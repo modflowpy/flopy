@@ -2,9 +2,11 @@
 mfmodel module.  Contains the MFModel class
 
 """
-import os
+import os, sys, inspect
 import numpy as np
-from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
+from .mfbase import PackageContainer, ExtFileAction, PackageContainerType, \
+                    MFDataException, ReadAsArraysException, FlopyException, \
+                    StructException
 from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
@@ -85,6 +87,7 @@ class MFModel(PackageContainer):
         self.name = modelname
         self.name_file = None
         self.version = version
+        self.type = 'Model'
 
         if model_nam_file is None:
             model_nam_file = '{}.nam'.format(modelname)
@@ -121,7 +124,7 @@ class MFModel(PackageContainer):
             kwargs_str = ', '.join(kwargs.keys())
             excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
                         'MFModel.'.format(kwargs_str)
-            raise mfstructure.FlopyException(excpt_str)
+            raise FlopyException(excpt_str)
 
         # build model name file
         # create name file based on model type - support different model types
@@ -130,7 +133,7 @@ class MFModel(PackageContainer):
             excpt_str = 'Name file could not be found for model' \
                         '{}.'.format(model_type[0:3])
             print(excpt_str)
-            raise mfstructure.StructException(excpt_str)
+            raise StructException(excpt_str)
 
         self.name_file = package_obj(self, fname=self.model_nam_file,
                                      pname=self.name)
@@ -344,7 +347,8 @@ class MFModel(PackageContainer):
                 old_model_base_name = os.path.splitext(old_model_file_name)[0]
                 if old_model_base_name.lower() == self.name.lower() or \
                         self.name == entry[2]:
-                    models_data[index][1] = os.path.join(path, old_model_file_name)
+                    models_data[index][1] = os.path.join(path,
+                                                         old_model_file_name)
                     break
             models.set_data(models_data)
 
@@ -353,14 +357,28 @@ class MFModel(PackageContainer):
                 list_file = self.name_file.list.get_data()
                 if list_file:
                     path, list_file_name = os.path.split(list_file)
-                    self.name_file.list.set_data(os.path.join(path, list_file_name))
-
+                    try:
+                        self.name_file.list.set_data(os.path.join(
+                            path, list_file_name))
+                    except MFDataException as mfde:
+                        message = 'Error occurred while setting relative ' \
+                                  'path "{}" in model '\
+                                  '"{}".'.format(os.path.join(path,
+                                                              list_file_name),
+                                                 self.name)
+                        raise MFDataException(mfdata_except=mfde,
+                                              model=self.model_name,
+                                              package=self.name_file.
+                                              _get_pname(),
+                                              message=message)
                 # update package file locations in model name file
                 packages = self.name_file.packages
                 packages_data = packages.get_data()
                 for index, entry in enumerate(packages_data):
-                    old_package_path, old_package_name = os.path.split(entry[1])
-                    packages_data[index][1] = os.path.join(path, old_package_name)
+                    old_package_path, \
+                    old_package_name = os.path.split(entry[1])
+                    packages_data[index][1] = os.path.join(path,
+                                                           old_package_name)
                 packages.set_data(packages_data)
 
                 # update files referenced from within packages
@@ -405,16 +423,45 @@ class MFModel(PackageContainer):
 
             self._remove_package_from_dictionaries(package)
 
-            # remove package from name file
-            package_data = self.name_file.packages.get_data()
-            new_rec_array = None
-            for item in package_data:
-                if item[1] != package.filename:
-                    if new_rec_array is None:
-                        new_rec_array = np.rec.array(item, package_data.dtype)
-                    else:
-                        new_rec_array = np.hstack((item, new_rec_array))
-            self.name_file.packages.set_data(new_rec_array)
+            try:
+                # remove package from name file
+                package_data = self.name_file.packages.get_data()
+            except MFDataException as mfde:
+                message = 'Error occurred while reading package names ' \
+                          'from name file in model ' \
+                          '"{}".'.format(self.name)
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self.model_name,
+                                      package=self.name_file._get_pname(),
+                                      message=message)
+            try:
+                new_rec_array = None
+                for item in package_data:
+                    if item[1] != package.filename:
+                        if new_rec_array is None:
+                            new_rec_array = np.rec.array(item, package_data.dtype)
+                        else:
+                            new_rec_array = np.hstack((item, new_rec_array))
+            except:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'building package recarray',
+                                      self.structure.name,
+                                      inspect.stack()[0][3],
+                                      type_, value_, traceback_, None,
+                                      self._simulation_data.debug)
+            try:
+                self.name_file.packages.set_data(new_rec_array)
+            except MFDataException as mfde:
+                message = 'Error occurred while setting package names ' \
+                          'from name file in model "{}".  Package name ' \
+                          'data:\n{}'.format(self.name, new_rec_array)
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self.model_name,
+                                      package=self.name_file._get_pname(),
+                                      message=message)
 
             # build list of child packages
             child_package_list = []
@@ -586,7 +633,7 @@ class MFModel(PackageContainer):
                               parent_file=parent_package)
         try:
             package.load(strict)
-        except mfstructure.ReadAsArraysException:
+        except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
             package_obj = self.package_factory('{}a'.format(ftype), model_type)
             package = package_obj(self, fname=fname, pname=dict_package_name,

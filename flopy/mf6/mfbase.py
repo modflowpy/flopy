@@ -1,9 +1,184 @@
 import glob
 import importlib
-import inspect
+import inspect, sys, traceback
 import os, collections, copy
 from shutil import copyfile
 from enum import Enum
+
+
+class FlopyException(Exception):
+    """
+    General Flopy Exception
+    """
+
+    def __init__(self, error, location=''):
+        Exception.__init__(self,
+                           "FlopyException: {} ({})".format(error, location))
+
+
+class StructException(Exception):
+    """
+    Exception related to the package file structure
+    """
+
+    def __init__(self, error, location):
+        self.message = error
+        Exception.__init__(self,
+                           "StructException: {} ({})".format(error, location))
+
+
+class MFDataFileException(Exception):
+    """
+    Exception related to parsing MODFLOW data files
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "MFDataFileException: {}".format(error))
+
+
+class MFFileParseException(Exception):
+    """
+    Exception related to parsing MODFLOW input files
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "MFFileParseException: {}".format(error))
+
+
+class MFInvalidTransientBlockHeaderException(MFFileParseException):
+    """
+    Exception related to parsing a transient block header
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self,
+                           "MFInvalidTransientBlockHeaderException: {}".format(
+                               error))
+
+
+class MFFileWriteException(Exception):
+    """
+    Exception related to the writing MODFLOW input files
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "MFFileWriteException: {}".format(error))
+
+
+class MFDataException(Exception):
+    """
+    Exception related to MODFLOW input/output data
+    """
+    def __init__(self, model=None, package=None, path=None,
+                 current_process=None, data_element=None,
+                 method_caught_in=None, org_type=None, org_value=None,
+                 org_traceback=None, message=None, debug=None,
+                 mfdata_except=None):
+        if mfdata_except is not None and \
+                isinstance(mfdata_except, MFDataException):
+            # copy constructure - copying values from original exception
+            self.model = mfdata_except.model
+            self.package = mfdata_except.package
+            self.current_process = mfdata_except.current_process
+            self.data_element = mfdata_except.data_element
+            self.path = mfdata_except.path
+            self.messages = mfdata_except.messages
+            self.debug = mfdata_except.debug
+            self.method_caught_in = mfdata_except.method_caught_in
+            self.org_type = mfdata_except.org_type
+            self.org_value = mfdata_except.org_value
+            self.org_traceback = mfdata_except.org_traceback
+            self.org_tb_string = mfdata_except.org_tb_string
+        else:
+            self.messages = []
+            if mfdata_except is not None and \
+                    isinstance(mfdata_except, StructException):
+                self.messages.append(mfdata_except.message)
+            self.model = None
+            self.package = None
+            self.current_process = None
+            self.data_element = None
+            self.path = None
+            self.debug = False
+            self.method_caught_in = None
+            self.org_type = None
+            self.org_value = None
+            self.org_traceback = None
+            self.org_tb_string = None
+        # override/assign any values that are not none
+        if model is not None:
+            self.model = model
+        if package is not None:
+            self.package = package
+        if current_process is not None:
+            self.current_process = current_process
+        if data_element is not None:
+            self.data_element = data_element
+        if path is not None:
+            self.path = path
+        if message is not None:
+            self.messages.append(message)
+        if debug is not None:
+            self.debug = debug
+        if method_caught_in is not None:
+            self.method_caught_in = method_caught_in
+        if org_type is not None:
+            self.org_type = org_type
+        if org_value is not None:
+            self.org_value = org_value
+        if org_traceback is not None:
+            self.org_traceback = org_traceback
+        self.org_tb_string = traceback.format_exception(self.org_type,
+                                                        self.org_value,
+                                                        self.org_traceback)
+        # build error string
+        error_message_0 = 'An error occurred in '
+        if self.data_element is not None and self.data_element != '':
+            error_message_1 = 'data element "{}"' \
+                              ' '.format(self.data_element)
+        else:
+            error_message_1 = ''
+        if self.model is not None and self.model != '':
+            error_message_2 = 'model "{}" '.format(self.model)
+        else:
+            error_message_2 = ''
+        error_message_3 = 'package "{}".'.format(self.package)
+        error_message_4 = ' The error occurred while {} in the "{}" method' \
+                          '.'.format(self.current_process,
+                                     self.method_caught_in)
+        if len(self.messages) > 0:
+            error_message_5 = '\nAdditional Information:\n'
+            for index, message in enumerate(self.messages):
+                error_message_5 = '{}({}) {}\n'.format(error_message_5,
+                                                       index + 1, message)
+        else:
+            error_message_5 = ''
+        error_message = '{}{}{}{}{}{}'.format(error_message_0, error_message_1,
+                                              error_message_2, error_message_3,
+                                              error_message_4, error_message_5)
+        #if self.debug:
+        #    tb_string = ''.join(self.org_tb_string)
+        #    error_message = '{}\nCall Stack\n{}'.format(error_message,
+        #                                                tb_string)
+        Exception.__init__(self, error_message)
+
+
+class MFFileExistsException(Exception):
+    """
+    MODFLOW input file requested does not exist
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "MFFileExistsException: {}".format(error))
+
+
+class ReadAsArraysException(Exception):
+    """
+    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
 
 
 class PackageContainerType(Enum):
@@ -84,8 +259,21 @@ class MFFileMgmt(object):
                         new_folders, new_leaf = os.path.split(path_new)
                         if not os.path.exists(new_folders):
                             os.makedirs(new_folders)
-                        copyfile(path_old,
-                                 path_new)
+                        try:
+                            copyfile(path_old,
+                                     path_new)
+                        except:
+                            type_, value_, traceback_ = sys.exc_info()
+                            raise MFDataException(self.structure.get_model(),
+                                                  self.structure.get_package(),
+                                                  self._path,
+                                                  'appending data',
+                                                  self.structure.name,
+                                                  inspect.stack()[0][3], type_,
+                                                  value_,
+                                                  traceback_, None,
+                                                  self._simulation_data.debug)
+
                         num_files_copied += 1
         print('INFORMATION: {} external files copied'.format(num_files_copied))
 
