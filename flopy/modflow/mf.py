@@ -659,19 +659,25 @@ class Modflow(BaseModel):
         # load bas after dis if it is available so that the free format option
         # is correctly set for subsequent packages.
         if bas_key is not None:
-            try:
+            if forgive:
+                try:
+                    pck = bas.package.load(bas.filename, ml,
+                                           ext_unit_dict=ext_unit_dict,
+                                           check=False)
+                    files_succesfully_loaded.append(bas.filename)
+                    if ml.verbose:
+                        sys.stdout.write('   {:4s} package load...success\n'
+                                         .format(pck.name[0]))
+                    ext_unit_dict.pop(bas_key)
+                except Exception as e:
+                    s = 'Could not read basic package: {}. Stopping...' \
+                        .format(os.path.basename(bas.filename))
+                    raise Exception(s + " " + str(e))
+            else:
                 pck = bas.package.load(bas.filename, ml,
                                        ext_unit_dict=ext_unit_dict,
                                        check=False)
                 files_succesfully_loaded.append(bas.filename)
-                if ml.verbose:
-                    sys.stdout.write('   {:4s} package load...success\n'
-                                     .format(pck.name[0]))
-                ext_unit_dict.pop(bas_key)
-            except Exception as e:
-                s = 'Could not read basic package: {}. Stopping...' \
-                    .format(os.path.basename(bas.filename))
-                raise Exception(s + " " + str(e))
 
 
         if load_only is None:
@@ -708,7 +714,8 @@ class Modflow(BaseModel):
             if item.package is not None:
                 if item.filetype in load_only and item.filetype != "DIS":
                     if not forgive:
-                        if "check" in inspect.getargspec(item.package.load):
+                        package_load_args = list(inspect.getargspec(item.package.load))[0]
+                        if "check" in package_load_args:
                             pck = item.package.load(item.filename, ml,
                                                     ext_unit_dict=ext_unit_dict,
                                                     check=False)

@@ -196,19 +196,31 @@ class ModflowUzf1(Package):
         are the sum of discharge values for the UZF, SFR2, and LAK packages. 
         Values are averaged over the period between output times.
         
-[NETFLUX unitrech unitdis]
-    finf : float
-        used to define the infiltration rates (LT-1) at land surface for each
+        [NETFLUX unitrech unitdis]
+    finf : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the infiltration rates (LT-1) at land surface for each
         vertical column of cells. If FINF is specified as being greater than
         the vertical hydraulic conductivity then FINF is set equal to the
         vertical unsaturated hydraulic conductivity. Excess water is routed
         to streams or lakes when IRUNFLG is not zero, and if SFR2 or LAK3 is
         active. (default is 1.0E-8)
-    pet : float
-        used to define the ET demand rates (L1T-1) within the ET extinction
+    pet : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the ET demand rates (L1T-1) within the ET extinction
         depth interval for each vertical column of cells. (default is 5.0E-8)
-    extdp : float
-        used to define the ET extinction depths. The quantity of ET removed
+    extdp : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the ET extinction depths. The quantity of ET removed
         from a cell is limited by the volume of water stored in the
         unsaturated zone above the extinction depth. If ground water is
         within the ET extinction depth, then the rate removed is based
@@ -216,8 +228,12 @@ class ModflowUzf1(Package):
         the ET extinction depth. The linear decrease is the same method used
         in the Evapotranspiration Package (McDonald and Harbaugh, 1988, chap.
         10). (default is 15.0)
-    extwc : float
-        used to define the extinction water content below which ET cannot be
+    extwc : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the extinction water content below which ET cannot be
         removed from the unsaturated zone.  EXTWC must have a value between
         (THTS-Sy) and THTS, where Sy is the specific yield specified in
         either the LPF or BCF Package. (default is 0.1)
@@ -450,6 +466,7 @@ class ModflowUzf1(Package):
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
+
         self.finf = Transient2d(model, (nrow, ncol), np.float32,
                                 finf, name='finf')
         if ietflg > 0:
@@ -457,7 +474,7 @@ class ModflowUzf1(Package):
                                    pet, name='pet')
             self.extdp = Transient2d(model, (nrow, ncol), np.float32,
                                     extdp, name='extdp')
-            self.extwc = Transient2d(model, (nrow, ncol), np.int,
+            self.extwc = Transient2d(model, (nrow, ncol), np.float32,
                                     extwc, name='extwc')
         self.parent.add_package(self)
 

@@ -67,19 +67,26 @@ class MFFileMgmt(object):
         num_files_copied = 0
         if self._last_loaded_sim_path is not None:
             for key, mffile_path in self.existing_file_dict.items():
-                for model_name in mffile_path.model_name:
-                    if model_name in self._last_loaded_model_relative_path:
-                        if os.path.isfile(self.resolve_path(mffile_path,
-                                                            model_name,
-                                                            True)) and \
-                          (not mffile_path.isabs() or not copy_relative_only):
-                            if not os.path.exists(
-                              self.resolve_path(mffile_path, model_name)):
-                                copyfile(self.resolve_path(mffile_path,
-                                                           model_name, True),
-                                         self.resolve_path(mffile_path,
-                                                           model_name))
-                                num_files_copied += 1
+#                for model_name in mffile_path.model_name:
+#                    if model_name in self._last_loaded_model_relative_path:
+                # resolve previous simulation path.  if mf6 changes
+                # so that paths are relative to the model folder, then
+                # this call should have "model_name" instead of "None"
+                path_old = self.resolve_path(mffile_path, None,
+                                             True)
+                if os.path.isfile(path_old) and \
+                  (not mffile_path.isabs() or not copy_relative_only):
+                    # change "None" to "model_name" as above if mf6
+                    # supports model relative paths
+                    path_new = self.resolve_path(mffile_path,
+                                                 None)
+                    if not os.path.exists(path_new):
+                        new_folders, new_leaf = os.path.split(path_new)
+                        if not os.path.exists(new_folders):
+                            os.makedirs(new_folders)
+                        copyfile(path_old,
+                                 path_new)
+                        num_files_copied += 1
         print('INFORMATION: {} external files copied'.format(num_files_copied))
 
     def get_updated_path(self, external_file_path, model_name,
@@ -142,9 +149,9 @@ class MFFileMgmt(object):
 
     @staticmethod
     def string_to_file_path(fp_string):
-        file_delimitiers = ['/','\\']
+        file_delimiters = ['/','\\']
         new_string = fp_string
-        for delimiter in file_delimitiers:
+        for delimiter in file_delimiters:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
@@ -159,6 +166,9 @@ class MFFileMgmt(object):
 
     def set_last_accessed_path(self):
         self._last_loaded_sim_path = self._sim_path
+        self.set_last_accessed_model_path()
+
+    def set_last_accessed_model_path(self):
         for key, item in self.model_relative_path.items():
             self._last_loaded_model_relative_path[key] = copy.deepcopy(item)
 
@@ -290,41 +300,70 @@ class PackageContainer(object):
     def package_factory(package_type, model_type):
         package_abbr = '{}{}'.format(model_type, package_type)
         package_utl_abbr = 'utl{}'.format(package_type)
-        base_path, tail = os.path.split(os.path.realpath(__file__))
-        package_path = os.path.join(base_path, 'modflow')
         package_list = []
         # iterate through python files
-        package_file_paths = glob.glob(os.path.join(package_path, "*.py"))
+        package_file_paths = PackageContainer.get_package_file_paths()
         for package_file_path in package_file_paths:
-            package_file_name = os.path.basename(package_file_path)
-            module_path = os.path.splitext(package_file_name)[0]
-            module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
-                                          module_path[3:])
-            if module_name.startswith("__"):
-                continue
-
-            # import
-            module = importlib.import_module("flopy.mf6.modflow.{}".format(
-              module_path))
-
-            # iterate imported items
-            for item in dir(module):
-                value = getattr(module, item)
-                # verify this is a class
-                if not value or not inspect.isclass(value) or not \
-                  hasattr(value, 'package_abbr'):
-                    continue
-                if package_type is None:
-                    package_list.append(value)
-                else:
-                    # check package type
-                    if value.package_abbr == package_abbr or \
-                      value.package_abbr == package_utl_abbr:
-                        return value
+            module = PackageContainer.get_module(package_file_path)
+            if module is not None:
+                # iterate imported items
+                for item in dir(module):
+                    value = PackageContainer.get_module_val(module, item,
+                                                            'package_abbr')
+                    if value is not None:
+                        if package_type is None:
+                            package_list.append(value)
+                        else:
+                            # check package type
+                            if value.package_abbr == package_abbr or \
+                              value.package_abbr == package_utl_abbr:
+                                return value
         if package_type is None:
             return package_list
         else:
             return None
+
+    @staticmethod
+    def model_factory(model_type):
+        package_file_paths = PackageContainer.get_package_file_paths()
+        for package_file_path in package_file_paths:
+            module = PackageContainer.get_module(package_file_path)
+            if module is not None:
+                # iterate imported items
+                for item in dir(module):
+                    value = PackageContainer.get_module_val(module, item,
+                                                            'model_type')
+                    if value is not None and value.model_type == model_type:
+                        return value
+        return None
+
+    @staticmethod
+    def get_module_val(module, item, attrb):
+        value = getattr(module, item)
+        # verify this is a class
+        if not value or not inspect.isclass(value) or not \
+                hasattr(value, attrb):
+            return None
+        return value
+
+    @staticmethod
+    def get_module(package_file_path):
+        package_file_name = os.path.basename(package_file_path)
+        module_path = os.path.splitext(package_file_name)[0]
+        module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
+                                      module_path[3:])
+        if module_name.startswith("__"):
+            return None
+
+        # import
+        return importlib.import_module("flopy.mf6.modflow.{}".format(
+            module_path))
+
+    @staticmethod
+    def get_package_file_paths():
+        base_path, tail = os.path.split(os.path.realpath(__file__))
+        package_path = os.path.join(base_path, 'modflow')
+        return glob.glob(os.path.join(package_path, "*.py"))
 
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries
@@ -398,12 +437,13 @@ class PackageContainer(object):
 
         # search for partial package name
         for pp in self.packages:
-            # get first package of the type requested
-            package_name = pp.package_name.lower()
-            if len(package_name) > len(name):
-                package_name = package_name[0:len(name)]
-            if package_name.lower() == name.lower():
-                return pp
+            if pp.package_name is not None:
+                # get first package of the type requested
+                package_name = pp.package_name.lower()
+                if len(package_name) > len(name):
+                    package_name = package_name[0:len(name)]
+                if package_name.lower() == name.lower():
+                    return pp
 
         return None
 

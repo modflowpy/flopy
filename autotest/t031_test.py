@@ -11,6 +11,7 @@ import flopy
 import numpy as np
 from flopy.utils.reference import SpatialReference
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
+from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
@@ -112,7 +113,6 @@ def test_get_destination_data():
 
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
-    #starting_locs = well_epd[['k0', 'i0', 'j0']]
     starting_locs = ra_slice(well_epd, ['k0', 'i0', 'j0'])
     pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(),
                              dtype=starting_locs.dtype)
@@ -217,6 +217,6 @@ def test_loadtxt():
 
 
 if __name__ == '__main__':
-    # test_mpsim()
+    test_mpsim()
     test_get_destination_data()
-    # test_loadtxt()
+    test_loadtxt()

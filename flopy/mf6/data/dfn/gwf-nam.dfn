@@ -60,7 +60,7 @@ description keyword that indicates whether the groundwater head in a cell will b
 # --------------------- gwf nam packages ---------------------
 
 block packages
-name packagerecarray
+name packages
 type recarray ftype fname pname
 reader urword
 optional false

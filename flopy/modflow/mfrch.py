@@ -83,7 +83,7 @@ class ModflowRch(Package):
     >>> rech = {}
     >>> rech[0] = 1.2e-4 #stress period 1 to 4
     >>> rech[4] = 0.0 #stress period 5 and 6
-    >>> rech[6] = 1.2e-3 #stress preiod 7 to the end
+    >>> rech[6] = 1.2e-3 #stress period 7 to the end
     >>> m = flopy.modflow.Modflow()
     >>> rch = flopy.modflow.ModflowRch(m, nrchop=3, rech=rech)
 
@@ -187,37 +187,48 @@ class ModflowRch(Package):
         hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
         if len(hk_package) > 0:
             pkg = list(hk_package)[0]
-            for per in range(self.parent.nper):
-                Rmean = self.rech.array[per].sum(axis=0)[active].mean()
 
-                # handle quasi-3D layers
-                # (ugly, would be nice to put this else where in a general function)
-                if self.parent.dis.laycbd.sum() != 0:
-                    thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
-                                          dtype=float)
-                    l = 0
-                    for i, cbd in enumerate(self.parent.dis.laycbd):
-                        thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
-                        if cbd > 0:
-                            l += 1
+            # handle quasi-3D layers
+            # (ugly, would be nice to put this else where in a general function)
+            if self.parent.dis.laycbd.sum() != 0:
+                thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
+                                     dtype=float)
+                l = 0
+                for i, cbd in enumerate(self.parent.dis.laycbd):
+                    thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
+                    if cbd > 0:
                         l += 1
-                    assert l == self.parent.dis.thickness.shape[0]
-                else:
-                    thickness = self.parent.dis.thickness.array
-                assert thickness.shape == self.parent.get_package(pkg).hk.shape
-                Tmean = (self.parent.get_package(pkg).hk.array *
-                         thickness)[:, active].sum(axis=0).mean()
-                if Tmean != 0.:
-                    if Rmean/Tmean < RTmin:
-                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                             desc='\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin))
-                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                    elif Rmean/Tmean > RTmax:
-                        chk._add_to_summary(type='Warning', value=Rmean/Tmean,
-                                             desc='\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax))
-                        chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
-                    else:
-                        chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                    l += 1
+                assert l == self.parent.dis.thickness.shape[0]
+            else:
+                thickness = self.parent.dis.thickness.array
+            assert thickness.shape == self.parent.get_package(pkg).hk.shape
+            Tmean = (self.parent.get_package(pkg).hk.array *
+                     thickness)[:, active].sum(axis=0).mean()
+
+            # get mean value of recharge array for each stress period
+            period_means = self.rech.array.mean(axis=(1, 2, 3))
+
+            if Tmean != 0:
+                R_T = period_means/Tmean
+                lessthan = np.where(R_T < RTmin)[0]
+                greaterthan = np.where(R_T > RTmax)[0]
+
+                if len(lessthan) > 0:
+                    txt = '\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin)
+                    txt += ' for {} stress periods'.format(len(lessthan))
+                    chk._add_to_summary(type='Warning', value=R_T.min(),
+                                         desc=txt)
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+
+                if len(greaterthan) > 0:
+                    txt = '\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax)
+                    txt += ' for {} stress periods'.format(len(greaterthan))
+                    chk._add_to_summary(type='Warning', value=R_T.max(),
+                                         desc=txt)
+                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                elif len(lessthan) == 0 and len(greaterthan) == 0:
+                    chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:

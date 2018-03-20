@@ -830,7 +830,7 @@ class MFPackage(PackageContainer):
         filename of file where this package is stored
     pname : string
         package name
-    add_to_package_list : bool
+    loading_package : bool
         whether or not to add this package to the parent container's package
         list during initialization
     parent_file : MFPackage
@@ -862,6 +862,8 @@ class MFPackage(PackageContainer):
         Writes the package to a file
     get_file_path : string
         Returns the package file's path
+    remove
+        Removes package from the simulation/model it is currently a part of
 
     See Also
     --------
@@ -875,7 +877,7 @@ class MFPackage(PackageContainer):
 
     """
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
-                 add_to_package_list=True, parent_file=None):
+                 loading_package=False, parent_file=None):
         self._model_or_sim = model_or_sim
         self.package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
@@ -888,6 +890,7 @@ class MFPackage(PackageContainer):
         self.parent_file = parent_file
         self.blocks = OrderedDict()
         self.container_type = []
+        self.loading_package = loading_package
         if pname is not None:
             self.package_name = pname.lower()
         else:
@@ -901,7 +904,7 @@ class MFPackage(PackageContainer):
 
         self.path, \
             self.structure = model_or_sim.register_package(self,
-                                                           add_to_package_list,
+                                                           not loading_package,
                                                            pname is None,
                                                            filename is None)
         self.dimensions = self.create_package_dimensions()
@@ -1011,7 +1014,12 @@ class MFPackage(PackageContainer):
                                               new_size,
                                               dataset.structure.name))
 
+    def remove(self):
+        self._model_or_sim.remove_package(self)
+
     def build_mfdata(self, var_name, data=None):
+        if self.loading_package:
+            data = None
         for key, block in self.structure.blocks.items():
             if var_name in block.data_structures:
                 if block.name not in self.blocks:
@@ -1201,7 +1209,7 @@ class MFPackage(PackageContainer):
             # object for that model
             if self.dfn_file_name[0:3] == 'exg':
                 exchange_rec_array = self._simulation_data.mfdata[
-                    ('nam', 'exchanges', 'exchangerecarray')].get_data()
+                    ('nam', 'exchanges', 'exchanges')].get_data()
                 if exchange_rec_array is None:
                     return None
                 for exchange in exchange_rec_array:

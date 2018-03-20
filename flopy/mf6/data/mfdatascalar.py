@@ -115,7 +115,6 @@ class MFScalar(mfdata.MFData):
         elif self.structure.type == DatumType.record:
             text_line = []
             for data_item in self.structure.data_item_structures:
-                force_upper_case = data_item.ucase
                 if data_item.type == DatumType.keyword and \
                         data_item.optional == False:
                     text_line.append(data_item.name.upper())
@@ -124,14 +123,14 @@ class MFScalar(mfdata.MFData):
                     if len(data) > 0:
                         text_line.append(storage.to_string(storage.get_data(),
                                                            self._data_type,
-                                                           force_upper_case =
-                                                           force_upper_case))
+                                                           data_item =
+                                                           data_item))
 
             text = self._simulation_data.indent_string.join(text_line)
             return '{}{}\n'.format(self._simulation_data.indent_string,
                                    text)
         else:
-            force_upper_case = self.structure.data_item_structures[0].ucase
+            data_item = self.structure.data_item_structures[0]
             if one_based:
                 assert(self.structure.type == DatumType.integer)
                 data = self._get_storage_obj().get_data() + 1
@@ -140,8 +139,8 @@ class MFScalar(mfdata.MFData):
             # data
             values = self._get_storage_obj().to_string(data,
                                                        self._data_type,
-                                                       force_upper_case=
-                                                       force_upper_case)
+                                                       data_item=
+                                                       data_item)
             if values_only:
                 return '{}{}'.format(self._simulation_data.indent_string,
                                      values)
@@ -350,8 +349,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
-        self._load_prep(first_line, file_handle, block_header,
-                        pre_data_comments)
+        self._load_prep(block_header)
         return super(MFScalarTransient, self).load(first_line, file_handle,
                                                    pre_data_comments)
 

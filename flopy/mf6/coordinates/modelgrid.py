@@ -388,7 +388,7 @@ class ModelGrid(object):
         grid type : DiscritizationType
         """
         package_recarray = simulation_data.mfdata[
-            (model_name, 'nam', 'packages', 'packagerecarray')]
+            (model_name, 'nam', 'packages', 'packages')]
         structure = MFStructure()
         if package_recarray.search_data(
                 'dis{}'.format(structure.get_version_string()), 0) is not None:

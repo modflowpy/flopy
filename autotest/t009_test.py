@@ -6,6 +6,8 @@ import os
 import glob
 import shutil
 import numpy as np
+from flopy.utils.recarray_utils import create_empty_recarray
+
 try:
     import matplotlib
     # if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
@@ -47,14 +49,12 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
              }
 
 def create_sfr_data():
-    dtype = [('k', int),
+    dtype = np.dtype([('k', int),
              ('i', int),
              ('j', int),
              ('iseg', int),
-             ('ireach', int)]
-    r = np.zeros((27, 5), dtype=dtype)
-    r = np.core.records.fromarrays(r.transpose(),
-                                   dtype=dtype)
+             ('ireach', int)])
+    r = create_empty_recarray(27, dtype=dtype)
     r['i'] = [3, 4, 5,
               7, 8, 9,
               0, 1, 2,
@@ -76,9 +76,7 @@ def create_sfr_data():
     r['iseg'] = sorted(list(range(1, 10)) * 3)
     r['ireach'] = [1, 2, 3] * 9
 
-    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
-    d = np.core.records.fromarrays(d.transpose(),
-                                   dtype=[('nseg', int), ('outseg', int)])
+    d = create_empty_recarray(9, dtype=np.dtype([('nseg', int), ('outseg', int)]))
     d['nseg'] = range(1, 10)
     d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
     return r, d
@@ -189,15 +187,13 @@ def test_sfr():
 def test_sfr_renumbering():
     # test segment renumbering
 
-    r = np.zeros((27, 2), dtype=[('iseg', int), ('ireach', int)])
-    r = np.core.records.fromarrays(r.transpose(),
-                                   dtype=[('iseg', int), ('ireach', int)])
+    dtype = np.dtype([('iseg', int), ('ireach', int)])
+    r = create_empty_recarray(27, dtype)
     r['iseg'] = sorted(list(range(1, 10)) * 3)
     r['ireach'] = [1, 2, 3] * 9
 
-    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
-    d = np.core.records.fromarrays(d.transpose(),
-                                   dtype=[('nseg', int), ('outseg', int)])
+    dtype = np.dtype([('nseg', int), ('outseg', int)])
+    d = create_empty_recarray(9, dtype)
     d['nseg'] = range(1, 10)
     d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
     m = flopy.modflow.Modflow()
@@ -213,9 +209,8 @@ def test_sfr_renumbering():
     r['iseg'] *= 2
     r['ireach'] = [1, 2, 3] * 9
 
-    d = np.zeros((9, 2), dtype=[('nseg', int), ('outseg', int)])
-    d = np.core.records.fromarrays(d.transpose(),
-                                   dtype=[('nseg', int), ('outseg', int)])
+    dtype = np.dtype([('nseg', int), ('outseg', int)])
+    d = create_empty_recarray(9, dtype)
     d['nseg'] = np.arange(1, 10) * 2
     d['outseg'] = np.array([4, 0, 6, 8, 3, 8, 1, 2, 8]) * 2
     m = flopy.modflow.Modflow()
@@ -456,11 +451,11 @@ def test_sfr_plot():
 if __name__ == '__main__':
     #test_sfr()
     test_sfr_renumbering()
-    test_example()
+    #test_example()
     #test_export()
     #test_transient_example()
     #test_sfr_plot()
-    #test_assign_layers()
-    #test_SfrFile()
-    #test_const()
+    test_assign_layers()
+    test_SfrFile()
+    test_const()
     pass

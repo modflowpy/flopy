@@ -13,7 +13,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     length_units : string
@@ -121,12 +121,12 @@ class ModflowGwfdisu(mfpackage.MFPackage):
           and for the diagonal position are not used. Note that ANGLDEGX is
           read in degrees, which is different from MODFLOW-USG, which reads a
           similar variable (ANGLEX) in radians.
-    verticesrecarray : [iv, xv, yv]
+    vertices : [iv, xv, yv]
         * iv (integer) is the vertex number. Records in the VERTICES block must
           be listed in consecutive order from 1 to NVERT.
         * xv (double) is the x-coordinate for the vertex.
         * yv (double) is the y-coordinate for the vertex.
-    cell2drecarray : [icell2d, xc, yc, ncvert, icvert]
+    cell2d : [icell2d, xc, yc, ncvert, icvert]
         * icell2d (integer) is the cell2d number. Records in the CELL2D block
           must be listed in consecutive order from 1 to NODES.
         * xc (double) is the x-coordinate for the cell center.
@@ -161,10 +161,9 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                                    'hwva'))
     angldegx = ArrayTemplateGenerator(('gwf6', 'disu', 'connectiondata', 
                                        'angldegx'))
-    verticesrecarray = ListTemplateGenerator(('gwf6', 'disu', 'vertices', 
-                                              'verticesrecarray'))
-    cell2drecarray = ListTemplateGenerator(('gwf6', 'disu', 'cell2d', 
-                                            'cell2drecarray'))
+    vertices = ListTemplateGenerator(('gwf6', 'disu', 'vertices', 
+                                      'vertices'))
+    cell2d = ListTemplateGenerator(('gwf6', 'disu', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisu"
     package_type = "disu"
     dfn_file_name = "gwf-disu.dfn"
@@ -194,7 +193,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
            ["block connectiondata", "name iac", "type integer", 
             "shape (nodes)", "reader readarray"],
            ["block connectiondata", "name ja", "type integer", 
-            "shape (nja)", "reader readarray"],
+            "shape (nja)", "reader readarray", "numeric_index true"],
            ["block connectiondata", "name ihc", "type integer", 
             "shape (nja)", "reader readarray"],
            ["block connectiondata", "name cl12", "type double precision", 
@@ -204,22 +203,23 @@ class ModflowGwfdisu(mfpackage.MFPackage):
            ["block connectiondata", "name angldegx", 
             "type double precision", "optional true", "shape (nja)", 
             "reader readarray"],
-           ["block vertices", "name verticesrecarray", 
-            "type recarray iv xv yv", "reader urword", "optional false"],
+           ["block vertices", "name vertices", "type recarray iv xv yv", 
+            "reader urword", "optional false"],
            ["block vertices", "name iv", "type integer", "in_record true", 
-            "tagged false", "reader urword", "optional false"],
+            "tagged false", "reader urword", "optional false", 
+            "numeric_index true"],
            ["block vertices", "name xv", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
            ["block vertices", "name yv", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
-           ["block cell2d", "name cell2drecarray", 
+           ["block cell2d", "name cell2d", 
             "type recarray icell2d xc yc ncvert icvert", "reader urword", 
             "optional false"],
            ["block cell2d", "name icell2d", "type integer", 
             "in_record true", "tagged false", "reader urword", 
-            "optional false"],
+            "optional false", "numeric_index true"],
            ["block cell2d", "name xc", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
@@ -232,14 +232,14 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "in_record true", "tagged false", "reader urword", 
             "optional false"]]
 
-    def __init__(self, model, add_to_package_list=True, length_units=None,
+    def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nodes=None, nja=None, nvert=None, top=None, bot=None,
                  area=None, iac=None, ja=None, ihc=None, cl12=None, hwva=None,
-                 angldegx=None, verticesrecarray=None, cell2drecarray=None,
-                 fname=None, pname=None, parent_file=None):
+                 angldegx=None, vertices=None, cell2d=None, fname=None,
+                 pname=None, parent_file=None):
         super(ModflowGwfdisu, self).__init__(model, "disu", fname, pname,
-                                             add_to_package_list, parent_file)        
+                                             loading_package, parent_file)        
 
         # set up variables
         self.length_units = self.build_mfdata("length_units",  length_units)
@@ -259,7 +259,5 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         self.cl12 = self.build_mfdata("cl12",  cl12)
         self.hwva = self.build_mfdata("hwva",  hwva)
         self.angldegx = self.build_mfdata("angldegx",  angldegx)
-        self.verticesrecarray = self.build_mfdata("verticesrecarray", 
-                                                  verticesrecarray)
-        self.cell2drecarray = self.build_mfdata("cell2drecarray", 
-                                                cell2drecarray)
+        self.vertices = self.build_mfdata("vertices",  vertices)
+        self.cell2d = self.build_mfdata("cell2d",  cell2d)

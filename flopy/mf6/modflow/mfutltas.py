@@ -13,7 +13,7 @@ class ModflowUtltas(mfpackage.MFPackage):
     model : MFModel
         Model that this package is a part of.  Package is automatically
         added to model when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     time_series_namerecord : [time_series_name]
@@ -82,12 +82,12 @@ class ModflowUtltas(mfpackage.MFPackage):
             "tagged false", "just_data true", "shape (unknown)", 
             "reader readarray", "optional false", "repeating true"]]
 
-    def __init__(self, model, add_to_package_list=True,
+    def __init__(self, model, loading_package=False,
                  time_series_namerecord=None, interpolation_methodrecord=None,
                  sfacrecord=None, tas_array=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowUtltas, self).__init__(model, "tas", fname, pname,
-                                            add_to_package_list, parent_file)        
+                                            loading_package, parent_file)        
 
         # set up variables
         self.time_series_namerecord = self.build_mfdata(

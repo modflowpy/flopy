@@ -217,7 +217,7 @@ class ListTemplateGenerator(TemplateGenerator):
     empty: (maxbound: int, aux_vars: list, boundnames: boolean, nseg: int) :
             dictionary
         Builds a template for the data you need to specify for a specific data
-        type (ie. "periodrecarray") in a specific model.  The data type is
+        type (ie. "stress_period_data") in a specific model.  The data type is
         determined by "path" during initialization of this class.  If the data
         is transient a dictionary containing a single stress period will be
         returned.  The number of entries in the recarray are determined by
@@ -749,18 +749,38 @@ class MFDocString(object):
         self.parameter_header = '{}Parameters\n{}' \
                                 '----------'.format(self.indent, self.indent)
         self.parameters = []
+        self.model_parameters = []
 
-    def add_parameter(self, param_descr, beginning_of_list=False):
+    def add_parameter(self, param_descr, beginning_of_list=False,
+                      model_parameter=False):
         if beginning_of_list:
             self.parameters.insert(0, param_descr)
+            if model_parameter:
+                self.model_parameters.insert(0, param_descr)
         else:
             self.parameters.append(param_descr)
+            if model_parameter:
+                self.model_parameters.append(param_descr)
 
-    def get_doc_string(self):
+    def get_doc_string(self, model_doc_string=False):
         doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent,
                                                   self.description,
                                                   self.parameter_header)
-        for parameter in self.parameters:
+        if model_doc_string:
+            param_list = self.model_parameters
+            doc_string = '{}    modelname : string\n        name of the ' \
+                         'model\n    model_nam_file : string\n' \
+                         '        relative path to the model name file from ' \
+                         'model working folder\n    version : string\n' \
+                         '        version of modflow\n    exe_name : string\n'\
+                         '        model executable name\n' \
+                         '    model_ws : string\n' \
+                         '        model working folder path' \
+                         '\n'.format(doc_string)
+        else:
+            param_list = self.parameters
+        for parameter in param_list:
             doc_string += '{}\n'.format(parameter)
-        doc_string += '\n{}"""'.format(self.indent)
+        if not model_doc_string:
+            doc_string += '\n{}"""'.format(self.indent)
         return doc_string

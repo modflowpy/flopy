@@ -13,7 +13,7 @@ class ModflowTdis(mfpackage.MFPackage):
     simulation : MFSimulation
         Simulation that this package is a part of. Package is automatically
         added to simulation when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     time_units : string
@@ -29,7 +29,7 @@ class ModflowTdis(mfpackage.MFPackage):
           https://www.w3.org/TR/NOTE-datetime.
     nper : integer
         * nper (integer) is the number of stress periods for the simulation.
-    tdisrecarray : [perlen, nstp, tsmult]
+    perioddata : [perlen, nstp, tsmult]
         * perlen (double) is the length of a stress period.
         * nstp (integer) is the number of time steps in a stress period.
         * tsmult (double) is the multiplier for the length of successive time
@@ -48,8 +48,8 @@ class ModflowTdis(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    tdisrecarray = ListTemplateGenerator(('tdis', 'perioddata', 
-                                          'tdisrecarray'))
+    perioddata = ListTemplateGenerator(('tdis', 'perioddata', 
+                                        'perioddata'))
     package_abbr = "tdis"
     package_type = "tdis"
     dfn_file_name = "sim-tdis.dfn"
@@ -59,10 +59,10 @@ class ModflowTdis(mfpackage.MFPackage):
            ["block options", "name start_date_time", "type string", 
             "reader urword", "optional true"],
            ["block dimensions", "name nper", "type integer", 
-            "reader urword", "optional false"],
-           ["block perioddata", "name tdisrecarray", 
+            "reader urword", "optional false", "default_value 1"],
+           ["block perioddata", "name perioddata", 
             "type recarray perlen nstp tsmult", "reader urword", 
-            "optional false"],
+            "optional false", "default_value ((1.0, 1, 1.0),)"],
            ["block perioddata", "name perlen", "type double precision", 
             "in_record true", "tagged false", "reader urword", 
             "optional false"],
@@ -73,15 +73,15 @@ class ModflowTdis(mfpackage.MFPackage):
             "in_record true", "tagged false", "reader urword", 
             "optional false"]]
 
-    def __init__(self, simulation, add_to_package_list=True, time_units=None,
-                 start_date_time=None, nper=None, tdisrecarray=None,
+    def __init__(self, simulation, loading_package=False, time_units=None,
+                 start_date_time=None, nper=1, perioddata=((1.0, 1, 1.0),),
                  fname=None, pname=None, parent_file=None):
         super(ModflowTdis, self).__init__(simulation, "tdis", fname, pname,
-                                          add_to_package_list, parent_file)        
+                                          loading_package, parent_file)        
 
         # set up variables
         self.time_units = self.build_mfdata("time_units",  time_units)
         self.start_date_time = self.build_mfdata("start_date_time", 
                                                  start_date_time)
         self.nper = self.build_mfdata("nper",  nper)
-        self.tdisrecarray = self.build_mfdata("tdisrecarray",  tdisrecarray)
+        self.perioddata = self.build_mfdata("perioddata",  perioddata)

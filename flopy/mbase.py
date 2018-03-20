@@ -136,6 +136,7 @@ class BaseModel(object):
         # external option stuff
         self.array_free_format = True
         self.free_format_input = True
+        self.parameter_load = False
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
@@ -995,6 +996,14 @@ class BaseModel(object):
             self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
                        level=1)
 
+        # reset the model to free_format if parameter substitution was
+        # performed on a model load
+        if self.parameter_load and not self.free_format_input:
+            if self.verbose:
+                print('\nReseting free_format_input to True to ' +
+                      'preserve the precision of the parameter data.')
+            self.free_format_input = True
+
         if self.verbose:
             print('\nWriting packages:')
 
@@ -1109,13 +1118,14 @@ class BaseModel(object):
         >>> m.check()
         """
 
-        results = {}
-        for p in self.packagelist:
-            results[p.name[0]] = p.check(f=None, verbose=False,
-                                         level=level - 1)
-
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1)
 
         # model level checks
         # solver check

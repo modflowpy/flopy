@@ -13,7 +13,7 @@ class ModflowNam(mfpackage.MFPackage):
     simulation : MFSimulation
         Simulation that this package is a part of. Package is automatically
         added to simulation when it is initialized.
-    add_to_package_list : bool
+    loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     continue_ : boolean
@@ -33,14 +33,14 @@ class ModflowNam(mfpackage.MFPackage):
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
-    modelrecarray : [mtype, mfname, mname]
+    models : [mtype, mfname, mname]
         * mtype (string) is the type of model to add to simulation.
         * mfname (string) is the file name of the model name file.
         * mname (string) is the user-assigned name of the model. The model name
           cannot exceed 16 characters and must not have blanks within the name.
           The model name is case insensitive; any lowercase letters are
           converted and stored as upper case letters.
-    exchangerecarray : [exgtype, exgfile, exgmnamea, exgmnameb]
+    exchanges : [exgtype, exgfile, exgmnamea, exgmnameb]
         * exgtype (string) is the exchange type.
         * exgfile (string) is the input file for the exchange.
         * exgmnamea (string) is the name of the first model that is part of
@@ -51,7 +51,7 @@ class ModflowNam(mfpackage.MFPackage):
         * mxiter (integer) is the maximum number of outer iterations for this
           solution group. The default value is 1. If there is only one solution
           in the solution group, then MXITER must be 1.
-    solutionrecarray : [slntype, slnfname, slnmnames]
+    solutiongroup : [slntype, slnfname, slnmnames]
         * slntype (string) is the type of solution. The Integrated Model
           Solution (IMS6) is the only supported option in this version.
         * slnfname (string) name of file containing solution input.
@@ -67,12 +67,10 @@ class ModflowNam(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    modelrecarray = ListTemplateGenerator(('nam', 'models', 
-                                           'modelrecarray'))
-    exchangerecarray = ListTemplateGenerator(('nam', 'exchanges', 
-                                              'exchangerecarray'))
-    solutionrecarray = ListTemplateGenerator(('nam', 'solutiongroup', 
-                                              'solutionrecarray'))
+    models = ListTemplateGenerator(('nam', 'models', 'models'))
+    exchanges = ListTemplateGenerator(('nam', 'exchanges', 'exchanges'))
+    solutiongroup = ListTemplateGenerator(('nam', 'solutiongroup', 
+                                           'solutiongroup'))
     package_abbr = "nam"
     package_type = "nam"
     dfn_file_name = "sim-nam.dfn"
@@ -85,7 +83,7 @@ class ModflowNam(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block timing", "name tdis6", "preserve_case true", 
             "type string", "reader urword", "optional"],
-           ["block models", "name modelrecarray", 
+           ["block models", "name models", 
             "type recarray mtype mfname mname", "reader urword", "optional"],
            ["block models", "name mtype", "in_record true", "type string", 
             "tagged false", "reader urword"],
@@ -93,7 +91,7 @@ class ModflowNam(mfpackage.MFPackage):
             "preserve_case true", "tagged false", "reader urword"],
            ["block models", "name mname", "in_record true", "type string", 
             "tagged false", "reader urword"],
-           ["block exchanges", "name exchangerecarray", 
+           ["block exchanges", "name exchanges", 
             "type recarray exgtype exgfile exgmnamea exgmnameb", 
             "reader urword", "optional"],
            ["block exchanges", "name exgtype", "in_record true", 
@@ -110,7 +108,7 @@ class ModflowNam(mfpackage.MFPackage):
             "reader urword"],
            ["block solutiongroup", "name mxiter", "type integer", 
             "reader urword", "optional true"],
-           ["block solutiongroup", "name solutionrecarray", 
+           ["block solutiongroup", "name solutiongroup", 
             "type recarray slntype slnfname slnmnames", "reader urword"],
            ["block solutiongroup", "name slntype", "type string", 
             "valid_values ims6", "in_record true", "tagged false", 
@@ -122,13 +120,12 @@ class ModflowNam(mfpackage.MFPackage):
             "in_record true", "shape (nslnmod)", "tagged false", 
             "reader urword"]]
 
-    def __init__(self, simulation, add_to_package_list=True, continue_=None,
+    def __init__(self, simulation, loading_package=False, continue_=None,
                  nocheck=None, memory_print_option=None, tdis6=None,
-                 modelrecarray=None, exchangerecarray=None, mxiter=None,
-                 solutionrecarray=None, fname=None, pname=None,
-                 parent_file=None):
+                 models=None, exchanges=None, mxiter=None, solutiongroup=None,
+                 fname=None, pname=None, parent_file=None):
         super(ModflowNam, self).__init__(simulation, "nam", fname, pname,
-                                         add_to_package_list, parent_file)        
+                                         loading_package, parent_file)        
 
         # set up variables
         self.continue_ = self.build_mfdata("continue",  continue_)
@@ -136,9 +133,7 @@ class ModflowNam(mfpackage.MFPackage):
         self.memory_print_option = self.build_mfdata("memory_print_option", 
                                                      memory_print_option)
         self.tdis6 = self.build_mfdata("tdis6",  tdis6)
-        self.modelrecarray = self.build_mfdata("modelrecarray",  modelrecarray)
-        self.exchangerecarray = self.build_mfdata("exchangerecarray", 
-                                                  exchangerecarray)
+        self.models = self.build_mfdata("models",  models)
+        self.exchanges = self.build_mfdata("exchanges",  exchanges)
         self.mxiter = self.build_mfdata("mxiter",  mxiter)
-        self.solutionrecarray = self.build_mfdata("solutionrecarray", 
-                                                  solutionrecarray)
+        self.solutiongroup = self.build_mfdata("solutiongroup",  solutiongroup)

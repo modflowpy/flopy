@@ -8,6 +8,7 @@ reader urword
 optional false
 longname use array-based input
 description indicates that array-based input will be used for the Evapotranspiration Package.  This keyword must be specified to use array-based input.
+default_value True
 
 block options
 name fixed_cell
@@ -167,6 +168,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 longname evapotranspiration surface
 description is the elevation of the ET surface ($L$).
+default_value 0.
 
 block period
 name rate
@@ -175,6 +177,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 longname evapotranspiration surface
 description is the maximum ET flux rate ($LT^{-1}$).
+default_value 1.e-3
 
 block period
 name depth
@@ -183,6 +186,7 @@ shape (ncol*nrow; ncpl)
 reader readarray
 longname extinction depth
 description is the ET extinction depth ($L$).
+default_value 1.0
 
 block period
 name aux(iaux)

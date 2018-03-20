@@ -35,7 +35,7 @@ def load_lak(mfnam, pth, run):
         apth = cpth
         compth = cpth
 
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True, forgive=False,
                                    exe_name=exe_name)
     assert m.load_fail is False
 
