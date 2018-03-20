@@ -35,4 +35,3 @@ from .mfgwfuzf import ModflowGwfuzf
 from .mfgwfmvr import ModflowGwfmvr
 from .mfgwfgnc import ModflowGwfgnc
 from .mfgwfoc import ModflowGwfoc
-from .mfgwfcsub import ModflowGwfcsub
