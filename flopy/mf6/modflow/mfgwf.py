@@ -87,11 +87,11 @@ class ModflowGwf(mfmodel.MFModel):
                                          **kwargs)
 
         self.name_file.list.set_data(list)
-        self.name_file.list.set_data(print_input)
-        self.name_file.list.set_data(print_flows)
-        self.name_file.list.set_data(save_flows)
-        self.name_file.list.set_data(newtonoptions)
-        self.name_file.list.set_data(packages)
+        self.name_file.print_input.set_data(print_input)
+        self.name_file.print_flows.set_data(print_flows)
+        self.name_file.save_flows.set_data(save_flows)
+        self.name_file.newtonoptions.set_data(newtonoptions)
+        self.name_file.packages.set_data(packages)
 
     @classmethod
     def load(cls, simulation, structure, modelname='NewModel',
