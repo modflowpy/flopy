@@ -2,7 +2,7 @@ import numpy as np
 from ..data.mfstructure import DatumType
 from ..data import mfstructure, mfdatautil, mfdata
 from collections import OrderedDict
-from ..mfbase import ExtFileAction
+from ..mfbase import ExtFileAction, MFFileParseException
 
 
 class MFScalar(mfdata.MFData):
@@ -100,7 +100,7 @@ class MFScalar(mfdata.MFData):
                          'operation.'.format(self._data_name,
                                              self.structure.get_datum_type())
             print(except_str)
-            raise mfstructure.MFFileParseException(except_str)
+            raise MFFileParseException(except_str)
 
     def get_file_entry(self, values_only=False, one_based=False,
                        ext_file_action=ExtFileAction.copy_relative_paths):
@@ -197,7 +197,7 @@ class MFScalar(mfdata.MFData):
                                             data_item_struct.name.lower(),
                                             current_line)
                 print(except_str)
-                raise mfstructure.MFFileParseException(except_str)
+                raise MFFileParseException(except_str)
 
             # read next word as data
             storage.set_data(storage.convert_data(arr_line[index_num],

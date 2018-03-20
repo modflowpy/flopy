@@ -6,7 +6,8 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..data.mfstructure import StructException, DatumType
+from ..mfbase import StructException
+from ..data.mfstructure import DatumType
 from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
 
@@ -531,10 +532,8 @@ class ModelDimensions(object):
             elif expression[2] == '/':
                 return value / int(expression[1])
             else:
-                except_str = 'ERROR: Expression "{}" contains an invalid ' \
-                             'operator and can not be ' \
-                             'resolved.'.format(expression)
-                print(except_str)
+                except_str = 'Expression "{}" contains an invalid operator ' \
+                             'and can not be resolved.'.format(expression)
                 raise StructException(except_str, '')
         else:
             return value

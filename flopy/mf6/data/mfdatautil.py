@@ -1,7 +1,7 @@
-import os
+import os, sys, inspect
 import numpy as np
-from textwrap import TextWrapper
 from copy import deepcopy
+from ..mfbase import MFDataException
 
 
 def clean_name(name):
@@ -127,16 +127,23 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
         # if layered data
         if layered and dimension_list[0] > 1:
-            data_with_header = ''
             if data_storage_type_list is not None and \
                     len(data_storage_type_list) != dimension_list[0]:
-                except_str = 'data_storage_type_list specified with the ' \
-                             'wrong size.  Size {} but expected to be ' \
-                             'the same as the number of layers, ' \
-                             '{}.'.format(len(data_storage_type_list),
-                                          dimension_list[0])
-                print(except_str)
-                raise mfstructure.MFDataException(except_str)
+                comment = 'data_storage_type_list specified with the ' \
+                          'wrong size.  Size {} but expected to be ' \
+                          'the same as the number of layers, ' \
+                          '{}.'.format(len(data_storage_type_list),
+                                       dimension_list[0])
+                type_, value_, traceback_ = sys.exc_info()
+
+                raise MFDataException(data_struct.get_model(),
+                                      data_struct.get_package(),
+                                      data_struct.path,
+                                      'generating array template',
+                                      data_struct.name,
+                                      inspect.stack()[0][3],
+                                      type_, value_, traceback_, comment,
+                                      model.simulation_data.debug)
             # build each layer
             data_with_header = []
             for layer in range(0, dimension_list[0]):

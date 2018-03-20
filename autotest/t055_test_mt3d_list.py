@@ -9,6 +9,11 @@ def test_mtlist():
         import pandas as pd
     except:
         return
+
+    mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
+    mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    df_gw, df_sw = mt.parse(forgive=False, start_datetime=None)
+
     mt_dir = os.path.join("..","examples","data","mt3d_test")
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir,"mcomp.list"))
     df_gw,df_sw = mt.parse(forgive=False, start_datetime="1-1-1970")

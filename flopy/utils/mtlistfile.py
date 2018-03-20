@@ -124,6 +124,7 @@ class MtListBudget(object):
         df_gw = pd.DataFrame(self.gw_data)
         df_gw.loc[:, "totim"] = df_gw.pop("totim_1")
 
+
         # if cumulative:
         #     keep = [c for c in df_gw.columns if "_flx" not in c]
         #     df_gw = df_gw.loc[:,keep]
@@ -139,7 +140,7 @@ class MtListBudget(object):
                                                                    unit=time_unit)
             df_gw.index = dts
         else:
-            df_gw.index = df_gw.totim_1
+            df_gw.index = df_gw.totim
         df_sw = None
         if len(self.sw_data) > 0:
             # trim the lists so that they are all the same lenght
@@ -164,10 +165,14 @@ class MtListBudget(object):
                 df_sw = self._diff(df_sw)
             if start_datetime is not None:
                 dts = pd.to_datetime(start_datetime) + pd.to_timedelta(
-                    df_sw.totim, unit=time_unit)
+                    df_sw.pop("totim"), unit=time_unit)
                 df_sw.index = dts
             else:
-                df_sw.index = df_sw.totim
+                df_sw.index = df_sw.pop("totim")
+
+        for col in df_gw.columns:
+            if "totim" in col:
+                df_gw.pop(col)
         return df_gw, df_sw
 
     def _diff(self, df):
@@ -178,7 +183,7 @@ class MtListBudget(object):
             return
         out_cols = [c for c in df.columns if "_out" in c]
         in_cols = [c for c in df.columns if "_in" in c]
-        out_base = set([c.replace("_out", '') for c in out_cols])
+        out_base =[c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
@@ -187,7 +192,7 @@ class MtListBudget(object):
         out_base.update(in_base)
         out_base = list(out_base)
         out_base.sort()
-        new = {"totim": df.totim}
+        new = {"totim":df.totim}
         for col in out_base:
             if col in out_dict:
                 odata = df.loc[:, out_dict[col]]
@@ -199,7 +204,7 @@ class MtListBudget(object):
                 idata = 0.0
             new[col] = idata - odata
 
-        return pd.DataFrame(new)
+        return pd.DataFrame(new,index=df.index)
 
     def _readline(self, f):
         line = f.readline().lower()
@@ -264,9 +269,9 @@ class MtListBudget(object):
 
     def _parse_gw_line(self, line):
         raw = line.lower().split(':')
-        item = raw[0].strip().replace(' ', '')
+        item = raw[0].strip().replace(' ', '_')
         ival = float(raw[1].split()[0])
-        oval = float(raw[1].split()[1])
+        oval = -1.0 * float(raw[1].split()[1])
         return item, ival, oval
 
     def _parse_sw(self, f, line):
@@ -336,9 +341,9 @@ class MtListBudget(object):
     def _parse_sw_line(self, line):
         # print(line)
         raw = line.strip().split('=')
-        citem = raw[0].strip().replace(" ", "")
+        citem = raw[0].strip().replace(" ", "_")
         cval = float(raw[1].split()[0])
-        fitem = raw[1].split()[-1].replace(" ", "")
+        fitem = raw[1].split()[-1].replace(" ", "_")
         fval = float(raw[2])
         # assert citem == fitem,"{0}, {1}".format(citem,fitem)
         return citem, cval, fval
