@@ -876,12 +876,26 @@ class MFDataItemStructure(object):
         return False
 
     @staticmethod
+    def _find_close_bracket(arr_line):
+        for index, word in enumerate(arr_line):
+            word = word.strip()
+            if len(word) > 0 and word[-1] == '}':
+                return index
+        return None
+
+    @staticmethod
     def _resolve_common(arr_line, common):
         if common is None:
             return arr_line
         assert (arr_line[2] in common and len(arr_line) >= 4)
+        close_bracket_loc = MFDataItemStructure._find_close_bracket(
+            arr_line[2:])
         resolved_str = common[arr_line[2]]
-        find_replace_str = ' '.join(arr_line[3:])
+        if close_bracket_loc is None:
+            find_replace_str = ' '.join(arr_line[3:])
+        else:
+            close_bracket_loc += 3
+            find_replace_str = ' '.join(arr_line[3:close_bracket_loc])
         find_replace_dict = ast.literal_eval(find_replace_str)
         for find_str, replace_str in find_replace_dict.items():
             resolved_str = resolved_str.replace(find_str, replace_str)
