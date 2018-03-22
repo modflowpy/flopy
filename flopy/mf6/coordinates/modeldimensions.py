@@ -452,8 +452,10 @@ class ModelDimensions(object):
                     if result:
                         shape_dimensions.append(result)
                     else:
-                        if item[0] == 'any1d' or item[0] == 'naux' or item[
-                            0] == 'nconrno' or item[0] == 'unknown':
+                        if item[0] == 'any1d' or item[0] == 'naux' or \
+                                        item[0] == 'nconrno' or \
+                                        item[0] == 'unknown' or \
+                                        item[0] == ':':
                             consistent_shape = False
                             shape_dimensions.append(-9999)
                         elif item[0] == 'any2d':

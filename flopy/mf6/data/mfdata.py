@@ -1061,11 +1061,10 @@ class DataStorage(object):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
-            except_str = 'ERROR: Can not convert {} to internal data. ' \
-                         'Exernal to internal file operations' \
+            except_str = 'Can not convert {} to internal data. ' \
+                         'Exernal to internal file operations ' \
                          'currently only supported for ndarrays. ' \
                          '{}'.format(path[-1], path,)
-            print(except_str)
             raise MFDataFileException(except_str)
         if layer_num is None:
             data_out = self._build_full_data(store_internal)
