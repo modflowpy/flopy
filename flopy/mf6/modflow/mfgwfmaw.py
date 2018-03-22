@@ -118,7 +118,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           also terminate with an error if information for a multi-aquifer well
           is specified more than once.
         * radius (double) radius for the multi-aquifer well.
-        * bottom (double) bottom elevation of the multi-aquifer well.
+        * bottom (double) bottom elevation of the multi-aquifer well. The well
+          bottom is reset to the cell bottom in the lowermost GWF cell
+          connection in cases where the specified well bottom is above the
+          bottom of this GWF cell.
         * strt (double) starting head for the multi-aquifer well.
         * condeqn (string) character string that defines the conductance
           equation that is used to calculate the saturated conductance for the
@@ -126,21 +129,20 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           include: SPECIFIED--character keyword to indicate the multi-aquifer
           well saturated conductance will be specified. THEIM--character
           keyword to indicate the multi-aquifer well saturated conductance will
-          be calculated using the Theim equation. SKIN--character keyword to
-          indicate that the multi-aquifer well saturated conductance will be
-          calculated using the screen top and bottom, screen hydraulic
-          conductivity, and skin radius. CUMULATIVE--character keyword to
-          indicate that the multi-aquifer well saturated conductance will be
-          calculated using a combination of the Theim equation and the screen
-          top and bottom, screen hydraulic conductivity, and skin radius. MEAN
-          --character keyword to indicate the multi-aquifer well saturated
-          conductance will be calculated using using the aquifer and screen top
-          and bottom, aquifer and screen hydraulic conductivity, and well and
-          skin radius.
+          be calculated using the Theim equation, which considers the cell top
+          and bottom, aquifer hydraulic conductivity, and effective cell and
+          well radius. SKIN--character keyword to indicate that the multi-
+          aquifer well saturated conductance will be calculated using the cell
+          top and bottom, aquifer and screen hydraulic conductivity, and well
+          and skin radius. CUMULATIVE--character keyword to indicate that the
+          multi-aquifer well saturated conductance will be calculated using a
+          combination of the Theim and SKIN equations. MEAN--character keyword
+          to indicate the multi-aquifer well saturated conductance will be
+          calculated using the aquifer and screen top and bottom, aquifer and
+          screen hydraulic conductivity, and well and skin radius.
         * ngwfnodes (integer) integer value that defines the number of GWF
-          nodes connected to this (WELLNO) multi-aquifer well. One or more
-          screened intervals can be connected to the same GWF node. NGWFNODES
-          must be greater than zero.
+          nodes connected to this (WELLNO) multi-aquifer well. NGWFNODES must
+          be greater than zero.
         * aux (double) represents the values of the auxiliary variables for
           each multi-aquifer well. The values of auxiliary variables must be
           present for each multi-aquifer well. The values must be specified in
@@ -172,16 +174,22 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. One or
+          more screened intervals can be connected to the same CELLID if
+          CONDEQN for a well is MEAN. The program will terminate with an error
+          if MAW wells using SPECIFIED, THEIM, SKIN, or CUMULATIVE conductance
+          equations have more than one connection to the same CELLID.
         * scrn_top (double) value that defines the top elevation of the screen
-          for the multi-aquifer well connection. SCRN_TOP can be any value if
-          CONDEQN is SPECIFIED or THEIM. If the specified SCRN_TOP is greater
-          than the top of the GWF cell it is set equal to the top of the cell.
+          for the multi-aquifer well connection. If the specified SCRN_TOP is
+          greater than the top of the GWF cell it is set equal to the top of
+          the cell. SCRN_TOP can be any value if CONDEQN is SPECIFIED, THEIM,
+          SKIN, or COMPOSITE and SCRN_TOP is set to the top of the cell.
         * scrn_bot (double) value that defines the bottom elevation of the
-          screen for the multi-aquifer well connection. SCRN_BOT can be any
-          value if CONDEQN is SPECIFIED or THEIM. If the specified SCRN_BOT is
-          less than the bottom of the GWF cell it is set equal to the bottom of
-          the cell.
+          screen for the multi-aquifer well connection. If the specified
+          SCRN_BOT is less than the bottom of the GWF cell it is set equal to
+          the bottom of the cell. SCRN_BOT can be any value if CONDEQN is
+          SPECIFIED, THEIM, SKIN, or COMPOSITE and SCRN_BOT is set to the
+          bottom of the cell.
         * hk_skin (double) value that defines the skin (filter pack) hydraulic
           conductivity (if CONDEQN for the multi-aquifer well is SKIN,
           CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer
@@ -199,6 +207,22 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,
           HEAD_LIMIT, SHUT_OFF, RATE_SCALING, and AUXILIARY.
+            status : [string]
+                * status (string) keyword option to define well status. STATUS
+                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
+                  ACTIVE.
+            flowing_wellrecord : [fwelev, fwcond, fwrlen]
+                * fwelev (double) elevation used to determine whether or not
+                  the well is flowing.
+                * fwcond (double) conductance used to calculate the discharge
+                  of a free flowing well. Flow occurs when the head in the well
+                  is above the well top elevation (FWELEV).
+                * fwrlen (double) length used to reduce the conductance of the
+                  flowing well. When the head in the well drops below the well
+                  top plus the reduction length, then the conductance is
+                  reduced. This reduction length can be used to improve the
+                  stability of simulations with flowing wells so that there is
+                  not an abrupt change in flowing well rates.
             rate : [double]
                 * rate (double) is the volumetric pumping rate for the multi-
                   aquifer well. A positive value indicates recharge and a
@@ -209,41 +233,6 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   time series by entering the time-series name in place of a
                   numeric value. By default, the RATE for each multi-aquifer
                   well is zero.
-            rate_scalingrecord : [pump_elevation, scaling_length]
-                * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
-                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
-                * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
-            shutoffrecord : [minrate, maxrate]
-                * minrate (double) is the minimum rate that a well must exceed
-                  to shutoff a well during a stress period. The well will shut
-                  down during a time step if the flow rate to the well from the
-                  aquifer is less than MINRATE. If a well is shut down during a
-                  time step, reactivation of the well cannot occur until the
-                  next time step to reduce oscillations. MINRATE must be less
-                  than maxrate.
-                * maxrate (double) is the maximum rate that a well must exceed
-                  to reactivate a well during a stress period. The well will
-                  reactivate during a timestep if the well was shutdown during
-                  the previous time step and the flow rate to the well from the
-                  aquifer exceeds maxrate. Reactivation of the well cannot
-                  occur until the next time step if a well is shutdown to
-                  reduce oscillations. maxrate must be greater than MINRATE.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
             well_head : [double]
                 * well_head (double) is the head in the multi-aquifer well.
                   WELL_HEAD is only applied to constant head (STATUS is
@@ -265,22 +254,41 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   MODFLOW but use of the RATE\_SCALING option instead of the
                   HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
                   `OFF'.
-            flowing_wellrecord : [fwelev, fwcond, fwrlen]
-                * fwelev (double) elevation used to determine whether or not
-                  the well is flowing.
-                * fwcond (double) conductance used to calculate the discharge
-                  of a free flowing well. Flow occurs when the head in the well
-                  is above the well top elevation (FWELEV).
-                * fwrlen (double) length used to reduce the conductance of the
-                  flowing well. When the head in the well drops below the well
-                  top plus the reduction length, then the conductance is
-                  reduced. This reduction length can be used to improve the
-                  stability of simulations with flowing wells so that there is
-                  not an abrupt change in flowing well rates.
-            status : [string]
-                * status (string) keyword option to define well status. STATUS
-                  can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
-                  ACTIVE.
+            shutoffrecord : [minrate, maxrate]
+                * minrate (double) is the minimum rate that a well must exceed
+                  to shutoff a well during a stress period. The well will shut
+                  down during a time step if the flow rate to the well from the
+                  aquifer is less than MINRATE. If a well is shut down during a
+                  time step, reactivation of the well cannot occur until the
+                  next time step to reduce oscillations. MINRATE must be less
+                  than maxrate.
+                * maxrate (double) is the maximum rate that a well must exceed
+                  to reactivate a well during a stress period. The well will
+                  reactivate during a timestep if the well was shutdown during
+                  the previous time step and the flow rate to the well from the
+                  aquifer exceeds maxrate. Reactivation of the well cannot
+                  occur until the next time step if a well is shutdown to
+                  reduce oscillations. maxrate must be greater than MINRATE.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
+                  By default, PUMP_ELEVATION is set equal to the bottom of the
+                  largest GWF node number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (SCALING_LENGTH) below which the pumping rate is reduced. The
+                  default value for SCALING_LENGTH is the well radius.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
     fname : String
         File name for this package.
     pname : String

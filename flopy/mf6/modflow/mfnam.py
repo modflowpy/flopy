@@ -56,7 +56,8 @@ class ModflowNam(mfpackage.MFPackage):
           Solution (IMS6) is the only supported option in this version.
         * slnfname (string) name of file containing solution input.
         * slnmnames (string) is the array of model names to add to this
-          solution.
+          solution. The number of model names is determined by the number of
+          model names the user provides on this line.
     fname : String
         File name for this package.
     pname : String
@@ -117,8 +118,7 @@ class ModflowNam(mfpackage.MFPackage):
             "preserve_case true", "in_record true", "tagged false", 
             "reader urword"],
            ["block solutiongroup", "name slnmnames", "type string", 
-            "in_record true", "shape (nslnmod)", "tagged false", 
-            "reader urword"]]
+            "in_record true", "shape (:)", "tagged false", "reader urword"]]
 
     def __init__(self, simulation, loading_package=False, continue_=None,
                  nocheck=None, memory_print_option=None, tdis6=None,

@@ -210,81 +210,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           keyword and values. Keyword values that can be used to start the
           SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
           EVAPORATION, RUNOFF, DIVERSION, UPSTREAM_FRACTION, and AUXILIARY.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  volumetric rate of diffuse overland runoff that enters the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default,
-                  runoff rates are zero for each reach.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (DIVFLOW) rate for the streamflow
-                  routing reach. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            inflow : [string]
-                * inflow (string) real or character value that defines the
-                  volumetric inflow rate for the streamflow routing reach. If
-                  the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, inflow rates are zero for each
-                  reach.
-            rainfall : [string]
-                * rainfall (string) real or character value that defines the
-                  volumetric rate per unit area of water added by precipitation
-                  directly on the streamflow routing reach. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, rainfall rates are zero for each reach.
-            upstream_fraction : [double]
-                * upstream_fraction (double) real value that defines the
-                  fraction of upstream flow (USTRF) from each upstream reach
-                  that is applied as upstream inflow to the reach. The sum of
-                  all USTRF values for all reaches connected to the same
-                  upstream reach must be equal to one.
-            manning : [string]
-                * manning (string) real or character value that defines the
-                  Manning's roughness coefficient for the reach. MANNING must
-                  be greater than zero. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-            stage : [string]
-                * stage (string) real or character value that defines the stage
-                  for the reach. The specified STAGE is only applied if the
-                  reach uses the simple routing option. If STAGE is not
-                  specified for reaches that use the simple routing option, the
-                  specified stage is set to the top of the reach. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-            evaporation : [string]
-                * evaporation (string) real or character value that defines the
-                  volumetric rate per unit area of water subtracted by
-                  evaporation from the streamflow routing reach. A positive
-                  evaporation rate should be provided. If the Options block
-                  includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, evaporation rates are zero for each reach.
             status : [string]
                 * status (string) keyword option to define stream reach status.
                   STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS
@@ -302,6 +227,81 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   respectively, to ensure that the active reach receives all of
                   the downstream outflow from the upstream reach. By default,
                   STATUS is ACTIVE.
+            manning : [string]
+                * manning (string) real or character value that defines the
+                  Manning's roughness coefficient for the reach. MANNING must
+                  be greater than zero. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the reach. The specified STAGE is only applied if the
+                  reach uses the simple routing option. If STAGE is not
+                  specified for reaches that use the simple routing option, the
+                  specified stage is set to the top of the reach. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            inflow : [string]
+                * inflow (string) real or character value that defines the
+                  volumetric inflow rate for the streamflow routing reach. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, inflow rates are zero for each
+                  reach.
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  volumetric rate per unit area of water subtracted by
+                  evaporation from the streamflow routing reach. A positive
+                  evaporation rate should be provided. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, evaporation rates are zero for each reach.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. By default,
+                  runoff rates are zero for each reach.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (DIVFLOW) rate for the streamflow
+                  routing reach. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            upstream_fraction : [double]
+                * upstream_fraction (double) real value that defines the
+                  fraction of upstream flow (USTRF) from each upstream reach
+                  that is applied as upstream inflow to the reach. The sum of
+                  all USTRF values for all reaches connected to the same
+                  upstream reach must be equal to one.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
     fname : String
         File name for this package.
     pname : String
