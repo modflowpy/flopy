@@ -519,10 +519,9 @@ class ModelDimensions(object):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
-                    except_str = 'ERROR: Expression "{}" contains an invalid '\
+                    except_str = 'Expression "{}" contains an invalid '\
                                  'second term and can not be ' \
                                  'resolved.'.format(expression)
-                    print(except_str)
                     raise StructException(except_str, '')
 
             if expression[2] == '+':

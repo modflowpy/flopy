@@ -6,10 +6,8 @@ import numpy as np
 from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
-from .mfbase import MFFileMgmt, MFDataFileException, MFDataException, \
-                    MFInvalidTransientBlockHeaderException, \
-                    MFFileParseException, ReadAsArraysException, \
-                    MFFileWriteException
+from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
+                    MFInvalidTransientBlockHeaderException
 from .data.mfstructure import DatumType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
@@ -1181,7 +1179,6 @@ class MFPackage(PackageContainer):
                                     data = dataset.get_data(key=key[0])
                                 except (IOError,
                                         OSError,
-                                        MFDataFileException,
                                         MFDataException):
                                     # TODO: Handle case where external file
                                     # path has been moved
@@ -1197,7 +1194,6 @@ class MFPackage(PackageContainer):
                                 data = dataset.get_data()
                             except (IOError,
                                     OSError,
-                                    MFDataFileException,
                                     MFDataException):
                                 # TODO: Handle case where external file
                                 # path has been moved
@@ -1256,11 +1252,15 @@ class MFPackage(PackageContainer):
             fd_input_file = open(self.get_file_path(), 'r')
         except OSError as e:
             if e.errno == errno.ENOENT:
-                excpt_str = 'File {} of type {} could not be opened. ' \
-                            '{}'.format(self.get_file_path(),
-                                        self.package_type, self.path)
-                print(excpt_str)
-                raise MFFileParseException(excpt_str)
+                message = 'File {} of type {} could not be opened' \
+                          '.'.format(self.get_file_path(), self.package_type)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.model_name,
+                                      self.structure.get_package(),
+                                      self.path, 'loading package file',
+                                      None, inspect.stack()[0][3],
+                                      type_, value_, traceback_, message,
+                                      self._simulation_data.debug)
 
         try:
             self._load_blocks(fd_input_file, strict)
@@ -1453,12 +1453,16 @@ class MFPackage(PackageContainer):
     def _write_blocks(self, fd, ext_file_action):
         # verify that all blocks are valid
         if not self.is_valid():
-            excpt_str = 'Unable to write out model file "{}" due to the ' \
+            message = 'Unable to write out model file "{}" due to the ' \
                         'following error: ' \
                         '{} ({})'.format(self.filename, self.last_error,
                                          self.path)
-            print(excpt_str)
-            raise MFFileWriteException(excpt_str)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.model_name, self._get_pname(),
+                                  self.path, 'writing package blocks',
+                                  None, inspect.stack()[0][3],
+                                  type_, value_, traceback_, message,
+                                  self._simulation_data.debug)
 
         # write initial comments
         pkg_hdr_comments_path = self.path + ('pkg_hdr_comments',)

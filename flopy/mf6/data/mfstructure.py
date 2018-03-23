@@ -83,7 +83,6 @@ class Dfn(object):
             package_abbr = os.path.splitext(f)[0]
             if package_abbr not in file_order:
                 file_order.append(package_abbr)
-                # raise Exception('File not in file_order: ', f)
         return [fname + '.dfn' for fname in file_order if
                 fname + '.dfn' in files]
 
@@ -953,7 +952,6 @@ class MFDataItemStructure(object):
             return DatumType.repeating_record
         else:
             exc_text = 'Data item type "{}" not supported.'.format(type_string)
-            print(exc_text)
             raise StructException(exc_text, self.path)
 
     def get_rec_type(self):

@@ -6,6 +6,28 @@ from shutil import copyfile
 from enum import Enum
 
 
+# internal handled exceptions
+class MFInvalidTransientBlockHeaderException(Exception):
+    """
+    Exception related to parsing a transient block header
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self,
+                           "MFInvalidTransientBlockHeaderException: {}".format(
+                               error))
+
+
+class ReadAsArraysException(Exception):
+    """
+    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
+    """
+
+    def __init__(self, error):
+        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
+
+
+# external exceptions for users
 class FlopyException(Exception):
     """
     General Flopy Exception
@@ -27,44 +49,6 @@ class StructException(Exception):
                            "StructException: {} ({})".format(error, location))
 
 
-class MFDataFileException(Exception):
-    """
-    Exception related to parsing MODFLOW data files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataFileException: {}".format(error))
-
-
-class MFFileParseException(Exception):
-    """
-    Exception related to parsing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileParseException: {}".format(error))
-
-
-class MFInvalidTransientBlockHeaderException(MFFileParseException):
-    """
-    Exception related to parsing a transient block header
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self,
-                           "MFInvalidTransientBlockHeaderException: {}".format(
-                               error))
-
-
-class MFFileWriteException(Exception):
-    """
-    Exception related to the writing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileWriteException: {}".format(error))
-
-
 class MFDataException(Exception):
     """
     Exception related to MODFLOW input/output data
@@ -76,7 +60,7 @@ class MFDataException(Exception):
                  mfdata_except=None):
         if mfdata_except is not None and \
                 isinstance(mfdata_except, MFDataException):
-            # copy constructure - copying values from original exception
+            # copy constructor - copying values from original exception
             self.model = mfdata_except.model
             self.package = mfdata_except.package
             self.current_process = mfdata_except.current_process
@@ -161,24 +145,6 @@ class MFDataException(Exception):
         #    error_message = '{}\nCall Stack\n{}'.format(error_message,
         #                                                tb_string)
         Exception.__init__(self, error_message)
-
-
-class MFFileExistsException(Exception):
-    """
-    MODFLOW input file requested does not exist
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileExistsException: {}".format(error))
-
-
-class ReadAsArraysException(Exception):
-    """
-    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
 
 
 class PackageContainerType(Enum):

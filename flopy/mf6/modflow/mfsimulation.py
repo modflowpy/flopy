@@ -9,8 +9,7 @@ import os.path
 from flopy.mbase import run_model
 from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                              PackageContainerType, MFDataException, \
-                             StructException, MFFileExistsException, \
-                             MFFileParseException
+                             FlopyException
 from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.data.mfstructure import DatumType
@@ -296,10 +295,9 @@ class MFSimulation(PackageContainer):
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
-            excpt_str = 'Invalid metadata file.  Unable to load MODFLOW file' \
-                        ' structure metadata.'
-            print(excpt_str)
-            raise StructException(excpt_str, 'root')
+            excpt_str = 'Invalid package metadata.  Unable to load MODFLOW ' \
+                        'file structure metadata.'
+            raise FlopyException(excpt_str)
 
         # initialize
         self.dimensions = None
@@ -880,7 +878,7 @@ class MFSimulation(PackageContainer):
         else:
             excpt_str = 'Exchange file "{}" can not be found' \
                         '.'.format(filename)
-            raise MFFileExistsException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def get_mvr_file(self, filename):
         """
@@ -903,7 +901,7 @@ class MFSimulation(PackageContainer):
         else:
             excpt_str = 'MVR file "{}" can not be ' \
                         'found.'.format(filename)
-            raise MFFileExistsException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def get_gnc_file(self, filename):
         """
@@ -926,7 +924,7 @@ class MFSimulation(PackageContainer):
         else:
             excpt_str = 'GNC file "{}" can not be ' \
                         'found.'.format(filename)
-            raise MFFileExistsException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def register_exchange_file(self, package):
         """
@@ -948,7 +946,7 @@ class MFSimulation(PackageContainer):
             if exgtype is None or exgmnamea is None or exgmnameb is None:
                 excpt_str = 'Exchange packages require that exgtype, ' \
                             'exgmnamea, and exgmnameb are specified.'
-                raise MFFileParseException(excpt_str)
+                raise FlopyException(excpt_str)
 
             self._exchange_files[package.filename] = package
             try:
@@ -1135,7 +1133,7 @@ class MFSimulation(PackageContainer):
             excpt_str = 'Invalid package type "{}".  Unable to register ' \
                         'package.'.format(package.package_type)
             print(excpt_str)
-            raise MFFileParseException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def register_model(self, model, model_type, model_name, model_namefile):
         """

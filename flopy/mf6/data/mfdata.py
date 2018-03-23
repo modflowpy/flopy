@@ -7,7 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 import struct
 import numpy as np
-from ..mfbase import MFDataException, MFDataFileException, \
+from ..mfbase import MFDataException, \
                      MFInvalidTransientBlockHeaderException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
@@ -1061,11 +1061,18 @@ class DataStorage(object):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
-            except_str = 'Can not convert {} to internal data. ' \
-                         'Exernal to internal file operations ' \
-                         'currently only supported for ndarrays. ' \
-                         '{}'.format(path[-1], path,)
-            raise MFDataFileException(except_str)
+            message= 'Can not convert {} to internal data. Exernal to ' \
+                     'internal file operations currently only supported ' \
+                     'for ndarrays.'.format(path[-1])
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'opening external file for writing',
+                self.data_dimensions.structure.name, inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
         if layer_num is None:
             data_out = self._build_full_data(store_internal)
         else:
@@ -1248,7 +1255,6 @@ class DataStorage(object):
                     inspect.stack()[0][3], type_, value_,
                     traceback_, message,
                     self._simulation_data.debug)
-
             index = 1
             while index < len(arr_line):
                 if isinstance(arr_line[index], str):
@@ -1311,7 +1317,7 @@ class DataStorage(object):
                         try:
                             multiplier = self.convert_data(arr_line[index+1],
                                                            self._data_type)
-                        except:
+                        except Exception as ex:
                             message = 'Data array {} contains an OPEN/CLOSE ' \
                                       'with an invalid multiplier following ' \
                                       'the "factor" keyword.' \
@@ -1324,7 +1330,7 @@ class DataStorage(object):
                                 'processing open/close line',
                                 data_dim.structure.name, inspect.stack()[0][3],
                                 type_, value_, traceback_, message,
-                                self._simulation_data.debug)
+                                self._simulation_data.debug, ex)
                         index += 2
                     elif arr_line[index].lower() == 'iprn' and \
                             index + 1 < len(arr_line):
@@ -1356,7 +1362,7 @@ class DataStorage(object):
                 if key.lower() == 'factor':
                     try:
                         multiplier = self.convert_data(value, self._data_type)
-                    except:
+                    except Exception as ex:
                         message = 'Data array {} contains an OPEN/CLOSE ' \
                                   'with an invalid multiplier following the ' \
                                   '"factor" keyword.' \
@@ -1369,7 +1375,7 @@ class DataStorage(object):
                             'processing open/close line',
                             data_dim.structure.name, inspect.stack()[0][3],
                             type_, value_, traceback_, message,
-                            self._simulation_data.debug)
+                            self._simulation_data.debug, ex)
                 if key.lower() == 'iprn':
                     print_format = value
                 if key.lower() == 'binary':
@@ -1983,9 +1989,9 @@ class MFTransient(object):
         transient_key = block_header.get_transient_key()
         if isinstance(transient_key, int):
             if not self._verify_sp(transient_key):
-                except_str = 'Invalid transient key "{}" in block' \
-                             ' "{}"'.format(transient_key, block_header.name)
-                raise MFInvalidTransientBlockHeaderException(except_str)
+                message = 'Invalid transient key "{}" in block' \
+                          ' "{}"'.format(transient_key, block_header.name)
+                raise MFInvalidTransientBlockHeaderException(message)
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
         self._current_key = transient_key
@@ -2070,7 +2076,6 @@ class MFData(object):
         self._data_name = structure.name
         self._data_storage = None
         self._data_type = structure.type
-        #self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
             self._data_dimensions = DataDimensions(dimensions, structure)
