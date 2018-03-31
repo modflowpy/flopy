@@ -12,7 +12,7 @@ import flopy as fp
 
 pcg_fname = os.path.join("..","examples", "data", "pcg_fmt_test", "fixfmt.pcg")
 
-def pcg_fmt_test(pcg_fname):
+def pcg_fmt_test():
     # mf2k container - this will pass
     m2k = fp.modflow.Modflow(version='mf2k')
     m2k.pcg = fp.modflow.ModflowPcg.load(model=m2k, 
@@ -30,4 +30,4 @@ def pcg_fmt_test(pcg_fname):
     return
     
 if __name__ == '__main__':
-    pcg_fmt_test(pcg_fname)
+    pcg_fmt_test()
