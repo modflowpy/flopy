@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
+from ..utils.recarray_utils import create_empty_recarray
 
 
 class ModflowWel(Package):
@@ -247,10 +248,7 @@ class ModflowWel(Package):
         dtype = ModflowWel.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-
-        d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None, check=True):

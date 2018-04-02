@@ -31,7 +31,8 @@ class StructuredSpatialReference(object):
         the counter-clockwise rotation (in degrees) of the grid
 
     proj4_str: str
-        a PROJ4 string that identifies the grid in space. warning: case sensitive!
+        a PROJ4 string that identifies the grid in space. warning: case
+        sensitive!
 
     Attributes
     ----------
@@ -68,8 +69,8 @@ class StructuredSpatialReference(object):
         
     """
 
-    def __init__(self, delr=1.0, delc=1.0, lenuni=1, nlay=1, xul=None, yul=None, rotation=0.0,
-                 proj4_str="EPSG:4326", **kwargs):
+    def __init__(self, delr=1.0, delc=1.0, lenuni=1, nlay=1, xul=None,
+                 yul=None, rotation=0.0, proj4_str="EPSG:4326", **kwargs):
         self.delc = np.atleast_1d(np.array(delc))
         self.delr = np.atleast_1d(np.array(delr))
         self.nlay = nlay
@@ -302,8 +303,8 @@ class StructuredSpatialReference(object):
 
     def _set_xygrid(self):
         self._xgrid, self._ygrid = np.meshgrid(self.xedge, self.yedge)
-        self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid, self.rotation,
-                                               0, self.yedge[0])
+        self._xgrid, self._ygrid = self.rotate(self._xgrid, self._ygrid,
+                                               self.rotation, 0, self.yedge[0])
         self._xgrid += self.xul
         self._ygrid += self.yul - self.yedge[0]
 
@@ -402,7 +403,8 @@ class StructuredSpatialReference(object):
     def get_xcenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every column in the grid in model space - not offset or rotated.
+        coordinate for every column in the grid in model space - not offset
+        or rotated.
 
         """
         x = np.add.accumulate(self.delr) - 0.5 * self.delr
@@ -411,7 +413,8 @@ class StructuredSpatialReference(object):
     def get_ycenter_array(self):
         """
         Return a numpy one-dimensional float array that has the cell center x
-        coordinate for every row in the grid in model space - not offset of rotated.
+        coordinate for every row in the grid in model space - not offset
+        of rotated.
 
         """
         Ly = np.add.reduce(self.delc)
@@ -437,15 +440,18 @@ class StructuredSpatialReference(object):
 
         """
         length_y = np.add.reduce(self.delc)
-        yedge = np.concatenate(([length_y], length_y - np.add.accumulate(self.delc)))
+        yedge = np.concatenate(([length_y], length_y -
+                                np.add.accumulate(self.delc)))
         return yedge
 
     def write_gridSpec(self, filename):
         """ write a PEST-style grid specification file
         """
         f = open(filename, 'w')
-        f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul, self.rotation))
+        f.write("{0:10d} {1:10d}\n".format(self.delc.shape[0],
+                                           self.delr.shape[0]))
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul, self.yul,
+                                                         self.rotation))
         for c in self.delc:
             f.write("{0:15.6E} ".format(c))
         f.write('\n')
@@ -530,7 +536,8 @@ class VertexSpatialReference(object):
     rotation : float
         the counter-clockwise rotation (in degrees) of the grid
     proj4_str: str
-        a PROJ4 string that identifies the grid in space. warning: case sensitive!
+        a PROJ4 string that identifies the grid in space. warning:
+        case sensitive!
     Attributes
     ----------
     xedge : ndarray
@@ -557,10 +564,12 @@ class VertexSpatialReference(object):
     accessed
 
     """
-    def __init__(self, xvdict=None, yvdict=None, nlay=1, xadj=0, yadj=0, rotation=0.,
-                 lenuni=1., proj4_str='EPSG:4326', **kwargs):
+    def __init__(self, xvdict=None, yvdict=None, nlay=1, xadj=0, yadj=0,
+                 rotation=0., lenuni=1., proj4_str='EPSG:4326', **kwargs):
 
-        assert len(xvdict) == len(yvdict), 'len(xvdict): {} != len(yvdict): {}'.format(len(xvdict), len(yvdict))
+        assert len(xvdict) == len(yvdict), \
+            'len(xvdict): {} != len(yvdict): {}'.format(len(xvdict),
+                                                        len(yvdict))
 
         self._xv = np.array([xvdict[idx] for idx, key in enumerate(xvdict)])
         self._yv = np.array([yvdict[idx] for idx, key in enumerate(yvdict)])
@@ -765,13 +774,16 @@ class VertexSpatialReference(object):
         self._xvarr, self._yvarr = self._get_rotated_vertices()
         self._xvdict = {idx: verts for idx, verts in enumerate(self._xvarr)}
         self._yvdict = {idx: verts for idx, verts in enumerate(self._yvarr)}
-        self._xyvdict = {idx: np.array(list(zip(self._xvdict[idx], self._yvdict[idx]))) for idx in self._xvdict}
-        return self._xvarr, self._yvarr, self._xvdict, self._yvdict, self._xyvdict
+        self._xyvdict = {idx: np.array(list(zip(self._xvdict[idx],
+                                                self._yvdict[idx])))
+                         for idx in self._xvdict}
+        return self._xvarr, self._yvarr, self._xvdict, self._yvdict, \
+               self._xyvdict
 
     def _set_xcenter_array(self):
         """
-        Gets the x vertex center location of all cells sets to a 1d array for further interpolation.
-        Useful when using Scipy.griddata to contour data
+        Gets the x vertex center location of all cells sets to a 1d array for
+        further interpolation. Useful when using Scipy.griddata to contour data
 
         """
         if self._xvarr is None:
@@ -783,8 +795,8 @@ class VertexSpatialReference(object):
 
     def _set_ycenter_array(self):
         """
-        Gets the x vertex center location of all cells sets to a 1d array for further interpolation.
-        Useful when using Scipy.griddata to contour data
+        Gets the x vertex center location of all cells sets to a 1d array for
+        further interpolation. Useful when using Scipy.griddata to contour data
 
         Returns
         -------
@@ -817,7 +829,8 @@ class SpatialReference(object):
         rotation : float
             the counter-clockwise rotation (in degrees) of the grid
         proj4_str: str
-            a PROJ4 string that identifies the grid in space. warning: case sensitive!
+            a PROJ4 string that identifies the grid in space. warning:
+            case sensitive!
         xadj : float
             vertex grid: x vertex adjustment factor
         yadj : float
@@ -829,14 +842,15 @@ class SpatialReference(object):
         distype: str
             model grid discretization type
     """
-    def __new__(cls, delr=1.0, delc=1.0, xvdict=None, yvdict=None, lenuni=1, nlay=1,
-                xul=None, yul=None, xadj=0., yadj=0., rotation=0.0,
+    def __new__(cls, delr=1.0, delc=1.0, xvdict=None, yvdict=None, lenuni=1,
+                nlay=1, xul=None, yul=None, xadj=0., yadj=0., rotation=0.0,
                 proj4_str="EPSG:4326", distype='structured'):
 
         if distype == 'structured':
             new = object.__new__(StructuredSpatialReference)
-            new.__init__(delr=delr, delc=delc, lenuni=lenuni, nlay=nlay, xul=xul,
-                         yul=yul, rotation=rotation, proj4_str=proj4_str)
+            new.__init__(delr=delr, delc=delc, lenuni=lenuni, nlay=nlay,
+                         xul=xul, yul=yul, rotation=rotation,
+                         proj4_str=proj4_str)
 
         elif distype == 'vertex':
             new = object.__new__(VertexSpatialReference)
@@ -844,9 +858,11 @@ class SpatialReference(object):
                          rotation=rotation, proj4_str=proj4_str, nlay=nlay)
 
         elif distype == 'unstructured':
-            raise NotImplementedError('Unstructured discretization not yet implemented')
+            raise NotImplementedError('Unstructured discretization not yet '
+                                      'implemented')
 
         else:
-            raise TypeError('Discretation type {} not supported'.format(distype))
+            raise TypeError('Discretation type {} not '
+                            'supported'.format(distype))
 
         return new

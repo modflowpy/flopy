@@ -3,9 +3,10 @@ Instructions for making a FloPy release
 
 ## Update master
 
-1.  Commit the changes to the `develop` branch and push to the GitHub site.
-2.  Change to the `master` branch in SourceTree.
-3.  Merge the `develop` branch into the `master` branch.
+1.  Update MODFLOW 6 dfn files and MODFLOW 6 package classes by running the `update_flopy.py` script in the [MODFLOW 6 github repo](https://github.com/MODFLOW-USGS/modflow6). Make sure you have checked out the latest MODFLOW 6 release on `MASTER` or the soon to be released `DEVELOP` branch in SourceTree prior to running the `update_flopy.py` script. 
+2.  Commit the changes to the `develop` branch and push to the GitHub site.
+3.  Change to the `master` branch in SourceTree.
+4.  Merge the `develop` branch into the `master` branch.
 
 
 ## Update the release version number
@@ -15,11 +16,24 @@ Instructions for making a FloPy release
 
 ## Build USGS release notes
 
-1.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+1.  Manually run pre-commit.py to update version information using:
+
+    ```
+    python pre-commit.py
+    ```
+
+2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
 
     ```
     pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md
     ```
+
+
+## Update the example notebooks
+
+1.  Rerun all of the notebooks in the `examples\Notebooks` directory.
+2.  Rerun all of the notebooks in the `examples\Notebooks\groundwater_paper` directory.
+
 
 ## Finalizing the release
 
@@ -36,21 +50,23 @@ Instructions for making a FloPy release
     conda search pypandoc
     conda search twine
     ```
-    
-    If they are not installed, install one or both using using:
+
+
+2.  If they are not installed, install one or both using using:
+
 
     ```
     conda install pypandoc
     conda install twine
     ```
  
-2.  Create the source zip file in a terminal using:
+3.  Create the source zip file in a terminal using:
 
     ```
     python setup.py sdist --format=zip
     ```
 
-3.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):
+4.  Upload the release to PyPi using (*make sure* `twine` *is installed using conda*):
 
     ```
     twine upload dist/flopy-version.zip
@@ -64,7 +80,7 @@ Instructions for making a FloPy release
 2.  Calculate the sha256 checksum for the `*.tar.gz` using:
   
     ```
-    openssl sha256 flopy-version.tar.gz 
+    openssl sha256 flopy-version.tar.gz
     ```
 
     from a terminal.

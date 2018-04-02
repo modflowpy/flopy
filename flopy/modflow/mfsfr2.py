@@ -4,13 +4,14 @@ import sys
 import textwrap
 import os
 import numpy as np
+import warnings
 import copy
 from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
-import matplotlib.pyplot as plt
 from ..utils import SpatialReference
+from ..utils.recarray_utils import create_empty_recarray
 
 try:
     import pandas as pd
@@ -336,8 +337,8 @@ class ModflowSfr2(Package):
         self.nsfrsets = nsfrsets  # max number trailing waves sets
 
         # if nstrm < 0 (MF-2005 only)
-        self.irtflag = irtflg  # switch for transient streamflow routing (> 0 = kinematic wave)
-        # if irtflag > 0
+        self.irtflg = irtflg  # switch for transient streamflow routing (> 0 = kinematic wave)
+        # if irtflg > 0
         self.numtim = numtim  # number of subtimesteps used for routing
         self.weight = weight  # time weighting factor used to calculate the change in channel storage
         self.flwtol = flwtol  # streamflow tolerance for convergence of the kinematic wave equation
@@ -349,11 +350,11 @@ class ModflowSfr2(Package):
                 self.reach_data[n] = reach_data[n]
 
         # assign node numbers if there are none (structured grid)
-        if np.diff(
-                self.reach_data.node).max() == 0 and 'DIS' in self.parent.get_package_list():
+        if np.diff(self.reach_data.node).max() == 0 and self.parent.has_package('DIS'):
             # first make kij list
             lrc = self.reach_data[['k', 'i', 'j']].copy()
-            lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+            #lrc = (lrc.view((int, len(lrc.dtype.names)))).tolist()
+            lrc = lrc.tolist()
             self.reach_data['node'] = self.parent.dis.get_node(lrc)
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=['iseg', 'ireach'])
@@ -376,14 +377,24 @@ class ModflowSfr2(Package):
         self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
-                self.segment_data[i] = self.get_empty_segment_data(nss)
+                nseg = len(segment_data[i])
+                self.segment_data[i] = self.get_empty_segment_data(nseg)
                 for n in segment_data[i].dtype.names:
+                    #inds = (segment_data[i]['nseg'] -1).astype(int)
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
-        if len(self.segment_data[0]) == 1 or \
-                                np.diff(self.segment_data[
-                                            0].nseg).max() != 0 and np.diff(
-                    self.segment_data[0].outseg).max() != 0:
+        if np.diff(self.reach_data.iseg).max() != 0 and \
+                np.diff(self.segment_data[0].nseg).max() != 0 \
+                and np.diff(self.segment_data[0].outseg).max() != 0:
+            if len(self.segment_data[0]) == 1:
+                self.segment_data[0]['nseg'] = 1
+                self.reach_data['iseg'] = 1
+
+            consistent_seg_numbers = len(set(self.reach_data.iseg).difference(
+                set(self.segment_data[0].nseg))) == 0
+            if not consistent_seg_numbers:
+                warnings.warn("Inconsistent segment numbers of reach_data and segment_data")
+
             # first convert any not_a_segment_values to 0
             for v in self.not_a_segment_values:
                 self.segment_data[0].outseg[
@@ -516,9 +527,7 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_reach_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nreaches, len(dtype)), dtype=dtype)
-        d[:, :] = default_value
-        d = np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = create_empty_recarray(nreaches, dtype, default_value=default_value)
         d['reachID'] = np.arange(1, nreaches + 1)
         return d
 
@@ -528,9 +537,8 @@ class ModflowSfr2(Package):
         dtype = ModflowSfr2.get_default_segment_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        d = np.zeros((nsegments, len(dtype)), dtype=dtype)
-        d[:, :] = default_value
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        d = create_empty_recarray(nsegments, dtype, default_value=default_value)
+        return d
 
     @staticmethod
     def get_default_reach_dtype(structured=True):
@@ -1000,10 +1008,16 @@ class ModflowSfr2(Package):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
         segment_data = self.segment_data[0]
-        ireach = []
-        for iseg in segment_data.nseg:
-            nreaches = np.sum(reach_data.iseg == iseg)
-            ireach += list(range(1, nreaches + 1))
+        #ireach = []
+        #for iseg in segment_data.nseg:
+        #    nreaches = np.sum(reach_data.iseg == iseg)
+        #    ireach += list(range(1, nreaches + 1))
+        reach_counts = np.bincount(reach_data.iseg)[1:]
+        reach_counts = dict(zip(range(1, len(reach_counts) +1),
+                                reach_counts))
+        ireach = [list(range(1, reach_counts[s] + 1))
+                   for s in segment_data.nseg]
+        ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
     def set_outreaches(self):
@@ -1119,6 +1133,24 @@ class ModflowSfr2(Package):
             all_upsegs[per] = {u: list(set(upsegs[u])) for u in outsegs}
         return all_upsegs
 
+    def get_variable_by_stress_period(self, varname):
+
+        import numpy.lib.recfunctions as rfn
+        dtype = []
+        all_data = np.zeros((self.nss, self.nper), dtype=float)
+        for per in range(self.nper):
+            inds = self.segment_data[per].nseg - 1
+            all_data[inds, per] = self.segment_data[per][varname]
+            dtype.append(('{}{}'.format(varname, per), float))
+        isvar = all_data.sum(axis=1) != 0
+        ra = np.core.records.fromarrays(all_data[isvar].transpose().copy(), dtype=dtype)
+        segs = self.segment_data[0].nseg[isvar]
+        isseg = np.array([True if s in segs else False for s in self.reach_data.iseg])
+        isinlet = isseg & (self.reach_data.ireach == 1)
+        rd = self.reach_data[isinlet][['k', 'i', 'j', 'iseg', 'ireach']].copy()
+        ra = rfn.merge_arrays([rd, ra], flatten=True, usemask=False)
+        return ra.view(np.recarray)
+
     def repair_outsegs(self):
         isasegment = np.in1d(self.segment_data[0].outseg,
                              self.segment_data[0].nseg)
@@ -1222,7 +1254,7 @@ class ModflowSfr2(Package):
         -------
         ax : matplotlib.axes._subplots.AxesSubplot object
         """
-
+        import matplotlib.pyplot as plt
         if not pd:
             print('This method requires pandas')
             return
@@ -1364,13 +1396,14 @@ class ModflowSfr2(Package):
                                                            self.isuzn,
                                                            self.nsfrsets))
         if self.nstrm < 0:
-            f_sfr.write('{:.0f} {:.0f} {:.0f} {:.0f} '.format(self.isfropt,
-                                                              self.nstrail,
+            f_sfr.write('{:.0f} '.format(self.isfropt))
+            if self.isfropt > 1:
+                f_sfr.write('{:.0f} {:.0f} {:.0f} '.format(self.nstrail,
                                                               self.isuzn,
                                                               self.nsfrsets))
         if self.nstrm < 0 or self.transroute:
-            f_sfr.write('{:.0f} '.format(self.irtflag))
-            if self.irtflag < 0:
+            f_sfr.write('{:.0f} '.format(self.irtflg))
+            if self.irtflg > 0:
                 f_sfr.write('{:.0f} {:.8f} {:.8f} '.format(self.numtim,
                                                            self.weight,
                                                            self.flwtol))
@@ -1660,6 +1693,7 @@ class ModflowSfr2(Package):
                                         asrecarray=True)
         recarray2shp(rd, geoms, f, **kwargs)
 
+
     def export_outlets(self, f, **kwargs):
         """Export point shapefile showing locations where streamflow is leaving
         the model (outset=0).
@@ -1678,6 +1712,37 @@ class ModflowSfr2(Package):
         y0 = m.sr.ycentergrid[rd.i, rd.j]
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
+
+    def export_transient_variable(self, f, varname, **kwargs):
+        """Export point shapefile showing locations with
+        a given segment_data variable applied. For example, segments
+        where streamflow is entering or leaving the upstream end of a stream segment (FLOW)
+        or where RUNOFF is applied. Cell centroids of the first reach of segments with
+        non-zero terms of varname are exported; values of varname are exported by
+        stress period in the attribute fields (e.g. flow0, flow1, flow2... for FLOW
+        in stress periods 0, 1, 2...
+
+        Parameters
+        ----------
+        f : str, filename
+        varname : str
+            Variable in SFR Package dataset 6a (see SFR package documentation)
+
+        """
+        from flopy.utils.geometry import Point
+        from flopy.export.shapefile_utils import recarray2shp
+
+        rd = self.reach_data
+        if np.min(rd.outreach) == np.max(rd.outreach):
+            self.set_outreaches()
+        ra = self.get_variable_by_stress_period(varname.lower())
+
+        # get the cell centers for each reach
+        m = self.parent
+        x0 = m.sr.xcentergrid[ra.i, ra.j]
+        y0 = m.sr.ycentergrid[ra.i, ra.j]
+        geoms = [Point(x, y) for x, y in zip(x0, y0)]
+        recarray2shp(ra, geoms, f, **kwargs)
 
     @staticmethod
     def ftype():
@@ -1776,7 +1841,7 @@ class check:
         http://stackoverflow.com/questions/22865877/how-do-i-write-to-multiple-fields-of-a-structured-array
         """
         txt = ''
-        array = array.copy()
+        array = array.view(np.recarray).copy()
         if isinstance(col1, np.ndarray):
             array = recfunctions.append_fields(array, names='tmp1', data=col1,
                                                asrecarray=True)
@@ -1809,7 +1874,7 @@ class check:
                 # currently failed_info[cols] results in a warning. Not sure
                 # how to do this properly with a recarray.
                 failed_info = recfunctions.append_fields(
-                    failed_info[cols].copy(),
+                    failed_info[cols].view(np.recarray).copy(),
                     names='diff',
                     data=diff,
                     asrecarray=True)
@@ -2547,6 +2612,8 @@ def _fmt_string(array, float_format='{}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += '{:.0f} '
         elif (vtype == 'f'):
@@ -2567,6 +2634,8 @@ def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
+        if vtype == 'v':
+            continue
         if (vtype == 'i'):
             fmt_string += ['{:.0f}']
         elif (vtype == 'f'):
@@ -2651,17 +2720,18 @@ def _parse_1c(line, reachinput, transroute):
             nsfrsets = int(line.pop(0))
     if nstrm < 0:
         isfropt = int(line.pop(0))
-        nstrail = int(line.pop(0))
-        isuzn = int(line.pop(0))
-        nsfrsets = int(line.pop(0))
+        if isfropt > 1:
+            nstrail = int(line.pop(0))
+            isuzn = int(line.pop(0))
+            nsfrsets = int(line.pop(0))
 
     irtflg, numtim, weight, flwtol = na, na, na, na
     if nstrm < 0 or transroute:
         irtflg = int(_pop_item(line))
         if irtflg > 0:
             numtim = int(line.pop(0))
-            weight = int(line.pop(0))
-            flwtol = int(line.pop(0))
+            weight = float(line.pop(0))
+            flwtol = float(line.pop(0))
 
     # auxillary variables (MODFLOW-LGR)
     option = [line[i] for i in np.arange(1, len(line)) if

@@ -771,8 +771,16 @@ class Package(object):
                                                 count=itmp)
                                 current = np.array(d, dtype=current.dtype)
                             else:
-                                current = np.genfromtxt(oc_filename,
-                                                        dtype=current.dtype)
+                                #current = np.genfromtxt(oc_filename,
+                                #                         dtype=current.dtype)
+                                #if len(current.shape) == 1:
+                                cd = current.dtype
+                                current = np.loadtxt(oc_filename).transpose()
+                                if current.ndim == 1:
+                                    current = np.atleast_2d(current).transpose()
+                                #current = np.atleast_2d(np.loadtxt(oc_filename,
+                                #                                   dtype=current.dtype)).transpose()
+                                current = np.core.records.fromarrays(current,dtype=cd)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
@@ -780,8 +788,7 @@ class Package(object):
                                 " :" + str(e))
                         assert current.shape[
                                    0] == itmp, "Package.load() error: open/close rec array from file " + \
-                                               oc_filename + " shape (" + str(
-                            current.shape) + \
+                                               oc_filename + " shape (" + str(current.shape) + \
                                                ") does not match itmp: {0:d}".format(
                                                    itmp)
                         break

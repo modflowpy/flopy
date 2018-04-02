@@ -12,7 +12,7 @@ Models and Packages
 The following is a list of the classes available to work with MODFLOW 6 models.  These classes should support all of the options available in the current version of MODFLOW 6.
 
 * MFSimulation
-* MFModel
+* ModflowGwf
 * ModflowNam
 * ModflowTdis
 * ModflowGwfgwf
@@ -58,11 +58,10 @@ jupyter Notebooks
 -----------------------------------------------
 Instructions for using the new MODFLOW 6 capabilities in Flopy are described in the following Jupyter Notebooks.
 
-1. Building the simple lake model ([flopy3_mf6_A_simple-model](../examples/Notebooks/flopy3_mf6_A_simple-model.ipynb) Notebook)
-2. Building a complex model ([flopy3_mf6_B_complex-model](../examples/Notebooks/flopy3_mf6_B_complex-model.ipynb) Notebook)
-3. Building an LGR model (coming soon)
-4. Understanding FloPy data objects for MODFLOW 6 (coming soon)
-5. Loading models, making changes, and rerunning (coming soon)
+1. Tutorial of MODFLOW 6 capabilities in Flopy ([flopy3_mf6_tutorial](../examples/Notebooks/flopy3_mf6_tutorial.ipynb) Notebook)
+2. Building the simple lake model ([flopy3_mf6_A_simple-model](../examples/Notebooks/flopy3_mf6_A_simple-model.ipynb) Notebook)
+3. Building a complex model ([flopy3_mf6_B_complex-model](../examples/Notebooks/flopy3_mf6_B_complex-model.ipynb) Notebook)
+4. Building an LGR model (coming soon)
 
 
 Future Plans

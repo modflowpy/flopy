@@ -42,7 +42,7 @@ def write_gridlines_shapefile(filename, sr):
                         "importing shapefile - try pip install pyshp")
 
     wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-    wr.field("number", "N", 20, 0)
+    wr.field("number", "N", 18, 0)
     for i, line in enumerate(sr.get_grid_lines()):
         wr.poly([line])
         wr.record(i)
@@ -91,9 +91,9 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
         assert array.shape == (sr.nrow, sr.ncol)
         array[np.where(np.isnan(array))] = nan_val
         if array.dtype in [np.int, np.int32, np.int64]:
-            wr.field(name, "N", 20, 0)
+            wr.field(name, "N", 18, 0)
         else:
-            wr.field(name, "N", 20, 12)
+            wr.field(name, "N", 18, 12)
         arrays.append(array)
 
     for i in range(sr.nrow):
@@ -106,7 +106,6 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             wr.record(*rec)
     wr.save(filename)
     print('wrote {}'.format(filename))
-
 
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
@@ -136,7 +135,6 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
         w.record(*r)
     w.save(filename)
     print('wrote {}'.format(filename))
-    # write the projection file
     # write the projection file
     write_prj(filename, epsg, prj)
 
@@ -315,8 +313,8 @@ def enforce_10ch_limit(names):
 def get_pyshp_field_info(dtypename):
     """Get pyshp dtype information for a given numpy dtype.
     """
-    fields = {'int': ('N', 20, 0),
-              '<i': ('N', 20, 0),
+    fields = {'int': ('N', 18, 0),
+              '<i': ('N', 18, 0),
               'float': ('F', 20, 12),
               '<f': ('F', 20, 12),
               'bool': ('L', 1),
@@ -450,7 +448,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
 def write_prj(shpname, epsg=None, prj=None):
     # write the projection file
-    prjname = shpname.split('.')[0] + '.prj'
+    prjname = shpname.replace('.shp', '.prj')
     # write projection file from epsg code
     if epsg is not None:
         prjtxt = getprj(epsg)
@@ -458,5 +456,9 @@ def write_prj(shpname, epsg=None, prj=None):
             with open(prjname, 'w') as output:
                 output.write(prjtxt)
     # copy a supplied prj file
-    if prj is not None:
+    elif prj is not None:
         shutil.copy(prj, prjname)
+    else:
+        print('No CRS information for writing a .prj file.\n'
+              'Supply an epsg code or .prj file path to the '
+              'model spatial reference or .export() method.')

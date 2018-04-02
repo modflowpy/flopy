@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import sys
+import platform
 import shutil
 
 exclude = ['flopy_swi2_ex2.py', 'flopy_swi2_ex5.py']
@@ -53,6 +54,12 @@ def import_from(mod, name):
 
 
 def run_scripts(fn):
+    # only run script autotests on released versions of python 3.6
+    pvstr = platform.python_version()
+    if '3.6.' not in pvstr and '+' not in pvstr:
+        print('skipping...{} on python {}'.format(fn, pvstr))
+        return
+
     # import run function from scripts
     s = os.path.splitext(fn)[0]
     run = import_from(s, 'run')
@@ -74,6 +81,8 @@ def run_scripts(fn):
 
 
 def test_notebooks():
+
+    # get list of scripts to run
     files = copy_scripts()
 
     for fn in files:
@@ -81,7 +90,9 @@ def test_notebooks():
 
 
 if __name__ == '__main__':
+
+    # get list of scripts to run
     files = copy_scripts()
-    print(files)
+
     for fn in files:
         run_scripts(fn)

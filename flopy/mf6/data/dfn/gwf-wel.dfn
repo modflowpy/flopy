@@ -57,7 +57,7 @@ type double precision
 reader urword
 optional true
 longname cell fractional thickness for reduced pumping
-description keyword and real value that defines the fraction of the cell thickness used as an interval for smoothly adjusting negative pumping rates to 0 in cells with head values less than or equal to the bottom of the cell. Negative pumping rates are adjusted to 0 or a smaller negative value when the head in the cell is equal to or less than the calculated interval above the cell bottom. \texttt{auto\_flow\_reduce} is set to 0.1 if the specified value is less than or equal to zero. By default, negative pumping rates are not reduced during a simulation.
+description keyword and real value that defines the fraction of the cell thickness used as an interval for smoothly adjusting negative pumping rates to 0 in cells with head values less than or equal to the bottom of the cell. Negative pumping rates are adjusted to 0 or a smaller negative value when the head in the cell is equal to or less than the calculated interval above the cell bottom. AUTO\_FLOW\_REDUCE is set to 0.1 if the specified value is less than or equal to zero. By default, negative pumping rates are not reduced during a simulation.
 
 block options
 name ts_filerecord
@@ -170,7 +170,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name periodrecarray
+name stress_period_data
 type recarray cellid q aux boundname
 shape (maxbound)
 reader urword

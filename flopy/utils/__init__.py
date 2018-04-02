@@ -32,7 +32,7 @@ from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
 from .observationfile import HydmodObs, SwrObs
 from .reference import SpatialReference, crs, TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
-    SwrListBudget
+    SwrListBudget, Mf6ListBudget
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
@@ -40,3 +40,5 @@ from .zonbud import ZoneBudget, read_zbarray, write_zbarray
 from .mfgrdfile import MfGrdFile
 from .postprocessing import get_transmissivities
 from .sfroutputfile import SfrFile
+from .recarray_utils import create_empty_recarray, ra_slice
+from .mtlistfile import MtListBudget

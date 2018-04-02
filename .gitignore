@@ -66,6 +66,8 @@ examples/Testing/.idea
 examples/Testing/data
 examples/Testing/.ipynb_checkpoints
 examples/scripts/data
+examples/groundwater_paper/Notebooks/temp
+examples/groundwater_paper/Notebooks/.ipynb_checkpoints
 
 
 autotest/*.bin

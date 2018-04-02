@@ -12,7 +12,7 @@ import sys
 import numpy as np
 
 from ..pakbase import Package
-
+from ..utils.recarray_utils import create_empty_recarray
 
 class ModflowFhb(Package):
     """
@@ -282,9 +282,7 @@ class ModflowFhb(Package):
         # get an empty recarray that correponds to dtype
         dtype = ModflowFhb.get_default_dtype(nbdtim=nbdtim,
                                              structured=structured, head=head)
-        d = np.zeros((ncells, len(dtype)), dtype=dtype)
-        d[:, :] = -1.0E+10
-        return np.core.records.fromarrays(d.transpose(), dtype=dtype)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 
     @staticmethod
     def get_default_dtype(nbdtim=1, structured=True, head=False):

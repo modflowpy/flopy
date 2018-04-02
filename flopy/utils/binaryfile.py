@@ -638,11 +638,6 @@ class CellBudgetFile(object):
         text = header['text']
         if isinstance(text, bytes):
             text = text.decode()
-        if self.nrow > 10000 or self.ncol > 10000:
-            s = 'Possible error. text="{}" - '.format(text.strip()) + \
-                'ncol ({}) '.format(self.ncol) + \
-                'or nrow ({}) > 10000 '.format(self.nrow)
-            warnings.warn(s)
         if self.nrow < 0 or self.ncol < 0:
             raise Exception("negative nrow, ncol")
         self.file.seek(0, 2)
@@ -652,8 +647,6 @@ class CellBudgetFile(object):
         ipos = 0
         while ipos < self.totalbytes:
             header = self._get_header()
-            #if self.verbose:
-            #    print(header)
             self.nrecords += 1
             totim = header['totim']
             if totim == 0:

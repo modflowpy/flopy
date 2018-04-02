@@ -298,7 +298,7 @@ class ListBudget(object):
         # pad an array with zeros and times with [days, hours, minutes, seconds]
         times = np.array([0 for i in range(4-len(times))] + times)
         # convert all to seconds
-        time2sec = np.array([24 * 60 * 60, 24 * 60, 60, 1])
+        time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
         times_sec = np.sum(times * time2sec)
         # return in the requested units
         if units == 'seconds':
@@ -345,8 +345,10 @@ class ListBudget(object):
             names.insert(0, 'stress_period')
             names.insert(0, 'time_step')
             names.insert(0, 'totim')
-            return self.inc[names].view(np.recarray), self.cum[names].view(
-                    np.recarray)
+            return self.inc[names].view(np.recarray), \
+                   self.cum[names].view(np.recarray)
+
+
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
@@ -731,7 +733,7 @@ class ListBudget(object):
         cu_str = ll[0]
 
         idx = line2.index('=') + 1
-        fx_str = line2[idx:].strip()
+        fx_str = line2[idx:].split()[0].strip()
 
         #
         # cu_str = line[self.cumu_idxs[0]:self.cumu_idxs[1]]
@@ -824,6 +826,16 @@ class MfListBudget(ListBudget):
 
     def set_budget_key(self):
         self.budgetkey = 'VOLUMETRIC BUDGET FOR ENTIRE MODEL'
+        return
+
+
+class Mf6ListBudget(ListBudget):
+    """
+
+    """
+
+    def set_budget_key(self):
+        self.budgetkey = 'VOLUME BUDGET FOR ENTIRE MODEL'
         return
 
 

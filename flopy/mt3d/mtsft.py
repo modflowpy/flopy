@@ -76,7 +76,9 @@ class Mt3dSft(Package):
         The length of the array is equal to the number of stream reaches and
         starting concentration values should be entered in the same order
         that individual reaches are entered for record set 2 in the SFR2
-        input file.
+        input file. To specify starting concentrations for other species in a
+        multi-species simulation, include additional keywords, such as
+        coldsf2, coldsf3, and so forth.
     dispsf : array of floats
         Is the dispersion coefficient [L2 T-1] for each stream reach in the
         simulation and can vary for each simulated component of the
@@ -84,8 +86,9 @@ class Mt3dSft(Package):
         of simulated stream reaches times the number of simulated components.
         Values of dispersion for each reach should be entered in the same
         order that individual reaches are entered for record set 2 in the
-        SFR2 input file.  The first NSTRM entries correspond to NCOMP = 1,
-        with subsequent entries for each NCOMP simulated species.
+        SFR2 input file.  To specify dispsf for other species in a
+        multi-species simulation, include additional keywords, such as
+        dispsf2, dispsf3, and so forth.
     nobssf : int
         Specifies the number of surface flow observation points for
         monitoring simulated concentrations in streams.
@@ -179,7 +182,7 @@ class Mt3dSft(Package):
 
     """
 
-    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
+    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data=None,
@@ -247,13 +250,30 @@ class Mt3dSft(Package):
         self.iprtxmd = iprtxmd
 
         # Set 1D array values
-        self.coldsf = Util2d(model, (nsfinit,), np.float32, coldsf,
+        self.coldsf = [Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)
+                             array_free_format=model.free_format)]
 
-        self.dispsf = Util2d(model, (nsfinit,), np.float32, dispsf,
+        self.dispsf = [Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)
+                             array_free_format=model.free_format)]
+        ncomp = model.ncomp
+        # handle the miult
+        if ncomp > 1:
+            for icomp in range(2,ncomp + 1):
+                for base_name,attr in zip(["coldsf","dispsf"],[self.coldsf,self.dispsf]):
+                    name = "{0}{1}".format(base_name,icomp)
+                    if name in kwargs:
+                        val = kwargs.pop(name)
+                    else:
+                        print("SFT: setting {0} for component {1} to zero, kwarg name {2}".
+                              format(base_name,icomp,name))
+                        val = 0.0
+                    u2d = Util2d(model, (nsfinit,), np.float32, val,
+                           name=name, locat=self.unit_number[0],
+                           array_free_format=model.free_format)
+                    attr.append(u2d)
+
 
         # Set streamflow observation locations
         self.nobssf = nobssf
@@ -265,12 +285,12 @@ class Mt3dSft(Package):
         else:
             self.dtype = self.get_default_dtype(ncomp)
 
-        if sf_stress_period_data is None:
+        if sf_stress_period_data is None or len(sf_stress_period_data) == 0:
             self.sf_stress_period_data = None
         else:
             self.sf_stress_period_data = MfList(self, model=model,
                                                 data=sf_stress_period_data)
-
+            self.sf_stress_period_data.list_free_format = True
         self.parent.add_package(self)
         return
 
@@ -283,7 +303,7 @@ class Mt3dSft(Package):
         type_list = [("node", np.int), ("isfbctyp", np.int), \
                      ("cbcsf0", np.float32)]
         if ncomp > 1:
-            for icomp in range(1, ncomp + 1):
+            for icomp in range(1, ncomp):
                 comp_name = "cbcsf{0:d}".format(icomp)
                 type_list.append((comp_name, np.float32))
         dtype = np.dtype(type_list)
@@ -329,10 +349,12 @@ class Mt3dSft(Package):
                 'iprtxmd\n')
 
         # Item 3
-        f.write(self.coldsf.get_file_entry())
+        for coldsf in self.coldsf:
+            f.write(coldsf.get_file_entry())
 
         # Item 4
-        f.write(self.dispsf.get_file_entry())
+        for dispsf in self.dispsf:
+            f.write(dispsf.get_file_entry())
 
         # Item 5
         f.write('{0:10d}                 # nobssf\n'.format(self.nobssf))
@@ -521,17 +543,29 @@ class Mt3dSft(Package):
 
         # Item 3 (COLDSF(NRCH)) Initial concentration
         if model.verbose:
-            print('   loading NSFINIT...')
+            print('   loading COLDSF...')
 
             if model.free_format:
                 print('   Using MODFLOW style array reader utilities to ' \
-                      'read NSFINIT')
+                      'read COLDSF')
             elif model.array_format == 'mt3d':
                 print('   Using historic MT3DMS array reader utilities to ' \
-                      'read NSFINIT')
+                      'read COLDSF')
 
-        coldsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'nsfinit',
+
+        coldsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'coldsf1',
                              ext_unit_dict, array_format=model.array_format)
+
+        kwargs = {}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = "coldsf" + str(icomp)
+                if model.verbose:
+                    print('   loading {}...'.format(name))
+                u2d = Util2d.load(f, model, (1,nsfinit), np.float32,
+                                  name, ext_unit_dict, array_format=model.array_format)
+                kwargs[name] = u2d
+
 
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
         if model.verbose:
@@ -542,8 +576,16 @@ class Mt3dSft(Package):
                 print('   Using historic MT3DMS array reader utilities to ' \
                       'read DISPSF')
 
-        dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
+        dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf1',
                              ext_unit_dict, array_format=model.array_format)
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = "dispsf" + str(icomp)
+                if model.verbose:
+                    print('   loading {}...'.format(name))
+                u2d = Util2d.load(f, model, (1,nsfinit), np.float32,
+                                  name, ext_unit_dict, array_format=model.array_format)
+                kwargs[name] = u2d
 
         # Item 5 NOBSSF
         if model.verbose:
@@ -636,7 +678,7 @@ class Mt3dSft(Package):
                       crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
                       sf_stress_period_data=sf_stress_period_data,
-                      unitnumber=unitnumber, filenames=filenames)
+                      unitnumber=unitnumber, filenames=filenames,**kwargs)
         return sft
 
     @staticmethod

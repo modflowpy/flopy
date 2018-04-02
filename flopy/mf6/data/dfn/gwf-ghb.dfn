@@ -162,7 +162,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name periodrecarray
+name stress_period_data
 type recarray cellid bhead cond aux boundname
 shape (maxbound)
 reader urword

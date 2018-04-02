@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from ..utils.flopy_io import _pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
-from ..utils import Util2d
+from ..utils import Util2d, Transient2d
 
 
 class ModflowUzf1(Package):
@@ -85,11 +85,6 @@ class ModflowUzf1(Package):
         waves allowed within an unsaturated zone cell is equal to
         NTRAIL2*NSETS2. An error will occur if the number of waves in a cell
         exceeds this value. (default is 20)
-    nuzgag : integer
-        equal to the number of cells (one per vertical column) that will be
-        specified for printing detailed information on the unsaturated zone
-        water budget and water content. A gage also may be used to print
-        the budget summed over all model cells.  (default is 0)
     surfdep : float
         The average height of undulations, D (Figure 1 in UZF documentation),
         in the land surface altitude. (default is 1.0)
@@ -178,6 +173,14 @@ class ModflowUzf1(Package):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
         CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
+    uzgage : dict of lists or list of lists
+        Dataset 8 in UZF Package documentation. Each entry in the dict
+        is keyed by iftunit.
+            Dict of lists: If iftunit is negative, the list is empty.
+            If iftunit is positive, the list includes [IUZROW, IUZCOL, IUZOPT]
+            List of lists:
+            Lists follow the format described in the documentation:
+            [[IUZROW, IUZCOL, IFTUNIT, IUZOPT]] or [[-IFTUNIT]]
     netflux : list of [Unitrech (int), Unitdis (int)]
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When NETFLUX is specified, 
@@ -193,19 +196,31 @@ class ModflowUzf1(Package):
         are the sum of discharge values for the UZF, SFR2, and LAK packages. 
         Values are averaged over the period between output times.
         
-[NETFLUX unitrech unitdis]
-    finf : float
-        used to define the infiltration rates (LT-1) at land surface for each
+        [NETFLUX unitrech unitdis]
+    finf : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the infiltration rates (LT-1) at land surface for each
         vertical column of cells. If FINF is specified as being greater than
         the vertical hydraulic conductivity then FINF is set equal to the
         vertical unsaturated hydraulic conductivity. Excess water is routed
         to streams or lakes when IRUNFLG is not zero, and if SFR2 or LAK3 is
         active. (default is 1.0E-8)
-    pet : float
-        used to define the ET demand rates (L1T-1) within the ET extinction
+    pet : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the ET demand rates (L1T-1) within the ET extinction
         depth interval for each vertical column of cells. (default is 5.0E-8)
-    extdp : float
-        used to define the ET extinction depths. The quantity of ET removed
+    extdp : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the ET extinction depths. The quantity of ET removed
         from a cell is limited by the volume of water stored in the
         unsaturated zone above the extinction depth. If ground water is
         within the ET extinction depth, then the rate removed is based
@@ -213,8 +228,12 @@ class ModflowUzf1(Package):
         the ET extinction depth. The linear decrease is the same method used
         in the Evapotranspiration Package (McDonald and Harbaugh, 1988, chap.
         10). (default is 15.0)
-    extwc : float
-        used to define the extinction water content below which ET cannot be
+    extwc : float, 2-D array, or dict of {kper:value}
+        where kper is the zero-based stress period
+        to assign a value to.  Value should be cast-able to Util2d instance
+        can be a scalar, list, or ndarray is the array value is constant in
+        time.
+        Used to define the extinction water content below which ET cannot be
         removed from the unsaturated zone.  EXTWC must have a value between
         (THTS-Sy) and THTS, where Sy is the specific yield specified in
         either the LPF or BCF Package. (default is 0.1)
@@ -243,6 +262,11 @@ class ModflowUzf1(Package):
 
     Attributes
     ----------
+    nuzgag : integer
+        equal to the number of cells (one per vertical column) that will be
+        specified for printing detailed information on the unsaturated zone
+        water budget and water content. A gage also may be used to print
+        the budget summed over all model cells.  (default is 0)
 
     Methods
     -------
@@ -265,7 +289,7 @@ class ModflowUzf1(Package):
 
     def __init__(self, model,
                  nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,
-                 iuzfcb2=None, ntrail2=10, nsets=20, nuzgag=0,
+                 iuzfcb2=None, ntrail2=10, nsets=20,
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
                  thtr=0.15, thti=0.20,
@@ -311,6 +335,15 @@ class ModflowUzf1(Package):
 
         ipos = 3
         if uzgag is not None:
+            # convert to dict
+            if isinstance(uzgag, list):
+                d = {}
+                for l in uzgag:
+                    if len(l) > 1:
+                        d[l[2]] = [l[0], l[1], l[3]]
+                    else:
+                        d[-np.abs(l[0])] = []
+                uzgag = d
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
@@ -320,6 +353,12 @@ class ModflowUzf1(Package):
                                       extension=uzgagext,
                                       package=ModflowUzf1.ftype())
                 ipos += 1
+                # handle case where iftunit is listed in the values
+                # (otherwise, iftunit will be written instead of iuzopt)
+                if len(value) == 4:
+                    uzgag[key] = value[:2] + value[-1:]
+                elif len(value) == 1:
+                    uzgag[-np.abs(key)] = []
 
         # Fill namefile items
         name = [ModflowUzf1.ftype()]
@@ -383,7 +422,6 @@ class ModflowUzf1(Package):
         if iuzfopt > 0:
             self.ntrail2 = ntrail2
             self.nsets = nsets
-        self.nuzgag = nuzgag
         self.surfdep = surfdep
 
         # Data Set 2
@@ -422,49 +460,41 @@ class ModflowUzf1(Package):
                                name='thti')
 
         # Data Set 8
-        # [IUZROW] [IUZCOL] IFTUNIT [IUZOPT]
-        self.uzgag = uzgag
-        if uzgag is not None:
-            if len(uzgag) != nuzgag:
-                print(
-                    "WARNING!\nItem 8 doesn't correspond with NUZGAG.\nNUZGAG set to 0")
-                self.nuzgag = 0
-                self.uzgag = []
-            else:
-                self.uzgag = uzgag
+        # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
+        self._uzgag = uzgag
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
-        self.finf = []
-        for i, a in enumerate(self._2list(finf)):
-            b = Util2d(model, (nrow, ncol), np.float32, a,
-                       name='finf_' + str(i + 1))
-            self.finf.append(b)
+
+        self.finf = Transient2d(model, (nrow, ncol), np.float32,
+                                finf, name='finf')
         if ietflg > 0:
-            # Data Set 12
-            # [PET (NCOL, NROW)] – U2DREL
-            self.pet = []
-            for i, a in enumerate(self._2list(pet)):
-                b = Util2d(model, (nrow, ncol), np.float32, a,
-                           name='pet_' + str(i + 1))
-                self.pet.append(b)
-            # Data Set 14
-            # [EXTDP (NCOL, NROW)] – U2DREL
-            self.extdp = []
-            for i, a in enumerate(self._2list(extdp)):
-                b = Util2d(model, (nrow, ncol), np.float32, a,
-                           name='extdp_' + str(i + 1))
-                self.extdp.append(b)
-            # Data Set 16
-            # [EXTWC (NCOL, NROW)] – U2DREL
-            if iuzfopt > 0:
-                self.extwc = []
-                for i, a in enumerate(self._2list(extwc)):
-                    b = Util2d(model, (nrow, ncol), np.float32, a,
-                               name='extwc_' + str(i + 1))
-                    self.extwc.append(b)
+            self.pet = Transient2d(model, (nrow, ncol), np.float32,
+                                   pet, name='pet')
+            self.extdp = Transient2d(model, (nrow, ncol), np.float32,
+                                    extdp, name='extdp')
+            self.extwc = Transient2d(model, (nrow, ncol), np.float32,
+                                    extwc, name='extwc')
         self.parent.add_package(self)
+
+    def __setattr__(self, key, value):
+        if key == "uzgag":
+            print('Uzgag must be set by the constructor; \
+            modifying this attribute requires creating a new ModflowUzf1 instance')
+        else:
+            super(ModflowUzf1, self).__setattr__(key, value)
+
+    @property
+    def nuzgag(self):
+        if self.uzgag is None:
+            return 0
+        else:
+            return len(self.uzgag)
+
+    @property
+    def uzgag(self):
+        return self._uzgag
 
     def _2list(self, arg):
         # input as a 3D array
@@ -582,49 +612,30 @@ class ModflowUzf1(Package):
                     values[0] += 1
                     values[1] += 1
                     comment = ' #IUZROW IUZCOL IFTUNIT IUZOPT'
+                    values.insert(2, iftunit)
                     for v in values:
                         f_uzf.write('{:10d}'.format(v))
                     f_uzf.write('{}\n'.format(comment))
                 else:
                     comment = ' #IFTUNIT'
-                    for v in values:
-                        f_uzf.write('{:10d}'.format(v))
+                    f_uzf.write('{:10d}'.format(iftunit))
                     f_uzf.write('{}\n'.format(comment))
+
+        def write_transient(name):
+            invar, var = self.__dict__[name].get_kper_entry(n)
+
+            comment = ' #{} for stress period '.format(name) + str(n + 1)
+            f_uzf.write('{0:10d}{1:20s}\n'.format(invar, comment))
+            if (invar >= 0):
+                f_uzf.write(var)
+
         for n in range(nper):
-            comment = ' #NUZF1 for stress period ' + str(n + 1)
-            if n < len(self.finf):
-                nuzf1 = 1
-            else:
-                nuzf1 = -1
-            f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf1, comment))
-            if n < len(self.finf):
-                f_uzf.write(self.finf[n].get_file_entry())
-            comment = ' #NUZF2 for stress period ' + str(n + 1)
+            write_transient('finf')
             if self.ietflg > 0:
-                if n < len(self.pet):
-                    nuzf2 = 1
-                else:
-                    nuzf2 = -1
-                f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf2, comment))
-                if n < len(self.pet):
-                    f_uzf.write(self.pet[n].get_file_entry())
-                comment = ' #NUZF3 for stress period ' + str(n + 1)
-                if n < len(self.extdp):
-                    nuzf3 = 1
-                else:
-                    nuzf3 = -1
-                f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf3, comment))
-                if n < len(self.extdp):
-                    f_uzf.write(self.extdp[n].get_file_entry())
-                comment = ' #NUZF4 for stress period ' + str(n + 1)
+                write_transient('pet')
+                write_transient('extdp')
                 if self.iuzfopt > 0:
-                    if n < len(self.extwc):
-                        nuzf4 = 1
-                    else:
-                        nuzf4 = -1
-                    f_uzf.write('{0:10d}{1:20s}\n'.format(nuzf4, comment))
-                    if n < len(self.extwc):
-                        f_uzf.write(self.extwc[n].get_file_entry())
+                    write_transient('extwc')
         f_uzf.close()
 
     @staticmethod
@@ -682,18 +693,18 @@ class ModflowUzf1(Package):
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
 
-        arrays = {'finf': [],
+        arrays = {'finf': {},
                   # datasets 10, 12, 14, 16 are lists of util2d arrays
-                  'pet': [],
-                  'extdp': [],
-                  'extwc': []}
+                  'pet': {},
+                  'extdp': {},
+                  'extwc': {}}
 
         def load_util2d(name, dtype, per=None):
             print('   loading {} array...'.format(name))
             if per is not None:
-                arrays[name].append(
+                arrays[name][per] =\
                     Util2d.load(f, model, (nrow, ncol), dtype, name,
-                                ext_unit_dict))
+                                ext_unit_dict)
             else:
                 arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
                                            ext_unit_dict)
@@ -798,7 +809,7 @@ class ModflowUzf1(Package):
                            nuztop=nuztop, iuzfopt=iuzfopt, irunflg=irunflg,
                            ietflg=ietflg,
                            ipakcb=ipakcb, iuzfcb2=iuzfcb2,
-                           ntrail2=ntrail2, nsets=nsets2, nuzgag=nuzgag,
+                           ntrail2=ntrail2, nsets=nsets2,
                            surfdep=surfdep, uzgag=uzgag,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, unitnumber=unitnumber,

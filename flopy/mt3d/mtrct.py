@@ -602,7 +602,7 @@ class Mt3dRct(Package):
         rct = Mt3dRct(model, isothm=isothm, ireact=ireact, igetsc=igetsc,
                       rhob=rhob, prsity2=prsity2, srconc=srconc, sp1=sp1,
                       sp2=sp2, rc1=rc1, rc2=rc2, unitnumber=unitnumber,
-                      filenames=filenames)
+                      filenames=filenames, **kwargs)
         return rct
 
     @staticmethod

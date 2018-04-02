@@ -21,10 +21,33 @@ def test_mflist_external():
     ml1 = flopy.modflow.Modflow.load("mflist_test.nam",
                                      model_ws=ml.model_ws,
                                      verbose=True,
-                                     forgive=False)
+                                     forgive=False,check=False)
+
     assert np.array_equal(ml.wel[0], ml1.wel[0])
     assert np.array_equal(ml.wel[1], ml1.wel[1])
 
+    ml1.write_input()
+
+
+def test_single_mflist_entry_load():
+
+    import os
+    import numpy as np
+    import flopy
+
+    model_ws = os.path.join("..","examples","data","freyberg")
+    m = flopy.modflow.Modflow.load("freyberg.nam",model_ws=model_ws,load_only=["WEL"],check=False)
+    w = m.wel
+    spd = w.stress_period_data
+    flopy.modflow.ModflowWel(m,stress_period_data={0:[0,0,0,0.0]})
+    m.external_path = "."
+    m.change_model_ws("temp",reset_external=True)
+    m.write_input()
+
+    mm = flopy.modflow.Modflow.load("freyberg.nam", model_ws="temp",forgive=False)
+    assert mm.wel.stress_period_data
+    mm.write_input()
 
 if __name__ == '__main__':
     test_mflist_external()
+    test_single_mflist_entry_load()

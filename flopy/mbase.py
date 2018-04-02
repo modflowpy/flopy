@@ -136,6 +136,7 @@ class BaseModel(object):
         # external option stuff
         self.array_free_format = True
         self.free_format_input = True
+        self.parameter_load = False
         self.array_format = None
         self.external_fnames = []
         self.external_units = []
@@ -718,6 +719,30 @@ class BaseModel(object):
                      '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
         return s
 
+    def has_package(self, name):
+        """
+        Check if package name is in package list.
+
+        Parameters
+        ----------
+        name : str
+            Name of the package, 'DIS', 'BAS6', etc. (case-insensitive).
+
+        Returns
+        -------
+        bool
+            True if package name exists, otherwise False if not found.
+
+        """
+        if not name:
+            raise ValueError('invalid package name')
+        name = name.upper()
+        for p in self.packagelist:
+            for pn in p.name:
+                if pn.upper() == name:
+                    return True
+        return False
+
     def get_package(self, name):
         """
         Get a package.
@@ -725,7 +750,7 @@ class BaseModel(object):
         Parameters
         ----------
         name : str
-            Name of the package, 'RIV', 'LPF', etc.
+            Name of the package, 'RIV', 'LPF', etc. (case-insensitive).
 
         Returns
         -------
@@ -733,8 +758,11 @@ class BaseModel(object):
             Package object of type :class:`flopy.pakbase.Package`
 
         """
+        if not name:
+            raise ValueError('invalid package name')
+        name = name.upper()
         for pp in (self.packagelist):
-            if (pp.name[0].upper() == name.upper()):
+            if pp.name[0].upper() == name:
                 return pp
         return None
 
@@ -968,6 +996,14 @@ class BaseModel(object):
             self.check(f='{}.chk'.format(self.name), verbose=self.verbose,
                        level=1)
 
+        # reset the model to free_format if parameter substitution was
+        # performed on a model load
+        if self.parameter_load and not self.free_format_input:
+            if self.verbose:
+                print('\nReseting free_format_input to True to ' +
+                      'preserve the precision of the parameter data.')
+            self.free_format_input = True
+
         if self.verbose:
             print('\nWriting packages:')
 
@@ -1082,13 +1118,14 @@ class BaseModel(object):
         >>> m.check()
         """
 
-        results = {}
-        for p in self.packagelist:
-            results[p.name[0]] = p.check(f=None, verbose=False,
-                                         level=level - 1)
-
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1)
 
         # model level checks
         # solver check

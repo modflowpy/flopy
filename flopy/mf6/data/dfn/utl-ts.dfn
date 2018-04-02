@@ -8,7 +8,7 @@ reader urword
 tagged false
 optional false
 longname
-description
+description xxx
 
 block attributes
 name names
@@ -18,7 +18,7 @@ shape
 reader urword
 optional false
 longname
-description
+description xxx
 
 block attributes
 name time_series_names
@@ -38,7 +38,7 @@ reader urword
 tagged false
 optional true
 longname
-description
+description xxx
 
 block attributes
 name methods
@@ -47,7 +47,7 @@ shape
 reader urword
 optional false
 longname
-description 
+description  xxx
 
 block attributes
 name interpolation_method
@@ -68,7 +68,7 @@ reader urword
 tagged false
 optional true
 longname
-description
+description xxx
 
 block attributes
 name method
@@ -77,7 +77,7 @@ shape
 reader urword
 optional false
 longname
-description 
+description  xxx
 
 block attributes
 name interpolation_method_single
@@ -98,7 +98,7 @@ reader urword
 tagged true
 optional true
 longname
-description
+description xxx
 
 block attributes
 name sfacs
@@ -107,7 +107,7 @@ shape
 reader urword
 optional false
 longname
-description 
+description  xxx
 
 block attributes
 name sfacval
@@ -127,7 +127,7 @@ reader urword
 tagged true
 optional true
 longname
-description
+description xxx
 
 block attributes
 name sfac
@@ -137,22 +137,22 @@ tagged false
 reader urword
 optional false
 longname
-description 
+description  xxx
 
 # --------------------- gwf ts timeseries ---------------------
 
 block timeseries
-name time_seriesrecarray
-type recarray tas_time tas_array
+name timeseries
+type recarray ts_time ts_array
 shape
 reader urword
 tagged true
 optional false
 longname
-description
+description xxx
 
 block timeseries
-name tas_time
+name ts_time
 type double precision
 shape
 tagged false
@@ -163,7 +163,7 @@ longname
 description A numeric time relative to the start of the simulation, in the time unit used in the simulation. Times must be strictly increasing.
 
 block timeseries
-name tas_array
+name ts_array
 type double precision
 shape time_series_names
 tagged false

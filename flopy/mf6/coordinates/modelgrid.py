@@ -12,12 +12,6 @@ class MFGridException(Exception):
         Exception.__init__(self, "MFGridException: {}".format(error))
 
 
-class CellReference(object):
-    def __init__(self, cellid, path):
-        self.cellid = cellid
-        self.path = path
-
-
 class ModelCell(object):
     """
     Represents a model cell
@@ -42,10 +36,6 @@ class ModelCell(object):
 
     def __init__(self, cellid):
         self._cellid = cellid
-
-    def get_cell_references(self, package='ALL'):
-        # returns list of CellReferences
-        print('1')
 
 
 class UnstructuredModelCell(ModelCell):
@@ -398,7 +388,7 @@ class ModelGrid(object):
         grid type : DiscritizationType
         """
         package_recarray = simulation_data.mfdata[
-            (model_name, 'nam', 'packages', 'packagerecarray')]
+            (model_name, 'nam', 'packages', 'packages')]
         structure = MFStructure()
         if package_recarray.search_data(
                 'dis{}'.format(structure.get_version_string()), 0) is not None:

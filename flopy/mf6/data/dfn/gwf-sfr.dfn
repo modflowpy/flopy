@@ -217,7 +217,7 @@ type double precision
 reader urword
 optional true
 longname SFR Newton-Raphson iterations
-description value that defines an maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, \texttt{maxsfrit} is equal to 100.
+description value that defines an maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, MAXSFRIT is equal to 100.
 
 block options
 name maximum_depth_change
@@ -225,7 +225,7 @@ type double precision
 reader urword
 optional true
 longname depth closure tolerance
-description value that defines the depth closure tolerance. By default, \texttt{dmaxchg} is equal to $1 \times 10^{-5}$.
+description value that defines the depth closure tolerance. By default, DMAXCHG is equal to $1 \times 10^{-5}$.
 
 block options
 name unit_conversion
@@ -244,13 +244,13 @@ type integer
 reader urword
 optional false
 longname maximum number reaches
-description integer value specifying the number of stream reaches.  There must be \texttt{nreaches} entries in the PACKAGEDATA block.
+description integer value specifying the number of stream reaches.  There must be NREACHES entries in the PACKAGEDATA block.
 
 
 # --------------------- gwf sfr packagedata ---------------------
 
 block packagedata
-name sfrrecarray
+name packagedata
 type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon ustrf ndv aux boundname
 shape (maxbound)
 reader urword
@@ -265,7 +265,8 @@ tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. \texttt{rno} must be greater than zero and less than or equal to \texttt{nreaches}. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+description integer value that defines the reach number associated with the specified PACKAGEDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if information for a reach is specified more than once.
+numeric_index true
 
 block packagedata
 name cellid
@@ -275,7 +276,7 @@ tagged false
 in_record true
 reader urword
 longname cell identifier
-description The keyword \texttt{`none'} must be specified for reaches that are not connected to an underlying GWF cell. The keyword \texttt{`none'} is used for reaches that are in cells that have \texttt{IDOMAIN} values less than one or are in areas not covered by the GWF model grid. Reach-aquifer flow is not calculated if the keyword \texttt{`none'} is specified.
+description The keyword `NONE' must be specified for reaches that are not connected to an underlying GWF cell. The keyword `NONE' is used for reaches that are in cells that have IDOMAIN values less than one or are in areas not covered by the GWF model grid. Reach-aquifer flow is not calculated if the keyword `NONE' is specified.
 
 block packagedata
 name rlen
@@ -285,7 +286,7 @@ tagged false
 in_record true
 reader urword
 longname reach length
-description real value that defines the reach length. \texttt{rlen} must be greater than zero.
+description real value that defines the reach length. RLEN must be greater than zero.
 
 block packagedata
 name rwid
@@ -295,7 +296,7 @@ tagged false
 in_record true
 reader urword
 longname reach width
-description real value that defines the reach width. \texttt{rwid} must be greater than zero.
+description real value that defines the reach width. RWID must be greater than zero.
 
 block packagedata
 name rgrd
@@ -305,7 +306,7 @@ tagged false
 in_record true
 reader urword
 longname stream gradient
-description real value that defines the stream gradient (slope) across the reach. \texttt{rgrd} must be greater than zero.
+description real value that defines the stream gradient (slope) across the reach. RGRD must be greater than zero.
 
 block packagedata
 name rtp
@@ -325,7 +326,7 @@ tagged false
 in_record true
 reader urword
 longname streambed thickness
-description real value that defines the thickness of the reach streambed. \texttt{rbth} can be any value if \texttt{cellid} is \texttt{`none'}. Otherwise, \texttt{rbth} must be greater than zero.
+description real value that defines the thickness of the reach streambed. RBTH can be any value if CELLID is `NONE'. Otherwise, RBTH must be greater than zero.
 
 block packagedata
 name rhk
@@ -335,7 +336,7 @@ tagged false
 in_record true
 reader urword
 longname
-description real value that defines the hydraulic conductivity of the reach streambed. \texttt{rhk} can be any positive value if \texttt{cellid} is \texttt{`none'}. Otherwise, \texttt{rhk} must be greater than zero.
+description real value that defines the hydraulic conductivity of the reach streambed. RHK can be any positive value if CELLID is `NONE'. Otherwise, RHK must be greater than zero.
 
 block packagedata
 name man
@@ -346,7 +347,7 @@ in_record true
 reader urword
 time_series true
 longname Manning's roughness coefficient
-description real or character value that defines the Manning's roughness coefficient for the reach. \texttt{man} must be greater than zero.  If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the Manning's roughness coefficient for the reach. MAN must be greater than zero.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block packagedata
 name ncon
@@ -366,7 +367,7 @@ tagged false
 in_record true
 reader urword
 longname fraction of upstream flow
-description real value that defines the fraction of upstream flow from each upstream reach that is applied as upstream inflow to the reach. The sum of all \texttt{ustrf} values for all reaches connected to the same upstream reach must be equal to one and \texttt{ustrf} must be greater than or equal to zero.
+description real value that defines the fraction of upstream flow from each upstream reach that is applied as upstream inflow to the reach. The sum of all USTRF values for all reaches connected to the same upstream reach must be equal to one and USTRF must be greater than or equal to zero.
 
 block packagedata
 name ndv
@@ -405,7 +406,7 @@ description REPLACE boundname {'{#1}': 'stream reach'}
 # --------------------- gwf sfr connectiondata ---------------------
 
 block connectiondata
-name reach_connectivityrecarray
+name connectiondata
 type recarray rno ic
 shape (maxbound)
 reader urword
@@ -420,7 +421,8 @@ tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified CONNECTIONDATA data on the line. \texttt{rno} must be greater than zero and less than or equal to \texttt{NREACHES}. Reach connection information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if connection information for a reach is specified more than once.
+description integer value that defines the reach number associated with the specified CONNECTIONDATA data on the line. RNO must be greater than zero and less than or equal to NREACHES. Reach connection information must be specified for every reach or the program will terminate with an error.  The program will also terminate with an error if connection information for a reach is specified more than once.
+numeric_index true
 
 block connectiondata
 name ic
@@ -430,12 +432,14 @@ tagged false
 in_record true
 reader urword
 longname connected reach numbers
-description integer value that defines the reach number of the reach connected to the current reach and whether it is connected to the upstream or downstream end of the reach. Negative \texttt{ic} numbers indicate connected reaches are connected to the downstream end of the current reach. Positive \texttt{ic} numbers indicate connected reaches are connected to the upstream end of the current reach. The absolute value of \texttt{ic} must be greater than zero and less than or equal to \texttt{NREACHES}.
+description integer value that defines the reach number of the reach connected to the current reach and whether it is connected to the upstream or downstream end of the reach. Negative IC numbers indicate connected reaches are connected to the downstream end of the current reach. Positive IC numbers indicate connected reaches are connected to the upstream end of the current reach. The absolute value of IC must be greater than zero and less than or equal to NREACHES.
+numeric_index true
+support_negative_index true
 
 # --------------------- gwf sfr diversions ---------------------
 
 block diversions
-name reach_diversionsrecarray
+name diversions
 type recarray rno idv iconr cprior
 shape (maxbound)
 reader urword
@@ -450,7 +454,8 @@ tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified DIVERSIONS data on the line. \texttt{rno} must be greater than zero and less than or equal to \texttt{NREACHES}.  Reach diversion information must be specified for every reach with a \texttt{ndv} value greater than 0 or the program will terminate with an error.  The program will also terminate with an error if diversion information for a given reach diversion is specified more than once.
+description integer value that defines the reach number associated with the specified DIVERSIONS data on the line. RNO must be greater than zero and less than or equal to NREACHES.  Reach diversion information must be specified for every reach with a NDV value greater than 0 or the program will terminate with an error.  The program will also terminate with an error if diversion information for a given reach diversion is specified more than once.
+numeric_index true
 
 block diversions
 name idv
@@ -460,7 +465,8 @@ tagged false
 in_record true
 reader urword
 longname downstream diversion number
-description integer value that defines the downstream diversion number for the diversion for reach \texttt{rno}. \texttt{idv} must be greater than zero and less than or equal to \texttt{ndv} for reach \texttt{rno}.
+description integer value that defines the downstream diversion number for the diversion for reach RNO. IDV must be greater than zero and less than or equal to NDV for reach RNO.
+numeric_index true
 
 block diversions
 name iconr
@@ -470,7 +476,8 @@ tagged false
 in_record true
 reader urword
 longname downstream reach number for diversion
-description integer value that defines the downstream reach that will receive the diverted water. \texttt{idv} must be greater than zero and less than or equal to \texttt{NREACHES}. Furthermore, reach  \texttt{iconr} must be a downstream connection for reach \texttt{rno}.
+description integer value that defines the downstream reach that will receive the diverted water. IDV must be greater than zero and less than or equal to NREACHES. Furthermore, reach  ICONR must be a downstream connection for reach RNO.
+numeric_index true
 
 block diversions
 name cprior
@@ -480,7 +487,7 @@ tagged false
 in_record true
 reader urword
 longname iprior code
-description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of \texttt{flow} value specified in the \texttt{STRESS\_PERIOD\_DATA} section. Available diversion options include:  (1) \texttt{cprior} = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach \texttt{rno} ($Q_{DS}$); in this case, 0.0 $\le$ \texttt{divflow} $\le$ 1.0.  (2) \texttt{cprior} = `EXCESS', a diversion is made only if $Q_{DS}$ for reach \texttt{rno} exceeds the value of \texttt{divflow}. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ \texttt{divflow}) and $Q_{DS}$ from reach \texttt{rno} is set equal to \texttt{divflow}. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) \texttt{cprior} = `THRESHOLD', then if $Q_{DS}$ in reach \texttt{rno} is less than the specified diversion flow (\texttt{divflow}), no water is diverted from reach \texttt{rno}. If $Q_{DS}$ in reach \texttt{rno} is greater than or equal to (\texttt{divflow}), (\texttt{divflow}) is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ \texttt{divflow})). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) \texttt{cprior} = `UPTO' -- if $Q_{DS}$ in reach \texttt{rno} is greater than or equal to the specified diversion flow (\texttt{divflow}), $Q_{DS}$ is reduced by \texttt{divflow}. If $Q_{DS}$ in reach \texttt{rno} is less than (\texttt{divflow}), \texttt{divflow} is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach \texttt{rno}. 
+description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach RNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach RNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach RNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach RNO is less than the specified diversion flow (DIVFLOW), no water is diverted from reach RNO. If $Q_{DS}$ in reach RNO is greater than or equal to (DIVFLOW), (DIVFLOW) is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach RNO is greater than or equal to the specified diversion flow (DIVFLOW), $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach RNO is less than (DIVFLOW), DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach RNO. 
 
 
 # --------------------- gwf sfr period ---------------------
@@ -499,7 +506,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name reachperiodrecarray
+name perioddata
 type recarray rno sfrsetting
 shape
 reader urword
@@ -514,7 +521,8 @@ tagged false
 in_record true
 reader urword
 longname reach number for this entry
-description integer value that defines the reach number associated with the specified PERIOD data on the line. \texttt{rno} must be greater than zero and less than or equal to \texttt{NREACHES}.
+description integer value that defines the reach number associated with the specified PERIOD data on the line. RNO must be greater than zero and less than or equal to NREACHES.
+numeric_index true
 
 block period
 name sfrsetting
@@ -524,7 +532,7 @@ tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the \texttt{sfrsetting} string include: \texttt{STATUS}, \texttt{MANNING}, \texttt{STAGE}, \texttt{INFLOW}, \texttt{RAINFALL}, \texttt{EVAPORATION}, \texttt{RUNOFF}, \texttt{DIVERSION}, \texttt{UPSTREAM\_FRACTION}, and \texttt{AUXILIARY}.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL, EVAPORATION, RUNOFF, DIVERSION, UPSTREAM\_FRACTION, and AUXILIARY.
 
 block period
 name status
@@ -534,7 +542,7 @@ tagged true
 in_record true
 reader urword
 longname well status
-description keyword option to define stream reach status.  \texttt{status} can be \texttt{ACTIVE}, \texttt{INACTIVE}, or \texttt{SIMPLE}. The \texttt{SIMPLE} \texttt{status} option simulates streamflow using a user-specified stage for a reach or a stage set to the top of the reach (depth = 0). In cases where the simulated leakage calculated using the specified stage exceeds the sum of inflows to the reach, the stage is set to the top of the reach and leakage is set equal to the sum of inflows. Upstream factions should be changed using the \texttt{UPSTREAM\_FRACTION} \texttt{sfrsetting} if the status for one or more reaches is changed to \texttt{ACTIVE} or \texttt{INACTIVE}. For example, if one of two downstream connections for a reach is inactivated, the upstream fraction for the active and inactive downstream reach should be changed to 1.0 and 0.0, respectively, to ensure that the active reach receives all of the downstream outflow from the upstream reach. By default, \texttt{status} is \texttt{ACTIVE}.
+description keyword option to define stream reach status.  STATUS can be ACTIVE, INACTIVE, or SIMPLE. The SIMPLE STATUS option simulates streamflow using a user-specified stage for a reach or a stage set to the top of the reach (depth = 0). In cases where the simulated leakage calculated using the specified stage exceeds the sum of inflows to the reach, the stage is set to the top of the reach and leakage is set equal to the sum of inflows. Upstream factions should be changed using the UPSTREAM\_FRACTION SFRSETTING if the status for one or more reaches is changed to ACTIVE or INACTIVE. For example, if one of two downstream connections for a reach is inactivated, the upstream fraction for the active and inactive downstream reach should be changed to 1.0 and 0.0, respectively, to ensure that the active reach receives all of the downstream outflow from the upstream reach. By default, STATUS is ACTIVE.
 
 block period
 name manning
@@ -545,7 +553,7 @@ in_record true
 reader urword
 time_series true
 longname reach Manning's roughness coefficient
-description real or character value that defines the Manning's roughness coefficient for the reach. \texttt{manning} must be greater than zero.  If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the Manning's roughness coefficient for the reach. MANNING must be greater than zero.  If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name stage
@@ -556,7 +564,7 @@ in_record true
 reader urword
 time_series true
 longname reach stage
-description real or character value that defines the stage for the reach. The specified \texttt{stage} is only applied if the reach uses the simple routing option. If \texttt{STAGE} is not specified for reaches that use the simple routing option, the specified stage is set to the top of the reach. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the stage for the reach. The specified STAGE is only applied if the reach uses the simple routing option. If STAGE is not specified for reaches that use the simple routing option, the specified stage is set to the top of the reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name inflow
@@ -630,6 +638,7 @@ in_record true
 reader urword
 longname diversion number
 description diversion number.
+numeric_index true
 
 block period
 name divrate
@@ -640,7 +649,7 @@ in_record true
 reader urword
 time_series true
 longname volumetric diversion rate
-description real or character value that defines the volumetric diversion (\texttt{divflow}) rate for the streamflow routing reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the volumetric diversion (DIVFLOW) rate for the streamflow routing reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name upstream_fraction
@@ -650,7 +659,7 @@ tagged true
 in_record true
 reader urword
 longname fraction of upstream flow
-description real value that defines the fraction of upstream flow (\texttt{ustrf}) from each upstream reach that is applied as upstream inflow to the reach. The sum of all \texttt{ustrf} values for all reaches connected to the same upstream reach must be equal to one.
+description real value that defines the fraction of upstream flow (USTRF) from each upstream reach that is applied as upstream inflow to the reach. The sum of all USTRF values for all reaches connected to the same upstream reach must be equal to one.
 
 block period
 name auxiliaryrecord
@@ -679,7 +688,7 @@ tagged false
 in_record true
 reader urword
 longname
-description name for the auxiliary variable to be assigned \texttt{auxval}.  \texttt{auxname} must match one of the auxiliary variable names defined in the \texttt{OPTIONS} block. If \texttt{auxname} does not match one of the auxiliary variable names defined in the \texttt{OPTIONS} block the data are ignored.
+description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
 
 block period
 name auxval

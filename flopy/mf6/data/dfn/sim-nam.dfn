@@ -22,7 +22,7 @@ type string
 reader urword
 optional true
 longname memory print option
-description is a flag that controls printing of detailed memory manager usage to the end of the simulation list file.  \texttt{NONE} means do not print detailed information. \texttt{SUMMARY} means print only the total memory for each simulation component. \texttt{ALL} means print information for each variable stored in the memory manager. \texttt{NONE} is default if \texttt{memory\_print\_option} is not specified.
+description is a flag that controls printing of detailed memory manager usage to the end of the simulation list file.  NONE means do not print detailed information. SUMMARY means print only the total memory for each simulation component. ALL means print information for each variable stored in the memory manager. NONE is default if MEMORY\_PRINT\_OPTION is not specified.
 
 
 
@@ -41,7 +41,7 @@ description is the name of the Temporal Discretization (TDIS) Input File.
 # --------------------- sim nam models ---------------------
 
 block models
-name modelrecarray
+name models
 type recarray mtype mfname mname
 reader urword
 optional
@@ -80,7 +80,7 @@ description is the user-assigned name of the model.  The model name cannot excee
 # --------------------- sim nam exchanges ---------------------
 
 block exchanges
-name exchangerecarray
+name exchanges
 type recarray exgtype exgfile exgmnamea exgmnameb
 reader urword
 optional
@@ -147,7 +147,7 @@ longname maximum solution group iterations
 description is the maximum number of outer iterations for this solution group.  The default value is 1.  If there is only one solution in the solution group, then MXITER must be 1.
 
 block solutiongroup
-name solutionrecarray
+name solutiongroup
 type recarray slntype slnfname slnmnames
 reader urword
 longname solution type and models in the solution
@@ -177,9 +177,9 @@ block solutiongroup
 name slnmnames
 type string
 in_record true
-shape (nslnmod)
+shape (:)
 tagged false
 reader urword
 longname array of model names in this solution
-description is the array of model names to add to this solution.
+description is the array of model names to add to this solution.  The number of model names is determined by the number of model names the user provides on this line.
 

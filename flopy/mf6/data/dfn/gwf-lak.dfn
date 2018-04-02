@@ -217,7 +217,7 @@ type double precision
 reader urword
 optional true
 longname surface depression depth
-description real value that defines the surface depression depth for \texttt{VERTICAL} lake-\texttt{GWF} connections. If specified, \texttt{surfdep} must be greater than or equal to zero. If \texttt{SURFDEP} is not specified, a default value of zero is used for all vertical lake-\texttt{GWF} connections.
+description real value that defines the surface depression depth for VERTICAL lake-GWF connections. If specified, SURFDEP must be greater than or equal to zero. If SURFDEP is not specified, a default value of zero is used for all vertical lake-GWF connections.
 
 block options
 name time_conversion
@@ -225,7 +225,7 @@ type double precision
 reader urword
 optional true
 longname time conversion factor
-description value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent time units. \texttt{time\_conversion} should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (\texttt{time\_units}) of seconds, minutes, hours, days, or years in the simulation, respectively. \texttt{convtime} does not need to be specified if no lake outlets are specified or \texttt{time\_units} are seconds.
+description value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent time units. TIME\_CONVERSION should be set to 1.0, 60.0, 3,600.0, 86,400.0, and 31,557,600.0 when using time units (TIME\_UNITS) of seconds, minutes, hours, days, or years in the simulation, respectively. CONVTIME does not need to be specified if no lake outlets are specified or TIME\_UNITS are seconds.
 
 block options
 name length_conversion
@@ -233,7 +233,7 @@ type double precision
 reader urword
 optional true
 longname length conversion factor
-description real value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent length units. \texttt{length\_conversion} should be set to 3.28081, 1.0, and 100.0 when using length units (\texttt{length\_units}) of feet, meters, or centimeters in the simulation, respectively. \texttt{length\_conversion} does not need to be specified if no lake outlets are specified or \texttt{length\_units} are meters.
+description real value that is used in converting outlet flow terms that use Manning's equation or gravitational acceleration to consistent length units. LENGTH\_CONVERSION should be set to 3.28081, 1.0, and 100.0 when using length units (LENGTH\_UNITS) of feet, meters, or centimeters in the simulation, respectively. LENGTH\_CONVERSION does not need to be specified if no lake outlets are specified or LENGTH\_UNITS are meters.
 
 
 # --------------------- gwf lak dimensions ---------------------
@@ -252,7 +252,7 @@ type integer
 reader urword
 optional false
 longname number of outlets
-description value specifying the number of outlets that will be simulated for all stress periods. If \texttt{NOUTLETS} is not specified, a default value of zero is used.
+description value specifying the number of outlets that will be simulated for all stress periods. If NOUTLETS is not specified, a default value of zero is used.
 
 block dimensions
 name ntables
@@ -260,13 +260,13 @@ type integer
 reader urword
 optional false
 longname number of tables
-description value specifying the number of lakes tables that will be used to define the lake stage, volume relation, and surface area. If \texttt{NTABLES} is not specified, a default value of zero is used.
+description value specifying the number of lakes tables that will be used to define the lake stage, volume relation, and surface area. If NTABLES is not specified, a default value of zero is used.
 
 
 # --------------------- gwf lak packagedata ---------------------
 
 block packagedata
-name lakrecarray_package
+name packagedata
 type recarray lakeno strt nlakeconn aux boundname
 shape (maxbound)
 reader urword
@@ -281,7 +281,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified PACKAGEDATA data on the line. \texttt{lakeno} must be greater than zero and less than or equal to \texttt{nlakes}. Lake information must be specified for every lake or the program will terminate with an error.  The program will also terminate with an error if information for a lake is specified more than once.
+description integer value that defines the lake number associated with the specified PACKAGEDATA data on the line. LAKENO must be greater than zero and less than or equal to NLAKES. Lake information must be specified for every lake or the program will terminate with an error.  The program will also terminate with an error if information for a lake is specified more than once.
+numeric_index true
 
 block packagedata
 name strt
@@ -301,7 +302,7 @@ tagged false
 in_record true
 reader urword
 longname number of lake connections
-description integer value that defines the number of \texttt{GWF} nodes connected to this (\texttt{lakeno}) lake. There can only be one vertical lake connection to each \texttt{GWF} node. \texttt{nlakeconn} must be greater than zero.
+description integer value that defines the number of GWF cells connected to this (LAKENO) lake. There can only be one vertical lake connection to each GWF cell. NLAKECONN must be greater than zero.
 
 block packagedata
 name aux
@@ -330,7 +331,7 @@ description REPLACE boundname {'{#1}': 'lake'}
 # --------------------- gwf lak connectiondata ---------------------
 
 block connectiondata
-name lakrecarray
+name connectiondata
 type recarray lakeno iconn cellid claktype bedleak belev telev connlen connwidth
 shape (sum(nlakecon))
 reader urword
@@ -345,7 +346,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified CONNECTIONDATA data on the line. \texttt{lakeno} must be greater than zero and less than or equal to \texttt{nlakes}. Lake connection information must be specified for every lake connection to the GWF model (\texttt{nlakeconn}) or the program will terminate with an error.  The program will also terminate with an error if connection information for a lake connection to the GWF model is specified more than once.
+description integer value that defines the lake number associated with the specified CONNECTIONDATA data on the line. LAKENO must be greater than zero and less than or equal to NLAKES. Lake connection information must be specified for every lake connection to the GWF model (NLAKECONN) or the program will terminate with an error.  The program will also terminate with an error if connection information for a lake connection to the GWF model is specified more than once.
+numeric_index true
 
 block connectiondata
 name iconn
@@ -355,7 +357,8 @@ tagged false
 in_record true
 reader urword
 longname connection number for this entry
-description integer value that defines the \texttt{GWF} connection number for this lake connection entry. \texttt{iconn} must be greater than zero and less than or equal to \texttt{nlakeconn} for lake \texttt{lakeno}.
+description integer value that defines the GWF connection number for this lake connection entry. ICONN must be greater than zero and less than or equal to NLAKECONN for lake LAKENO.
+numeric_index true
 
 block connectiondata
 name cellid
@@ -375,7 +378,7 @@ tagged false
 in_record true
 reader urword
 longname lake connection type
-description character string that defines the lake-\texttt{GWF} connection type for the lake connection. Possible lake-\texttt{GWF} connection type strings include:  \texttt{VERTICAL}--character keyword to indicate the lake-\texttt{GWF} connection is vertical  and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for \texttt{cellid} in the NPF package. \texttt{HORIZONTAL}--character keyword to indicate the lake-\texttt{GWF} connection is horizontal and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for \texttt{cellid} in the NPF package. \texttt{EMBEDDEDH}--character keyword to indicate the lake-\texttt{GWF} connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for \texttt{cellid} in the NPF package. \texttt{EMBEDDEDV}--character keyword to indicate the lake-\texttt{GWF} connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for \texttt{cellid} in the NPF package. Embedded lakes can only be connected to a single cell (\texttt{nlakconn = 1}) and there must be a lake table associated with each embedded lake.
+description character string that defines the lake-GWF connection type for the lake connection. Possible lake-GWF connection type strings include:  VERTICAL--character keyword to indicate the lake-GWF connection is vertical  and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. HORIZONTAL--character keyword to indicate the lake-GWF connection is horizontal and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDH--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDV--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. Embedded lakes can only be connected to a single cell (NLAKCONN = 1) and there must be a lake table associated with each embedded lake.
 
 block connectiondata
 name bedleak
@@ -385,7 +388,7 @@ tagged false
 in_record true
 reader urword
 longname bed leakance
-description character string or real value that defines the bed leakance for the lake-\texttt{GWF} connection. \texttt{bedleak} must be greater than or equal to zero or specified to be \texttt{none}. If \texttt{bedleak} is specified to be \texttt{none}, the lake-\texttt{GWF} connection conductance is solely a function of aquifer properties in the connected \texttt{GWF} cell and lakebed sediments are assumed to be absent.
+description character string or real value that defines the bed leakance for the lake-GWF connection. BEDLEAK must be greater than or equal to zero or specified to be NONE. If BEDLEAK is specified to be NONE, the lake-GWF connection conductance is solely a function of aquifer properties in the connected GWF cell and lakebed sediments are assumed to be absent.
 
 block connectiondata
 name belev
@@ -395,7 +398,7 @@ tagged false
 in_record true
 reader urword
 longname bottom elevation
-description real value that defines the bottom elevation for a \texttt{HORIZONTAL} lake-\texttt{GWF} connection. Any value can be specified if \texttt{claktype} is \texttt{VERTICAL}, \texttt{EMBEDDEDH}, or \texttt{EMBEDDEDV}. If \texttt{claktype} is \texttt{HORIZONTAL} and \texttt{belev} is not equal to \texttt{telev}, \texttt{belev} must be greater than or equal to the bottom of the \texttt{GWF} cell \texttt{cellid}. If \texttt{belev} is equal to \texttt{telev}, \texttt{belev} is reset to the bottom of the \texttt{GWF} cell \texttt{cellid}.
+description real value that defines the bottom elevation for a HORIZONTAL lake-GWF connection. Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If CLAKTYPE is HORIZONTAL and BELEV is not equal to TELEV, BELEV must be greater than or equal to the bottom of the GWF cell CELLID. If BELEV is equal to TELEV, BELEV is reset to the bottom of the GWF cell CELLID.
 
 block connectiondata
 name telev
@@ -405,7 +408,7 @@ tagged false
 in_record true
 reader urword
 longname top elevation
-description real value that defines the top elevation for a \texttt{HORIZONTAL} lake-\texttt{GWF} connection. Any value can be specified if \texttt{claktype} is \texttt{VERTICAL}, \texttt{EMBEDDEDH}, or \texttt{EMBEDDEDV}. If \texttt{claktype} is \texttt{HORIZONTAL} and \texttt{telev} is not equal to \texttt{belev}, \texttt{telev} must be less than or equal to the top of the \texttt{GWF} cell \texttt{cellid}. If \texttt{telev} is equal to \texttt{belev}, \texttt{telev} is reset to the top of the \texttt{GWF} cell \texttt{cellid}.
+description real value that defines the top elevation for a HORIZONTAL lake-GWF connection. Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV. If CLAKTYPE is HORIZONTAL and TELEV is not equal to BELEV, TELEV must be less than or equal to the top of the GWF cell CELLID. If TELEV is equal to BELEV, TELEV is reset to the top of the GWF cell CELLID.
 
 block connectiondata
 name connlen
@@ -415,7 +418,7 @@ tagged false
 in_record true
 reader urword
 longname connection length
-description real value that defines the distance between the connected \texttt{GWF} \texttt{cellid} node and the lake for a \texttt{HORIZONTAL}, \texttt{EMBEDDEDH}, or \texttt{EMBEDDEDV} lake-\texttt{GWF} connection. \texttt{connlen} must be greater than zero for a \texttt{HORIZONTAL}, \texttt{EMBEDDEDH}, or \texttt{EMBEDDEDV} lake-\texttt{GWF} connection. Any value can be specified if \texttt{claktype} is \texttt{VERTICAL}.
+description real value that defines the distance between the connected GWF CELLID node and the lake for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF connection. CONLENN must be greater than zero for a HORIZONTAL, EMBEDDEDH, or EMBEDDEDV lake-GWF connection. Any value can be specified if CLAKTYPE is VERTICAL.
 
 block connectiondata
 name connwidth
@@ -425,13 +428,13 @@ tagged false
 in_record true
 reader urword
 longname connection width
-description real value that defines the connection face width for a \texttt{HORIZONTAL} lake-\texttt{GWF} connection. \texttt{connwidth} must be greater than zero for a \texttt{HORIZONTAL} lake-\texttt{GWF} connection. Any value can be specified if \texttt{claktype} is \texttt{VERTICAL}, \texttt{EMBEDDEDH}, or \texttt{EMBEDDEDV}.
+description real value that defines the connection face width for a HORIZONTAL lake-GWF connection. CONNWIDTH must be greater than zero for a HORIZONTAL lake-GWF connection. Any value can be specified if CLAKTYPE is VERTICAL, EMBEDDEDH, or EMBEDDEDV.
 
 
 # --------------------- gwf lak tables ---------------------
 
 block tables
-name lake_tablesrecarray
+name tables
 type recarray lakeno tab6 filein tab6_filename
 shape (ntables)
 reader urword
@@ -446,7 +449,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified TABLES data on the line. \texttt{lakeno} must be greater than zero and less than or equal to \texttt{nlakes}. The program will terminate with an error if table information for a lake is specified more than once or the number of specified tables is less than \texttt{ntables}.
+description integer value that defines the lake number associated with the specified TABLES data on the line. LAKENO must be greater than zero and less than or equal to NLAKES. The program will terminate with an error if table information for a lake is specified more than once or the number of specified tables is less than NTABLES.
+numeric_index true
 
 block tables
 name tab6
@@ -479,14 +483,14 @@ reader urword
 optional false
 tagged false
 longname table file name
-description character string that defines the path and filename for the file containing lake table data for the lake connection. The \texttt{ctabname} file includes the number of entries in the file and the relation between stage, surface area, and volume for each entry in the file. Lake table files for \texttt{EMBEDDEDH} and \texttt{EMBEDDEDV} lake-\texttt{GWF} connections also include lake-\texttt{GWF} exchange area data for each entry in the file. Input instructions for the \texttt{ctabname} file is included at the LAK package lake table file input instructions section.
+description character string that defines the path and filename for the file containing lake table data for the lake connection. The CTABNAME file includes the number of entries in the file and the relation between stage, surface area, and volume for each entry in the file. Lake table files for EMBEDDEDH and EMBEDDEDV lake-GWF connections also include lake-GWF exchange area data for each entry in the file. Input instructions for the CTABNAME file is included at the LAK package lake table file input instructions section.
 
 
 
 # --------------------- gwf lak outlets ---------------------
 
 block outlets
-name outletsrecarray
+name outlets
 type recarray outletno lakein lakeout couttype invert width rough slope
 shape (noutlets)
 reader urword
@@ -501,7 +505,8 @@ tagged false
 in_record true
 reader urword
 longname outlet number for this entry
-description integer value that defines the outlet number associated with the specified OUTLETS data on the line. \texttt{outletno} must be greater than zero and less than or equal to \texttt{noutlets}. Outlet information must be specified for every outlet or the program will terminate with an error. The program will also terminate with an error if information for a outlet is specified more than once.
+description integer value that defines the outlet number associated with the specified OUTLETS data on the line. OUTLETNO must be greater than zero and less than or equal to NOUTLETS. Outlet information must be specified for every outlet or the program will terminate with an error. The program will also terminate with an error if information for a outlet is specified more than once.
+numeric_index true
 
 block outlets
 name lakein
@@ -511,7 +516,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for upstream lake
-description integer value that defines the lake number that outlet is connected to. \texttt{lakein} must be greater than zero and less than or equal to \texttt{nlakes}.
+description integer value that defines the lake number that outlet is connected to. LAKEIN must be greater than zero and less than or equal to NLAKES.
+numeric_index true
 
 block outlets
 name lakeout
@@ -521,7 +527,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for downstream lake
-description integer value that defines the lake number that outlet discharge from lake outlet \texttt{outletno} is routed to. \texttt{lakeout} must be greater than or equal to zero and less than or equal to \texttt{nlakes}. If \texttt{lakeout} is zero, outlet discharge from lake outlet \texttt{outletno} is discharged to an external boundary.
+description integer value that defines the lake number that outlet discharge from lake outlet OUTLETNO is routed to. LAKEOUT must be greater than or equal to zero and less than or equal to NLAKES. If LAKEOUT is zero, outlet discharge from lake outlet OUTLETNO is discharged to an external boundary.
+numeric_index true
 
 block outlets
 name couttype
@@ -531,7 +538,7 @@ tagged false
 in_record true
 reader urword
 longname outlet type
-description character string that defines the outlet type for the outlet \texttt{outletno}. Possible \texttt{couttype} strings include: \texttt{SPECIFIED}--character keyword to indicate the outlet is defined as a specified flow.  \texttt{MANNING}--character keyword to indicate the outlet is defined using Manning's equation. \texttt{WEIR}--character keyword to indicate the outlet is defined using a sharp weir equation.
+description character string that defines the outlet type for the outlet OUTLETNO. Possible COUTTYPE strings include: SPECIFIED--character keyword to indicate the outlet is defined as a specified flow.  MANNING--character keyword to indicate the outlet is defined using Manning's equation. WEIR--character keyword to indicate the outlet is defined using a sharp weir equation.
 
 block outlets
 name invert
@@ -542,7 +549,7 @@ in_record true
 reader urword
 time_series true
 longname invert elevation
-description real value that defines the invert elevation for the lake outlet. Any value can be specified if \texttt{couttype} is \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real value that defines the invert elevation for the lake outlet. Any value can be specified if COUTTYPE is SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block outlets
 name width
@@ -553,7 +560,7 @@ in_record true
 reader urword
 time_series true
 longname outlet width
-description real value that defines the width of the lake outlet. Any value can be specified if \texttt{couttype} is \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real value that defines the width of the lake outlet. Any value can be specified if COUTTYPE is SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block outlets
 name rough
@@ -564,7 +571,7 @@ in_record true
 reader urword
 time_series true
 longname roughness coefficient
-description real value that defines the roughness coefficient for the lake outlet. Any value can be specified if \texttt{couttype} is not \texttt{MANNING}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real value that defines the roughness coefficient for the lake outlet. Any value can be specified if COUTTYPE is not MANNING. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block outlets
 name slope
@@ -575,7 +582,7 @@ in_record true
 reader urword
 time_series true
 longname bed slope
-description real value that defines the bed slope for the lake outlet. Any value can be specified if \texttt{couttype} is not \texttt{MANNING}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real value that defines the bed slope for the lake outlet. Any value can be specified if COUTTYPE is not MANNING. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 
 # --------------------- gwf lak period ---------------------
@@ -594,7 +601,7 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name lakeperiodrecarray
+name lakeperioddata
 type recarray lakeno laksetting
 shape
 reader urword
@@ -609,7 +616,8 @@ tagged false
 in_record true
 reader urword
 longname lake number for this entry
-description integer value that defines the lake number associated with the specified PERIOD data on the line. \texttt{lakeno} must be greater than zero and less than or equal to \texttt{nlakes}.
+description integer value that defines the lake number associated with the specified PERIOD data on the line. LAKENO must be greater than zero and less than or equal to NLAKES.
+numeric_index true
 
 block period
 name laksetting
@@ -619,7 +627,7 @@ tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the \texttt{laksetting} string include: \texttt{STATUS}, \texttt{STAGE}, \texttt{RAINFALL}, \texttt{EVAPORATION}, \texttt{RUNOFF}, \texttt{WITHDRAWAL}, and \texttt{AUXILIARY}.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the LAKSETTING string include: STATUS, STAGE, STAGE, EVAPORATION, RUNOFFON, WITHDRAWAL, and AUXILIARY.
 
 block period
 name status
@@ -629,18 +637,7 @@ tagged true
 in_record true
 reader urword
 longname well status
-description keyword option to define lake status.  \texttt{status} can be \texttt{ACTIVE}, \texttt{INACTIVE}, or \texttt{CONSTANT}. By default, \texttt{status} is \texttt{ACTIVE}.
-
-block period
-name rate
-type string
-shape
-tagged true
-in_record true
-reader urword
-time_series true
-longname extraction rate
-description real or character value that defines the extraction rate for the lake outflow. A positive value indicates inflow and a negative value indicates outflow from the lake. \texttt{rate} only applies to active (\texttt{IBOUND}$>0$) lakes. A specified \texttt{rate} is only applied if \texttt{couttype} for the \texttt{outletno} is \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, the \texttt{rate} for each \texttt{SPECIFIED} lake outlet is zero.
+description keyword option to define lake status.  STATUS can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is ACTIVE.
 
 block period
 name stage
@@ -651,7 +648,7 @@ in_record true
 time_series true
 reader urword
 longname lake stage
-description real or character value that defines the stage for the lake. The specified \texttt{stage} is only applied if the lake is a constant stage lake. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the stage for the lake. The specified STAGE is only applied if the lake is a constant stage lake. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name rainfall
@@ -662,7 +659,7 @@ in_record true
 reader urword
 time_series true
 longname rainfall rate
-description real or character value that defines the rainfall rate for the lake. \texttt{value} must be greater than or equal to zero. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the rainfall rate $(LT^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name evaporation
@@ -673,7 +670,7 @@ in_record true
 reader urword
 time_series true
 longname evaporation rate
-description real or character value that defines the maximum evaporation rate for the lake. \texttt{value} must be greater than or equal to zero. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the maximum evaporation rate $(LT^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name runoff
@@ -684,7 +681,7 @@ in_record true
 reader urword
 time_series true
 longname runoff rate
-description real or character value that defines the runoff rate for the lake. \texttt{value} must be greater than or equal to zero. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the runoff rate $(L^3 T^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name withdrawal
@@ -695,7 +692,7 @@ in_record true
 reader urword
 time_series true
 longname maximum withdrawal rate
-description real or character value that defines the maximum withdrawal rate for the lake. \texttt{value} must be greater than or equal to zero. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the maximum withdrawal rate $(L^3 T^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name auxiliaryrecord
@@ -724,7 +721,7 @@ tagged false
 in_record true
 reader urword
 longname
-description name for the auxiliary variable to be assigned \texttt{auxval}.  \texttt{auxname} must match one of the auxiliary variable names defined in the \texttt{OPTIONS} block. If \texttt{auxname} does not match one of the auxiliary variable names defined in the \texttt{OPTIONS} block the data are ignored.
+description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
 
 block period
 name auxval
@@ -735,10 +732,10 @@ in_record true
 reader urword
 time_series true
 longname auxiliary variable value
-description value for the auxiliary variable. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
-name outletperiodrecarray
+name outletperioddata
 type recarray outletno outletsetting
 shape
 reader urword
@@ -753,7 +750,8 @@ tagged false
 in_record true
 reader urword
 longname outlet number for this entry
-description integer value that defines the outlet number associated with the specified PERIOD data on the line. \texttt{outletno} must be greater than zero and less than or equal to \texttt{noutlets}.
+description integer value that defines the outlet number associated with the specified PERIOD data on the line. OUTLETNO must be greater than zero and less than or equal to NOUTLETS.
+numeric_index true
 
 block period
 name outletsetting
@@ -763,7 +761,7 @@ tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the \texttt{outletsetting} string include: \texttt{RATE}, \texttt{INVERT}, \texttt{WIDTH}, \texttt{SLOPE}, and \texttt{ROUGH}.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the OUTLETSETTING string include: RATE, INVERT, WIDTH, SLOPE, and ROUGH.
 
 block period
 name rate
@@ -774,7 +772,7 @@ in_record true
 reader urword
 time_series true
 longname extraction rate
-description real or character value that defines the extraction rate for the lake outflow. A positive value indicates inflow and a negative value indicates outflow from the lake. \texttt{rate} only applies to active (\texttt{IBOUND}$>0$) lakes. A specified \texttt{rate} is only applied if \texttt{couttype} for the \texttt{outletno} is \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, the \texttt{rate} for each \texttt{SPECIFIED} lake outlet is zero.
+description real or character value that defines the extraction rate for the lake outflow. A positive value indicates inflow and a negative value indicates outflow from the lake. RATE only applies to active (IBOUND $>$ 0) lakes. A specified RATE is only applied if COUTTYPE for the OUTLETNO is SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, the RATE for each SPECIFIED lake outlet is zero.
 
 block period
 name invert
@@ -785,7 +783,7 @@ in_record true
 reader urword
 time_series true
 longname invert elevation
-description real or character value that defines the invert elevation for the lake outlet. A specified \texttt{invert} value is only used for active lakes if \texttt{couttype} for lake outlet \texttt{outletno} is not \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the invert elevation for the lake outlet. A specified INVERT value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO is not SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name rough
@@ -796,7 +794,7 @@ in_record true
 reader urword
 time_series true
 longname outlet width
-description real or character value that defines the width of the lake outlet. A specified \texttt{width} value is only used for active lakes if \texttt{couttype} for lake outlet \texttt{outletno} is not \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the width of the lake outlet. A specified WIDTH value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO is not SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name width
@@ -807,7 +805,7 @@ in_record true
 reader urword
 time_series true
 longname outlet width
-description real or character value that defines the width of the lake outlet. A specified \texttt{width} value is only used for active lakes if \texttt{couttype} for lake outlet \texttt{outletno} is not \texttt{SPECIFIED}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the width of the lake outlet. A specified WIDTH value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO is not SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period
 name slope
@@ -818,4 +816,4 @@ in_record true
 reader urword
 time_series true
 longname bed slope
-description real or character value that defines the bed slope for the lake outlet. A specified \texttt{slope} value is only used for active lakes if \texttt{couttype} for lake outlet \texttt{outletno} is \texttt{MANNING}. If the Options block includes a \texttt{TIMESERIESFILE} entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description real or character value that defines the bed slope for the lake outlet. A specified SLOPE value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO is MANNING. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
