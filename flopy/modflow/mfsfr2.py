@@ -2608,7 +2608,7 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     return names
 
 
-def _fmt_string(array, float_format='{}'):
+def _fmt_string(array, float_format='{!s}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
@@ -2630,7 +2630,7 @@ def _fmt_string(array, float_format='{}'):
     return fmt_string
 
 
-def _fmt_string_list(array, float_format='{}'):
+def _fmt_string_list(array, float_format='{!s}'):
     fmt_string = []
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
