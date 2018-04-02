@@ -15,7 +15,7 @@ FILLVALUE = -99999.9
 ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
           5: "years"}
 LENUNI = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
-PRECISION_STRS = ["f4", "f8", "i4"]
+PRECISION_STRS = ["f4", "f8", "i4", "i8"]
 
 STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
                  "time"]
