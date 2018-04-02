@@ -4,13 +4,14 @@ mfstructure module.  Contains classes related to package structure
 
 """
 import os
+import traceback
 import ast
 import keyword
 from enum import Enum
 from textwrap import TextWrapper
 from collections import OrderedDict
 import numpy as np
-from ..mfbase import PackageContainer
+from ..mfbase import PackageContainer, StructException
 
 
 class DfnType(Enum):
@@ -82,7 +83,6 @@ class Dfn(object):
             package_abbr = os.path.splitext(f)[0]
             if package_abbr not in file_order:
                 file_order.append(package_abbr)
-                # raise Exception('File not in file_order: ', f)
         return [fname + '.dfn' for fname in file_order if
                 fname + '.dfn' in files]
 
@@ -552,91 +552,6 @@ class BlockType(Enum):
     transient = 3
 
 
-class FlopyException(Exception):
-    """
-    General Flopy Exception
-    """
-
-    def __init__(self, error, location=''):
-        Exception.__init__(self,
-                           "FlopyException: {} ({})".format(error, location))
-
-
-class StructException(Exception):
-    """
-    Exception related to the package file structure
-    """
-
-    def __init__(self, error, location):
-        Exception.__init__(self,
-                           "StructException: {} ({})".format(error, location))
-
-
-class MFDataFileException(Exception):
-    """
-    Exception related to parsing MODFLOW data files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataFileException: {}".format(error))
-
-
-class MFFileParseException(Exception):
-    """
-    Exception related to parsing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileParseException: {}".format(error))
-
-
-class MFInvalidTransientBlockHeaderException(MFFileParseException):
-    """
-    Exception related to parsing a transient block header
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self,
-                           "MFInvalidTransientBlockHeaderException: {}".format(
-                               error))
-
-
-class MFFileWriteException(Exception):
-    """
-    Exception related to the writing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileWriteException: {}".format(error))
-
-
-class MFDataException(Exception):
-    """
-    Exception related to MODFLOW input/output data
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataException: {}".format(error))
-
-
-class MFFileExistsException(Exception):
-    """
-    MODFLOW input file requested does not exist
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileExistsException: {}".format(error))
-
-
-class ReadAsArraysException(Exception):
-    """
-    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
-
-
 class MFDataItemStructure(object):
     """
     Defines the structure of a single MF6 data item in a dfn file
@@ -960,12 +875,26 @@ class MFDataItemStructure(object):
         return False
 
     @staticmethod
+    def _find_close_bracket(arr_line):
+        for index, word in enumerate(arr_line):
+            word = word.strip()
+            if len(word) > 0 and word[-1] == '}':
+                return index
+        return None
+
+    @staticmethod
     def _resolve_common(arr_line, common):
         if common is None:
             return arr_line
         assert (arr_line[2] in common and len(arr_line) >= 4)
+        close_bracket_loc = MFDataItemStructure._find_close_bracket(
+            arr_line[2:])
         resolved_str = common[arr_line[2]]
-        find_replace_str = ' '.join(arr_line[3:])
+        if close_bracket_loc is None:
+            find_replace_str = ' '.join(arr_line[3:])
+        else:
+            close_bracket_loc += 3
+            find_replace_str = ' '.join(arr_line[3:close_bracket_loc])
         find_replace_dict = ast.literal_eval(find_replace_str)
         for find_str, replace_str in find_replace_dict.items():
             resolved_str = resolved_str.replace(find_str, replace_str)
@@ -1023,7 +952,6 @@ class MFDataItemStructure(object):
             return DatumType.repeating_record
         else:
             exc_text = 'Data item type "{}" not supported.'.format(type_string)
-            print(exc_text)
             raise StructException(exc_text, self.path)
 
     def get_rec_type(self):
@@ -1510,6 +1438,21 @@ class MFDataStructure(object):
             if data_item.type != DatumType.keyword:
                 return index
         return None
+
+    def get_model(self):
+        if self.model_data:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return None
+
+    def get_package(self):
+        if self.model_data:
+            if len(self.path) >= 2:
+                return self.path[1]
+        else:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return ''
 
 
 class MFBlockStructure(object):

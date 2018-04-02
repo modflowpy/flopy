@@ -232,8 +232,8 @@ def build_model_init_vars(param_list):
     init_var_list = []
     for param in param_list:
         param_parts = param.split('=')
-        init_var_list.append('        self.name_file.list.set_data({}'
-                             ')'.format(param_parts[0]))
+        init_var_list.append('        self.name_file.{}.set_data({}'
+                             ')'.format(param_parts[0], param_parts[0]))
     return '\n'.join(init_var_list)
 
 

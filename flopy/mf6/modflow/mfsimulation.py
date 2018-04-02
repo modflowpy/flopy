@@ -3,12 +3,13 @@ mfsimulation module.  contains the MFSimulation class
 
 
 """
-import errno
+import errno, sys, inspect
 import collections
 import os.path
 from flopy.mbase import run_model
-from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction
-from flopy.mf6.mfbase import PackageContainerType
+from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
+                             PackageContainerType, MFDataException, \
+                             FlopyException
 from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.data.mfstructure import DatumType
@@ -16,7 +17,6 @@ from flopy.mf6.data import mfstructure, mfdata
 from flopy.mf6.utils import binaryfile_utils
 from flopy.mf6.utils import mfobservation
 from flopy.mf6.modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
-
 
 class SimulationDict(collections.OrderedDict):
     """
@@ -170,6 +170,7 @@ class MFSimulationData(object):
         self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
+        self.debug = False
 
         self._update_str_format()
 
@@ -289,16 +290,14 @@ class MFSimulation(PackageContainer):
 
     """
     def __init__(self, sim_name='sim', version='mf6',
-                 exe_name='mf6.exe', sim_ws='.',
-                 sim_tdis_file='modflow6.tdis'):
+                 exe_name='mf6.exe', sim_ws='.'):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
-            excpt_str = 'Invalid metadata file.  Unable to load MODFLOW file' \
-                        ' structure metadata.'
-            print(excpt_str)
-            raise mfstructure.StructException(excpt_str, 'root')
+            excpt_str = 'Invalid package metadata.  Unable to load MODFLOW ' \
+                        'file structure metadata.'
+            raise FlopyException(excpt_str)
 
         # initialize
         self.dimensions = None
@@ -409,9 +408,19 @@ class MFSimulation(PackageContainer):
         instance._tdis_file.load(strict)
 
         # load models
-        model_recarray = instance.simulation_data.mfdata[('nam', 'models',
-                                                          'models')]
-        for item in model_recarray.get_data():
+        try:
+            model_recarray = instance.simulation_data.mfdata[('nam', 'models',
+                                                              'models')]
+            models = model_recarray.get_data()
+        except MFDataException as mfde:
+            message = 'Error occurred while loading model names from the ' \
+                      'simulation name file.'
+            raise MFDataException(mfdata_except=mfde,
+                                  model=instance.name,
+                                  package='nam',
+                                  message=message)
+
+        for item in models:
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
             model_obj = PackageContainer.model_factory(item[0][:-1].lower())
@@ -422,9 +431,27 @@ class MFSimulation(PackageContainer):
                 name_file, version, exe_name, strict, path)
 
         # load exchange packages and dependent packages
-        exchange_recarray = instance.name_file.exchanges
-        if exchange_recarray.has_data():
-            for exgfile in exchange_recarray.get_data():
+        try:
+            exchange_recarray = instance.name_file.exchanges
+            has_exch_data = exchange_recarray.has_data()
+        except MFDataException as mfde:
+            message = 'Error occurred while loading exchange names from the ' \
+                      'simulation name file.'
+            raise MFDataException(mfdata_except=mfde,
+                                  model=instance.name,
+                                  package='nam',
+                                  message=message)
+        if has_exch_data:
+            try:
+                exch_data = exchange_recarray.get_data()
+            except MFDataException as mfde:
+                message = 'Error occurred while loading exchange names from the ' \
+                          'simulation name file.'
+                raise MFDataException(mfdata_except=mfde,
+                                      model=instance.name,
+                                      package='nam',
+                                      message=message)
+            for exgfile in exch_data:
                 # get exchange type by removing numbers from exgtype
                 exchange_type = ''.join([char for char in exgfile[0] if
                                          not char.isdigit()]).upper()
@@ -442,10 +469,18 @@ class MFSimulation(PackageContainer):
                 package_obj = instance.package_factory(
                     exchange_type.replace('-', '').lower(), '')
                 if not package_obj:
-                    excpt_str = 'Exchange type {} could not be found' \
-                                '.'.format(exchange_type)
-                    print(excpt_str)
-                    raise mfstructure.MFFileParseException(excpt_str)
+                    message = 'An error occurred while loading the ' \
+                              'simulation name file.  Invalid exchange type ' \
+                              '"{}" specified.'.format(exchange_type)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(instance.name,
+                                          'nam',
+                                          'nam',
+                                          'loading simulation name file',
+                                          exchange_recarray.structure.name,
+                                          inspect.stack()[0][3],
+                                          type_, value_, traceback_, message,
+                                          instance._simulation_data.debug)
 
                 # build and load exchange package object
                 exchange_file = package_obj(instance, exgtype=exgfile[0],
@@ -462,7 +497,17 @@ class MFSimulation(PackageContainer):
                                                              'solutiongroup',
                                                              'solutiongroup'
                                                              )]
-        for solution_info in solution_recarray.get_data():
+
+        try:
+            solution_groups = solution_recarray.get_data()
+        except MFDataException as mfde:
+            message = 'Error occurred while loading solution groups from ' \
+                      'the simulation name file.'
+            raise MFDataException(mfdata_except=mfde,
+                                  model=instance.name,
+                                  package='nam',
+                                  message=message)
+        for solution_info in solution_groups:
             ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
                                         pname=solution_info[2])
             ims_file.load(strict)
@@ -566,6 +611,21 @@ class MFSimulation(PackageContainer):
         if isinstance(model_list, str):
             model_list = [model_list]
 
+        if not isinstance(ims_file, mfims.ModflowIms):
+            comment = 'Parameter "ims_file" is not a valid ims file.  ' \
+                      'Expected type ModflowIms, but type "{}" was given' \
+                      '.'.format(type(ims_file))
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(None,
+                                  'ims',
+                                  '',
+                                  'registering ims package',
+                                  '',
+                                  inspect.stack()[0][3], type_,
+                                  value_,
+                                  traceback_, comment,
+                                  self.simulation_data.debug)
+
         in_simulation = False
         pkg_with_same_name = None
         for index, file in self._ims_files.items():
@@ -611,6 +671,7 @@ class MFSimulation(PackageContainer):
                 solution_group_num = 0
             else:
                 solution_group_num = solution_group_list[-1][0]
+
             self.name_file.mxiter.add_transient_key(solution_group_num)
 
             # associate any models in the model list to this simulation file
@@ -618,10 +679,30 @@ class MFSimulation(PackageContainer):
             ims_pkg = 'ims{}'.format(version_string)
             new_record = [ims_pkg, ims_file.filename]
             for model in model_list:
+                #if model not in self._models:
+                #    comment = 'Model "{}" is not part of the simulation and ' \
+                #              'can not be associated with an ims ' \
+                #              'package.'.format(model)
+                #    type_, value_, traceback_ = sys.exc_info()
+                #    raise MFDataException(None, 'ims', '',
+                #                          'registering ims package',
+                #                          'solutiongroup',
+                #                          inspect.stack()[0][3], type_,
+                #                          value_, traceback_, comment,
+                #                          self.simulation_data.debug)
+
                 new_record.append(model)
-            solution_recarray.append_list_as_record(new_record,
-                                                    solution_group_num)
-            self.name_file.mxiter.add_one(solution_group_num)
+            try:
+                solution_recarray.append_list_as_record(new_record,
+                                                        solution_group_num)
+                self.name_file.mxiter.add_one(solution_group_num)
+            except MFDataException as mfde:
+                message = 'Error occurred while updating the ' \
+                          'simulation name file with the ims package ' \
+                          'file "{}".'.format(ims_file.filename)
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
 
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths):
@@ -654,7 +735,15 @@ class MFSimulation(PackageContainer):
             exchange_file.write()
             if hasattr(exchange_file, 'gnc_filerecord') and \
                     exchange_file.gnc_filerecord.has_data():
-                gnc_file = exchange_file.gnc_filerecord.get_data()[0][0]
+                try:
+                    gnc_file = exchange_file.gnc_filerecord.get_data()[0][0]
+                except MFDataException as mfde:
+                    message = 'An error occurred while retrieving the ghost ' \
+                              'node file record from exchange file ' \
+                              '"{}".'.format(exchange_file.filename)
+                    raise MFDataException(mfdata_except=mfde,
+                                          package=exchange_file._get_pname(),
+                                          message=message)
                 if gnc_file in self._ghost_node_files:
                     self._ghost_node_files[gnc_file].write(ext_file_action=
                                                            ext_file_action)
@@ -664,7 +753,16 @@ class MFSimulation(PackageContainer):
                           )
             if hasattr(exchange_file, 'mvr_filerecord') and \
                     exchange_file.mvr_filerecord.has_data():
-                mvr_file = exchange_file.mvr_filerecord.get_data()[0][0]
+                try:
+                    mvr_file = exchange_file.mvr_filerecord.get_data()[0][0]
+                except MFDataException as mfde:
+                    message = 'An error occurred while retrieving the mover ' \
+                              'file record from exchange file ' \
+                              '"{}".'.format(exchange_file.filename)
+                    raise MFDataException(mfdata_except=mfde,
+                                          package=exchange_file._get_pname(),
+                                          message=message)
+
                 if mvr_file in self._mover_files:
                     self._mover_files[mvr_file].write(ext_file_action=
                                                       ext_file_action)
@@ -757,7 +855,6 @@ class MFSimulation(PackageContainer):
         --------
         """
 
-        # TODO: Fully implement this
         return self._models[model_name]
 
     def get_exchange_file(self, filename):
@@ -779,12 +876,9 @@ class MFSimulation(PackageContainer):
         if filename in self._exchange_files:
             return self._exchange_files[filename]
         else:
-            excpt_str = 'ERROR: Exchange file "{}" can not be found.  ' \
-                        'Exchange files must be registered with ' \
-                        '"register_exchange_file" before they can be ' \
-                        'retrieved'.format(filename)
-            print(excpt_str)
-            raise mfstructure.MFFileExistsException(excpt_str)
+            excpt_str = 'Exchange file "{}" can not be found' \
+                        '.'.format(filename)
+            raise FlopyException(excpt_str)
 
     def get_mvr_file(self, filename):
         """
@@ -805,10 +899,9 @@ class MFSimulation(PackageContainer):
         if filename in self._mover_files:
             return self._mover_files[filename]
         else:
-            excpt_str = 'ERROR: MVR file "{}" can not be ' \
+            excpt_str = 'MVR file "{}" can not be ' \
                         'found.'.format(filename)
-            print(excpt_str)
-            raise mfstructure.MFFileExistsException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def get_gnc_file(self, filename):
         """
@@ -829,10 +922,9 @@ class MFSimulation(PackageContainer):
         if filename in self._ghost_node_files:
             return self._ghost_node_files[filename]
         else:
-            excpt_str = 'ERROR: GNC file "{}" can not be ' \
+            excpt_str = 'GNC file "{}" can not be ' \
                         'found.'.format(filename)
-            print(excpt_str)
-            raise mfstructure.MFFileExistsException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def register_exchange_file(self, package):
         """
@@ -852,13 +944,21 @@ class MFSimulation(PackageContainer):
             exgmnameb = package.exgmnameb
 
             if exgtype is None or exgmnamea is None or exgmnameb is None:
-                excpt_str = 'ERROR: Exchange packages require that exgtype, ' \
+                excpt_str = 'Exchange packages require that exgtype, ' \
                             'exgmnamea, and exgmnameb are specified.'
-                print(excpt_str)
-                raise mfstructure.MFFileParseException(excpt_str)
+                raise FlopyException(excpt_str)
 
             self._exchange_files[package.filename] = package
-            exchange_recarray_data = self.name_file.exchanges.get_data()
+            try:
+                exchange_recarray_data = self.name_file.exchanges.get_data()
+            except MFDataException as mfde:
+                message = 'An error occurred while retrieving exchange ' \
+                          'data from the simulation name file.  The error ' \
+                          'occurred while registering exchange file ' \
+                          '"{}".'.format(package.filename)
+                raise MFDataException(mfdata_except=mfde,
+                                      package=package._get_pname(),
+                                      message=message)
             if exchange_recarray_data is not None:
                 for index, exchange in zip(range(0,
                                                  len(exchange_recarray_data)),
@@ -869,13 +969,37 @@ class MFSimulation(PackageContainer):
                         exchange_recarray_data[index][2] = exgmnamea
                         exchange_recarray_data[index][3] = exgmnameb
                         ex_recarray = self.name_file.exchanges
-                        ex_recarray.set_data(exchange_recarray_data)
+                        try:
+                            ex_recarray.set_data(exchange_recarray_data)
+                        except MFDataException as mfde:
+                            message = 'An error occurred while setting ' \
+                                      'exchange data in the simulation name ' \
+                                      'file.  The error occurred while ' \
+                                      'registering the following ' \
+                                      'values (exgtype, filename, ' \
+                                      'exgmnamea, exgmnameb): "{} {} {}' \
+                                      '{}".'.format(exgtype, package.filename,
+                                                    exgmnamea, exgmnameb)
+                            raise MFDataException(mfdata_except=mfde,
+                                                  package=package._get_pname(),
+                                                  message=message)
                         return
-            # add new exchange
-            self.name_file.exchanges.append_data([(exgtype,
-                                                   package.filename,
-                                                   exgmnamea,
-                                                   exgmnameb)])
+            try:
+                # add new exchange
+                self.name_file.exchanges.append_data([(exgtype,
+                                                       package.filename,
+                                                       exgmnamea,
+                                                       exgmnameb)])
+            except MFDataException as mfde:
+                message = 'An error occurred while setting exchange data ' \
+                          'in the simulation name file.  The error occurred ' \
+                          'while registering the following values (exgtype, ' \
+                          'filename, exgmnamea, exgmnameb): "{} {} {}' \
+                          '{}".'.format(exgtype, package.filename, exgmnamea,
+                                        exgmnameb)
+                raise MFDataException(mfdata_except=mfde,
+                                      package=package._get_pname(),
+                                      message=message)
             if package.dimensions is None:
                 # resolve exchange package dimensions object
                 package.dimensions = package.create_package_dimensions()
@@ -953,7 +1077,16 @@ class MFSimulation(PackageContainer):
             struct_root = mfstructure.MFStructure()
             tdis_pkg = 'tdis{}'.format(struct_root.get_version_string())
             tdis_attr = getattr(self.name_file, tdis_pkg)
-            tdis_attr.set_data(package.filename)
+            try:
+                tdis_attr.set_data(package.filename)
+            except MFDataException as mfde:
+                message = 'An error occurred while setting the tdis package ' \
+                          'file name "{}".  The error occurred while ' \
+                          'registering the tdis package with the ' \
+                          'simulation'.format(package.filename)
+                raise MFDataException(mfdata_except=mfde,
+                                      package=package._get_pname(),
+                                      message=message)
             return path, self.structure.package_struct_objs[
                 package.package_type.lower()]
         elif package.package_type.lower() == 'gnc':
@@ -1000,7 +1133,7 @@ class MFSimulation(PackageContainer):
             excpt_str = 'Invalid package type "{}".  Unable to register ' \
                         'package.'.format(package.package_type)
             print(excpt_str)
-            raise mfstructure.MFFileParseException(excpt_str)
+            raise FlopyException(excpt_str)
 
     def register_model(self, model, model_type, model_name, model_namefile):
         """
@@ -1023,9 +1156,14 @@ class MFSimulation(PackageContainer):
 
         # get model structure from model type
         if model_type not in self.structure.model_struct_objs:
-            excpt_str = 'Invalid model type: "{}".'.format(model_type)
-            print(excpt_str)
-            raise mfstructure.MFDataException(excpt_str)
+            message = 'Invalid model type: "{}".'.format(model_type)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(model.name,
+                                  '', model.name,
+                                  'registering model', 'sim',
+                                  inspect.stack()[0][3],
+                                  type_, value_, traceback_, message,
+                                  self.simulation_data.debug)
 
         # add model
         self._models[model_name] = model
@@ -1115,7 +1253,17 @@ class MFSimulation(PackageContainer):
     def _replace_ims_in_solution_group(self, item, index, new_item):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
-            rec_array = solution_recarray.get_data(solution_group_num[0])
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file.  The error ' \
+                          'occurred while replacing IMS file "{}" with "{}"' \
+                          'at index "{}"'.format(solution_group_num[0],
+                                                 item, new_item, index)
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
             if rec_array is not None:
                 for rec_item in rec_array:
                     if rec_item[index] == item:
@@ -1124,7 +1272,18 @@ class MFSimulation(PackageContainer):
     def _is_in_solution_group(self, item, index):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
-            rec_array = solution_recarray.get_data(solution_group_num[0])
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file.  The error ' \
+                          'occurred while verifying file "{}" at index "{}" ' \
+                          'is in the simulation name file' \
+                          '.'.format(solution_group_num[0], item, index)
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+
             if rec_array is not None:
                 for rec_item in rec_array:
                     if rec_item[index] == item:

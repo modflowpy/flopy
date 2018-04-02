@@ -7,7 +7,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdata import DataStorageType
 from flopy.mf6.data.mfdatautil import ArrayUtil
-from flopy.mf6.data.mfstructure import FlopyException
+from flopy.mf6.mfbase import FlopyException
 from flopy.mf6.modflow.mfgwf import ModflowGwf
 from flopy.mf6.modflow.mfgwfchd import ModflowGwfchd
 from flopy.mf6.modflow.mfgwfdis import ModflowGwfdis
@@ -73,8 +73,7 @@ def np001():
 
     # model tests
     test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
-                            exe_name=exe_name, sim_ws=run_folder,
-                            sim_tdis_file='{}.tdis'.format(test_ex_name))
+                            exe_name=exe_name, sim_ws=run_folder)
     kwargs = {}
     kwargs['bad_kwarg'] = 20
     try:
@@ -94,8 +93,7 @@ def np001():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=[(2.0, 1, 1.0)])
@@ -272,8 +270,7 @@ def np002():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=run_folder,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=run_folder)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)
@@ -395,8 +392,7 @@ def test021_twri():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     tdis_rc = [(86400.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=1,
                                perioddata=tdis_rc)
@@ -494,8 +490,7 @@ def test005_advgw_tidal():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='simulation.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     # test tdis package deletion
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=[(2.0, 2, 1.0)])
@@ -879,8 +874,7 @@ def test004_bcfss():
 
     # create simulation
     sim = MFSimulation(sim_name=model_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(model_name))
+                       sim_ws=pth)
     tdis_rc = [(1.0, 1, 1.0), (1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)
@@ -986,8 +980,7 @@ def test035_fhb():
 
     # create simulation
     sim = MFSimulation(sim_name=model_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(model_name))
+                       sim_ws=pth)
     tdis_rc = [(400.0, 10, 1.0), (200.0, 4, 1.0), (400.0, 6, 1.1)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=3,
                                perioddata=tdis_rc)
@@ -1084,8 +1077,7 @@ def test006_gwf3_disv():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=tdis_rc)
@@ -1210,8 +1202,7 @@ def test006_2models_gnc():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=tdis_rc)
@@ -1359,8 +1350,7 @@ def test050_circle_island():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     tdis_rc = [(1.0, 1, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=tdis_rc)
@@ -1437,8 +1427,7 @@ def test028_sfr():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth,
-                       sim_tdis_file='{}.tdis'.format(test_ex_name))
+                       sim_ws=pth)
     sim.name_file.continue_.set_data(True)
     tdis_rc = [(1577889000, 50, 1.1), (1577889000, 50, 1.1)]
     tdis_package = ModflowTdis(sim, time_units='SECONDS', nper=2,
@@ -1593,6 +1582,7 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
+    test028_sfr()
     np001()
     np002()
     test004_bcfss()
@@ -1600,6 +1590,5 @@ if __name__ == '__main__':
     test006_2models_gnc()
     test006_gwf3_disv()
     test021_twri()
-    test028_sfr()
     test035_fhb()
     test050_circle_island()

@@ -6,7 +6,8 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..data.mfstructure import StructException, DatumType
+from ..mfbase import StructException
+from ..data.mfstructure import DatumType
 from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
 
@@ -451,8 +452,10 @@ class ModelDimensions(object):
                     if result:
                         shape_dimensions.append(result)
                     else:
-                        if item[0] == 'any1d' or item[0] == 'naux' or item[
-                            0] == 'nconrno' or item[0] == 'unknown':
+                        if item[0] == 'any1d' or item[0] == 'naux' or \
+                                        item[0] == 'nconrno' or \
+                                        item[0] == 'unknown' or \
+                                        item[0] == ':':
                             consistent_shape = False
                             shape_dimensions.append(-9999)
                         elif item[0] == 'any2d':
@@ -516,10 +519,9 @@ class ModelDimensions(object):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
-                    except_str = 'ERROR: Expression "{}" contains an invalid '\
+                    except_str = 'Expression "{}" contains an invalid '\
                                  'second term and can not be ' \
                                  'resolved.'.format(expression)
-                    print(except_str)
                     raise StructException(except_str, '')
 
             if expression[2] == '+':
@@ -531,10 +533,8 @@ class ModelDimensions(object):
             elif expression[2] == '/':
                 return value / int(expression[1])
             else:
-                except_str = 'ERROR: Expression "{}" contains an invalid ' \
-                             'operator and can not be ' \
-                             'resolved.'.format(expression)
-                print(except_str)
+                except_str = 'Expression "{}" contains an invalid operator ' \
+                             'and can not be resolved.'.format(expression)
                 raise StructException(except_str, '')
         else:
             return value

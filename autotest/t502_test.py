@@ -26,8 +26,7 @@ def test_create_and_run_model():
     tdis_name = '{}.tdis'.format(sim_name)
     sim = MFSimulation(sim_name=sim_name,
                        version='mf6', exe_name=exe_name,
-                       sim_ws=out_dir,
-                       sim_tdis_file=tdis_name)
+                       sim_ws=out_dir)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(sim, time_units='DAYS', nper=2,
                               perioddata=tdis_rc)
