@@ -43,7 +43,7 @@ class Mt3dSsm(Package):
         can be specified for additional species by passing additional
         arguments to the Mt3dSsm constructor.  For example, to specify the
         recharge concentration for species two one could use
-        crch2={0: 0., 1: 10*np.ones((nlay, nrow, ncol), dtype=np.float)} as
+        crch2={0: 0., 1: 10*np.ones((nrow, ncol), dtype=np.float)} as
         and additional keyword argument that is passed to Mt3dSsm when making
         the ssm object.
     cevt : Transient2d, scalar, array of floats, or dictionary
