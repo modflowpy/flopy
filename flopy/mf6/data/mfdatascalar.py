@@ -28,16 +28,13 @@ class MFScalar(mfdata.MFData):
 
     Methods
     -------
-    has_data : (layer_num : int) : bool
-        Returns whether layer "layer_num" has any data associated with it.
-        For unlayered data do not pass in "layer".
-    get_data : (layer_num : int) : ndarray
-        Returns the data associated with layer "layer_num".  If "layer_num" is
-        None, returns all data.
-    set_data : (data : ndarray/list, multiplier : float, layer_num : int)
-        Sets the contents of the data at layer "layer_num" to "data" with
-        multiplier "multiplier".    For unlayered data do not pass in
-        "layer_num".
+    has_data : () : bool
+        Returns whether this object has data associated with it.
+    get_data : () : ndarray
+        Returns the data associated with this object.
+    set_data : (data : ndarray/list, multiplier : float)
+        Sets the contents of the data to "data" with
+        multiplier "multiplier".
     load : (first_line : string, file_handle : file descriptor,
             block_header : MFBlockHeader, pre_data_comments : MFComment) :
             tuple (bool, string)
@@ -45,9 +42,8 @@ class MFScalar(mfdata.MFData):
         file_handle which is pointing to the second line of data.  Returns a
         tuple with the first item indicating whether all data was read
         and the second item being the last line of text read from the file.
-    get_file_entry : (layer : int) : string
-        Returns a string containing the data in layer "layer".  For unlayered
-        data do not pass in "layer".
+    get_file_entry : () : string
+        Returns a string containing the data.
 
     See Also
     --------
@@ -475,14 +471,11 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         retrieved using the key "transient_key"
     add_one :(transient_key : int)
         Adds one to the data stored at key "transient_key"
-    get_data : (layer_num : int, key : int) : ndarray
-        Returns the data associated with layer "layer_num" during time "key".
-        If "layer_num" is None, returns all data for time "key".
-    set_data : (data : ndarray/list, multiplier : float, layer_num : int,
-                key : int)
-        Sets the contents of the data at layer "layer_num" and time "key" to
-        "data" with multiplier "multiplier". For unlayered data do not pass
-        in "layer_num".
+    get_data : (key : int) : ndarray
+        Returns the data associated with "key".
+    set_data : (data : ndarray/list, multiplier : float, key : int)
+        Sets the contents of the data at time "key" to
+        "data" with multiplier "multiplier".
     load : (first_line : string, file_handle : file descriptor,
             block_header : MFBlockHeader, pre_data_comments : MFComment) :
             tuple (bool, string)
@@ -490,9 +483,8 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         file_handle which is pointing to the second line of data.  Returns a
         tuple with the first item indicating whether all data was read
         and the second item being the last line of text read from the file.
-    get_file_entry : (layer : int, key : int) : string
-        Returns a string containing the data in layer "layer" at time "key".
-        For unlayered data do not pass in "layer".
+    get_file_entry : (key : int) : string
+        Returns a string containing the data at time "key".
 
     See Also
     --------

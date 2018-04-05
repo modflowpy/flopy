@@ -32,6 +32,15 @@ def find_keyword(arr_line, keyword_dict):
     return None
 
 
+def max_tuple_abs_size(some_tuple):
+    max_size = 0
+    for item in some_tuple:
+        item_abs = abs(item)
+        if item_abs > max_size:
+            max_size = item_abs
+    return max_size
+
+
 class TemplateGenerator(object):
     """
     Abstract base class for building a data template for different data types.
@@ -380,7 +389,7 @@ class ArrayUtil(object):
         else:
             self.path = os.getcwd()
 
-    @ staticmethod
+    @staticmethod
     def has_one_item(current_list):
         if not isinstance(current_list, list) and not isinstance(current_list,
                                                                  np.ndarray):
@@ -393,7 +402,7 @@ class ArrayUtil(object):
             return False
         return True
 
-    @ staticmethod
+    @staticmethod
     def is_empty_list(current_list):
         if not isinstance(current_list, list):
             return not current_list
@@ -408,7 +417,7 @@ class ArrayUtil(object):
 
         return True
 
-    @ staticmethod
+    @staticmethod
     def max_multi_dim_list_size(current_list):
         max_length = -1
         for item in current_list:
@@ -416,7 +425,7 @@ class ArrayUtil(object):
                 max_length = len(item)
         return max_length
 
-    @ staticmethod
+    @staticmethod
     def first_item(current_list):
         if not isinstance(current_list, list):
             return current_list
@@ -428,7 +437,7 @@ class ArrayUtil(object):
             else:
                 return item
 
-    @ staticmethod
+    @staticmethod
     def next_item(current_list, new_list=True, nesting_change=0,
                   end_of_list=True):
         # returns the next item in a nested list along with other information:
@@ -454,6 +463,18 @@ class ArrayUtil(object):
                            list_size == 1, nesting_change)
                     nesting_change = 0
                 list_size += 1
+
+    @staticmethod
+    def next_list(current_list):
+        if not isinstance(current_list[0], list):
+            yield current_list
+        else:
+            for lst in current_list:
+                if isinstance(lst[0], list):
+                    for lst in ArrayUtil.next_list(lst):
+                        yield lst
+                else:
+                    yield lst
 
     def array_comp(self, first_array, second_array):
         diff = first_array - second_array
@@ -579,13 +600,155 @@ class ArrayUtil(object):
                 np.savetxt(outfile, multi_array, fmt='%10.3e')
 
 
+class MultiList():
+    def __init__(self, mdlist=None, shape=None, callback=None):
+        if mdlist is not None:
+            self.multi_dim_list = mdlist
+            self.list_shape = MultiList._calc_shape(mdlist)
+        elif shape is not None:
+            self.list_shape = shape
+            if callback is not None:
+                self.multi_dim_list = []
+                self.build_list(callback)
+            else:
+                self.multi_dim_list = None
+        else:
+            raise Exception('MultiList requires either a mdlist or a shape '
+                            'at initialization.')
+
+    def __getitem__(self, k):
+        if isinstance(k, list) or isinstance(k, tuple):
+            item_ptr = self.multi_dim_list
+            for index in k:
+                item_ptr = item_ptr[index]
+            return item_ptr
+        else:
+            return self.multi_dim_list[k]
+
+    @staticmethod
+    def _calc_shape(current_list):
+        shape = []
+        if not isinstance(current_list, list):
+            return 1
+        else:
+            shape.append(len(current_list))
+            sub_list = current_list[0]
+            if isinstance(sub_list, list):
+                shape += MultiList._calc_shape(sub_list)
+        return tuple(shape)
+
+    def increment_dimension(self, dimension, callback):
+        # ONLY SUPPORTS 1 OR 2 DIMENSIONAL MULTI-LISTS
+        # TODO: REWRITE TO SUPPORT N-DIMENSIONAL MULTI-LISTS
+        if len(self.list_shape) > 2:
+            raise Exception('Increment_dimension currently only supports 1 '
+                            'or 2 dimensional multi-lists')
+        if len(self.list_shape) == 1:
+            self.multi_dim_list.append(callback(len(self.list_shape)))
+            self.list_shape = (self.list_shape[0] + 1,)
+        else:
+            if dimension == 1:
+                new_row_idx = len(self.multi_dim_list)
+                self.multi_dim_list.append([])
+                for index in range(0, self.list_shape[1]):
+                    self.multi_dim_list[-1].append(callback((new_row_idx,
+                                                             index)))
+                self.list_shape = (self.list_shape[0] + 1, self.list_shape[1])
+            elif dimension == 2:
+                new_col_idx = len(self.multi_dim_list[0])
+                for index in range(0, self.list_shape[0]):
+                    self.multi_dim_list[index].append(callback((index,
+                                                                new_col_idx)))
+                self.list_shape = (self.list_shape[0], self.list_shape[1] + 1)
+            else:
+                raise Exception('For two dimensional lists "dimension" must '
+                                'be 1 or 2.')
+
+    def build_list(self, callback):
+        entry_points = [(self.multi_dim_list, self.first_index())]
+        shape_len = len(self.list_shape)
+        for index, shape_size in enumerate(self.list_shape):
+            new_entry_points = []
+            for entry_point in entry_points:
+                for val in range(0, shape_size):
+                    if index < (shape_len - 1):
+                        entry_point[0].append([])
+                        if entry_point[1] is None:
+                            new_location = (len(entry_point) - 1,)
+                        else:
+                            new_location = entry_point[1] + (len(
+                                entry_point[0]) - 1)
+                        new_entry_points.append((entry_point[-1],
+                                                 new_location))
+                    else:
+                        entry_point[0].append(callback(entry_point[1]))
+            entry_points = new_entry_points
+
+    def first_item(self):
+        return ArrayUtil.first_item(self.multi_dim_list)
+
+    def get_total_size(self):
+        shape_size = 1
+        for item in self.list_shape:
+            if item is None:
+                return 0
+            else:
+                shape_size *= item
+        return shape_size
+
+    def in_shape(self, indexes):
+        for index, item in zip(indexes, self.list_shape):
+            if index > item:
+                return False
+        return True
+
+    def inc_shape_idx(self, indexes):
+        new_indexes = []
+        incremented = False
+        for index, item in zip(indexes, self.list_shape):
+            if index == item:
+                new_indexes.append(0)
+            elif incremented:
+                new_indexes.append(index)
+            else:
+                incremented = True
+                new_indexes.append(index+1)
+        if not incremented:
+            new_indexes[-1] += 1
+        return tuple(new_indexes)
+
+    def first_index(self):
+        first_index = []
+        for index in self.list_shape:
+            first_index.append(0)
+        return tuple(first_index)
+
+    def indexes(self, start_indexes=None, end_indexes=None):
+        aii = ArrayIndexIter(self.list_shape, True)
+        if start_indexes is not None:
+            aii.current_location = list(start_indexes)
+            aii.current_index = len(aii.current_location) - 1
+        if end_indexes is not None:
+            aii.end_location = list(end_indexes)
+        return aii
+
+    def elements(self):
+        return MultiListIter(self.multi_dim_list, True)
+
+    def leaf_lists(self):
+        return MultiListIter(self.multi_dim_list, True, True)
+
+
 class ArrayIndexIter(object):
-    def __init__(self, array_shape):
+    def __init__(self, array_shape, index_as_tuple=False):
         self.array_shape = array_shape
         self.current_location = []
+        self.end_location = []
         self.first_item = True
+        self.index_as_tuple = index_as_tuple
         for item in array_shape:
             self.current_location.append(0)
+            self.end_location.append(item)
         self.current_index = len(self.current_location) - 1
 
     def __iter__(self):
@@ -594,16 +757,18 @@ class ArrayIndexIter(object):
     def __next__(self):
         if self.first_item:
             self.first_item = False
-            if len(self.current_location) > 1:
-                return tuple(self.current_location)
-            else:
-                return self.current_location[0]
+            if self.current_location[self.current_index] < \
+                    self.end_location[self.current_index]:
+                if len(self.current_location) > 1 or self.index_as_tuple:
+                    return tuple(self.current_location)
+                else:
+                    return self.current_location[0]
         while self.current_index >= 0:
             location = self.current_location[self.current_index]
-            if location < self.array_shape[self.current_index] - 1:
+            if location < self.end_location[self.current_index] - 1:
                 self.current_location[self.current_index] += 1
                 self.current_index = len(self.current_location) - 1
-                if len(self.current_location) > 1:
+                if len(self.current_location) > 1 or self.index_as_tuple:
                     return tuple(self.current_location)
                 else:
                     return self.current_location[0]
@@ -616,10 +781,13 @@ class ArrayIndexIter(object):
 
 
 class MultiListIter(object):
-    def __init__(self, multi_list, detailed_info=False):
+    def __init__(self, multi_list, detailed_info=False, iter_leaf_lists=False):
         self.multi_list = multi_list
         self.detailed_info = detailed_info
-        self.val_iter = ArrayUtil.next_item(self.multi_list)
+        if iter_leaf_lists:
+            self.val_iter = ArrayUtil.next_list(self.multi_list)
+        else:
+            self.val_iter = ArrayUtil.next_item(self.multi_list)
 
     def __iter__(self):
         return self

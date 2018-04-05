@@ -263,7 +263,7 @@ class MFList(mfdata.MFMultiDimVar):
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
 
-        if storage.layer_storage[0].data_storage_type == \
+        if storage.layer_storage.first_item().data_storage_type == \
                 mfdata.DataStorageType.external_file:
             try:
                 ext_string = self._get_external_formatting_string(0,
@@ -283,7 +283,7 @@ class MFList(mfdata.MFMultiDimVar):
         else:
             try:
                 data_complete = storage.get_data()
-                if storage.layer_storage[0].data_storage_type == \
+                if storage.layer_storage.first_item().data_storage_type == \
                         mfdata.DataStorageType.internal_constant:
                     data_lines = 1
                 else:
@@ -324,7 +324,7 @@ class MFList(mfdata.MFMultiDimVar):
 
     def _get_file_entry_record(self, data_complete, mflist_line, text_line,
                                index, data_set, storage, indent):
-        if storage.layer_storage[0].data_storage_type == \
+        if storage.layer_storage.first_item().data_storage_type == \
                 mfdata.DataStorageType.internal_constant:
             try:
                 #  constant data
@@ -650,7 +650,7 @@ class MFList(mfdata.MFMultiDimVar):
                     else:
                         storage.pre_data_comments.add_text(current_line)
                     # store constant value for all cellids
-                    storage.layer_storage[0].data_storage_type = \
+                    storage.layer_storage.first_item().data_storage_type = \
                             mfdata.DataStorageType.internal_constant
                     storage.store_internal(
                             storage.convert_data(arr_line[1],
@@ -1262,14 +1262,11 @@ class MFTransientList(MFList, mfdata.MFTransient):
         retrieved using the key "transient_key"
     add_one :(transient_key : int)
         Adds one to the data stored at key "transient_key"
-    get_data : (layer_num : int, key : int) : ndarray
-        Returns the data associated with layer "layer_num" during time "key".
-        If "layer_num" is None, returns all data for time "key".
-    set_data : (data : ndarray/list, multiplier : float, layer_num : int,
-                key : int)
-        Sets the contents of the data at layer "layer_num" and time "key" to
-        "data" with multiplier "multiplier". For unlayered data do not pass
-        in "layer_num".
+    get_data : (key : int) : ndarray
+        Returns the data during time "key".
+    set_data : (data : ndarray/list, multiplier : float, key : int)
+        Sets the contents of the data at time "key" to "data" with
+        multiplier "multiplier".
     load : (first_line : string, file_handle : file descriptor,
             block_header : MFBlockHeader, pre_data_comments : MFComment) :
             tuple (bool, string)
@@ -1277,9 +1274,8 @@ class MFTransientList(MFList, mfdata.MFTransient):
         file_handle which is pointing to the second line of data.  Returns a
         tuple with the first item indicating whether all data was read
         and the second item being the last line of text read from the file.
-    get_file_entry : (layer : int, key : int) : string
-        Returns a string containing the data in layer "layer" at time "key".
-        For unlayered data do not pass in "layer".
+    get_file_entry : (key : int) : string
+        Returns a string containing the data at time "key".
     append_list_as_record : (data : list, key : int)
         Appends the list "data" as a single record in this list's recarray at
         time "key".  Assumes "data" has the correct dimensions.
