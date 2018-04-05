@@ -573,7 +573,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                  file_handle)
         else:
             # write the aux var to it's unique index
-            self._load_layer(aux_var_index, layer_size, storage, arr_line,
+            self._load_layer((aux_var_index,), layer_size, storage, arr_line,
                              file_handle)
         return [False, None]
 
