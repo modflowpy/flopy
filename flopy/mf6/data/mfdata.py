@@ -511,7 +511,7 @@ class DataStorage(object):
             data = previous_storage.get_data()
             storage_type = previous_storage.data_storage_type
             data_dim = self.get_data_dimensions(None)
-            self.layer_storage = MultiList(shape=data_dim[0],
+            self.layer_storage = MultiList(shape=(data_dim[0],),
                                            callback=self._create_layer)
             #self.layer_storage = [LayerStorage(self, x, storage_type)
             #                      for x in range(data_dim[0])]
@@ -526,7 +526,7 @@ class DataStorage(object):
                 assert(data_ml.get_total_size() ==
                        self.layer_storage.get_total_size())
                 for data_layer, storage in zip(data,
-                                               self.layer_storage.leaf_lists()):
+                                               self.layer_storage.elements()):
                     storage.internal_data = data_layer
                     storage.factor = previous_storage.factor
                     storage.iprn = previous_storage.iprn

@@ -628,13 +628,15 @@ class MultiList():
     @staticmethod
     def _calc_shape(current_list):
         shape = []
-        if not isinstance(current_list, list):
-            return 1
-        else:
+        if isinstance(current_list, list):
             shape.append(len(current_list))
             sub_list = current_list[0]
             if isinstance(sub_list, list):
                 shape += MultiList._calc_shape(sub_list)
+        elif isinstance(current_list, np.ndarray):
+            shape.append(current_list.shape[0])
+        else:
+            return 1
         return tuple(shape)
 
     def increment_dimension(self, dimension, callback):
@@ -733,10 +735,10 @@ class MultiList():
         return aii
 
     def elements(self):
-        return MultiListIter(self.multi_dim_list, True)
+        return MultiListIter(self.multi_dim_list, False)
 
     def leaf_lists(self):
-        return MultiListIter(self.multi_dim_list, True, True)
+        return MultiListIter(self.multi_dim_list, False, True)
 
 
 class ArrayIndexIter(object):
