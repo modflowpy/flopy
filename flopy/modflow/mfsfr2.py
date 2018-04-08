@@ -2109,7 +2109,8 @@ class check:
             conductances.sort()
 
             # list nodes with multiple non-zero SFR reach conductances
-            if conductances[0] / conductances[-1] > tol:
+            if (conductances[-1] != 0.0 and
+                    (conductances[0] / conductances[-1] > tol)):
                 nodes_with_multiple_conductance.update({node})
 
         if len(nodes_with_multiple_conductance) > 0:
