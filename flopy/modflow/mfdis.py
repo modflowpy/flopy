@@ -724,11 +724,17 @@ class ModflowDis(Package):
         # make ibound of same shape as thicknesses/botm for quasi-3D models
         active = chk.get_active(include_cbd=True)
 
-        chk.values(self.thickness.array,
-                   active & (self.thickness.array <= 0),
+        # Use either a numpy array or masked array
+        thickness = self.thickness.array
+        non_finite = ~(np.isfinite(thickness))
+        if non_finite.any():
+            thickness[non_finite] = 0
+            thickness = np.ma.array(thickness, mask=non_finite)
+
+        chk.values(thickness, active & (thickness <= 0),
                    'zero or negative thickness', 'Error')
-        thin_cells = (self.thickness.array < 1) & (self.thickness.array > 0)
-        chk.values(self.thickness.array, active & thin_cells,
+        thin_cells = (thickness < chk.thin_cell_threshold) & (thickness > 0)
+        chk.values(thickness, active & thin_cells,
                    'thin cells (less than checker threshold of {:.1f})'
                    .format(chk.thin_cell_threshold), 'Error')
         chk.values(self.top.array,
