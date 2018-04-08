@@ -5,7 +5,7 @@ def create_empty_recarray(length, dtype, default_value=0):
     assert isinstance(dtype, np.dtype), "dtype argument must be an instance of np.dtype, not list."
     for name in dtype.names:
         dt = dtype.fields[name][0]
-        if 'float' in str(dt):
+        if np.issubdtype(dt, np.float_):
             r[name] = default_value
     return r.view(np.recarray)
 
