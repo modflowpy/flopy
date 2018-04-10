@@ -244,6 +244,114 @@ class ObsFiles(FlopyBinaryData):
                 'Abstract method _build_index called in BinaryFiles.  This method needs to be overridden.')
 
 
+class Mf6Obs(ObsFiles):
+    """
+    Mf6Obs Class - used to read ascii and binary MODFLOW6 observation output
+
+    Parameters
+    ----------
+    filename : str
+        Name of the hydmod output file
+    verbose : boolean
+        If true, print additional information to to the screen during the
+        extraction.  (default is False)
+    hydlbl_len : int
+        Length of hydmod labels. (default is 20)
+
+    Returns
+    -------
+    None
+
+    """
+
+    def __init__(self, filename, verbose=False, isBinary=True):
+        """
+        Class constructor.
+
+        """
+        super(Mf6Obs, self).__init__()
+        # initialize class information
+        self.verbose = verbose
+        if isBinary:
+            # --open binary head file
+            self.file = open(filename, 'rb')
+
+            # read control line
+            cline = self.read_text(nchar=100)
+            precision = 'single'
+            if 'double' in cline[5:11].lower():
+                precision = 'double'
+            self.set_float(precision)
+            lenobsname = int(cline[11:])
+
+            # get number of observations
+            self.nobs = self.read_integer()
+
+            # # continue reading the file
+            # self.v = np.empty(self.nobs, dtype=np.float)
+            # self.v.fill(1.0E+32)
+
+            # read obsnames
+            obsnames = []
+            for idx in range(0, self.nobs):
+                cid = self.read_text(lenobsname)
+                obsnames.append(cid)
+            self.obsnames = np.array(obsnames)
+
+            # build dtype
+            self._build_dtype()
+
+            # build index
+            self._build_index()
+
+            self.data = None
+            self._read_data()
+        else:
+            # --open binary head file
+            self.file = open(filename, 'r')
+
+            # read header line
+            line = self.file.readline()
+            t = line.rstrip().split(',')
+            self.set_float('double')
+
+            # get number of observations
+            self.nobs = len(t) - 1
+
+            # set obsnames
+            obsnames = []
+            for idx in range(1, self.nobs+1):
+                obsnames.append(t[idx])
+            self.obsnames = np.array(obsnames)
+
+            # build dtype
+            self._build_dtype()
+
+            # build index
+            self._build_index()
+
+            # read ascii data
+            self.data = np.loadtxt(self.file, dtype=self.dtype, delimiter=',')
+        return
+
+
+
+    def _build_dtype(self):
+
+        # create dtype
+        dtype = [('totim', self.floattype)]
+        for site in self.obsnames:
+            if not isinstance(site, str):
+                site_name = site.decode().strip()
+            else:
+                site_name = site.strip()
+            dtype.append((site_name, self.floattype))
+        self.dtype = np.dtype(dtype)
+        return
+
+    def _build_index(self):
+        return
+
 class HydmodObs(ObsFiles):
     """
     HydmodObs Class - used to read binary MODFLOW HYDMOD package output

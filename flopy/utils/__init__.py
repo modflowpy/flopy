@@ -29,7 +29,7 @@ from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile
 from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
-from .observationfile import HydmodObs, SwrObs
+from .observationfile import HydmodObs, SwrObs, Mf6Obs
 from .reference import SpatialReference, crs, TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget, Mf6ListBudget

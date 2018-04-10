@@ -442,14 +442,16 @@ class MFList(mfdata.MFMultiDimVar):
                         if data_complete_len > index:
                             data_val = data_line[index]
                             if data_item.type == DatumType.keyword:
-                                text_line.append(data_item.display_name)
+                                if data_val is not None:
+                                    text_line.append(data_item.display_name)
                                 if self.structure.block_variable:
                                     # block variables behave differently for
                                     # now.  this needs to be resolved
                                     # more consistently at some point
                                     index += 1
                             elif data_item.type == DatumType.keystring:
-                                text_line.append(data_val)
+                                if data_val is not None:
+                                    text_line.append(data_val)
                                 index += 1
 
                                 # keystring must be at the end of the line so
