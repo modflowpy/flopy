@@ -2122,17 +2122,15 @@ class check:
                         ['k', 'i', 'j', 'iseg', 'ireach', 'rchlen', 'strthick',
                          'strhc1', 'width', 'conductance']]
 
-                reach_data = recfunctions.append_fields(reach_data,
-                                                        names=['width',
-                                                               'conductance'],
-                                                        data=[w, Cond],
-                                                        usemask=False,
-                                                        asrecarray=True)
+                reach_data = recfunctions.append_fields(
+                    reach_data,
+                    names=['width', 'conductance'], data=[w, Cond],
+                    usemask=False, asrecarray=False)
                 has_multiple = np.array(
                     [True if n in nodes_with_multiple_conductance
-                     else False for n in reach_data.node])
-                reach_data = reach_data[has_multiple].copy()
-                reach_data = reach_data[cols].copy()
+                     else False for n in reach_data['node']])
+                reach_data = reach_data[has_multiple]
+                reach_data = reach_data[cols]
                 txt += _print_rec_array(reach_data, delimiter='\t')
 
         self._txt_footer(headertxt, txt, 'overlapping conductance')
@@ -2326,11 +2324,11 @@ class check:
         if (self.sfr.nstrm < 0 or self.sfr.reachinput and
                 self.sfr.isfropt in [1, 2, 3]):  # see SFR input instructions
             reach_data = np.array(self.reach_data)
-            i, j, k = reach_data['i', 'j', 'k']
+            i, j, k = reach_data['i'], reach_data['j'], reach_data['k']
 
             # check streambed bottoms in relation to respective cell bottoms
             bots = self.sfr.parent.dis.botm.array[k, i, j]
-            streambed_bots = reach_data.strtop - reach_data.strthick
+            streambed_bots = reach_data['strtop'] - reach_data['strthick']
             reach_data = recfunctions.append_fields(
                 reach_data, names=['layerbot', 'strbot'],
                 data=[bots, streambed_bots], usemask=False, asrecarray=False)
@@ -2346,9 +2344,9 @@ class check:
                 warning = False  # this constitutes an error (MODFLOW won't run)
             # check streambed elevations in relation to model top
             tops = self.sfr.parent.dis.top.array[i, j]
-            reach_data = recfunctions.append_fields(reach_data,
-                                                    names='modeltop',
-                                                    data=tops, asrecarray=True)
+            reach_data = recfunctions.append_fields(
+                reach_data, names='modeltop', data=tops,
+                usemask=False, asrecarray=False)
 
             txt += self._boolean_compare(
                 reach_data[['k', 'i', 'j', 'iseg', 'ireach',
@@ -2397,16 +2395,15 @@ class check:
             segment_ends = recfunctions.stack_arrays(
                 [first_reaches, last_reaches],
                 asrecarray=True, usemask=False)
-            segment_ends['strtop'] = np.append(segment_data.elevup,
-                                               segment_data.elevdn)
+            segment_ends['strtop'] = np.append(segment_data['elevup'],
+                                               segment_data['elevdn'])
             i, j = segment_ends.i, segment_ends.j
             tops = self.sfr.parent.dis.top.array[i, j]
             diff = tops - segment_ends.strtop
-            segment_ends = recfunctions.append_fields(segment_ends,
-                                                      names=['modeltop',
-                                                             'diff'],
-                                                      data=[tops, diff],
-                                                      asrecarray=True)
+            segment_ends = recfunctions.append_fields(
+                segment_ends,
+                names=['modeltop', 'diff'], data=[tops, diff],
+                usemask=False, asrecarray=False)
 
             txt += self._boolean_compare(segment_ends[['k', 'i', 'j', 'iseg',
                                                        'strtop', 'modeltop',
