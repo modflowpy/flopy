@@ -5,8 +5,7 @@ mfmodel module.  Contains the MFModel class
 import os, sys, inspect
 import numpy as np
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType, \
-                    MFDataException, ReadAsArraysException, FlopyException, \
-                    StructException
+                    MFDataException, ReadAsArraysException, FlopyException
 from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
@@ -122,7 +121,7 @@ class MFModel(PackageContainer):
         # check for extraneous kwargs
         if len(kwargs) > 0:
             kwargs_str = ', '.join(kwargs.keys())
-            excpt_str = 'ERROR: Extraneous kwargs "{}" provided to ' \
+            excpt_str = 'Extraneous kwargs "{}" provided to ' \
                         'MFModel.'.format(kwargs_str)
             raise FlopyException(excpt_str)
 
@@ -132,8 +131,7 @@ class MFModel(PackageContainer):
         if not package_obj:
             excpt_str = 'Name file could not be found for model' \
                         '{}.'.format(model_type[0:3])
-            print(excpt_str)
-            raise StructException(excpt_str)
+            raise FlopyException(excpt_str)
 
         self.name_file = package_obj(self, fname=self.model_nam_file,
                                      pname=self.name)
@@ -415,10 +413,9 @@ class MFModel(PackageContainer):
                 packages = [packages]
         for package in packages:
             if package._model_or_sim.name != self.name:
-                except_text = 'ERROR: Package can not be removed from model {} ' \
+                except_text = 'Package can not be removed from model {} ' \
                               'since it is ' \
                               'not part of '
-                print(except_text)
                 raise mfstructure.FlopyException(except_text)
 
             self._remove_package_from_dictionaries(package)

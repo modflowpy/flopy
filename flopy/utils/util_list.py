@@ -1025,6 +1025,7 @@ class MfList(object):
         for name, arr in arrays.items():
             cnt = np.zeros((self.model.nlay, self.model.nrow, self.model.ncol),
                            dtype=np.float)
+            #print(name,kper)
             for rec in sarr:
                 arr[rec['k'], rec['i'], rec['j']] += rec[name]
                 cnt[rec['k'], rec['i'], rec['j']] += 1.

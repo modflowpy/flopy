@@ -212,7 +212,11 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 elif isinstance(a, MfList):
                     kpers = a.data.keys()
                     for kper in kpers:
-                        arrays = a.to_array(kper)
+                        try:
+                            arrays = a.to_array(kper)
+                        except:
+                            print("error exporting MfList in pak {0} to shapefile".format(pname))
+                            continue
                         for name, array in arrays.items():
                             for k in range(array.shape[0]):
                                 # aname = name + "{0:03d}{1:02d}".format(kper, k)

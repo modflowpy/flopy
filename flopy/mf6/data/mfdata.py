@@ -7,11 +7,11 @@ from collections import OrderedDict
 from enum import Enum
 import struct
 import numpy as np
-from ..mfbase import MFDataException, MFDataFileException, \
+from ..mfbase import MFDataException, \
                      MFInvalidTransientBlockHeaderException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
-                              ConstIter, ArrayIndexIter
+                              ConstIter, ArrayIndexIter, MultiList
 from ..coordinates.modeldimensions import DataDimensions
 
 
@@ -221,12 +221,64 @@ class DataStructureType(Enum):
 
 
 class LayerStorage(object):
-    def __init__(self, data_storage, lay_num,
+    """
+    Stores a single layer of data.
+
+    Parameters
+    ----------
+    data_storage : DataStorage
+        Parent data storage object that layer is contained in
+    lay_num : int
+        Layer number of layered being stored
+    data_storage_type : DataStorageType
+        Method used to store the data
+
+    Attributes
+    ----------
+    internal_data : ndarray or recarray
+        data being stored, if full data is being stored internally in memory
+    data_const_value : int/float
+        constant value of data being stored, if data is a constant
+    data_storage_type : DataStorageType
+        method used to store the data
+    fname : str
+        file name of external file containing the data
+    factor : int/float
+        factor to multiply the data by
+    iprn : int
+        print code
+    binary : bool
+        whether the data is stored in a binary file
+
+    Methods
+    -------
+    get_const_val(layer)
+        gets the constant value of a given layer.  data storage type for layer
+        must be "internal_constant".
+    get_data(layer) : ndarray/recarray/string
+        returns the data for the specified layer
+    set_data(data, layer=None, multiplier=[1.0]
+        sets the data being stored to "data" for layer "layer", replacing all
+        data for that layer.  a multiplier can be specified.
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+
+    """
+
+    def __init__(self, data_storage, lay_indexes,
                  data_storage_type=DataStorageType.internal_array):
         self._data_storage_parent = data_storage
-        self._lay_num = lay_num
-        self._internal_data = None
-        self._data_const_value = None
+        self._lay_indexes = lay_indexes
+        self.internal_data = None
+        self.data_const_value = None
         self.data_storage_type = data_storage_type
         self.fname = None
         self.factor = 1.0
@@ -247,20 +299,19 @@ class LayerStorage(object):
 
     def __getattr__(self, attr):
         if attr == 'array':
-            return self._data_storage_parent.get_data(self._lay_num, True)
-        #return object.__getattribute__(self, attr)
+            return self._data_storage_parent.get_data(self._lay_indexes, True)
 
     def set_data(self, data):
-        self._data_storage_parent.set_data(data, self._lay_num, [self.factor])
+        self._data_storage_parent.set_data(data, self._lay_indexes, [self.factor])
 
     def get_data(self):
-        return self._data_storage_parent.get_data(self._lay_num, False)
+        return self._data_storage_parent.get_data(self._lay_indexes, False)
 
     def get_data_const_val(self):
-        if isinstance(self._data_const_value, list):
-            return self._data_const_value[0]
+        if isinstance(self.data_const_value, list):
+            return self.data_const_value[0]
         else:
-            return self._data_const_value
+            return self.data_const_value
 
 
 class DataStorage(object):
@@ -279,10 +330,12 @@ class DataStorage(object):
         file)
     data_structure_type : enum
         what internal type is the data stored in (ndarray, recarray, scalar)
-    num_layers : int
-        number of layers data has
+    layer_shape : int
+        number of data layers
     layered : boolean
         is the data layered
+    layer_storage : MultiList<LayerStorage>
+        one or more dimensional list of LayerStorage
 
     Attributes
     ----------
@@ -296,8 +349,6 @@ class DataStorage(object):
         list of multipliers, one for each layer
     print_format : list
         list of print formats, one for each layer
-    num_layers : int
-        number of data layers
     data_structure_type :
         what internal type is the data stored in (ndarray, recarray, scalar)
     layered : boolean
@@ -385,14 +436,17 @@ class DataStorage(object):
     """
     def __init__(self, sim_data, data_dimensions,
                  data_storage_type=DataStorageType.internal_array,
-                 data_structure_type=DataStructureType.ndarray, num_layers=1,
+                 data_structure_type=DataStructureType.ndarray,
+                 layer_shape=(1,),
                  layered=False):
         self.data_dimensions = data_dimensions
         self._simulation_data = sim_data
         self._data_type_overrides = {}
-        self.layer_storage = [LayerStorage(self, x, data_storage_type)
-                              for x in range(num_layers)]
-        self.num_layers = num_layers
+        self._data_storage_type = data_storage_type
+        self.layer_storage = MultiList(shape=layer_shape,
+                                       callback=self._create_layer)
+        #self.layer_storage = [LayerStorage(self, x, data_storage_type)
+        #                      for x in range(layer_shape)]
         self.data_structure_type = data_structure_type
         package_dim = self.data_dimensions.package_dim
         self.in_model = self.data_dimensions is not None and \
@@ -418,11 +472,14 @@ class DataStorage(object):
     def __str__(self):
         return self.get_data_str(False)
 
+    def _create_layer(self, indexes):
+        return LayerStorage(self, indexes, self._data_storage_type)
+
     def flatten(self):
         self.layered = False
-        storage_type = self.layer_storage[0].data_storage_type
-        self.layer_storage = [LayerStorage(self, 0, storage_type)]
-        self.num_layers = 1
+        storage_type = self.layer_storage.first_item().data_storage_type
+        self.layer_storage = MultiList(mdlist=[LayerStorage(self, 0,
+                                                            storage_type)])
 
     def make_layered(self):
         if not self.layered:
@@ -437,7 +494,7 @@ class DataStorage(object):
                     self.data_dimensions.structure.name, inspect.stack()[0][3],
                     type_, value_, traceback_, message,
                     self._simulation_data.debug)
-            if self.layer_storage[0].data_storage_type == \
+            if self.layer_storage.first_item().data_storage_type == \
                     DataStorageType.external_file:
                 message = 'Converting external file data into layered ' \
                           'data currently not support.'
@@ -450,33 +507,37 @@ class DataStorage(object):
                     type_, value_, traceback_, message,
                     self._simulation_data.debug)
 
-            previous_storage = self.layer_storage[0]
+            previous_storage = self.layer_storage.first_item()
             data = previous_storage.get_data()
             storage_type = previous_storage.data_storage_type
             data_dim = self.get_data_dimensions(None)
-            self.layer_storage = [LayerStorage(self, x, storage_type)
-                                  for x in range(data_dim[0])]
+            self.layer_storage = MultiList(shape=(data_dim[0],),
+                                           callback=self._create_layer)
+            #self.layer_storage = [LayerStorage(self, x, storage_type)
+            #                      for x in range(data_dim[0])]
             if previous_storage.data_storage_type == \
                     DataStorageType.internal_constant:
-                for storage in self.layer_storage:
-                    storage._data_const_value = \
-                        previous_storage._data_const_value
+                for storage in self.layer_storage.elements():
+                    storage.data_const_value = \
+                        previous_storage.data_const_value
             elif previous_storage.data_storage_type == \
                     DataStorageType.internal_array:
-                assert(len(data) == len(self.layer_storage))
-                for data_layer, storage in zip(data, self.layer_storage):
-                    storage._internal_data = data_layer
+                data_ml = MultiList(data)
+                assert(data_ml.get_total_size() ==
+                       self.layer_storage.get_total_size())
+                for data_layer, storage in zip(data,
+                                               self.layer_storage.elements()):
+                    storage.internal_data = data_layer
                     storage.factor = previous_storage.factor
                     storage.iprn = previous_storage.iprn
             self.layered = True
-            self.num_layers = len(self.layer_storage)
 
     def get_data_str(self, formal):
         data_str = ''
         # Assemble strings for internal array data
-        for index, storage in enumerate(self.layer_storage):
+        for index, storage in enumerate(self.layer_storage.elements()):
             if storage.data_storage_type == DataStorageType.internal_array:
-                if storage._internal_data is not None:
+                if storage.internal_data is not None:
                     header = self._get_layer_header_str(index)
                     if formal:
                         data_str = '{}Layer_{}{{{}}}' \
@@ -487,7 +548,7 @@ class DataStorage(object):
                                                              str(storage))
             elif storage.data_storage_type == \
                     DataStorageType.internal_constant:
-                if storage._data_const_value is not None:
+                if storage.data_const_value is not None:
                     data_str = '{}{{{}}}' \
                                '\n'.format(data_str,
                                            self._get_layer_header_str(index))
@@ -518,10 +579,12 @@ class DataStorage(object):
             return ''
 
     def add_layer(self):
-        storage_zero = self.layer_storage[0]
-        self.layer_storage.append(LayerStorage(self, len(self.layer_storage),
-                                               storage_zero.data_storage_type))
-        self.num_layers += 1
+        #storage_zero = self.layer_storage.first_item()
+        self.layer_storage.increment_dimension(2, self._create_layer)
+        #self.layer_storage.append(LayerStorage(self, len(self.layer_storage),
+        #
+        # storage_zero.data_storage_type))
+        #self.layer_shape += 1
 
     def override_data_type(self, index, data_type):
         self._data_type_overrides[index] = data_type
@@ -534,12 +597,13 @@ class DataStorage(object):
 
     def get_const_val(self, layer=None):
         if layer is None:
-            assert(len(self.layer_storage) >= 1)
-            assert(self.layer_storage[0].data_storage_type ==
+            assert(self.layer_storage.get_total_size() >= 1)
+            first_item = self.layer_storage.first_item()
+            assert(first_item.data_storage_type ==
                    DataStorageType.internal_constant)
-            return self.layer_storage[0].get_data_const_val()
+            return first_item.get_data_const_val()
         else:
-            assert(len(self.layer_storage) > layer)
+            assert(self.layer_storage.in_shape(layer))
             assert(self.layer_storage[layer].data_storage_type ==
                    DataStorageType.internal_constant)
             return self.layer_storage[layer].get_data_const_val()
@@ -560,40 +624,41 @@ class DataStorage(object):
             else:
                 return True
         else:
-            if (self.layer_storage[layer_check]._internal_data is None and
+            if (self.layer_storage[layer_check].internal_data is None and
               self.layer_storage[layer_check].data_storage_type ==
                     DataStorageType.internal_array) or \
-              (self.layer_storage[layer_check]._data_const_value is None and
+              (self.layer_storage[layer_check].data_const_value is None and
               self.layer_storage[layer_check].data_storage_type ==
                     DataStorageType.internal_constant):
                 return None
             if self.data_structure_type == DataStructureType.ndarray and \
-               self.layer_storage[layer_check]._data_const_value is None and \
-               self.layer_storage[layer_check]._internal_data is None:
+               self.layer_storage[layer_check].data_const_value is None and \
+               self.layer_storage[layer_check].internal_data is None:
                 return None
-            assert(layer is None or layer < self.num_layers)
+            assert(layer is None or self.layer_storage.in_shape(layer))
             if layer is None:
                 if self.data_structure_type == DataStructureType.ndarray or \
                   self.data_structure_type == DataStructureType.scalar:
                     if return_data:
                         data = self._build_full_data(apply_mult)
                         if data is None:
-                            if self.layer_storage[0].data_storage_type == \
+                            if self.layer_storage.first_item().data_storage_type == \
                                     DataStorageType.internal_constant:
-                                return self.layer_storage[0].get_data()[0]
+                                return self.layer_storage.first_item().\
+                                        get_data()[0]
                         else:
                             return data
                     else:
                         if self.data_structure_type == DataStructureType.scalar:
-                            return self.layer_storage[0]._internal_data \
-                                   is not None
+                            return self.layer_storage.first_item().\
+                                    internal_data is not None
                         check_storage = self.layer_storage[layer_check]
-                        return (check_storage._data_const_value is not None and
+                        return (check_storage.data_const_value is not None and
                                 check_storage.data_storage_type ==
                                 DataStorageType.internal_constant) or (
-                                check_storage._internal_data is not None and
-                                check_storage.data_storage_type ==
-                                DataStorageType.internal_array)
+                                   check_storage.internal_data is not None and
+                                   check_storage.data_storage_type ==
+                                   DataStorageType.internal_array)
                 else:
                     if self.layer_storage[layer_check].data_storage_type == \
                             DataStorageType.internal_constant:
@@ -607,8 +672,8 @@ class DataStorage(object):
                             package_dim = self.data_dimensions.package_dim
                             for cellid in model_grid.get_all_model_cells():
                                 data_line = (cellid,) + \
-                                            (self.layer_storage[0].
-                                             _data_const_value,)
+                                            (self.layer_storage.first_item().
+                                             data_const_value,)
                                 if len(structure.data_item_structures) > 2:
                                     # append None any expected optional data
                                     for data_item_struct in \
@@ -622,18 +687,19 @@ class DataStorage(object):
                                                 self._recarray_type_list)
                         else:
                             return self.layer_storage[layer_check
-                                   ]._data_const_value is not None
+                                   ].data_const_value is not None
                     else:
                         if return_data:
-                            return self.layer_storage[0]._internal_data
+                            return self.layer_storage.first_item().\
+                                internal_data
                         else:
                             return True
             elif self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_array:
                 if return_data:
-                    return self.layer_storage[layer]._internal_data
+                    return self.layer_storage[layer].internal_data
                 else:
-                    return self.layer_storage[layer]._internal_data is not None
+                    return self.layer_storage[layer].internal_data is not None
             elif self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_constant:
                 layer_storage = self.layer_storage[layer]
@@ -642,11 +708,11 @@ class DataStorage(object):
                     if data is None:
                         if layer_storage.data_storage_type == \
                                 DataStructureType.internal_constant:
-                            return layer_storage._data_const_value[0]
+                            return layer_storage.data_const_value[0]
                     else:
                         return data
                 else:
-                    return layer_storage._data_const_value is not None
+                    return layer_storage.data_const_value is not None
             else:
                 if return_data:
                     return self.get_external(layer)
@@ -656,14 +722,15 @@ class DataStorage(object):
     def append_data(self, data):
         # currently only support appending to recarrays
         assert(self.data_structure_type == DataStructureType.recarray)
-        internal_data = self.layer_storage[0]._internal_data
+        internal_data = self.layer_storage.first_item().internal_data
         if internal_data is None:
             if len(data[0]) != len(self._recarray_type_list):
                 # rebuild type list using existing data as a guide
                 self.build_type_list(data=data)
             self.set_data(np.rec.array(data, self._recarray_type_list))
         else:
-            if len(self.layer_storage[0]._internal_data[0]) < len(data[0]):
+            if len(self.layer_storage.first_item().internal_data[0]) < \
+                    len(data[0]):
                 # Rebuild recarray to fit larger size
                 for index in range(len(internal_data[0]), len(data[0])):
                     self._duplicate_last_item()
@@ -674,7 +741,8 @@ class DataStorage(object):
                 self.set_data(np.rec.array(internal_data_list,
                                            self._recarray_type_list))
             else:
-                if len(self.layer_storage[0]._internal_data[0]) > len(data[0]):
+                if len(self.layer_storage.first_item().internal_data[0]) \
+                        > len(data[0]):
                     # Add placeholders to data
                     self._add_placeholders(data)
                 self.set_data(np.hstack(
@@ -701,7 +769,7 @@ class DataStorage(object):
                     for layer, aux_var_data in enumerate(data):
                         if layer > 0:
                             self.add_layer()
-                        self._set_array(aux_var_data, layer, multiplier, key,
+                        self._set_array(aux_var_data, [layer], multiplier, key,
                                         autofill)
                 else:
                     message = 'Unable to set data for aux variable. ' \
@@ -738,7 +806,8 @@ class DataStorage(object):
             success = False
             layer_num = 0
             if layer is None and self.data_structure_type == \
-                    DataStructureType.ndarray and len(data) == self.num_layers:
+                    DataStructureType.ndarray and len(data) == \
+                    self.layer_storage.get_total_size():
                 self.layered = True
                 # loop through list and try to store each list entry as a layer
                 success = True
@@ -748,7 +817,7 @@ class DataStorage(object):
                             not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
                     success = success and self._set_array_layer(layer_data,
-                                                                layer_num,
+                                                                [layer_num],
                                                                 multiplier,
                                                                 key)
             if not success:
@@ -766,7 +835,7 @@ class DataStorage(object):
                     self._simulation_data.debug)
         elif layer is None:
             self.layered = False
-            self.num_layers = 1
+            self.layer_storage.list_shape = (1,)
 
     def _set_array_layer(self, data, layer, multiplier, key):
         # look for a single constant value
@@ -848,27 +917,27 @@ class DataStorage(object):
 
     def get_active_layer_indices(self):
         layer_index = []
-        for index in range(0, self.num_layers):
+        for index in self.layer_storage.indexes():
             if self.layer_storage[index].fname is not None or \
-                    self.layer_storage[index]._internal_data is not None:
+                    self.layer_storage[index].internal_data is not None:
                 layer_index.append(index)
         return layer_index
 
     def get_external(self, layer=None):
-        assert(layer is None or layer < self.num_layers)
+        assert(layer is None or self.layer_storage.in_shape(layer))
 
     def store_internal(self, data, layer=None, const=False, multiplier=[1.0],
                        key=None, autofill=False,
                        print_format=None):
         if self.data_structure_type == DataStructureType.recarray:
-            if self.layer_storage[0].data_storage_type == \
+            if self.layer_storage.first_item().data_storage_type == \
                     DataStorageType.internal_constant:
-                self.layer_storage[0]._data_const_value = data
+                self.layer_storage.first_item().data_const_value = data
             else:
-                self.layer_storage[0].data_storage_type = \
+                self.layer_storage.first_item().data_storage_type = \
                         DataStorageType.internal_array
                 if data is None or isinstance(data, np.recarray):
-                    self.layer_storage[0]._internal_data = data
+                    self.layer_storage.first_item().internal_data = data
                 else:
                     if autofill and data is not None:
                         if isinstance(data, tuple) and isinstance(data[0],
@@ -927,19 +996,19 @@ class DataStorage(object):
                         self.set_data(new_data)
 
         elif self.data_structure_type == DataStructureType.scalar:
-            self.layer_storage[0]._internal_data = data
+            self.layer_storage.first_item().internal_data = data
         else:
             layer, multiplier = self._store_prep(layer, multiplier)
             dimensions = self.get_data_dimensions(layer)
             if const:
                 self.layer_storage[layer].data_storage_type = \
                         DataStorageType.internal_constant
-                self.layer_storage[layer]._data_const_value = data
+                self.layer_storage[layer].data_const_value = data
             else:
                 self.layer_storage[layer].data_storage_type = \
                         DataStorageType.internal_array
                 try:
-                    self.layer_storage[layer]._internal_data = \
+                    self.layer_storage[layer].internal_data = \
                         np.reshape(data, dimensions)
                 except:
                     message = 'An error occurred when reshaping data ' \
@@ -983,10 +1052,10 @@ class DataStorage(object):
         self.layer_storage[layer].data_storage_type = \
                 DataStorageType.external_file
         if self.data_structure_type == DataStructureType.recarray:
-            self.layer_storage[0]._internal_data = None
+            self.layer_storage.first_item().internal_data = None
         else:
             self.layer_storage[layer].factor = multiplier
-            self.layer_storage[layer]._internal_data = None
+            self.layer_storage[layer].internal_data = None
             if data is not None:
                 data_size = self._get_data_size(layer)
                 current_size = 0
@@ -1042,8 +1111,8 @@ class DataStorage(object):
                              layer=None):
         # currently only support files containing ndarrays
         assert(self.data_structure_type == DataStructureType.ndarray)
-        assert((layer is None and self.num_layers == 1) or
-               (layer is not None and layer < self.num_layers))
+        assert((layer is None and self.layer_storage.get_total_size() == 1) or
+               (layer is not None and self.layer_storage.in_shape(layer)))
         # get data storage
         if layer is None:
             layer = 1
@@ -1057,26 +1126,32 @@ class DataStorage(object):
                             self.layer_storage[layer].iprn,
                             binary=self.layer_storage[layer].binary)
 
-    def external_to_internal(self, layer_num=None, store_internal=False):
+    def external_to_internal(self, layer=None, store_internal=False):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
-            except_str = 'ERROR: Can not convert {} to internal data. ' \
-                         'Exernal to internal file operations' \
-                         'currently only supported for ndarrays. ' \
-                         '{}'.format(path[-1], path,)
-            print(except_str)
-            raise MFDataFileException(except_str)
-        if layer_num is None:
+            message= 'Can not convert {} to internal data. Exernal to ' \
+                     'internal file operations currently only supported ' \
+                     'for ndarrays.'.format(path[-1])
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'opening external file for writing',
+                self.data_dimensions.structure.name, inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+        if layer is None:
             data_out = self._build_full_data(store_internal)
         else:
             # load data from external file
-            data_out, current_size = self.read_data_from_file(layer_num)
-            if self.layer_storage[layer_num].factor is not None:
-                data_out = data_out * self.layer_storage[layer_num].factor
+            data_out, current_size = self.read_data_from_file(layer)
+            if self.layer_storage[layer].factor is not None:
+                data_out = data_out * self.layer_storage[layer].factor
 
         if store_internal:
-            self.store_internal(data_out, layer_num)
+            self.store_internal(data_out, layer)
         return data_out
 
     def internal_to_external(self, new_external_file, multiplier=None,
@@ -1084,11 +1159,11 @@ class DataStorage(object):
         if layer is None:
             self.store_external(new_external_file, layer, multiplier,
                                 print_format,
-                                self.layer_storage[0]._internal_data)
+                                self.layer_storage.first_item().internal_data)
         else:
             self.store_external(new_external_file, layer, multiplier,
                                 print_format,
-                                self.layer_storage[layer]._internal_data)
+                                self.layer_storage[layer].internal_data)
 
     def read_data_from_file(self, layer, fd=None, multiplier=None,
                             print_format=None, data_item=None):
@@ -1249,7 +1324,6 @@ class DataStorage(object):
                     inspect.stack()[0][3], type_, value_,
                     traceback_, message,
                     self._simulation_data.debug)
-
             index = 1
             while index < len(arr_line):
                 if isinstance(arr_line[index], str):
@@ -1312,7 +1386,7 @@ class DataStorage(object):
                         try:
                             multiplier = self.convert_data(arr_line[index+1],
                                                            self._data_type)
-                        except:
+                        except Exception as ex:
                             message = 'Data array {} contains an OPEN/CLOSE ' \
                                       'with an invalid multiplier following ' \
                                       'the "factor" keyword.' \
@@ -1325,7 +1399,7 @@ class DataStorage(object):
                                 'processing open/close line',
                                 data_dim.structure.name, inspect.stack()[0][3],
                                 type_, value_, traceback_, message,
-                                self._simulation_data.debug)
+                                self._simulation_data.debug, ex)
                         index += 2
                     elif arr_line[index].lower() == 'iprn' and \
                             index + 1 < len(arr_line):
@@ -1357,7 +1431,7 @@ class DataStorage(object):
                 if key.lower() == 'factor':
                     try:
                         multiplier = self.convert_data(value, self._data_type)
-                    except:
+                    except Exception as ex:
                         message = 'Data array {} contains an OPEN/CLOSE ' \
                                   'with an invalid multiplier following the ' \
                                   '"factor" keyword.' \
@@ -1370,7 +1444,7 @@ class DataStorage(object):
                             'processing open/close line',
                             data_dim.structure.name, inspect.stack()[0][3],
                             type_, value_, traceback_, message,
-                            self._simulation_data.debug)
+                            self._simulation_data.debug, ex)
                 if key.lower() == 'iprn':
                     print_format = value
                 if key.lower() == 'binary':
@@ -1444,7 +1518,7 @@ class DataStorage(object):
 
     def _build_full_data(self, apply_multiplier=False):
         if self.data_structure_type == DataStructureType.scalar:
-            return self.layer_storage[0]._internal_data
+            return self.layer_storage.first_item().internal_data
         dimensions = self.get_data_dimensions(None)
         if dimensions[0] < 0:
             return None
@@ -1453,10 +1527,10 @@ class DataStorage(object):
                             )
 
         if not self.layered:
-            layers_to_process = 1
+            layers_to_process = [0]
         else:
-            layers_to_process = self.num_layers
-        for layer in range(0, layers_to_process):
+            layers_to_process = self.layer_storage.indexes()
+        for layer in layers_to_process:
             if self.layer_storage[layer].factor is not None and \
                     apply_multiplier:
                 mult = self.layer_storage[layer].factor
@@ -1467,22 +1541,25 @@ class DataStorage(object):
 
             if self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_array:
-                if len(self.layer_storage[layer]._internal_data) > layer and \
-                       self.layer_storage[layer]._internal_data[layer] is None:
+                if len(self.layer_storage[layer].internal_data) > 0 and \
+                       self.layer_storage[layer].internal_data[0] is None:
                     return None
-                if self.num_layers == 1 or not self.layered:
-                    full_data = self.layer_storage[layer]._internal_data * mult
+                if self.layer_storage.get_total_size() == 1 or \
+                        not self.layered:
+                    full_data = self.layer_storage[layer].internal_data * mult
                 else:
                     full_data[layer] = \
-                            self.layer_storage[layer]._internal_data * mult
+                        self.layer_storage[layer].internal_data * mult
             elif self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_constant:
-                if self.num_layers == 1 or not self.layered:
+                if self.layer_storage.get_total_size() == 1 or \
+                        not self.layered:
                     full_data = self._fill_const_layer(layer) * mult
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
             else:
-                if self.num_layers == 1 or not self.layered:
+                if self.layer_storage.get_total_size() == 1 or \
+                        not self.layered:
                     full_data = self.read_data_from_file(layer)[0] * mult
                 else:
                     full_data[layer] = self.read_data_from_file(layer)[0]*mult
@@ -1535,9 +1612,9 @@ class DataStorage(object):
     def _fill_const_layer(self, layer):
         data_dimensions = self.get_data_dimensions(layer)
         if data_dimensions[0] < 0:
-            return self.layer_storage[layer]._data_const_value
+            return self.layer_storage[layer].data_const_value
         else:
-            data_iter = ConstIter(self.layer_storage[layer]._data_const_value)
+            data_iter = ConstIter(self.layer_storage[layer].data_const_value)
             return self._fill_dimensions(data_iter, data_dimensions)
 
     def _is_type(self, data_item, data_type):
@@ -1609,13 +1686,14 @@ class DataStorage(object):
         # existing rec_array. Assumes repeating data element names follow the
         #  format <data_element_name>_X
         assert(self.data_structure_type == DataStructureType.recarray)
-        if len(self.layer_storage[0]._internal_data[0]) <= index:
+        if len(self.layer_storage.first_item().internal_data[0]) <= index:
             return 0
-        label = self.layer_storage[0]._internal_data.dtype.names[index]
+        label = self.layer_storage.first_item().\
+                internal_data.dtype.names[index]
         label_list = label.split('_')
         if len(label_list) == 1:
             return 1
-        internal_data = self.layer_storage[0]._internal_data
+        internal_data = self.layer_storage.first_item().internal_data
         for forward_index in range(index+1, len(internal_data.dtype.names)):
             forward_label = internal_data.dtype.names[forward_index]
             forward_label_list = forward_label.split('_')
@@ -1770,29 +1848,30 @@ class DataStorage(object):
 
     def get_data_dimensions(self, layer):
         data_dimensions, shape_rule = self.data_dimensions.get_data_shape()
-        if layer is not None and self.num_layers > 1:
+        if layer is not None and self.layer_storage.get_total_size() > 1:
             # this currently does not support jagged arrays
             data_dimensions = data_dimensions[1:]
         return data_dimensions
 
     def _store_prep(self, layer, multiplier):
-        assert(layer is None or layer < self.num_layers)
+        assert(layer is None or self.layer_storage.in_shape(layer))
         if layer is None:
             # layer is none means the data provided is for all layers or this
             # is not layered data
-            layer = 0
-            self.num_layers = 1
-            self._internal_data = [None]
-        if layer > len(multiplier) - 1:
+            layer = (0,)
+            self.layer_storage.list_shape = (1,)
+            self.layer_storage.first_item().internal_data = [None]
+        mult_ml = MultiList(multiplier)
+        if not mult_ml.in_shape(layer):
             if multiplier[0] is None:
                 multiplier = 1.0
             else:
                 multiplier = multiplier[0]
         else:
-            if multiplier[layer] is None:
+            if mult_ml.first_item() is None:
                 multiplier = 1.0
-            elif isinstance(multiplier, list):
-                multiplier = multiplier[0]
+            else:
+                multiplier = mult_ml.first_item()
 
         return layer, multiplier
 
@@ -1984,9 +2063,9 @@ class MFTransient(object):
         transient_key = block_header.get_transient_key()
         if isinstance(transient_key, int):
             if not self._verify_sp(transient_key):
-                except_str = 'Invalid transient key "{}" in block' \
-                             ' "{}"'.format(transient_key, block_header.name)
-                raise MFInvalidTransientBlockHeaderException(except_str)
+                message = 'Invalid transient key "{}" in block' \
+                          ' "{}"'.format(transient_key, block_header.name)
+                raise MFInvalidTransientBlockHeaderException(message)
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
         self._current_key = transient_key
@@ -2071,7 +2150,6 @@ class MFData(object):
         self._data_name = structure.name
         self._data_storage = None
         self._data_type = structure.type
-        #self._internal_data = None
         self._keyword = ''
         if self._simulation_data is not None:
             self._data_dimensions = DataDimensions(dimensions, structure)
@@ -2168,7 +2246,8 @@ class MFData(object):
 
     def _get_aux_var_name(self, aux_var_index):
         aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
-        return aux_var_names[0][aux_var_index+1]
+        # TODO: Verify that this works for multi-dimensional layering
+        return aux_var_names[0][aux_var_index[0]+1]
 
     def _load_keyword(self, arr_line, index_num):
         aux_var_index = None
@@ -2253,10 +2332,11 @@ class MFMultiDimVar(MFData):
 
     def _get_internal_formatting_string(self, layer):
         if layer is None:
-            layer = 0
+            layer_storage = self._get_storage_obj().layer_storage.first_item()
+        else:
+            layer_storage = self._get_storage_obj().layer_storage[layer]
         int_format = ['INTERNAL', 'FACTOR']
         data_type = self.structure.get_datum_type(return_enum_type=True)
-        layer_storage = self._get_storage_obj().layer_storage[layer]
         if layer_storage.factor is not None:
             int_format.append(str(layer_storage.factor))
         else:
@@ -2271,10 +2351,11 @@ class MFMultiDimVar(MFData):
 
     def _get_external_formatting_string(self, layer, ext_file_action):
         if layer is None:
-            layer = 0
+            layer_storage = self._get_storage_obj().layer_storage.first_item()
+        else:
+            layer_storage = self._get_storage_obj().layer_storage[layer]
         # resolve external file path
         file_mgmt = self._simulation_data.mfpath
-        layer_storage = self._get_storage_obj().layer_storage[layer]
         model_name = self._data_dimensions.package_dim.model_dim[0].model_name
         ext_file_path = file_mgmt.get_updated_path(layer_storage.fname,
                                                    model_name,

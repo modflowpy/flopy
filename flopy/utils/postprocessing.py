@@ -163,7 +163,8 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     sat_thickness : 3 or 4-D np.ndarray
         Array of saturated thickness
     """
-    heads = np.array(heads, ndmin=4)
+    # internal calculations done on a masked array
+    heads = np.ma.array(heads, ndmin=4, mask=heads == nodata)
     botm = m.dis.botm.array
     thickness = m.dis.thickness.array
     nper, nlay, nrow, ncol = heads.shape
@@ -172,14 +173,14 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     elif np.isscalar(per_idx):
         per_idx = [per_idx]
 
-    heads[heads == nodata] = np.nan
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
         perthickness = hds - botm
         conf = perthickness > thickness
         perthickness[conf] = thickness[conf]
-        sat_thickness.append(perthickness)
+        # convert to nan-filled array, as is expected(!?)
+        sat_thickness.append(perthickness.filled(np.nan))
     return np.squeeze(sat_thickness)
 
 def get_gradients(heads, m, nodata, per_idx=None):
@@ -202,23 +203,25 @@ def get_gradients(heads, m, nodata, per_idx=None):
     grad : 3 or 4-D np.ndarray
         Array of hydraulic gradients
     """
-    heads = np.array(heads, ndmin=4)
+    # internal calculations done on a masked array
+    heads = np.ma.array(heads, ndmin=4, mask=heads == nodata)
     nper, nlay, nrow, ncol = heads.shape
     if per_idx is None:
         per_idx = list(range(nper))
     elif np.isscalar(per_idx):
         per_idx = [per_idx]
 
-    heads[heads == nodata] = np.nan
     grad = []
     for per in per_idx:
         hds = heads[per]
-        zcnt_per = m.dis.zcentroids.copy()
+        zcnt_per = np.ma.array(m.dis.zcentroids, mask=hds.mask)
         unsat = zcnt_per > hds
-        zcnt_per[np.isnan(hds)] = np.nan
         zcnt_per[unsat] = hds[unsat]
 
-        dz = np.diff(zcnt_per, axis=0)
-        dh = np.diff(hds, axis=0)
-        grad.append(dh/dz)
+        # apply .diff on data and mask components separately
+        diff_mask = np.diff(hds.mask, axis=0)
+        dz = np.ma.array(np.diff(zcnt_per.data, axis=0), mask=diff_mask)
+        dh = np.ma.array(np.diff(hds.data, axis=0), mask=diff_mask)
+        # convert to nan-filled array, as is expected(!?)
+        grad.append((dh/dz).filled(np.nan))
     return np.squeeze(grad)

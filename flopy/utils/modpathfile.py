@@ -229,7 +229,7 @@ class PathlineFile():
             Slice of pathline data array (e.g. PathlineFile._data)
             containing only pathlines with final k,i,j in dest_cells.
         """
-        ra = self._data.view(np.recarray)
+        ra = np.array(self._data)
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
         raslice = ra[['k', 'i', 'j']]
@@ -238,10 +238,10 @@ class PathlineFile():
         epdest = ra[inds].copy().view(np.recarray)
 
         # use particle ids to get the rest of the paths
-        inds = np.in1d(ra.particleid, epdest.particleid)
+        inds = np.in1d(ra['particleid'], epdest.particleid)
         pthldes = ra[inds].copy()
         pthldes.sort(order=['particleid', 'time'])
-        return pthldes
+        return pthldes.view(np.recarray)
 
     def write_shapefile(self, pathline_data=None,
                         one_per_particle=True,
