@@ -94,12 +94,18 @@ class MFScalar(mfdata.MFData):
                                   self._simulation_data.debug, ex)
 
     def set_data(self, data):
-        while isinstance(data, list) or isinstance(data, np.ndarray) or \
-                isinstance(data, tuple):
-            data = data[0]
-            if (isinstance(data, list) or isinstance(data, tuple)) and \
-                    len(data) > 1:
-                self._add_data_line_comment(data[1:], 0)
+        if self.structure.type == DatumType.record:
+            if data is not None:
+                if not isinstance(data, list) or isinstance(data, np.ndarray) or \
+                            isinstance(data, tuple):
+                    data = [data]
+        else:
+            while isinstance(data, list) or isinstance(data, np.ndarray) or \
+                    isinstance(data, tuple):
+                data = data[0]
+                if (isinstance(data, list) or isinstance(data, tuple)) and \
+                        len(data) > 1:
+                    self._add_data_line_comment(data[1:], 0)
         storge = self._get_storage_obj()
         data_struct = self.structure.data_item_structures[0]
         try:
@@ -230,7 +236,7 @@ class MFScalar(mfdata.MFData):
                                               inspect.stack()[0][3], type_,
                                               value_, traceback_, None,
                                               self._simulation_data.debug, ex)
-                    if len(data) > 0:
+                    if data is not None and data != '':
                         try:
                             text_line.append(storage.to_string(data,
                                                                self._data_type,

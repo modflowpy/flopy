@@ -1764,7 +1764,7 @@ class DataStorage(object):
                     # don't include initial keywords
                     if data_item.type != DatumType.keyword or \
                             initial_keyword == \
-                            False:
+                            False or data_set.block_variable == True:
                         initial_keyword = False
                         shape_rule = None
                         if data_item.tagged:
