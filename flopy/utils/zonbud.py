@@ -599,23 +599,30 @@ class ZoneBudget(object):
             return
 
         # Inflows
-        # idx = np.isin(tz, 0, invert=True)  # numpy >= 1.13
         idx = np.logical_not(np.array([item in tz for item in [0]*len(tz)]))
-        rownames = np.array(list(['FROM_' + n for n in
-                                  self._iflow_recnames[fz[idx]]['name']]))
-        colnames = self._iflow_recnames[tz[idx]]['name']
+        fzi = fz[idx]
+        tzi = tz[idx]
+        rownames = np.array(list(['FROM_' +
+                                  self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+                                  for z in fzi]))
+        colnames = np.array(list([self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+                                  for z in tzi]))
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper, totim)
 
         # Outflows
-        # idx = np.isin(fz, 0, invert=True)  # numpy >= 1.13
         idx = np.logical_not(np.array([item in fz for item in [0] * len(fz)]))
-        rownames = np.array(list(['TO_' + n for n in self._iflow_recnames[tz[idx]]['name']]))
-        colnames = self._iflow_recnames[fz[idx]]['name']
+        fzi = fz[idx]
+        tzi = tz[idx]
+        rownames = np.array(list(['TO_' +
+                                  self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+                                  for z in tzi]))
+        colnames = np.array(list([self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+                                  for z in fzi]))
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper, totim)
         return
-    
+
     def _update_budget_fromssst(self, fz, tz, f, kstpkper=None, totim=None):
         if len(f) == 0:
             return
