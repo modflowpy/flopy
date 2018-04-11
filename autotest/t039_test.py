@@ -148,7 +148,7 @@ def test_zonbud_aliases():
     """
     zon = read_zbarray(zon_f)
     aliases = {1: 'Trey', 2: 'Mike', 4: 'Wilson', 0: 'Carini'}
-    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096), aliases=aliases)
+    zb = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096), aliases=aliases, verbose=True)
     bud = zb.get_budget()
     assert bud[bud['name'] == 'FROM_Mike'].shape[0] > 0, 'No records returned.'
     return
@@ -176,6 +176,8 @@ def test_zonbud_math():
     cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
     cmd / 35.3147
     cmd * 12.
+    cmd + 1e6
+    cmd - 1e6
     return
 
 
@@ -206,7 +208,7 @@ def test_dataframes():
     try:
         import pandas
         zon = read_zbarray(zon_f)
-        cmd = ZoneBudget(cbc_f, zon, kstpkper=(0, 1096))
+        cmd = ZoneBudget(cbc_f, zon, totim=1095.)
         df = cmd.get_dataframes()
         assert len(df) > 0, 'Output DataFrames empty.'
     except ImportError as e:
