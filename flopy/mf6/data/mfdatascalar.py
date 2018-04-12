@@ -218,43 +218,83 @@ class MFScalar(mfdata.MFData):
             return '{}{}\n'.format(self._simulation_data.indent_string,
                                    self.structure.name.upper())
         elif self.structure.type == DatumType.record:
+            try:
+                data = storage.get_data()
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'getting data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
             text_line = []
+            index = 0
             for data_item in self.structure.data_item_structures:
                 if data_item.type == DatumType.keyword and \
                         data_item.optional == False:
-                    text_line.append(data_item.name.upper())
+                    if isinstance(data, list) or isinstance(data, tuple):
+                        if len(data) > index and (data[index] is not None and
+                                                  data[index] != False):
+                            text_line.append(data_item.name.upper())
+                    else:
+                        if data is not None and data != False:
+                            text_line.append(data_item.name.upper())
                 else:
-                    try:
-                        data = storage.get_data()
-                    except Exception as ex:
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'getting data',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_, traceback_, None,
-                                              self._simulation_data.debug, ex)
                     if data is not None and data != '':
-                        try:
-                            text_line.append(storage.to_string(data,
-                                                               self._data_type,
-                                                               data_item =
-                                                               data_item))
-                        except Exception as ex:
-                            message = 'Could not convert "{}" of type "{}" ' \
-                                      'to a string.'.format(data,
-                                                            self._data_type)
-                            type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(self.structure.get_model(),
-                                                  self.structure.get_package(),
-                                                  self._path,
-                                                  'converting data to string',
-                                                  self.structure.name,
-                                                  inspect.stack()[0][3], type_,
-                                                  value_, traceback_, message,
-                                                  self._simulation_data.debug)
+                        if isinstance(data, list) or isinstance(data, tuple):
+                            if len(data) > index:
+                                if data[index] is not None and \
+                                        data[index] != False:
+                                    current_data = data[index]
+                                else:
+                                    break
+                            elif data_item.optional == True:
+                                break
+                            else:
+                                message = 'Missing expected data. Data ' \
+                                          'size is {}. Index {} not' \
+                                          'found.'.format(len(data), index)
+                                type_, value_, traceback_ = sys.exc_info()
+                                raise MFDataException(
+                                    self.structure.get_model(),
+                                    self.structure.get_package(),
+                                    self._path,
+                                    'getting data',
+                                    self.structure.name,
+                                    inspect.stack()[0][3], type_,
+                                    value_, traceback_, message,
+                                    self._simulation_data.debug)
+
+                        else:
+                            current_data = data
+                        if data_item.type == DatumType.keyword:
+                            if current_data is not None and current_data != \
+                                    False:
+                                text_line.append(data_item.name.upper())
+                        else:
+                            try:
+                                text_line.append(storage.to_string(
+                                    current_data, self._data_type,
+                                    data_item = data_item))
+                            except Exception as ex:
+                                message = 'Could not convert "{}" of type ' \
+                                          '"{}" to a string' \
+                                          '.'.format(current_data,
+                                                     self._data_type)
+                                type_, value_, traceback_ = sys.exc_info()
+                                raise MFDataException(
+                                    self.structure.get_model(),
+                                    self.structure.get_package(),
+                                    self._path,
+                                    'converting data to string',
+                                    self.structure.name,
+                                    inspect.stack()[0][3], type_,
+                                    value_, traceback_, message,
+                                    self._simulation_data.debug)
+                index += 1
 
             text = self._simulation_data.indent_string.join(text_line)
             return '{}{}\n'.format(self._simulation_data.indent_string,
@@ -334,27 +374,38 @@ class MFScalar(mfdata.MFData):
                         and optional == True):
                     break
                 index += 1
-
-            try:
-                converted_data = storage.convert_data(arr_line[index],
-                            self.structure.data_item_structures[index].type,
-                            self.structure.data_item_structures[0])
-            except Exception as ex:
-                message = 'Could not convert "{}" of type "{}" ' \
-                          'to a string.'.format(
+            first_type = self.structure.get_data_item_types()[0]
+            if first_type[0] == DatumType.keyword:
+                converted_data = [True]
+            else:
+                converted_data = []
+            if first_type[0] != DatumType.keyword or index == 1:
+                if self.structure.get_data_item_types()[1] != \
+                        DatumType.keyword or arr_line[index].lower == \
+                        self.structure.data_item_structures[index].name:
+                    try:
+                        converted_data.append(storage.convert_data(
                             arr_line[index],
-                            self.structure.data_item_structures[index].type)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'converting data to string',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
+                            self.structure.data_item_structures[index].type,
+                            self.structure.data_item_structures[0]))
+                    except Exception as ex:
+                        message = 'Could not convert "{}" of type "{}" ' \
+                                  'to a string.'.format(
+                                    arr_line[index],
+                                    self.structure.data_item_structures[index].
+                                        type)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(self.structure.get_model(),
+                                              self.structure.get_package(),
+                                              self._path,
+                                              'converting data to string',
+                                              self.structure.name,
+                                              inspect.stack()[0][3], type_,
+                                              value_, traceback_, message,
+                                              self._simulation_data.debug)
             try:
                 storage.set_data(converted_data, key=self._current_key)
+                index_num += 1
             except Exception as ex:
                 message = 'Could not set data "{}" with key ' \
                           '"{}".'.format(converted_data, self._current_key)
