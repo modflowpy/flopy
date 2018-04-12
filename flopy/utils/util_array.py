@@ -2430,7 +2430,7 @@ class Util2d(object):
     def load_bin(shape, file_in, dtype, bintype=None):
         import flopy.utils.binaryfile as bf
         nrow, ncol = shape
-        if bintype is not None and not np.issubdtype(dtype, np.int):
+        if bintype is not None and not np.issubdtype(dtype, np.integer):
             header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         else:

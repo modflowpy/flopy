@@ -84,6 +84,9 @@ class MfList(object):
         if data is not None:
             self.__cast_data(data)
         self.__df = None
+        if list_free_format is None:
+            if package.parent.version == "mf2k":
+                list_free_format = False
         self.list_free_format = list_free_format
         return
 

@@ -1,11 +1,11 @@
-import sys, inspect
+import sys, inspect, copy
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from ..data import mfstructure, mfdatautil, mfdata
+from ..data.mfdatautil import MultiList
 from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
-
 
 class MFArray(mfdata.MFMultiDimVar):
     """
@@ -105,16 +105,18 @@ class MFArray(mfdata.MFMultiDimVar):
                                       sim_data.debug, ex)
 
             if model_grid.grid_type() == DiscretizationType.DISU:
-                self._number_of_layers = 1
+                self._layer_shape = (1,)
             else:
-                self._number_of_layers = model_grid.num_layers()
-                if self._number_of_layers is None:
-                    self._number_of_layers = 1
+                self._layer_shape = (model_grid.num_layers(),)
+                if self._layer_shape[0] is None:
+                    self._layer_shape = (1,)
         else:
-            self._number_of_layers = 1
+            self._layer_shape = (1,)
         self._data_type = structure.data_item_structures[0].type
         try:
-            self._data_storage = self._new_storage(self._number_of_layers != 1)
+            shp_ml = MultiList(shape=self._layer_shape)
+            self._data_storage = self._new_storage(shp_ml.get_total_size()
+                                                   != 1)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(structure.get_model(),
@@ -145,20 +147,22 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def __setattr__(self, name, value):
         if name == 'fname':
-            self._get_storage_obj().layer_storage[0].fname = value
+            self._get_storage_obj().layer_storage.first_item().fname = value
         elif name == 'factor':
-            self._get_storage_obj().layer_storage[0].factor = value
+            self._get_storage_obj().layer_storage.first_item().factor = value
         elif name == 'iprn':
-            self._get_storage_obj().layer_storage[0].iprn = value
+            self._get_storage_obj().layer_storage.first_item().iprn = value
         elif name == 'binary':
-            self._get_storage_obj().layer_storage[0].binary = value
+            self._get_storage_obj().layer_storage.first_item().binary = value
         else:
             super(MFArray, self).__setattr__(name, value)
 
     def __getitem__(self, k):
+        if isinstance(k, int):
+            k = (k,)
         storage = self._get_storage_obj()
-        if storage.layered and isinstance(k, int):
-            if len(storage.layer_storage) <= k:
+        if storage.layered and (isinstance(k, tuple) or isinstance(k, list)):
+            if not storage.layer_storage.in_shape(k):
                 comment = 'Could not retrieve layer {} of "{}". There' \
                           'are only {} layers available' \
                           '.'.format(k, self.structure.name,
@@ -172,7 +176,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, comment,
                                       self._simulation_data.debug)
-            # for layered data treat k as a layer number
+            # for layered data treat k as layer number(s)
             return storage.layer_storage[k]
         else:
             # for non-layered data treat k as an array/list index of the data
@@ -231,6 +235,8 @@ class MFArray(mfdata.MFMultiDimVar):
     def __setitem__(self, k, value):
         storage = self._get_storage_obj()
         if storage.layered:
+            if isinstance(k, int):
+                k = (k,)
             # for layered data treat k as a layer number
             try:
                storage.layer_storage[k].set_data(value)
@@ -251,7 +257,7 @@ class MFArray(mfdata.MFMultiDimVar):
                 a = self.get_data()
                 a[k] = value
                 a = a.astype(self.get_data().dtype)
-                layer_storage = storage.layer_storage[0]
+                layer_storage = storage.layer_storage.first_item()
                 self._get_storage_obj().set_data(a, key=self._current_key,
                                                  multiplier=layer_storage.factor)
             except Exception as ex:
@@ -268,7 +274,7 @@ class MFArray(mfdata.MFMultiDimVar):
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
-        self._number_of_layers = 1
+        self._layer_shape = (1,)
 
     def supports_layered(self):
         try:
@@ -338,21 +344,23 @@ class MFArray(mfdata.MFMultiDimVar):
                                   self._simulation_data.debug)
 
     def store_as_external_file(self, external_file_path, multiplier=[1.0],
-                               layer_num=None):
+                               layer=None):
+        if isinstance(layer, int):
+            layer = (layer,)
         storage = self._get_storage_obj()
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
-        ds_index = self._resolve_layer_index(layer_num)
+        ds_index = self._resolve_layer_index(layer)
 
         try:
             # move data to file
             if storage.layer_storage[ds_index[0]].data_storage_type == \
                     mfdata.DataStorageType.external_file:
                 storage.external_to_external(external_file_path, multiplier,
-                                             layer_num)
+                                             layer)
             else:
                 storage.internal_to_external(external_file_path, multiplier,
-                                             layer_num)
+                                             layer)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),
@@ -374,11 +382,14 @@ class MFArray(mfdata.MFMultiDimVar):
             self._get_storage_obj().layer_storage[ds_index[0]].multiplier = \
                     multiplier[0]
 
-    def has_data(self, layer_num=None):
-        if self._get_storage_obj() is None:
+    def has_data(self, layer=None):
+        storage = self._get_storage_obj()
+        if storage is None:
             return False
+        if isinstance(layer, int):
+            layer = (layer,)
         try:
-            return self._get_storage_obj().has_data(layer_num)
+            return storage.has_data(layer)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),
@@ -390,11 +401,13 @@ class MFArray(mfdata.MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, layer_num=None, apply_mult=False):
+    def get_data(self, layer=None, apply_mult=False):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
+        if isinstance(layer, int):
+            layer = (layer,)
         try:
-            return self._get_storage_obj().get_data(layer_num, apply_mult)
+            return self._get_storage_obj().get_data(layer, apply_mult)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),
@@ -406,11 +419,13 @@ class MFArray(mfdata.MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def set_data(self, data, multiplier=[1.0], layer_num=None):
+    def set_data(self, data, multiplier=[1.0], layer=None):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
+        if isinstance(layer, int):
+            layer = (layer,)
         try:
-            self._get_storage_obj().set_data(data, layer_num, multiplier,
+            self._get_storage_obj().set_data(data, layer, multiplier,
                                              key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
@@ -422,7 +437,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
-        self._number_of_layers = self._get_storage_obj().num_layers
+        self._layer_shape = self._get_storage_obj().layer_storage.list_shape
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
@@ -442,15 +457,16 @@ class MFArray(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
-            if self._number_of_layers != model_grid.num_layers():
+            if self._layer_shape[-1] != model_grid.num_layers():
                 if model_grid.grid_type() == DiscretizationType.DISU:
-                    self._number_of_layers = 1
+                    self._layer_shape = (1,)
                 else:
-                    self._number_of_layers = model_grid.num_layers()
-                    if self._number_of_layers is None:
-                        self._number_of_layers = 1
-                self._set_storage_obj(self._new_storage(self._number_of_layers
-                                                        != 1, True))
+                    self._layer_shape = (model_grid.num_layers(),)
+                    if self._layer_shape[-1] is None:
+                        self._layer_shape = (1,)
+                shape_ml = MultiList(shape=self._layer_shape)
+                self._set_storage_obj(self._new_storage(
+                    shape_ml.get_total_size() != 1, True))
         storage = self._get_storage_obj()
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
@@ -500,6 +516,7 @@ class MFArray(mfdata.MFMultiDimVar):
             index_num = 0
             aux_var_index = None
 
+        # TODO: Add species support
         # if layered supported, look for layered flag
         if self.structure.layered or aux_var_index is not None:
             if (len(arr_line) > index_num and
@@ -517,14 +534,14 @@ class MFArray(mfdata.MFMultiDimVar):
                                           inspect.stack()[0][3], type_,
                                           value_, traceback_, None,
                                           self._simulation_data.debug, ex)
-                while storage.num_layers < layers:
+                while storage.layer_storage.list_shape[0] < layers:
                     storage.add_layer()
             elif aux_var_index is not None:
                 # each layer stores a different aux variable
                 layers = len(package_dim.get_aux_variables()[0]) - 1
-                self._number_of_layers = layers
+                self._layer_shape = (layers,)
                 storage.layered = True
-                while storage.num_layers < layers:
+                while storage.layer_storage.list_shape[0] < layers:
                     storage.add_layer()
             else:
                 layers = 1
@@ -552,17 +569,17 @@ class MFArray(mfdata.MFMultiDimVar):
         if aux_var_index is None:
             # loop through the number of layers
             for layer in range(0, layers):
-                self._load_layer(layer, layer_size, storage, arr_line,
+                self._load_layer((layer,), layer_size, storage, arr_line,
                                  file_handle)
         else:
             # write the aux var to it's unique index
-            self._load_layer(aux_var_index, layer_size, storage, arr_line,
+            self._load_layer((aux_var_index,), layer_size, storage, arr_line,
                              file_handle)
         return [False, None]
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         di_struct = self.structure.data_item_structures[0]
-        if not di_struct.just_data or layer > 0:
+        if not di_struct.just_data or mfdatautil.max_tuple_abs_size(layer) > 0:
             arr_line = mfdatautil.ArrayUtil.\
                 split_data_line(file_handle.readline())
         layer_storage = storage.layer_storage[layer]
@@ -709,9 +726,12 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def get_file_entry(self, layer=None,
                        ext_file_action=ExtFileAction.copy_relative_paths):
+        if isinstance(layer, int):
+            layer = (layer,)
         data_storage = self._get_storage_obj()
-        if data_storage is None or data_storage.num_layers == 0 or \
-                not data_storage.has_data():
+        if data_storage is None or \
+                data_storage.layer_storage.get_total_size() == 0 \
+                or not data_storage.has_data():
             return ''
 
         # determine if this is the special aux variable case
@@ -721,7 +741,8 @@ class MFArray(mfdata.MFMultiDimVar):
             layered_aux = False
         # prepare indent
         indent = self._simulation_data.indent_string
-        if self._number_of_layers == 1:
+        shape_ml = MultiList(shape=self._layer_shape)
+        if shape_ml.get_total_size() == 1:
             data_indent = indent
         else:
             data_indent = '{}{}'.format(indent,
@@ -758,11 +779,11 @@ class MFArray(mfdata.MFMultiDimVar):
                     file_entry_array.append('{}{}\n'.format(indent, 'LAYERED'))
 
             if layer is None:
-                layer_min = 0
-                layer_max = self._number_of_layers
+                layer_min = shape_ml.first_index()
+                layer_max = copy.deepcopy(self._layer_shape)
             else:
                 # set layer range
-                if layer >= self._number_of_layers - 1:
+                if not shape_ml.in_shape(layer):
                     comment = 'Layer {} for variable "{}" does not exist' \
                               '.'.format(layer, self._data_name)
                     type_, value_, traceback_ = sys.exc_info()
@@ -776,9 +797,8 @@ class MFArray(mfdata.MFMultiDimVar):
                                           self._simulation_data.debug)
 
                 layer_min = layer
-                layer_max = layer + 1
-
-            for layer in range(layer_min, layer_max):
+                layer_max = shape_ml.inc_shape_idx(layer)
+            for layer in shape_ml.indexes(layer_min, layer_max):
                 file_entry_array.append(
                         self._get_file_entry_layer(layer, data_indent,
                                                    data_storage.layer_storage[
@@ -805,7 +825,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                       self._data_dimensions,
                                       mfdata.DataStorageType.internal_array,
                                       mfdata.DataStructureType.ndarray,
-                                      self._number_of_layers)
+                                      self._layer_shape)
         else:
             return mfdata.DataStorage(self._simulation_data,
                                       self._data_dimensions,
@@ -829,9 +849,20 @@ class MFArray(mfdata.MFMultiDimVar):
 
         file_entry = ''
         if layered_aux:
-            # display aux name
-            file_entry = '{}{}\n'.format(indent_string,
-                                         self._get_aux_var_name(layer))
+            try:
+                # display aux name
+                file_entry = '{}{}\n'.format(indent_string,
+                                             self._get_aux_var_name(layer))
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'getting aux variables',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
             indent_string = '{}{}'.format(indent_string,
                                           self._simulation_data.indent_string)
 
@@ -976,11 +1007,11 @@ class MFArray(mfdata.MFMultiDimVar):
         else:
             return data
 
-    def _resolve_layer_index(self, layer_num, allow_multiple_layers=False):
+    def _resolve_layer_index(self, layer, allow_multiple_layers=False):
         # handle layered vs non-layered data
         storage = self._get_storage_obj()
         if storage.layered:
-            if layer_num is None:
+            if layer is None:
                 if allow_multiple_layers:
                     layer_index = storage.get_active_layer_indices()
                 else:
@@ -998,9 +1029,9 @@ class MFArray(mfdata.MFMultiDimVar):
                                           self._simulation_data.debug)
 
             else:
-                layer_index = [layer_num]
+                layer_index = [layer]
         else:
-            layer_index = [0]
+            layer_index = [[0]]
         return layer_index
 
     def _verify_data(self, data_iter, layer_num):
@@ -1086,14 +1117,14 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
         self.get_data_prep(key)
         return super(MFTransientArray, self).get_data(apply_mult=apply_mult)
 
-    def set_data(self, data, multiplier=[1.0], layer_num=None, key=None):
+    def set_data(self, data, multiplier=[1.0], layer=None, key=None):
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
             for key, list_item in data.items():
                 self._set_data_prep(list_item, key)
                 super(MFTransientArray, self).set_data(list_item, multiplier,
-                                                       layer_num)
+                                                       layer)
         else:
             if key is None:
                 # search for a key
@@ -1104,7 +1135,7 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
                 else:
                     key = 0
             self._set_data_prep(data, key)
-            super(MFTransientArray, self).set_data(data, multiplier, layer_num)
+            super(MFTransientArray, self).set_data(data, multiplier, layer)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):
