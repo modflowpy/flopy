@@ -176,8 +176,8 @@ class Mnw(object):
             zpump : float
             hlim : float
             qcut : int
-            gfrcmn : float
-            gfrcmx : float
+            qfrcmn : float
+            qfrcmx : float
             hlift : float
             liftq0 : float
             liftqmax : float

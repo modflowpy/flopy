@@ -787,6 +787,7 @@ class Mt3dBtn(Package):
             print('   loading DELR...')
         delr = Util2d.load(f, model, (ncol, 1), np.float32, 'delr',
                             ext_unit_dict, array_format="mt3d")
+        delr = delr.array.reshape((ncol))
         if model.verbose:
             print('   DELR {}'.format(delr))
 
@@ -794,6 +795,7 @@ class Mt3dBtn(Package):
             print('   loading DELC...')
         delc = Util2d.load(f, model, (nrow, 1), np.float32, 'delc',
                             ext_unit_dict, array_format="mt3d")
+        delc = delc.array.reshape((nrow))
         if model.verbose:
             print('   DELC {}'.format(delc))
 
