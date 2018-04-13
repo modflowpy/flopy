@@ -7,6 +7,7 @@ import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdatautil import ArrayUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
+from flopy.mf6.mfbase import VerbosityLevel
 
 try:
     import pymake
@@ -51,7 +52,8 @@ def test001a_tharmonic():
     array_util = ArrayUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verbosity_level=VerbosityLevel.quiet)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -208,6 +210,7 @@ def test003_gwfs_disv():
 
     return
 
+
 def test005_advgw_tidal():
     # init paths
     test_ex_name = 'test005_advgw_tidal'
@@ -226,7 +229,8 @@ def test005_advgw_tidal():
     expected_head_file_b = os.path.join(expected_output_folder, 'AdvGW_tidal_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verbosity_level=VerbosityLevel.verbose)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -785,9 +789,9 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
+    test036_twrihfb()
     test027_timeseriestest()
     test006_2models_mvr()
-    test036_twrihfb()
     test045_lake2tr()
     test001e_uzf_3lay()
     test045_lake1ss_table()
