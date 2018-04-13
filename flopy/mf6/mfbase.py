@@ -147,6 +147,12 @@ class MFDataException(Exception):
         Exception.__init__(self, error_message)
 
 
+class VerbosityLevel(Enum):
+    quiet = 1
+    normal = 2
+    verbose = 3
+
+
 class PackageContainerType(Enum):
     simulation = 1
     model = 2
@@ -241,7 +247,7 @@ class MFFileMgmt(object):
                                                   self._simulation_data.debug)
 
                         num_files_copied += 1
-        print('INFORMATION: {} external files copied'.format(num_files_copied))
+        return num_files_copied
 
     def get_updated_path(self, external_file_path, model_name,
                          ext_file_action):

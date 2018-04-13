@@ -9,7 +9,7 @@ import os.path
 from flopy.mbase import run_model
 from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                              PackageContainerType, MFDataException, \
-                             FlopyException
+                             FlopyException, VerbosityLevel
 from flopy.mf6.mfmodel import MFModel
 from flopy.mf6.mfpackage import MFPackage
 from flopy.mf6.data.mfstructure import DatumType
@@ -17,6 +17,7 @@ from flopy.mf6.data import mfstructure, mfdata
 from flopy.mf6.utils import binaryfile_utils
 from flopy.mf6.utils import mfobservation
 from flopy.mf6.modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
+
 
 class SimulationDict(collections.OrderedDict):
     """
@@ -171,6 +172,8 @@ class MFSimulationData(object):
         self.comments_on = False
         self.auto_set_sizes = True
         self.debug = False
+        self.verbose = True
+        self.verbosity_level = VerbosityLevel.normal
 
         self._update_str_format()
 
@@ -250,7 +253,8 @@ class MFSimulation(PackageContainer):
     Methods
     -------
     load : (sim_name : string, sim_name_file : string, version : string,
-            exe_name : string, sim_ws : string, strict : boolean) :
+            exe_name : string, sim_ws : string, strict : boolean,
+            verbosity_level : VerbosityLevel) :
             MFSimulation
         a class method that loads a simulation from files
     write_simulation
@@ -326,7 +330,9 @@ class MFSimulation(PackageContainer):
         try:
             os.makedirs(self.simulation_data.mfpath.get_sim_path())
         except OSError as e:
-            if e.errno == errno.EEXIST:
+            if e.errno == errno.EEXIST and \
+                self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
                 print('Directory structure already exists for simulation path '
                       '{}'.format(self.simulation_data.mfpath.get_sim_path()))
 
@@ -334,7 +340,6 @@ class MFSimulation(PackageContainer):
         # add at least one model to the simulation and fill out the name and
         #  tdis files
         self.valid = False
-        self.verbose = False
 
     def __getattr__(self, item):
         """
@@ -361,7 +366,7 @@ class MFSimulation(PackageContainer):
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
-             sim_ws='.', strict=True):
+             sim_ws='.', strict=True, verbosity_level=VerbosityLevel.normal):
         """
         Load an existing model.
 
@@ -381,6 +386,8 @@ class MFSimulation(PackageContainer):
             path to simulation working folder
         strict : boolean
             strict enforcement of file formatting
+        verbosity_level : VerbosityLevel
+            verbosity level of console output messages
         Returns
         -------
         sim : MFSimulation object
@@ -389,11 +396,16 @@ class MFSimulation(PackageContainer):
         --------
         >>> s = flopy6.mfsimulation.load('my simulation')
         """
-
         # initialize
         instance = cls(sim_name, version, exe_name, sim_ws)
+        instance.simulation_data.verbosity_level = verbosity_level
+
+        if verbosity_level.value >= VerbosityLevel.normal.value:
+            print('loading simulation...')
 
         # load simulation name file
+        if verbosity_level.value >= VerbosityLevel.normal.value:
+            print('  loading simulation name file...')
         instance.name_file.load(strict)
 
         # load TDIS file
@@ -405,6 +417,8 @@ class MFSimulation(PackageContainer):
 
         instance._tdis_file.filename = instance.simulation_data.mfdata[
             ('nam', 'timing', tdis_pkg)].get_data()
+        if verbosity_level.value >= VerbosityLevel.normal.value:
+            print('  loading tdis package...')
         instance._tdis_file.load(strict)
 
         # load models
@@ -425,6 +439,8 @@ class MFSimulation(PackageContainer):
             path, name_file = os.path.split(item[1])
             model_obj = PackageContainer.model_factory(item[0][:-1].lower())
             # load model
+            if verbosity_level.value >= VerbosityLevel.normal.value:
+                print('  loading model {}...'.format(item[0].lower()))
             instance._models[item[2]] = model_obj.load(
                 instance,
                 instance.structure.model_struct_objs[item[0].lower()], item[2],
@@ -489,6 +505,9 @@ class MFSimulation(PackageContainer):
                                             fname=exgfile[1],
                                             pname=exchange_name,
                                             loading_package=True)
+                if verbosity_level.value >= VerbosityLevel.normal.value:
+                    print('  loading exchange package {}..'
+                          '.'.format(exchange_file._get_pname()))
                 exchange_file.load(strict)
                 instance._exchange_files[exgfile[1]] = exchange_file
 
@@ -510,6 +529,9 @@ class MFSimulation(PackageContainer):
         for solution_info in solution_groups:
             ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
                                         pname=solution_info[2])
+            if verbosity_level.value >= VerbosityLevel.normal.value:
+                print('  loading ims package {}..'
+                      '.'.format(ims_file._get_pname()))
             ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
@@ -591,8 +613,10 @@ class MFSimulation(PackageContainer):
                     # register child package with the parent package
                     parent_package._add_package(package, package.path)
             else:
-                print('WARNING: Unsupported file type {} for '
-                      'simulation.'.format(package.package_type))
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: Unsupported file type {} for '
+                          'simulation.'.format(package.package_type))
 
     def register_ims_package(self, ims_file, model_list):
         """
@@ -634,9 +658,11 @@ class MFSimulation(PackageContainer):
             if file.package_name == ims_file.package_name and \
                     file != ims_file:
                 pkg_with_same_name = file
-                print('WARNING: ims package with name {} already exists. '
-                      'New ims package will replace old package'
-                      '.'.format(file.package_name))
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: ims package with name {} already exists. '
+                          'New ims package will replace old package'
+                          '.'.format(file.package_name))
                 self._remove_package(self._ims_files[file.filename])
                 del self._ims_files[file.filename]
         # register ims package
@@ -721,13 +747,24 @@ class MFSimulation(PackageContainer):
         --------
         """
         # write simulation name file
+        if self.simulation_data.verbosity_level.value >= \
+                VerbosityLevel.normal.value:
+            print('writing simulation...')
+            print('  writing simulation name file...')
         self.name_file.write(ext_file_action=ext_file_action)
 
         # write TDIS file
+        if self.simulation_data.verbosity_level.value >= \
+                VerbosityLevel.normal.value:
+            print('  writing simulation tdis package...')
         self._tdis_file.write(ext_file_action=ext_file_action)
 
         # write ims files
         for index, ims_file in self._ims_files.items():
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('  writing ims package {}...'.format(
+                    ims_file._get_pname()))
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
@@ -745,12 +782,18 @@ class MFSimulation(PackageContainer):
                                           package=exchange_file._get_pname(),
                                           message=message)
                 if gnc_file in self._ghost_node_files:
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('  writing gnc package {}...'.format(
+                            self._ghost_node_files[gnc_file]._get_pname()))
                     self._ghost_node_files[gnc_file].write(ext_file_action=
                                                            ext_file_action)
                 else:
-                    print('WARNING: Ghost node file {} not loaded prior to '
-                          'writing. File will not be written.'.format(gnc_file)
-                          )
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('WARNING: Ghost node file {} not loaded prior to'
+                              ' writing. File will not be written'
+                              '.'.format(gnc_file))
             if hasattr(exchange_file, 'mvr_filerecord') and \
                     exchange_file.mvr_filerecord.has_data():
                 try:
@@ -764,39 +807,65 @@ class MFSimulation(PackageContainer):
                                           message=message)
 
                 if mvr_file in self._mover_files:
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('  writing mvr package {}...'.format(
+                            self._mover_files[mvr_file]._get_pname()))
                     self._mover_files[mvr_file].write(ext_file_action=
                                                       ext_file_action)
                 else:
-                    print('WARNING: Mover file {} not loaded prior to writing.'
-                          '  File will not be written.'.format(mvr_file))
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('WARNING: Mover file {} not loaded prior to '
+                              'writing. File will not be '
+                              'written.'.format(mvr_file))
 
         # write other packages
         for index, pp in self._other_files.items():
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('  writing package {}...'.format(pp._get_pname()))
             pp.write(ext_file_action=ext_file_action)
 
         # FIX: model working folder should be model name file folder
 
         # write models
         for key, model in self._models.items():
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('  writing model {}...'.format(model.name))
             model.write(ext_file_action=ext_file_action)
 
         if ext_file_action == ExtFileAction.copy_relative_paths:
             # move external files with relative paths
-            self.simulation_data.mfpath.copy_files()
+            num_files_copied = self.simulation_data.mfpath.copy_files()
         elif ext_file_action == ExtFileAction.copy_all:
             # move all external files
-            self.simulation_data.mfpath.copy_files(copy_relative_only=False)
+            num_files_copied = self.simulation_data.mfpath.copy_files(
+                copy_relative_only=False)
+        else:
+            num_files_copied = 0
+        if self.simulation_data.verbosity_level.value >= \
+                VerbosityLevel.verbose.value and num_files_copied > 0:
+            print('INFORMATION: {} external files copied'.format(
+                num_files_copied))
         self.simulation_data.mfpath.set_last_accessed_path()
 
     def set_sim_path(self, path):
         self.simulation_data.mfpath.set_sim_path(path)
 
-    def run_simulation(self, silent=False, pause=False, report=False,
+    def run_simulation(self, silent=None, pause=False, report=False,
                        normal_msg='normal termination',
                        async=False, cargs=None):
         """
         Run the simulation.
         """
+        if silent is None:
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                silent = False
+            else:
+                silent = True
         return run_model(self._exe_name, self.name_file.filename,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
@@ -1037,17 +1106,21 @@ class MFSimulation(PackageContainer):
                     not None and self._tdis_file in self.packages:
                 # tdis package already exists. there can be only one tdis
                 # package.  remove existing tdis package
-                print('WARNING: tdis package already exists. Replacing '
-                      'existing tdis package.')
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: tdis package already exists. Replacing '
+                          'existing tdis package.')
                 self._remove_package(self._tdis_file)
             elif package.package_type.lower() == 'gnc' and \
                     package.filename in self._ghost_node_files and \
                     self._ghost_node_files[package.filename] in self.packages:
                 # gnc package with same file name already exists.  remove old
                 # gnc package
-                print('WARNING: gnc package with name {} already exists. '
-                      'Replacing existing gnc package'
-                      '.'.format(pname))
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: gnc package with name {} already exists. '
+                          'Replacing existing gnc package'
+                          '.'.format(pname))
                 self._remove_package(self._ghost_node_files[package.filename])
                 del self._ghost_node_files[package.filename]
             elif package.package_type.lower() == 'mvr' and \
@@ -1055,16 +1128,20 @@ class MFSimulation(PackageContainer):
                      self._mover_files[package.filename] in self.packages:
                 # mvr package with same file name already exists.  remove old
                 # mvr package
-                print('WARNING: mvr package with name {} already exists. '
-                      'Replacing existing mvr package'
-                      '.'.format(pname))
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: mvr package with name {} already exists. '
+                          'Replacing existing mvr package'
+                          '.'.format(pname))
                 self._remove_package(self._mover_files[package.filename])
                 del self._mover_files[package.filename]
             elif package.package_type.lower() != 'ims' and pname in \
                     self.package_name_dict:
-                print('WARNING: Package with name {} already exists.  '
-                      'Replacing existing package'
-                      '.'.format(package.package_name.lower()))
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: Package with name {} already exists.  '
+                          'Replacing existing package'
+                          '.'.format(package.package_name.lower()))
                 self._remove_package(self.package_name_dict[pname])
             if package.package_type.lower() != 'ims':
                 # all but ims packages get added here.  ims packages are

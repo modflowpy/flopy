@@ -7,7 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 import struct
 import numpy as np
-from ..mfbase import MFDataException, \
+from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
@@ -1206,11 +1206,13 @@ class DataStorage(object):
             for data in arr_line:
                 if data != '':
                     if current_size == data_size:
-                        path = self.data_dimensions.structure.path
-                        print('WARNING: More data found than expected in file'
-                              ' {} for data '
-                              '"{}".'.format(fd.name,
-                                             path))
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.normal.value:
+                            path = self.data_dimensions.structure.path
+                            print('WARNING: More data found than expected in '
+                                  'file {} for data '
+                                  '"{}".'.format(fd.name,
+                                                 path))
                         break
                     data_out.append(self.convert_data(data, self._data_type,
                                                       data_item))
@@ -1626,10 +1628,14 @@ class DataStorage(object):
             return DatumUtil.is_float(data_item)
         elif data_type == DatumType.keystring:
             # TODO: support keystring type
-            print('Keystring type currently not supported.')
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('Keystring type currently not supported.')
             return True
         else:
-            print('{} type checking currently not supported'.format(data_type))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('{} type checking currently not supported'.format(data_type))
             return True
 
     def _fill_dimensions(self, data_iter, dimensions):
