@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
-                    MFInvalidTransientBlockHeaderException
+                    MFInvalidTransientBlockHeaderException, VerbosityLevel
 from .data.mfstructure import DatumType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
@@ -486,20 +486,24 @@ class MFBlock(object):
         # verify number of header variables
         if len(block_header.variable_strings) < \
           self.structure.number_non_optional_block_header_data():
-            warning_str = 'WARNING: Block header for block "{}" does not ' \
-                          'contain the correct number of ' \
-                          'variables {}'.format(block_header.name, self.path)
-            print(warning_str)
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                warning_str = 'WARNING: Block header for block "{}" does not ' \
+                              'contain the correct number of ' \
+                              'variables {}'.format(block_header.name, self.path)
+                print(warning_str)
             return
 
         if self.loaded:
             # verify header has not already been loaded
             for bh_current in self.block_headers:
                 if bh_current.is_same_header(block_header):
-                    warning_str = 'WARNING: Block header for block "{}" is ' \
-                                  'not a unique block header ' \
-                                  '{}'.format(block_header.name, self.path)
-                    print(warning_str)
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        warning_str = 'WARNING: Block header for block "{}" is ' \
+                                      'not a unique block header ' \
+                                      '{}'.format(block_header.name, self.path)
+                        print(warning_str)
                     return
 
         # init
@@ -544,6 +548,10 @@ class MFBlock(object):
                 fd_path, filename = os.path.split(
                   os.path.realpath(fd_block.name))
                 try:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        opening external file "{}"..'
+                              '.'.format(arr_line[1]))
                     self.external_file_name = arr_line[1]
                     fd_block = open(os.path.join(fd_path, self.external_file_name),
                                     'r')
@@ -565,6 +573,10 @@ class MFBlock(object):
                 # load a single data set
                 dataset = self.datasets[next(iter(self.datasets))]
                 try:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading data {}..'
+                              '.'.format(dataset.structure.name))
                     next_line = dataset.load(line, fd_block,
                                              self.block_headers[-1],
                                              initial_comment)
@@ -584,6 +596,10 @@ class MFBlock(object):
                 package_info_list = self._get_package_info(dataset)
                 if package_info_list is not None:
                     for package_info in package_info_list:
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('        loading child package {}..'
+                                  '.'.format(package_info[0]))
                         self._model_or_sim.load_package(package_info[0],
                                                         package_info[1],
                                                         package_info[1], True,
@@ -637,18 +653,15 @@ class MFBlock(object):
                                 break
                             # look for keyword and store line as data o
                             # r comment
-                            key, \
-                            result = self._find_data_by_keyword(line,
-                                                                fd_block,
-                                                                initial_comment
-                                                                )
+                            key, result = self._find_data_by_keyword(
+                                line, fd_block, initial_comment)
                             self._save_comments(arr_line, line, key, comments)
                             if result[1] is not None and \
                                result[1][:3].upper() == 'END':
                                 break
 
         self._simulation_data.mfdata[self.blk_trailing_comment_path].text = \
-          comments
+            comments
         self.loaded = True
         self.is_valid()
 
@@ -663,9 +676,12 @@ class MFBlock(object):
             if key is not None:
                 ds_name = self.datasets_keyword[key].name
                 try:
-                    next_line = self.datasets[ds_name].load(next_line[1], fd,
-                                                            self.block_headers[-1],
-                                                            initial_comment)
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading data {}...'.format(ds_name))
+                    next_line = self.datasets[ds_name].load(
+                        next_line[1], fd, self.block_headers[-1],
+                        initial_comment)
                 except MFDataException as mfde:
                     raise MFDataException(mfdata_except=mfde,
                                           model=self._container_package.
@@ -685,6 +701,10 @@ class MFBlock(object):
                                                            ds_name])
                 if package_info_list is not None:
                     for package_info in package_info_list:
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('        loading child package {}..'
+                                  '.'.format(package_info[0]))
                         self._model_or_sim.load_package(package_info[0],
                                                         package_info[1],
                                                         package_info[1], True,
@@ -719,6 +739,10 @@ class MFBlock(object):
             package_info_list = self._get_package_info(dataset)
             if package_info_list is not None:
                 for package_info in package_info_list:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading child package {}..'
+                              '.'.format(package_info[0]))
                     self._model_or_sim.load_package(package_info[0],
                                                     package_info[1], None,
                                                     True, package_info[2],
@@ -858,9 +882,18 @@ class MFBlock(object):
         for key, dataset in self.datasets.items():
             try:
                 if transient_key is None:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        writing data {}..'
+                              '.'.format(dataset.structure.name))
                     fd.write(dataset.get_file_entry(
                         ext_file_action=ext_file_action))
                 else:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        writing data {} ({})..'
+                              '.'.format(dataset.structure.name,
+                                         transient_key))
                     if dataset.repeating:
                         fd.write(dataset.get_file_entry(
                             transient_key, ext_file_action=ext_file_action))
@@ -1090,8 +1123,10 @@ class MFPackage(PackageContainer):
         self.dimensions = self.create_package_dimensions()
 
         if self.path is None:
-            print('WARNING: Package type {} failed to register property.'
-                  ' {}'.format(self.package_type, self.path))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Package type {} failed to register property.'
+                      ' {}'.format(self.package_type, self.path))
         if parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
@@ -1203,13 +1238,16 @@ class MFPackage(PackageContainer):
                         if size_def.get_data() != new_size >= 0:
                             # store current size
                             size_def.set_data(new_size)
+
                             # informational message to the user
-                            print('INFORMATION: {} in {} changed to {} based '
-                                  'on size of '
-                                  '{}'.format(size_def_name,
-                                              size_def.structure.path[:-1],
-                                              new_size,
-                                              dataset.structure.name))
+                            if self._simulation_data.verbosity_level.value >= \
+                                    VerbosityLevel.normal.value:
+                                print('INFORMATION: {} in {} changed to {} '
+                                      'based on size of '
+                                      '{}'.format(size_def_name,
+                                                  size_def.structure.path[:-1],
+                                                  new_size,
+                                                  dataset.structure.name))
 
     def remove(self):
         self._model_or_sim.remove_package(self)
@@ -1342,10 +1380,12 @@ class MFPackage(PackageContainer):
                 if block_key not in self.blocks:
                     # block name not recognized, load block as comments and
                     # issue a warning
-                    warning_str = 'WARNING: Block "{}" is not a valid block ' \
-                                  'name for file type ' \
-                                  '{}.'.format(block_key, self.package_type)
-                    print(warning_str)
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        warning_str = 'WARNING: Block "{}" is not a valid block ' \
+                                      'name for file type ' \
+                                      '{}.'.format(block_key, self.package_type)
+                        print(warning_str)
                     self._store_comment(line, found_first_block)
                     while line != '':
                         line = fd_input_file.readline()
@@ -1364,17 +1404,25 @@ class MFPackage(PackageContainer):
                         # multiple entries
                         header_name = block_header_info.name
                         if not self.structure.blocks[header_name.lower()].\
-                          repeating():
+                                repeating():
                             # warn and skip block
-                            warning_str = 'WARNING: Block "{}" has multiple ' \
-                                          'entries and is not intended to ' \
-                                          'be a repeating block ({} ' \
-                                          'package)'.format(header_name,
-                                                            self.package_type)
-                            print(warning_str)
+                            if self._simulation_data.verbosity_level.value >= \
+                                    VerbosityLevel.normal.value:
+                                warning_str = 'WARNING: Block "{}" has ' \
+                                              'multiple entries and is not ' \
+                                              'intended to be a repeating ' \
+                                              'block ({} package' \
+                                              ')'.format(header_name,
+                                                         self.package_type)
+                                print(warning_str)
                             skip_block = True
 
                     if not skip_block:
+                        if self.simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('      loading block {}...'.format(
+                                self.blocks[block_key].structure.name))
+
                         self.blocks[block_key].load(block_header_info,
                                                     fd_input_file, strict)
                         self._simulation_data.mfdata[self.blocks[block_key].
@@ -1474,6 +1522,9 @@ class MFPackage(PackageContainer):
         # loop through blocks
         block_num = 1
         for index, block in self.blocks.items():
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.verbose.value:
+                print('      writing block {}...'.format(block.structure.name))
             # write block
             block.write(fd, ext_file_action=ext_file_action)
             block_num += 1

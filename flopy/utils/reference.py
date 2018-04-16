@@ -1122,7 +1122,7 @@ class SpatialReference(object):
                                   epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
-                        fieldname='level',
+                        fieldname='level', epsg=None, prj=None,
                         **kwargs):
         """Convert matplotlib contour plot object to shapefile.
 
@@ -1132,6 +1132,10 @@ class SpatialReference(object):
             path of output shapefile
         contours : matplotlib.contour.QuadContourSet or list of them
             (object returned by matplotlib.pyplot.contour)
+        epsg : int
+            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+        prj : str
+            Existing projection file to be used with new shapefile.
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
         Returns
@@ -1143,6 +1147,11 @@ class SpatialReference(object):
 
         if not isinstance(contours, list):
             contours = [contours]
+
+        if epsg is None:
+            epsg=self._epsg
+        if prj is None:
+            prj=self.proj4_str
 
         geoms = []
         level = []
@@ -1157,13 +1166,15 @@ class SpatialReference(object):
         ra = np.array(level,
                       dtype=[(fieldname, float)]).view(np.recarray)
 
-        recarray2shp(ra, geoms, filename, **kwargs)
+        recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
 
     def export_array_contours(self, filename, a,
                               fieldname='level',
                               interval=None,
                               levels=None,
                               maxlevels=1000,
+                              epsg=None,
+                              prj=None,
                               **kwargs):
         """Contour an array using matplotlib; write shapefile of contours.
 
@@ -1173,10 +1184,18 @@ class SpatialReference(object):
             Path of output file with '.shp' extention.
         a : 2D numpy array
             Array to contour
-
+        epsg : int
+            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+        prj : str
+            Existing projection file to be used with new shapefile.
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
         """
         import matplotlib.pyplot as plt
+
+        if epsg is None:
+            epsg=self._epsg
+        if prj is None:
+            prj=self.proj4_str
 
         if interval is not None:
             min = np.nanmin(a)
@@ -1190,10 +1209,10 @@ class SpatialReference(object):
             levels = np.arange(min, max, interval)
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
-        self.export_contours(filename, ctr, fieldname, **kwargs)
+        self.export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
         plt.close()
 
-    def contour_array(self, ax, a, **kwargs):
+    def contour_array(self, ax, a,  **kwargs):
         """
         Create a QuadMesh plot of the specified array using pcolormesh
 

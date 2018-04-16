@@ -4,7 +4,7 @@ import sys
 import inspect
 from copy import deepcopy
 from ..data import mfstructure, mfdatautil, mfdata
-from ..mfbase import MFDataException, ExtFileAction
+from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
 
 
@@ -901,13 +901,17 @@ class MFList(mfdata.MFMultiDimVar):
                                                     data_item.keystring_dict:
                                                 # data does not match any
                                                 # expected keywords
-                                                print('WARNING: Failed to '
-                                                      'process line {}.  '
-                                                      'Line does not match '
-                                                      'expected keystring '
-                                                      '{}'.format(
-                                                            ' '.join(arr_line),
-                                                            data_item.name))
+                                                if self._simulation_data.\
+                                                    verbosity_level.value >= \
+                                                    VerbosityLevel.normal.\
+                                                        value:
+                                                    print('WARNING: Failed to '
+                                                          'process line {}.  '
+                                                          'Line does not match'
+                                                          ' expected keystring'
+                                                          ' {}'.format(
+                                                          ' '.join(arr_line),
+                                                          data_item.name))
                                                 break
                                         data_item_ks = \
                                             data_item.keystring_dict[
