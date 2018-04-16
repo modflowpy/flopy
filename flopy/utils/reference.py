@@ -1080,7 +1080,10 @@ class SpatialReference(object):
                     Affine.rotation(self.rotation) * \
                     Affine.scale(dxdy, -dxdy)
 
+            # third dimension is the number of bands
             a = a.copy()
+            if len(a.shape) == 2:
+                a = np.reshape(a, (1, *a.shape))
             if a.dtype.name == 'int64':
                 a = a.astype('int32')
                 dtype = rasterio.int32
@@ -1094,9 +1097,9 @@ class SpatialReference(object):
                 msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
                 raise TypeError(msg)
 
-            meta = {'count': 1,
-                    'width': a.shape[1],
-                    'height': a.shape[0],
+            meta = {'count': a.shape[0],
+                    'width': a.shape[2],
+                    'height': a.shape[1],
                     'nodata': nodata,
                     'dtype': dtype,
                     'driver': 'GTiff',
@@ -1105,7 +1108,7 @@ class SpatialReference(object):
                     }
             meta.update(kwargs)
             with rasterio.open(filename, 'w', **meta) as dst:
-                dst.write(a, 1)
+                dst.write(a)
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
