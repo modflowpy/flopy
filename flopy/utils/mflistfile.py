@@ -250,7 +250,7 @@ class ListBudget(object):
             names.insert(0, 'stress_period')
             names.insert(0, 'time_step')
             names.insert(0, 'totim')
-            return self.cum[names].view(np.recarray)
+            return np.array(self.cum)[names].view(np.recarray)
 
     def get_model_runtime(self, units='seconds'):
         """
@@ -417,6 +417,7 @@ class ListBudget(object):
             print('Could not find specified condition.')
             print('  kstpkper = {}'.format(kstpkper))
             print('  totim = {}'.format(totim))
+            # TODO: return zero-length array, or update docstring return type
             return None
 
         if incremental:
@@ -764,26 +765,26 @@ class ListBudget(object):
                 print(
                         'end of file found while seeking time information for ts,sp',
                         ts, sp)
-                return np.NaN, np.NaN, np.Nan
+                return np.NaN, np.NaN, np.NaN
             elif ihead == 2 and 'SECONDS     MINUTES      HOURS       DAYS        YEARS' not in line:
                 break
             elif '-----------------------------------------------------------' in line:
                 line = self.f.readline()
                 break
         tslen = self._parse_time_line(line)
-        if tslen == None:
+        if tslen is None:
             print('error parsing tslen for ts,sp', ts, sp)
-            return np.NaN, np.NaN, np.Nan
+            return np.NaN, np.NaN, np.NaN
 
         sptim = self._parse_time_line(self.f.readline())
-        if sptim == None:
+        if sptim is None:
             print('error parsing sptim for ts,sp', ts, sp)
-            return np.NaN, np.NaN, np.Nan
+            return np.NaN, np.NaN, np.NaN
 
         totim = self._parse_time_line(self.f.readline())
-        if totim == None:
+        if totim is None:
             print('error parsing totim for ts,sp', ts, sp)
-            return np.NaN, np.NaN, np.Nan
+            return np.NaN, np.NaN, np.NaN
         return tslen, sptim, totim
 
     def _parse_time_line(self, line):
