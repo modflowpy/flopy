@@ -158,9 +158,15 @@ class MFModel(PackageContainer):
 
     def __setattr__(self, key, value):
         if key == "sr":
-            assert isinstance(value, SpatialReference) or \
-                   isinstance(value, StructuredSpatialReference) or \
-                   isinstance(value, VertexSpatialReference)
+            if not (isinstance(value, SpatialReference) or
+                   isinstance(value, StructuredSpatialReference) or
+                   isinstance(value, VertexSpatialReference)):
+                raise FlopyException('Unable to set attribute "sr" with '
+                                     'type {}. Attribute "sr" must be of type '
+                                     '"SpatialReference", '
+                                     '"StructuredSpatialReference", '
+                                     'or "VertexSpatialReference"'
+                                     '.'.format(type(value)))
         super(MFModel, self).__setattr__(key, value)
 
     @classmethod
