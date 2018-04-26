@@ -6,7 +6,7 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..mfbase import StructException
+from ..mfbase import StructException, FlopyException
 from ..data.mfstructure import DatumType
 from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
@@ -89,7 +89,14 @@ class DataDimensions(object):
                         len(self.package_dim.model_dim) == 1:
             return self.package_dim.model_dim[0]
         else:
-            assert (len(self.structure.data_item_structures) > data_item_num)
+            if not (len(self.structure.data_item_structures) >
+                    data_item_num):
+                raise FlopyException('Data item index "{}" requested which '
+                                     'is greater than the maximum index of'
+                                     '{}.'.format(data_item_num,
+                                                  len(self.structure.
+                                                      data_item_structures)
+                                                  - 1))
             model_num = self.structure.data_item_structures[data_item_num][-1]
             if DatumUtil.is_int(model_num):
                 return self.package_dim.model_dim[int(model_num)]
@@ -338,7 +345,9 @@ class ModelDimensions(object):
     def get_data_shape(self, structure, data_item=None, data_set_struct=None,
                        data=None, path=None, deconstruct_axis=True,
                        repeating_key=None):
-        assert (structure is not None)
+        if structure is None:
+            raise FlopyException('get_data_shape requires a valid structure '
+                                 'object')
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:
                 return self.stored_shapes[data_item.path][0], \

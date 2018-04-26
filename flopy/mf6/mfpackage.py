@@ -7,7 +7,8 @@ from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
-                    MFInvalidTransientBlockHeaderException, VerbosityLevel
+                    MFInvalidTransientBlockHeaderException, VerbosityLevel, \
+                    FlopyException
 from .data.mfstructure import DatumType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
@@ -49,8 +50,10 @@ class MFBlockHeader(object):
                  path=None):
         self.name = name
         self.variable_strings = variable_strings
-        assert((simulation_data is None and path is None) or
-               (simulation_data is not None and path is not None))
+        if not ((simulation_data is None and path is None) or
+               (simulation_data is not None and path is not None)):
+            raise FlopyException('Block header must be initialized with both '
+                                 'simulation_data and path or with neither.')
         if simulation_data is None:
             self.comment = comment
             self.simulation_data = None
@@ -156,8 +159,16 @@ class MFBlockHeader(object):
                 if isinstance(transient_key, np.recarray):
                     item_struct = self.data_items[index].structure
                     key_index = item_struct.first_non_keyword_index()
-                    assert key_index is not None and \
-                           len(transient_key[0]) > key_index
+                    if not (key_index is not None and
+                           len(transient_key[0]) > key_index):
+                        if key_index is None:
+                            raise FlopyException('Block header index could '
+                                                 'not be determined.')
+                        else:
+                            raise FlopyException('Block header index "{}" '
+                                                 'must be less than "{}"'
+                                                 '.'.format(
+                                key_index, len(transient_key[0])))
                     transient_key = transient_key[0][key_index]
                 break
         return transient_key
