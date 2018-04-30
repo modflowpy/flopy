@@ -1,5 +1,4 @@
 import os
-import platform
 import shutil
 
 import flopy
@@ -19,8 +18,6 @@ def test_create_and_run_model():
     sim_name = 'testsim'
     model_name = 'testmodel'
     exe_name = 'mf6'
-    if platform.system() == 'Windows':
-        exe_name += '.exe'
 
     # set up simulation
     tdis_name = '{}.tdis'.format(sim_name)

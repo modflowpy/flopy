@@ -305,7 +305,7 @@ def test_export():
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
-                                   exe_name='mf2005.exe',
+                                   exe_name='mf2005',
                                    model_ws=path,
                                    load_only=['ghb', 'evt', 'rch', 'dis',
                                               'bas6', 'oc', 'sip', 'lpf'])

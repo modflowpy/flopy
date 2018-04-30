@@ -1,5 +1,4 @@
 import os
-import platform
 
 import numpy as np
 
@@ -15,9 +14,6 @@ except:
     print('could not import pymake')
 
 exe_name = 'mf6'
-#exe_name = 'C:\\WrdApp\\mf6.0.1\\bin\\mf6'
-if platform.system() == 'Windows':
-    exe_name += '.exe'
 v = flopy.which(exe_name)
 
 run = True
