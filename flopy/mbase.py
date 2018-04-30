@@ -22,31 +22,15 @@ import numpy as np
 from flopy import utils
 from .version import __version__
 
+if sys.version_info >= (3, 3):
+    from shutil import which
+else:
+    from distutils.spawn import find_executable as which
+
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
 
-
-def is_exe(fpath):
-    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-
-def which(program):
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        # test for exe in current working directory
-        if is_exe(program):
-            return program
-        # test for exe in path statement
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-    return None
 
 
 class FileData(object):
