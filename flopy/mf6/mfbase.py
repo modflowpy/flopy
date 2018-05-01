@@ -34,6 +34,7 @@ class FlopyException(Exception):
     """
 
     def __init__(self, error, location=''):
+        self.message = error
         Exception.__init__(self,
                            "FlopyException: {} ({})".format(error, location))
 
@@ -76,7 +77,8 @@ class MFDataException(Exception):
         else:
             self.messages = []
             if mfdata_except is not None and \
-                    isinstance(mfdata_except, StructException):
+                    (isinstance(mfdata_except, StructException) or
+                    isinstance(mfdata_except, FlopyException)):
                 self.messages.append(mfdata_except.message)
             self.model = None
             self.package = None
