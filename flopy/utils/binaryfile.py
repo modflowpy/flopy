@@ -1112,11 +1112,14 @@ class CellBudgetFile(object):
                 result[idx, 0] = t
 
         for itim, k in enumerate(kk):
-            v = self.get_data(kstpkper=k, text=text, full3D=True)[0]
-            istat = 1
-            for k, i, j in kijlist:
-                result[itim, istat] = v[k, i, j].copy()
-                istat += 1
+            v = self.get_data(kstpkper=k, text=text, full3D=True)
+            # skip missing data - required for storage
+            if len(v) > 0:
+                v = v[0]
+                istat = 1
+                for k, i, j in kijlist:
+                    result[itim, istat] = v[k, i, j].copy()
+                    istat += 1
 
         return result
 
