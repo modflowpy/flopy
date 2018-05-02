@@ -1393,7 +1393,7 @@ def _parse_2(f):
         d2dw.update(_parse_2c(next(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
-                d2d[k] = v
+                d2d[k].append(v)
     # dataset 2d
     pp = 1  # partial penetration flag
     for i in range(np.abs(nnodes)):
@@ -1413,9 +1413,9 @@ def _parse_2(f):
                          cwc=d2dw['cwc'])
         # append only the returned items
         for k, v in d2di.items():
-            d2d[k] += v
+            d2d[k].append(v)
         if ppflag > 0 and nnodes > 0:
-            d2d['pp'] += pop_item(line, float)
+            d2d['pp'].append(pop_item(line, float))
 
     # dataset 2e
     pumplay = None
