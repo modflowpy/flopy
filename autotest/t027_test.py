@@ -2,8 +2,8 @@
 test MNW1 and MNW2 packages
 """
 import sys
-
 sys.path.insert(0, '..')
+import shutil
 import os
 import flopy
 import numpy as np
@@ -50,18 +50,25 @@ def test_load():
         mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[
             0].qdes).min() < 0.01
 
-def test_load_mnw1():
+def test_mnw1_load_write():
     m = flopy.modflow.Modflow.load('mnw1.nam', model_ws=mnw1_path,
+                                   load_only=['mnw1'],
                                    verbose=True, forgive=False)
-    m.change_model_ws(cpth)
     assert m.has_package('MNW1')
     assert m.mnw1.mxmnw == 120
     for i in range(3):
-        assert len(m.mnw1.stress_period_data[i]) == m.mnw1.itmp[i] == 17
+        assert len(m.mnw1.stress_period_data[i]) == 17
         assert len(np.unique(m.mnw1.stress_period_data[i]['mnw_no'])) == 15
         assert len(set(m.mnw1.stress_period_data[i]['label'])) == 4
-
-
+    shutil.copy(mnw1_path + '/mnw1.nam', cpth)
+    shutil.copy(mnw1_path + '/mnw1.dis', cpth)
+    shutil.copy(mnw1_path + '/mnw1.bas', cpth)
+    m.mnw1.fn_path = cpth + '/mnw1.mnw'
+    m.mnw1.write_file()
+    m2 = flopy.modflow.Modflow.load('mnw1.nam', model_ws=cpth,
+                                   load_only=['mnw1'],
+                                   verbose=True, forgive=False)
+    assert m.stress_period_data == m2.stress_period_data
 
 def test_make_package():
     """t027 test make MNW2 Package"""
@@ -186,5 +193,5 @@ if __name__ == '__main__':
     #test_make_package()
     #test_export()
     #test_checks()
-    test_load_mnw1()
+    test_mnw1_load_write()
     pass

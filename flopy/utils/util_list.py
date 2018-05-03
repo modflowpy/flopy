@@ -228,7 +228,7 @@ class MfList(object):
         fmt_string = ''
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype == 'i':
+            if vtype == 'i' or vtype == 'b':
                 if use_free:
                     fmt_string += ' %9d'
                 else:

@@ -79,7 +79,6 @@ class ModflowMnw1(Package):
 
     def __init__(self, model, mxmnw=0, ipakcb=None, iwelpt=0, nomoiter=0,
                  kspref=1, wel1_bynode_qsum=None, losstype='skin',
-                 itmp=None,
                  stress_period_data=None, dtype=None,
                  mnwname=None,
                  extension='mnw1', unitnumber=None, filenames=None):
@@ -123,8 +122,6 @@ class ModflowMnw1(Package):
         self.kspref = kspref            #-alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
         self.losstype = losstype          #-string indicating head loss type for each well
         self.wel1_bynode_qsum = wel1_bynode_qsum #-nested list containing file names, unit numbers, and ALLTIME flag for auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
-        self._itmp = itmp
-        self.stress_period_data = {}
         #if stress_period_data is not None:
         #    for per, spd in stress_period_data.items():
         #        for n in spd.dtype.names:
@@ -145,23 +142,7 @@ class ModflowMnw1(Package):
         auxFileExtensions = ['wl1','ByNode','Qsum']
         for each in self.wel1_bynode_qsum:
             assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
-        assert self.itmp.max() <= self.mxmnw, 'ITMP cannot exceed maximum number of wells to be simulated.'
-        
         self.parent.add_package(self)
-
-    def __setattr__(self, key, value):
-        if key == "itmp":
-            super(ModflowMnw1, self). \
-                __setattr__("_itmp", value)
-        else:  # return to default behavior of pakbase
-            super(ModflowMnw1, self).__setattr__(key, value)
-
-    @property
-    def itmp(self):
-        if self._itmp is None:
-            self._itmp = np.array([len(self.stress_period_data.data.get(per, []))
-                          for per in range(self.nper)])
-        return self._itmp
 
     @staticmethod
     def get_empty_stress_period_data(itmp, structured=True,
@@ -278,54 +259,57 @@ class ModflowMnw1(Package):
 
         #-open file for writing
         # f_mnw1 = open( self.file_name[0], 'w' )
-        f_mnw1 = open( self.fn_path, 'w' )
+        f = open( self.fn_path, 'w' )
 
         #-write header
-        f_mnw1.write( '%s\n' % self.heading )
+        f.write('%s\n' % self.heading)
 
         #-Section 1 - MXMNW ipakcb IWELPT NOMOITER REF:kspref
-        f_mnw1.write( '%10i%10i%10i%10i REF = %s\n' % ( self.mxmnw, self.ipakcb, self.iwelpt, self.nomoiter, self.kspref) )
+        f.write('%10i%10i%10i%10i REF = %s\n' % (self.mxmnw,
+                                                      self.ipakcb,
+                                                      self.iwelpt,
+                                                      self.nomoiter,
+                                                      self.kspref))
         
         #-Section 2 - LOSSTYPE {PLossMNW}
-        f_mnw1.write( '%s\n' % ( self.losstype ) )                        
+        f.write('%s\n' % (self.losstype))
 
         #-Section 3a - {FILE:filename WEL1:iunw1}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'wl1':
-                f_mnw1.write( 'FILE:%s WEL1:%10i\n' % ( each[0],each[1] ) )
+                f_mnw1.write('FILE:%s WEL1:%10i\n' % (each[0],
+                                                      each[1]))
 
         #-Section 3b - {FILE:filename BYNODE:iunby} {ALLTIME}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'ByNode':
                 if len(each) == 2:
-                    f_mnw1.write( 'FILE:%s BYNODE:%10i\n' % ( each[0],each[1] ) )
+                    f_mnw1.write('FILE:%s BYNODE:%10i\n' % (each[0],
+                                                            each[1]))
                 elif len(each) == 3:
-                    f_mnw1.write( 'FILE:%s BYNODE:%10i %s\n' % ( each[0],each[1],each[2] ) )
+                    f_mnw1.write('FILE:%s BYNODE:%10i %s\n' % (each[0],
+                                                               each[1],
+                                                               each[2]))
 
         #-Section 3C - {FILE:filename QSUM:iunqs} {ALLTIME}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'Qsum':
                 if len(each) == 2:
-                    f_mnw1.write( 'FILE:%s QSUM:%10i\n' % ( each[0],each[1] ) )
+                    f_mnw1.write('FILE:%s QSUM:%10i\n' % (each[0],
+                                                          each[1]))
                 elif len(each) == 3:
-                    f_mnw1.write( 'FILE:%s QSUM:%10i %s\n' % ( each[0],each[1],each[2] ) )
-        
+                    f_mnw1.write('FILE:%s QSUM:%10i %s\n' % (each[0],
+                                                             each[1],
+                                                             each[2]))
 
-        #-Repeat NPER times:
-        for p in range(self.nper):
-            #-Section 4 - ITMP ({ADD} flag is not supported)
-            f_mnw1.write( '%10i\n' % ( self.itmp[p] ) )
-
-            #-Section 5 - Lay Row Col Qdes {(MN MULTI) QWval Rw Skin Hlim Href (DD) Cp:C (QCUT Q-%CUT: Qfrcmn Qfrcmx) DEFAULT SITE: MNWsite}
-            for node in self.lay_row_col_qdes_mn_multi:
-                f_mnw1.write( '%10i%10i%10i %10f %s \n' % ( node[0],node[1],node[2],node[3],node[4] ) )
+        self.stress_period_data.write_transient(f)
 
         #-Un-numbered section PREFIX:MNWNAME
         if self.mnwname:
-            f_mnw1.write('PREFIX:%s\n' % ( self.mnwname ) )
+            f.write('PREFIX:%s\n' % (self.mnwname))
 
 
-        f_mnw1.close()
+        f.close()
 
 
     @staticmethod
@@ -483,3 +467,6 @@ def _parse_5(f, itmp,
 
     return data, qfrcmn_default, qfrcmx_default, qcut_default
 
+def _write_5(f, spd):
+    f.write('{:d} {:d} {:d} {}')
+    pass
