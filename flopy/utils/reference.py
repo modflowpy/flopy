@@ -1083,7 +1083,7 @@ class SpatialReference(object):
             # third dimension is the number of bands
             a = a.copy()
             if len(a.shape) == 2:
-                a = np.reshape(a, (1, *a.shape))
+                a = np.reshape(a, (1, a.shape[0], a.shape[1]))
             if a.dtype.name == 'int64':
                 a = a.astype('int32')
                 dtype = rasterio.int32
