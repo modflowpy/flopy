@@ -1,5 +1,5 @@
 """
-test MNW2 package
+test MNW1 and MNW2 packages
 """
 import sys
 
@@ -14,7 +14,7 @@ cpth = os.path.join('temp', 't027')
 if not os.path.isdir(cpth):
     os.makedirs(cpth)
 mf2005pth = os.path.join('..', 'examples', 'data', 'mnw2_examples')
-
+mnw1_path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 
 def test_line_parse():
     """t027 test line_parse method in MNW2 Package class"""
@@ -49,6 +49,18 @@ def test_load():
     assert np.abs(
         mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[
             0].qdes).min() < 0.01
+
+def test_load_mnw1():
+    m = flopy.modflow.Modflow.load('mnw1.nam', model_ws=mnw1_path,
+                                   verbose=True, forgive=False)
+    m.change_model_ws(cpth)
+    assert m.has_package('MNW1')
+    assert m.mnw1.mxmnw == 120
+    for i in range(3):
+        assert len(m.mnw1.stress_period_data[i]) == m.mnw1.itmp[i] == 17
+        assert len(np.unique(m.mnw1.stress_period_data[i]['mnw_no'])) == 15
+        assert len(set(m.mnw1.stress_period_data[i]['label'])) == 4
+
 
 
 def test_make_package():
@@ -172,6 +184,7 @@ if __name__ == '__main__':
     #test_line_parse()
     #test_load()
     #test_make_package()
-    test_export()
+    #test_export()
     #test_checks()
+    test_load_mnw1()
     pass

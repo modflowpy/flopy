@@ -1,5 +1,11 @@
-from numpy import empty, zeros
+import sys
+import re
+import numpy as np
 from ..pakbase import Package
+from ..utils.flopy_io import line_parse, pop_item
+from ..utils import MfList
+from ..utils.recarray_utils import create_empty_recarray, recarray
+
 
 class ModflowMnw1(Package):
     """
@@ -72,9 +78,9 @@ class ModflowMnw1(Package):
     """
 
     def __init__(self, model, mxmnw=0, ipakcb=None, iwelpt=0, nomoiter=0,
-                 kspref=1, wel1_bynode_qsum=None,
-                 itmp=0,
-                 lay_row_col_qdes_mn_multi=None,
+                 kspref=1, wel1_bynode_qsum=None, losstype='skin',
+                 itmp=None,
+                 stress_period_data=None, dtype=None,
                  mnwname=None,
                  extension='mnw1', unitnumber=None, filenames=None):
         # set default unit number of one is not specified
@@ -115,27 +121,150 @@ class ModflowMnw1(Package):
         self.iwelpt = iwelpt            #-verbosity flag
         self.nomoiter = nomoiter        #-integer indicating the number of iterations for which flow in MNW wells is calculated
         self.kspref = kspref            #-alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
-        self.losstype = 'SKIN'          #-string indicating head loss type for each well
+        self.losstype = losstype          #-string indicating head loss type for each well
         self.wel1_bynode_qsum = wel1_bynode_qsum #-nested list containing file names, unit numbers, and ALLTIME flag for auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
-        self.itmp = itmp                #-array containing # of wells to be simulated for each stress period (shape = (NPER))  
-        self.lay_row_col_qdes_mn_multi = lay_row_col_qdes_mn_multi  #-list of arrays containing lay, row, col, qdes, and MN or MULTI flag for all well nodes (length = NPER)
+        self._itmp = itmp
+        self.stress_period_data = {}
+        #if stress_period_data is not None:
+        #    for per, spd in stress_period_data.items():
+        #        for n in spd.dtype.names:
+        #            self.stress_period_data[per] = ModflowMnw1.get_empty_stress_period_data(len(spd),
+        #                                                                                    structured=self.parent.structured)
+        #            self.stress_period_data[per][n] = stress_period_data[per][n]
+        if dtype is not None:
+            self.dtype = dtype
+        else:
+            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+        self.stress_period_data = MfList(self, stress_period_data)
+
         self.mnwname = mnwname          #-string prefix name of file for outputting time series data from MNW1
 
-        #-create empty arrays of the correct size
-        self.itmp = zeros( self.nper,dtype='int32' )
-
-        #-assign values to arrays
-        self.assignarray_old( self.itmp, itmp )
-
         #-input format checks:
-        lossTypes = ['SKIN','LINEAR']
-        assert self.losstype in lossTypes, 'LOSSTYPE (%s) must be one of the following: "%s" or "%s"' % ( self.losstype, lossTypes[0], lossTypes[1] )
+        lossTypes = ['skin', 'linear', 'nonlinear']
+        assert self.losstype.lower() in lossTypes, 'LOSSTYPE (%s) must be one of the following: "%s" or "%s"' % (self.losstype, *lossTypes)
         auxFileExtensions = ['wl1','ByNode','Qsum']
         for each in self.wel1_bynode_qsum:
             assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
         assert self.itmp.max() <= self.mxmnw, 'ITMP cannot exceed maximum number of wells to be simulated.'
         
         self.parent.add_package(self)
+
+    def __setattr__(self, key, value):
+        if key == "itmp":
+            super(ModflowMnw1, self). \
+                __setattr__("_itmp", value)
+        else:  # return to default behavior of pakbase
+            super(ModflowMnw1, self).__setattr__(key, value)
+
+    @property
+    def itmp(self):
+        if self._itmp is None:
+            self._itmp = np.array([len(self.stress_period_data.data.get(per, []))
+                          for per in range(self.nper)])
+        return self._itmp
+
+    @staticmethod
+    def get_empty_stress_period_data(itmp, structured=True,
+                                     default_value=0):
+        # get an empty recarray that correponds to dtype
+        dtype = ModflowMnw1.get_default_dtype(structured=structured)
+        return create_empty_recarray(itmp, dtype, default_value=default_value)
+
+    @staticmethod
+    def get_default_dtype(structured=True):
+        if structured:
+            return np.dtype([('k', np.int),
+                             ('i', np.int),
+                             ('j', np.int),
+                             ('qdes', np.float32),
+                             ('mnw_no', np.int),
+                             ('qwval', np.float32),
+                             ('rw', np.float32),
+                             ('skin', np.float32),
+                             ('hlim', np.float32),
+                             ('href', np.float32),
+                             ('dd', bool),
+                             ('iqwgrp', np.object),
+                             ('cpc', np.int),
+                             ('qcut', bool),
+                             ('qfrcmn', np.float32),
+                             ('qfrcmx', np.float32),
+                             ('label', np.object)])
+        else:
+            pass
+
+    @staticmethod
+    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+
+        if model.verbose:
+            sys.stdout.write('loading mnw1 package file...\n')
+
+        structured = model.structured
+        if nper is None:
+            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # dataset 0 (header)
+        line = skipcomments(next(f), f)
+
+        # dataset 1
+        mxmnw, ipakcb, iwelpt, nomoiter, kspref = _parse_1(line)
+
+        # dataset 2
+        line = skipcomments(next(f), f)
+        losstype = _parse_2(line)
+
+        # dataset 3
+        wel1_bynode_qsum = []
+        line = skipcomments(next(f), f)
+        for txt in ['wel1', 'bynode', 'qsum']:
+            if txt in line:
+                wel1_bynode_qsum.append(_parse_3(line))
+                if txt == 'qsum':
+                    line = skipcomments(next(f), f)
+
+        # dataset 4
+        line = skipcomments(line, f)
+        stress_period_data = {}
+        dtype = ModflowMnw1.get_default_dtype(structured=structured)
+        qfrcmn_default = None
+        qfrcmx_default = None
+        qcut_default = None
+
+        # not sure what 'add' means
+        add = True if 'add' in line.lower() else False
+
+        for per in range(nper):
+            if per > 0:
+                line = skipcomments(next(f), f)
+            add = True if 'add' in line.lower() else False
+            itmp = int(line_parse(line)[0])
+            if itmp > 0:
+
+                # dataset 5
+                data, \
+                qfrcmn_default, \
+                qfrcmx_default, \
+                qcut_default = _parse_5(f,
+                                        itmp,
+                                        qfrcmn_default,
+                                        qfrcmx_default,
+                                        qcut_default)
+
+                # cast data (list) to recarray
+                tmp = recarray(data, dtype)
+                spd = ModflowMnw1.get_empty_stress_period_data(len(data))
+                for n in dtype.descr:
+                    spd[n[0]] = tmp[n[0]]
+                stress_period_data[per] = spd
+
+        return ModflowMnw1(model, mxmnw=mxmnw, ipakcb=ipakcb, iwelpt=iwelpt, nomoiter=nomoiter,
+                           kspref=kspref, wel1_bynode_qsum=wel1_bynode_qsum, losstype=losstype,
+                           stress_period_data=stress_period_data)
 
     def write_file(self):
         """
@@ -207,4 +336,150 @@ class ModflowMnw1(Package):
     @staticmethod
     def defaultunit():
         return 33
+
+def skipcomments(line, f):
+    if line.strip().startswith('#'):
+        line = skipcomments(next(f), f)
+    return line
+
+def _parse_1(line):
+    line = line_parse(line)
+    mnwmax = pop_item(line, int)
+    ipakcb = pop_item(line, int)
+    mnwprint = pop_item(line, int)
+    next_item = line.pop()
+    nomoiter = 0
+    kspref = 1
+    if next_item.isnumeric():
+        nomoiter = int(next_item)
+    elif 'ref' in next_item:
+        line = ' '.join(line)
+        kspref = re.findall(r'\d+', line)
+        if len(kspref) > 0:
+            kspref = int(kspref[0])
+    return mnwmax, ipakcb, mnwprint, nomoiter, kspref
+
+def _parse_2(line):
+    line = line.split('!!')[0]
+    options = ['SKIN', 'NONLINEAR', 'LINEAR']
+    losstype = 'skin'
+    for lt in options:
+        if lt.lower() in line.lower():
+            losstype = lt.lower()
+    return losstype
+
+def _parse_3(line, txt):
+
+    def getitem(line, txt):
+        return line.pop(0).lower().replace(txt+':', '').strip()
+
+    line = line_parse(line)
+    items = []
+    items.append(getitem(line, 'file:'))
+    items.append(getitem(line, txt))
+    if 'alltime' in ' '.join(line).lower():
+        items.append('alltime')
+
+def _parse_5(f, itmp,
+             qfrcmn_default=None,
+             qfrcmx_default=None,
+             qcut_default=None):
+
+    data = []
+    mnw_no = 0
+    mn = False
+    multi = False
+    label = ''
+    for n in range(itmp):
+
+        linetxt = skipcomments(next(f), f).lower()
+
+        # strip out the label
+        if 'site:' in linetxt:
+            label = linetxt.replace(',', ' ').split('site:')[1].split()[0]
+            linetxt = linetxt.replace(',', ' ').split('site:')[0]
+
+        line = line_parse(linetxt)
+        k = pop_item(line, int) - 1
+        i = pop_item(line, int) - 1
+        j = pop_item(line, int) - 1
+        qdes = pop_item(line, float)
+
+        # logic to create column of unique numbers for each MNW
+        mntxt = ''
+        if 'mn' in line:
+            if not mn:
+                mnw_no -= 1  # this node has same number as previous
+                if label == '':
+                    label = data[n-1][-1]
+            mn = True
+            mntxt = 'mn'
+            line.remove('mn')
+        if 'multi' in line or mn and not multi:
+            multi = True
+            mntxt = 'multi'
+            if 'multi' in line:
+                line.remove('multi')
+
+        # "The alphanumeric flags MN and DD can appear anywhere
+        # between columns 41 and 256, inclusive."
+        dd = False
+        if 'dd' in line:
+            line.remove('dd')
+            dd = True
+
+        qwval = pop_item(line, float)
+        rw = pop_item(line, float)
+        skin = pop_item(line, float)
+        hlim = pop_item(line, float)
+        href = pop_item(line, float)
+        iqwgrp = pop_item(line)
+
+        cpc = 0
+        if 'cp:' in linetxt:
+            cpc = re.findall(r'\d+', line.pop(0))
+            # in case there is whitespace between cp: and the value
+            if len(cpc) == 0:
+                cpc = pop_item(line, int)
+
+        qcut = False
+        qfrcmn = 0.
+        qfrcmx = 0.
+        if 'qcut' in linetxt:
+            qcut = True
+            pop_item(line)
+        elif '%cut' in linetxt:
+            qcut = False
+            pop_item(line)
+        if 'qcut' in linetxt or '%cut' in linetxt:
+            qfrcmn = pop_item(line, float)
+            qfrcmx = pop_item(line, float)
+        elif qfrcmn_default is not None and qfrcmx_default is not None:
+            qfrcmn = qfrcmn_default
+            qfrcmx = qfrcmx_default
+            if 'qcut' not in linetxt and '%cut' not in linetxt:
+                qcut = qcut_default
+        if 'default' in line:
+            qfrcmn_default = qfrcmn
+            qfrcmx_default = qfrcmx
+            qcut_default = qcut
+
+
+        idata = [k, i, j, qdes, mnw_no, qwval,
+                 rw, skin, hlim, href, dd, iqwgrp,
+                 cpc, qcut, qfrcmn, qfrcmx, label]
+        data.append(idata)
+
+        # reset MNW designators
+        # if at the end of the well
+        if mn and multi:
+            mnw_no += 1
+            mn = False
+            multi = False
+            label = ''
+        elif not mn and not multi:
+            mnw_no += 1
+            label = ''
+
+    return data, qfrcmn_default, qfrcmx_default, qcut_default
 

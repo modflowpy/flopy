@@ -1011,8 +1011,6 @@ class ModflowMnw2(Package):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f),
                                                                    mnw,
                                                                    gwt=gwt)
-                    if wellid == 'Mellen3':
-                        j = 2
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
@@ -1116,8 +1114,6 @@ class ModflowMnw2(Package):
         nd = []
         for i in range(len(self.node_data)):
             r = self.node_data[i]
-            if r['wellid'] == '76264':
-                z=2
             if r['ztop'] - r['zbotm'] > 0:
                 startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
                 endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
