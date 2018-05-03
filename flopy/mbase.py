@@ -1314,7 +1314,9 @@ def run_model(exe_name, namefile, model_ws='./',
         Executable name (with path, if necessary) to run.
     namefile : str
         Namefile of model to run. The namefile must be the
-        filename of the namefile without the path.
+        filename of the namefile without the path. Namefile can be None
+        to allow programs that do not require a control file (name file)
+        to be passed as a command line argument.
     model_ws : str
         Path to the location of the namefile. (default is the
         current working directory - './')
@@ -1365,13 +1367,15 @@ def run_model(exe_name, namefile, model_ws='./',
         raise Exception(s)
     else:
         if not silent:
-            s = 'FloPy is using the following executable to run the model: {}'.format(
-                exe)
+            s = 'FloPy is using the following ' + \
+                ' executable to run the model: {}'.format(exe)
             print(s)
 
-    if not os.path.isfile(os.path.join(model_ws, namefile)):
-        s = 'The namefile for this model does not exists: {}'.format(namefile)
-        raise Exception(s)
+    if namefile is not None:
+        if not os.path.isfile(os.path.join(model_ws, namefile)):
+            s = 'The namefile for this model ' + \
+                'does not exists: {}'.format(namefile)
+            raise Exception(s)
 
     # simple little function for the thread to target
     def q_output(output, q):
@@ -1381,7 +1385,9 @@ def run_model(exe_name, namefile, model_ws='./',
             # output.close()
 
     # create a list of arguments to pass to Popen
-    argv = [exe_name, namefile]
+    argv = [exe_name]
+    if namefile is not None:
+        argv.append(namefile)
 
     # add additional arguments to Popen arguments
     if cargs is not None:
