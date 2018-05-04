@@ -138,7 +138,9 @@ class ModflowMnw1(Package):
 
         #-input format checks:
         lossTypes = ['skin', 'linear', 'nonlinear']
-        assert self.losstype.lower() in lossTypes, 'LOSSTYPE (%s) must be one of the following: "%s" or "%s"' % (self.losstype, *lossTypes)
+        assert self.losstype.lower() in lossTypes, \
+            'LOSSTYPE (%s) must be one of the following: skin, linear, nonlinear' \
+            % (self.losstype)
         #auxFileExtensions = ['wl1','ByNode','Qsum']
         #for each in self.wel1_bynode_qsum:
         #    assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
