@@ -337,7 +337,7 @@ def _parse_1(line):
     next_item = line.pop()
     nomoiter = 0
     kspref = 1
-    if next_item.isnumeric():
+    if next_item.isdigit():
         nomoiter = int(next_item)
     elif 'ref' in next_item:
         line = ' '.join(line)
