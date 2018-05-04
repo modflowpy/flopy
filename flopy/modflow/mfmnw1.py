@@ -139,9 +139,9 @@ class ModflowMnw1(Package):
         #-input format checks:
         lossTypes = ['skin', 'linear', 'nonlinear']
         assert self.losstype.lower() in lossTypes, 'LOSSTYPE (%s) must be one of the following: "%s" or "%s"' % (self.losstype, *lossTypes)
-        auxFileExtensions = ['wl1','ByNode','Qsum']
-        for each in self.wel1_bynode_qsum:
-            assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
+        #auxFileExtensions = ['wl1','ByNode','Qsum']
+        #for each in self.wel1_bynode_qsum:
+        #    assert each[0].split('.')[1] in auxFileExtensions, 'File extensions in "wel1_bynode_qsum" must be one of the following: ".wl1", ".ByNode", or ".Qsum".'
         self.parent.add_package(self)
 
     @staticmethod
@@ -154,20 +154,21 @@ class ModflowMnw1(Package):
     @staticmethod
     def get_default_dtype(structured=True):
         if structured:
-            return np.dtype([('k', np.int),
+            return np.dtype([('mnw_no', np.int),
+                             ('k', np.int),
                              ('i', np.int),
                              ('j', np.int),
                              ('qdes', np.float32),
-                             ('mnw_no', np.int),
+                             ('mntxt', np.object),
                              ('qwval', np.float32),
                              ('rw', np.float32),
                              ('skin', np.float32),
                              ('hlim', np.float32),
                              ('href', np.float32),
-                             ('dd', bool),
+                             ('dd', np.object),
                              ('iqwgrp', np.object),
-                             ('cpc', np.int),
-                             ('qcut', bool),
+                             ('cpc', np.object),
+                             ('qcut', np.object),
                              ('qfrcmn', np.float32),
                              ('qfrcmx', np.float32),
                              ('label', np.object)])
@@ -203,10 +204,9 @@ class ModflowMnw1(Package):
         wel1_bynode_qsum = []
         line = skipcomments(next(f), f)
         for txt in ['wel1', 'bynode', 'qsum']:
-            if txt in line:
-                wel1_bynode_qsum.append(_parse_3(line))
-                if txt == 'qsum':
-                    line = skipcomments(next(f), f)
+            if txt in line.lower():
+                wel1_bynode_qsum.append(_parse_3(line, txt))
+                line = skipcomments(next(f), f)
 
         # dataset 4
         line = skipcomments(line, f)
@@ -214,7 +214,7 @@ class ModflowMnw1(Package):
         dtype = ModflowMnw1.get_default_dtype(structured=structured)
         qfrcmn_default = None
         qfrcmx_default = None
-        qcut_default = None
+        qcut_default = ''
 
         # not sure what 'add' means
         add = True if 'add' in line.lower() else False
@@ -302,7 +302,8 @@ class ModflowMnw1(Package):
                                                              each[1],
                                                              each[2]))
 
-        self.stress_period_data.write_transient(f)
+        spd = self.stress_period_data.drop('mnw_no')
+        spd.write_transient(f)
 
         #-Un-numbered section PREFIX:MNWNAME
         if self.mnwname:
@@ -355,19 +356,19 @@ def _parse_2(line):
 def _parse_3(line, txt):
 
     def getitem(line, txt):
-        return line.pop(0).lower().replace(txt+':', '').strip()
+        return line.pop(0).replace(txt+':', '').strip()
 
-    line = line_parse(line)
-    items = []
-    items.append(getitem(line, 'file:'))
-    items.append(getitem(line, txt))
-    if 'alltime' in ' '.join(line).lower():
+    line = line_parse(line.lower())
+    items = [getitem(line, 'file:'),
+             getitem(line, txt)]
+    if 'alltime' in ' '.join(line):
         items.append('alltime')
+    return items
 
 def _parse_5(f, itmp,
              qfrcmn_default=None,
              qfrcmx_default=None,
-             qcut_default=None):
+             qcut_default=''):
 
     data = []
     mnw_no = 0
@@ -377,13 +378,16 @@ def _parse_5(f, itmp,
     for n in range(itmp):
 
         linetxt = skipcomments(next(f), f).lower()
+        line = line_parse(linetxt)
 
-        # strip out the label
+        # get the label; strip it out
         if 'site:' in linetxt:
             label = linetxt.replace(',', ' ').split('site:')[1].split()[0]
-            linetxt = linetxt.replace(',', ' ').split('site:')[0]
+            label = 'site:' + label
+            txt = [t for t in line if 'site:' in t]
+            if len(txt) > 0: # site: might have been in the comments section
+                line.remove(txt[0])
 
-        line = line_parse(linetxt)
         k = pop_item(line, int) - 1
         i = pop_item(line, int) - 1
         j = pop_item(line, int) - 1
@@ -399,18 +403,19 @@ def _parse_5(f, itmp,
             mn = True
             mntxt = 'mn'
             line.remove('mn')
-        if 'multi' in line or mn and not multi:
+        if 'multi' in line:
             multi = True
             mntxt = 'multi'
-            if 'multi' in line:
-                line.remove('multi')
+            line.remove('multi')
+        if mn and not multi:
+            multi = True
 
         # "The alphanumeric flags MN and DD can appear anywhere
         # between columns 41 and 256, inclusive."
-        dd = False
+        dd = ''
         if 'dd' in line:
             line.remove('dd')
-            dd = True
+            dd = 'dd'
 
         qwval = pop_item(line, float)
         rw = pop_item(line, float)
@@ -419,22 +424,25 @@ def _parse_5(f, itmp,
         href = pop_item(line, float)
         iqwgrp = pop_item(line)
 
-        cpc = 0
+        cpc = ''
         if 'cp:' in linetxt:
             cpc = re.findall(r'\d+', line.pop(0))
             # in case there is whitespace between cp: and the value
             if len(cpc) == 0:
-                cpc = pop_item(line, int)
+                cpc = pop_item(line)
+            cpc = 'cp:' + cpc
 
-        qcut = False
+        qcut = ''
         qfrcmn = 0.
         qfrcmx = 0.
         if 'qcut' in linetxt:
-            qcut = True
-            pop_item(line)
+            txt = [t for t in line if 'qcut' in t][0]
+            qcut = txt
+            line.remove(txt)
         elif '%cut' in linetxt:
-            qcut = False
-            pop_item(line)
+            txt = [t for t in line if '%cut' in t][0]
+            qcut = txt
+            line.remove(txt)
         if 'qcut' in linetxt or '%cut' in linetxt:
             qfrcmn = pop_item(line, float)
             qfrcmx = pop_item(line, float)
@@ -449,7 +457,7 @@ def _parse_5(f, itmp,
             qcut_default = qcut
 
 
-        idata = [k, i, j, qdes, mnw_no, qwval,
+        idata = [mnw_no, k, i, j, qdes, mntxt, qwval,
                  rw, skin, hlim, href, dd, iqwgrp,
                  cpc, qcut, qfrcmn, qfrcmx, label]
         data.append(idata)
