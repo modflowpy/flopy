@@ -235,7 +235,7 @@ class MfList(object):
         fmts = []
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype == 'i':
+            if vtype == 'i' or vtype == 'b':
                 if use_free:
                     fmts.append('%9d')
                 else:

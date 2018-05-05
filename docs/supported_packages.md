@@ -24,7 +24,7 @@ FloPy Supported Packages
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
 | MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
 | Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
-| Multi-Node Well 1 (MNW1)                       | Limited support      | Not supported        | Not supported        |
+| Multi-Node Well 1 (MNW1)                       | Supported            | Supported            | Not supported        |
 | Multi-Node Well 2 (MNW2)                       | Supported            | Supported            | Not supported        |
 | Multi-Node Well Information (MNWI)             | Supported            | Supported            | Not supported        |
 | Newton (NWT)                                   | Supported            | Supported            | Not supported        |

@@ -198,11 +198,14 @@ def test_write_shapefile():
                           epsg=26715,
                           lenuni=1  # MODFLOW length units
                           )
+    vrts = copy.deepcopy(sr.vertices)
     outshp1 = os.path.join(tpth, 'junk.shp')
     outshp2 = os.path.join(tpth, 'junk2.shp')
     write_grid_shapefile(outshp1, sr, array_dict={})
     write_grid_shapefile2(outshp2, sr, array_dict={})
 
+    # test that vertices aren't getting altered by writing shapefile
+    assert np.array_equal(vrts, sr.vertices)
     for outshp in [outshp1, outshp2]:
         # check that pyshp reads integers
         # this only check that row/column were recorded as "N"
@@ -955,8 +958,8 @@ if __name__ == '__main__':
     # for namfile in ["fhb.nam"]:
     # export_netcdf(namfile)
     # test_freyberg_export()
-    test_export_array()
-    #test_write_shapefile()
+    #test_export_array()
+    test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

@@ -265,7 +265,8 @@ class check:
     def _stress_period_data_nans(self, stress_period_data):
         """Check for and list any nans in stress period data."""
         isnan = np.array([np.isnan(stress_period_data[c])
-                          for c in stress_period_data.dtype.names]).transpose()
+                          for c in stress_period_data.dtype.names
+                          if not isinstance(stress_period_data.dtype[c], np.object)]).transpose()
         if np.any(isnan):
             row_has_nan = np.any(isnan, axis=1)
             sa = self._list_spd_check_violations(stress_period_data,

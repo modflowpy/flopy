@@ -167,6 +167,7 @@ class Modflow(BaseModel):
             "chd": flopy.modflow.ModflowChd,
             "fhb": flopy.modflow.ModflowFhb,
             "wel": flopy.modflow.ModflowWel,
+            "mnw1": flopy.modflow.ModflowMnw1,
             "mnw2": flopy.modflow.ModflowMnw2,
             "mnwi": flopy.modflow.ModflowMnwi,
             "drn": flopy.modflow.ModflowDrn,
