@@ -94,23 +94,20 @@ class MFArray(mfdata.MFMultiDimVar):
                                       dimensions)
         if self.structure.layered:
             try:
-                model_grid = self._data_dimensions.get_model_grid()
+                self._layer_shape = self.layer_shape()
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(structure.get_model(),
-                                      structure.get_package(), path,
-                                      'getting model grid', structure.name,
-                                      inspect.stack()[0][3],
-                                      type_, value_, traceback_, None,
-                                      sim_data.debug, ex)
-
-            if model_grid.grid_type() == DiscretizationType.DISU:
-                self._layer_shape = (1,)
-            else:
-                self._layer_shape = (model_grid.num_layers(),)
-                if self._layer_shape[0] is None:
-                    self._layer_shape = (1,)
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'resolving layer dimensions',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
         else:
+            self._layer_shape = (1,)
+        if self._layer_shape[0] is None:
             self._layer_shape = (1,)
         self._data_type = structure.data_item_structures[0].type
         try:
@@ -523,19 +520,20 @@ class MFArray(mfdata.MFMultiDimVar):
                     arr_line[index_num].lower() == 'layered'):
                 storage.layered = True
                 try:
-                    layers = self._data_dimensions.get_model_grid().num_layers()
+                    layers = self.layer_shape()
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(self.structure.get_model(),
                                           self.structure.get_package(),
                                           self._path,
-                                          'getting model grid',
+                                          'resolving layer dimensions',
                                           self.structure.name,
                                           inspect.stack()[0][3], type_,
                                           value_, traceback_, None,
                                           self._simulation_data.debug, ex)
-                while storage.layer_storage.list_shape[0] < layers:
-                    storage.add_layer()
+                if len(layers) > 0:
+                    storage.init_layers(layers)
+                self._layer_shape = layers
             elif aux_var_index is not None:
                 # each layer stores a different aux variable
                 layers = len(package_dim.get_aux_variables()[0]) - 1
@@ -544,32 +542,30 @@ class MFArray(mfdata.MFMultiDimVar):
                 while storage.layer_storage.list_shape[0] < layers:
                     storage.add_layer()
             else:
-                layers = 1
                 storage.flatten()
-        else:
-            layers = 1
         try:
-            total_size = \
-                self._data_dimensions.model_subspace_size(self.structure.shape)
+            dimensions = self._get_storage_obj().get_data_dimensions(
+                self._layer_shape)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
+            comment = 'Could not get data shape for key "{}".'.format(
+                self._current_key)
             raise MFDataException(self.structure.get_model(),
                                   self.structure.get_package(),
                                   self._path,
-                                  'getting model grid size',
+                                  'getting data shape',
                                   self.structure.name,
                                   inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
+                                  value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        if aux_var_index is not None:
-            layer_size = total_size
-        else:
-            layer_size = int(total_size / layers)
+        layer_size = 1
+        for dimension in dimensions:
+            layer_size *= dimension
 
         if aux_var_index is None:
             # loop through the number of layers
-            for layer in range(0, layers):
-                self._load_layer((layer,), layer_size, storage, arr_line,
+            for layer in storage.layer_storage.indexes():
+                self._load_layer(layer, layer_size, storage, arr_line,
                                  file_handle)
         else:
             # write the aux var to it's unique index
@@ -973,8 +969,8 @@ class MFArray(mfdata.MFMultiDimVar):
     def _resolve_data_shape(self, data):
         data_dim = self._data_dimensions
         try:
-            dimensions, shape_rule = data_dim.get_data_shape(repeating_key=
-                                                             self._current_key)
+            dimensions = self._get_storage_obj().get_data_dimensions(
+                self._layer_shape)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             comment = 'Could not get data shape for key "{}".'.format(
@@ -987,8 +983,6 @@ class MFArray(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        if self._get_storage_obj().layered:
-            dimensions = dimensions[1:]
         if isinstance(data, list) or isinstance(data, np.ndarray):
             try:
                 return np.reshape(data, dimensions).tolist()

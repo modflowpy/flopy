@@ -431,7 +431,7 @@ class ModelDimensions(object):
 
             if deconstruct_axis:
                 shape = self.deconstruct_axis(shape)
-            ordered_shape = self._order_shape(shape)
+            ordered_shape = self._order_shape(shape, data_item_struct)
             ordered_shape_expression = self.build_shape_expression(
                 ordered_shape)
             for item in ordered_shape_expression:
@@ -592,15 +592,22 @@ class ModelDimensions(object):
                             new_expression_array.append([entry])
         return new_expression_array
 
-    def _order_shape(self, shape_array):
+    def _order_shape(self, shape_array, data_item_struct):
         new_shape_array = []
+
+        for entry in shape_array:
+            if entry in data_item_struct.layer_dims:
+                # "layer" dimensions get ordered first
+                new_shape_array.append(entry)
+
         order = ['nlay', 'nrow', 'ncol']
         for order_item in order:
-            for entry in shape_array:
-                if entry == order_item:
-                    new_shape_array.append(entry)
+            if order_item not in data_item_struct.layer_dims:
+                for entry in shape_array:
+                    if entry == order_item:
+                        new_shape_array.append(entry)
         for entry in shape_array:
-            if entry not in order:
+            if entry not in order and entry not in data_item_struct.layer_dims:
                 new_shape_array.append(entry)
         return new_shape_array
 
