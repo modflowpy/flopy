@@ -499,9 +499,12 @@ class Modflow(BaseModel):
             Show messages that can be useful for debugging. Default False.
         model_ws : str
             Model workspace path. Default '.' or current directory.
-        load_only : list or None
+        load_only : list, str or None
             List of case insensitive filetypes to load, e.g. ["bas6", "lpf"].
-            Default is None, which attempts to load all files.
+            One package can also be specified, e.g. "rch". Default is None,
+            which attempts to load all files. An empty list [] will not load
+            any additional packages than is necessary. At a minimum, "dis" or
+            "disu" is always loaded, and "bas6" (if available) is also loaded.
         forgive : bool, optional
             Option to raise exceptions on package load failure, which can be
             useful for debugging. Default False.
@@ -520,7 +523,7 @@ class Modflow(BaseModel):
 
         """
         if forgive:
-            # Catch any Exception, show a message and (sometimes) carry on
+            # Catch any Exception, show a message and carry on
             ExceptionOption = Exception
         else:
             # This exception is not thown anywhere else, so any other exception
@@ -561,11 +564,11 @@ class Modflow(BaseModel):
         # reset version based on packages in the name file
         if 'NWT' in ext_pkg_d or 'UPW' in ext_pkg_d:
             version = 'mfnwt'
-        elif 'GLOBAL' in ext_pkg_d:
+        if 'GLOBAL' in ext_pkg_d:
             version = 'mf2k'
-        elif 'SMS' in ext_pkg_d:
+        if 'SMS' in ext_pkg_d:
             version = 'mfusg'
-        elif 'DISU' in ext_pkg_d:
+        if 'DISU' in ext_pkg_d:
             version = 'mfusg'
             ml.structured = False
         # update the modflow version
@@ -579,6 +582,7 @@ class Modflow(BaseModel):
                 ml.glo.unit_number = [unitnumber]
                 ml.glo.file_name = [filepth]
             else:
+                # TODO: is this necessary? it's not done for LIST.
                 ml.glo.unit_number = [0]
                 ml.glo.file_name = ['']
 
@@ -586,9 +590,6 @@ class Modflow(BaseModel):
         if 'LIST' in ext_pkg_d:
             unitnumber = ext_pkg_d['LIST']
             filepth = os.path.basename(ext_unit_dict[unitnumber].filename)
-            ml.lst.unit_number = [unitnumber]
-            ml.lst.file_name = [filepth]
-        else:
             ml.lst.unit_number = [unitnumber]
             ml.lst.file_name = [filepth]
 
@@ -611,17 +612,12 @@ class Modflow(BaseModel):
         if dis_key is None:
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
-        try:
-            dis = disnamdata.package.load(
-                    disnamdata.filename, ml,
-                    ext_unit_dict=ext_unit_dict, check=False)
-            files_successfully_loaded.append(disnamdata.filename)
-            if ml.verbose:
-                print('   {:4s} package load...success'.format(dis.name[0]))
-        except ExceptionOption as e:
-            raise Exception(
-                    'Could not read discretization package: {}. Stopping... {}'
-                    .format(os.path.basename(disnamdata.filename), e))
+        dis = disnamdata.package.load(
+                disnamdata.filename, ml,
+                ext_unit_dict=ext_unit_dict, check=False)
+        files_successfully_loaded.append(disnamdata.filename)
+        if ml.verbose:
+            print('   {:4s} package load...success'.format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
         ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
@@ -647,22 +643,21 @@ class Modflow(BaseModel):
         # load bas after dis if it is available. Note that the free format
         # option was already determined earlier in this method.
         if bas_key is not None:
-            try:
-                pck = bas.package.load(bas.filename, ml,
-                                       ext_unit_dict=ext_unit_dict,
-                                       check=False)
-                files_successfully_loaded.append(bas.filename)
-                if ml.verbose:
-                    print('   {:4s} package load...success'
-                          .format(pck.name[0]))
-            except ExceptionOption as e:
-                raise Exception(
-                    'Could not read basic package: {}. Stopping... {}'
-                    .format(os.path.basename(bas.filename), e))
+            pck = bas.package.load(bas.filename, ml,
+                                   ext_unit_dict=ext_unit_dict, check=False)
+            files_successfully_loaded.append(bas.filename)
+            if ml.verbose:
+                print('   {:4s} package load...success'
+                      .format(pck.name[0]))
             assert bas_key == ml.pop_key_list.pop()
             ext_unit_dict.pop(bas_key)
 
-        if load_only:  # check items in list
+        if load_only is None:
+            # load all packages/files
+            load_only = ext_pkg_d.keys()
+        else:  # check items in list
+            if not isinstance(load_only, list):
+                load_only = [load_only]
             not_found = []
             for i, filetype in enumerate(load_only):
                 load_only[i] = filetype = filetype.upper()
@@ -672,9 +667,6 @@ class Modflow(BaseModel):
                 raise KeyError(
                     "the following load_only entries were not found "
                     "in the ext_unit_dict: " + str(not_found))
-        else:
-            # load all packages/files
-            load_only = ext_pkg_d.keys()
 
         # zone, mult, pval
         if 'PVAL' in ext_pkg_d:
