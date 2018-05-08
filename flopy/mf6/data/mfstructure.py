@@ -587,6 +587,9 @@ class MFDataItemStructure(object):
         otherwise, name information appears
     shape : list
         describes the shape of the data
+    layer_dims : list
+        which dimensions in the shape function as layers, if None defaults to
+        "layer"
     reader : basestring
         reader that MF6 uses to read the data
     optional : bool
@@ -657,6 +660,7 @@ class MFDataItemStructure(object):
         self.tagged = True
         self.just_data = False
         self.shape = []
+        self.layer_dims = ['nlay']
         self.reader = None
         self.optional = False
         self.longname = None
@@ -751,6 +755,10 @@ class MFDataItemStructure(object):
                             dimension = dimension.replace('(', '')
                             dimension = dimension.replace(')', '')
                             dimension = dimension.replace(',', '')
+                            if dimension[0] == '*':
+                                dimension = dimension.replace('*', '')
+                                # set as a "layer" dimension
+                                self.layer_dims.insert(0, dimension)
                             self.shape.append(dimension)
                         else:
                             # only process what is after the last ; which by
@@ -1090,7 +1098,8 @@ class MFDataStructure(object):
         self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
-                        'nodes' in data_item.shape)
+                        'nodes' in data_item.shape or
+                        len(data_item.layer_dims) > 1)
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
