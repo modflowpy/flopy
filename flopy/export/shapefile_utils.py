@@ -115,16 +115,20 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
     w = sf.Writer(5)  # polygon
     w.autoBalance = 1
     # set up the attribute fields
-    names = ['row', 'column'] + list(array_dict.keys())
+    names = ['node', 'row', 'column'] + list(array_dict.keys())
     names = enforce_10ch_limit(names)
-    dtypes = [('row', np.dtype('int')), ('column', np.dtype('int'))] + \
+    dtypes = [('node', np.dtype('int')),
+              ('row', np.dtype('int')),
+              ('column', np.dtype('int'))] + \
              [(name, arr.dtype) for name, arr in array_dict.items()]
 
     # set-up array of attributes of shape ncells x nattributes
+    node = list(range(1, sr.ncol * sr.nrow + 1))
     col = list(range(1, sr.ncol + 1)) * sr.nrow
     row = sorted(list(range(1, sr.nrow + 1)) * sr.ncol)
     at = np.vstack(
-        [row, col] + [arr.ravel() for arr in array_dict.values()]).transpose()
+        [node, row, col] +
+        [arr.ravel() for arr in array_dict.values()]).transpose()
     at[np.isnan(at)] = nan_val
 
     for i, npdtype in enumerate(dtypes):
