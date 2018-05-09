@@ -374,10 +374,9 @@ class ModflowNwt(Package):
         # dataset 0 -- header
 
         # dataset 0 -- header
-        while True:
-            line = f.readline().rstrip()
-            if line[0] != '#':
-                break
+        flines=[line.strip() for line in f.readlines() if not line.strip().startswith('#')]
+        line = flines.pop(0)
+
         # dataset 1
         ifrfm = True #model.free_format_input
 
@@ -424,7 +423,11 @@ class ModflowNwt(Package):
                         break
                 ipos += 1
             # dataset 2
-            line = f.readline().rstrip()
+            try:
+                line=flines.pop(0)
+            except:
+                raise Exception('Error: OPTIONS set to "Specified" but only one line in NWT file')
+
             lindict = {}
             if kwargs['linmeth'] == 1:
                 lindict = (('maxitinner', int), ('ilumethod', int),
@@ -449,9 +452,6 @@ class ModflowNwt(Package):
                 # (apparently NWT runs without it)
                 if len(t) > 0:
                     kwargs[k] = c(t.pop(0))
-
-        # close the open file
-        f.close()
 
         # determine specified unit number
         # set package unit number
