@@ -1011,8 +1011,6 @@ class ModflowMnw2(Package):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f),
                                                                    mnw,
                                                                    gwt=gwt)
-                    if wellid == 'Mellen3':
-                        j = 2
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
@@ -1116,8 +1114,6 @@ class ModflowMnw2(Package):
         nd = []
         for i in range(len(self.node_data)):
             r = self.node_data[i]
-            if r['wellid'] == '76264':
-                z=2
             if r['ztop'] - r['zbotm'] > 0:
                 startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
                 endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
@@ -1393,7 +1389,7 @@ def _parse_2(f):
         d2dw.update(_parse_2c(next(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
-                d2d[k] = v
+                d2d[k].append(v)
     # dataset 2d
     pp = 1  # partial penetration flag
     for i in range(np.abs(nnodes)):
@@ -1413,9 +1409,9 @@ def _parse_2(f):
                          cwc=d2dw['cwc'])
         # append only the returned items
         for k, v in d2di.items():
-            d2d[k] += v
+            d2d[k].append(v)
         if ppflag > 0 and nnodes > 0:
-            d2d['pp'] += pop_item(line, float)
+            d2d['pp'].append(pop_item(line, float))
 
     # dataset 2e
     pumplay = None

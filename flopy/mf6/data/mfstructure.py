@@ -587,6 +587,9 @@ class MFDataItemStructure(object):
         otherwise, name information appears
     shape : list
         describes the shape of the data
+    layer_dims : list
+        which dimensions in the shape function as layers, if None defaults to
+        "layer"
     reader : basestring
         reader that MF6 uses to read the data
     optional : bool
@@ -657,6 +660,7 @@ class MFDataItemStructure(object):
         self.tagged = True
         self.just_data = False
         self.shape = []
+        self.layer_dims = ['nlay']
         self.reader = None
         self.optional = False
         self.longname = None
@@ -713,7 +717,10 @@ class MFDataItemStructure(object):
                     # support_negative_index flag is set
                     return
                 type_line = arr_line[1:]
-                assert (len(type_line) > 0)
+                if len(type_line) <= 0:
+                    raise StructException('Data structure "{}" does not have '
+                                          'a type specified'
+                                          '.'.format(self.name), self.path)
                 self.type_string = type_line[0].lower()
                 self.type = self._str_to_enum_type(type_line[0])
                 if self.type == DatumType.recarray or \
@@ -748,6 +755,10 @@ class MFDataItemStructure(object):
                             dimension = dimension.replace('(', '')
                             dimension = dimension.replace(')', '')
                             dimension = dimension.replace(',', '')
+                            if dimension[0] == '*':
+                                dimension = dimension.replace('*', '')
+                                # set as a "layer" dimension
+                                self.layer_dims.insert(0, dimension)
                             self.shape.append(dimension)
                         else:
                             # only process what is after the last ; which by
@@ -827,7 +838,10 @@ class MFDataItemStructure(object):
 
 
     def get_keystring_desc(self, line_size, initial_indent, level_indent):
-        assert(self.type == DatumType.keystring)
+        if self.type != DatumType.keystring:
+            raise StructException('Can not get keystring description for "{}" '
+                                  'because it is not a keystring'
+                                  '.'.format(self.name), self.path)
 
         # get description of keystring elements
         description = ''
@@ -886,7 +900,9 @@ class MFDataItemStructure(object):
     def _resolve_common(arr_line, common):
         if common is None:
             return arr_line
-        assert (arr_line[2] in common and len(arr_line) >= 4)
+        if not (arr_line[2] in common and len(arr_line) >= 4):
+            raise StructException('Could not find line "{}" in common dfn'
+                                  '.'.format(arr_line))
         close_bracket_loc = MFDataItemStructure._find_close_bracket(
             arr_line[2:])
         resolved_str = common[arr_line[2]]
@@ -1082,7 +1098,8 @@ class MFDataStructure(object):
         self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
-                        'nodes' in data_item.shape)
+                        'nodes' in data_item.shape or
+                        len(data_item.layer_dims) > 1)
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
@@ -1168,7 +1185,11 @@ class MFDataStructure(object):
                 ((item.type != DatumType.record and
                 item.type != DatumType.repeating_record) or
                 record == True):
-            assert (item.name in self.expected_data_items)
+            if item.name not in self.expected_data_items:
+                raise StructException('Could not find data item "{}" in '
+                                      'expected data items of data structure '
+                                      '{}.'.format(item.name, self.name),
+                                                   self.path)
             item.set_path(self.path)
             if len(self.data_item_structures) == 0:
                 self.keyword = item.name
@@ -1178,7 +1199,12 @@ class MFDataStructure(object):
                 # TODO: ask about this condition and remove
                 if self.data_item_structures[location] is None:
                     # verify that this is not a placeholder value
-                    assert (self.data_item_structures[location] is None)
+                    if self.data_item_structures[location] is not None:
+                        raise StructException('Data structure "{}" already '
+                                              'has the item named "{}"'
+                                              '.'.format(self.name,
+                                                         item.name),
+                                              self.path)
                     if isinstance(item, MFDataItemStructure):
                         self.file_data = self.file_data or \
                                          item.indicates_file_name()

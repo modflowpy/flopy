@@ -24,25 +24,13 @@ def _fmt_string(array, float_format='{}'):
                             "in dtype:" + vtype)
     return fmt_string
 
-def _pop_item(line, dtype=str):
-    if len(line) > 0:
-        if dtype == str:
-            return line.pop(0)
-        elif dtype == float:
-            return float(line.pop(0))
-        elif dtype == int:
-            # handle strings like this:
-            # '-10.'
-            return int(float(line.pop(0)))
-    return 0
-
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
     case where a free formatted MODFLOW input file may have commas in
     it.
     """
-    for comment_flag in [';', '#']:
+    for comment_flag in [';', '#', '!!']:
         line = line.split(comment_flag)[0]
     line = line.replace(',', ' ')
     return line.strip().split()
@@ -57,7 +45,7 @@ def pop_item(line, dtype=str):
             # handle strings like this:
             # '-10.'
             return int(float(line.pop(0)))
-    return 0
+    return dtype(0)
 
 def read_nwt_options(f):
     """convert options codeblock to single line."""

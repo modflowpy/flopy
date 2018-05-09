@@ -303,7 +303,20 @@ class MFScalar(mfdata.MFData):
             data_item = self.structure.data_item_structures[0]
             try:
                 if one_based:
-                    assert(self.structure.type == DatumType.integer)
+                    if self.structure.type != DatumType.integer:
+                        message = 'Data scalar "{}" can not be one_based ' \
+                                  'because it is not an integer' \
+                                  '.'.format(self.structure.name)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.structure.get_model(),
+                            self.structure.get_package(),
+                            self._path,
+                            'storing one based integer',
+                            self.structure.name,
+                            inspect.stack()[0][3], type_,
+                            value_, traceback_, message,
+                            self._simulation_data.debug)
                     data = self._get_storage_obj().get_data() + 1
                 else:
                     data = self._get_storage_obj().get_data()

@@ -1,3 +1,5 @@
+from ..mfbase import FlopyException
+
 """
 simulationtime module.  Contains the simulationtime and
 stress period classes
@@ -104,7 +106,9 @@ class SimulationTime(object):
     def get_sp_time_steps(self, sp_num):
         perioddata = self.simdata.mfdata[
             ('tdis', 'perioddata', 'perioddata')].get_data()
-        assert (len(perioddata) > sp_num)
+        if len(perioddata) <= sp_num:
+            raise FlopyException('Stress period {} was requested but does not '
+                   'exist.'.format(sp_num))
         return perioddata[sp_num][1]
 
     #def get_stress_period(self, sp_num):

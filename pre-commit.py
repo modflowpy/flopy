@@ -6,7 +6,18 @@ import os
 import sys
 import datetime
 
-files = ['version.py', 'README.md']
+# update files and paths so that there are the same number of
+# path and file entries in the paths and files list. Enter '.'
+# as the path if the file is in the root repository directory
+paths = ['flopy', '.', 'docs', 'docs']
+files = ['version.py', 'README.md', 'USGS_release.md', 'PyPi_release.md']
+
+# check that there are the same number of entries in files and paths
+if len(paths) != len(files):
+    msg = 'The number of entries in paths ' + \
+          '({}) must equal '.format(len(paths)) + \
+          'the number of entries in files ({})'.format(len(files))
+    assert False, msg
 
 pak = 'flopy'
 
@@ -102,10 +113,17 @@ def update_version():
 
 
 def add_updated_files():
+    cargs = ['git', 'add']
+    for (p, f) in zip(paths, files):
+        if p == '.':
+            fpth = f
+        else:
+            fpth = os.path.join(p, f)
+        cargs.append(fpth)
     try:
         # add modified version file
         print('Adding updated files to repo')
-        b = subprocess.Popen(("git", "add", "-u"),
+        b = subprocess.Popen(cargs,
                              stdout=subprocess.PIPE).communicate()[0]
     except:
         print('Could not add updated files')
@@ -196,11 +214,11 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
         lines = [line.rstrip() for line in file]
 
     # write USGS_release.md
-    fpth = os.path.join('docs', 'USGS_release.md')
+    fpth = os.path.join(paths[2], files[2])
     f = open(fpth, 'w')
 
-    # write USGS_release.md
-    fpth = os.path.join('docs', 'PyPi_release.md')
+    # write PyPi_release.md
+    fpth = os.path.join(paths[3], files[3])
     f2 = open(fpth, 'w')
 
     # date and branch information
@@ -230,7 +248,8 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     f.write('    - \\fancyhf{{}}\n')
     f.write('    - \\fancyhead[LE, LO, RE, RO]{}\n')
     f.write('    - \\fancyhead[CE, CO]{FloPy Release Notes}\n')
-    f.write('    - \\fancyfoot[LE, RO]{{FloPy version {}{}}}\n'.format(version, sb))
+    f.write('    - \\fancyfoot[LE, RO]{{FloPy version {}{}}}\n'.format(version,
+                                                                       sb))
     f.write('    - \\fancyfoot[CO, CE]{\\thepage\\ of \\pageref{LastPage}}\n')
     f.write('    - \\fancyfoot[RE, LO]{{{}}}\n'.format(sdate))
     f.write('geometry: margin=0.75in\n')
@@ -244,10 +263,12 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
         elif line == 'Examples':
             writeline = False
         elif 'Click [here](docs/mf6.md) for more information.' in line:
-            line = line.replace('Click [here](docs/mf6.md) for more information.', '')
+            line = line.replace(
+                'Click [here](docs/mf6.md) for more information.', '')
         elif ' Pull requests will only be accepted on the develop branch of the repository.' in line:
-            line = line.replace(' Pull requests will only be accepted on the develop branch of the repository.',
-                                '')
+            line = line.replace(
+                ' Pull requests will only be accepted on the develop branch of the repository.',
+                '')
         if writeline:
             f.write('{}\n'.format(line))
             line = line.replace('***', '*')
@@ -280,7 +301,6 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     line = line.replace(' from the USGS FloPy website', '')
 
     f2.write(line)
-
 
     # close the PyPi_release.md file
     f2.close()

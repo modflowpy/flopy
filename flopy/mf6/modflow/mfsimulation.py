@@ -866,7 +866,7 @@ class MFSimulation(PackageContainer):
                 silent = False
             else:
                 silent = True
-        return run_model(self._exe_name, self.name_file.filename,
+        return run_model(self._exe_name, None,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
                          normal_msg=normal_msg, async=async, cargs=cargs)
