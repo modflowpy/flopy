@@ -128,8 +128,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
         data_storage = mfdata.DataStorage(
-                model.simulation_data,
-                data_dimensions,
+                model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
                 mfdata.DataStructureType.recarray)
         dimension_list = data_storage.get_data_dimensions(None)
@@ -265,8 +264,7 @@ class ListTemplateGenerator(TemplateGenerator):
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
         data_storage = mfdata.DataStorage(
-                model.simulation_data,
-                data_dimensions,
+                model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
                 mfdata.DataStructureType.recarray)
 

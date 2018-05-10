@@ -507,6 +507,7 @@ class MFScalar(mfdata.MFData):
     def _new_storage(self):
         return mfdata.DataStorage(self._simulation_data,
                                   self._data_dimensions,
+                                  self.get_file_entry,
                                   mfdata.DataStorageType.internal_array,
                                   mfdata.DataStructureType.scalar)
 
