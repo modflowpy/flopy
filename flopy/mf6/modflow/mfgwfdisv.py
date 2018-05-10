@@ -155,7 +155,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
             "tagged false", "reader urword", "optional false"],
            ["block cell2d", "name icvert", "type integer", "shape (ncvert)", 
             "in_record true", "tagged false", "reader urword", 
-            "optional false"]]
+            "optional false", "numeric_index true"]]
 
     def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
