@@ -193,7 +193,7 @@ def test_build_mf6():
         return
     starget = 'MODFLOW6'
     exe_name = 'mf6'
-    dirname = 'mf6.0.1'
+    dirname = 'mf6.0.2'
     url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname, include_subdirs=True)
