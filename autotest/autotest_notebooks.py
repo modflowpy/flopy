@@ -48,7 +48,6 @@ def run_notebook(fn):
 def test_notebooks():
     # get list of notebooks to run
     files = get_Notebooks()
-    files = ['flopy3_triangle.ipynb']
 
     # run each notebook
     for fn in files:
