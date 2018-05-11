@@ -289,13 +289,13 @@ class LayerStorage(object):
 
     def __repr__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
-            return 'constant {}'.format(self._get_data_const_val())
+            return 'constant {}'.format(self.get_data_const_val())
         else:
             return repr(self.get_data())
 
     def __str__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
-            return '{}'.format(self._get_data_const_val())
+            return '{}'.format(self.get_data_const_val())
         else:
             return str(self.get_data())
 
