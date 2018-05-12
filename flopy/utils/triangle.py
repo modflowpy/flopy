@@ -157,7 +157,7 @@ class Triangle(object):
         # load the results
         self._load_results()
         self.ncpl = self.ele.shape[0]
-        self.nverts = self.node.shape[0]
+        self.nvert = self.node.shape[0]
 
         # create verts and iverts
         self.verts = self.node[['x', 'y']]
@@ -518,7 +518,7 @@ class Triangle(object):
     def _initialize_vars(self):
         self.file_prefix = '_triangle'
         self.ncpl = 0
-        self.nverts = 0
+        self.nvert = 0
         self._active_domain = None
         self._polygons = []
         self._holes = []
@@ -540,7 +540,7 @@ class Triangle(object):
             line = f.readline()
             f.close()
             ll = line.strip().split()
-            nverts = int(ll[0])
+            nvert = int(ll[0])
             ndim = int(ll[1])
             assert ndim == 2, 'Dimensions in node file is not 2'
             iattribute = int(ll[2])
@@ -550,7 +550,7 @@ class Triangle(object):
             if ibm == 1:
                 dt.append(('boundary_marker', int))
             a = np.loadtxt(fname, skiprows=1, comments='#', dtype=dt)
-            assert a.shape[0] == nverts
+            assert a.shape[0] == nvert
             setattr(self, ext, a)
 
         # ele file
