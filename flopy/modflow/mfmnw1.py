@@ -278,13 +278,13 @@ class ModflowMnw1(Package):
 
         #-Section 3a - {FILE:filename WEL1:iunw1}
         for each in self.wel1_bynode_qsum:
-            if each[0].split('.')[1] == 'wl1':
+            if each[0].split('.')[1].lower() == 'wl1':
                 f.write('FILE:%s WEL1:%10i\n' % (each[0],
                                                       int(each[1])))
 
         #-Section 3b - {FILE:filename BYNODE:iunby} {ALLTIME}
         for each in self.wel1_bynode_qsum:
-            if each[0].split('.')[1] == 'ByNode':
+            if each[0].split('.')[1].lower() == 'bynode':
                 if len(each) == 2:
                     f.write('FILE:%s BYNODE:%10i\n' % (each[0],
                                                             int(each[1])))
@@ -295,7 +295,7 @@ class ModflowMnw1(Package):
 
         #-Section 3C - {FILE:filename QSUM:iunqs} {ALLTIME}
         for each in self.wel1_bynode_qsum:
-            if each[0].split('.')[1] == 'Qsum':
+            if each[0].split('.')[1].lower() == 'qsum':
                 if len(each) == 2:
                     f.write('FILE:%s QSUM:%10i\n' % (each[0],
                                                           int(each[1])))
