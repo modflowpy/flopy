@@ -279,29 +279,29 @@ class ModflowMnw1(Package):
         #-Section 3a - {FILE:filename WEL1:iunw1}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'wl1':
-                f_mnw1.write('FILE:%s WEL1:%10i\n' % (each[0],
-                                                      each[1]))
+                f.write('FILE:%s WEL1:%10i\n' % (each[0],
+                                                      int(each[1])))
 
         #-Section 3b - {FILE:filename BYNODE:iunby} {ALLTIME}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'ByNode':
                 if len(each) == 2:
-                    f_mnw1.write('FILE:%s BYNODE:%10i\n' % (each[0],
-                                                            each[1]))
+                    f.write('FILE:%s BYNODE:%10i\n' % (each[0],
+                                                            int(each[1])))
                 elif len(each) == 3:
-                    f_mnw1.write('FILE:%s BYNODE:%10i %s\n' % (each[0],
-                                                               each[1],
+                    f.write('FILE:%s BYNODE:%10i %s\n' % (each[0],
+                                                               int(each[1]),
                                                                each[2]))
 
         #-Section 3C - {FILE:filename QSUM:iunqs} {ALLTIME}
         for each in self.wel1_bynode_qsum:
             if each[0].split('.')[1] == 'Qsum':
                 if len(each) == 2:
-                    f_mnw1.write('FILE:%s QSUM:%10i\n' % (each[0],
-                                                          each[1]))
+                    f.write('FILE:%s QSUM:%10i\n' % (each[0],
+                                                          int(each[1])))
                 elif len(each) == 3:
-                    f_mnw1.write('FILE:%s QSUM:%10i %s\n' % (each[0],
-                                                             each[1],
+                    f.write('FILE:%s QSUM:%10i %s\n' % (each[0],
+                                                             int(each[1]),
                                                              each[2]))
 
         spd = self.stress_period_data.drop('mnw_no')
