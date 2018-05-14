@@ -819,12 +819,14 @@ class MFArray(mfdata.MFMultiDimVar):
         if set_layers:
             return mfdata.DataStorage(self._simulation_data,
                                       self._data_dimensions,
+                                      self.get_file_entry,
                                       mfdata.DataStorageType.internal_array,
                                       mfdata.DataStructureType.ndarray,
                                       self._layer_shape)
         else:
             return mfdata.DataStorage(self._simulation_data,
                                       self._data_dimensions,
+                                      self.get_file_entry,
                                       mfdata.DataStorageType.internal_array,
                                       mfdata.DataStructureType.ndarray)
 

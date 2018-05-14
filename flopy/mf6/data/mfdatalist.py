@@ -269,7 +269,7 @@ class MFList(mfdata.MFMultiDimVar):
                 ext_string = self._get_external_formatting_string(0,
                                                                   ext_file_action)
                 file_entry.append('{}{}{}'.format(indent, indent,
-                                                 ext_string.upper()))
+                                                 ext_string))
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -777,6 +777,7 @@ class MFList(mfdata.MFMultiDimVar):
     def _new_storage(self):
         return mfdata.DataStorage(self._simulation_data,
                                   self._data_dimensions,
+                                  self.get_file_entry,
                                   mfdata.DataStorageType.internal_array,
                                   mfdata.DataStructureType.recarray)
 
