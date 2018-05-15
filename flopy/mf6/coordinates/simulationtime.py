@@ -100,16 +100,24 @@ class SimulationTime(object):
     #    def get_stress_period_array(self):
     #        return np.arange(1, self.get_num_stress_periods(), 1, np.int)
 
+    def get_total_time(self):
+        period_data = self.simdata.mfdata[
+            ('tdis', 'perioddata', 'perioddata')].get_data()
+        total_time = 0.0
+        for period in period_data:
+            total_time += period[0]
+        return total_time
+
     def get_num_stress_periods(self):
         return self.simdata.mfdata[('tdis', 'dimensions', 'nper')].get_data()
 
     def get_sp_time_steps(self, sp_num):
-        perioddata = self.simdata.mfdata[
+        period_data = self.simdata.mfdata[
             ('tdis', 'perioddata', 'perioddata')].get_data()
-        if len(perioddata) <= sp_num:
+        if len(period_data) <= sp_num:
             raise FlopyException('Stress period {} was requested but does not '
                    'exist.'.format(sp_num))
-        return perioddata[sp_num][1]
+        return period_data[sp_num][1]
 
     #def get_stress_period(self, sp_num):
 

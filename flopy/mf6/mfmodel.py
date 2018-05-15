@@ -169,6 +169,31 @@ class MFModel(PackageContainer):
                                      '.'.format(type(value)))
         super(MFModel, self).__setattr__(key, value)
 
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        data_str = ''
+        for package in self.packagelist:
+            if formal:
+                pk_repr = repr(package)
+                if len(pk_repr.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                           pk_repr)
+            else:
+                pk_str = str(package)
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+        return data_str
+
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
                   model_nam_file='modflowtest.nam', type='gwf', version='mf6',
@@ -289,7 +314,7 @@ class MFModel(PackageContainer):
         self.name_file.write(ext_file_action=ext_file_action)
 
         # write packages
-        for pp in self.packages:
+        for pp in self.packagelist:
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('    writing package {}...'.format(pp._get_pname()))
@@ -315,7 +340,7 @@ class MFModel(PackageContainer):
             return False
 
         # valid packages
-        for pp in self.packages:
+        for pp in self.packagelist:
             if not pp.is_valid():
                 return False
 
@@ -395,7 +420,7 @@ class MFModel(PackageContainer):
                 packages.set_data(packages_data)
 
                 # update files referenced from within packages
-                for package in self.packages:
+                for package in self.packagelist:
                     package.set_model_relative_path(model_ws)
 
     def _remove_package_from_dictionaries(self, package):
@@ -477,7 +502,7 @@ class MFModel(PackageContainer):
 
             # build list of child packages
             child_package_list = []
-            for pkg in self.packages:
+            for pkg in self.packagelist:
                 if pkg.parent_file is not None and pkg.parent_file.path == \
                         package.path:
                     child_package_list.append(pkg)

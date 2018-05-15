@@ -404,6 +404,24 @@ class ModelGrid(object):
 
         return DiscretizationType.UNDEFINED
 
+    def get_idomain(self):
+        if self._grid_type == DiscretizationType.DIS:
+            return self._simulation_data.mfdata[
+                (self._model_name, 'dis', 'griddata', 'idomain')].get_data()
+        elif self._grid_type == DiscretizationType.DISV:
+            return self._simulation_data.mfdata[
+                (self._model_name, 'disv', 'griddata', 'idomain')].get_data()
+        elif self._grid_type == DiscretizationType.DISU:
+            except_str = 'ERROR: Can not return idomain for model {}.  This ' \
+                         'model uses a DISU grid that does not ' \
+                         'have an idomain.'.format(self._model_name)
+            print(except_str)
+            raise MFGridException(except_str)
+        except_str = 'ERROR: Grid type {} for model {} not ' \
+                     'recognized.'.format(self._grid_type, self._model_name)
+        print(except_str)
+        raise MFGridException(except_str)
+
     def grid_type(self):
         if self.freeze_grid:
             return self._grid_type

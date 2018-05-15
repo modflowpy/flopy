@@ -364,6 +364,44 @@ class MFSimulation(PackageContainer):
         else:
             return self.get_package(item)
 
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        data_str = ''
+        for package in self.packagelist:
+            if formal:
+                pk_repr = repr(package)
+                if len(pk_repr.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                           pk_repr)
+            else:
+                pk_str = str(package)
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+        for idx, model in self._models.items():
+            if formal:
+                mod_repr = repr(model)
+                if len(mod_repr.strip()) > 0:
+                    data_str = '{}@@@@@@@@@@@@@@@@@@@@\nModel {}\n' \
+                               '@@@@@@@@@@@@@@@@@@@@\n\n' \
+                               '{}\n'.format(data_str, model.name, mod_repr)
+            else:
+                mod_str = str(model)
+                if len(mod_str.strip()) > 0:
+                    data_str = '{}@@@@@@@@@@@@@@@@@@@@\nModel {}\n' \
+                               '@@@@@@@@@@@@@@@@@@@@\n\n' \
+                               '{}\n'.format(data_str, model.name, mod_str)
+        return data_str
+
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
              sim_ws='.', strict=True, verbosity_level=VerbosityLevel.normal):
@@ -907,6 +945,9 @@ class MFSimulation(PackageContainer):
 
             self._remove_package(package)
 
+    def get_model_itr(self):
+        return self._models.items()
+
     def get_model(self, model_name=''):
         """
         Load an existing model.
@@ -1103,7 +1144,7 @@ class MFSimulation(PackageContainer):
             if package.package_name is not None:
                 pname = package.package_name.lower()
             if package.package_type.lower() == 'tdis' and self._tdis_file is \
-                    not None and self._tdis_file in self.packages:
+                    not None and self._tdis_file in self.packagelist:
                 # tdis package already exists. there can be only one tdis
                 # package.  remove existing tdis package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1113,7 +1154,7 @@ class MFSimulation(PackageContainer):
                 self._remove_package(self._tdis_file)
             elif package.package_type.lower() == 'gnc' and \
                     package.filename in self._ghost_node_files and \
-                    self._ghost_node_files[package.filename] in self.packages:
+                    self._ghost_node_files[package.filename] in self.packagelist:
                 # gnc package with same file name already exists.  remove old
                 # gnc package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1125,7 +1166,7 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             elif package.package_type.lower() == 'mvr' and \
                      package.filename in self._mover_files and \
-                     self._mover_files[package.filename] in self.packages:
+                     self._mover_files[package.filename] in self.packagelist:
                 # mvr package with same file name already exists.  remove old
                 # mvr package
                 if self.simulation_data.verbosity_level.value >= \
