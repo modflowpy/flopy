@@ -43,7 +43,7 @@ class ModflowNwt(Package):
         is a flag that indicates whether additional information about solver
         convergence will be printed to the main listing file.
         (default is 0).
-    ibotavg : int
+    ibotav : int
         is a flag that indicates whether corrections will be made to groundwater
         head relative to the cell-bottom altitude if the cell is surrounded by
         dewatered cells (integer). A value of 1 indicates that a correction will
