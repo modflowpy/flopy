@@ -305,7 +305,8 @@ class ModflowMnw1(Package):
                                                              each[2]))
 
         spd = self.stress_period_data.drop('mnw_no')
-        spd.write_transient(f)
+        # force write_transient to keep the list arrays internal because MNW1 doesn't allow open/close
+        spd.write_transient(f, forceInternal=True)
 
         #-Un-numbered section PREFIX:MNWNAME
         if self.mnwname:
