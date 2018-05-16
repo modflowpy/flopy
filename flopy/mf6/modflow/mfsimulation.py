@@ -307,6 +307,7 @@ class MFSimulation(PackageContainer):
         self.dimensions = None
         self.type = 'Simulation'
 
+        self._version = version
         self._exe_name = exe_name
         self._models = collections.OrderedDict()
         self._tdis_file = None
@@ -371,17 +372,20 @@ class MFSimulation(PackageContainer):
         return self._get_data_str(False)
 
     def _get_data_str(self, formal):
-        data_str = ''
+        file_mgt = self.simulation_data.mfpath
+        data_str = 'sim_name = {}\nsim_path = {}\nexe_name = ' \
+                   '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
+                                   self._exe_name)
+
         for package in self.packagelist:
+            pk_str = package._get_data_str(formal, False)
             if formal:
-                pk_repr = repr(package)
-                if len(pk_repr.strip()) > 0:
+                if len(pk_str.strip()) > 0:
                     data_str = '{}###################\nPackage {}\n' \
                                '###################\n\n' \
                                '{}\n'.format(data_str, package._get_pname(),
-                                           pk_repr)
+                                             pk_str)
             else:
-                pk_str = str(package)
                 if len(pk_str.strip()) > 0:
                     data_str = '{}###################\nPackage {}\n' \
                                '###################\n\n' \

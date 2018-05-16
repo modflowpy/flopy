@@ -1186,21 +1186,34 @@ class MFPackage(PackageContainer):
     def __str__(self):
         return self._get_data_str(False)
 
-    def _get_data_str(self, formal):
-        data_str = ''
-        for idx, block in self.blocks.items():
-            if formal:
-                bl_repr = repr(block)
-                if len(bl_repr.strip()) > 0:
-                    data_str = '{}Block {}\n--------------------\n{}' \
-                               '\n'.format(data_str, block.structure.name,
-                                           repr(block))
-            else:
-                bl_str = str(block)
-                if len(bl_str.strip()) > 0:
-                    data_str = '{}Block {}\n--------------------\n{}' \
-                               '\n'.format(data_str, block.structure.name,
-                                           str(block))
+    def _get_data_str(self, formal, show_data=True):
+        data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
+                   '\nmodel_or_simulation_package = {}' \
+                   '\n{}_name = {}' \
+                   '\n'.format(self._get_pname(), self.filename,
+                               self.package_type,
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.name)
+        if self.parent_file is not None and formal:
+            data_str = '{}parent_file = ' \
+                       '{}\n\n'.format(data_str, self.parent_file._get_pname())
+        else:
+            data_str = '{}\n'.format(data_str)
+        if show_data:
+            for idx, block in self.blocks.items():
+                if formal:
+                    bl_repr = repr(block)
+                    if len(bl_repr.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               repr(block))
+                else:
+                    bl_str = str(block)
+                    if len(bl_str.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               str(block))
         return data_str
 
     def _get_pname(self):

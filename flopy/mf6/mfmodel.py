@@ -87,6 +87,7 @@ class MFModel(PackageContainer):
         self.name = modelname
         self.name_file = None
         self.version = version
+        self.model_type = model_type
         self.type = 'Model'
 
         if model_nam_file is None:
@@ -176,17 +177,22 @@ class MFModel(PackageContainer):
         return self._get_data_str(False)
 
     def _get_data_str(self, formal):
-        data_str = ''
+        file_mgr = self.simulation_data.mfpath
+        data_str = 'name = {}\nmodel_type = {}\nversion = {}\nmodel_' \
+                   'relative_path = {}' \
+                   '\n\n'.format(self.name, self.model_type, self.version,
+                                 file_mgr.model_relative_path[self.name])
+
         for package in self.packagelist:
+            pk_str = package._get_data_str(formal, False)
             if formal:
-                pk_repr = repr(package)
-                if len(pk_repr.strip()) > 0:
+                if len(pk_str.strip()) > 0:
                     data_str = '{}###################\nPackage {}\n' \
                                '###################\n\n' \
                                '{}\n'.format(data_str, package._get_pname(),
-                                           pk_repr)
+                                             pk_str)
             else:
-                pk_str = str(package)
+                pk_str = package._get_data_str(formal, False)
                 if len(pk_str.strip()) > 0:
                     data_str = '{}###################\nPackage {}\n' \
                                '###################\n\n' \
