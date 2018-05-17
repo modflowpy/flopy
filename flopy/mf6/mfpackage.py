@@ -260,6 +260,29 @@ class MFBlock(object):
         self.external_file_name = None
         self._structure_init()
 
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        data_str = ''
+        for idx, dataset in self.datasets.items():
+            if formal:
+                ds_repr = repr(dataset)
+                if len(ds_repr.strip()) > 0:
+                    data_str = '{}{}\n{}\n'.format(data_str,
+                                                   dataset.structure.name,
+                                                   repr(dataset))
+            else:
+                ds_str = str(dataset)
+                if len(ds_str.strip()) > 0:
+                    data_str = '{}{}\n{}\n'.format(data_str,
+                                                   dataset.structure.name,
+                                                   str(dataset))
+        return data_str
+
     # return an MFScalar, MFList, or MFArray
     @staticmethod
     def data_factory(sim_data, structure, enable, path, dimensions, data=None):
@@ -1157,6 +1180,42 @@ class MFPackage(PackageContainer):
                 return
         super(MFPackage, self).__setattr__(name, value)
 
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal, show_data=True):
+        data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
+                   '\nmodel_or_simulation_package = {}' \
+                   '\n{}_name = {}' \
+                   '\n'.format(self._get_pname(), self.filename,
+                               self.package_type,
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.name)
+        if self.parent_file is not None and formal:
+            data_str = '{}parent_file = ' \
+                       '{}\n\n'.format(data_str, self.parent_file._get_pname())
+        else:
+            data_str = '{}\n'.format(data_str)
+        if show_data:
+            for idx, block in self.blocks.items():
+                if formal:
+                    bl_repr = repr(block)
+                    if len(bl_repr.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               repr(block))
+                else:
+                    bl_str = str(block)
+                    if len(bl_str.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               str(block))
+        return data_str
+
     def _get_pname(self):
         if self.package_name is not None:
             return '{}'.format(self.package_name)
@@ -1292,7 +1351,7 @@ class MFPackage(PackageContainer):
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
         # update sub-packages
-        for package in self.packages:
+        for package in self.packagelist:
             package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):

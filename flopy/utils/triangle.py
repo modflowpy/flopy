@@ -459,14 +459,11 @@ class Triangle(object):
         """
         # Create the edge dictionary if it doesn't exist
         if self.edgedict is None:
-            edgedict = {}
-            for ie, iv1, iv2, iseg in self.edge:
-                if iseg != 0:
-                    edgedict[(iv1, iv2)] = iseg
-                    edgedict[(iv2, iv1)] = iseg
+            self._create_edge_dict()
 
         # Create a list of cells for boundary marker ibm
         cell_list = []
+        edgedict = self.edgedict
         for n, ivlist in enumerate(self.iverts):
             itmp = ivlist + [ivlist[0]]
             for i in range(len(ivlist)):
@@ -476,6 +473,48 @@ class Triangle(object):
                         cell_list.append(n)
 
         return cell_list
+
+    def get_cell_edge_length(self, n, ibm):
+        """
+        Get the length of the edge for cell n that corresponds to
+        boundary marker ibm
+
+        Parameters
+        ----------
+        n : int
+            cell number.  0 <= n < self.ncpl
+
+        ibm : integer
+            boundary marker number
+
+        Returns
+        -------
+        length : float
+            Length of the edge along that boundary marker.  Will
+            return None if cell n does not touch boundary marker.
+
+        """
+
+        assert 0 <= n < self.ncpl, 'Not a valid cell number'
+
+        # Create the edge dictionary if it doesn't exist
+        if self.edgedict is None:
+            self._create_edge_dict()
+
+        ivlist = self.iverts[n]
+        itmp = ivlist + [ivlist[0]]
+        d = None
+        for i in range(len(ivlist)):
+            iv1 = itmp[i]
+            iv2 = itmp[i + 1]
+            ie = (itmp[i], itmp[i + 1])
+            if ie in self.edgedict:
+                if self.edgedict[ie] == ibm:
+                    x1, y1 = self.verts[iv1]
+                    x2, y2 = self.verts[iv2]
+                    d = ( (x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+                    return d
+        return d
 
     def get_attribute_array(self):
         """
@@ -679,4 +718,17 @@ class Triangle(object):
             f.write(s)
 
         f.close()
+        return
+
+    def _create_edge_dict(self):
+        """
+        Create the edge dictionary
+
+        """
+        edgedict = {}
+        for ie, iv1, iv2, iseg in self.edge:
+            if iseg != 0:
+                edgedict[(iv1, iv2)] = iseg
+                edgedict[(iv2, iv1)] = iseg
+        self.edgedict = edgedict
         return

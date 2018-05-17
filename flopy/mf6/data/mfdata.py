@@ -559,9 +559,14 @@ class DataStorage(object):
                 if storage.internal_data is not None:
                     header = self._get_layer_header_str(index)
                     if formal:
-                        data_str = '{}Layer_{}{{{}}}' \
-                                   '\n({})\n'.format(data_str, index + 1,
-                                                     header, repr(storage))
+                        if self.layered:
+                            data_str = '{}Layer_{}{{{}}}' \
+                                       '\n({})\n'.format(data_str, index + 1,
+                                                         header, repr(storage))
+                        else:
+                            data_str = '{}{{{}}}\n({})\n'.format(data_str,
+                                                                 header,
+                                                                 repr(storage))
                     else:
                         data_str = '{}{{{}}}\n({})\n'.format(data_str, header,
                                                              str(storage))
@@ -571,7 +576,6 @@ class DataStorage(object):
                     data_str = '{}{{{}}}' \
                                '\n'.format(data_str,
                                            self._get_layer_header_str(index))
-
         return data_str
 
     def _get_layer_header_str(self, layer):
