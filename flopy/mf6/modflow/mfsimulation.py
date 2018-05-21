@@ -753,23 +753,10 @@ class MFSimulation(PackageContainer):
                 ims_pkg = 'ims{}'.format(version_string)
                 new_record = [ims_pkg, ims_file.filename]
                 for model in model_list:
-                    #if model not in self._models:
-                    #    comment = 'Model "{}" is not part of the simulation and ' \
-                    #              'can not be associated with an ims ' \
-                    #              'package.'.format(model)
-                    #    type_, value_, traceback_ = sys.exc_info()
-                    #    raise MFDataException(None, 'ims', '',
-                    #                          'registering ims package',
-                    #                          'solutiongroup',
-                    #                          inspect.stack()[0][3], type_,
-                    #                          value_, traceback_, comment,
-                    #                          self.simulation_data.debug)
-
                     new_record.append(model)
                 try:
                     solution_recarray.append_list_as_record(new_record,
                                                             solution_group_num)
-                    self.name_file.mxiter.add_one(solution_group_num)
                 except MFDataException as mfde:
                     message = 'Error occurred while updating the ' \
                               'simulation name file with the ims package ' \
