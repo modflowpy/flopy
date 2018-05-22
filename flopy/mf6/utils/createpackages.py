@@ -3,6 +3,11 @@ import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
 
+"""
+createpackages.py is a utility script that reads in the file definition 
+metadata in the .dfn files to create the package classes in the modflow folder.
+Run this script any time changes are made to the .dfn files.
+"""
 
 class PackageLevel(Enum):
     sim_level = 0
