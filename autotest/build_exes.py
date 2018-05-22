@@ -144,7 +144,7 @@ def test_build_mfnwt():
         return
     starget = 'MODFLOW-NWT'
     exe_name = 'mfnwt'
-    dirname = 'MODFLOW-NWT_1.1.3'
+    dirname = 'MODFLOW-NWT_1.1.4'
     url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
 
     build_target(starget, exe_name, url, dirname)

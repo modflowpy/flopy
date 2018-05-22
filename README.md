@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.9 develop &mdash; build 126
+### Version 3.2.9 develop &mdash; build 128
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
@@ -18,21 +18,9 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Contributing
 ------------------------------------------------
 
-Contributions are welcome from the community. Questions can be asked on the
-[issues page][1]. Before creating a new issue, please take a moment to search
-and make sure a similar issue does not already exist. If one does exist, you
-can comment (most simply even with just a `:+1:`) to show your support for that
-issue.
+Contributions are welcome from the community. Questions can be asked on the [issues page](https://github.com/modflowpy/flopy/issues). Before creating a new issue, please take a  moment to search and make sure a similar issue does not already exist. If one does exist, you can comment (most simply even with just a `:+1:`) to show your support for that issue.
 
-If you have direct contributions you would like considered for incorporation
-into the project you can [fork this repository][2] and
-[submit a pull request][3] for review.
-
-
-
-[1]: https://github.com/modflowpy/flopy/issues
-[2]: https://help.github.com/articles/fork-a-repo/
-[3]: https://help.github.com/articles/about-pull-requests/
+If you have direct contributions you would like considered for incorporation into the project you can [fork this repository](https://help.github.com/articles/fork-a-repo/) and [submit a pull request](https://help.github.com/articles/about-pull-requests/) for review.
 
 
 Documentation
@@ -41,23 +29,11 @@ Documentation
 FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
 
-How to Cite
------------------------------------------------
-
-##### ***Citation for FloPy:***
-
-[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
-
-##### ***Software/Code citation for FloPy:***
-
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 22 May 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
-
-
 
 Getting Started
 -----------------------------------------------
 
-### [Getting started with FloPy](docs/working_with_flopy.md)
+### [Frequently asked questions](docs/flopyFAQ.md)
 
 ### [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html)
 
@@ -175,6 +151,18 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.df()` in `flopy.modflow.mfsfr2` `SfrFile` class                                    | **pandas** >= 0.15                                 |
 | `.time_coverage()` in `flopy.export.metadata` `acc` class - ***used if available***  | **pandas** >= 0.15                                 |
 | `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
+
+
+How to Cite
+-----------------------------------------------
+
+##### ***Citation for FloPy:***
+
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
+
+##### ***Software/Code citation for FloPy:***
+
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 22 May 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

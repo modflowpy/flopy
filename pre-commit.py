@@ -360,15 +360,16 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     for line in lines:
         if line == 'Introduction':
             writeline = True
-        elif line == 'Examples':
+        elif line == 'Getting Started':
             writeline = False
-        elif 'Click [here](docs/mf6.md) for more information.' in line:
-            line = line.replace(
-                'Click [here](docs/mf6.md) for more information.', '')
-        elif ' Pull requests will only be accepted on the develop branch of the repository.' in line:
-            line = line.replace(
-                ' Pull requests will only be accepted on the develop branch of the repository.',
-                '')
+        elif line == 'How to Cite':
+            writeline = True
+        elif line == 'MODFLOW Resources':
+            writeline = False
+        elif line == 'Disclaimer':
+            writeline = True
+        elif '[MODFLOW 6](docs/mf6.md)' in line:
+            line = line.replace('[MODFLOW 6](docs/mf6.md)', 'MODFLOW 6')
         if writeline:
             f.write('{}\n'.format(line))
             line = line.replace('***', '*')

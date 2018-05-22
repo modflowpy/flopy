@@ -32,7 +32,7 @@ setup(name=__name__,
                    'aleaf@usgs.gov, spaulinski@usgs.gov, jjstarn@usgs.gov, ' +
                    'mnfienen@usgs.gov',
       url='https://github.com/modflowpy/flopy/',
-      license='New BSD',
+      license='CC0',
       platforms='Windows, Mac OS-X, Linux',
       install_requires=['enum34;python_version<"3.4"',
                         'numpy>=1.9'],
