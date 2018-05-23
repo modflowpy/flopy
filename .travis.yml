@@ -78,6 +78,7 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
+    - export JUPYTER_PATH='/home/travis/build/modflowpy/flopy':$JUPYTER_PATH
     - jupyter kernelspec list
     - echo python path; python -c "from __future__ import print_function; import sys; print(sys.path)"
     - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
