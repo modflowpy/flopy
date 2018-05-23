@@ -37,7 +37,7 @@ def run_notebook(dpth, fn):
     # run autotest on each notebook
     pth = os.path.join(dpth, fn)
     cmd = 'jupyter ' + 'nbconvert ' + \
-          '--ExecutePreprocessor.kernel_name=python ' + \
+          #'--ExecutePreprocessor.kernel_name=python ' + \
           '--ExecutePreprocessor.timeout=600 ' + '--to ' + 'notebook ' + \
           '--execute ' + '{} '.format(pth) + \
           '--output-dir ' + '{} '.format(testdir) + \

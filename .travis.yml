@@ -78,7 +78,6 @@ install:
 # command to run tests
 script: 
     - export PYTHONPATH=$PYTHONPATH:.
-    - export JUPYTER_PATH=$PYTHONPATH:$JUPYTER_PATH
     - echo python path; python -c "from __future__ import print_function; import sys; print(sys.path)"
     - python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
     - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
