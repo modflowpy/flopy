@@ -394,17 +394,21 @@ class StartingLocationsFile(Package):
         if len(data) == 0:
             print('No data to write!')
             return
+        data = data.copy()
+        data['k0'] += 1
+        data['i0'] += 1
+        data['j0'] += 1
         with open(self.fn_path, 'w') as output:
             output.write('{}\n'.format(self.heading))
             output.write('{:d}\n'.format(self.input_style))
-            groups = np.unique(self.data.groupname)
+            groups = np.unique(data.groupname)
             ngroups = len(groups)
             output.write('{:d}\n'.format(ngroups))
             for g in groups:
-                npt = len(self.data[self.data.groupname == g])
+                npt = len(data[data.groupname == g])
                 output.write('{}\n{:d}\n'.format(g.decode(), npt))
             txt =''
-            for p in self.data:
+            for p in data:
                 txt += '{:d} {:d} {:d} {:d} {:d} {:d}'.format(*list(p)[:6])
                 fmtstr = ' {0} {0} {0} {0} '.format(float_format)
                 txt += fmtstr.format(*list(p)[6:10])

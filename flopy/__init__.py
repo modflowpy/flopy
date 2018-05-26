@@ -21,10 +21,12 @@ contribute.
 """
 
 __name__ = 'flopy'
-__author__ = 'Mark Bakker, Vincent Post, Chris Langevin, Joe Hughes, Jeremy White, Jeff Starn, Mike Fienen, and Alain Frances'
+__author__ = 'Mark Bakker, Vincent Post, Christian D. Langevin, ' + \
+             'Joseph D. Hughes, Jeremy T. White, Andrew T. Leaf, ' + \
+             'Scott R. Paulinski, Jeffrey J. Starn, and Michael N. Fienen'
 from .version import __version__, __build__, __git_commit__
 
-#imports
+# imports
 from . import modflow
 from . import mt3d
 from . import seawat
@@ -35,4 +37,4 @@ from . import plot
 from . import export
 from . import pest
 from . import mf6
-from .mbase import run_model, which, is_exe
+from .mbase import run_model, which

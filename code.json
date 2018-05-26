@@ -1,0 +1,49 @@
+[
+    {
+        "status": "Release Candidate", 
+        "languages": [
+            "python"
+        ], 
+        "repositoryURL": "https://code.usgs.gov/usgs/modflow/flopy.git", 
+        "laborHours": -1, 
+        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models.", 
+        "tags": [
+            "MODFLOW", 
+            "MODFLOW 6", 
+            "MODFLOW-2005", 
+            "MODFLOW-NWT", 
+            "MODFLOW-USG", 
+            "MODFLOW-2000", 
+            "MT3DMS", 
+            "MT3D-USGS", 
+            "SEAWAT", 
+            "MODPATH", 
+            "groundwater model", 
+            "transport model", 
+            "python"
+        ], 
+        "name": "flopy", 
+        "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip", 
+        "contact": {
+            "name": "Joseph D. Hughes", 
+            "email": "jdhughes@usgs.gov"
+        }, 
+        "vcs": "git", 
+        "version": "3.2.9.136", 
+        "date": {
+            "metadataLastUpdated": "2018-05-24"
+        }, 
+        "organization": "U.S. Geological Survey", 
+        "permissions": {
+            "licenses": [
+                {
+                    "URL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/LICENSE.md", 
+                    "name": "Public Domain, CC0-1.0"
+                }
+            ], 
+            "usageType": "openSource"
+        }, 
+        "homepageURL": "https://code.usgs.gov/usgs/modflow/flopy/", 
+        "disclaimerURL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/DISCLAIMER.md"
+    }
+]

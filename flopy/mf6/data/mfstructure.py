@@ -29,6 +29,35 @@ class DfnType(Enum):
 
 
 class Dfn(object):
+    """
+    Base class for package file definitions
+
+    Attributes
+    ----------
+    dfndir : path
+        folder containing package definition files (dfn)
+    common : path
+        file containing common information
+    multi_package : dict
+        contains the names of all packages that are allowed to have multiple
+        instances in a model/simulation
+
+    Methods
+    -------
+    get_file_list : () : list
+        returns all of the dfn files found in dfndir.  files are returned in
+        a specified order defined in the local variable file_order
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self):
         # directories
         self.dfndir = os.path.join('.', 'dfn')
@@ -120,6 +149,33 @@ class Dfn(object):
 
 
 class DfnPackage(Dfn):
+    """
+    Dfn child class that loads dfn information from a list structure stored
+    in the auto-built package classes
+
+    Attributes
+    ----------
+    package : MFPackage
+        MFPackage subclass that contains dfn information
+
+    Methods
+    -------
+    multi_package_support : () : bool
+        returns flag for multi-package support
+    get_block_structure_dict : (path : tuple, common : bool, model_file :
+            bool) : dict
+        returns a dictionray of block structure information for the package
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self, package):
         super(DfnPackage, self).__init__()
         self.package = package
@@ -297,6 +353,36 @@ class DfnPackage(Dfn):
 
 
 class DfnFile(Dfn):
+    """
+    Dfn child class that loads dfn information from a package definition (dfn)
+    file
+
+    Attributes
+    ----------
+    file : str
+        name of the file to be loaded
+
+    Methods
+    -------
+    multi_package_support : () : bool
+        returns flag for multi-package support
+    dict_by_name : {} : dict
+        returns a dictionary of data item descriptions from the dfn file with
+        the data item name as the dictionary key
+    get_block_structure_dict : (path : tuple, common : bool, model_file :
+            bool) : dict
+        returns a dictionray of block structure information for the package
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self, file):
         super(DfnFile, self).__init__()
 
@@ -531,6 +617,9 @@ class DataType(Enum):
 
 
 class DatumType(Enum):
+    """
+    Types of individual pieces of data
+    """
     keyword = 1
     integer = 2
     double_precision = 3
@@ -587,6 +676,9 @@ class MFDataItemStructure(object):
         otherwise, name information appears
     shape : list
         describes the shape of the data
+    layer_dims : list
+        which dimensions in the shape function as layers, if None defaults to
+        "layer"
     reader : basestring
         reader that MF6 uses to read the data
     optional : bool
@@ -657,6 +749,7 @@ class MFDataItemStructure(object):
         self.tagged = True
         self.just_data = False
         self.shape = []
+        self.layer_dims = ['nlay']
         self.reader = None
         self.optional = False
         self.longname = None
@@ -751,6 +844,10 @@ class MFDataItemStructure(object):
                             dimension = dimension.replace('(', '')
                             dimension = dimension.replace(')', '')
                             dimension = dimension.replace(',', '')
+                            if dimension[0] == '*':
+                                dimension = dimension.replace('*', '')
+                                # set as a "layer" dimension
+                                self.layer_dims.insert(0, dimension)
                             self.shape.append(dimension)
                         else:
                             # only process what is after the last ; which by
@@ -1090,7 +1187,8 @@ class MFDataStructure(object):
         self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
-                        'nodes' in data_item.shape)
+                        'nodes' in data_item.shape or
+                        len(data_item.layer_dims) > 1)
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False

@@ -6,6 +6,7 @@ mfsimulation module.  contains the MFSimulation class
 import errno, sys, inspect
 import collections
 import os.path
+import numpy as np
 from flopy.mbase import run_model
 from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                              PackageContainerType, MFDataException, \
@@ -307,6 +308,7 @@ class MFSimulation(PackageContainer):
         self.dimensions = None
         self.type = 'Simulation'
 
+        self._version = version
         self._exe_name = exe_name
         self._models = collections.OrderedDict()
         self._tdis_file = None
@@ -363,6 +365,47 @@ class MFSimulation(PackageContainer):
             return self.get_model(item)
         else:
             return self.get_package(item)
+
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        file_mgt = self.simulation_data.mfpath
+        data_str = 'sim_name = {}\nsim_path = {}\nexe_name = ' \
+                   '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
+                                   self._exe_name)
+
+        for package in self.packagelist:
+            pk_str = package._get_data_str(formal, False)
+            if formal:
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+            else:
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+        for idx, model in self._models.items():
+            if formal:
+                mod_repr = repr(model)
+                if len(mod_repr.strip()) > 0:
+                    data_str = '{}@@@@@@@@@@@@@@@@@@@@\nModel {}\n' \
+                               '@@@@@@@@@@@@@@@@@@@@\n\n' \
+                               '{}\n'.format(data_str, model.name, mod_repr)
+            else:
+                mod_str = str(model)
+                if len(mod_str.strip()) > 0:
+                    data_str = '{}@@@@@@@@@@@@@@@@@@@@\nModel {}\n' \
+                               '@@@@@@@@@@@@@@@@@@@@\n\n' \
+                               '{}\n'.format(data_str, model.name, mod_str)
+        return data_str
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
@@ -688,8 +731,8 @@ class MFSimulation(PackageContainer):
             self._replace_ims_in_solution_group(pkg_with_same_name.filename,
                                                 1, ims_file.filename)
         # only allow an ims package to be registered to one solution group
-        elif not self._is_in_solution_group(ims_file.filename, 1) \
-                and model_list is not None:
+        elif model_list is not None:
+            ims_in_group = self._is_in_solution_group(ims_file.filename, 1)
             # add solution group to the simulation name file
             solution_recarray = self.name_file.solutiongroup
             solution_group_list = solution_recarray.get_active_key_list()
@@ -698,37 +741,29 @@ class MFSimulation(PackageContainer):
             else:
                 solution_group_num = solution_group_list[-1][0]
 
-            self.name_file.mxiter.add_transient_key(solution_group_num)
+            if ims_in_group:
+                self._append_to_ims_solution_group(ims_file.filename,
+                                                   model_list)
+            else:
+                if self.name_file.mxiter.get_data(solution_group_num) is None:
+                    self.name_file.mxiter.add_transient_key(solution_group_num)
 
-            # associate any models in the model list to this simulation file
-            version_string = mfstructure.MFStructure().get_version_string()
-            ims_pkg = 'ims{}'.format(version_string)
-            new_record = [ims_pkg, ims_file.filename]
-            for model in model_list:
-                #if model not in self._models:
-                #    comment = 'Model "{}" is not part of the simulation and ' \
-                #              'can not be associated with an ims ' \
-                #              'package.'.format(model)
-                #    type_, value_, traceback_ = sys.exc_info()
-                #    raise MFDataException(None, 'ims', '',
-                #                          'registering ims package',
-                #                          'solutiongroup',
-                #                          inspect.stack()[0][3], type_,
-                #                          value_, traceback_, comment,
-                #                          self.simulation_data.debug)
-
-                new_record.append(model)
-            try:
-                solution_recarray.append_list_as_record(new_record,
-                                                        solution_group_num)
-                self.name_file.mxiter.add_one(solution_group_num)
-            except MFDataException as mfde:
-                message = 'Error occurred while updating the ' \
-                          'simulation name file with the ims package ' \
-                          'file "{}".'.format(ims_file.filename)
-                raise MFDataException(mfdata_except=mfde,
-                                      package='nam',
-                                      message=message)
+                # associate any models in the model list to this simulation file
+                version_string = mfstructure.MFStructure().get_version_string()
+                ims_pkg = 'ims{}'.format(version_string)
+                new_record = [ims_pkg, ims_file.filename]
+                for model in model_list:
+                    new_record.append(model)
+                try:
+                    solution_recarray.append_list_as_record(new_record,
+                                                            solution_group_num)
+                except MFDataException as mfde:
+                    message = 'Error occurred while updating the ' \
+                              'simulation name file with the ims package ' \
+                              'file "{}".'.format(ims_file.filename)
+                    raise MFDataException(mfdata_except=mfde,
+                                          package='nam',
+                                          message=message)
 
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths):
@@ -866,7 +901,7 @@ class MFSimulation(PackageContainer):
                 silent = False
             else:
                 silent = True
-        return run_model(self._exe_name, self.name_file.filename,
+        return run_model(self._exe_name, None,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
                          normal_msg=normal_msg, async=async, cargs=cargs)
@@ -906,6 +941,9 @@ class MFSimulation(PackageContainer):
                 del self._other_files[package.filename]
 
             self._remove_package(package)
+
+    def get_model_itr(self):
+        return self._models.items()
 
     def get_model(self, model_name=''):
         """
@@ -1103,7 +1141,7 @@ class MFSimulation(PackageContainer):
             if package.package_name is not None:
                 pname = package.package_name.lower()
             if package.package_type.lower() == 'tdis' and self._tdis_file is \
-                    not None and self._tdis_file in self.packages:
+                    not None and self._tdis_file in self.packagelist:
                 # tdis package already exists. there can be only one tdis
                 # package.  remove existing tdis package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1113,7 +1151,7 @@ class MFSimulation(PackageContainer):
                 self._remove_package(self._tdis_file)
             elif package.package_type.lower() == 'gnc' and \
                     package.filename in self._ghost_node_files and \
-                    self._ghost_node_files[package.filename] in self.packages:
+                    self._ghost_node_files[package.filename] in self.packagelist:
                 # gnc package with same file name already exists.  remove old
                 # gnc package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1125,7 +1163,7 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             elif package.package_type.lower() == 'mvr' and \
                      package.filename in self._mover_files and \
-                     self._mover_files[package.filename] in self.packages:
+                     self._mover_files[package.filename] in self.packagelist:
                 # mvr package with same file name already exists.  remove old
                 # mvr package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1326,6 +1364,39 @@ class MFSimulation(PackageContainer):
             return (package.parent_file.path) + (package.package_type,)
         else:
             return (package.package_type,)
+
+    def _append_to_ims_solution_group(self, ims_file, new_models):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file.  The error ' \
+                          'occurred while replacing IMS file "{}" with "{}"' \
+                          'at index "{}"'.format(solution_group_num[0],
+                                                 item, new_item, index)
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+            new_array = []
+            for index, record in enumerate(rec_array):
+                new_record = []
+                rec_model_dict = {}
+                for index, item in enumerate(record):
+                    if record[1] == ims_file or item not in new_models:
+                        new_record.append(item)
+                        if index > 1:
+                            rec_model_dict[item] = 1
+
+                if record[1] == ims_file:
+                    for model in new_models:
+                        if model not in rec_model_dict:
+                            new_record.append(model)
+
+                new_array.append(tuple(new_record))
+            solution_recarray.set_data(new_array,
+                                       solution_group_num[0])
 
     def _replace_ims_in_solution_group(self, item, index, new_item):
         solution_recarray = self.name_file.solutiongroup

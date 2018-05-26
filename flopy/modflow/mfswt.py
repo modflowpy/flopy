@@ -251,13 +251,15 @@ class ModflowSwt(Package):
         else:
             ipakcb = 0
 
-        item16_extensions = ["subsidence.hds", "total_comp.hds",
-                             "inter_comp.hds", "vert_disp.hds",
-                             "precon_stress.hds", "precon_stress_delta.hds",
-                             "geostatic_stress.hds",
-                             "geostatic_stress_delta.hds",
-                             "eff_stress.hds", "eff_stress_delta.hds",
-                             "void_ratio.hds", "thick.hds", "lay_center.hds"]
+        item16_extensions = ["swt_subsidence.hds", "swt_total_comp.hds",
+                             "swt_inter_comp.hds", "swt_vert_disp.hds",
+                             "swt_precon_stress.hds",
+                             "swt_precon_stress_delta.hds",
+                             "swt_geostatic_stress.hds",
+                             "swt_geostatic_stress_delta.hds",
+                             "swt_eff_stress.hds", "swt_eff_stress_delta.hds",
+                             "swt_void_ratio.hds", "swt_thick.hds",
+                             "swt_lay_center.hds"]
         item16_units = [2052 + i for i in range(len(item16_extensions))]
 
         if iswtoc > 0:

@@ -13,6 +13,12 @@ import os
 import warnings
 import numpy as np
 
+try:
+    from numpy.lib import NumpyVersion
+    numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
+except ImportError:
+    numpy114 = False
+
 
 class MfList(object):
     """
@@ -213,9 +219,10 @@ class MfList(object):
             mxact = max(mxact, self.get_itmp(kper))
         return mxact
 
-    # Get the numpy savetxt-style fmt string that corresponds to the dtype
     @property
     def fmt_string(self):
+        """Returns a C-style fmt string for numpy savetxt that corresponds to
+        the dtype"""
         if self.list_free_format is not None:
             use_free = self.list_free_format
         else:
@@ -225,32 +232,40 @@ class MfList(object):
             # mt3d list data is fixed format
             if 'mt3d' in self.package.parent.version.lower():
                 use_free = False
-        fmt_string = ''
+        fmts = []
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype == 'i':
+            if vtype == 'i' or vtype == 'b':
                 if use_free:
-                    fmt_string += ' %9d'
+                    fmts.append('%9d')
                 else:
-                    fmt_string += '%10d'
+                    fmts.append('%10d')
             elif vtype == 'f':
                 if use_free:
-                    fmt_string += ' %15.7E'
+                    if numpy114:
+                        # Use numpy's floating-point formatter (Dragon4)
+                        fmts.append('%15s')
+                    else:
+                        fmts.append('%15.7E')
                 else:
-                    fmt_string += '%10G'
-
+                    fmts.append('%10G')
             elif vtype == 'o':
                 if use_free:
-                    fmt_string += ' %9s'
+                    fmts.append('%9s')
                 else:
-                    fmt_string += '%10s'
+                    fmts.append('%10s')
             elif vtype == 's':
-                raise Exception("MfList error: '\str\' type found it dtype." + \
-                                " This gives unpredictable results when " + \
-                                "recarray to file - change to \'object\' type")
+                raise TypeError(
+                        "MfList.fmt_string error: 'str' type found in dtype. "
+                        "This gives unpredictable results when "
+                        "recarray to file - change to 'object' type")
             else:
-                raise Exception("MfList.fmt_string error: unknown vtype " + \
-                                "in dtype:" + vtype)
+                raise TypeError("MfList.fmt_string error: unknown vtype in "
+                                "field: {}".format(field))
+        if use_free:
+            fmt_string = ' ' + ' '.join(fmts)
+        else:
+            fmt_string = ''.join(fmts)
         return fmt_string
 
     # Private method to cast the data argument
@@ -577,7 +592,9 @@ class MfList(object):
     def binary(self):
         return bool(self.__binary)
 
-    def write_transient(self, f, single_per=None):
+    def write_transient(self, f, single_per=None, forceInternal=False):
+        # forceInteral overrides isExternal (set below) for cases where
+        # external arrays are not supported (oh hello MNW1!)
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         assert hasattr(f, "read"), "MfList.write() error: " + \
@@ -619,7 +636,8 @@ class MfList(object):
 
             isExternal = False
             if self.model.array_free_format and \
-                            self.model.external_path is not None:
+                            self.model.external_path is not None and \
+                            forceInternal is False:
                 isExternal = True
             if self.__binary:
                 isExternal = True

@@ -128,8 +128,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
         data_storage = mfdata.DataStorage(
-                model.simulation_data,
-                data_dimensions,
+                model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
                 mfdata.DataStructureType.recarray)
         dimension_list = data_storage.get_data_dimensions(None)
@@ -265,8 +264,7 @@ class ListTemplateGenerator(TemplateGenerator):
         data_type = data_struct.get_datatype()
         # build a temporary data storge object
         data_storage = mfdata.DataStorage(
-                model.simulation_data,
-                data_dimensions,
+                model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
                 mfdata.DataStructureType.recarray)
 
@@ -601,17 +599,58 @@ class ArrayUtil(object):
 
 
 class MultiList():
+    """
+    Class for storing objects in an n-dimensional list which can be iterated
+    through as a single list.
+
+    Parameters
+    ----------
+    mdlist : list
+        multi-dimensional list to initialize the multi-list.  either mdlist
+        or both shape and callback must be specified
+    shape : tuple
+        shape of the multi-list
+    callback : method
+        callback method that takes a location in the multi-list (tuple) and
+        returns an object to be stored at that location in the multi-list
+
+    Methods
+    -------
+    increment_dimension : (dimension, callback)
+        increments the size of one of the two dimensions of the multi-list
+    build_list : (callback)
+        builds a multi-list of shape self.list_shape, constructing objects
+        for the list using the supplied callback method
+    first_item : () : object
+        gets the first entry in the multi-list
+    get_total_size : () : int
+        returns the total number of entries in the multi-list
+    in_shape : (indexes) : boolean
+        returns whether a tuple of indexes are valid indexes for the shape of
+        the multi-list
+    inc_shape_idx : (indexes) : tuple
+        given a tuple of indexes pointing to an entry in the multi-list,
+        returns a tuple of indexes pointing to the next entry in the multi-list
+    first_index : () : tuple
+        returns a tuple of indexes pointing to the first entry in the
+        multi-list
+    indexes : (start_indexes=None, end_indexes=None) : iter(tuple)
+        returns an iterator that iterates from the location in the
+        multi-list defined by start_indexes to the location in the
+        multi-list defined by end_indexes
+    elements : () : iter(object)
+        returns an iterator that iterates over each object stored in the
+        multi-list
+    """
     def __init__(self, mdlist=None, shape=None, callback=None):
         if mdlist is not None:
             self.multi_dim_list = mdlist
             self.list_shape = MultiList._calc_shape(mdlist)
         elif shape is not None:
             self.list_shape = shape
+            self.multi_dim_list = []
             if callback is not None:
-                self.multi_dim_list = []
                 self.build_list(callback)
-            else:
-                self.multi_dim_list = None
         else:
             raise Exception('MultiList requires either a mdlist or a shape '
                             'at initialization.')
@@ -669,18 +708,22 @@ class MultiList():
     def build_list(self, callback):
         entry_points = [(self.multi_dim_list, self.first_index())]
         shape_len = len(self.list_shape)
+        # loop through each dimension
         for index, shape_size in enumerate(self.list_shape):
             new_entry_points = []
+            # loop through locations to add to the list
             for entry_point in entry_points:
+                # loop through the size of current dimension
                 for val in range(0, shape_size):
                     if index < (shape_len - 1):
+                        # this is a multi-dimensional multi-list, build out
+                        # first dimension
                         entry_point[0].append([])
                         if entry_point[1] is None:
                             new_location = (len(entry_point) - 1,)
                         else:
-                            new_location = entry_point[1] + (len(
-                                entry_point[0]) - 1)
-                        new_entry_points.append((entry_point[-1],
+                            new_location = ((len(entry_point[0]) - 1), val)
+                        new_entry_points.append((entry_point[0][-1],
                                                  new_location))
                     else:
                         entry_point[0].append(callback(entry_point[1]))
@@ -725,6 +768,15 @@ class MultiList():
             first_index.append(0)
         return tuple(first_index)
 
+    def nth_index(self, n):
+        index = None
+        aii = ArrayIndexIter(self.list_shape, True)
+        index_num = 0
+        while index_num <= n:
+            index = aii.next()
+            index_num += 1
+        return index
+
     def indexes(self, start_indexes=None, end_indexes=None):
         aii = ArrayIndexIter(self.list_shape, True)
         if start_indexes is not None:
@@ -736,9 +788,6 @@ class MultiList():
 
     def elements(self):
         return MultiListIter(self.multi_dim_list, False)
-
-    def leaf_lists(self):
-        return MultiListIter(self.multi_dim_list, False, True)
 
 
 class ArrayIndexIter(object):

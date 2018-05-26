@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from ..utils.flopy_io import _pop_item, line_parse, read_nwt_options
+from ..utils.flopy_io import pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 
@@ -750,7 +750,7 @@ class ModflowUzf1(Package):
         for per in range(nper):
             print('stress period {}:'.format(per + 1))
             line = line_parse(f.readline())
-            nuzf1 = _pop_item(line, int)
+            nuzf1 = pop_item(line, int)
 
             # dataset 10
             if nuzf1 > 0:
@@ -759,19 +759,19 @@ class ModflowUzf1(Package):
             if ietflg > 0:
                 # dataset 11
                 line = line_parse(f.readline())
-                nuzf2 = _pop_item(line, int)
+                nuzf2 = pop_item(line, int)
                 if nuzf2 > 0:
                     # dataset 12
                     load_util2d('pet', np.float32, per=per)
                 # dataset 13
                 line = line_parse(f.readline())
-                nuzf3 = _pop_item(line, int)
+                nuzf3 = pop_item(line, int)
                 if nuzf3 > 0:
                     # dataset 14
                     load_util2d('extdp', np.float32, per=per)
                 # dataset 15
                 line = line_parse(f.readline())
-                nuzf4 = _pop_item(line, int)
+                nuzf4 = pop_item(line, int)
                 if nuzf4 > 0:
                     # dataset 16
                     load_util2d('extwc', np.float32, per=per)
@@ -837,17 +837,17 @@ def _parse1(line):
     ntrail2 = None
     nsets2 = None
     line = line_parse(line)
-    nuztop = _pop_item(line, int)
-    iuzfopt = _pop_item(line, int)
-    irunflg = _pop_item(line, int)
-    ietflag = _pop_item(line, int)
-    ipakcb = _pop_item(line, int)
-    iuzfcb2 = _pop_item(line, int)
+    nuztop = pop_item(line, int)
+    iuzfopt = pop_item(line, int)
+    irunflg = pop_item(line, int)
+    ietflag = pop_item(line, int)
+    ipakcb = pop_item(line, int)
+    iuzfcb2 = pop_item(line, int)
     if iuzfopt > 0:
-        ntrail2 = _pop_item(line, int)
-        nsets2 = _pop_item(line, int)
-    nuzgag = _pop_item(line, int)
-    surfdep = _pop_item(line, float)
+        ntrail2 = pop_item(line, int)
+        nsets2 = pop_item(line, int)
+    nuzgag = pop_item(line, int)
+    surfdep = pop_item(line, float)
     return nuztop, iuzfopt, irunflg, ietflag, ipakcb, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
 
 
@@ -857,10 +857,10 @@ def _parse8(line):
     iuzopt = 0
     line = line_parse(line)
     if len(line) > 1:
-        iuzrow = _pop_item(line, int) - 1
-        iuzcol = _pop_item(line, int) - 1
-        iftunit = _pop_item(line, int)
-        iuzopt = _pop_item(line, int)
+        iuzrow = pop_item(line, int) - 1
+        iuzcol = pop_item(line, int) - 1
+        iftunit = pop_item(line, int)
+        iuzopt = pop_item(line, int)
     else:
-        iftunit = _pop_item(line, int)
+        iftunit = pop_item(line, int)
     return iuzrow, iuzcol, iftunit, iuzopt
