@@ -424,7 +424,7 @@ class BaseModel(object):
                   "replacing existing filename {0}".format(fname))
             idx = self.output_fnames.index(fname)
             if self.verbose:
-                self._output_msg(i, add=False)
+                self._output_msg(idx, add=False)
             self.output_fnames.pop(idx)
             self.output_units.pop(idx)
             self.output_binflag.pop(idx)
