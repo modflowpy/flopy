@@ -208,9 +208,13 @@ class Mt3dSft(Package):
                     filenames.append(None)
 
         if ioutobs is not None:
-            ext = 'sftcobs.out'
-            fname = filenames[1]
-            model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
+            if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
+                ext = filenames[1].split('.', maxsplit=1)[-1]
+                fname = '{}.{}'.format(*filenames[1].split('.', maxsplit=1))
+            else:
+                ext = 'sftcobs.out'
+                fname = '{}.{}'.format(filenames[1],ext)
+            model.add_output_file(abs(ioutobs), fname=fname, extension=None,
                                   binflag=False, package=Mt3dSft.ftype())
         else:
             ioutobs = 0
@@ -252,11 +256,11 @@ class Mt3dSft(Package):
         # Set 1D array values
         self.coldsf = [Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)]
+                             array_free_format=False)]
 
         self.dispsf = [Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)]
+                             array_free_format=False)]
         ncomp = model.ncomp
         # handle the miult
         if ncomp > 1:
