@@ -211,7 +211,7 @@ class Mt3dSft(Package):
             ext = 'sftcobs.out'
             if filenames[1] is not None:
                 if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
-                    fname = '{}.{}'.format(*filenames[1].split('.', maxsplit=1))
+                    fname = '{}.{}'.format(*filenames[1].split('.', 1))
                 else:
                     fname = '{}.{}'.format(filenames[1], ext)
             else:
