@@ -145,7 +145,7 @@ class Mt3dSft(Package):
         the model name and lake concentration observation extension
         (for example, modflowtest.cbc and modflowtest.sftcobs.out), if ioutobs
         is a number greater than zero. If a single string is passed the
-        package will be set to the string and lake concentration observation
+        package will be set to the string and sfr concentration observation
         output name will be created using the model name and .sftcobs.out
         extension, if ioutobs is a number greater than zero. To define the
         names for all package files (input and output) the length of the list
@@ -196,8 +196,8 @@ class Mt3dSft(Package):
             unitnumber = Mt3dSft.reservedunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
+        if filenames is None:  # if filename not passed
+            filenames = [None, None]  # setup filenames
             if abs(ioutobs) > 0:
                 filenames[1] = model.name
         elif isinstance(filenames, str):
@@ -208,12 +208,15 @@ class Mt3dSft(Package):
                     filenames.append(None)
 
         if ioutobs is not None:
-            if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
-                ext = filenames[1].split('.', maxsplit=1)[-1]
-                fname = '{}.{}'.format(*filenames[1].split('.', maxsplit=1))
+            if filenames[1] is not None:
+                if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
+                    ext = filenames[1].split('.', maxsplit=1)[-1]
+                    fname = '{}.{}'.format(*filenames[1].split('.', maxsplit=1))
+                else:
+                    ext = 'sftcobs.out'
+                    fname = '{}.{}'.format(filenames[1],ext)
             else:
-                ext = 'sftcobs.out'
-                fname = '{}.{}'.format(filenames[1],ext)
+                fname = None
             model.add_output_file(abs(ioutobs), fname=fname, extension=None,
                                   binflag=False, package=Mt3dSft.ftype())
         else:
