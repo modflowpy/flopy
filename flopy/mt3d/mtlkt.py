@@ -128,7 +128,7 @@ class Mt3dLkt(Package):
         if icbclk is not None:
             ext = 'lkcobs.out'
             if filenames[1] is not None:
-                if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
+                if len(filenames[1].split('.', 1)) > 1:  # already has extension
                     fname = '{}.{}'.format(*filenames[1].split('.', 1))
                 else:
                     fname = '{}.{}'.format(filenames[1], ext)
