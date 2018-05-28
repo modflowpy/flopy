@@ -126,15 +126,14 @@ class Mt3dLkt(Package):
                     filenames.append(None)
 
         if icbclk is not None:
+            ext = 'lkcobs.out'
             if filenames[1] is not None:
                 if len(filenames[1].split('.', maxsplit=1)) > 1:  # already has extension
-                    ext = filenames[1].split('.', maxsplit=1)[-1]
                     fname = '{}.{}'.format(*filenames[1].split('.', maxsplit=1))
                 else:
-                    ext = 'lkcobs.out'
                     fname = '{}.{}'.format(filenames[1], ext)
             else:
-                fname = None
+                fname = '{}.{}'.format(model.name, ext)
             model.add_output_file(icbclk, fname=fname, extension=None,
                                   binflag=False, package=Mt3dLkt.ftype())
         else:
