@@ -6,6 +6,7 @@ mfsimulation module.  contains the MFSimulation class
 import errno, sys, inspect
 import collections
 import os.path
+import numpy as np
 from flopy.mbase import run_model
 from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                              PackageContainerType, MFDataException, \
@@ -730,8 +731,8 @@ class MFSimulation(PackageContainer):
             self._replace_ims_in_solution_group(pkg_with_same_name.filename,
                                                 1, ims_file.filename)
         # only allow an ims package to be registered to one solution group
-        elif not self._is_in_solution_group(ims_file.filename, 1) \
-                and model_list is not None:
+        elif model_list is not None:
+            ims_in_group = self._is_in_solution_group(ims_file.filename, 1)
             # add solution group to the simulation name file
             solution_recarray = self.name_file.solutiongroup
             solution_group_list = solution_recarray.get_active_key_list()
@@ -740,37 +741,29 @@ class MFSimulation(PackageContainer):
             else:
                 solution_group_num = solution_group_list[-1][0]
 
-            self.name_file.mxiter.add_transient_key(solution_group_num)
+            if ims_in_group:
+                self._append_to_ims_solution_group(ims_file.filename,
+                                                   model_list)
+            else:
+                if self.name_file.mxiter.get_data(solution_group_num) is None:
+                    self.name_file.mxiter.add_transient_key(solution_group_num)
 
-            # associate any models in the model list to this simulation file
-            version_string = mfstructure.MFStructure().get_version_string()
-            ims_pkg = 'ims{}'.format(version_string)
-            new_record = [ims_pkg, ims_file.filename]
-            for model in model_list:
-                #if model not in self._models:
-                #    comment = 'Model "{}" is not part of the simulation and ' \
-                #              'can not be associated with an ims ' \
-                #              'package.'.format(model)
-                #    type_, value_, traceback_ = sys.exc_info()
-                #    raise MFDataException(None, 'ims', '',
-                #                          'registering ims package',
-                #                          'solutiongroup',
-                #                          inspect.stack()[0][3], type_,
-                #                          value_, traceback_, comment,
-                #                          self.simulation_data.debug)
-
-                new_record.append(model)
-            try:
-                solution_recarray.append_list_as_record(new_record,
-                                                        solution_group_num)
-                self.name_file.mxiter.add_one(solution_group_num)
-            except MFDataException as mfde:
-                message = 'Error occurred while updating the ' \
-                          'simulation name file with the ims package ' \
-                          'file "{}".'.format(ims_file.filename)
-                raise MFDataException(mfdata_except=mfde,
-                                      package='nam',
-                                      message=message)
+                # associate any models in the model list to this simulation file
+                version_string = mfstructure.MFStructure().get_version_string()
+                ims_pkg = 'ims{}'.format(version_string)
+                new_record = [ims_pkg, ims_file.filename]
+                for model in model_list:
+                    new_record.append(model)
+                try:
+                    solution_recarray.append_list_as_record(new_record,
+                                                            solution_group_num)
+                except MFDataException as mfde:
+                    message = 'Error occurred while updating the ' \
+                              'simulation name file with the ims package ' \
+                              'file "{}".'.format(ims_file.filename)
+                    raise MFDataException(mfdata_except=mfde,
+                                          package='nam',
+                                          message=message)
 
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths):
@@ -1371,6 +1364,39 @@ class MFSimulation(PackageContainer):
             return (package.parent_file.path) + (package.package_type,)
         else:
             return (package.package_type,)
+
+    def _append_to_ims_solution_group(self, ims_file, new_models):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file.  The error ' \
+                          'occurred while replacing IMS file "{}" with "{}"' \
+                          'at index "{}"'.format(solution_group_num[0],
+                                                 item, new_item, index)
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+            new_array = []
+            for index, record in enumerate(rec_array):
+                new_record = []
+                rec_model_dict = {}
+                for index, item in enumerate(record):
+                    if record[1] == ims_file or item not in new_models:
+                        new_record.append(item)
+                        if index > 1:
+                            rec_model_dict[item] = 1
+
+                if record[1] == ims_file:
+                    for model in new_models:
+                        if model not in rec_model_dict:
+                            new_record.append(model)
+
+                new_array.append(tuple(new_record))
+            solution_recarray.set_data(new_array,
+                                       solution_group_num[0])
 
     def _replace_ims_in_solution_group(self, item, index, new_item):
         solution_recarray = self.name_file.solutiongroup
