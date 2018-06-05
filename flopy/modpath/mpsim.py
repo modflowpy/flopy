@@ -403,7 +403,7 @@ class StartingLocationsFile(Package):
             output.write('{:d}\n'.format(self.input_style))
             # list groups, preserving order
             uniquegroups, idx = np.unique(data.groupname, return_index=True)
-            uniquegroups = data.groupname.values[np.sort(idx)]
+            uniquegroups = data.groupname[np.sort(idx)]
             ngroups = len(uniquegroups)
             output.write('{:d}\n'.format(ngroups))
             for g in uniquegroups:
