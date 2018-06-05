@@ -1382,10 +1382,11 @@ def _parse_2(f):
     names = ['ztop', 'zbotm', 'k', 'i', 'j', 'rw', 'rskin', 'kskin', 'B', 'C',
              'P', 'cwc', 'pp']
     d2d = {n: [] for n in names}  # dataset 2d; dict of lists for each variable
+    # set default values of 0 for all 2c items
+    d2dw = dict(
+        zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
     if losstype.lower() != 'none':
-        # set default values of 0 for all 2c items
-        d2dw = dict(
-            zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
+        # update d2dw items
         d2dw.update(_parse_2c(next(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
