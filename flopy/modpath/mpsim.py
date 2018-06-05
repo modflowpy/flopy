@@ -401,10 +401,12 @@ class StartingLocationsFile(Package):
         with open(self.fn_path, 'w') as output:
             output.write('{}\n'.format(self.heading))
             output.write('{:d}\n'.format(self.input_style))
-            groups = np.unique(data.groupname)
-            ngroups = len(groups)
+            # list groups, preserving order
+            uniquegroups, idx = np.unique(data.groupname, return_index=True)
+            uniquegroups = data.groupname.values[np.sort(idx)]
+            ngroups = len(uniquegroups)
             output.write('{:d}\n'.format(ngroups))
-            for g in groups:
+            for g in uniquegroups:
                 npt = len(data[data.groupname == g])
                 output.write('{}\n{:d}\n'.format(g.decode(), npt))
             txt =''
