@@ -5,12 +5,18 @@ import subprocess
 import os
 import sys
 import datetime
+import json
+
 
 # update files and paths so that there are the same number of
 # path and file entries in the paths and files list. Enter '.'
 # as the path if the file is in the root repository directory
-paths = ['flopy', '.', 'docs', 'docs']
-files = ['version.py', 'README.md', 'USGS_release.md', 'PyPi_release.md']
+paths = ['flopy', '.', 
+         'docs', 'docs',
+         '.', '.']
+files = ['version.py', 'README.md', 
+         'USGS_release.md', 'PyPi_release.md',
+         'code.json', 'DISCLAIMER.md']
 
 # check that there are the same number of entries in files and paths
 if len(paths) != len(files):
@@ -20,6 +26,58 @@ if len(paths) != len(files):
     assert False, msg
 
 pak = 'flopy'
+
+approved = '''Disclaimer
+----------
+
+This software has been approved for release by the U.S. Geological Survey
+(USGS). Although the software has been subjected to rigorous review, the USGS
+reserves the right to update the software as needed pursuant to further analysis
+and review. No warranty, expressed or implied, is made by the USGS or the U.S.
+Government as to the functionality of the software and related material nor
+shall the fact of release constitute any such warranty. Furthermore, the
+software is released on condition that neither the USGS nor the U.S. Government
+shall be held liable for any damages resulting from its authorized or
+unauthorized use.
+'''
+
+preliminary = '''Disclaimer
+----------
+
+This software is preliminary or provisional and is subject to revision. It is
+being provided to meet the need for timely best science. The software has not
+received final approval by the U.S. Geological Survey (USGS). No warranty,
+expressed or implied, is made by the USGS or the U.S. Government as to the
+functionality of the software and related material nor shall the fact of release
+constitute any such warranty. The software is provided on the condition that
+neither the USGS nor the U.S. Government shall be held liable for any damages
+resulting from the authorized or unauthorized use of the software.
+'''
+
+def get_disclaimer(branch):
+    if 'release' in branch.lower() or 'master' in branch.lower():
+        disclaimer = approved
+    else:
+        disclaimer = preliminary
+    return disclaimer
+
+def get_branch():
+    try:
+        # determine current buildstat branch
+        b = subprocess.Popen(("git", "status"),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).communicate()[0]
+        if isinstance(b, bytes):
+            b = b.decode('utf-8')
+
+        # determine current buildstat branch
+        for line in b.splitlines():
+            if 'On branch' in line:
+                branch = line.replace('On branch ', '').rstrip()
+    except:
+        branch = None
+
+    return branch
 
 
 def get_version_str(v0, v1, v2, v3):
@@ -107,6 +165,9 @@ def update_version():
 
     # update README.md with new version information
     update_readme_markdown(vmajor, vminor, vmicro, vbuild)
+    
+    # update code.json
+    update_codejson(vmajor, vminor, vmicro, vbuild)
 
     # update docs/USGS_release.md with new version information
     update_USGSmarkdown(vmajor, vminor, vmicro, vbuild)
@@ -130,31 +191,60 @@ def add_updated_files():
         sys.exit(1)
 
 
-def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
-    try:
-        # determine current buildstat branch
-        b = subprocess.Popen(("git", "status"),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).communicate()[0]
-        if isinstance(b, bytes):
-            b = b.decode('utf-8')
+def update_codejson(vmajor, vminor, vmicro, vbuild):
 
-        # determine current buildstat branch
-        for line in b.splitlines():
-            if 'On branch' in line:
-                branch = line.replace('On branch ', '').rstrip()
-    except:
+    # get branch
+    branch = get_branch()
+    if branch is None:
+        print('Cannot update code.json - could not determine current branch')
+        return
+
+    # create version
+    version = get_tag(vmajor, vminor, vmicro)
+    
+    # load and modify json file
+    jsonFile = open('code.json', 'r') # Open the JSON file for reading
+    data = json.load(jsonFile) # Read the JSON into the buffer
+    jsonFile.close() # Close the JSON file
+    
+    # modify the json file data
+    now = datetime.datetime.now()
+    sdate = now.strftime('%Y-%m-%d')
+    data[0]['date']['metadataLastUpdated'] = sdate
+    if 'release' in branch.lower() or 'master' in branch.lower():
+        data[0]['version'] = version
+        data[0]['status'] = 'Production'
+    else:
+        data[0]['version'] = version + '.{}'.format(vbuild)
+        data[0]['status'] = 'Release Candidate'
+    
+    # rewrite the json file
+    with open(files[4], 'w') as f:
+        json.dump(data, f, indent=4)  
+    
+    return
+    
+
+def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
+    
+    # get branch
+    branch = get_branch()
+    if branch is None:
         print('Cannot update README.md - could not determine current branch')
         return
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
+    
+    # create disclaimer text
+    disclaimer = get_disclaimer(branch)
 
     # read README.md into memory
     with open(files[1], 'r') as file:
         lines = [line.rstrip() for line in file]
 
     # rewrite README.md
+    terminate = False
     f = open(files[1], 'w')
     for line in lines:
         if '### Version ' in line:
@@ -183,7 +273,17 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
                    '{}, '.format(now.strftime('%d %B %Y')) + \
                    'http://dx.doi.org/10.5066/F7BK19FH]' + \
                    '(http://dx.doi.org/10.5066/F7BK19FH)'
+        elif 'Disclaimer' in line:
+            line = disclaimer
+            terminate = True
         f.write('{}\n'.format(line))
+        if terminate:
+            break
+    f.close()
+    
+    # write disclaimer markdown file
+    f = open('DISCLAIMER.md', 'w')
+    f.write(disclaimer)
     f.close()
 
     return
@@ -260,15 +360,16 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     for line in lines:
         if line == 'Introduction':
             writeline = True
-        elif line == 'Examples':
+        elif line == 'Getting Started':
             writeline = False
-        elif 'Click [here](docs/mf6.md) for more information.' in line:
-            line = line.replace(
-                'Click [here](docs/mf6.md) for more information.', '')
-        elif ' Pull requests will only be accepted on the develop branch of the repository.' in line:
-            line = line.replace(
-                ' Pull requests will only be accepted on the develop branch of the repository.',
-                '')
+        elif line == 'How to Cite':
+            writeline = True
+        elif line == 'MODFLOW Resources':
+            writeline = False
+        elif line == 'Disclaimer':
+            writeline = True
+        elif '[MODFLOW 6](docs/mf6.md)' in line:
+            line = line.replace('[MODFLOW 6](docs/mf6.md)', 'MODFLOW 6')
         if writeline:
             f.write('{}\n'.format(line))
             line = line.replace('***', '*')

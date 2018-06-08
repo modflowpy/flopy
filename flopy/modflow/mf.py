@@ -5,7 +5,6 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os
-import sys
 import inspect
 import flopy
 from ..mbase import BaseModel
@@ -485,21 +484,33 @@ class Modflow(BaseModel):
     def load(f, version='mf2005', exe_name='mf2005.exe', verbose=False,
              model_ws='.', load_only=None, forgive=True, check=True):
         """
-        Load an existing model.
+        Load an existing MODFLOW model.
 
         Parameters
         ----------
-        f : MODFLOW name file
-            File to load.
-        
-        model_ws : model workspace path
+        f : str
+            Path to MODFLOW name file to load.
+        version : str, optional
+            MODFLOW version. Default 'mf2005', although can be modified on
+            loading packages unique to different MODFLOW versions.
+        exe_name : str, optional
+            MODFLOW executable name. Default 'mf2005.exe'.
+        verbose : bool, optional
+            Show messages that can be useful for debugging. Default False.
+        model_ws : str
+            Model workspace path. Default '.' or current directory.
+        load_only : list, str or None
+            List of case insensitive filetypes to load, e.g. ["bas6", "lpf"].
+            One package can also be specified, e.g. "rch". Default is None,
+            which attempts to load all files. An empty list [] will not load
+            any additional packages than is necessary. At a minimum, "dis" or
+            "disu" is always loaded, and "bas6" (if available) is also loaded.
+        forgive : bool, optional
+            Option to raise exceptions on package load failure, which can be
+            useful for debugging. Default False.
+        check : boolean, optional
+            Check model input for common errors. Default True.
 
-        load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])
-
-        forgive : flag to raise exception(s) on package load failure - good for debugging
-
-        check : boolean
-            Check model input for common errors. (default True)
         Returns
         -------
         ml : Modflow object
@@ -508,24 +519,31 @@ class Modflow(BaseModel):
         --------
 
         >>> import flopy
-        >>> ml = flopy.modflow.Modflow.load(f)
+        >>> ml = flopy.modflow.Modflow.load('model.nam')
 
         """
-        # test if name file is passed with extension (i.e., is a valid file)
-        if os.path.isfile(os.path.join(model_ws, f)):
-            modelname = f.rpartition('.')[0]
+        if forgive:
+            # Catch any Exception, show a message and carry on
+            ExceptionOption = Exception
         else:
-            modelname = f
+            # This exception is not thown anywhere else, so any other exception
+            # can be thrown by code within the "try" block
+            def DoNotCatchMe(Exception):
+                pass
+            ExceptionOption = DoNotCatchMe
+
+        # Determine model name from 'f', without any extension or path
+        modelname = os.path.splitext(os.path.basename(f))[0]
 
         # if model_ws is None:
         #    model_ws = os.path.dirname(f)
         if verbose:
-            sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
-                             format(modelname, 50 * '-'))
+            print('\nCreating new model with name: {}\n{}\n'
+                  .format(modelname, 50 * '-'))
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws)
 
-        files_succesfully_loaded = []
+        files_successfully_loaded = []
         files_not_loaded = []
 
         namefile_path = os.path.join(ml.model_ws, f)
@@ -534,65 +552,51 @@ class Modflow(BaseModel):
         ref_attributes = SpatialReference.load(namefile_path)
 
         # read name file
-        try:
-            ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
-                                                    ml.mfnam_packages,
-                                                    verbose=verbose)
-        except Exception as e:
-            raise Exception(
-                "error loading name file entries from file:\n" + str(e))
-
+        ext_unit_dict = mfreadnam.parsenamefile(
+                namefile_path, ml.mfnam_packages, verbose=verbose)
         if ml.verbose:
-            print('\n{}\nExternal unit dictionary:\n{}\n{}\n'.
-                  format(50 * '-', ext_unit_dict, 50 * '-'))
+            print('\n{}\nExternal unit dictionary:\n{}\n{}\n'
+                  .format(50 * '-', ext_unit_dict, 50 * '-'))
+
+        # create a dict where key is the package name, value is unitnumber
+        ext_pkg_d = {v.filetype: k for (k, v) in ext_unit_dict.items()}
+
+        # reset version based on packages in the name file
+        if 'NWT' in ext_pkg_d or 'UPW' in ext_pkg_d:
+            version = 'mfnwt'
+        if 'GLOBAL' in ext_pkg_d:
+            version = 'mf2k'
+        if 'SMS' in ext_pkg_d:
+            version = 'mfusg'
+        if 'DISU' in ext_pkg_d:
+            version = 'mfusg'
+            ml.structured = False
+        # update the modflow version
+        ml.set_version(version)
 
         # reset unit number for glo file
         if version == 'mf2k':
-            unitnumber = None
-            for key, value in ext_unit_dict.items():
-                if value.filetype == 'GLOBAL':
-                    unitnumber = key
-                    filepth = os.path.basename(value.filename)
-            if unitnumber is not None:
+            if 'GLOBAL' in ext_pkg_d:
+                unitnumber = ext_pkg_d['GLOBAL']
+                filepth = os.path.basename(ext_unit_dict[unitnumber].filename)
                 ml.glo.unit_number = [unitnumber]
                 ml.glo.file_name = [filepth]
             else:
+                # TODO: is this necessary? it's not done for LIST.
                 ml.glo.unit_number = [0]
                 ml.glo.file_name = ['']
 
         # reset unit number for list file
-        unitnumber = None
-        for key, value in ext_unit_dict.items():
-            if value.filetype == 'LIST':
-                unitnumber = key
-                filepth = os.path.basename(value.filename)
-        if unitnumber is not None:
+        if 'LIST' in ext_pkg_d:
+            unitnumber = ext_pkg_d['LIST']
+            filepth = os.path.basename(ext_unit_dict[unitnumber].filename)
             ml.lst.unit_number = [unitnumber]
             ml.lst.file_name = [filepth]
 
-        # reset version based on packages in the name file
-        for k, v in ext_unit_dict.items():
-            if v.filetype == 'NWT' or v.filetype == 'UPW':
-                version = 'mfnwt'
-            elif v.filetype == 'GLO':
-                version = 'mf2k'
-            elif v.filetype == 'SMS':
-                version = 'mfusg'
-            elif v.filetype == 'DISU':
-                version = 'mfusg'
-                ml.structured = False
-        # update the modflow version
-        ml.set_version(version)
-
         # look for the free format flag in bas6
-        bas = None
-        bas_key = None
-        for key, item in ext_unit_dict.items():
-            if item.filetype == "BAS6":
-                bas = item
-                bas_key = key
-                break
+        bas_key = ext_pkg_d.get('BAS6')
         if bas_key is not None:
+            bas = ext_unit_dict[bas_key]
             start = bas.filehandle.tell()
             line = bas.filehandle.readline()
             while line.startswith("#"):
@@ -601,42 +605,21 @@ class Modflow(BaseModel):
                 ml.free_format_input = True
             bas.filehandle.seek(start)
         if verbose:
-            print("ModflowBas6 free format:{0}\n".format(
-                ml.free_format_input))
+            print("ModflowBas6 free format:{0}\n".format(ml.free_format_input))
 
         # load dis
-        disnamdata = None
-        dis_key = None
-        for key, item in ext_unit_dict.items():
-            if item.filetype == "DIS":
-                disnamdata = item
-                dis_key = key
-                break
-            if item.filetype == "DISU":
-                disnamdata = item
-                dis_key = key
-                break
-        if forgive:
-            try:
-                dis = disnamdata.package.load(disnamdata.filename, ml,
-                                       ext_unit_dict=ext_unit_dict, check=False)
-                files_succesfully_loaded.append(disnamdata.filename)
-                if ml.verbose:
-                    sys.stdout.write('   {:4s} package load...success\n'
-                                     .format(dis.name[0]))
-                ext_unit_dict.pop(dis_key)
-            except Exception as e:
-                s = 'Could not read discretization package: {}. Stopping...' \
-                    .format(os.path.basename(disnamdata.filename))
-                raise Exception(s + " " + str(e))
-        else:
-            dis = disnamdata.package.load(disnamdata.filename, ml,
-                                       ext_unit_dict=ext_unit_dict, check=False)
-            files_succesfully_loaded.append(disnamdata.filename)
-            if ml.verbose:
-                sys.stdout.write('   {:4s} package load...success\n'
-                                 .format(dis.name[0]))
-            ext_unit_dict.pop(dis_key)
+        dis_key = ext_pkg_d.get('DIS') or ext_pkg_d.get('DISU')
+        if dis_key is None:
+            raise KeyError('discretization entry not found in nam file')
+        disnamdata = ext_unit_dict[dis_key]
+        dis = disnamdata.package.load(
+                disnamdata.filename, ml,
+                ext_unit_dict=ext_unit_dict, check=False)
+        files_successfully_loaded.append(disnamdata.filename)
+        if ml.verbose:
+            print('   {:4s} package load...success'.format(dis.name[0]))
+        assert ml.pop_key_list.pop() == dis_key
+        ext_unit_dict.pop(dis_key)
         start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
         itmuni = ref_attributes.pop("itmuni", 4)
         ref_source = ref_attributes.pop("source", "defaults")
@@ -657,113 +640,85 @@ class Modflow(BaseModel):
         dis.tr = TemporalReference(itmuni=itmuni, start_datetime=start_datetime)
         dis.start_datetime = start_datetime
 
-        # load bas after dis if it is available so that the free format option
-        # is correctly set for subsequent packages.
+        # load bas after dis if it is available. Note that the free format
+        # option was already determined earlier in this method.
         if bas_key is not None:
-            if forgive:
-                try:
-                    pck = bas.package.load(bas.filename, ml,
-                                           ext_unit_dict=ext_unit_dict,
-                                           check=False)
-                    files_succesfully_loaded.append(bas.filename)
-                    if ml.verbose:
-                        sys.stdout.write('   {:4s} package load...success\n'
-                                         .format(pck.name[0]))
-                    ext_unit_dict.pop(bas_key)
-                except Exception as e:
-                    s = 'Could not read basic package: {}. Stopping...' \
-                        .format(os.path.basename(bas.filename))
-                    raise Exception(s + " " + str(e))
-            else:
-                pck = bas.package.load(bas.filename, ml,
-                                       ext_unit_dict=ext_unit_dict,
-                                       check=False)
-                files_succesfully_loaded.append(bas.filename)
-
+            pck = bas.package.load(bas.filename, ml,
+                                   ext_unit_dict=ext_unit_dict, check=False)
+            files_successfully_loaded.append(bas.filename)
+            if ml.verbose:
+                print('   {:4s} package load...success'
+                      .format(pck.name[0]))
+            assert bas_key == ml.pop_key_list.pop()
+            ext_unit_dict.pop(bas_key)
 
         if load_only is None:
-            load_only = []
-            for key, item in ext_unit_dict.items():
-                load_only.append(item.filetype)
-        else:
+            # load all packages/files
+            load_only = ext_pkg_d.keys()
+        else:  # check items in list
             if not isinstance(load_only, list):
                 load_only = [load_only]
             not_found = []
             for i, filetype in enumerate(load_only):
-                filetype = filetype.upper()
-                if filetype != 'DIS' and filetype != 'BAS6':
-                    load_only[i] = filetype
-                    found = False
-                    for key, item in ext_unit_dict.items():
-                        if item.filetype == filetype:
-                            found = True
-                            break
-                    if not found:
-                        not_found.append(filetype)
-            if len(not_found) > 0:
-                raise Exception(
+                load_only[i] = filetype = filetype.upper()
+                if filetype not in ext_pkg_d:
+                    not_found.append(filetype)
+            if not_found:
+                raise KeyError(
                     "the following load_only entries were not found "
-                    "in the ext_unit_dict: " + ','.join(not_found))
+                    "in the ext_unit_dict: " + str(not_found))
 
         # zone, mult, pval
-        ml.mfpar.set_pval(ml, ext_unit_dict)
-        ml.mfpar.set_zone(ml, ext_unit_dict)
-        ml.mfpar.set_mult(ml, ext_unit_dict)
+        if 'PVAL' in ext_pkg_d:
+            ml.mfpar.set_pval(ml, ext_unit_dict)
+            assert ml.pop_key_list.pop() == ext_pkg_d.get('PVAL')
+        if 'ZONE' in ext_pkg_d:
+            ml.mfpar.set_zone(ml, ext_unit_dict)
+            assert ml.pop_key_list.pop() == ext_pkg_d.get('ZONE')
+        if 'MULT' in ext_pkg_d:
+            ml.mfpar.set_mult(ml, ext_unit_dict)
+            assert ml.pop_key_list.pop() == ext_pkg_d.get('MULT')
 
         # try loading packages in ext_unit_dict
         for key, item in ext_unit_dict.items():
             if item.package is not None:
-                if item.filetype in load_only and item.filetype != "DIS":
-                    if not forgive:
-                        package_load_args = list(inspect.getargspec(item.package.load))[0]
+                if item.filetype in load_only:
+                    try:
+                        package_load_args = \
+                            list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
-                            pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict,
-                                                    check=False)
+                            pck = item.package.load(
+                                    item.filename, ml,
+                                    ext_unit_dict=ext_unit_dict, check=False)
                         else:
-                            pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict)
-                        files_succesfully_loaded.append(item.filename)
+                            pck = item.package.load(
+                                    item.filename, ml,
+                                    ext_unit_dict=ext_unit_dict)
+                        files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            sys.stdout.write(
-                                '   {:4s} package load...success\n'
-                                .format(pck.name[0]))
-                    else:
-                        try:
-                            try:
-                                pck = item.package.load(item.filename, ml,
-                                                        ext_unit_dict=ext_unit_dict,
-                                                        check=False)
-                            except TypeError:
-                                pck = item.package.load(item.filename, ml,
-                                                        ext_unit_dict=ext_unit_dict)
-                            files_succesfully_loaded.append(item.filename)
-                            if ml.verbose:
-                                sys.stdout.write(
-                                    '   {:4s} package load...success\n'
-                                    .format(pck.name[0]))
-                        except BaseException as o:
-                            ml.load_fail = True
-                            if ml.verbose:
-                                sys.stdout.write(
-                                    '   {:4s} package load...failed\n   {!s}\n'
-                                    .format(item.filetype, o))
-                            files_not_loaded.append(item.filename)
+                            print('   {:4s} package load...success'
+                                  .format(item.filetype))
+                    except ExceptionOption as e:
+                        ml.load_fail = True
+                        if ml.verbose:
+                            print('   {:4s} package load...failed\n   {!s}'
+                                  .format(item.filetype, e))
+                        files_not_loaded.append(item.filename)
                 else:
                     if ml.verbose:
-                        sys.stdout.write('   {:4s} package load...skipped\n'
-                                         .format(item.filetype))
+                        print('   {:4s} package load...skipped'
+                              .format(item.filetype))
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
-                    sys.stdout.write('   {:4s} package load...skipped\n'
-                                     .format(item.filetype))
+                    print('   {:4s} package load...skipped'
+                          .format(item.filetype))
             elif "data" in item.filetype.lower():
                 if ml.verbose:
-                    sys.stdout.write('   {} file load...skipped\n      {}\n'
-                                     .format(item.filetype,
-                                             os.path.basename(item.filename)))
+                    print('   {} file load...skipped\n      {}'
+                          .format(item.filetype,
+                                  os.path.basename(item.filename)))
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
@@ -772,6 +727,8 @@ class Modflow(BaseModel):
                         ml.external_binflag.append("binary"
                                                    in item.filetype.lower())
                         ml.external_output.append(False)
+            else:
+                raise KeyError('unhandled case: {}, {}'.format(key, item))
 
         # pop binary output keys and any external file units that are now
         # internal
@@ -779,27 +736,23 @@ class Modflow(BaseModel):
             try:
                 ml.remove_external(unit=key)
                 ext_unit_dict.pop(key)
-            except:
+            except KeyError:
                 if ml.verbose:
-                    sys.stdout.write('Warning: external file unit " +\
-                        "{} does not exist in ext_unit_dict.\n'.format(key))
+                    print('Warning: external file unit {} does not exist in '
+                          'ext_unit_dict.'.format(key))
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
-            print(1 * '\n')
-            s = '   The following {0} packages were successfully loaded.' \
-                .format(len(files_succesfully_loaded))
-            print(s)
-            for fname in files_succesfully_loaded:
+            print('')
+            print('   The following {0} packages were successfully loaded.'
+                  .format(len(files_successfully_loaded)))
+            for fname in files_successfully_loaded:
                 print('      ' + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                s = '   The following {0} packages were not loaded.'.format(
-                    len(files_not_loaded))
-                print(s)
+                print('   The following {0} packages were not loaded.'
+                      .format(len(files_not_loaded)))
                 for fname in files_not_loaded:
                     print('      ' + os.path.basename(fname))
-                print('\n')
-
         if check:
             ml.check(f='{}.chk'.format(ml.name), verbose=ml.verbose, level=0)
 

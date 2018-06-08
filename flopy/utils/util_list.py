@@ -592,7 +592,9 @@ class MfList(object):
     def binary(self):
         return bool(self.__binary)
 
-    def write_transient(self, f, single_per=None):
+    def write_transient(self, f, single_per=None, forceInternal=False):
+        # forceInteral overrides isExternal (set below) for cases where
+        # external arrays are not supported (oh hello MNW1!)
         # write the transient sequence described by the data dict
         nr, nc, nl, nper = self.model.get_nrow_ncol_nlay_nper()
         assert hasattr(f, "read"), "MfList.write() error: " + \
@@ -634,7 +636,8 @@ class MfList(object):
 
             isExternal = False
             if self.model.array_free_format and \
-                            self.model.external_path is not None:
+                            self.model.external_path is not None and \
+                            forceInternal is False:
                 isExternal = True
             if self.__binary:
                 isExternal = True

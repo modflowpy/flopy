@@ -69,7 +69,9 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         * irch (integer) IRCH is the layer number that defines the layer in
           each vertical column where recharge is applied. If IRCH is omitted,
           recharge by default is applied to cells in layer 1. IRCH can only be
-          used if READASARRAYS is specified in the OPTIONS block.
+          used if READASARRAYS is specified in the OPTIONS block. If IRCH is
+          specified, it must be specified as the first variable in the PERIOD
+          block or MODFLOW will terminate with an error.
     recharge : [double]
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell

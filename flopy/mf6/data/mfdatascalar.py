@@ -213,11 +213,8 @@ class MFScalar(mfdata.MFData):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
-        if self.structure.type == DatumType.keyword:
-            # keyword appears alone
-            return '{}{}\n'.format(self._simulation_data.indent_string,
-                                   self.structure.name.upper())
-        elif self.structure.type == DatumType.record:
+        if self.structure.type == DatumType.keyword or self.structure.type ==\
+                DatumType.record:
             try:
                 data = storage.get_data()
             except Exception as ex:
@@ -230,6 +227,14 @@ class MFScalar(mfdata.MFData):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
+        if self.structure.type == DatumType.keyword:
+            if data is not None and data != False:
+                # keyword appears alone
+                return '{}{}\n'.format(self._simulation_data.indent_string,
+                                       self.structure.name.upper())
+            else:
+                return ''
+        elif self.structure.type == DatumType.record:
             text_line = []
             index = 0
             for data_item in self.structure.data_item_structures:
@@ -507,6 +512,7 @@ class MFScalar(mfdata.MFData):
     def _new_storage(self):
         return mfdata.DataStorage(self._simulation_data,
                                   self._data_dimensions,
+                                  self.get_file_entry,
                                   mfdata.DataStorageType.internal_array,
                                   mfdata.DataStructureType.scalar)
 

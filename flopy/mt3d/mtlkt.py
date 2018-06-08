@@ -105,11 +105,11 @@ class Mt3dLkt(Package):
 
     def __init__(self, model, nlkinit=0, mxlkbc=0, icbclk=None, ietlak=0,
                  coldlak=0.0, lk_stress_period_data=None, dtype=None,
-                 extension='lkt', unitnumber=None, filenames=None, **kwargs):
+                 extension='lkt', unitnumber=None, filenames=None, iprn=-1, **kwargs):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dLkt.defaultunit()
+            unitnumber = Mt3dLkt.reservedunit()
         elif unitnumber == 0:
             unitnumber = Mt3dLkt.reservedunit()
 
@@ -126,9 +126,15 @@ class Mt3dLkt(Package):
                     filenames.append(None)
 
         if icbclk is not None:
-            fname = filenames[1]
-            extension = 'lkcobs.out'
-            model.add_output_file(icbclk, fname=fname, extension=extension,
+            ext = 'lkcobs.out'
+            if filenames[1] is not None:
+                if len(filenames[1].split('.', 1)) > 1:  # already has extension
+                    fname = '{}.{}'.format(*filenames[1].split('.', 1))
+                else:
+                    fname = '{}.{}'.format(filenames[1], ext)
+            else:
+                fname = '{}.{}'.format(model.name, ext)
+            model.add_output_file(icbclk, fname=fname, extension=None,
                                   binflag=False, package=Mt3dLkt.ftype())
         else:
             icbclk = 0
@@ -161,11 +167,27 @@ class Mt3dLkt(Package):
         if coldlak is not None:
             self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, coldlak,
                                   name='coldlak', locat=self.unit_number[0],
-                                  array_free_format=model.free_format)
+                                  array_free_format=False, iprn=iprn)
         else:
             self.coldlak = Util2d(self.parent, (nlkinit,), np.float32, 0.0,
                                   name='coldlak', locat=self.unit_number[0],
-                                  array_free_format=model.free_format)
+                                  array_free_format=False, iprn=iprn)
+
+        # handle the miult
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                for base_name, attr in zip(["coldlak"], [self.coldlak]):
+                    name = "{0}{1}".format(base_name, icomp)
+                    if name in kwargs:
+                        val = kwargs.pop(name)
+                    else:
+                        print("LKT: setting {0} for component {1} to zero, kwarg name {2}".
+                              format(base_name, icomp, name))
+                        val = 0.0
+                    u2d = Util2d(model, (nlkinit,), np.float32, val,
+                           name=name, locat=self.unit_number[0],
+                           array_free_format=model.free_format)
+                    attr.append(u2d)
 
         # Set transient data
         if dtype is not None:
@@ -319,19 +341,26 @@ class Mt3dLkt(Package):
 
         # Item 2 (COLDLAK - Initial concentration in this instance)
         if model.verbose:
-            print('   loading initial concentration   ')
-        if model.array_foramt == 'free':
-            # ******************************
-            # Need to fill this section out
-            # ******************************
-            pass
-        else:
-            # Read header line
-            line = f.readline()
+            print('   loading initial concentration (COLDLAK)  ')
+            if model.free_format:
+                print('   Using MODFLOW style array reader utilities to ' \
+                          'read COLDLAK')
+            elif model.array_format == 'mt3d':
+                    print('   Using historic MT3DMS array reader utilities to ' \
+                          'read COLDLAK')
 
-            # Next, read the values
-            coldlak = np.empty((nlkinit), dtype=np.float)
-            coldlak = read1d(f, coldlak)
+        coldlak = Util2d.load(f, model, (1, nlkinit), np.float32, 'coldlak1',
+                              ext_unit_dict, array_format=model.array_format)
+
+        kwargs = {}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = "coldlak" + str(icomp)
+                if model.verbose:
+                    print('   loading {}...'.format(name))
+                u2d = Util2d.load(f, model, (1,nlkinit), np.float32,
+                                  name, ext_unit_dict, array_format=model.array_format)
+                kwargs[name] = u2d
 
         # dtype
         dtype = Mt3dLkt.get_default_dtype(ncomp)
@@ -402,7 +431,7 @@ class Mt3dLkt(Package):
         lkt = Mt3dLkt(model, nlkinit=nlkinit, mxlkbc=mxlkbc, icbclk=icbclk,
                       ietlak=ietlak, coldlak=coldlak,
                       lk_stress_period_data=lk_stress_period_data,
-                      unitnumber=unitnumber, filenames=filenames)
+                      unitnumber=unitnumber, filenames=filenames,**kwargs)
         return lkt
 
     @staticmethod
