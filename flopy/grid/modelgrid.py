@@ -65,6 +65,16 @@ class SimulationTime():
         self.temporal_reference = temporal_reference
 
 
+class CachedData():
+    def __init__(self, data):
+        self.data = data
+        self.out_of_date = False
+
+    def update_data(self, data):
+        self.data = data
+        self.out_of_date = False
+
+
 class ModelGrid(object):
     """
     Base class for a structured or unstructured model grid
@@ -134,19 +144,33 @@ class ModelGrid(object):
     def __init__(self, grid_type, sr=None, simulation_time=None,
                  model_name=''):
         self.grid_type = grid_type
-        self.sr = sr
+        self._sr = sr
         self.sim_time = simulation_time
         self.model_name = model_name
+        self._cache_dict = {}
 
     ###########################
     # basic functions
     ###########################
+    @property
+    def sr(self):
+        return self._sr
+
+    @sr.setter
+    def sr(self, sr):
+        self._sr = sr
+        self._require_cache_updates()
+
     @abc.abstractmethod
     def get_tabular_data(self, data, coord_type=LocationType.xyz,
                         time_type=TimeType.calendar):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
+
+    def _require_cache_updates(self):
+        for cache_data in self._cache_dict.values():
+            cache_data.out_of_date = True
 
     ############################
     # from spatial reference
