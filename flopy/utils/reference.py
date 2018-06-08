@@ -5,6 +5,7 @@ Module spatial referencing for flopy model objects
 import sys
 import os
 import numpy as np
+import warnings
 
 
 class SpatialReference(object):
@@ -928,6 +929,9 @@ class SpatialReference(object):
             return [v.tolist() for v in vrts]
 
     def get_rc(self, x, y):
+        return self.get_ij(x, y)
+
+    def get_ij(self, x, y):
         """Return the row and column of a point or sequence of points
         in real-world coordinates.
 
@@ -938,8 +942,8 @@ class SpatialReference(object):
 
         Returns
         -------
-        r : row or sequence of rows (zero-based)
-        c : column or sequence of columns (zero-based)
+        i : row or sequence of rows (zero-based)
+        j : column or sequence of columns (zero-based)
         """
         if np.isscalar(x):
             c = (np.abs(self.xcentergrid[0] - x)).argmin()
