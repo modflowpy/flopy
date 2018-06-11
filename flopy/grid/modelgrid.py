@@ -116,9 +116,6 @@ class ModelGrid(object):
         discritization type
     get_num_spatial_coordinates : () : int
         returns the number of spatial coordinates
-    num_connections : () : int
-        returns the number of model connections.  model discritization type
-        must be DIS
     num_cells_per_layer : () : list
         returns the number of cells per model layer.  model discritization
         type must be DIS or DISV
@@ -512,12 +509,7 @@ class ModelGrid(object):
                                   'class to use this base class')
 
     @abc.abstractmethod
-    def num_connections(self):
-        raise NotImplementedError('must define get_model_dim_arrays in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def num_cells_per_layer(self, active_only=False):
+    def num_cells_per_layer(self):
         raise NotImplementedError('must define get_model_dim_arrays in child '
                                   'class to use this base class')
 
@@ -527,7 +519,7 @@ class ModelGrid(object):
                                   'class to use this base class')
 
     @abc.abstractmethod
-    def get_all_model_cells(self, active_only=False):
+    def get_all_model_cells(self):
         raise NotImplementedError('must define get_model_dim_arrays in child '
                                   'class to use this base class')
 
@@ -558,23 +550,70 @@ class StructuredModelGrid(ModelGrid):
                  simulation_time=None):
         super(StructuredModelGrid, self).__init__(GridType.structured, sr,
                                                   simulation_time)
-        self.delc = delc
-        self.delr = delr
-        self.top = top
-        self.botm = botm
-        self.idomain = idomain
-        self.nlay = len(botm)
-        self.nrow = len(delr)
-        self.ncol = len(delc)
+        self._delc = delc
+        self._delr = delr
+        self._top = top
+        self._botm = botm
+        self._idomain = idomain
+        self._nlay = len(botm)
+        self._nrow = len(delr)
+        self._ncol = len(delc)
 
-    def get_arraydata(self, name):
-        raise NotImplementedError('this feature is not yet implemented')
+    @property
+    def delc(self):
+        return self._delc
 
-    def num_connections(self):
-        raise NotImplementedError('this feature is not yet implemented')
+    @delc.setter
+    def delc(self, delc):
+        self._delc = delc
+        self._ncol = len(delc)
+        self._require_cache_updates()
 
-    def get_all_model_cells(self, active_only=False):
-        raise NotImplementedError('this feature is not yet implemented')
+    @property
+    def delr(self):
+        return self._delr
+
+    @delr.setter
+    def delr(self, delr):
+        self._delr = delr
+        self._nrow = len(delr)
+        self._require_cache_updates()
+
+    @property
+    def top(self):
+        return self._top
+
+    @top.setter
+    def top(self, top):
+        self._top = top
+        self._require_cache_updates()
+
+    @property
+    def botm(self):
+        return self._botm
+
+    @botm.setter
+    def botm(self, botm):
+        self._botm = botm
+        self._botm = len(botm)
+        self._require_cache_updates()
+
+    @property
+    def idomain(self):
+        return self._idomain
+
+    @idomain.setter
+    def idomain(self, idomain):
+        self._idomain = idomain
+        self._require_cache_updates()
+
+    def get_all_model_cells(self):
+        model_cells = []
+        for layer in range(0, self._nlay):
+            for row in range(0, self._nrow):
+                for column in range(0, self._ncol):
+                    model_cells.append((layer + 1, row + 1, column + 1))
+        return model_cells
 
     # move to export folder
     def load_shapefile_data(self, shapefile):
@@ -584,36 +623,33 @@ class StructuredModelGrid(ModelGrid):
                                   'class to use this base class')
 
     def get_row_array(self):
-        return np.arange(1, self.nrow + 1, 1, np.int)
+        return np.arange(1, self._nrow + 1, 1, np.int)
 
     def get_column_array(self):
-        return np.arange(1, self.ncol + 1, 1, np.int)
+        return np.arange(1, self._ncol + 1, 1, np.int)
 
     def get_layer_array(self):
-        return np.arange(1, self.nlay + 1, 1, np.int)
+        return np.arange(1, self._nlay + 1, 1, np.int)
 
     def get_model_dim_arrays(self):
-        return [np.arange(1, self.nlay + 1, 1, np.int),
-                np.arange(1, self.nrow + 1, 1, np.int),
-                np.arange(1, self.ncol + 1, 1, np.int)]
+        return [np.arange(1, self._nlay + 1, 1, np.int),
+                np.arange(1, self._nrow + 1, 1, np.int),
+                np.arange(1, self._ncol + 1, 1, np.int)]
 
-    def num_cells_per_layer(self, active_only=False):
-        if active_only:
-            raise NotImplementedError('this feature is not yet implemented')
-        else:
-            return self.nrow * self.ncol
+    def num_cells_per_layer(self):
+        return self._nrow * self._ncol
 
     def num_cells(self, active_only=False):
         if active_only:
             raise NotImplementedError('this feature is not yet implemented')
         else:
-            return self.nrow * self.ncol * self.nlay
+            return self._nrow * self._ncol * self._nlay
 
     def get_model_dim(self):
         if self.grid_type() == GridType.structured:
-            return [self.nlay, self.nrow, self.ncol]
+            return [self._nlay, self._nrow, self._ncol]
         elif self.grid_type() == GridType.layered_vertex:
-            return [self.nlay, self.num_cells_per_layer()]
+            return [self._nlay, self.num_cells_per_layer()]
         elif self.grid_type() == GridType.unlayered_vertex:
             return [self.num_cells()]
 
@@ -629,8 +665,8 @@ class StructuredModelGrid(ModelGrid):
         return ['row', 'column']
 
     def get_horizontal_cross_section_dim_arrays(self):
-        return [np.arange(1, self.nrow + 1, 1, np.int),
-                np.arange(1, self.ncol + 1, 1, np.int)]
+        return [np.arange(1, self._nrow + 1, 1, np.int),
+                np.arange(1, self._ncol + 1, 1, np.int)]
 
 
 class VertexModelGrid(ModelGrid):
@@ -646,21 +682,19 @@ class VertexModelGrid(ModelGrid):
         self.idomain = idomain
         self._vertices = vertices
         self.cell2d = cell2d
-        self.nlay = nlay
-        self.ncpl = ncpl
+        self._nlay = nlay
+        self._ncpl = ncpl
 
     def get_model_dim_arrays(self):
         if self.grid_type() == GridType.layered_vertex:
-            return [np.arange(1, self.nlay + 1, 1, np.int),
+            return [np.arange(1, self._nlay + 1, 1, np.int),
                     np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
         elif self.grid_type() == GridType.unlayered_vertex:
             return [np.arange(1, self.num_cells() + 1, 1, np.int)]
 
-    def num_cells_per_layer(self, active_only=False):
+    def num_cells_per_layer(self):
         if self.grid_type() == GridType.layered_vertex:
-            # return number of cells for each layer
-            raise NotImplementedError(
-                'this feature is not yet implemented')
+            return max(self._ncpl)
         elif self.grid_type() == GridType.unlayered_vertex:
             except_str = 'ERROR: Model "{}" is unstructured and does not ' \
                          'have a consistant number of cells per ' \
@@ -675,16 +709,15 @@ class VertexModelGrid(ModelGrid):
         else:
             if self.grid_type() == GridType.layered_vertex:
                 total_cells = 0
-                for layer_cells in self.ncpl:
+                for layer_cells in self._ncpl:
                     total_cells += layer_cells
                 return total_cells
             elif self.grid_type() == GridType.unlayered_vertex:
-                raise NotImplementedError(
-                    'this feature is not yet implemented')
+                return self._ncpl
 
     def get_model_dim(self):
         if self.grid_type() == GridType.layered_vertex:
-            return [self.nlay, max(self.ncpl)]
+            return [self._nlay, max(self._ncpl)]
         elif self.grid_type() == GridType.unlayered_vertex:
             return [self.num_cells()]
 
@@ -715,6 +748,18 @@ class VertexModelGrid(ModelGrid):
                          'individual layers.'.format(self.model_name)
             print(except_str)
             raise MFGridException(except_str)
+
+    def get_all_model_cells(self):
+        model_cells = []
+        if self.grid_type() == GridType.layered_vertex:
+            for layer in range(0, self._nlay):
+                for layer_cellid in range(0, self._ncpl):
+                    model_cells.append((layer + 1, layer_cellid + 1))
+            return model_cells
+        else:
+            for node in range(0, self._ncpl):
+                model_cells.append(node + 1)
+            return model_cells
 
     @classmethod
     # move to export folder
