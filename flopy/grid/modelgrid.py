@@ -37,7 +37,7 @@ class PointType(Enum):
     """
     Enumeration of vertex types
     """
-    modelxy = 0
+    modelxyz = 0
     spatialxyz = 1
 
 
@@ -63,6 +63,14 @@ class SimulationTime():
     def __init__(self, stress_periods, temporal_reference=None):
         self.stress_periods = stress_periods
         self.temporal_reference = temporal_reference
+
+
+class CachedDataType(Enum):
+    """
+    Enumeration of types of cached data
+    """
+    xyvertices = 0
+    edge_array = 1
 
 
 class CachedData():
@@ -91,8 +99,21 @@ class ModelGrid(object):
     model_name : str
         Name of the model associated with this grid
 
+    Attributes
+    ----------
+    xedge : ndarray
+        array of column edges
+    yedge : ndarray
+        array of row edges
+
     Methods
     ----------
+    xedgegrid : (point_type) : ndarray
+        returns numpy meshgrid of x edges in reference frame defined by
+        point_type
+    yedgegrid : (point_type) : ndarray
+        returns numpy meshgrid of y edges in reference frame defined by
+        point_type
     get_tabular_data : (name_list, data, location_type, time_type) : data
         returns a pandas object with the data defined in name_list in the
         spatial representation defined by coord_type and using time
@@ -103,8 +124,9 @@ class ModelGrid(object):
         are in the coordinate system provided by the spatial reference
         information. otherwise the cell centers are based on a 0,0 location for
         the upper left corner of the model grid
-    vertices : (point_type) : ndarray
-        1D array of cell vertices for whole grid in C-style (row-major) order
+    xyvertices : (point_type) : ndarray
+        1D array of x and y coordinates of cell vertices for whole grid
+        (single layer) in C-style (row-major) order
         (same as np.ravel())
     get_model_dim : () : list
         returns the dimensions of the model
@@ -173,10 +195,6 @@ class ModelGrid(object):
     # from spatial reference
     ############################
     @property
-    # it would be nice if all of these worked with or without a spatial
-    # reference, and the user has the options of getting the output in the
-    # spatial reference system or just as the distance from a corner
-    # of the model (say upper-left corner)
     def xedge(self):
         return self.get_edge_array()[0]
 
@@ -184,22 +202,20 @@ class ModelGrid(object):
     def yedge(self):
         return self.get_edge_array()[1]
 
-    @property
-    def xgrid(self):
-        return self.get_xygrid[0]
+    def xedgegrid(self, point_type=PointType.spatialxyz):
+        return self.get_xygrid(point_type)[0]
 
-    @property
-    def ygrid(self):
-        return self.get_xygrid[1]
+    def yedgegrid(self, point_type=PointType.spatialxyz):
+        return self.get_xygrid(point_type)[1]
 
-    def xcell_centers(self, point_type=PointType.xyz):
+    def xcell_centers(self, point_type=PointType.spatialxyz):
         return self.get_cellcenters()[0]
 
-    def ycell_centers(self, point_type=PointType.xyz):
+    def ycell_centers(self, point_type=PointType.spatialxyz):
         return self.get_cellcenters()[1]
 
     @abc.abstractmethod
-    def vertices(self, point_type=PointType.xyz):
+    def xyvertices(self, point_type=PointType.spatialxyz):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
@@ -210,12 +226,10 @@ class ModelGrid(object):
             'must define get_model_dim_arrays in child '
             'class to use this base class')
 
-    def get_xygrid(self):
+    def get_xygrid(self, point_type=PointType.spatialxyz):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
-        #xgrid, ygrid = np.meshgrid(self.xedge, self.yedge)
-        #return self.transform(xgrid, ygrid)
 
     @abc.abstractmethod
     def get_edge_array(self):
@@ -534,6 +548,8 @@ class ModelGrid(object):
 
 class StructuredModelGrid(ModelGrid):
     """
+    def get_cell_vertices(i, j, point_type)
+        returns vertices for a single cell or sequence of i, j locations.
     get_row_array : ()
         returns a numpy ndarray sized to a model row
     get_column_array : ()
@@ -606,6 +622,54 @@ class StructuredModelGrid(ModelGrid):
     def idomain(self, idomain):
         self._idomain = idomain
         self._require_cache_updates()
+
+    def get_edge_array(self):
+        """
+        Return two numpy one-dimensional float arrays. One array has the cell
+        edge x coordinates for every column in the grid in model space -
+        not offset or rotated.  Array is of size (ncol + 1). The other array
+        has the cell edge y coordinates.
+        """
+        if CachedDataType.edge_array.value not in self._cache_dict or \
+                self._cache_dict[CachedDataType.edge_array.value].out_of_date:
+            xedge = np.concatenate(([0.], np.add.accumulate(self._delr)))
+            length_y = np.add.reduce(self.delc)
+            yedge = np.concatenate(([length_y], length_y -
+                                    np.add.accumulate(self.delc)))
+            self._cache_dict[CachedDataType.edge_array.value] = \
+                CachedData([xedge, yedge])
+        return self._cache_dict[CachedDataType.edge_array.value].data
+
+    def get_xygrid(self, point_type=PointType.spatialxyz):
+        xgrid, ygrid = np.meshgrid(self.xedge, self.yedge)
+        if point_type == PointType.spatialxyz:
+            return self.sr.transform(xgrid, ygrid)
+        else:
+            return xgrid, ygrid
+
+    def get_cell_vertices(self, i, j, point_type=PointType.spatialxyz):
+        """Get vertices for a single cell or sequence of i, j locations."""
+        pts = []
+        xgrid, ygrid = self.xedgegrid(point_type), self.yedgegrid(point_type)
+        pts.append([xgrid[i, j], ygrid[i, j]])
+        pts.append([xgrid[i + 1, j], ygrid[i + 1, j]])
+        pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
+        pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
+        pts.append([xgrid[i, j], ygrid[i, j]])
+        if np.isscalar(i):
+            return pts
+        else:
+            vrts = np.array(pts).transpose([2, 0, 1])
+            return [v.tolist() for v in vrts]
+
+    def xyvertices(self, point_type=PointType.spatialxyz):
+        if CachedDataType.xyvertices.value not in self._cache_dict or \
+                self._cache_dict[CachedDataType.xyvertices.value].out_of_date:
+            jj, ii = np.meshgrid(range(self._ncol), range(self._nrow))
+            jj, ii = jj.ravel(), ii.ravel()
+            self._cache_dict[CachedDataType.xyvertices.value] = \
+                CachedData(self.get_cell_vertices(ii, jj))
+        return self._cache_dict[CachedDataType.xyvertices.value].data
 
     def get_all_model_cells(self):
         model_cells = []
