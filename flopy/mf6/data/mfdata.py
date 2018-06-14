@@ -10,8 +10,8 @@ import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
-from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
-                              ConstIter, ArrayIndexIter, MultiList
+from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
+                             ConstIter, ArrayIndexIter, MultiList
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 
 
@@ -1003,7 +1003,7 @@ class DataStorage(object):
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
         if not (layer_storage.data_storage_type ==
                 DataStorageType.internal_constant and
-                    ArrayUtil.has_one_item(data)) and \
+                    PyListUtil.has_one_item(data)) and \
                 self._verify_data(MultiListIter(data), layer):
             # store data as is
             self.store_internal(data, layer, False, multiplier, key=key)
@@ -1381,10 +1381,10 @@ class DataStorage(object):
                     type_, value_, traceback_, message,
                     self._simulation_data.debug)
         line = ' '
-        ArrayUtil.reset_delimiter_used()
+        PyListUtil.reset_delimiter_used()
         while line != '':
             line = fd.readline()
-            arr_line = ArrayUtil.split_data_line(line, True)
+            arr_line = PyListUtil.split_data_line(line, True)
             for data in arr_line:
                 if data != '':
                     if current_size == data_size:
@@ -2010,7 +2010,7 @@ class DataStorage(object):
                             if data is not None:
                                 # shape is an indeterminate 1-d array and
                                 # should consume the remainder of the data
-                                max_s = ArrayUtil.max_multi_dim_list_size(data)
+                                max_s = PyListUtil.max_multi_dim_list_size(data)
                                 resolved_shape[0] = \
                                     max_s - len(self._recarray_type_list)
                             else:
@@ -2101,7 +2101,7 @@ class DataStorage(object):
     def convert_data(self, data, type, data_item=None):
         if type == DatumType.double_precision:
             if data_item is not None and data_item.support_negative_index:
-                val = int(ArrayUtil.clean_numeric(data))
+                val = int(PyListUtil.clean_numeric(data))
                 if val == -1:
                     return -0.0
                 elif val == 1:
@@ -2133,7 +2133,7 @@ class DataStorage(object):
                     return float(data)
                 except (ValueError, TypeError):
                     try:
-                        return float(ArrayUtil.clean_numeric(data))
+                        return float(PyListUtil.clean_numeric(data))
                     except (ValueError, TypeError):
                         message = 'Data "{}" with value "{}" can ' \
                                   'not be converted to float' \
@@ -2151,12 +2151,12 @@ class DataStorage(object):
                             traceback_, message, self._simulation_data.debug)
         elif type == DatumType.integer:
             if data_item is not None and data_item.numeric_index:
-                return int(ArrayUtil.clean_numeric(data)) - 1
+                return int(PyListUtil.clean_numeric(data)) - 1
             try:
                 return int(data)
             except (ValueError, TypeError):
                 try:
-                    return int(ArrayUtil.clean_numeric(data))
+                    return int(PyListUtil.clean_numeric(data))
                 except (ValueError, TypeError):
                     message = 'Data "{}" with value "{}" can not be ' \
                               'converted to int' \
@@ -2570,7 +2570,7 @@ class MFData(object):
             storage.pre_data_comments = None
 
         # read through any fully commented or empty lines
-        arr_line = ArrayUtil.split_data_line(line)
+        arr_line = PyListUtil.split_data_line(line)
         while MFComment.is_comment(arr_line, True) and line != '':
             if storage.pre_data_comments:
                 storage.pre_data_comments.add_text('\n')
@@ -2583,7 +2583,7 @@ class MFData(object):
             self._add_data_line_comment(arr_line, line_num)
 
             line = file_handle.readline()
-            arr_line = ArrayUtil.split_data_line(line)
+            arr_line = PyListUtil.split_data_line(line)
         return line
 
     def _add_data_line_comment(self, comment, line_num):

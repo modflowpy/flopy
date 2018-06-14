@@ -11,7 +11,8 @@ from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
                              VertexSpatialReference
-from .data import mfstructure, mfdatautil
+from .data import mfstructure
+from ..utils import datautil
 
 
 class MFModel(PackageContainer):
@@ -557,7 +558,7 @@ class MFModel(PackageContainer):
 
         # make sure path is unique
         if path in self._package_paths:
-            path_iter = mfdatautil.PathIter(path)
+            path_iter = datautil.PathIter(path)
             for new_path in path_iter:
                 if new_path not in self._package_paths:
                     path = new_path
@@ -574,7 +575,7 @@ class MFModel(PackageContainer):
             if package_struct is not None and \
               package_struct.multi_package_support:
                 # check for other registered packages of this type
-                name_iter = mfdatautil.NameIter(package.package_type, False)
+                name_iter = datautil.NameIter(package.package_type, False)
                 for package_name in name_iter:
                     if package_name not in self.package_name_dict:
                         package.package_name = package_name
@@ -670,7 +671,7 @@ class MFModel(PackageContainer):
 
         # clean up model type text
         model_type = self.structure.model_type
-        while mfdatautil.DatumUtil.is_int(model_type[-1]):
+        while datautil.DatumUtil.is_int(model_type[-1]):
             model_type = model_type[0:-1]
 
         # create package

@@ -1,7 +1,8 @@
 import sys, inspect
 import numpy as np
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
+from ..data import mfstructure, mfdata
+from ...utils import datautil
 from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
 
@@ -373,8 +374,8 @@ class MFScalar(mfdata.MFData):
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
 
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         # verify keyword
         index_num, aux_var_index = self._load_keyword(arr_line, 0)

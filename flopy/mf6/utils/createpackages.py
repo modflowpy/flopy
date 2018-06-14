@@ -1,7 +1,8 @@
 import os
 import textwrap
 from enum import Enum
-from flopy.mf6.data import mfstructure, mfdatautil
+from ...mf6.data import mfstructure, mfdatautil
+from ...utils import datautil
 
 """
 createpackages.py is a utility script that reads in the file definition 
@@ -175,7 +176,7 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
             doc_string, data_structure_dict, default_value, name,
             python_name, description, path, data_type,
             basic_init=False):
-    clean_ds_name = mfdatautil.clean_name(python_name)
+    clean_ds_name = datautil.clean_name(python_name)
     if basic_init:
         init_vars.append(create_basic_init(clean_ds_name))
     else:

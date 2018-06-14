@@ -2,8 +2,9 @@ import sys, inspect, copy
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
-from ..data.mfdatautil import MultiList
+from ..data import mfdatautil, mfdata
+from ...utils import datautil
+from ...utils.datautil import MultiList
 from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
 
@@ -468,8 +469,8 @@ class MFArray(mfdata.MFMultiDimVar):
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         package_dim = self._data_dimensions.package_dim
         if len(arr_line) > 2:
@@ -575,8 +576,8 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         di_struct = self.structure.data_item_structures[0]
-        if not di_struct.just_data or mfdatautil.max_tuple_abs_size(layer) > 0:
-            arr_line = mfdatautil.ArrayUtil.\
+        if not di_struct.just_data or datautil.max_tuple_abs_size(layer) > 0:
+            arr_line = datautil.PyListUtil.\
                 split_data_line(file_handle.readline())
         layer_storage = storage.layer_storage[layer]
         # if constant
@@ -933,7 +934,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        data_iter = mfdatautil.ArrayUtil.next_item(data)
+        data_iter = datautil.PyListUtil.next_item(data)
         indent_str = self._simulation_data.indent_string
         for item, last_item, new_list, nesting_change in data_iter:
             # increment data/layer counts

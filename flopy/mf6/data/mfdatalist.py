@@ -3,9 +3,10 @@ import math
 import sys
 import inspect
 from copy import deepcopy
-from ..data import mfstructure, mfdatautil, mfdata
+from ..data import mfstructure, mfdata
 from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
+from ...utils import datautil
 
 
 class MFList(mfdata.MFMultiDimVar):
@@ -420,7 +421,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                         cellid_size)
                         data_size = 1
                         if len(resolved_shape) == 1 and \
-                                mfdatautil.DatumUtil.is_int(resolved_shape[0]):
+                                datautil.DatumUtil.is_int(resolved_shape[0]):
                             data_size = int(resolved_shape[0])
                             if data_size < 0:
                                 # unable to resolve data size based on shape, use
@@ -607,8 +608,8 @@ class MFList(mfdata.MFMultiDimVar):
                                                     pre_data_comments)
         # reset data line delimiter so that the next split_data_line will
         # automatically determine the delimiter
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.split_data_line(current_line)
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.split_data_line(current_line)
         if arr_line and (len(arr_line[0]) >= 2 and
                 arr_line[0][:3].upper() == 'END'):
             return [False, arr_line]
@@ -638,7 +639,7 @@ class MFList(mfdata.MFMultiDimVar):
             except MFDataException as err:
                 # this could possibly be a constant line.
                 line = file_handle.readline()
-                arr_line = mfdatautil.ArrayUtil.\
+                arr_line = datautil.PyListUtil.\
                     split_data_line(line)
                 if len(arr_line) >= 2 and arr_line[0].upper() == 'CONSTANT' \
                         and len(self.structure.data_item_structures) >= 2 and \
@@ -662,7 +663,7 @@ class MFList(mfdata.MFMultiDimVar):
                     line = ' '
                     while line != '':
                         line = file_handle.readline()
-                        arr_line = mfdatautil.ArrayUtil.\
+                        arr_line = datautil.PyListUtil.\
                             split_data_line(line)
                         if arr_line and (len(arr_line[0]) >= 2 and
                                 arr_line[0][:3].upper() == 'END'):
@@ -699,7 +700,7 @@ class MFList(mfdata.MFMultiDimVar):
         line = ' '
         while line != '':
             line = file_handle.readline()
-            arr_line = mfdatautil.ArrayUtil.\
+            arr_line = datautil.PyListUtil.\
                 split_data_line(line)
             if arr_line and (len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
@@ -711,7 +712,7 @@ class MFList(mfdata.MFMultiDimVar):
                 return [False, line]
             if recarray_len != 1 and \
                     not mfdata.MFComment.is_comment(arr_line, True):
-                key = mfdatautil.find_keyword(arr_line,
+                key = datautil.find_keyword(arr_line,
                                               self.structure.get_keywords())
                 if key is None:
                     # unexpected text, may be start of another record
@@ -1122,7 +1123,7 @@ class MFList(mfdata.MFMultiDimVar):
             model_grid = self._data_dimensions.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             cellid_tuple = ()
-            if not mfdatautil.DatumUtil.is_int(arr_line[data_index]) and \
+            if not datautil.DatumUtil.is_int(arr_line[data_index]) and \
                     arr_line[data_index].lower() == 'none':
                 # special case where cellid is 'none', store as tuple of
                 # 'none's
@@ -1149,7 +1150,7 @@ class MFList(mfdata.MFMultiDimVar):
                                           traceback_, comment,
                                           self._simulation_data.debug)
                 for index in range(data_index, cellid_size + data_index):
-                    if not mfdatautil.DatumUtil.is_int(arr_line[index]) or \
+                    if not datautil.DatumUtil.is_int(arr_line[index]) or \
                             int(arr_line[index]) < 0:
                         comment = 'Expected a integer or cell ID in ' \
                                   'data "{}" field "{}".  Found {} ' \
@@ -1249,7 +1250,7 @@ class MFList(mfdata.MFMultiDimVar):
         if cellid_size + data_index > len(arr_line):
             return False
         for index in range(data_index, cellid_size + data_index):
-            if not mfdatautil.DatumUtil.is_int(arr_line[index]):
+            if not datautil.DatumUtil.is_int(arr_line[index]):
                 return False
             if int(arr_line[index]) <= 0:
                 return False

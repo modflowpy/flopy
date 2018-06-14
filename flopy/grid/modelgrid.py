@@ -1,7 +1,8 @@
 import abc
 from enum import Enum
 import numpy as np
-
+from ..utils.datautil import PyListUtil
+from pandas import DataFrame
 
 class GridType(Enum):
     """
@@ -16,9 +17,9 @@ class LocationType(Enum):
     """
     Enumeration of location types
     """
-    xyz = 0  # coordinates defined by spatial reference
-    xyz_nosr = 1 # coordinates defined based on 0,0 point as upper-left most
+    modelxyz = 0 # coordinates defined based on 0,0 point as upper-left most
                  # point of the model
+    spatialxyz = 1 # coordinates defined by spatial reference
     cellid = 2  # cell ids
     layer_cellid = 3  # layer + cell id
     lrc = 4  # layer row column
@@ -115,10 +116,9 @@ class ModelGrid(object):
     yedgegrid : (point_type) : ndarray
         returns numpy meshgrid of y edges in reference frame defined by
         point_type
-    get_tabular_data : (name_list, data, location_type, time_type) : data
+    get_tabular_data : (name_list, data, location_type) : data
         returns a pandas object with the data defined in name_list in the
-        spatial representation defined by coord_type and using time
-        representation defined by time_type.
+        spatial representation defined by coord_type
     xcell_centers : (point_type) : ndarray
         returns x coordinate of cell centers
     ycell_centers : (point_type) : ndarray
@@ -186,8 +186,7 @@ class ModelGrid(object):
         self._require_cache_updates()
 
     @abc.abstractmethod
-    def get_tabular_data(self, data, coord_type=LocationType.xyz,
-                        time_type=TimeType.calendar):
+    def get_tabular_data(self, data, coord_type=LocationType.spatialxyz):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
@@ -580,6 +579,9 @@ class StructuredModelGrid(ModelGrid):
         self._nrow = len(delr)
         self._ncol = len(delc)
 
+    ####################
+    # Properties
+    ####################
     @property
     def delc(self):
         return self._delc
@@ -627,6 +629,71 @@ class StructuredModelGrid(ModelGrid):
     def idomain(self, idomain):
         self._idomain = idomain
         self._require_cache_updates()
+
+    ####################
+    # Methods
+    ####################
+    def get_tabular_data(self, data, location_type=LocationType.spatialxyz):
+        # initialize counters
+        current_row = 0
+        current_col = 0
+        current_cellid = 0
+        current_layer = 0
+        current_layer_cellid = 0
+        cells_per_layer = self._nrow * self._ncol
+        # initialize "pandas" dictionary
+        if location_type == LocationType.modelxyz or \
+                location_type == LocationType.spatialxyz:
+            data_d = {'X': [], 'Y': [], 'data': []}
+        elif location_type == LocationType.cellid:
+            data_d = {'cellid' : [], 'data': []}
+        elif location_type == LocationType.layer_cellid:
+            data_d = {'layer': [], 'layer_cellid': [], 'data': []}
+        elif location_type == LocationType.lrc:
+            data_d = {'layer': [], 'row': [], 'column': [], 'data': []}
+
+        # loop through the data and build out pandas dictionary
+        for item in PyListUtil.next_item(data):
+            # build location data
+            if location_type == LocationType.modelxyz or \
+                    location_type == LocationType.spatialxyz:
+                if location_type == LocationType.modelxyz:
+                    point_type = PointType.modelxyz
+                else:
+                    point_type = PointType.spatialxyz
+                cell_center = self.get_cellcenter(current_row,
+                                                  current_col,
+                                                  point_type)
+                data_d['X'].append(cell_center[0])
+                data_d['Y'].append(cell_center[1])
+            elif location_type == LocationType.cellid:
+                data_d['cellid'].append(current_cellid)
+            elif location_type == LocationType.layer_cellid:
+                data_d['layer'].append(current_layer)
+                data_d['layer_cellid'].append(current_layer_cellid)
+            elif location_type == LocationType.lrc:
+                data_d['layer'].append(current_layer)
+                data_d['row'].append(current_row)
+                data_d['column'].append(current_col)
+            # build data
+            data_d['data'].append(item[0])
+            # update counters
+            if current_col == self._ncol - 1:
+                current_col = 0
+                current_row += 1
+            else:
+                current_col += 1
+            current_cellid += 1
+            if current_layer_cellid == cells_per_layer - 1:
+                current_layer_cellid = 0
+                current_layer += 1
+                current_row = 0
+                current_col = 0
+                if current_layer == self._nlay:
+                    break
+            else:
+                current_layer_cellid += 1
+        return DataFrame(data=data_d)
 
     def get_edge_array(self):
         """
@@ -676,6 +743,10 @@ class StructuredModelGrid(ModelGrid):
             self._cache_dict[cache_index] = \
                 CachedData(self.get_cell_vertices(ii, jj))
         return self._cache_dict[cache_index].data
+
+    def get_cellcenter(self, row, col, point_type=PointType.spatialxyz):
+        cell_centers = self.get_cellcenters(point_type)
+        return cell_centers[0][row], cell_centers[1][col]
 
     def get_cellcenters(self, point_type=PointType.spatialxyz):
         """

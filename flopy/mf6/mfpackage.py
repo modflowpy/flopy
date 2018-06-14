@@ -10,7 +10,8 @@ from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
                     MFInvalidTransientBlockHeaderException, VerbosityLevel, \
                     FlopyException
 from .data.mfstructure import DatumType
-from .data import mfstructure, mfdatautil, mfdata
+from .data import mfstructure, mfdata
+from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
 
@@ -567,12 +568,12 @@ class MFBlock(object):
         initial_comment = mfdata.MFComment('', '', 0)
         fd_block = fd
         line = fd_block.readline()
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.split_data_line(line)
         while mfdata.MFComment.is_comment(line, True):
             initial_comment.add_text(line)
             line = fd_block.readline()
-            arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+            arr_line = datautil.PyListUtil.split_data_line(line)
 
         # if block not empty
         if not (len(arr_line[0]) > 2 and arr_line[0][:3].upper() == 'END'):
@@ -591,7 +592,7 @@ class MFBlock(object):
                                     'r')
                     # read first line of external file
                     line = fd_block.readline()
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                    arr_line = datautil.PyListUtil.split_data_line(line)
                 except:
                     type_, value_, traceback_ = sys.exc_info()
                     message = 'Error reading external file specified in ' \
@@ -643,7 +644,7 @@ class MFBlock(object):
                                                         )
 
                 if next_line[1] is not None:
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(
+                    arr_line = datautil.PyListUtil.split_data_line(
                       next_line[1])
                 else:
                     arr_line = ''
@@ -654,7 +655,7 @@ class MFBlock(object):
                 while arr_line and (len(next_line[1]) <= 2 or
                                     arr_line[0][:3].upper() != 'END'):
                     next_line[1] = fd_block.readline().strip()
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(
+                    arr_line = datautil.PyListUtil.split_data_line(
                         next_line[1])
                     if arr_line and (len(next_line[1]) <= 2 or
                                      arr_line[0][:3].upper() != 'END'):
@@ -678,7 +679,7 @@ class MFBlock(object):
                     line = ' '
                     while line != '':
                         line = fd_block.readline()
-                        arr_line = mfdatautil.ArrayUtil.\
+                        arr_line = datautil.PyListUtil.\
                             split_data_line(line)
                         if arr_line:
                             # determine if at end of block
@@ -704,9 +705,9 @@ class MFBlock(object):
         nothing_found = False
         next_line = [True, line]
         while next_line[0] and not nothing_found:
-            arr_line = mfdatautil.ArrayUtil.\
+            arr_line = datautil.PyListUtil.\
                 split_data_line(next_line[1])
-            key = mfdatautil.find_keyword(arr_line, self.datasets_keyword)
+            key = datautil.find_keyword(arr_line, self.datasets_keyword)
             if key is not None:
                 ds_name = self.datasets_keyword[key].name
                 try:
@@ -1460,7 +1461,7 @@ class MFPackage(PackageContainer):
                     while line != '':
                         line = fd_input_file.readline()
                         self._store_comment(line, found_first_block)
-                        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                        arr_line = datautil.PyListUtil.split_data_line(line)
                         if arr_line and (len(arr_line[0]) <= 2 or
                            arr_line[0][:3].upper() == 'END'):
                             break
