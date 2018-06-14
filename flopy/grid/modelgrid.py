@@ -71,6 +71,7 @@ class CachedDataType(Enum):
     """
     xyvertices = 0
     edge_array = 1
+    cell_centers = 2
 
 
 class CachedData():
@@ -118,7 +119,11 @@ class ModelGrid(object):
         returns a pandas object with the data defined in name_list in the
         spatial representation defined by coord_type and using time
         representation defined by time_type.
-    get_cell_centers : () : ndarray
+    xcell_centers : (point_type) : ndarray
+        returns x coordinate of cell centers
+    ycell_centers : (point_type) : ndarray
+        returns y coordinate of cell centers
+    get_cell_centers : (point_type) : ndarray
         returns the cell centers of all models cells in the model grid.  if
         the model grid contains spatial reference information, the cell centers
         are in the coordinate system provided by the spatial reference
@@ -209,10 +214,10 @@ class ModelGrid(object):
         return self.get_xygrid(point_type)[1]
 
     def xcell_centers(self, point_type=PointType.spatialxyz):
-        return self.get_cellcenters()[0]
+        return self.get_cellcenters(point_type)[0]
 
     def ycell_centers(self, point_type=PointType.spatialxyz):
-        return self.get_cellcenters()[1]
+        return self.get_cellcenters(point_type)[1]
 
     @abc.abstractmethod
     def xyvertices(self, point_type=PointType.spatialxyz):
@@ -663,13 +668,36 @@ class StructuredModelGrid(ModelGrid):
             return [v.tolist() for v in vrts]
 
     def xyvertices(self, point_type=PointType.spatialxyz):
-        if CachedDataType.xyvertices.value not in self._cache_dict or \
-                self._cache_dict[CachedDataType.xyvertices.value].out_of_date:
+        cache_index = (CachedDataType.xyvertices.value, point_type.value)
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
             jj, ii = np.meshgrid(range(self._ncol), range(self._nrow))
             jj, ii = jj.ravel(), ii.ravel()
-            self._cache_dict[CachedDataType.xyvertices.value] = \
+            self._cache_dict[cache_index] = \
                 CachedData(self.get_cell_vertices(ii, jj))
-        return self._cache_dict[CachedDataType.xyvertices.value].data
+        return self._cache_dict[cache_index].data
+
+    def get_cellcenters(self, point_type=PointType.spatialxyz):
+        """
+        Return a list of two numpy one-dimensional float array one with
+        the cell center x coordinate and the other with the cell center y
+        coordinate for every row in the grid in model space -
+        not offset of rotated, with the cell center y coordinate.
+        """
+        cache_index = (CachedDataType.cell_centers.value, point_type.value)
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
+            x = np.add.accumulate(self._delr) - 0.5 * self.delr
+            Ly = np.add.reduce(self._delc)
+            y = Ly - (np.add.accumulate(self._delc) - 0.5 *
+                      self._delc)
+            if point_type == PointType.spatialxyz:
+                self._cache_dict[cache_index] = \
+                    CachedData(self.sr.transform(x, y))
+            else:
+                self._cache_dict[cache_index] = \
+                    CachedData([x, y])
+        return self._cache_dict[cache_index].data
 
     def get_all_model_cells(self):
         model_cells = []
