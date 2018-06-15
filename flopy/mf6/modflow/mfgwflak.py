@@ -256,13 +256,13 @@ class ModflowGwflak(mfpackage.MFPackage):
           Options block includes a TIMESERIESFILE entry (see the "Time-Variable
           Input" section), values can be obtained from a time series by
           entering the time-series name in place of a numeric value.
-    lakeperioddata : [lakeno, laksetting]
+    lakeperioddata : [lakeno, laksettingkeyword, laksettingvalue]
         * lakeno (integer) integer value that defines the lake number
           associated with the specified PERIOD data on the line. LAKENO must be
           greater than zero and less than or equal to NLAKES.
         * laksetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          LAKSETTING string include: STATUS, STAGE, STAGE, EVAPORATION,
+          LAKSETTING string include: STATUS, STAGE, RAINFALL, EVAPORATION,
           RUNOFFON, WITHDRAWAL, and AUXILIARY.
             status : [string]
                 * status (string) keyword option to define lake status. STATUS
