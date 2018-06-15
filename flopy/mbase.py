@@ -6,6 +6,7 @@ mbase module
 """
 
 from __future__ import print_function
+import abc
 import sys
 import os
 import subprocess as sp
@@ -56,7 +57,64 @@ class FileData(object):
                                        output=output, package=package))
 
 
-class BaseModel(object):
+class ModelInterface(object):
+    @abc.abstractmethod
+    @property
+    def modelgrid(self):
+        raise NotImplementedError(
+            'must define modelgrid in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def packagelist(self):
+        raise NotImplementedError(
+            'must define packagelist in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def namefile(self):
+        raise NotImplementedError(
+            'must define namefile in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def model_ws(self):
+        raise NotImplementedError(
+            'must define model_ws in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def exename(self):
+        raise NotImplementedError(
+            'must define exename in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def version(self):
+        raise NotImplementedError(
+            'must define version in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @property
+    def solver_tols(self):
+        raise NotImplementedError(
+            'must define version in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    def export(self, f, modelgrid, **kwargs):
+        raise NotImplementedError(
+            'must define export in child '
+            'class to use this base class')
+
+
+class BaseModel(ModelInterface):
     """
     MODFLOW based models base class
 
@@ -88,10 +146,10 @@ class BaseModel(object):
         """
         self.__name = modelname
         self.namefile_ext = namefile_ext
-        self.namefile = self.__name + '.' + self.namefile_ext
-        self.packagelist = []
+        self._namefile = self.__name + '.' + self.namefile_ext
+        self._packagelist = []
         self.heading = ''
-        self.exe_name = exe_name
+        self._exe_name = exe_name
         self.external_extension = 'ref'
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
@@ -135,6 +193,52 @@ class BaseModel(object):
         self.output_packages = []
 
         return
+
+    @property
+    def modelgrid(self):
+        raise NotImplementedError(
+            'must define modelgrid in child '
+            'class to use this base class')
+
+    @property
+    def packagelist(self):
+        return self._packagelist
+
+    @packagelist.setter
+    def packagelist(self, packagelist):
+        self._packagelist = packagelist
+
+    @property
+    def namefile(self):
+        return self._namefile
+
+    @namefile.setter
+    def namefile(self, namefile):
+        self._namefile = namefile
+
+    @property
+    def model_ws(self):
+        return self._model_ws
+
+    @model_ws.setter
+    def model_ws(self, model_ws):
+        self._model_ws = model_ws
+
+    @property
+    def exename(self):
+        return self._exename
+
+    @exename.setter
+    def exename(self, exename):
+        self._exename = exename
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
 
     # we don't need these - no need for controlled access to array_free_format
     # def set_free_format(self, value=True):

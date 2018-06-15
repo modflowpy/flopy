@@ -61,9 +61,25 @@ class SimulationTime():
     temporal_reference : TemporalReference
         contains start time and time units information
     """
-    def __init__(self, stress_periods, temporal_reference=None):
-        self.stress_periods = stress_periods
-        self.temporal_reference = temporal_reference
+    def __init__(self, period_data, time_units='days',
+                 temporal_reference=None):
+        if isinstance(period_data, dict):
+            period_data = DataFrame(period_data)
+        self.period_data = period_data
+        self.time_units = time_units
+        self.tr = temporal_reference
+
+    @property
+    def perlen(self):
+        return self.period_data['perlen'].values
+
+    @property
+    def nstp(self):
+        return self.period_data['nstp'].values
+
+    @property
+    def tsmult(self):
+        return self.period_data['tsmult'].values
 
 
 class CachedDataType(Enum):
@@ -166,12 +182,13 @@ class ModelGrid(object):
     """
 
     def __init__(self, grid_type, sr=None, simulation_time=None,
-                 model_name=''):
+                 model_name='', steady=False):
         self.grid_type = grid_type
         self._sr = sr
         self.sim_time = simulation_time
         self.model_name = model_name
         self._cache_dict = {}
+        self._steady = steady
 
     ###########################
     # basic functions
@@ -184,6 +201,10 @@ class ModelGrid(object):
     def sr(self, sr):
         self._sr = sr
         self._require_cache_updates()
+
+    @property
+    def steady(self):
+        return self._steady
 
     @abc.abstractmethod
     def get_tabular_data(self, data, coord_type=LocationType.spatialxyz):
@@ -567,9 +588,10 @@ class StructuredModelGrid(ModelGrid):
 
     """
     def __init__(self, delc, delr, top, botm, idomain, sr=None,
-                 simulation_time=None):
+                 simulation_time=None, model_name='', steady=False):
         super(StructuredModelGrid, self).__init__(GridType.structured, sr,
-                                                  simulation_time)
+                                                  simulation_time,
+                                                  model_name, steady)
         self._delc = delc
         self._delr = delr
         self._top = top
@@ -629,6 +651,13 @@ class StructuredModelGrid(ModelGrid):
     def idomain(self, idomain):
         self._idomain = idomain
         self._require_cache_updates()
+
+    @property
+    def bounds(self):
+        """Return bounding box in shapely order."""
+        xmin, xmax, ymin, ymax = self.get_extent(point_type=
+                                                 PointType.spatialxyz)
+        return xmin, ymin, xmax, ymax
 
     ####################
     # Methods
@@ -770,6 +799,40 @@ class StructuredModelGrid(ModelGrid):
                     CachedData([x, y])
         return self._cache_dict[cache_index].data
 
+    def get_extent(self, point_type=PointType.spatialxyz):
+        """
+        Get the extent of the rotated and offset grid
+
+        Return (xmin, xmax, ymin, ymax)
+
+        """
+        x0 = self.xedge[0]
+        x1 = self.xedge[-1]
+        y0 = self.yedge[0]
+        y1 = self.yedge[-1]
+
+        if point_type == PointType.spatialxyz:
+            # upper left point
+            x0r, y0r = self.sr.transform(x0, y0)
+
+            # upper right point
+            x1r, y1r = self.sr.transform(x1, y0)
+
+            # lower right point
+            x2r, y2r = self.sr.transform(x1, y1)
+
+            # lower left point
+            x3r, y3r = self.sr.transform(x0, y1)
+
+            xmin = min(x0r, x1r, x2r, x3r)
+            xmax = max(x0r, x1r, x2r, x3r)
+            ymin = min(y0r, y1r, y2r, y3r)
+            ymax = max(y0r, y1r, y2r, y3r)
+
+            return (xmin, xmax, ymin, ymax)
+        else:
+            return (x0, x1, y0, y1)
+
     def get_all_model_cells(self):
         model_cells = []
         for layer in range(0, self._nlay):
@@ -834,12 +897,14 @@ class StructuredModelGrid(ModelGrid):
 
 class VertexModelGrid(ModelGrid):
     def __init__(self, top, botm, idomain, vertices, cell2d, nlay=None,
-                 ncpl=None, sr=None, simulation_time=None):
+                 ncpl=None, sr=None, simulation_time=None, model_name='',
+                 steady=False):
         if nlay is None:
             grid_type = GridType.unlayered_vertex
         else:
             grid_type = GridType.layered_vertex
-        super(VertexModelGrid, self).__init__(grid_type, sr, simulation_time)
+        super(VertexModelGrid, self).__init__(grid_type, sr, simulation_time,
+                                              model_name, steady)
         self.top = top
         self.botm = botm
         self.idomain = idomain

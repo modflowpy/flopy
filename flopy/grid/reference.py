@@ -256,12 +256,6 @@ class SpatialReference(object):
     def model_length_units(self):
         return self.lenuni_text[self.lenuni]
 
-    @property
-    def bounds(self):
-        """Return bounding box in shapely order."""
-        xmin, xmax, ymin, ymax = self.get_extent()
-        return xmin, ymin, xmax, ymax
-
     @staticmethod
     def load(namefile=None, reffile='usgs.model.reference'):
         """Attempts to load spatial reference information from
@@ -648,37 +642,6 @@ class SpatialReference(object):
             x /= self.length_multiplier
             y /= self.length_multiplier
         return x, y
-
-    def get_extent(self):
-        """
-        Get the extent of the rotated and offset grid
-
-        Return (xmin, xmax, ymin, ymax)
-
-        """
-        x0 = self.xedge[0]
-        x1 = self.xedge[-1]
-        y0 = self.yedge[0]
-        y1 = self.yedge[-1]
-
-        # upper left point
-        x0r, y0r = self.transform(x0, y0)
-
-        # upper right point
-        x1r, y1r = self.transform(x1, y0)
-
-        # lower right point
-        x2r, y2r = self.transform(x1, y1)
-
-        # lower left point
-        x3r, y3r = self.transform(x0, y1)
-
-        xmin = min(x0r, x1r, x2r, x3r)
-        xmax = max(x0r, x1r, x2r, x3r)
-        ymin = min(y0r, y1r, y2r, y3r)
-        ymax = max(y0r, y1r, y2r, y3r)
-
-        return (xmin, xmax, ymin, ymax)
 
     def get_grid_lines(self):
         """

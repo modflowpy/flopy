@@ -4,7 +4,7 @@ import os
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
-from ..mbase import BaseModel
+from ..mbase import BaseModel, ModelInterface
 from ..pakbase import Package
 from . import NetCdf, netcdf
 from . import shapefile_utils
@@ -341,7 +341,7 @@ def output_helper(f, ml, oudic, **kwargs):
 
 
 def model_helper(f, ml, **kwargs):
-    assert isinstance(ml, BaseModel)
+    assert isinstance(ml, ModelInterface)
     package_names = kwargs.get("package_names", None)
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]

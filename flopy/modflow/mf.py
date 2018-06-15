@@ -10,6 +10,7 @@ import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam, SpatialReference, TemporalReference
+from ..grid import modelgrid, reference
 from .mfpar import ModflowPar
 
 
@@ -216,6 +217,32 @@ class Modflow(BaseModel):
     #     next_unit = self.__next_ext_unit + 1
     #     self.__next_ext_unit += 1
     #     return next_unit
+
+    @property
+    def modelgrid(self):
+        tr = reference.TemporalReference(self.dis.itmuni, self.start_datetime)
+        data_frame = {'perlen': self.dis.perlen, 'nstp': self.dis.nstp,
+                      'tsmult': self.dis.tsmult}
+        sim_time = modelgrid.SimulationTime(data_frame,
+                                            self.model.dis.itmuni_dict[
+                                            self.model.dis.itmuni], tr)
+        return modelgrid.StructuredModelGrid(self.dis.delc,
+                                             self.dis.delr,
+                                             self.dis.top, self.dis.botm,
+                                             self.dis.idomain, self.sr,
+                                             sim_time, self.__name,
+                                             self.dis.steady)
+
+    @property
+    def solver_tols(self):
+        if self.pcg is not None:
+            return self.pcg.hclose, self.pcg.rclose
+        elif self.nwt is not None:
+            return self.nwt.headtol, self.nwt.fluxtol
+        elif self.sip is not None:
+            return self.sip.hclose, -999
+        elif self.gmg is not None:
+            return self.gmg.hclose, self.gmg.rclose
 
     @property
     def nlay(self):

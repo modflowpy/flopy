@@ -7,6 +7,7 @@ pakbase module
 
 from __future__ import print_function
 
+import abc
 import os
 import sys
 import platform
@@ -19,7 +20,29 @@ from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
 
 
-class Package(object):
+class PackageInterface(object):
+    @abc.abstractmethod
+    @property
+    def name(self):
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    @name.setter
+    def name(self, name):
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    def export(self, f, **kwargs):
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
+
+class Package(PackageInterface):
     """
     Base package class from which most other packages are derived.
 
@@ -49,7 +72,7 @@ class Package(object):
         self.fn_path = os.path.join(self.parent.model_ws, self.file_name[0])
         if (not isinstance(name, list)):
             name = [name]
-        self.name = name
+        self._name = name
         if (not isinstance(unit_number, list)):
             unit_number = [unit_number]
         self.unit_number = unit_number
@@ -157,6 +180,14 @@ class Package(object):
                         value = new_list
 
         super(Package, self).__setattr__(key, value)
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
 
     def export(self, f, **kwargs):
         from flopy import export
