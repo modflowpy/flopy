@@ -114,7 +114,7 @@ class MtListBudget(object):
         if len(self.gw_data) == 0:
             raise Exception("no groundwater budget info found...")
 
-        # trim the lists so that they are all the same lenght
+        # trim the lists so that they are all the same length
         # in case of a read fail
         min_len = 1e+10
         for i, lst in self.gw_data.items():
@@ -231,11 +231,10 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading from totim to time step")
-        raw = line.strip().split()
         try:
-            kper = int(raw[-1])
-            kstp = int(raw[-4][:-1])
-            tkstp = int(raw[-7][:-1])
+            kper = int(line[-6:-1])
+            kstp = int(line[-26:-21])
+            tkstp = int(line[-42:-37])
         except Exception as e:
             raise Exception("error parsing time step info on line {0}: {1}".
                             format(self.lcount, str(e)))
@@ -275,11 +274,14 @@ class MtListBudget(object):
         return item, ival, oval
 
     def _parse_sw(self, f, line):
-        raw = line.split()
-        comp = int(raw[-1])
-        kper = int(raw[-4])
-        kstp = int(raw[-7][:-1])
-        tkstp = int(raw[-10][:-1])
+        try:
+            comp = int(line[-5:-1])
+            kper = int(line[-24:-19])
+            kstp = int(line[-44:-39])
+            tkstp = int(line[-60:-55])
+        except Exception as e:
+            raise Exception("error parsing time step info on line {0}: {1}".
+                            format(self.lcount, str(e)))
         for lab, val in zip(["kper", "kstp", "tkstp"], [kper, kstp, tkstp]):
             lab += '_{0}'.format(comp)
             if lab not in self.gw_data.keys():
