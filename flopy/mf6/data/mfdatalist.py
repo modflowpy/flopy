@@ -4,7 +4,7 @@ import sys
 import inspect
 from copy import deepcopy
 from ..data import mfstructure, mfdatautil, mfdata
-from ..mfbase import MFDataException, ExtFileAction
+from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
 
 
@@ -269,7 +269,7 @@ class MFList(mfdata.MFMultiDimVar):
                 ext_string = self._get_external_formatting_string(0,
                                                                   ext_file_action)
                 file_entry.append('{}{}{}'.format(indent, indent,
-                                                 ext_string.upper()))
+                                                 ext_string))
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -680,7 +680,7 @@ class MFList(mfdata.MFMultiDimVar):
                                           self.structure.name,
                                           inspect.stack()[0][3], type_,
                                           value_, traceback_, comment,
-                                          self._simulation_data.debug)
+                                          self._simulation_data.debug, err)
         if self.structure.type == DatumType.record or self.structure.type == \
                 DatumType.string:
             # records only contain a single line
@@ -777,6 +777,7 @@ class MFList(mfdata.MFMultiDimVar):
     def _new_storage(self):
         return mfdata.DataStorage(self._simulation_data,
                                   self._data_dimensions,
+                                  self.get_file_entry,
                                   mfdata.DataStorageType.internal_array,
                                   mfdata.DataStructureType.recarray)
 
@@ -901,18 +902,37 @@ class MFList(mfdata.MFMultiDimVar):
                                                     data_item.keystring_dict:
                                                 # data does not match any
                                                 # expected keywords
-                                                print('WARNING: Failed to '
-                                                      'process line {}.  '
-                                                      'Line does not match '
-                                                      'expected keystring '
-                                                      '{}'.format(
-                                                            ' '.join(arr_line),
-                                                            data_item.name))
+                                                if self._simulation_data.\
+                                                    verbosity_level.value >= \
+                                                    VerbosityLevel.normal.\
+                                                        value:
+                                                    print('WARNING: Failed to '
+                                                          'process line {}.  '
+                                                          'Line does not match'
+                                                          ' expected keystring'
+                                                          ' {}'.format(
+                                                          ' '.join(arr_line),
+                                                          data_item.name))
                                                 break
                                         data_item_ks = \
                                             data_item.keystring_dict[
                                             name_data]
-                                        assert(data_item_ks != 0)
+                                        if data_item_ks == 0:
+                                            comment = 'Could not find ' \
+                                                      'keystring ' \
+                                                      '{}.'.format(name_data)
+                                            type_, value_, \
+                                            traceback_ = sys.exc_info()
+                                            raise MFDataException(
+                                                self.structure.get_model(),
+                                                self.structure.get_package(),
+                                                self._path,
+                                                'loading data list from '
+                                                'package file',
+                                                self.structure.name,
+                                                inspect.stack()[0][3], type_,
+                                                value_, traceback_, comment,
+                                                self._simulation_data.debug)
 
                                         # keyword is always implied in a
                                         # keystring and should be stored,
@@ -1196,9 +1216,8 @@ class MFList(mfdata.MFMultiDimVar):
                                                      repeating_key=
                                                      self._current_key)
         except Exception as se:
-            comment = 'Unable to resolve shape for data "{}" field "{}". This ' \
-                      'may be a problem with your flopy install' \
-                      '. '.format(self.structure.name,
+            comment = 'Unable to resolve shape for data "{}" field "{}"' \
+                      '.'.format(self.structure.name,
                                   data_item.name)
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),

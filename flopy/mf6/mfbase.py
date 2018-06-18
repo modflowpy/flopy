@@ -34,6 +34,7 @@ class FlopyException(Exception):
     """
 
     def __init__(self, error, location=''):
+        self.message = error
         Exception.__init__(self,
                            "FlopyException: {} ({})".format(error, location))
 
@@ -76,7 +77,8 @@ class MFDataException(Exception):
         else:
             self.messages = []
             if mfdata_except is not None and \
-                    isinstance(mfdata_except, StructException):
+                    (isinstance(mfdata_except, StructException) or
+                    isinstance(mfdata_except, FlopyException)):
                 self.messages.append(mfdata_except.message)
             self.model = None
             self.package = None
@@ -145,6 +147,12 @@ class MFDataException(Exception):
         #    error_message = '{}\nCall Stack\n{}'.format(error_message,
         #                                                tb_string)
         Exception.__init__(self, error_message)
+
+
+class VerbosityLevel(Enum):
+    quiet = 1
+    normal = 2
+    verbose = 3
 
 
 class PackageContainerType(Enum):
@@ -241,7 +249,7 @@ class MFFileMgmt(object):
                                                   self._simulation_data.debug)
 
                         num_files_copied += 1
-        print('INFORMATION: {} external files copied'.format(num_files_copied))
+        return num_files_copied
 
     def get_updated_path(self, external_file_path, model_name,
                          ext_file_action):
@@ -418,7 +426,7 @@ class PackageContainer(object):
 
     Attributes
     ----------
-    packages : list
+    packagelist : list
         packages contained in the package container
     package_type_dict : dictionary
         dictionary of packages by package type
@@ -445,7 +453,7 @@ class PackageContainer(object):
         self.type = 'PackageContainer'
         self.simulation_data = simulation_data
         self.name = name
-        self.packages = []
+        self.packagelist = []
         self.package_type_dict = {}
         self.package_name_dict = {}
         self.package_key_dict = {}
@@ -521,7 +529,7 @@ class PackageContainer(object):
 
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries
-        self.packages.append(package)
+        self.packagelist.append(package)
         if package.package_name is not None:
             self.package_name_dict[package.package_name.lower()] = package
         self.package_key_dict[path[-1].lower()] = package
@@ -530,7 +538,7 @@ class PackageContainer(object):
         self.package_type_dict[package.package_type.lower()].append(package)
 
     def _remove_package(self, package):
-        self.packages.remove(package)
+        self.packagelist.remove(package)
         if package.package_name is not None and \
                 package.package_name.lower() in self.package_name_dict:
             del self.package_name_dict[package.package_name.lower()]
@@ -570,7 +578,7 @@ class PackageContainer(object):
 
         """
         if name is None:
-            return self.packages[:]
+            return self.packagelist[:]
 
         # search for full package name
         if name.lower() in self.package_name_dict:
@@ -590,7 +598,7 @@ class PackageContainer(object):
                 return self.package_type_dict[name.lower()]
 
         # search for partial package name
-        for pp in self.packages:
+        for pp in self.packagelist:
             if pp.package_name is not None:
                 # get first package of the type requested
                 package_name = pp.package_name.lower()

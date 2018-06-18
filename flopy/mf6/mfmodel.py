@@ -5,7 +5,8 @@ mfmodel module.  Contains the MFModel class
 import os, sys, inspect
 import numpy as np
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType, \
-                    MFDataException, ReadAsArraysException, FlopyException
+                    MFDataException, ReadAsArraysException, FlopyException, \
+                    VerbosityLevel
 from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
@@ -86,6 +87,7 @@ class MFModel(PackageContainer):
         self.name = modelname
         self.name_file = None
         self.version = version
+        self.model_type = model_type
         self.type = 'Model'
 
         if model_nam_file is None:
@@ -135,7 +137,6 @@ class MFModel(PackageContainer):
 
         self.name_file = package_obj(self, fname=self.model_nam_file,
                                      pname=self.name)
-        self.verbose = simulation.verbose
 
     def __getattr__(self, item):
         """
@@ -158,10 +159,46 @@ class MFModel(PackageContainer):
 
     def __setattr__(self, key, value):
         if key == "sr":
-            assert isinstance(value, SpatialReference) or \
-                   isinstance(value, StructuredSpatialReference) or \
-                   isinstance(value, VertexSpatialReference)
+            if not (isinstance(value, SpatialReference) or
+                   isinstance(value, StructuredSpatialReference) or
+                   isinstance(value, VertexSpatialReference)):
+                raise FlopyException('Unable to set attribute "sr" with '
+                                     'type {}. Attribute "sr" must be of type '
+                                     '"SpatialReference", '
+                                     '"StructuredSpatialReference", '
+                                     'or "VertexSpatialReference"'
+                                     '.'.format(type(value)))
         super(MFModel, self).__setattr__(key, value)
+
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        file_mgr = self.simulation_data.mfpath
+        data_str = 'name = {}\nmodel_type = {}\nversion = {}\nmodel_' \
+                   'relative_path = {}' \
+                   '\n\n'.format(self.name, self.model_type, self.version,
+                                 file_mgr.model_relative_path[self.name])
+
+        for package in self.packagelist:
+            pk_str = package._get_data_str(formal, False)
+            if formal:
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+            else:
+                pk_str = package._get_data_str(formal, False)
+                if len(pk_str.strip()) > 0:
+                    data_str = '{}###################\nPackage {}\n' \
+                               '###################\n\n' \
+                               '{}\n'.format(data_str, package._get_pname(),
+                                             pk_str)
+        return data_str
 
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
@@ -235,7 +272,9 @@ class MFModel(PackageContainer):
                     filemgr = simulation.simulation_data.mfpath
                     fname = filemgr.strip_model_relative_path(modelname,
                                                               fname)
-                print('loading {}...'.format(fname))
+                if simulation.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('    loading package {}...'.format(ftype))
                 # load package
                 instance.load_package(ftype, fname, pname, strict, None)
 
@@ -274,10 +313,17 @@ class MFModel(PackageContainer):
         """
 
         # write name file
+        if self.simulation_data.verbosity_level.value >= \
+                VerbosityLevel.normal.value:
+            print('    writing model name file...')
+
         self.name_file.write(ext_file_action=ext_file_action)
 
         # write packages
-        for pp in self.packages:
+        for pp in self.packagelist:
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('    writing package {}...'.format(pp._get_pname()))
             pp.write(ext_file_action=ext_file_action)
 
     def is_valid(self):
@@ -300,7 +346,7 @@ class MFModel(PackageContainer):
             return False
 
         # valid packages
-        for pp in self.packages:
+        for pp in self.packagelist:
             if not pp.is_valid():
                 return False
 
@@ -380,7 +426,7 @@ class MFModel(PackageContainer):
                 packages.set_data(packages_data)
 
                 # update files referenced from within packages
-                for package in self.packages:
+                for package in self.packagelist:
                     package.set_model_relative_path(model_ws)
 
     def _remove_package_from_dictionaries(self, package):
@@ -462,7 +508,7 @@ class MFModel(PackageContainer):
 
             # build list of child packages
             child_package_list = []
-            for pkg in self.packages:
+            for pkg in self.packagelist:
                 if pkg.parent_file is not None and pkg.parent_file.path == \
                         package.path:
                     child_package_list.append(pkg)
@@ -503,8 +549,10 @@ class MFModel(PackageContainer):
                 set_package_name and package.package_name in \
                 self.package_name_dict:
             # package of this type with this name already exists, replace it
-            print('WARNING: Package with name {} already exists. '
-                  'Replacing existing package.'.format(package.package_name))
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Package with name {} already exists. '
+                      'Replacing existing package.'.format(package.package_name))
             self.remove_package(self.package_name_dict[package.package_name])
 
         # make sure path is unique
@@ -550,14 +598,16 @@ class MFModel(PackageContainer):
                 # Model Assumption - assuming all name files have a package
                 # rec array
                 self.name_file.packages.\
-                  update_record(['{}6'.format(pkg_type), package.filename,
-                  package.package_name], 0)
+                    update_record(['{}6'.format(pkg_type), package.filename,
+                                   package.package_name], 0)
         if package_struct is not None:
             return (path, package_struct)
         else:
-            print('WARNING: Unable to register unsupported file type {} for '
-                  'model {}.'.format(package.package_type, self.name))
-        return (None, None)
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Unable to register unsupported file type {} '
+                      'for model {}.'.format(package.package_type, self.name))
+        return None, None
 
     def load_package(self, ftype, fname, pname, strict, ref_path,
                      dict_package_name=None, parent_package=None):

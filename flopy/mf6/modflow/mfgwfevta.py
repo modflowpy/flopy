@@ -69,7 +69,8 @@ class ModflowGwfevta(mfpackage.MFPackage):
         * ievt (integer) IEVT is the layer number that defines the layer in
           each vertical column where evapotranspiration is applied. If IEVT is
           omitted, evapotranspiration by default is applied to cells in layer
-          1.
+          1. If IEVT is specified, it must be specified as the first variable
+          in the PERIOD block or MODFLOW will terminate with an error.
     surface : [double]
         * surface (double) is the elevation of the ET surface (:math:`L`).
     rate : [double]

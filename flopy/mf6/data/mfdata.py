@@ -7,12 +7,12 @@ from collections import OrderedDict
 from enum import Enum
 import struct
 import numpy as np
-from ..mfbase import MFDataException, \
-                     MFInvalidTransientBlockHeaderException
+from ..mfbase import MFDataException, VerbosityLevel, \
+                     MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
                               ConstIter, ArrayIndexIter, MultiList
-from ..coordinates.modeldimensions import DataDimensions
+from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 
 
 class MFComment(object):
@@ -66,8 +66,10 @@ class MFComment(object):
 
     """
     def __init__(self, comment, path, sim_data, line_number=0):
-        assert(isinstance(comment, str) or isinstance(comment, list) or comment
-               is None)
+        if not (isinstance(comment, str) or isinstance(comment, list) or
+                        comment is None):
+            raise FlopyException('Comment "{}" not valid.  Comment must be '
+                                 'of type str of list.'.format(comment))
         self.text = comment
         self.path = path
         self.line_number = line_number
@@ -287,13 +289,13 @@ class LayerStorage(object):
 
     def __repr__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
-            return 'constant {}'.format(self._get_data_const_val())
+            return 'constant {}'.format(self.get_data_const_val())
         else:
             return repr(self.get_data())
 
     def __str__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
-            return '{}'.format(self._get_data_const_val())
+            return '{}'.format(self.get_data_const_val())
         else:
             return str(self.get_data())
 
@@ -325,6 +327,8 @@ class DataStorage(object):
         reference to the simulation data class
     data_dimensions : data dimensions class
         a data dimensions class for the data being stored
+    get_file_entry : method reference
+        method that returns the file entry for the stored data
     data_storage_type : enum
         how the data will be stored (internally, as a constant, as an external
         file)
@@ -434,13 +438,14 @@ class DataStorage(object):
 
 
     """
-    def __init__(self, sim_data, data_dimensions,
+    def __init__(self, sim_data, data_dimensions, get_file_entry,
                  data_storage_type=DataStorageType.internal_array,
                  data_structure_type=DataStructureType.ndarray,
                  layer_shape=(1,),
                  layered=False):
         self.data_dimensions = data_dimensions
         self._simulation_data = sim_data
+        self._get_file_entry = get_file_entry
         self._data_type_overrides = {}
         self._data_storage_type = data_storage_type
         self.layer_storage = MultiList(shape=layer_shape,
@@ -523,8 +528,22 @@ class DataStorage(object):
             elif previous_storage.data_storage_type == \
                     DataStorageType.internal_array:
                 data_ml = MultiList(data)
-                assert(data_ml.get_total_size() ==
-                       self.layer_storage.get_total_size())
+                if not (data_ml.get_total_size() ==
+                       self.layer_storage.get_total_size()):
+                    message = 'Size of data ({}) does not match expected ' \
+                              'value of {}' \
+                              '.'.format(data_ml.get_total_size(),
+                                         self.layer_storage.get_total_size())
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'making data layered',
+                        self.data_dimensions.structure.name,
+                        inspect.stack()[0][3],
+                        type_, value_, traceback_, message,
+                        self._simulation_data.debug)
                 for data_layer, storage in zip(data,
                                                self.layer_storage.elements()):
                     storage.internal_data = data_layer
@@ -540,9 +559,14 @@ class DataStorage(object):
                 if storage.internal_data is not None:
                     header = self._get_layer_header_str(index)
                     if formal:
-                        data_str = '{}Layer_{}{{{}}}' \
-                                   '\n({})\n'.format(data_str, index + 1,
-                                                     header, repr(storage))
+                        if self.layered:
+                            data_str = '{}Layer_{}{{{}}}' \
+                                       '\n({})\n'.format(data_str, index + 1,
+                                                         header, repr(storage))
+                        else:
+                            data_str = '{}{{{}}}\n({})\n'.format(data_str,
+                                                                 header,
+                                                                 repr(storage))
                     else:
                         data_str = '{}{{{}}}\n({})\n'.format(data_str, header,
                                                              str(storage))
@@ -552,7 +576,6 @@ class DataStorage(object):
                     data_str = '{}{{{}}}' \
                                '\n'.format(data_str,
                                            self._get_layer_header_str(index))
-
         return data_str
 
     def _get_layer_header_str(self, layer):
@@ -578,13 +601,12 @@ class DataStorage(object):
         else:
             return ''
 
-    def add_layer(self):
-        #storage_zero = self.layer_storage.first_item()
-        self.layer_storage.increment_dimension(2, self._create_layer)
-        #self.layer_storage.append(LayerStorage(self, len(self.layer_storage),
-        #
-        # storage_zero.data_storage_type))
-        #self.layer_shape += 1
+    def init_layers(self, dimensions):
+        self.layer_storage= MultiList(shape=dimensions,
+                                      callback=self._create_layer)
+
+    def add_layer(self, dimension=2):
+        self.layer_storage.increment_dimension(dimension, self._create_layer)
 
     def override_data_type(self, index, data_type):
         self._data_type_overrides[index] = data_type
@@ -597,15 +619,63 @@ class DataStorage(object):
 
     def get_const_val(self, layer=None):
         if layer is None:
-            assert(self.layer_storage.get_total_size() >= 1)
+            if not self.layer_storage.get_total_size() >= 1:
+                message = 'Can not get constant value. No data is available.'
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'getting constant value',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             first_item = self.layer_storage.first_item()
-            assert(first_item.data_storage_type ==
-                   DataStorageType.internal_constant)
+            if not first_item.data_storage_type == \
+                   DataStorageType.internal_constant:
+                message = 'Can not get constant value. Storage type must be ' \
+                          'internal_constant.'
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'getting constant value',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
+
             return first_item.get_data_const_val()
         else:
-            assert(self.layer_storage.in_shape(layer))
-            assert(self.layer_storage[layer].data_storage_type ==
-                   DataStorageType.internal_constant)
+            if not self.layer_storage.in_shape(layer):
+                message = 'Can not get constant value. Layer "{}" is not a ' \
+                          'valid layer.'.format(layer)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'getting constant value',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
+            if not self.layer_storage[layer].data_storage_type == \
+                   DataStorageType.internal_constant:
+                message = 'Can not get constant value. Storage type must be ' \
+                          'internal_constant.'.format(layer)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'getting constant value',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             return self.layer_storage[layer].get_data_const_val()
 
     def has_data(self, layer=None):
@@ -635,7 +705,18 @@ class DataStorage(object):
                self.layer_storage[layer_check].data_const_value is None and \
                self.layer_storage[layer_check].internal_data is None:
                 return None
-            assert(layer is None or self.layer_storage.in_shape(layer))
+            if not (layer is None or self.layer_storage.in_shape(layer)):
+                message = 'Layer "{}" is an invalid layer.'.format(layer)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.data_dimensions.structure.get_model(),
+                    self.data_dimensions.structure.get_package(),
+                    self.data_dimensions.structure.path,
+                    'accessing data',
+                    self.data_dimensions.structure.name,
+                    inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
             if layer is None:
                 if self.data_structure_type == DataStructureType.ndarray or \
                   self.data_structure_type == DataStructureType.scalar:
@@ -721,7 +802,20 @@ class DataStorage(object):
 
     def append_data(self, data):
         # currently only support appending to recarrays
-        assert(self.data_structure_type == DataStructureType.recarray)
+        if not (self.data_structure_type == DataStructureType.recarray):
+            message = 'Can not append to data structure "{}". Can only ' \
+                      'append to a recarray datastructure' \
+                      '.'.format(self.data_structure_type)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'appending data',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
         internal_data = self.layer_storage.first_item().internal_data
         if internal_data is None:
             if len(data[0]) != len(self._recarray_type_list):
@@ -816,8 +910,9 @@ class DataStorage(object):
                             not isinstance(layer_data, dict) and \
                             not isinstance(layer_data, np.ndarray):
                         layer_data = [layer_data]
+                    layer_index = self.layer_storage.nth_index(layer_num)
                     success = success and self._set_array_layer(layer_data,
-                                                                [layer_num],
+                                                                layer_index,
                                                                 multiplier,
                                                                 key)
             if not success:
@@ -908,7 +1003,7 @@ class DataStorage(object):
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
         if not (layer_storage.data_storage_type ==
                 DataStorageType.internal_constant and
-                ArrayUtil.has_one_item(data)) and \
+                    ArrayUtil.has_one_item(data)) and \
                 self._verify_data(MultiListIter(data), layer):
             # store data as is
             self.store_internal(data, layer, False, multiplier, key=key)
@@ -924,7 +1019,19 @@ class DataStorage(object):
         return layer_index
 
     def get_external(self, layer=None):
-        assert(layer is None or self.layer_storage.in_shape(layer))
+        if not (layer is None or self.layer_storage.in_shape(layer)):
+            message = 'Can not get external data for layer "{}"' \
+                      '.'.format(layer)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'getting external data',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
 
     def store_internal(self, data, layer=None, const=False, multiplier=[1.0],
                        key=None, autofill=False,
@@ -1046,17 +1153,39 @@ class DataStorage(object):
                        print_format=None, data=None, do_not_verify=False,
                        binary=False):
         layer, multiplier = self._store_prep(layer, multiplier)
-        self.layer_storage[layer].fname = file_path
-        self.layer_storage[layer].iprn = print_format
-        self.layer_storage[layer].binary = binary
-        self.layer_storage[layer].data_storage_type = \
-                DataStorageType.external_file
-        if self.data_structure_type == DataStructureType.recarray:
-            self.layer_storage.first_item().internal_data = None
-        else:
-            self.layer_storage[layer].factor = multiplier
-            self.layer_storage[layer].internal_data = None
-            if data is not None:
+
+        if data is not None:
+            if self.data_structure_type == DataStructureType.recarray:
+                # store data internally first so that a file entry can be generated
+                self.store_internal(data, layer, False, [multiplier], None,
+                                    False, print_format)
+                ext_file_entry = self._get_file_entry()
+                # create external file and write file entry to the file
+                data_dim = self.data_dimensions
+                model_name = data_dim.package_dim.model_dim[0].model_name
+                fp = self._simulation_data.mfpath.resolve_path(file_path,
+                                                               model_name)
+                try:
+                    fd = open(fp, 'w')
+                except:
+                    message = 'Unable to open file {}.  Make sure the file ' \
+                              'is not locked and the folder exists' \
+                              '.'.format(fp)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'opening external file for writing',
+                        data_dim.structure.name, inspect.stack()[0][3], type_,
+                        value_, traceback_, message,
+                        self._simulation_data.debug)
+                fd.write(ext_file_entry)
+                fd.close()
+                # set as external data
+                self.layer_storage.first_item().internal_data = None
+            else:
+                # store data externally in file
                 data_size = self._get_data_size(layer)
                 current_size = 0
                 data_dim = self.data_dimensions
@@ -1092,7 +1221,7 @@ class DataStorage(object):
                               ' {}.  Expected data size is {}, actual data ' \
                               'size is' \
                               '{}.'.format(data_dim.structure.path, fd.name,
-                                              data_size, current_size)
+                                           data_size, current_size)
                     type_, value_, traceback_ = sys.exc_info()
                     fd.close()
                     raise MFDataException(
@@ -1103,20 +1232,73 @@ class DataStorage(object):
                         inspect.stack()[0][3], type_, value_, traceback_,
                         message, self._simulation_data.debug)
                 fd.close()
-            elif self._simulation_data.verify_external_data and \
-                    do_not_verify is None:
-                self.external_to_internal(layer)
+                self.layer_storage[layer].factor = multiplier
+                self.layer_storage[layer].internal_data = None
+        else:
+            if self.data_structure_type == DataStructureType.recarray:
+                self.layer_storage.first_item().internal_data = None
+            else:
+                self.layer_storage[layer].factor = multiplier
+                self.layer_storage[layer].internal_data = None
+
+        # point to the external file and set flags
+        self.layer_storage[layer].fname = file_path
+        self.layer_storage[layer].iprn = print_format
+        self.layer_storage[layer].binary = binary
+        self.layer_storage[layer].data_storage_type = \
+                DataStorageType.external_file
 
     def external_to_external(self, new_external_file, multiplier=None,
                              layer=None):
         # currently only support files containing ndarrays
-        assert(self.data_structure_type == DataStructureType.ndarray)
-        assert((layer is None and self.layer_storage.get_total_size() == 1) or
-               (layer is not None and self.layer_storage.in_shape(layer)))
+        if not (self.data_structure_type == DataStructureType.ndarray):
+            message = 'Can not copy external file of type "{}". Only ' \
+                      'files containing ndarrays currently supported' \
+                      '.'.format(self.data_structure_type)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'copy external file',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+        if not ((layer is None and self.layer_storage.get_total_size() == 1) or
+               (layer is not None and self.layer_storage.in_shape(layer))):
+            if layer is None:
+                message = 'When no layer is supplied the data must contain ' \
+                          'only one layer. Data contains {} layers' \
+                          '.' .format(self.layer_storage.get_total_size())
+            else:
+                message = 'layer "{}" is not a valid layer'.format(layer)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'copy external file',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
         # get data storage
         if layer is None:
             layer = 1
-        assert(self.layer_storage[layer].fname is not None)
+        if self.layer_storage[layer].fname is None:
+            message = 'No file name exists for layer {}.'.format(layer)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'copy external file',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+
         # copy file to new location
         copyfile(self.layer_storage[layer].fname, new_external_file)
 
@@ -1206,11 +1388,13 @@ class DataStorage(object):
             for data in arr_line:
                 if data != '':
                     if current_size == data_size:
-                        path = self.data_dimensions.structure.path
-                        print('WARNING: More data found than expected in file'
-                              ' {} for data '
-                              '"{}".'.format(fd.name,
-                                             path))
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.normal.value:
+                            path = self.data_dimensions.structure.path
+                            print('WARNING: More data found than expected in '
+                                  'file {} for data '
+                                  '"{}".'.format(fd.name,
+                                                 path))
                         break
                     data_out.append(self.convert_data(data, self._data_type,
                                                       data_item))
@@ -1567,7 +1751,7 @@ class DataStorage(object):
 
     def _resolve_layer(self, layer):
         if layer is None:
-            return 0
+            return self.layer_storage.first_index()
         else:
             return layer
 
@@ -1597,7 +1781,8 @@ class DataStorage(object):
         else:
             expected_data_size = 1
             for dimension in data_dimensions:
-                expected_data_size = expected_data_size * dimension
+                if dimension > 0:
+                    expected_data_size = expected_data_size * dimension
             data_type = self.data_dimensions.structure.\
                 get_datum_type(return_enum_type=True)
             # check to see if data can fit dimensions
@@ -1626,10 +1811,14 @@ class DataStorage(object):
             return DatumUtil.is_float(data_item)
         elif data_type == DatumType.keystring:
             # TODO: support keystring type
-            print('Keystring type currently not supported.')
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('Keystring type currently not supported.')
             return True
         else:
-            print('{} type checking currently not supported'.format(data_type))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('{} type checking currently not supported'.format(data_type))
             return True
 
     def _fill_dimensions(self, data_iter, dimensions):
@@ -1685,7 +1874,20 @@ class DataStorage(object):
         # Resolves the size of a given data element based on the names in the
         # existing rec_array. Assumes repeating data element names follow the
         #  format <data_element_name>_X
-        assert(self.data_structure_type == DataStructureType.recarray)
+        if self.data_structure_type != DataStructureType.recarray:
+            message = 'Data structure type is {}. Data structure type must ' \
+                      'be recarray.'.format(self.data_structure_type)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'resolving data size',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+
         if len(self.layer_storage.first_item().internal_data[0]) <= index:
             return 0
         label = self.layer_storage.first_item().\
@@ -1849,18 +2051,32 @@ class DataStorage(object):
     def get_data_dimensions(self, layer):
         data_dimensions, shape_rule = self.data_dimensions.get_data_shape()
         if layer is not None and self.layer_storage.get_total_size() > 1:
-            # this currently does not support jagged arrays
-            data_dimensions = data_dimensions[1:]
+            # remove all "layer" dimensions from the list
+            layer_dims = self.data_dimensions.structure.\
+                data_item_structures[0].layer_dims
+            data_dimensions = data_dimensions[len(layer_dims):]
         return data_dimensions
 
     def _store_prep(self, layer, multiplier):
-        assert(layer is None or self.layer_storage.in_shape(layer))
+        if not (layer is None or self.layer_storage.in_shape(layer)):
+            message = 'Layer {} is not a valid layer.'.format(layer)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'storing data',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
         if layer is None:
             # layer is none means the data provided is for all layers or this
             # is not layered data
             layer = (0,)
             self.layer_storage.list_shape = (1,)
-            self.layer_storage.first_item().internal_data = [None]
+            self.layer_storage.multi_dim_list = [
+                self.layer_storage.first_item()]
         mult_ml = MultiList(multiplier)
         if not mult_ml.in_shape(layer):
             if multiplier[0] is None:
@@ -2024,7 +2240,7 @@ class MFTransient(object):
 
     def add_transient_key(self, transient_key):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
 
     def update_transient_key(self, old_transient_key, new_transient_key):
         if old_transient_key in self._data_storage:
@@ -2041,21 +2257,21 @@ class MFTransient(object):
 
     def get_data_prep(self, transient_key=0):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
 
     def _set_data_prep(self, data, transient_key=0):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
 
     def _get_file_entry_prep(self, transient_key=0):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
         self._current_key = transient_key
 
     def _load_prep(self, block_header):
@@ -2072,14 +2288,14 @@ class MFTransient(object):
 
     def _append_list_as_record_prep(self, record, transient_key=0):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
         self._current_key = transient_key
         if transient_key not in self._data_storage:
             self.add_transient_key(transient_key)
 
     def _update_record_prep(self, transient_key=0):
         if isinstance(transient_key, int):
-            assert(self._verify_sp(transient_key))
+            self._verify_sp(transient_key)
         self._current_key = transient_key
 
     def get_active_key_list(self):
@@ -2088,9 +2304,15 @@ class MFTransient(object):
     def _verify_sp(self, sp_num):
         if self._path[0].lower() == 'nam':
             return True
-        assert ('tdis', 'dimensions', 'nper') in self._simulation_data.mfdata
+        if not ('tdis', 'dimensions', 'nper') in self._simulation_data.mfdata:
+            raise FlopyException('Could not find number of stress periods ('
+                                 'nper).')
         nper = self._simulation_data.mfdata[('tdis', 'dimensions', 'nper')]
-        return (sp_num <= nper.get_data())
+        if not (sp_num <= nper.get_data()):
+            raise FlopyException('Stress period value sp_num ({}) is greater '
+                                 'than the number of stress periods defined '
+                                 'in nper.'.format(sp_num))
+        return True
 
 
 class MFData(object):
@@ -2123,6 +2345,8 @@ class MFData(object):
     -------
     new_simulation(sim_data)
         points data object to a new simulation
+    layer_shape() : tuple
+        returns the shape of the layered dimensions
 
     See Also
     --------
@@ -2179,14 +2403,67 @@ class MFData(object):
         self._simulation_data = sim_data
         self._data_storage = None
 
-    def aux_var_names(self):
+    def find_dimension_size(self, dimension_name):
         parent_path = self._path[:-1]
         result = self._simulation_data.mfdata.find_in_path(parent_path,
-                                                           'auxnames')
+                                                           dimension_name)
         if result[0] is not None:
-            return result.get_data()
+            return [result[0].get_data()]
         else:
             return []
+
+    def aux_var_names(self):
+        return self.find_dimension_size('auxnames')
+
+    def layer_shape(self):
+        layers = []
+        layer_dims = self.structure.data_item_structures[0] \
+            .layer_dims
+        if len(layer_dims) == 1:
+            layers.append(self._data_dimensions.get_model_grid(). \
+                num_layers())
+        else:
+            for layer in layer_dims:
+                if layer == 'nlay':
+                    # get the layer size from the model grid
+                    try:
+                        model_grid = self._data_dimensions.get_model_grid()
+                    except Exception as ex:
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(self.structure.get_model(),
+                                              self.structure.get_package(),
+                                              self.path,
+                                              'getting model grid',
+                                              self.structure.name,
+                                              inspect.stack()[0][3],
+                                              type_, value_, traceback_, None,
+                                              self.sim_data.debug, ex)
+
+                    if model_grid.grid_type() == DiscretizationType.DISU:
+                        layers.append(1)
+                    else:
+                        num_layers = model_grid.num_layers()
+                        if num_layers is not None:
+                            layers.append(num_layers)
+                        else:
+                            layers.append(1)
+                else:
+                    # search data dictionary for layer size
+                    layer_size = self.find_dimension_size(layer)
+                    if len(layer_size) == 1:
+                        layers.append(layer_size[0])
+                    else:
+                        message = 'Unable to find the size of expected layer ' \
+                                  'dimension {} '.format(layer)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.structure.get_model(),
+                            self.structure.get_package(),
+                            self.structure.path, 'resolving layer dimensions',
+                            self.structure.name, inspect.stack()[0][3],
+                            type_, value_, traceback_, message,
+                            self._simulation_data.debug)
+        return tuple(layers)
 
     def get_description(self, description=None, data_set=None):
         if data_set is None:

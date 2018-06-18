@@ -27,7 +27,8 @@ def test_mflistfile():
 
     times = mflist.get_times()
     bud = mflist.get_data(totim=times[0])
-    assert isinstance(bud, np.ndarray)
+    # TODO: there are two return types, but only one is documented
+    assert isinstance(bud, np.ndarray) or bud is None
 
     # plt.bar(bud['index'], bud['value'])
     # plt.xticks(bud['index'], bud['name'], rotation=45, size=6)

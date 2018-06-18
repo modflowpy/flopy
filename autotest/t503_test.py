@@ -2,7 +2,6 @@ import os
 import shutil
 import flopy
 import pymake
-import platform
 
 
 def download_mf6_distribution():
@@ -52,8 +51,6 @@ for f in folders:
     shutil.copytree(src, dst)
 
 exe_name = 'mf6'
-if platform.system() == 'Windows':
-    exe_name += '.exe'
 v = flopy.which(exe_name)
 run = True
 if v is None:
