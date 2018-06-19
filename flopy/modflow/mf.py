@@ -690,7 +690,7 @@ class Modflow(BaseModel):
                             if ml.verbose:
                                 print('   {:4s} package load...success'
                                       .format(item.filetype))
-                        except ExceptionOption as e:
+                        except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
                                 print('   {:4s} package load...failed\n   {!s}'
