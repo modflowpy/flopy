@@ -522,15 +522,6 @@ class Modflow(BaseModel):
         >>> ml = flopy.modflow.Modflow.load('model.nam')
 
         """
-        if forgive:
-            # Catch any Exception, show a message and carry on
-            ExceptionOption = Exception
-        else:
-            # This exception is not thown anywhere else, so any other exception
-            # can be thrown by code within the "try" block
-            def DoNotCatchMe(Exception):
-                pass
-            ExceptionOption = DoNotCatchMe
 
         # Determine model name from 'f', without any extension or path
         modelname = os.path.splitext(os.path.basename(f))[0]
@@ -683,27 +674,43 @@ class Modflow(BaseModel):
         for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only:
-                    try:
+                    if forgive:
+                        try:
+                            package_load_args = \
+                                list(inspect.getargspec(item.package.load))[0]
+                            if "check" in package_load_args:
+                                pck = item.package.load(
+                                        item.filename, ml,
+                                        ext_unit_dict=ext_unit_dict, check=False)
+                            else:
+                                pck = item.package.load(
+                                        item.filename, ml,
+                                        ext_unit_dict=ext_unit_dict)
+                            files_successfully_loaded.append(item.filename)
+                            if ml.verbose:
+                                print('   {:4s} package load...success'
+                                      .format(item.filetype))
+                        except ExceptionOption as e:
+                            ml.load_fail = True
+                            if ml.verbose:
+                                print('   {:4s} package load...failed\n   {!s}'
+                                      .format(item.filetype, e))
+                            files_not_loaded.append(item.filename)
+                    else:
                         package_load_args = \
                             list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
                             pck = item.package.load(
-                                    item.filename, ml,
-                                    ext_unit_dict=ext_unit_dict, check=False)
+                                item.filename, ml,
+                                ext_unit_dict=ext_unit_dict, check=False)
                         else:
                             pck = item.package.load(
-                                    item.filename, ml,
-                                    ext_unit_dict=ext_unit_dict)
+                                item.filename, ml,
+                                ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
                             print('   {:4s} package load...success'
                                   .format(item.filetype))
-                    except ExceptionOption as e:
-                        ml.load_fail = True
-                        if ml.verbose:
-                            print('   {:4s} package load...failed\n   {!s}'
-                                  .format(item.filetype, e))
-                        files_not_loaded.append(item.filename)
                 else:
                     if ml.verbose:
                         print('   {:4s} package load...skipped'
