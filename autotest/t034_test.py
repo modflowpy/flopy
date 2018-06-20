@@ -179,6 +179,15 @@ def test_load_and_write():
                 for i, a in enumerate(a1):
                     assert a == l2[i]
 
+    # load uzf test problem for nwt model with "options" and 'open/close' array types
+    tpth = os.path.join('..', 'examples', 'data', 'uzf_examples', 'load_uzf_for_nwt')
+    [shutil.copy(os.path.join(tpth, f), os.path.join(cpth, f)) for f in os.listdir(tpth)]
+    m3 = flopy.modflow.Modflow('UZFtest3', version='mfnwt', verbose=True)
+    m3.model_ws = cpth
+    dis = flopy.modflow.ModflowDis.load(os.path.join(tpth, 'UZFtest3.dis'), m3)
+    uzf = flopy.modflow.ModflowUzf1.load(os.path.join(tpth, 'UZFtest3.uzf'), m3)
+    assert np.sum(uzf.iuzfbnd.array) == 28800
+    assert np.isclose(np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4)
 
 if __name__ == '__main__':
     test_create()
