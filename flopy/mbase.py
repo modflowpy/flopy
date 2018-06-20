@@ -58,50 +58,51 @@ class FileData(object):
 
 
 class ModelInterface(object):
-    @abc.abstractmethod
+
     @property
+    @abc.abstractmethod
     def modelgrid(self):
         raise NotImplementedError(
             'must define modelgrid in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def packagelist(self):
         raise NotImplementedError(
             'must define packagelist in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def namefile(self):
         raise NotImplementedError(
             'must define namefile in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def model_ws(self):
         raise NotImplementedError(
             'must define model_ws in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def exename(self):
         raise NotImplementedError(
             'must define exename in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def version(self):
         raise NotImplementedError(
             'must define version in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def solver_tols(self):
         raise NotImplementedError(
             'must define version in child '

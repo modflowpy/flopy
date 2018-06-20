@@ -21,15 +21,15 @@ from .utils import Util2d, Util3d, Transient2d, MfList, check
 
 
 class PackageInterface(object):
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def name(self):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @name.setter
+    @abc.abstractmethod
     def name(self, name):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
