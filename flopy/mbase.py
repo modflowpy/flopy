@@ -1307,71 +1307,9 @@ class BaseModel(ModelInterface):
         >>> ml.plot()
 
         """
-        # valid keyword arguments
-        if 'kper' in kwargs:
-            kper = int(kwargs.pop('kper'))
-        else:
-            kper = 0
+        from flopy.plot import PlotUtilities
 
-        if 'mflay' in kwargs:
-            mflay = kwargs.pop('mflay')
-        else:
-            mflay = None
-
-        if 'filename_base' in kwargs:
-            fileb = kwargs.pop('filename_base')
-        else:
-            fileb = None
-
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
-        else:
-            fext = 'png'
-
-        if 'key' in kwargs:
-            key = kwargs.pop('key')
-        else:
-            key = None
-
-        if self.verbose:
-            print('\nPlotting Packages')
-
-        axes = []
-        ifig = 0
-        if SelPackList is None:
-            for p in self.packagelist:
-                caxs = p.plot(initial_fig=ifig,
-                              filename_base=fileb, file_extension=fext,
-                              kper=kper, mflay=mflay, key=key)
-                # unroll nested lists of axes into a single list of axes
-                if isinstance(caxs, list):
-                    for c in caxs:
-                        axes.append(c)
-                else:
-                    axes.append(caxs)
-                # update next active figure number
-                ifig = len(axes) + 1
-        else:
-            for pon in SelPackList:
-                for i, p in enumerate(self.packagelist):
-                    if pon in p.name:
-                        if self.verbose:
-                            print('   Plotting Package: ', p.name[0])
-                        caxs = p.plot(initial_fig=ifig,
-                                      filename_base=fileb, file_extension=fext,
-                                      kper=kper, mflay=mflay, key=key)
-                        # unroll nested lists of axes into a single list of axes
-                        if isinstance(caxs, list):
-                            for c in caxs:
-                                axes.append(c)
-                        else:
-                            axes.append(caxs)
-                        # update next active figure number
-                        ifig = len(axes) + 1
-                        break
-        if self.verbose:
-            print(' ')
+        axes = PlotUtilities._plot_model_helper(self, SelPackList=SelPackList, **kwargs)
         return axes
 
     def to_shapefile(self, filename, package_names=None, **kwargs):

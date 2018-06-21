@@ -280,6 +280,103 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'STR': 'purple', 'SFR': 'blue'}
 
 
+class PlotUtilities(object):
+    """
+    Class which groups a collection of plotting utilities
+    which Flopy and Flopy6 can use to generate map based plots
+    """
+
+    @staticmethod
+    def _plot_model_helper(model, SelPackList, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        model input data from a model instance
+
+        Args:
+            model: Flopy model instance
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            **kwargs : dict
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+        Returns:
+            axes : list
+                Empty list is returned if filename_base is not None. Otherwise
+                a list of matplotlib.pyplot.axis are returned.
+        """
+        # valid keyword arguments
+        defaults = {"kper": 0, "mflay": None, "filename_base": None,
+                    "file_extension": "png", "key": None}
+
+        for key in defaults:
+            if key in kwargs:
+                if key == 'file_extension':
+                    defaults[key] = kwargs[key].replace(".", "")
+                else:
+                    defaults[key] = kwargs[key]
+
+                kwargs.pop(key)
+
+        axes = []
+        ifig = 0
+        if SelPackList is None:
+            for p in model.packagelist:
+                caxs = p.plot(initial_fig=ifig,
+                              filename_base=defaults['filename_base'],
+                              file_extension=defaults['file_extension'],
+                              kper=defaults['kper'],
+                              mflay=defaults['mflay'],
+                              key=defaults['key'])
+                # unroll nested lists of axes into a single list of axes
+                if isinstance(caxs, list):
+                    for c in caxs:
+                        axes.append(c)
+                else:
+                    axes.append(caxs)
+                # update next active figure number
+                ifig = len(axes) + 1
+
+        else:
+            for pon in SelPackList:
+                for p in model.packagelist:
+                    if pon in p.name:
+                        if model.verbose:
+                            print('   Plotting Package: ', p.name[0])
+                        caxs = p.plot(initial_fig=ifig,
+                                      filename_base=defaults['filename_base'],
+                                      file_extension=defaults['file_extension'],
+                                      kper=defaults['kper'],
+                                      mflay=defaults['mflay'],
+                                      key=defaults['key'])
+                        # unroll nested lists of axes into a single list of axes
+                        if isinstance(caxs, list):
+                            for c in caxs:
+                                axes.append(c)
+                        else:
+                            axes.append(caxs)
+                        # update next active figure number
+                        ifig = len(axes) + 1
+                        break
+        if model.verbose:
+            print(' ')
+        return axes
+
+
 def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
                        names=None, filenames=None, fignum=None,
                        mflay=None, **kwargs):
