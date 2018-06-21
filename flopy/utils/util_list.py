@@ -869,59 +869,12 @@ class MfList(object):
 
         """
 
-        import flopy.plot.plotutil as pu
+        from flopy.plot import PlotUtilities
+        axes = PlotUtilities._plot_mflist_helper(self, key=key,names=names,
+                                                 kper=kper, filename_base=filename_base,
+                                                 file_extension=file_extension, mflay=mflay,
+                                                 **kwargs)
 
-        if file_extension is not None:
-            fext = file_extension
-        else:
-            fext = 'png'
-
-        filenames = None
-        if filename_base is not None:
-            if mflay is not None:
-                i0 = int(mflay)
-                if i0 + 1 >= self.model.nlay:
-                    i0 = self.model.nlay - 1
-                i1 = i0 + 1
-            else:
-                i0 = 0
-                i1 = self.model.nlay
-            # build filenames
-            pn = self.package.name[0].upper()
-            filenames = [
-                '{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, pn,
-                                                         kper + 1, k + 1, fext)
-                for k in range(i0, i1)]
-        if names is None:
-            if key is None:
-                names = ['{} location stress period: {} layer: {}'.format(
-                    self.package.name[0], kper + 1, k + 1)
-                         for k in range(self.model.nlay)]
-            else:
-                names = ['{} {} stress period: {} layer: {}'.format(
-                    self.package.name[0], key, kper + 1, k + 1)
-                         for k in range(self.model.nlay)]
-
-        if key is None:
-            axes = pu._plot_bc_helper(self.package, kper,
-                                      names=names, filenames=filenames,
-                                      mflay=mflay, **kwargs)
-        else:
-            arr_dict = self.to_array(kper, mask=True)
-
-            try:
-                arr = arr_dict[key]
-            except:
-                p = 'Cannot find key to plot\n'
-                p += '  Provided key={}\n  Available keys='.format(key)
-                for name, arr in arr_dict.items():
-                    p += '{}, '.format(name)
-                p += '\n'
-                raise Exception(p)
-
-            axes = pu._plot_array_helper(arr, model=self.model,
-                                         names=names, filenames=filenames,
-                                         mflay=mflay, **kwargs)
         return axes
 
     def to_shapefile(self, filename, kper=None):
