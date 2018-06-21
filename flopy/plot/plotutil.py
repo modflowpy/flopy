@@ -281,6 +281,11 @@ bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'STR': 'purple', 'SFR': 'blue'}
 
 
+class PlotException(Exception):
+    def __init__(self, message):
+        super(PlotException, self).__init__(message)
+
+
 class PlotUtilities(object):
     """
     Class which groups a collection of plotting utilities
@@ -613,10 +618,11 @@ class PlotUtilities(object):
                 i1 = mflist.model.nlay
             # build filenames
             package_name = mflist.package.name[0].upper()
-            filenames = [
-                '{}_{}_StressPeriod{}_Layer{}.{}'.format(filename_base, package_name,
-                                                         kper + 1, k + 1, fext)
-                for k in range(i0, i1)]
+            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(
+                filename_base, package_name,
+                kper + 1, k + 1, fext)
+                         for k in range(i0, i1)]
+
         if names is None:
             if key is None:
                 names = ['{} location stress period: {} layer: {}'.format(
@@ -644,7 +650,7 @@ class PlotUtilities(object):
                 for name, arr in arr_dict.items():
                     err_msg += '{}, '.format(name)
                 err_msg += '\n'
-                raise Exception(err_msg)
+                raise PlotException(err_msg)
 
             axes = PlotUtilities._plot_array_helper(arr,
                                                     model=mflist.model,
@@ -655,28 +661,271 @@ class PlotUtilities(object):
         return axes
 
     @staticmethod
-    def _plot_util2d_helper():
+    def _plot_util2d_helper(util2d, title=None, filename_base=None,
+                            file_extension=None, fignum=None, **kwargs):
         """
+        Plot 2-D model input data
 
-        :return:
+        Parameters
+        ----------
+        util2d : flopy.util.util_array.Util2d object
+        title : str
+            Plot title. If a plot title is not provide one will be
+            created based on data name (self.name). (default is None)
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+
         """
-        pass
+        if title is None:
+            title = util2d.name
+
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        filename = None
+        if filename_base is not None:
+            filename = '{}_{}.{}'.format(filename_base,
+                                         util2d.name, fext)
+
+        axes = PlotUtilities._plot_array_helper(util2d.array,
+                                                util2d.model,
+                                                names=title,
+                                                filenames=filename,
+                                                fignum=fignum,
+                                                **kwargs)
+        return axes
 
     @staticmethod
-    def _plot_util3d_helper():
+    def _plot_util3d_helper(util3d, filename_base=None,
+                            file_extension=None, mflay=None,
+                            fignum=None, **kwargs):
         """
+        Plot 3-D model input data
 
-        :return:
+        Parameters
+        ----------
+        util3d : flopy.util.util_array.Util3d object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
         """
-        pass
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        names = ['{} layer {}'.format(util3d.name[k], k + 1) for k in
+                 range(util3d.shape[0])]
+
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0 + 1 >= util3d.shape[0]:
+                    i0 = util3d.shape[0] - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = util3d.shape[0]
+            # build filenames
+            filenames = ['{}_{}_Layer{}.{}'.format(
+                filename_base, util3d.name[k],
+                k + 1, fext)
+                         for k in range(i0, i1)]
+
+        axes = PlotUtilities._plot_array_helper(util3d.array,
+                                                util3d.model,
+                                                names=names,
+                                                filenames=filenames,
+                                                mflay=mflay,
+                                                fignum=fignum,
+                                                **kwargs)
+        return axes
 
     @staticmethod
-    def _plot_transient2d_helper():
+    def _plot_transient2d_helper(transient2d, filename_base=None,
+                                 file_extension=None, **kwargs):
         """
+        Plot transient 2-D model input data
 
-        :return:
+        Parameters
+        ----------
+        transient2d : flopy.utils.util_array.Transient2D object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
         """
-        pass
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        # todo: clean this up a bit! maybe add these options to the inputs for the method
+
+        if 'kper' in kwargs:
+            kk = kwargs['kper']
+            kwargs.pop('kper')
+            try:
+                kk = kk.lower()
+                if kk == 'all':
+                    k0 = 0
+                    k1 = transient2d.model.nper
+                else:
+                    k0 = 0
+                    k1 = 1
+            except:
+                k0 = int(kk)
+                k1 = k0 + 1
+
+        else:
+            k0 = 0
+            k1 = 1
+
+        if 'fignum' in kwargs:
+            fignum = kwargs.pop('fignum')
+        else:
+            fignum = list(range(k0, k1))
+
+        if 'mflay' in kwargs:
+            kwargs.pop('mflay')
+
+        axes = []
+        for idx, kper in enumerate(range(k0, k1)):
+            title = '{} stress period {:d}'.format(
+                transient2d.name_base.replace('_', '').upper(),
+                kper + 1)
+
+            if filename_base is not None:
+                filename = filename_base + '_{:05d}.{}'.format(kper + 1, fext)
+            else:
+                filename = None
+
+            axes.append(PlotUtilities._plot_array_helper(
+                                            transient2d[kper].array,
+                                            transient2d.model,
+                                            names=title,
+                                            filenames=filename,
+                                            fignum=fignum[idx],
+                                            **kwargs))
+        return axes
 
     @staticmethod
     def _plot_array_helper(plotarray, model=None, sr=None, axes=None,

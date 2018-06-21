@@ -685,34 +685,15 @@ class Util3d(object):
         >>> ml.lpf.hk.plot()
 
         """
-        import flopy.plot.plotutil as pu
+        from flopy.plot import PlotUtilities
 
-        if file_extension is not None:
-            fext = file_extension
-        else:
-            fext = 'png'
-
-        names = ['{} layer {}'.format(self.name[k], k + 1) for k in
-                 range(self.shape[0])]
-
-        filenames = None
-        if filename_base is not None:
-            if mflay is not None:
-                i0 = int(mflay)
-                if i0 + 1 >= self.shape[0]:
-                    i0 = self.shape[0] - 1
-                i1 = i0 + 1
-            else:
-                i0 = 0
-                i1 = self.shape[0]
-            # build filenames
-            filenames = ['{}_{}_Layer{}.{}'.format(filename_base, self.name[k],
-                                                   k + 1, fext) for k in
-                         range(i0, i1)]
-
-        return pu._plot_array_helper(self.array, self.model,
-                                     names=names, filenames=filenames,
-                                     mflay=mflay, fignum=fignum, **kwargs)
+        axes = PlotUtilities._plot_util3d_helper(self,
+                                                 filename_base=filename_base,
+                                                 file_extension=file_extension,
+                                                 mflay=mflay,
+                                                 fignum=fignum,
+                                                 **kwargs)
+        return axes
 
     def __getitem__(self, k):
         if (isinstance(k, int) or
@@ -1376,58 +1357,13 @@ class Transient2d(object):
         >>> ml.rch.rech.plot()
 
         """
-        import flopy.plot.plotutil as pu
+        from flopy.plot import PlotUtilities
 
-        if file_extension is not None:
-            fext = file_extension
-        else:
-            fext = 'png'
+        axes = PlotUtilities._plot_transient2d_helper(self,
+                                                      filename_base=filename_base,
+                                                      file_extension=file_extension,
+                                                      **kwargs)
 
-        if 'kper' in kwargs:
-            kk = kwargs['kper']
-            kwargs.pop('kper')
-            try:
-                kk = kk.lower()
-                if kk == 'all':
-                    k0 = 0
-                    k1 = self.model.nper
-                else:
-                    k0 = 0
-                    k1 = 1
-            except:
-                k0 = int(kk)
-                k1 = k0 + 1
-                # if kwargs['kper'] == 'all':
-                #     kwargs.pop('kper')
-                #     k0 = 0
-                #     k1 = self.model.nper
-                # else:
-                #     k0 = int(kwargs.pop('kper'))
-                #     k1 = k0 + 1
-        else:
-            k0 = 0
-            k1 = 1
-
-        if 'fignum' in kwargs:
-            fignum = kwargs.pop('fignum')
-        else:
-            fignum = list(range(k0, k1))
-
-        if 'mflay' in kwargs:
-            kwargs.pop('mflay')
-
-        axes = []
-        for idx, kper in enumerate(range(k0, k1)):
-            title = '{} stress period {:d}'. \
-                format(self.name_base.replace('_', '').upper(),
-                       kper + 1)
-            if filename_base is not None:
-                filename = filename_base + '_{:05d}.{}'.format(kper + 1, fext)
-            else:
-                filename = None
-            axes.append(pu._plot_array_helper(self[kper].array, self.model,
-                                              names=title, filenames=filename,
-                                              fignum=fignum[idx], **kwargs))
         return axes
 
     def __getitem__(self, kper):
@@ -1781,23 +1717,13 @@ class Util2d(object):
         >>> ml.dis.top.plot()
         
         """
-        import flopy.plot.plotutil as pu
+        from flopy.plot import PlotUtilities
 
-        if title is None:
-            title = self.name
-
-        if file_extension is not None:
-            fext = file_extension
-        else:
-            fext = 'png'
-
-        filename = None
-        if filename_base is not None:
-            filename = '{}_{}.{}'.format(filename_base, self.name, fext)
-
-        return pu._plot_array_helper(self.array, self.model,
-                                     names=title, filenames=filename,
-                                     fignum=fignum, **kwargs)
+        axes = PlotUtilities._plot_util2d_helper(self, title=title,
+                                                 filename_base=filename_base,
+                                                 file_extension=file_extension,
+                                                 fignum=fignum, **kwargs)
+        return axes
 
     def export(self, f, **kwargs):
         from flopy import export
