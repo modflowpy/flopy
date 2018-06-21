@@ -9,6 +9,7 @@ import os
 import sys
 import math
 import numpy as np
+from flopy.utils import MfList, Util2d, Util3d, Transient2d
 try:
     from matplotlib.colors import LinearSegmentedColormap
 
@@ -376,6 +377,194 @@ class PlotUtilities(object):
             print(' ')
         return axes
 
+    @staticmethod
+    def _plot_package_helper(package, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        package input data
+
+        Parameters
+        ----------
+        package: flopy.pakbase.Package instance supplied for plotting
+
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is
+                zero)
+            key : str
+                MfList dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        """
+        defaults = {"kper": 0, 'filename_base': None,
+                    "file_extension": "png", 'mflay': None,
+                    "key": None, "initial_fig": 0}
+
+        for key in defaults:
+            if key in kwargs:
+                if key == "file_extension":
+                    defaults[key] = kwargs[key].replace(".", "")
+                elif key == "initial_fig":
+                    defaults[key] = int(kwargs[key])
+                else:
+                    defaults[key] = kwargs[key]
+
+                kwargs.pop(key)
+
+        inc = package.parent.nlay
+        if defaults['mflay'] is not None:
+            inc = 1
+
+        axes = []
+        for item, value in package.__dict__.items():
+            caxs = []
+            if isinstance(value, MfList):
+                if package.parent.verbose:
+                    print('plotting {} package MfList instance: {}'.format(
+                          package.name[0], item))
+                if defaults['key'] is None:
+                    names = ['{} location stress period {} layer {}'.format(
+                             package.name[0], defaults['kper'] + 1, k + 1)
+                        for k in range(package.parent.nlay)]
+                    colorbar = False
+                else:
+                    names = ['{} {} data stress period {} layer {}'.format(
+                             package.name[0], defaults['key'],
+                             defaults['kper'] + 1, k + 1)
+                             for k in range(package.parent.nlay)]
+                    colorbar = True
+
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + inc))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(value.plot(defaults['key'],
+                                       names,
+                                       defaults['kper'],
+                                       filename_base=defaults['filename_base'],
+                                       file_extension=defaults['file_extension'],
+                                       mflay=defaults['mflay'],
+                                       fignum=fignum, colorbar=colorbar,
+                                       **kwargs))
+
+            elif isinstance(value, Util3d):
+                if package.parent.verbose:
+                    print('plotting {} package Util3d instance: {}'.format(
+                          package.name[0], item))
+                # fignum = list(range(ifig, ifig + inc))
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + value.shape[0]))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(
+                    value.plot(filename_base=defaults['filename_base'],
+                               file_extension=defaults['file_extension'],
+                               mflay=defaults['mflay'],
+                               fignum=fignum,
+                               colorbar=True))
+
+            elif isinstance(value, Util2d):
+                if len(value.shape) == 2:
+                    if package.parent.verbose:
+                        print('plotting {} package Util2d instance: {}'.format(
+                              package.name[0], item))
+                    fignum = list(range(defaults['initial_fig'],
+                                        defaults['initial_fig'] + 1))
+                    defaults['initial_fig'] = fignum[-1] + 1
+                    caxs.append(
+                        value.plot(filename_base=defaults['filename_base'],
+                                   file_extension=defaults['file_extension'],
+                                   fignum=fignum, colorbar=True))
+
+            elif isinstance(value, Transient2d):
+                if package.parent.verbose:
+                    print(
+                          'plotting {} package Transient2d instance: {}'.format(
+                           package.name[0], item))
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + inc))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(
+                    value.plot(filename_base=defaults['filename_base'],
+                               file_extension=defaults['file_extension'],
+                               kper=defaults['kper'],
+                               fignum=fignum, colorbar=True))
+
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, Util3d):
+                        if package.parent.verbose:
+                            print(
+                                  'plotting {} package Util3d instance: {}'.format(
+                                  package.name[0], item))
+                        fignum = list(range(defaults['initial_fig'],
+                                            defaults['initial_fig'] + inc))
+                        defaults['initial_fig'] = fignum[-1] + 1
+                        caxs.append(
+                            v.plot(filename_base=defaults['filename_base'],
+                                   file_extension=defaults['file_extension'],
+                                   mflay=defaults['mflay'],
+                                   fignum=fignum, colorbar=True))
+            else:
+                pass
+
+            # unroll nested lists os axes into a single list of axes
+            if isinstance(caxs, list):
+                for c in caxs:
+                    if isinstance(c, list):
+                        for cc in c:
+                            axes.append(cc)
+                    else:
+                        axes.append(c)
+            else:
+                axes.append(caxs)
+
+        return axes
+
+    @staticmethod
+    def _plot_mflist_helper():
+        """
+
+        :return:
+        """
+        pass
+
+    @staticmethod
+    def _plot_util2d_helper():
+        """
+
+        :return:
+        """
+        pass
+
+    @staticmethod
+    def _plot_util3d_helper():
+        """
+
+        :return:
+        """
+        pass
+
+    @staticmethod
+    def _plot_transient2d_helper():
+        """
+
+        :return:
+        """
+        pass
 
 def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
                        names=None, filenames=None, fignum=None,

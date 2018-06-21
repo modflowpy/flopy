@@ -18,6 +18,7 @@ from numpy.lib.recfunctions import stack_arrays
 
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
+from flopy.plot import PlotUtilities
 
 
 class PackageInterface(object):
@@ -482,130 +483,7 @@ class Package(PackageInterface):
         >>> ml.dis.plot()
 
         """
-
-        # valid keyword arguments
-        if 'kper' in kwargs:
-            kper = kwargs.pop('kper')
-        else:
-            kper = 0
-
-        if 'filename_base' in kwargs:
-            fileb = kwargs.pop('filename_base')
-        else:
-            fileb = None
-
-        if 'mflay' in kwargs:
-            mflay = kwargs.pop('mflay')
-        else:
-            mflay = None
-
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
-        else:
-            fext = 'png'
-
-        if 'key' in kwargs:
-            key = kwargs.pop('key')
-        else:
-            key = None
-
-        if 'initial_fig' in kwargs:
-            ifig = int(kwargs.pop('initial_fig'))
-        else:
-            ifig = 0
-
-        inc = self.parent.nlay
-        if mflay is not None:
-            inc = 1
-
-        axes = []
-        for item, value in self.__dict__.items():
-            caxs = []
-            if isinstance(value, MfList):
-                if self.parent.verbose:
-                    print('plotting {} package MfList instance: {}'.format(
-                        self.name[0], item))
-                if key is None:
-                    names = ['{} location stress period {} layer {}'.format(
-                        self.name[0], kper + 1, k + 1)
-                             for k in range(self.parent.nlay)]
-                    colorbar = False
-                else:
-                    names = ['{} {} data stress period {} layer {}'.format(
-                        self.name[0], key, kper + 1, k + 1)
-                             for k in range(self.parent.nlay)]
-                    colorbar = True
-
-                fignum = list(range(ifig, ifig + inc))
-                ifig = fignum[-1] + 1
-                caxs.append(value.plot(key, names, kper,
-                                       filename_base=fileb,
-                                       file_extension=fext, mflay=mflay,
-                                       fignum=fignum, colorbar=colorbar,
-                                       **kwargs))
-
-            elif isinstance(value, Util3d):
-                if self.parent.verbose:
-                    print('plotting {} package Util3d instance: {}'.format(
-                        self.name[0], item))
-                # fignum = list(range(ifig, ifig + inc))
-                fignum = list(range(ifig, ifig + value.shape[0]))
-                ifig = fignum[-1] + 1
-                caxs.append(
-                    value.plot(filename_base=fileb, file_extension=fext,
-                               mflay=mflay,
-                               fignum=fignum, colorbar=True))
-            elif isinstance(value, Util2d):
-                if len(value.shape) == 2:
-                    if self.parent.verbose:
-                        print('plotting {} package Util2d instance: {}'.format(
-                            self.name[0], item))
-                    fignum = list(range(ifig, ifig + 1))
-                    ifig = fignum[-1] + 1
-                    caxs.append(
-                        value.plot(filename_base=fileb,
-                                   file_extension=fext,
-                                   fignum=fignum, colorbar=True))
-            elif isinstance(value, Transient2d):
-                if self.parent.verbose:
-                    print(
-                        'plotting {} package Transient2d instance: {}'.format(
-                            self.name[0], item))
-                fignum = list(range(ifig, ifig + inc))
-                ifig = fignum[-1] + 1
-                caxs.append(
-                    value.plot(filename_base=fileb, file_extension=fext,
-                               kper=kper,
-                               fignum=fignum, colorbar=True))
-            elif isinstance(value, list):
-                for v in value:
-                    if isinstance(v, Util3d):
-                        if self.parent.verbose:
-                            print(
-                                'plotting {} package Util3d instance: {}'.format(
-                                    self.name[0], item))
-                        fignum = list(range(ifig, ifig + inc))
-                        ifig = fignum[-1] + 1
-                        caxs.append(
-                            v.plot(filename_base=fileb,
-                                   file_extension=fext,
-                                   mflay=mflay,
-                                   fignum=fignum, colorbar=True))
-            else:
-                pass
-
-            # unroll nested lists os axes into a single list of axes
-            if isinstance(caxs, list):
-                for c in caxs:
-                    if isinstance(c, list):
-                        for cc in c:
-                            axes.append(cc)
-                    else:
-                        axes.append(c)
-            else:
-                axes.append(caxs)
-
+        axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
 
     def to_shapefile(self, filename, **kwargs):
