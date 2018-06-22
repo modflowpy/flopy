@@ -221,17 +221,22 @@ class Modflow(BaseModel):
     @property
     def modelgrid(self):
         tr = reference.TemporalReference(self.dis.itmuni, self.start_datetime)
-        data_frame = {'perlen': self.dis.perlen, 'nstp': self.dis.nstp,
-                      'tsmult': self.dis.tsmult}
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
         sim_time = modelgrid.SimulationTime(data_frame,
-                                            self.model.dis.itmuni_dict[
-                                            self.model.dis.itmuni], tr)
-        return modelgrid.StructuredModelGrid(self.dis.delc,
-                                             self.dis.delr,
-                                             self.dis.top, self.dis.botm,
-                                             self.dis.idomain, self.sr,
-                                             sim_time, self.__name,
-                                             self.dis.steady)
+                                            self.dis.itmuni_dict[
+                                            self.dis.itmuni], tr)
+        if self.bas is not None:
+            ibound = self.bas.ibound.array
+        else:
+            ibound = None
+        return modelgrid.StructuredModelGrid(self.dis.delc.array,
+                                             self.dis.delr.array,
+                                             self.dis.top.array,
+                                             self.dis.botm.array, ibound,
+                                             self.sr, sim_time, self.name,
+                                             self.dis.steady.array)
 
     @property
     def solver_tols(self):

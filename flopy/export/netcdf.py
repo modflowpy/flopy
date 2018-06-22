@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 from .metadata import acdd
 import flopy
-from ..grid.modelgrid import ModelGrid, GridType
+from ..grid.modelgrid import ModelGrid, GridType, PointType
 
 # globals
 FILLVALUE = -99999.9
@@ -642,10 +642,13 @@ class NetCdf(object):
         if self.z_positive == 'down':
             vmin, vmax = vmax, vmin
         else:
-            self.zs = self.model_grid.get_cell_centers()
+            self.zs = self.model_grid.get_cellcenters(PointType.modelxyz)[2].\
+                copy()
 
-        ys = self.model_grid.ycell_centers.copy()
-        xs = self.model_grid.xcell_centers.copy()
+        ys = self.model_grid.get_cellcenters(PointType.modelxyz)[1].\
+            copy()
+        xs = self.model_grid.get_cellcenters(PointType.modelxyz)[0].\
+            copy()
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
@@ -662,8 +665,8 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model_grid.xedgegrid[0, 0]
-        base_y = self.model_grid.yedgegrid[0, 0]
+        base_x = self.model_grid.xedgegrid()[0, 0]
+        base_y = self.model_grid.yedgegrid()[0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
 
@@ -777,8 +780,7 @@ class NetCdf(object):
                    "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[
-        :] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
+        elev[:] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
@@ -809,7 +811,7 @@ class NetCdf(object):
                    "axis": "X"}
         x = self.create_variable("x_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        x[:] = sr.xcentergrid
+        x[:] = self.model_grid.get_cellcenters()[0]
 
         # y
         self.log("creating y var")
@@ -820,7 +822,7 @@ class NetCdf(object):
                    "axis": "Y"}
         y = self.create_variable("y_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        y[:] = sr.ycentergrid
+        y[:] = self.model_grid.get_cellcenters()[1]
 
         # grid mapping variable
         attribs = self.sr.crs.grid_mapping_attribs

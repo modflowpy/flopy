@@ -4,6 +4,7 @@ import numpy as np
 from ..utils.datautil import PyListUtil
 from pandas import DataFrame
 
+
 class GridType(Enum):
     """
     Enumeration of grid types
@@ -605,6 +606,18 @@ class StructuredModelGrid(ModelGrid):
     # Properties
     ####################
     @property
+    def nlay(self):
+        return self._nlay
+
+    @property
+    def nrow(self):
+        return self._nrow
+
+    @property
+    def ncol(self):
+        return self._ncol
+
+    @property
     def delc(self):
         return self._delc
 
@@ -787,16 +800,24 @@ class StructuredModelGrid(ModelGrid):
         cache_index = (CachedDataType.cell_centers.value, point_type.value)
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
+            # get x centers
             x = np.add.accumulate(self._delr) - 0.5 * self.delr
+            # get y centers
             Ly = np.add.reduce(self._delc)
             y = Ly - (np.add.accumulate(self._delc) - 0.5 *
                       self._delc)
+            x_mesh, y_mesh = np.meshgrid(x, y)
+            # get z centers
+            z = np.empty((self._nlay, self._nrow, self._ncol))
+            z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.
+            for l in range(1, self._nlay):
+                z[l, :, :] = (self._botm[l - 1, :, :] +
+                              self._botm[l, :, :]) / 2.
             if point_type == PointType.spatialxyz:
-                self._cache_dict[cache_index] = \
-                    CachedData(self.sr.transform(x, y))
-            else:
-                self._cache_dict[cache_index] = \
-                    CachedData([x, y])
+                # transform x and y
+                x, y = self.sr.transform(x_mesh, y_mesh)
+            # store in cache
+            self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
         return self._cache_dict[cache_index].data
 
     def get_extent(self, point_type=PointType.spatialxyz):
