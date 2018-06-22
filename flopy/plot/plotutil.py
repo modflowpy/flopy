@@ -14,7 +14,7 @@ from flopy.utils import MfList, Util2d, Util3d, Transient2d
 try:
     import matplotlib.pyplot as plt
     import flopy.plot.map as map
-except:
+except ImportError:
     plt = None
 
 try:
@@ -988,7 +988,7 @@ class PlotUtilities(object):
                                            plotarray.shape[1]))
 
         # setup plotting routines
-        # todo: consider refactoring maxlay to nlay
+        # consider refactoring maxlay to nlay
         maxlay = plotarray.shape[0]
         i0, i1 = PlotUtilities._set_layer_range(mflay, maxlay)
         names = PlotUtilities._set_names(names, maxlay)
@@ -996,28 +996,6 @@ class PlotUtilities(object):
         fignum = PlotUtilities._set_fignum(fignum, maxlay, i0, i1)
         axes = PlotUtilities._set_axes(axes, mflay, maxlay, i0, i1,
                                        defaults, names, fignum)
-
-        if axes is not None:
-            if not isinstance(axes, list):
-                axes = [axes]
-            assert len(axes) == plotarray.shape[0]
-
-        else:
-            # prepare some axis objects for use
-            axes = []
-            for idx, k in enumerate(range(i0, i1)):
-                fig = plt.figure(figsize=defaults['figsize'],
-                                 num=fignum[idx])
-                ax = plt.subplot(1, 1, 1, aspect='equal')
-                if names is not None:
-                    title = names[k]
-                else:
-                    klay = k
-                    if mflay is not None:
-                        klay = int(mflay)
-                    title = '{} Layer {}'.format('data', klay+1)
-                ax.set_title(title)
-                axes.append(ax)
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
@@ -1071,116 +1049,65 @@ class PlotUtilities(object):
     def _plot_bc_helper(package, kper,
                         axes=None, names=None, filenames=None, fignum=None,
                         mflay=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except:
+        """
+            Helper method to plot bc objects from flopy packages
+
+            Parameters:
+                package : flopy.pakbase.Package objects
+                axes: matplotlib.axes object
+                    existing matplotlib axis object to layer additional
+                    plotting on to. Optional.
+                names: list
+                    list of figure titles (optional)
+                filenames: list
+                    list of filenames to save figures to (optional)
+                fignum:
+                    list of figure numbers (optional)
+                mflay: int
+                    modflow model layer
+                **kwargs:
+                    keyword arguments
+
+            Returns:
+                 axes: list matplotlib.axes object
+        """
+
+        if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' +\
                 ' in order to plot boundary condition data.'
-            raise Exception(s)
+            raise PlotException(s)
 
         import flopy.plot.map as map
 
-        # reshape 2d arrays to 3d for convenience
-        ftype = package.name[0]
+        defaults = {'figsize': None, "inactive": True,
+                    'grid': False, "dpi": None,
+                    "masked_values": None}
 
+        # parse kwargs
+        for key in defaults:
+            if key in kwargs:
+                defaults[key] = kwargs.pop(key)
+
+        ftype = package.name[0]
         nlay = package.parent.nlay
 
-        # parse keyword arguments
-        if 'figsize' in kwargs:
-            figsize = kwargs.pop('figsize')
-        else:
-            figsize = None
-
-        if 'inactive' in kwargs:
-            inactive = kwargs.pop('inactive')
-        else:
-            inactive = True
-
-        if 'grid' in kwargs:
-            grid = kwargs.pop('grid')
-        else:
-            grid = False
-
-        if 'dpi' in kwargs:
-            dpi = kwargs.pop('dpi')
-        else:
-            dpi = None
-
-        if 'masked_values' in kwargs:
-            kwargs.pop('masked_values ')
-
-        if mflay is not None:
-            i0 = int(mflay)
-            if i0+1 >= nlay:
-                i0 = nlay - 1
-            i1 = i0 + 1
-        else:
-            i0 = 0
-            i1 = nlay
-
-
-
-        if names is not None:
-            if not isinstance(names, list):
-                names = [names]
-            assert len(names) == nlay
-
-        if filenames is not None:
-            if not isinstance(filenames, list):
-                filenames = [filenames]
-            assert len(filenames) == (i1 - i0)
-
-        if fignum is not None:
-            if not isinstance(fignum, list):
-                fignum = [fignum]
-            assert len(fignum) == (i1 - i0)
-            # check for existing figures
-            f0 = fignum[0]
-            for i in plt.get_fignums():
-                if i >= f0:
-                    f0 = i + 1
-            finc = f0 - fignum[0]
-            for idx in range(len(fignum)):
-                fignum[idx] += finc
-        else:
-            #fignum = np.arange(i0, i1)
-            # check for existing figures
-            f0 = 0
-            for i in plt.get_fignums():
-                if i >= f0:
-                    f0 += 1
-            f1 = f0 + (i1 - i0)
-            fignum = np.arange(f0, f1)
-
-        if axes is not None:
-            if not isinstance(axes, list):
-                axes = [axes]
-            assert len(axes) == i1 - i0
-        # prepare some axis objects for use
-        else:
-            axes = []
-            for idx, k in enumerate(range(i0, i1)):
-                fig = plt.figure(figsize=figsize, num=fignum[idx])
-                ax = plt.subplot(1, 1, 1, aspect='equal')
-                if names is not None:
-                    title = names[k]
-                else:
-                    klay = k
-                    if mflay is not None:
-                        klay = int(mflay)
-                    title = '{} Layer {}'.format('data', klay+1)
-                ax.set_title(title)
-                axes.append(ax)
+        # set up plotting routines
+        i0, i1 = PlotUtilities._set_layer_range(mflay, nlay)
+        names = PlotUtilities._set_names(names, nlay)
+        filenames = PlotUtilities._set_names(filenames, i1 - i0)
+        fignum = PlotUtilities._set_fignum(fignum, nlay, i0, i1)
+        axes = PlotUtilities._set_axes(axes, mflay, nlay, i0, i1,
+                                       defaults, names, fignum)
 
         for idx, k in enumerate(range(i0, i1)):
             mm = map.ModelMap(ax=axes[idx], model=package.parent, layer=k)
             fig = plt.figure(num=fignum[idx])
             qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
 
-            if grid:
+            if defaults['grid']:
                 mm.plot_grid(ax=axes[idx])
 
-            if inactive:
+            if defaults['inactive']:
                 try:
                     ib = package.parent.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
@@ -1193,12 +1120,13 @@ class PlotUtilities(object):
         if filenames is not None:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
-                fig.savefig(filenames[idx], dpi=dpi)
+                fig.savefig(filenames[idx], dpi=defaults['dpi'])
                 plt.close(fignum[idx])
                 print('    created...{}'.format(os.path.basename(filenames[idx])))
             # there will be nothing to return when done
             axes = None
             plt.close('all')
+
         return axes
 
     @staticmethod
@@ -1273,8 +1201,6 @@ class PlotUtilities(object):
         Returns:
             fignum (list)
         """
-        import matplotlib.pyplot as plt
-
         if fignum is not None:
             if not isinstance(fignum, list):
                 fignum = [fignum]
