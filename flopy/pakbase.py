@@ -18,7 +18,6 @@ from numpy.lib.recfunctions import stack_arrays
 
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
-from flopy.plot import PlotUtilities
 
 
 class PackageInterface(object):
@@ -483,6 +482,8 @@ class Package(PackageInterface):
         >>> ml.dis.plot()
 
         """
+        from flopy.plot import PlotUtilities
+
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes
 

@@ -1294,7 +1294,8 @@ class Transient2d(object):
         # write_grid_shapefile(filename, self.model.dis.sr, array_dict)
         self.export(filename)
 
-    def plot(self, filename_base=None, file_extension=None, **kwargs):
+    def plot(self, filename_base=None, file_extension=None, kper=0,
+             fignum=None, **kwargs):
         """
         Plot transient 2-D model input data
 
@@ -1307,6 +1308,12 @@ class Transient2d(object):
         file_extension : str
             Valid matplotlib.pyplot file extension for savefig(). Only used
             if filename_base is not None. (default is 'png')
+        kper : int or str
+            model stress period. if 'all' is provided, all stress periods
+            will be plotted
+        fignum: list or int
+            Figure numbers for plot title
+
         **kwargs : dict
             axes : list of matplotlib.pyplot.axis
                 List of matplotlib.pyplot.axis that will be used to plot
@@ -1362,6 +1369,8 @@ class Transient2d(object):
         axes = PlotUtilities._plot_transient2d_helper(self,
                                                       filename_base=filename_base,
                                                       file_extension=file_extension,
+                                                      kper=kper,
+                                                      fignum=fignum,
                                                       **kwargs)
 
         return axes

@@ -10,6 +10,13 @@ import sys
 import math
 import numpy as np
 from flopy.utils import MfList, Util2d, Util3d, Transient2d
+
+try:
+    import matplotlib.pyplot as plt
+    import flopy.plot.map as map
+except:
+    plt = None
+
 try:
     from matplotlib.colors import LinearSegmentedColormap
 
@@ -822,7 +829,8 @@ class PlotUtilities(object):
 
     @staticmethod
     def _plot_transient2d_helper(transient2d, filename_base=None,
-                                 file_extension=None, **kwargs):
+                                 file_extension=None, kper=0,
+                                 fignum=None, **kwargs):
         """
         Plot transient 2-D model input data
 
@@ -878,29 +886,25 @@ class PlotUtilities(object):
         else:
             fext = 'png'
 
-        # todo: clean this up a bit! maybe add these options to the inputs for the method
+        if isinstance(kper, int):
+            k0 = kper
+            k1 = kper + 1
 
-        if 'kper' in kwargs:
-            kk = kwargs['kper']
-            kwargs.pop('kper')
-            try:
-                kk = kk.lower()
-                if kk == 'all':
-                    k0 = 0
-                    k1 = transient2d.model.nper
-                else:
-                    k0 = 0
-                    k1 = 1
-            except:
-                k0 = int(kk)
+        elif isinstance(kper, str):
+            if kper.lower() == "all":
+                k0 = 0
+                k1 = transient2d.model.nper
+            else:
+                k0 = int(kper)
                 k1 = k0 + 1
 
         else:
-            k0 = 0
-            k1 = 1
+            k0 = int(kper)
+            k1 = k0 + 1
 
-        if 'fignum' in kwargs:
-            fignum = kwargs.pop('fignum')
+        if fignum is not None:
+            if not isinstance(fignum, list):
+                fignum = list(fignum)
         else:
             fignum = list(range(k0, k1))
 
@@ -931,133 +935,79 @@ class PlotUtilities(object):
     def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
                            names=None, filenames=None, fignum=None,
                            mflay=None, **kwargs):
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            s = 'Could not import matplotlib.  Must install matplotlib ' +\
-                ' in order to plot LayerFile data.'
-            raise Exception(s)
+        """
+        Helper method to plot array objects
 
-        import flopy.plot.map as map
+        Parameters:
+            plotarray : np.array object
+            model: fp.modflow.Modflow object
+                optional if spatial reference is provided
+            sr: fp.utils.SpatialReference object
+                object that defines the spatial orientation of a modflow
+                grid within flopy. Optional if model object is provided
+            axes: matplotlib.axes object
+                existing matplotlib axis object to layer additional
+                plotting on to. Optional.
+            names: list
+                list of figure titles (optional)
+            filenames: list
+                list of filenames to save figures to (optional)
+            fignum:
+                list of figure numbers (optional)
+            mflay: int
+                modflow model layer
+            **kwargs:
+                keyword arguments
 
+        Returns:
+             axes: list matplotlib.axes object
+        """
+
+        defaults = {'figsize': None, 'masked_values': None,
+                    'pcolor': True, 'inactive': True,
+                    'contour': False, 'clabel': False,
+                    'colorbar': False, 'grid': False,
+                    'levels': None, 'colors': "black",
+                    'dpi': None, 'fmt': "%1.3f"}
+
+        # check that matplotlib is installed
+        if plt is None:
+            err_msg = 'Could not import matplotlib. ' \
+                      'Must install matplotlib ' + \
+                      ' in order to plot LayerFile data.'
+            raise PlotException(err_msg)
+
+        # filter defaults from kwargs
+        for key in defaults:
+            if key in kwargs:
+                defaults[key] = kwargs.pop(key)
 
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2:
             plotarray = plotarray.reshape((1, plotarray.shape[0],
                                            plotarray.shape[1]))
 
-        # parse keyword arguments
-        if 'figsize' in kwargs:
-            figsize = kwargs.pop('figsize')
-        else:
-            figsize = None
-
-        if 'masked_values' in kwargs:
-            masked_values = kwargs.pop('masked_values')
-        else:
-            masked_values = None
-
-        if 'pcolor' in kwargs:
-            pcolor = kwargs.pop('pcolor')
-        else:
-            pcolor = True
-
-        if 'inactive' in kwargs:
-            inactive = kwargs.pop('inactive')
-        else:
-            inactive = True
-
-        if 'contour' in kwargs:
-            contourdata = kwargs.pop('contour')
-        else:
-            contourdata = False
-
-        if 'clabel' in kwargs:
-            clabel = kwargs.pop('clabel')
-        else:
-            clabel = False
-
-        if 'colorbar' in kwargs:
-            cb = kwargs.pop('colorbar')
-        else:
-            cb = False
-
-        if 'grid' in kwargs:
-            grid = kwargs.pop('grid')
-        else:
-            grid = False
-
-        if 'levels' in kwargs:
-            levels = kwargs.pop('levels')
-        else:
-            levels = None
-
-        if 'colors' in kwargs:
-            colors = kwargs.pop('colors')
-        else:
-            colors = 'black'
-
-        if 'dpi' in kwargs:
-            dpi = kwargs.pop('dpi')
-        else:
-            dpi = None
-
-        if 'fmt' in kwargs:
-            fmt = kwargs.pop('fmt')
-        else:
-            fmt = '%1.3f'
-
-        if mflay is not None:
-            i0 = int(mflay)
-            if i0+1 >= plotarray.shape[0]:
-                i0 = plotarray.shape[0] - 1
-            i1 = i0 + 1
-        else:
-            i0 = 0
-            i1 = plotarray.shape[0]
-
-        if names is not None:
-            if not isinstance(names, list):
-                names = [names]
-            assert len(names) == plotarray.shape[0]
-
-        if filenames is not None:
-            if not isinstance(filenames, list):
-                filenames = [filenames]
-            assert len(filenames) == plotarray.shape[0]
-
-        if fignum is not None:
-            if not isinstance(fignum, list):
-                fignum = [fignum]
-            assert len(fignum) == plotarray.shape[0]
-            # check for existing figures
-            f0 = fignum[0]
-            for i in plt.get_fignums():
-                if i >= f0:
-                    f0 = i + 1
-            finc = f0 - fignum[0]
-            for idx in range(len(fignum)):
-                fignum[idx] += finc
-        else:
-            #fignum = np.arange(i0, i1)
-            # check for existing figures
-            f0 = 0
-            for i in plt.get_fignums():
-                if i >= f0:
-                    f0 += 1
-            f1 = f0 + (i1 - i0)
-            fignum = np.arange(f0, f1)
-
+        # setup plotting routines
+        # todo: consider refactoring maxlay to nlay
+        maxlay = plotarray.shape[0]
+        i0, i1 = PlotUtilities._set_layer_range(mflay, maxlay)
+        names = PlotUtilities._set_names(names, maxlay)
+        filenames = PlotUtilities._set_names(filenames, maxlay)
+        fignum = PlotUtilities._set_fignum(fignum, maxlay, i0, i1)
+        axes = PlotUtilities._set_axes(axes, mflay, maxlay, i0, i1,
+                                       defaults, names, fignum)
 
         if axes is not None:
             if not isinstance(axes, list):
                 axes = [axes]
             assert len(axes) == plotarray.shape[0]
-        # prepare some axis objects for use
+
         else:
+            # prepare some axis objects for use
             axes = []
             for idx, k in enumerate(range(i0, i1)):
-                fig = plt.figure(figsize=figsize, num=fignum[idx])
+                fig = plt.figure(figsize=defaults['figsize'],
+                                 num=fignum[idx])
                 ax = plt.subplot(1, 1, 1, aspect='equal')
                 if names is not None:
                     title = names[k]
@@ -1072,25 +1022,31 @@ class PlotUtilities(object):
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
             mm = map.ModelMap(ax=axes[idx], model=model, sr=sr, layer=k)
-            if pcolor:
-                cm = mm.plot_array(plotarray[k], masked_values=masked_values,
+            if defaults['pcolor']:
+                cm = mm.plot_array(plotarray[k],
+                                   masked_values=defaults['masked_values'],
                                    ax=axes[idx], **kwargs)
-                if cb:
+
+                if defaults['colorbar']:
                     label = ''
-                    if not isinstance(cb,bool):
-                        label = str(cb)
-                    plt.colorbar(cm, ax=axes[idx], shrink=0.5,label=label)
+                    if not isinstance(defaults['colorbar'], bool):
+                        label = str(defaults['colorbar'])
+                    plt.colorbar(cm, ax=axes[idx], shrink=0.5, label=label)
 
-            if contourdata:
-                cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                      ax=axes[idx], colors=colors, levels=levels, **kwargs)
-                if clabel:
-                    axes[idx].clabel(cl, fmt=fmt,**kwargs)
+            if defaults['contour']:
+                cl = mm.contour_array(plotarray[k],
+                                      masked_values=defaults['masked_values'],
+                                      ax=axes[idx],
+                                      colors=defaults['colors'],
+                                      levels=defaults['levels'],
+                                      **kwargs)
+                if defaults['clabel']:
+                    axes[idx].clabel(cl, fmt=defaults['fmt'],**kwargs)
 
-            if grid:
+            if defaults['grid']:
                 mm.plot_grid(ax=axes[idx])
 
-            if inactive:
+            if defaults['inactive']:
                 try:
                     ib = model.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
@@ -1099,14 +1055,16 @@ class PlotUtilities(object):
 
         if len(axes) == 1:
             axes = axes[0]
+
         if filenames is not None:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
-                fig.savefig(filenames[idx], dpi=dpi)
+                fig.savefig(filenames[idx], dpi=defaults['dpi'])
                 print('    created...{}'.format(os.path.basename(filenames[idx])))
             # there will be nothing to return when done
             axes = None
             plt.close('all')
+
         return axes
 
     @staticmethod
@@ -1159,6 +1117,8 @@ class PlotUtilities(object):
         else:
             i0 = 0
             i1 = nlay
+
+
 
         if names is not None:
             if not isinstance(names, list):
@@ -1239,6 +1199,151 @@ class PlotUtilities(object):
             # there will be nothing to return when done
             axes = None
             plt.close('all')
+        return axes
+
+    @staticmethod
+    def _set_layer_range(mflay, maxlay):
+        """
+        Re-usable method to check for mflay and set
+        the range of plottable layers
+
+        Parameters:
+
+            mflay: (int)
+            maxlay: (int)
+                maximum number of layers in the plotting array
+
+        Returns:
+            i0, i1:  (int), (int)
+                minimum and maximum bounds on the layer range
+        """
+        if mflay is not None:
+            i0 = int(mflay)
+            if i0+1 >= maxlay:
+                i0 = maxlay - 1
+            i1 = i0 + 1
+        else:
+            i0 = 0
+            i1 = maxlay
+
+        return i0, i1
+
+    @staticmethod
+    def _set_names(names, maxlay):
+        """
+        Checks the supplied name variable for shape
+
+        Parameters:
+
+            names: (list), (str)
+                if names is not none, asserts that there is
+                a name supplied for each plot that will be
+                generated
+
+            maxlay: (int)
+                maximum number of layers in the plotting array
+
+        Returns:
+            names:  (list) or (None)
+                list of names or None
+        """
+        if names is not None:
+            if not isinstance(names, list):
+                names = [names]
+            assert len(names) == maxlay
+        return names
+
+    @staticmethod
+    def _set_fignum(fignum, maxlay, i0, i1):
+        """
+        Method to generate a list of matplotlib figure
+        numbers to join to figure objects. Checks
+        for existing figures.
+
+        Parameters:
+            fignum: (list)
+                list of figure numbers
+            maxlay: (int)
+                maximum number of layers in the plotting array
+            i0: (int)
+                minimum layer range
+            i1: (int)
+                maximum layer range
+
+        Returns:
+            fignum (list)
+        """
+        import matplotlib.pyplot as plt
+
+        if fignum is not None:
+            if not isinstance(fignum, list):
+                fignum = [fignum]
+            assert len(fignum) == maxlay
+            # check for existing figures
+            f0 = fignum[0]
+            for i in plt.get_fignums():
+                if i >= f0:
+                    f0 = i + 1
+            finc = f0 - fignum[0]
+            for idx in range(len(fignum)):
+                fignum[idx] += finc
+        else:
+            # check for existing figures
+            f0 = 0
+            for i in plt.get_fignums():
+                if i >= f0:
+                    f0 += 1
+            f1 = f0 + (i1 - i0)
+            fignum = np.arange(f0, f1)
+
+        return fignum
+
+    @staticmethod
+    def _set_axes(axes, mflay, maxlay, i0, i1,
+                  defaults, names, fignum):
+        """
+        Method to prepare axes objects for plotting
+
+        Parameters
+            axes: (list)
+                matplotlib.axes objects
+            mflay: (int)
+                layer to plot or None
+            i0: (int)
+                minimum range of layers to plot
+            i1: (int)
+                maximum range of layers to plot
+            defaults: (dict)
+                the default dictionary from the parent plotting method
+            fignum: (list)
+                list of figure numbers
+
+        Returns
+            axes: (list)
+                matplotlib.axes objects
+        """
+        if axes is not None:
+            if not isinstance(axes, list):
+                axes = [axes]
+            assert len(axes) == maxlay
+
+        else:
+            # prepare some axis objects for use
+            axes = []
+            for idx, k in enumerate(range(i0, i1)):
+                fig = plt.figure(figsize=defaults['figsize'],
+                                 num=fignum[idx])
+                ax = plt.subplot(1, 1, 1, aspect='equal')
+                if names is not None:
+                    title = names[k]
+                else:
+                    klay = k
+                    if mflay is not None:
+                        klay = int(mflay)
+                    title = '{} Layer {}'.format('data', klay+1)
+                ax.set_title(title)
+                axes.append(ax)
+
         return axes
 
 
