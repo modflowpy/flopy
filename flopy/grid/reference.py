@@ -77,12 +77,11 @@ class SpatialReference(object):
                      'centimeters': 3}
     lenuni_text = {v: k for k, v in lenuni_values.items()}
 
-    def __init__(self, lenuni=2, xul=None, yul=None, xll=None, yll=None,
+    def __init__(self, delc=np.array([]), lenuni=2, xul=None, yul=None, xll=None, yll=None,
                  rotation=0.0, proj4_str=None, epsg=None, prj=None, units=None,
-                 length_multiplier=None):
+                 length_multiplier=None, yedge=None):
         self._lenuni = lenuni
         self._proj4_str = proj4_str
-
         self._epsg = epsg
         if epsg is not None:
             self._proj4_str = getproj4(self._epsg)
@@ -94,7 +93,11 @@ class SpatialReference(object):
         self._units = units
         self._length_multiplier = length_multiplier
         self._reset()
-        self.set_spatialreference(xul, yul, xll, yll, rotation)
+        self.set_spatialreference(delc, xul, yul, xll, yll, rotation)
+        self._yedge = yedge
+
+    def set_yedge(self, yedge):
+        self._yedge = yedge
 
     @property
     def xll(self):
@@ -102,7 +105,7 @@ class SpatialReference(object):
             xll = self._xll if self._xll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            xll = self._xul - (np.sin(self.theta) * self.yedge[0] *
+            xll = self._xul - (np.sin(self.theta) * self._yedge *
                                self.length_multiplier)
         return xll
 
@@ -112,7 +115,7 @@ class SpatialReference(object):
             yll = self._yll if self._yll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            yll = self._yul - (np.cos(self.theta) * self.yedge[0] *
+            yll = self._yul - (np.cos(self.theta) * self._yedge *
                                self.length_multiplier)
         return yll
 
@@ -120,7 +123,7 @@ class SpatialReference(object):
     def xul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
+            xul = self._xll + (np.sin(self.theta) * self._yedge *
                                self.length_multiplier)
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
@@ -131,7 +134,7 @@ class SpatialReference(object):
     def yul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            yul = self._yll + (np.cos(self.theta) * self.yedge[0] *
+            yul = self._yll + (np.cos(self.theta) * self._yedge *
                                self.length_multiplier)
 
         if self.origin_loc == 'ul':
@@ -529,8 +532,8 @@ class SpatialReference(object):
         return {"xul": self.xul, "yul": self.yul, "rotation": self.rotation,
                 "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
-                             rotation=0.0):
+    def set_spatialreference(self, delc=None, xul=None, yul=None, xll=None,
+                             yll=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
 
@@ -549,7 +552,7 @@ class SpatialReference(object):
         if xul is None and yul is None and xll is None and yll is None:
             self.origin_loc = 'ul'
             xul = 0.
-            yul = self.delc.sum()
+            yul = delc.sum()
         elif xll is not None:
             self.origin_loc = 'll'
         else:
@@ -572,31 +575,9 @@ class SpatialReference(object):
         s += "length_multiplier:{}".format(self.length_multiplier)
         return s
 
-    def set_origin(self, xul=None, yul=None, xll=None, yll=None):
-        if self.origin_loc == 'll':
-            # calculate coords for upper left corner
-            self._xll = xll if xll is not None else 0.
-            self.yll = yll if yll is not None else 0.
-            self.xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
-                                    self.length_multiplier)
-            self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
-                                   self.length_multiplier)
-
-        if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            self.xul = xul if xul is not None else 0.
-            self.yul = yul if yul is not None else 0.
-            self._xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
-                                    self.length_multiplier)
-            self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
-                                   self.length_multiplier)
-        self._reset()
-        return
-
     @property
     def theta(self):
         return -self.rotation * np.pi / 180.
-
 
     @staticmethod
     def rotate(x, y, theta, xorigin=0., yorigin=0.):

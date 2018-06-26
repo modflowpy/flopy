@@ -14,7 +14,8 @@ import warnings
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, reference, check
+from ..utils import Util2d, Util3d, check
+from ..grid import reference
 from ..utils.flopy_io import line_parse
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
@@ -202,8 +203,8 @@ class ModflowDis(Package):
         if start_datetime is None:
             start_datetime = model._start_datetime
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-                                             self.lenuni, xul=xul, yul=yul,
+        self.sr = reference.SpatialReference(self.delc, self.lenuni,
+                                             xul=xul, yul=yul,
                                              rotation=rotation,
                                              proj4_str=proj4_str)
         self.tr = reference.TemporalReference(itmuni=self.itmuni,
