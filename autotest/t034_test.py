@@ -179,7 +179,7 @@ def test_load_and_write():
                 for i, a in enumerate(a1):
                     assert a == l2[i]
 
-    # load uzf test problem for nwt model with "options" and 'open/close' array types
+    # load uzf test problem for nwt model with 'nwt_11_fmt'-style options and 'open/close' array types
     tpth = os.path.join('..', 'examples', 'data', 'uzf_examples', 'load_uzf_for_nwt')
     [shutil.copy(os.path.join(tpth, f), os.path.join(cpth, f)) for f in os.listdir(tpth)]
     m3 = flopy.modflow.Modflow('UZFtest3', version='mfnwt', verbose=True)
