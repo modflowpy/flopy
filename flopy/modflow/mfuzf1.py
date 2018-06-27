@@ -685,7 +685,9 @@ class ModflowUzf1(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
-        specifythtr, specifythti, nosurfleak = False, False, False
+        specifythtr, specifythti, nosurfleak, nwt_11_fmt = False, False, False, False
+        if len(line.split()) == 1 and 'options' in line.split()[0]:
+            nwt_11_fmt = True
         if 'options' in line:
             line = read_nwt_options(f)
             specifythtr, specifythti, nosurfleak = _parse1a(line)
@@ -812,6 +814,7 @@ class ModflowUzf1(Package):
                            ipakcb=ipakcb, iuzfcb2=iuzfcb2,
                            ntrail2=ntrail2, nsets=nsets2,
                            surfdep=surfdep, uzgag=uzgag,
+                           nwt_11_fmt=nwt_11_fmt,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, unitnumber=unitnumber,
                            filenames=filenames, **arrays)
