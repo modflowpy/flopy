@@ -4,7 +4,7 @@ the ModflowUzf1 class as `flopy.modflow.ModflowUzf1`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/uzf___unsaturated_zone_flow_pa_3.htm>`_.
+<https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?uzf_unsaturated_zone_flow_pack.htm>`_.
 
 """
 
@@ -136,6 +136,15 @@ class ModflowUzf1(Package):
             followed by a series of depths and water contents in the
             unsaturated zone.
 
+    nwt_11_fmt : boolean
+        flag indicating whether or not to utilize a newer (MODFLOW-NWT
+        version 1.1 or later) format style, i.e., uzf1 optional variables 
+        appear line-by-line rather than in a specific order on a single
+        line. True means that optional variables (e.g., SPECIFYTHTR,
+        SPECIFYTHTI, NOSURFLEAK) appear on new lines. True also supports 
+        a number of newer optional variables (e.g., SPECIFYSURFK,
+        REJECTSURFK, SEEPSURFK). False means that optional variables 
+        appear on one line.  (default is False)
     specifythtr : boolean
         key word for specifying optional input variable THTR (default is 0)
     specifythti : boolean
