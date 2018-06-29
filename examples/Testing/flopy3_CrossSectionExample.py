@@ -30,7 +30,7 @@ ml.change_model_ws(new_pth=modelpth)
 ml.write_input()
 success, buff = ml.run_model()
 if not success:
-    print 'Something bad happened.'
+    print('Something bad happened.')
 files = ['freyberg.hds', 'freyberg.cbc']
 for f in files:
     if os.path.isfile(os.path.join(modelpth, f)):
@@ -49,7 +49,7 @@ fig = plt.figure(figsize=(5, 5))
 ax = fig.add_subplot(1, 1, 1)
 
 # Next we create an instance of the ModelMap class
-modelxsect = flopy.plot.ModelCrossSection(ml=ml, line={'Row': 20})
+modelxsect = flopy.plot.ModelCrossSection(model=ml, line={'Row': 20})
 fb = modelxsect.plot_fill_between(head, colors=['brown', 'cyan'], masked_values=[999.00])
 #patches = modelxsect.csplot_ibound(head=head)
 patches = modelxsect.plot_bc('RIV', head=head)

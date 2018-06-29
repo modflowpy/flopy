@@ -37,7 +37,7 @@ class Triangle(object):
         self.model_ws = model_ws
         exe_name = which(exe_name)
         if exe_name is None:
-            raise Exception('Cannot find gridgen binary executable')
+            raise Exception('Cannot find triangle binary executable')
         self.exe_name = os.path.abspath(exe_name)
         self.angle = angle
         self.maximum_area = maximum_area
