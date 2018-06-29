@@ -570,7 +570,7 @@ class ListBudget(object):
         # sp = int(line[self.sp_idxs[0]:self.sp_idxs[1]])
 
         # Get rid of nasty things
-        line = line.replace(',', '')
+        line = line.replace(',', '').replace('*', '')
 
         searchstring = 'TIME STEP'
         idx = line.index(searchstring) + len(searchstring)
