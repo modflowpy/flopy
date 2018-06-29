@@ -5,14 +5,18 @@ import numpy as np
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
-except:
+except ImportError:
     plt = None
+
 from . import plotutil
 from .plotutil import bc_color_dict
 from ..utils import SpatialReference
+from flopy.plot.plotbase import PlotMapView
+import warnings
+warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class ModelMap(object):
+class StructuredMapView(object):
     """
     Class to create a map of the model.
 
@@ -65,14 +69,18 @@ class ModelMap(object):
         self.layer = layer
         self.dis = dis
         self.sr = None
+
         if sr is not None:
             self.sr = copy.deepcopy(sr)
+
         elif dis is not None:
             # print("warning: the dis arg to model map is deprecated")
             self.sr = copy.deepcopy(dis.parent.sr)
+
         elif model is not None:
             # print("warning: the model arg to model map is deprecated")
             self.sr = copy.deepcopy(model.sr)
+
         else:
             self.sr = SpatialReference(xll=xll, yll=yll, xul=xul, yul=yul,
                                        rotation=rotation,
@@ -92,6 +100,7 @@ class ModelMap(object):
                 self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
         else:
             self.ax = ax
+
         if extent is not None:
             self._extent = extent
         else:
@@ -132,9 +141,11 @@ class ModelMap(object):
             plotarray = a
         else:
             raise Exception('Array must be of dimension 1, 2 or 3')
+
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -153,6 +164,7 @@ class ModelMap(object):
             vmax = kwargs.pop('vmax')
         else:
             vmax = None
+
         quadmesh.set_clim(vmin=vmin, vmax=vmax)
 
         # send rest of kwargs to quadmesh
@@ -193,19 +205,20 @@ class ModelMap(object):
             plotarray = a
         else:
             raise Exception('Array must be of dimension 1, 2 or 3')
+
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         if 'colors' in kwargs.keys():
             if 'cmap' in kwargs.keys():
-                cmap = kwargs.pop('cmap')
-            cmap = None
-        # contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-        #                         plotarray, **kwargs)
+                kwargs.pop('cmap')
+
         contour_set = self.sr.contour_array(ax, plotarray, **kwargs)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -230,11 +243,6 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
@@ -247,6 +255,7 @@ class ModelMap(object):
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
         return quadmesh
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
@@ -269,11 +278,6 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
@@ -346,20 +350,17 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
         # Find package to plot
         if package is not None:
             p = package
             ftype = p.name[0]
+
         elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
             ftype = ftype.upper()
             p = self.model.get_package(ftype)
+
         else:
             raise Exception('Cannot find package to plot')
 
@@ -373,6 +374,7 @@ class ModelMap(object):
         if mflist is None:
             return None
         nlay = self.model.nlay
+
         # Plot the list locations
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         if plotAll:
@@ -397,6 +399,7 @@ class ModelMap(object):
                 c = bc_color_dict['default']
         else:
             c = color
+
         cmap = matplotlib.colors.ListedColormap(['0', c])
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
@@ -424,6 +427,7 @@ class ModelMap(object):
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
         return patch_collection
 
@@ -477,7 +481,7 @@ class ModelMap(object):
             ncpl = kwargs.pop('ncpl')
             if isinstance(ncpl, int):
                 i = int(ncpl)
-                ncpl = np.ones((nlay), dtype=np.int) * i
+                ncpl = np.ones((nlay,), dtype=np.int) * i
             elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
                 ncpl = np.array(ncpl)
             i0 = 0
@@ -496,14 +500,16 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         if 'colors' in kwargs.keys():
             if 'cmap' in kwargs.keys():
-                cmap = kwargs.pop('cmap')
-            cmap = None
+                kwargs.pop('cmap')
+
         contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
                                     plotarray, **kwargs)
 
@@ -520,6 +526,8 @@ class ModelMap(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
+        dis: flopy.modflow.ModflowDis
+            Flopy DIS package class
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
@@ -580,7 +588,7 @@ class ModelMap(object):
         # thickness by setting laytyp to zeros
         if head is None or laytyp is None:
             head = np.zeros(botm.shape, np.float32)
-            laytyp = np.zeros((nlay), dtype=np.int)
+            laytyp = np.zeros((nlay,), dtype=np.int)
         sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
                                                [hnoflo, hdry])
 
@@ -709,7 +717,6 @@ class ModelMap(object):
                     idx = (p['time'] <= time)
                 tp = p[idx]
 
-            vlc = []
             # rotate data
             x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
                                       self.sr.yedge[0])
@@ -772,19 +779,17 @@ class ModelMap(object):
         sp : matplotlib.pyplot.scatter
 
         """
-        if direction.lower() == 'ending':
-            direction = 'ending'
-        elif direction.lower() == 'starting':
-            direction = 'starting'
+        direction = direction.lower()
+        if direction == 'starting':
+            xp, yp = 'x0', 'y0'
+
+        elif direction == 'ending':
+            xp, yp = 'x', 'y'
+
         else:
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-
-        if direction == 'starting':
-            xp, yp = 'x0', 'y0'
-        elif direction == 'ending':
-            xp, yp = 'x', 'y'
 
         if selection_direction is not None:
             if selection_direction.lower() != 'starting' and \
@@ -857,10 +862,410 @@ class ModelMap(object):
         arr = np.vstack((x0r, y0r)).T
 
         # plot the end point data
-        sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        # todo: try ax.scatter to preseve the current axis object
+        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        # sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 
         # add a colorbar for travel times
         if createcb:
             cb = plt.colorbar(sp, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
+
+
+class VertexModelMap(object):
+    """
+    Class to create a map of the model. Delegates plotting
+    functionality based on model grid type.
+
+    Parameters
+    ----------
+    sr : flopy.utils.reference.SpatialReference
+        The spatial reference class (Default is None)
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
+    layer : int
+        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+    xul : float
+        x coordinate for upper left corner
+    yul : float
+        y coordinate for upper left corner.  The default is the sum of the
+        delc array.
+    rotation : float
+        Angle of grid rotation around the upper left corner.  A positive value
+        indicates clockwise rotation.  Angles are in degrees.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
+
+    Notes
+    -----
+    ModelMap must know the position and rotation of the grid in order to make
+    the plot.  This information is contained in the SpatialReference class
+    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
+    If dis is None, then it looks for sr in model.dis.  If all of these
+    arguments are none, then it uses xul, yul, and rotation.  If none of these
+    arguments are provided, then it puts the lower-left-hand corner of the
+    grid at (0, 0).
+
+    """
+    def __init__(self):
+        pass
+
+    @property
+    def extent(self):
+        raise NotImplementedError()
+
+    def plot_array(self, a, masked_values=None, **kwargs):
+        """
+        Plot an array.  If the array is three-dimensional, then the method
+        will plot the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        raise NotImplementedError()
+
+    def contour_array(self, a, masked_values=None, **kwargs):
+        """
+        Contour an array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+
+        """
+        raise NotImplementedError()
+
+    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+        """
+        Make a plot of inactive cells.  If not specified, then pull ibound
+        from the self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+
+        color_noflow : string
+            (Default is 'black')
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        raise NotImplementedError()
+
+    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
+                    **kwargs):
+        """
+        Make a plot of ibound.  If not specified, then pull ibound from the
+        self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        color_noflow : string
+            (Default is 'black')
+        color_ch : string
+            Color for constant heads (Default is 'blue'.)
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        raise NotImplementedError()
+
+    def plot_grid(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+                plotAll=False, **kwargs):
+        """
+        Plot boundary conditions locations for a specific boundary
+        type from a flopy model
+
+        Parameters
+        ----------
+        ftype : string
+            Package name string ('WEL', 'GHB', etc.). (Default is None)
+        package : flopy.modflow.Modflow package class instance
+            flopy package class instance. (Default is None)
+        kper : int
+            Stress period to plot
+        color : string
+            matplotlib color string. (Default is None)
+        plotAll : bool
+            Boolean used to specify that boundary condition locations for all
+            layers will be plotted on the current ModelMap layer.
+            (Default is False)
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        raise NotImplementedError()
+
+    def plot_shapefile(self, shp, **kwargs):
+        """
+        Plot a shapefile.  The shapefile must be in the same coordinates as
+        the rotated and offset grid.
+
+        Parameters
+        ----------
+        shp : string
+            Name of the shapefile to plot
+
+        kwargs : dictionary
+            Keyword arguments passed to plotutil.plot_shapefile()
+
+        """
+        raise NotImplementedError()
+
+    def plot_cvfd(self, verts, iverts, **kwargs):
+        """
+        Plot a cvfd grid.  The vertices must be in the same coordinates as
+        the rotated and offset grid.
+
+        Parameters
+        ----------
+        verts : ndarray
+            2d array of x and y points.
+        iverts : list of lists
+            should be of len(ncells) with a list of vertex number for each cell
+
+        kwargs : dictionary
+            Keyword arguments passed to plotutil.plot_cvfd()
+
+        """
+        raise NotImplementedError()
+
+    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
+        """
+        Contour an array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer).
+
+        Parameters
+        ----------
+        vertc : np.ndarray
+            Array with of size (nc, 2) with centroid location of cvfd
+        a : numpy.ndarray
+            Array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.pcolormesh
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+
+        """
+        raise NotImplementedError()
+
+    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
+                       jstep=1, normalize=False, **kwargs):
+        """
+        Use quiver to plot vectors.
+
+        Parameters
+        ----------
+        frf : numpy.ndarray
+            MODFLOW's 'flow right face'
+        fff : numpy.ndarray
+            MODFLOW's 'flow front face'
+        flf : numpy.ndarray
+            MODFLOW's 'flow lower face' (Default is None.)
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then will assume confined
+            conditions in order to calculated saturated thickness.
+        istep : int
+            row frequency to plot. (Default is 1.)
+        jstep : int
+            column frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
+        kwargs : dictionary
+            Keyword arguments passed to plt.quiver()
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            Vectors of specific discharge.
+
+        """
+        raise NotImplementedError()
+
+    def plot_pathline(self, pl, travel_time=None, **kwargs):
+        """
+        Plot the MODPATH pathlines.
+
+        Parameters
+        ----------
+        pl : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile PathlineFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+        travel_time: float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_endpoint(self, ep, direction='ending',
+                      selection=None, selection_direction=None, **kwargs):
+        """
+        Plot the MODPATH endpoints.
+
+        Parameters
+        ----------
+        ep : rec array
+            A numpy recarray with the endpoint particle data from the
+            MODPATH 6 endpoint file
+        direction : str
+            String defining if starting or ending particle locations should be
+            considered. (default is 'ending')
+        selection : tuple
+            tuple that defines the zero-base layer, row, column location
+            (l, r, c) to use to make a selection of particle endpoints.
+            The selection could be a well location to determine capture zone
+            for the well. If selection is None, all particle endpoints for
+            the user-sepcified direction will be plotted. (default is None)
+        selection_direction : str
+            String defining is a selection should be made on starting or
+            ending particle locations. If selection is not None and
+            selection_direction is None, the selection direction will be set
+            to the opposite of direction. (default is None)
+
+        kwargs : ax, c, s or size, colorbar, colorbar_label, shrink. The
+            remaining kwargs are passed into the matplotlib scatter
+            method. If colorbar is True a colorbar will be added to the plot.
+            If colorbar_label is passed in and colorbar is True then
+            colorbar_label will be passed to the colorbar set_label()
+            method. If shrink is passed in and colorbar is True then
+            the colorbar size will be set using shrink.
+
+        Returns
+        -------
+        sp : matplotlib.pyplot.scatter
+
+        """
+        raise NotImplementedError()
+
+
+class ModelMap(object):
+    """
+    Pending Depreciation: ModelMap acts as a PlotMapView factory
+    object. Please migrate to PlotMapView for plotting
+    functionality and future code compatibility
+
+    Parameters
+    ----------
+    sr : flopy.utils.reference.SpatialReference
+        The spatial reference class (Default is None)
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
+    layer : int
+        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+    xul : float
+        x coordinate for upper left corner
+    yul : float
+        y coordinate for upper left corner.  The default is the sum of the
+        delc array.
+    rotation : float
+        Angle of grid rotation around the upper left corner.  A positive value
+        indicates clockwise rotation.  Angles are in degrees.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
+
+    Notes
+    -----
+    ModelMap must know the position and rotation of the grid in order to make
+    the plot.  This information is contained in the SpatialReference class
+    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
+    If dis is None, then it looks for sr in model.dis.  If all of these
+    arguments are none, then it uses xul, yul, and rotation.  If none of these
+    arguments are provided, then it puts the lower-left-hand corner of the
+    grid at (0, 0).
+    """
+    def __new__(cls, sr=None, ax=None, model=None, dis=None, layer=0,
+                extent=None, xul=None, yul=None, xll=None, yll=None,
+                rotation=0., length_multiplier=1.):
+
+        err_msg = "ModelMap will be replaced by PlotMapView(), Calling PlotMapView()"
+        warnings.warn(err_msg, PendingDeprecationWarning)
+
+        return PlotMapView(sr=sr, ax=ax, model=model, dis=dis, layer=layer,
+                           extent=extent, xul=xul, yul=yul, xll=xll, yll=yll,
+                           rotation=rotation, length_multiplier=length_multiplier)
+
+

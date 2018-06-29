@@ -10,10 +10,15 @@ import sys
 import math
 import numpy as np
 from flopy.utils import MfList, Util2d, Util3d, Transient2d
+from flopy.plot.plotbase import PlotMapView
+
+try:
+    import shapefile
+except ImportError:
+    shapefile = None
 
 try:
     import matplotlib.pyplot as plt
-    import flopy.plot.map as map
 except ImportError:
     plt = None
 
@@ -280,7 +285,6 @@ try:
     viridis = LinearSegmentedColormap.from_list(__file__, cm_data)
 except:
     pass
-
 
 
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
@@ -999,7 +1003,7 @@ class PlotUtilities(object):
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            mm = map.ModelMap(ax=axes[idx], model=model, sr=sr, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=model, sr=sr, layer=k)
             if defaults['pcolor']:
                 cm = mm.plot_array(plotarray[k],
                                    masked_values=defaults['masked_values'],
@@ -1077,8 +1081,6 @@ class PlotUtilities(object):
                 ' in order to plot boundary condition data.'
             raise PlotException(s)
 
-        import flopy.plot.map as map
-
         defaults = {'figsize': None, "inactive": True,
                     'grid': False, "dpi": None,
                     "masked_values": None}
@@ -1100,7 +1102,7 @@ class PlotUtilities(object):
                                        defaults, names, fignum)
 
         for idx, k in enumerate(range(i0, i1)):
-            mm = map.ModelMap(ax=axes[idx], model=package.parent, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=package.parent, layer=k)
             fig = plt.figure(num=fignum[idx])
             qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
 
@@ -1358,7 +1360,6 @@ class SwiConcentration():
             return conc[layer, :, :]
 
 
-
 def shapefile_extents(shp):
     """
     Determine the extents of a shapefile
@@ -1381,11 +1382,10 @@ def shapefile_extents(shp):
     >>> extent = flopy.plot.plotutil.shapefile_extents(fshp)
 
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     nshp = len(shapes)
@@ -1424,11 +1424,10 @@ def shapefile_get_vertices(shp):
     >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
     
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     nshp = len(shapes)
@@ -1476,11 +1475,10 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     from matplotlib.patches import Polygon, Circle, Path, PathPatch
     from matplotlib.collections import PatchCollection
     sf = shapefile.Reader(shp)
@@ -1554,13 +1552,9 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
 
     """
 
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
-    import numpy as np
-    import matplotlib.pyplot as plt
+        raise PlotException(s)
 
     if 'vmin' in kwargs:
         vmin = kwargs.pop('vmin')
