@@ -248,30 +248,70 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading from time step to budget")
+        break_next = False
+        while True:
+            line = self._readline(f)
+            if line is None:
+                raise Exception("EOF while reading budget")
+            elif '-----' in line:
+                break_next = True
+                continue
+            try:
+                item, ival, oval = self._parse_gw_line(line)
+            except Exception as e:
+                raise Exception("error parsing GW items on line {0}: {1}".
+                                format(self.lcount, str(e)))
+            self._add_to_gw_data(item, ival, oval, comp)
+            if break_next:
+                break
+        # read extras (in-out) and percent discrep.
+        blank_count = 0
         while True:
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading budget")
             elif '-----' in line:
                 break
+            elif line.strip() == '':
+                blank_count += 1
+                if blank_count == 2:
+                    break  # two consecutive blank line is end of block
+                else:
+                    continue
+            else:
+                blank_count = 0  #
             try:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
-                raise Exception("error parsing GW items on line {0}: {1}".
-                                format(self.lcount, str(e)))
-            item += "_{0}".format(comp)
-            for lab, val in zip(["_in", "_out"], [ival, oval]):
-                iitem = item + lab + "_cum"
-                if iitem not in self.gw_data.keys():
-                    self.gw_data[iitem] = []
-                self.gw_data[iitem].append(val)
+                raise Exception("error parsing GW items on line {0}: {1}".format(self.lcount, str(e)))
+            self._add_to_gw_data(item, ival, oval, comp)
 
     def _parse_gw_line(self, line):
         raw = line.lower().split(':')
-        item = raw[0].strip().replace(' ', '_')
-        ival = float(raw[1].split()[0])
-        oval = -1.0 * float(raw[1].split()[1])
+        item = raw[0].strip().strip('[\|]').replace(' ', '_')
+        idx_ival = 0
+        idx_oval = 1
+        if "TOTAL" in item.upper():
+            idx_oval += 1  # to deal with the units in the total string
+        if len(raw[1].split()) < 2:  # net (in-out) and discrepancy will only have 1 entry
+            ival = float(raw[1])
+            oval = None
+        else:
+            ival = float(raw[1].split()[idx_ival])
+            oval = -1.0 * float(raw[1].split()[idx_oval])
         return item, ival, oval
+
+    def _add_to_gw_data(self, item, ival, oval, comp):
+        item += "_{0}".format(comp)
+        if oval is None:
+            lab_val = zip([""], [ival])
+        else:
+            lab_val = zip(["_in", "_out"], [ival, oval])
+        for lab, val in lab_val:
+            iitem = item + lab + "_cum"
+            if iitem not in self.gw_data.keys():
+                self.gw_data[iitem] = []
+            self.gw_data[iitem].append(val)
 
     def _parse_sw(self, f, line):
         try:

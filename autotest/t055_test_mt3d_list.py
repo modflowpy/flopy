@@ -12,7 +12,11 @@ def test_mtlist():
 
     mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp.list"))
-    df_gw, df_sw = mt.parse(forgive=False, start_datetime=None)
+    df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
+
+    mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
+    mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    df_gw2, df_sw2 = mt.parse(forgive=False, start_datetime=None)
 
     mt_dir = os.path.join("..","examples","data","mt3d_test")
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir,"mcomp.list"))
