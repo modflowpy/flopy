@@ -181,9 +181,10 @@ class MtListBudget(object):
         except:
             print("must use pandas")
             return
-        out_cols = [c for c in df.columns if "_out" in c]
-        in_cols = [c for c in df.columns if "_in" in c]
-        out_base =[c.replace("_out", '') for c in out_cols]
+        out_cols = [c for c in df.columns if "_out" in c and not c.startswith("net_")]
+        in_cols = [c for c in df.columns if "_in" in c and not c.startswith("net_")]
+        add_cols = [c for c in df.columns if c not in out_cols + in_cols + ["totim"]]
+        out_base = [c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
@@ -192,7 +193,7 @@ class MtListBudget(object):
         out_base.update(in_base)
         out_base = list(out_base)
         out_base.sort()
-        new = {"totim":df.totim}
+        new = {"totim": df.totim}
         for col in out_base:
             if col in out_dict:
                 odata = df.loc[:, out_dict[col]]
@@ -203,8 +204,8 @@ class MtListBudget(object):
             else:
                 idata = 0.0
             new[col] = idata - odata
-
-        return pd.DataFrame(new,index=df.index)
+        new_df = pd.concat([pd.DataFrame(new, index=df.index), df.loc[:, add_cols]], axis=1)
+        return new_df
 
     def _readline(self, f):
         line = f.readline().lower()
