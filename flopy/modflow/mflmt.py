@@ -4,7 +4,7 @@ the ModflowLmt class as `flopy.modflow.ModflowLmt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt.htm>`_.
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt6.htm>`_.
 
 """
 import os

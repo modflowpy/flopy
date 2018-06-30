@@ -685,10 +685,11 @@ class ModflowUzf1(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
+        specifythtr, specifythti, nosurfleak = False, False, False
         if 'options' in line:
             line = read_nwt_options(f)
-        specifythtr, specifythti, nosurfleak = _parse1a(line)
-
+            specifythtr, specifythti, nosurfleak = _parse1a(line)
+            line = f.readline()
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
