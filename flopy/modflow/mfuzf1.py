@@ -262,11 +262,11 @@ class ModflowUzf1(Package):
 
     Attributes
     ----------
-    nuzgag : integer
+    nuzgag : integer (deprecated - counter is set based on length of uzgage)
         equal to the number of cells (one per vertical column) that will be
         specified for printing detailed information on the unsaturated zone
         water budget and water content. A gage also may be used to print
-        the budget summed over all model cells.  (default is 0)
+        the budget summed over all model cells.  (default is None)
 
     Methods
     -------
@@ -297,7 +297,7 @@ class ModflowUzf1(Package):
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
                  nwt_11_fmt=False,
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
-                 etsquare=None, netflux=None,
+                 etsquare=None, netflux=None, nuzgag=None,
                  uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None):
         # set default unit number of one is not specified
