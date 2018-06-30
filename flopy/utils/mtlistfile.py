@@ -143,7 +143,7 @@ class MtListBudget(object):
             df_gw.index = df_gw.totim
         df_sw = None
         if len(self.sw_data) > 0:
-            # trim the lists so that they are all the same lenght
+            # trim the lists so that they are all the same length
             # in case of a read fail
             min_len = 1e+10
             for i, lst in self.sw_data.items():
@@ -265,7 +265,7 @@ class MtListBudget(object):
             self._add_to_gw_data(item, ival, oval, comp)
             if break_next:
                 break
-        # read extras (in-out) and percent discrep.
+        # read extras (in-out and percent discrep.)
         blank_count = 0
         while True:
             line = self._readline(f)
@@ -333,52 +333,46 @@ class MtListBudget(object):
             if line is None:
                 raise Exception(
                     "EOF while reading from time step to SW budget")
+        break_next = False
         while True:
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading 'in' SW budget")
             elif '------' in line:
-                break
+                break_next = True # make sure we read total in
+                continue
             try:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 raise Exception(
                     "error parsing 'in' SW items on line {0}: {1}".format(
                         self.lcountm, str(e)))
-            item += '_{0}_{1}'.format(comp, 'in')
-            for lab, val in zip(['_cum', '_flx'], [cval, fval]):
-                iitem = item + lab
-                if iitem not in self.sw_data.keys():
-                    self.sw_data[iitem] = []
-                self.sw_data[iitem].append(val)
-        line = self._readline(f)
+            self._add_to_sw_data('in', item, cval, fval, comp)
+            if break_next:
+                break
+        line = self._readline(f) # blank line read
         if line is None:
             raise Exception("EOF while reading 'in' SW budget")
-        # in_tots = self._parse_sw_line(line)
-        line = self._readline(f)
-        if line is None:
-            raise Exception("EOF while reading 'in' SW budget")
-        while True:
+        while True:  # read outs
             line = self._readline(f)
             if line is None:
                 raise Exception()
             elif '------' in line:
-                break
+                break_next = True  # make sure we read total out
+                continue
             try:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 raise Exception(
                     "error parsing 'out' SW items on line {0}: {1}".format(
                         self.lcount, str(e)))
-            item += '_{0}_{1}'.format(comp, 'out')
-            for lab, val in zip(['_cum', '_flx'], [cval, fval]):
-                iitem = item + lab
-                if iitem not in self.sw_data.keys():
-                    self.sw_data[iitem] = []
-                self.sw_data[iitem].append(val)
+            self._add_to_sw_data('out', item, cval, fval, comp)
+            if break_next:
+                break
         line = self._readline(f)
         if line is None:
             raise Exception("EOF while reading 'out' SW budget")
+        # TODO: SW net in out and  discrepancy
         # out_tots = self._parse_sw_line(line)
 
     def _parse_sw_line(self, line):
@@ -390,3 +384,11 @@ class MtListBudget(object):
         fval = float(raw[2])
         # assert citem == fitem,"{0}, {1}".format(citem,fitem)
         return citem, cval, fval
+
+    def _add_to_sw_data(self,inout, item, cval, fval, comp):
+        item += '_{0}_{1}'.format(comp, inout)
+        for lab, val in zip(['_cum', '_flx'], [cval, fval]):
+            iitem = item + lab
+            if iitem not in self.sw_data.keys():
+                self.sw_data[iitem] = []
+            self.sw_data[iitem].append(val)
