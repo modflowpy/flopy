@@ -1,5 +1,8 @@
+import sys
+import numpy as np
 from flopy.plot.map import StructuredMapView
 from flopy.plot.crosssection import StructuredCrossSection
+from flopy.plot import plotutil
 
 try:
     import matplotlib.pyplot as plt
@@ -227,7 +230,13 @@ class PlotMapView(object):
             Keyword arguments passed to plotutil.plot_shapefile()
 
         """
-        return self.__cls.plot_shapefile(shp=shp, **kwargs)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
+
+        return patch_collection
 
     def plot_cvfd(self, verts, iverts, **kwargs):
         """
@@ -245,13 +254,19 @@ class PlotMapView(object):
             Keyword arguments passed to plotutil.plot_cvfd()
 
         """
-        return self.__cls.plot_cvfd(verts=verts, iverts=iverts,
-                                    **kwargs)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, self.layer,
+                                              **kwargs)
+        return patch_collection
 
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer).
+        Contour a cvfd array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer). The vertices
+        must be in the same coordinates as the rotated and offset grid.
 
         Parameters
         ----------
@@ -269,9 +284,44 @@ class PlotMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        return self.__cls.contour_array_cvfd(vertc=vertc, a=a,
-                                             masked_values=masked_values,
-                                             **kwargs)
+        if 'ncpl' in kwargs:
+            nlay = self.layer + 1
+            ncpl = kwargs.pop('ncpl')
+            if isinstance(ncpl, int):
+                i = int(ncpl)
+                ncpl = np.ones((nlay,), dtype=np.int) * i
+            elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
+                ncpl = np.array(ncpl)
+            i0 = 0
+            i1 = 0
+            for k in range(nlay):
+                i0 = i1
+                i1 = i0 + ncpl[k]
+            # retain vertc in selected layer
+            vertc = vertc[i0:i1, :]
+        else:
+            i0 = 0
+            i1 = vertc.shape[0]
+
+        plotarray = a[i0:i1]
+
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                kwargs.pop('cmap')
+
+        contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
+                                    plotarray, **kwargs)
+
+        return contour_set
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
@@ -306,6 +356,8 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
+        # todo: figure out the preparation for plotting discharge.... if user should do
+        # todo: frf, fff, flf or flopy should auto-process these data!
         return self.__cls.plot_discharge(frf=frf, fff=fff, dis=dis, flf=flf, head=head,
                                          istep=istep, jstep=jstep, normalize=normalize,
                                          **kwargs)
@@ -340,8 +392,92 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        return self.__cls.plot_pathline(pl=pl, travel_time=travel_time,
-                                        **kwargs)
+        from matplotlib.collections import LineCollection
+        # make sure pathlines is a list
+        if not isinstance(pl, list):
+            pl = [pl]
+
+        # todo: add a check if this is Unstructured. We then get rid of layers
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'colors' not in kwargs:
+            kwargs['colors'] = '0.5'
+
+        linecol = []
+        for p in pl:
+            if travel_time is None:
+                tp = p.copy()
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (p['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (p['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (p['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (p['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (p['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (p['time'] <= time)
+                tp = p[idx]
+
+            # rotate data
+            # todo: this is propably not applicable to vertex grid models! Add a check if needed!
+            # todo: there should not be a sr.yedge array either.... however this refers to yorigin, so maybe if vertex/ unstructured; set to zero!
+            x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
+                                      self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+            # build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            # select based on layer
+            if kon >= 0:
+                kk = p['k'].copy().reshape(p.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+            else:
+                arr = np.ma.asarray(arr)
+            # append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+        # create line collection
+        lc = None
+        if len(linecol) > 0:
+            lc = LineCollection(linecol, **kwargs)
+            ax.add_collection(lc)
+        return lc
 
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):

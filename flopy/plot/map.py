@@ -106,8 +106,6 @@ class StructuredMapView(object):
         else:
             self._extent = None
 
-        return
-
     @property
     def extent(self):
         if self._extent is None:
@@ -423,13 +421,9 @@ class StructuredMapView(object):
             Keyword arguments passed to plotutil.plot_shapefile()
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
-        return patch_collection
+        err_msg = "plot_shapefile() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_cvfd(self, verts, iverts, **kwargs):
         """
@@ -447,13 +441,9 @@ class StructuredMapView(object):
             Keyword arguments passed to plotutil.plot_cvfd()
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-        patch_collection = plotutil.plot_cvfd(verts, iverts, ax, self.layer,
-                                              **kwargs)
-        return patch_collection
+        err_msg = "plot_cvfd() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
@@ -476,44 +466,9 @@ class StructuredMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        if 'ncpl' in kwargs:
-            nlay = self.layer + 1
-            ncpl = kwargs.pop('ncpl')
-            if isinstance(ncpl, int):
-                i = int(ncpl)
-                ncpl = np.ones((nlay,), dtype=np.int) * i
-            elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
-                ncpl = np.array(ncpl)
-            i0 = 0
-            i1 = 0
-            for k in range(nlay):
-                i0 = i1
-                i1 = i0 + ncpl[k]
-            # retain vertc in selected layer
-            vertc = vertc[i0:i1, :]
-        else:
-            i0 = 0
-            i1 = vertc.shape[0]
-
-        plotarray = a[i0:i1]
-
-        if masked_values is not None:
-            for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        if 'colors' in kwargs.keys():
-            if 'cmap' in kwargs.keys():
-                kwargs.pop('cmap')
-
-        contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
-                                    plotarray, **kwargs)
-
-        return contour_set
+        err_msg = "contour_array_cvfd() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
@@ -657,89 +612,9 @@ class StructuredMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        from matplotlib.collections import LineCollection
-        # make sure pathlines is a list
-        if not isinstance(pl, list):
-            pl = [pl]
-
-        if 'layer' in kwargs:
-            kon = kwargs.pop('layer')
-            if sys.version_info[0] > 2:
-                if isinstance(kon, bytes):
-                    kon = kon.decode()
-            if isinstance(kon, str):
-                if kon.lower() == 'all':
-                    kon = -1
-                else:
-                    kon = self.layer
-        else:
-            kon = self.layer
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        if 'colors' not in kwargs:
-            kwargs['colors'] = '0.5'
-
-        linecol = []
-        for p in pl:
-            if travel_time is None:
-                tp = p.copy()
-            else:
-                if isinstance(travel_time, str):
-                    if '<=' in travel_time:
-                        time = float(travel_time.replace('<=', ''))
-                        idx = (p['time'] <= time)
-                    elif '<' in travel_time:
-                        time = float(travel_time.replace('<', ''))
-                        idx = (p['time'] < time)
-                    elif '>=' in travel_time:
-                        time = float(travel_time.replace('>=', ''))
-                        idx = (p['time'] >= time)
-                    elif '<' in travel_time:
-                        time = float(travel_time.replace('>', ''))
-                        idx = (p['time'] > time)
-                    else:
-                        try:
-                            time = float(travel_time)
-                            idx = (p['time'] <= time)
-                        except:
-                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
-                                     'variable cannot be parsed. ' + \
-                                     'Acceptable logical variables are , ' + \
-                                     '<=, <, >=, and >. ' + \
-                                     'You passed {}'.format(travel_time)
-                            raise Exception(errmsg)
-                else:
-                    time = float(travel_time)
-                    idx = (p['time'] <= time)
-                tp = p[idx]
-
-            # rotate data
-            x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
-                                      self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-            # build polyline array
-            arr = np.vstack((x0r, y0r)).T
-            # select based on layer
-            if kon >= 0:
-                kk = p['k'].copy().reshape(p.shape[0], 1)
-                kk = np.repeat(kk, 2, axis=1)
-                arr = np.ma.masked_where((kk != kon), arr)
-            else:
-                arr = np.ma.asarray(arr)
-            # append line to linecol if there is some unmasked segment
-            if not arr.mask.all():
-                linecol.append(arr)
-        # create line collection
-        lc = None
-        if len(linecol) > 0:
-            lc = LineCollection(linecol, **kwargs)
-            ax.add_collection(lc)
-        return lc
+        err_msg = "plot_pathline() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
@@ -914,8 +789,53 @@ class VertexModelMap(object):
     grid at (0, 0).
 
     """
-    def __init__(self):
-        pass
+    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
+                 extent=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., length_multiplier=1.):
+
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelMap method'
+            raise Exception(s)
+
+        self.model = model
+        self.dis = dis
+        self.layer = layer
+        self.sr = None
+
+        if sr is not None:
+            self.sr = copy.deepcopy(sr)
+
+        elif dis is not None:
+            self.sr = copy.deepcopy(dis.sr)
+
+        elif model is not None:
+            self.sr = copy.deepcopy(model.dis.sr)
+
+        else:
+            self.sr = SpatialReference(xll=xll, yll=yll, xul=xul, yul=yul,
+                                       rotation=rotation,
+                                       length_multiplier=length_multiplier)
+
+        # model map override spatial reference settings
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
+                rotation != 0 or length_multiplier != 1.:
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+
+        if ax is None:
+            try:
+                self.ax = plt.gca()
+                self.ax.set_aspect('equal')
+            except:
+                self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
+        else:
+            self.ax = ax
+
+        if extent is not None:
+            self._extent = extent
+        else:
+            self._extent = None
 
     @property
     def extent(self):
@@ -923,7 +843,7 @@ class VertexModelMap(object):
 
     def plot_array(self, a, masked_values=None, **kwargs):
         """
-        Plot an array.  If the array is three-dimensional, then the method
+        Plot an array.  If the array is two-dimensional, then the method
         will plot the layer tied to this class (self.layer).
 
         Parameters
@@ -937,14 +857,49 @@ class VertexModelMap(object):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        patch_collection : matplotlib.collections.PatchCollection
 
         """
-        raise NotImplementedError()
+        nf = True
+        if nf:
+            raise NotImplementedError()
+
+        if a.ndim == 2:
+            plotarray = a[self.layer, :]
+        elif a.ndim == 1:
+            plotarray = a
+        else:
+            raise Exception('Array must be of dimension 1 or 2')
+
+        mask = [False]*plotarray.size
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+                mask = np.ma.getmask(plotarray)
+
+        if type(mask) is np.bool_:
+            mask = [False] * plotarray.size
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # todo: solve this tabular data issue. We need a dictionary or dataframe of verticies to plot
+        # todo: vertex and unstructured grids! Name the vertex table appropriately too!
+        vertexdict = self.sr.xydict
+
+        p = self.get_patch_collection(vertexdict, plotarray, mask, **kwargs)
+        patch_collection = ax.add_collection(p)
+
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
+        return patch_collection
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
+        Contour an array.  If the array is two-dimensional, then the method
         will contour the layer tied to this class (self.layer).
 
         Parameters
@@ -961,7 +916,45 @@ class VertexModelMap(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        raise NotImplementedError()
+        from scipy.interpolate import griddata
+
+        if a.ndim == 2:
+            plotarray = a[self.layer, :]
+        elif a.ndim == 1:
+            plotarray = a
+        else:
+            raise Exception('Array must be of dimension 1 or 2')
+
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'colors' in kwargs.keys():
+            if 'cmap' in kwargs.keys():
+                cmap = kwargs.pop('cmap')
+            cmap = None
+
+        # todo: check that these data still exist within the sr class
+        x = self.sr.xcenter_array
+        y = self.sr.ycenter_array
+
+        xi = np.linspace(np.min(x), np.max(x), 1000)
+        yi = np.linspace(np.min(y), np.max(y), 1000)
+
+        zi = griddata((x, y), plotarray, (xi[None, :], yi[:, None]), method='cubic')
+
+        contour_set = ax.contour(xi, yi, zi, **kwargs)
+        # contour_set = ax.contourf(xi, yi, zi, **kwargs)
+
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
+        return contour_set
 
     def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
         """
@@ -1019,7 +1012,31 @@ class VertexModelMap(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        raise NotImplementedError()
+        nf = True
+        if nf:
+            raise NotImplementedError()
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'edgecolor' not in kwargs:
+            kwargs['edgecolor'] = '0.5'
+
+        if 'facecolor' not in kwargs:
+            kwargs['facecolor'] = 'none'
+
+        # todo: develop SR or modelgrid method to get the verticies in tabular
+        # todo: or dictionary format. Can then use that for plotting.
+        vertexdict = self.sr.xydict
+        pc = self.get_patch_collection(vertexdict, grid=True, **kwargs)
+
+        ax.add_collection(pc)
+        ax.set_xlim(self.extent[0], self.extent[1])
+        ax.set_ylim(self.extent[2], self.extent[3])
+
+        return pc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -1049,7 +1066,63 @@ class VertexModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        raise NotImplementedError()
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # Find package to plot
+        if package is not None:
+            p = package
+        elif self.model is not None:
+            if ftype is None:
+                raise Exception('ftype not specified')
+            p = self.model.get_package(ftype)
+        else:
+            raise Exception('Cannot find package to plot')
+
+        # Get the list data
+        try:
+            # todo: remove test case from try statement, update to flopy code
+            mflist = p.data[kper]
+            # mflist = p.stress_period_data[kper]
+        except Exception as e:
+            raise Exception('Not a list-style boundary package:' + str(e))
+
+        # Return if MfList is None
+        if mflist is None:
+            return None
+
+        # todo: check that these are still valid (nlay, ncpl). Spatial reference has changed!
+        nlay = self.sr.nlay
+        # Plot the list locations
+        plotarray = np.zeros((nlay, self.sr.ncpl), dtype=np.int)
+        if plotAll:
+            # todo: check if raw data is zero based or 1 based remove <-1> if appropriate
+            idx = [mflist['ncpl'] - 1]
+            # plotarray[:, idx] = 1
+            pa = np.zeros((self.sr.ncpl), dtype=np.int)
+            pa[idx] = 1
+            for k in range(nlay):
+                plotarray[k, :] = pa.copy()
+        else:
+            # todo: check if raw data is zero based or 1 based remove <-1> if appropriate
+            idx = [mflist['layer'] - 1, mflist['ncpl'] - 1]
+
+            plotarray[idx] = 1
+
+        if color is None:
+            if ftype in bc_color_dict:
+                c = bc_color_dict[ftype]
+            else:
+                c = bc_color_dict['default']
+        else:
+            c = color
+        cmap = matplotlib.colors.ListedColormap(['0', c])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        patch_collection = self.plot_array(plotarray, cmap=cmap, norm=norm, masked_values=[0], **kwargs)
+        return patch_collection
 
     def plot_shapefile(self, shp, **kwargs):
         """
@@ -1065,7 +1138,9 @@ class VertexModelMap(object):
             Keyword arguments passed to plotutil.plot_shapefile()
 
         """
-        raise NotImplementedError()
+        err_msg = "plot_shapefile() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_cvfd(self, verts, iverts, **kwargs):
         """
@@ -1083,7 +1158,9 @@ class VertexModelMap(object):
             Keyword arguments passed to plotutil.plot_cvfd()
 
         """
-        raise NotImplementedError()
+        err_msg = "plot_cvfd() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
@@ -1106,7 +1183,9 @@ class VertexModelMap(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        raise NotImplementedError()
+        err_msg = "contour_array_cvfd() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
@@ -1173,7 +1252,9 @@ class VertexModelMap(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        raise NotImplementedError()
+        err_msg = "plot_pathline() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
@@ -1190,7 +1271,7 @@ class VertexModelMap(object):
             considered. (default is 'ending')
         selection : tuple
             tuple that defines the zero-base layer, row, column location
-            (l, r, c) to use to make a selection of particle endpoints.
+            (l, node) to use to make a selection of particle endpoints.
             The selection could be a well location to determine capture zone
             for the well. If selection is None, all particle endpoints for
             the user-sepcified direction will be plotted. (default is None)
@@ -1213,7 +1294,100 @@ class VertexModelMap(object):
         sp : matplotlib.pyplot.scatter
 
         """
-        raise NotImplementedError()
+        direction = direction.lower()
+        if direction == 'starting':
+            xp, yp = 'x0', 'y0'
+
+        elif direction == 'ending':
+            xp, yp = 'x', 'y'
+
+        else:
+            errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
+                     'or "starting".'
+            raise Exception(errmsg)
+
+        if selection_direction is not None:
+            if selection_direction.lower() != 'starting' and \
+                    selection_direction.lower() != 'ending':
+                errmsg = 'flopy.map.plot_endpoint selection_direction ' + \
+                         'must be "ending" or "starting".'
+                raise Exception(errmsg)
+        else:
+            if direction.lower() == 'starting':
+                selection_direction = 'ending'
+            elif direction.lower() == 'ending':
+                selection_direction = 'starting'
+
+        if selection is not None:
+            try:
+                # todo: check that this is the proper fmt!
+                k, i = selection[0], selection[1]
+                if selection_direction.lower() == 'starting':
+                    ksel, node = 'k0', "node0"  # 'i0', 'j0'
+                elif selection_direction.lower() == 'ending':
+                    ksel, node = 'k', 'node'  # , 'j'
+            except:
+                errmsg = 'flopy.map.plot_endpoint selection must be a ' + \
+                         'zero-based layer, node tuple (l, node) ' + \
+                         'of the location to evaluate (i.e., well location).'
+                raise Exception(errmsg)
+
+        if selection is not None:
+            # todo: check that this is the proper fmt!
+            idx = (ep[ksel] == k) & (ep[node] == i)
+            tep = ep[idx]
+        else:
+            tep = ep.copy()
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # scatter kwargs that users may redefine
+        if 'c' not in kwargs:
+            c = tep['finaltime'] - tep['initialtime']
+        else:
+            c = np.empty((tep.shape[0]), dtype="S30")
+            c.fill(kwargs.pop('c'))
+
+        s = 50
+        if 's' in kwargs:
+            s = float(kwargs.pop('s')) ** 2.
+        elif 'size' in kwargs:
+            s = float(kwargs.pop('size')) ** 2.
+
+        # colorbar kwargs
+        createcb = False
+        if 'colorbar' in kwargs:
+            createcb = kwargs.pop('colorbar')
+
+        colorbar_label = 'Endpoint Time'
+        if 'colorbar_label' in kwargs:
+            colorbar_label = kwargs.pop('colorbar_label')
+
+        shrink = 1.
+        if 'shrink' in kwargs:
+            shrink = float(kwargs.pop('shrink'))
+
+        # rotate data
+        x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation, 0.,
+                                  self.sr.yedge[0])
+        x0r += self.sr.xul
+        y0r += self.sr.yul - self.sr.yedge[0]
+        # build array to plot
+        arr = np.vstack((x0r, y0r)).T
+
+        # plot the end point data
+        # todo: try ax.scatter to preseve the current axis object
+        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        # sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+
+        # add a colorbar for travel times
+        if createcb:
+            cb = plt.colorbar(sp, shrink=shrink)
+            cb.set_label(colorbar_label)
+        return sp
 
 
 class ModelMap(object):
@@ -1261,7 +1435,8 @@ class ModelMap(object):
                 extent=None, xul=None, yul=None, xll=None, yll=None,
                 rotation=0., length_multiplier=1.):
 
-        err_msg = "ModelMap will be replaced by PlotMapView(), Calling PlotMapView()"
+        err_msg = "ModelMap will be replaced by " \
+                  "PlotMapView(); Calling PlotMapView()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
         return PlotMapView(sr=sr, ax=ax, model=model, dis=dis, layer=layer,

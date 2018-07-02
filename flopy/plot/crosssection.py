@@ -54,6 +54,7 @@ class StructuredCrossSection(object):
             raise ImportError(s)
 
         self.model = model
+        # todo: add sr to this!
         if dis is None:
             if model is None:
                 raise Exception('Cannot find discretization package')
@@ -1041,10 +1042,91 @@ class VertexCrossSection(object):
 
         self.direction = "xy"
 
+        # Set origin and rotation, not sure if this applies, but we can include it!
+        if xul is not None:
+            self.sr.xul = xul
+        if yul is not None:
+            self.sr.yul = yul
+        if rotation is not None:
+            self.sr.rotation = rotation
+
         # convert pts list to a numpy array
         pts = line[onkey]
         self.pts = np.array(pts)
         #todo: look into spatial refernce to see what is there for vertex grids!
+
+        # get points along the line
+        # todo: after crafting this spartial refernce code, send the dictionary item to a plotutil method!
+        self.xpts = plotutil.line_intersect_vertex_grid(self.pts, self.sr.xydict)
+        # xpts returns xy intersection locations of line by cell
+
+        if len(self.xpts) < 2:
+            s = 'cross-section cannot be created\n.'
+            s += '   less than 2 points intersect the model grid\n'
+            s += '   {} points intersect the grid.'.format(len(self.xpts))
+            raise Exception(s)
+
+        top = self.dis.top
+        botm = self.dis.botm
+        elev = [top.copy()]
+        for k in range(self.dis.nlay):
+            elev.append(botm[k, :])
+
+        self.elev = np.array(elev)
+        self.layer0 = 0
+        self.layer1 = self.dis.nlay + 1
+
+        zpts = []
+        for k in range(self.layer0, self.layer1):
+            # todo: craft code that accomplishes this! It grabs the cell values from a dict and list!
+            zpts.append(plotutil.cell_value_points_from_dict(self.xpts, self.elev[k, :]))
+        self.zpts = zpts
+
+        xcentergrid = []
+        zcentergrid = []
+        xparr = []
+        zparr = []
+
+        # todo: redo this section
+        if self.dis.nlay == 1:
+            for k in range(1, len(zpts)):
+                xp = {}
+                zp = {}
+                for i, value in zpts[k].items():
+                    try:
+                        xparr.append([self.xpts[i][0][0], self.xpts[i][-1][0]])
+                        zparr.append([value, zpts[k - 1][i]])
+                        # todo: this should be set to a dictionary correct. Currently its being overwritten each loop!
+                        # todo: then it'll be the same as the following code after else:
+                        xp = 0.5 * (self.xpts[i][0][0] + self.xpts[i][-1][0])
+                        zp = 0.5 * (value + self.zpts[k - 1][i])
+
+                    except:
+                        break
+                xcentergrid.append(xp)
+                zcentergrid.append(zp)
+
+        else:
+            for k in range(1, len(zpts)):
+                xp = {}
+                zp = {}
+                for i, value in zpts[k].items():
+                    try:
+                        xparr.append([self.xpts[i][0][0], self.xpts[i][-1][0]])
+                        zparr.append([value, zpts[k - 1][i]])
+                        xp[i] = 0.5 * (self.xpts[i][0][0] + self.xpts[i][-1][0])
+                        zp[i] = 0.5 * (value + zpts[k - 1][i])
+
+                    except:
+                        break
+                xcentergrid.append(xp)
+                zcentergrid.append(zp)
+
+        self.xparr = np.array(xparr)
+        self.zparr = np.array(zparr)
+
+        self.xcentergrid = xcentergrid
+        self.zcentergrid = zcentergrid
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
