@@ -308,8 +308,8 @@ class MFSimulation(PackageContainer):
         self.dimensions = None
         self.type = 'Simulation'
 
-        self._version = version
-        self._exe_name = exe_name
+        self.version = version
+        self.exe_name = exe_name
         self._models = collections.OrderedDict()
         self._tdis_file = None
         self._exchange_files = collections.OrderedDict()
@@ -376,7 +376,7 @@ class MFSimulation(PackageContainer):
         file_mgt = self.simulation_data.mfpath
         data_str = 'sim_name = {}\nsim_path = {}\nexe_name = ' \
                    '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
-                                   self._exe_name)
+                                   self.exe_name)
 
         for package in self.packagelist:
             pk_str = package._get_data_str(formal, False)
@@ -901,7 +901,7 @@ class MFSimulation(PackageContainer):
                 silent = False
             else:
                 silent = True
-        return run_model(self._exe_name, None,
+        return run_model(self.exe_name, None,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
                          normal_msg=normal_msg, async=async, cargs=cargs)
