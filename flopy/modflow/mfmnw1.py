@@ -361,7 +361,7 @@ def _parse_3(line, txt):
     def getitem(line, txt):
         return line.pop(0).replace(txt+':', '').strip()
     line = line_parse(line.lower())
-    items = [getitem(line, 'file:'),
+    items = [getitem(line, 'file'),
              getitem(line, txt)]
     if 'alltime' in ' '.join(line):
         items.append('alltime')
