@@ -1087,9 +1087,20 @@ class DataStorage(object):
                             new_data = np.rec.array(data,
                                                     self._recarray_type_list)
                         except:
+                            data_expected = []
+                            for data_type in self._recarray_type_list:
+                                data_expected.append('<{}>'.format(
+                                    data_type[0]))
                             message = 'An error occurred when storing data ' \
-                                      '"{}" in a recarray.'.format(
-                                          self.data_dimensions.structure.name)
+                                      '"{}" in a recarray. {} data is a one ' \
+                                      'or two dimensional list containing ' \
+                                      'the variables "{}" (some variables ' \
+                                      'may be optional, see MF6 ' \
+                                      'documentation), but data "{}" was ' \
+                                      'supplied.'.format(
+                                          self.data_dimensions.structure.name,
+                                          self.data_dimensions.structure.name,
+                                          ' '.join(data_expected), data)
                             type_, value_, traceback_ = sys.exc_info()
                             raise MFDataException(
                                 self.data_dimensions.structure.get_model(),
