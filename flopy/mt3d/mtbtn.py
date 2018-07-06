@@ -740,15 +740,15 @@ class Mt3dBtn(Package):
         if m_arr[0].isdigit() is False:
             line = f.readline()
         nlay = int(line[0:10])
-        nrow = int(line[11:20])
-        ncol = int(line[21:30])
-        nper = int(line[31:40])
+        nrow = int(line[10:20])
+        ncol = int(line[20:30])
+        nper = int(line[30:40])
         try:
-            ncomp = int(line[41:50])
+            ncomp = int(line[40:50])
         except:
             ncomp = 1
         try:
-            mcomp = int(line[51:60])
+            mcomp = int(line[50:60])
         except:
             mcomp = 1
         if model.verbose:
