@@ -85,7 +85,6 @@ class MtListBudget(object):
         with open(self.file_name) as f:
             while True:
                 line = self._readline(f)
-
                 if line is None:
                     break
                 if self.gw_budget_key in line:
@@ -353,6 +352,7 @@ class MtListBudget(object):
         line = self._readline(f) # blank line read
         if line is None:
             raise Exception("EOF while reading 'in' SW budget")
+        break_next = False
         while True:  # read outs
             line = self._readline(f)
             if line is None:
