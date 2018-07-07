@@ -611,9 +611,9 @@ class Mt3dBtn(Package):
         f_btn.write('{0:>10s}\n'.format(ss))
 
         # A16, A17
-        if self.timprs is None:
-            f_btn.write('{0:10d}\n'.format(self.nprs))
-        else:
+        f_btn.write('{0:10d}\n'.format(self.nprs))
+        
+        if self.nprs > 0:
             f_btn.write('{0:10d}\n'.format(len(self.timprs)))
             timprs = Util2d(self.parent, (len(self.timprs),),
                              np.float32, self.timprs, name='timprs',
