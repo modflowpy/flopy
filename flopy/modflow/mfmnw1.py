@@ -31,9 +31,10 @@ class ModflowMnw1(Package):
         calculating drawdown
     losstype : string
         head loss type for each well
-    wel1_bynode_qsum : list of lists
+    wel1_bynode_qsum : list of lists or None
         nested list containing file names, unit numbers, and ALLTIME flag for
         auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        if None, these optional external filenames and unit numbers are not written out
     itmp : array
         number of wells to be simulated for each stress period (shape : (NPER))
     lay_row_col_qdes_mn_multi : list of arrays
