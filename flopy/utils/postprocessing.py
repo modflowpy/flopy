@@ -10,8 +10,8 @@ def get_transmissivities(heads, m,
 
     Parameters
     ----------
-    heads : 2D array
-        numpy array of shape nlay by n locations
+    heads : 2D array OR 3D array
+        numpy array of shape nlay by n locations (2D) OR complete heads array of the model for one time (3D)
     m : flopy.modflow.Modflow object
         Must have dis, sr, and lpf or upw packages.
     r : 1D array-like of ints, of length n locations
@@ -52,6 +52,10 @@ def get_transmissivities(heads, m,
         raise ValueError('No LPF or UPW package.')
 
     botm = m.dis.botm.array[:, r, c]
+
+    if heads.shape == (m.nlay, m.nrow, m.ncol):
+        heads = heads[:,r,c]
+
     assert heads.shape == botm.shape, 'Shape of heads array must be nlay x nhyd'
 
     # set open interval tops/bottoms to model top/bottom if None
