@@ -146,6 +146,10 @@ class ModelGrid(object):
         are in the coordinate system provided by the spatial reference
         information. otherwise the cell centers are based on a 0,0 location for
         the upper left corner of the model grid
+    get_grid_lines : (point_type=PointType.spatialxyz) : list
+        returns the model grid lines in a list.  each line is returned as a
+        list containing two tuples in the format [(x1,y1), (x2,y2)] where
+        x1,y1 and x2,y2 are the endpoints of the line.
     xyvertices : (point_type) : ndarray
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
@@ -249,6 +253,12 @@ class ModelGrid(object):
 
     @abc.abstractmethod
     def get_cellcenters(self):
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
+    @abc.abstractmethod
+    def get_grid_lines(self, point_type=PointType.spatialxyz):
         raise NotImplementedError(
             'must define get_model_dim_arrays in child '
             'class to use this base class')
@@ -821,6 +831,39 @@ class StructuredModelGrid(ModelGrid):
             # store in cache
             self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
         return self._cache_dict[cache_index].data
+
+    def get_grid_lines(self, point_type=PointType.spatialxyz):
+        """
+            Get the grid lines as a list
+
+        """
+        xmin = self.xedge[0]
+        xmax = self.xedge[-1]
+        ymin = self.yedge[-1]
+        ymax = self.yedge[0]
+        lines = []
+        # Vertical lines
+        for j in range(self.ncol + 1):
+            x0 = self.xedge[j]
+            x1 = x0
+            y0 = ymin
+            y1 = ymax
+            if point_type == PointType.spatialxyz:
+                x0, y0 = self.sr.transform(x0, y0)
+                x1, y1 = self.sr.transform(x1, y1)
+            lines.append([(x0, y0), (x1, y1)])
+
+        # horizontal lines
+        for i in range(self.nrow + 1):
+            x0 = xmin
+            x1 = xmax
+            y0 = self.yedge[i]
+            y1 = y0
+            if point_type == PointType.spatialxyz:
+                x0, y0 = self.sr.transform(x0, y0)
+                x1, y1 = self.sr.transform(x1, y1)
+            lines.append([(x0, y0), (x1, y1)])
+        return lines
 
     def get_extent(self, point_type=PointType.spatialxyz):
         """

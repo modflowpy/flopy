@@ -524,8 +524,7 @@ class SpatialReference(object):
                     delc.append(float(r))
                     i += 1
         f.close()
-        return cls(np.array(delr), np.array(delc),
-                   lenuni, xul=xul, yul=yul, rotation=rot)
+        return cls(np.array(delc), lenuni, xul=xul, yul=yul, rotation=rot)
 
     @property
     def attribute_dict(self):
@@ -623,37 +622,6 @@ class SpatialReference(object):
             x /= self.length_multiplier
             y /= self.length_multiplier
         return x, y
-
-    def get_grid_lines(self):
-        """
-            Get the grid lines as a list
-
-        """
-        xmin = self.xedge[0]
-        xmax = self.xedge[-1]
-        ymin = self.yedge[-1]
-        ymax = self.yedge[0]
-        lines = []
-        # Vertical lines
-        for j in range(self.ncol + 1):
-            x0 = self.xedge[j]
-            x1 = x0
-            y0 = ymin
-            y1 = ymax
-            x0r, y0r = self.transform(x0, y0)
-            x1r, y1r = self.transform(x1, y1)
-            lines.append([(x0r, y0r), (x1r, y1r)])
-
-        # horizontal lines
-        for i in range(self.nrow + 1):
-            x0 = xmin
-            x1 = xmax
-            y0 = self.yedge[i]
-            y1 = y0
-            x0r, y0r = self.transform(x0, y0)
-            x1r, y1r = self.transform(x1, y1)
-            lines.append([(x0r, y0r), (x1r, y1r)])
-        return lines
 
     def get_grid_line_collection(self, **kwargs):
         """
