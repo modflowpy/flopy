@@ -9,9 +9,10 @@ except ImportError:
     plt = None
 
 from . import plotutil
-from .plotutil import bc_color_dict
-from ..utils import SpatialReference
-from flopy.plot.plotbase import PlotMapView
+# from flopy.plot.plotutil import bc_color_dict
+from ..utils import SpatialReference as DepreciatedSpatialReference
+from ..grid.modelgrid import StructuredModelGrid, VertexModelGrid
+from ..grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
@@ -57,8 +58,8 @@ class StructuredMapView(object):
 
     """
 
-    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
-                 extent=None, xul=None, yul=None, xll=None, yll=None,
+    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., length_multiplier=1.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -68,23 +69,33 @@ class StructuredMapView(object):
         self.model = model
         self.layer = layer
         self.dis = dis
+        self.mg = None
         self.sr = None
 
-        if sr is not None:
-            self.sr = copy.deepcopy(sr)
+        if model is not None:
+            self.mg = model.modelgrid
+            self.sr = model.modelgrid.sr
+
+        elif modelgrid is not None:
+            self.mg = modelgrid
+            self.sr = modelgrid.sr
 
         elif dis is not None:
-            # print("warning: the dis arg to model map is deprecated")
-            self.sr = copy.deepcopy(dis.parent.sr)
+            self.mg = dis.parent.modelgrid
+            self.sr = dis.parent.modelgrid.sr
 
-        elif model is not None:
-            # print("warning: the model arg to model map is deprecated")
-            self.sr = copy.deepcopy(model.sr)
+        elif sr is not None:
+            if isinstance(sr, DepreciatedSpatialReference):
+                self.mg = copy.deepcopy(sr)
+                self.sr = copy.deepcopy(sr)
 
-        else:
-            self.sr = SpatialReference(xll=xll, yll=yll, xul=xul, yul=yul,
-                                       rotation=rotation,
-                                       length_multiplier=length_multiplier)
+            else:
+                self.sr = SpatialReference(delc=np.array([]), xll=xll, xul=xul,
+                                           yul=yul, rotation=rotation,
+                                           length_multiplier=length_multiplier)
+                self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
+                                              top=np.array([]), botm=np.array([]),
+                                              idomain=np.array([]), sr=self.sr)
 
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
@@ -109,7 +120,7 @@ class StructuredMapView(object):
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.sr.get_extent()
+            self._extent = self.mg.get_extent()
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -149,9 +160,14 @@ class StructuredMapView(object):
         else:
             ax = self.ax
 
-        # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-        #                          **kwargs)
-        quadmesh = self.sr.plot_array(plotarray, ax=ax)
+        try:
+            # check if this is an old style spatial reference
+            xgrid = self.sr.xgrid
+            ygrid = self.sr.ygrid
+        except AttributeError:
+            xgrid, ygrid = self.mg.get_xygrid()
+
+        quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
 
         # set max and min
         if 'vmin' in kwargs:
@@ -195,6 +211,18 @@ class StructuredMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
+        try:
+            import matplotlib.tri as tri
+        except:
+            tri = None
+
+        try:
+            xcentergrid = self.mg.xcell_centers()
+            ycentergrid = self.mg.ycell_centers()
+        except AttributeError:
+            xcentergrid = self.sr.xcentergrid
+            ycentergrid = self.sr.ycentergrid
+
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
@@ -217,7 +245,39 @@ class StructuredMapView(object):
             if 'cmap' in kwargs.keys():
                 kwargs.pop('cmap')
 
-        contour_set = self.sr.contour_array(ax, plotarray, **kwargs)
+        plot_triplot = False
+        if 'plot_triplot' in kwargs:
+            plot_triplot = kwargs.pop('plot_triplot')
+
+        if 'extent' in kwargs and tri is not None:
+            extent = kwargs.pop('extent')
+
+
+            idx = (xcentergrid >= extent[0]) & (
+                   xcentergrid <= extent[1]) & (
+                          ycentergrid >= extent[2]) & (
+                          ycentergrid <= extent[3])
+            a = a[idx].flatten()
+            xc = xcentergrid[idx].flatten()
+            yc = ycentergrid[idx].flatten()
+            triang = tri.Triangulation(xc, yc)
+            try:
+                amask = a.mask
+                mask = [False for i in range(triang.triangles.shape[0])]
+                for ipos, (n0, n1, n2) in enumerate(triang.triangles):
+                    if amask[n0] or amask[n1] or amask[n2]:
+                        mask[ipos] = True
+                triang.set_mask(mask)
+            except:
+                mask = None
+            contour_set = ax.tricontour(triang, a, **kwargs)
+            if plot_triplot:
+                ax.triplot(triang, color='black', marker='o', lw=0.75)
+        else:
+
+            contour_set = ax.contour(xcentergrid, ycentergrid,
+                                     a, **kwargs)
+
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -303,8 +363,10 @@ class StructuredMapView(object):
         Returns
         -------
         lc : matplotlib.collections.LineCollection
-
+p
         """
+        from matplotlib.collections import LineCollection
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -313,7 +375,7 @@ class StructuredMapView(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = self.sr.get_grid_line_collection(**kwargs)
+        lc = LineCollection(self.mg.get_grid_lines(), **kwargs)
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -371,14 +433,14 @@ class StructuredMapView(object):
         # Return if MfList is None
         if mflist is None:
             return None
-        nlay = self.model.nlay
+        nlay = self.model.modelgrid.nlay
 
         # Plot the list locations
-        plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
+        plotarray = np.zeros((nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
         if plotAll:
             idx = [mflist['i'], mflist['j']]
             # plotarray[:, idx] = 1
-            pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
+            pa = np.zeros((self.mg.nrow, self.mg.ncol), dtype=np.int)
             pa[idx] = 1
             for k in range(nlay):
                 plotarray[k, :, :] = pa.copy()
@@ -391,10 +453,10 @@ class StructuredMapView(object):
 
         # set the colormap
         if color is None:
-            if ftype in bc_color_dict:
-                c = bc_color_dict[ftype]
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
             else:
-                c = bc_color_dict['default']
+                c = plotutil.bc_color_dict['default']
         else:
             c = color
 
@@ -521,6 +583,7 @@ class StructuredMapView(object):
                 print('ModelMap.plot_quiver() error: self.dis is None and dis '
                       'arg is None.')
                 return
+        # todo: this will break with flopy6 it will have to call idomain array
         ib = self.model.bas6.ibound.array
         delr = dis.delr.array
         delc = dis.delc.array
@@ -555,8 +618,16 @@ class StructuredMapView(object):
         u = qx[self.layer, :, :]
         v = qy[self.layer, :, :]
         # apply step
-        x = self.sr.xcentergrid[::istep, ::jstep]
-        y = self.sr.ycentergrid[::istep, ::jstep]
+
+        try:
+            xcentergrid = self.sr.xcentergrid
+            ycentergrid = self.sr.ycentergrid
+        except AttributeError:
+            xcentergrid = self.mg.xcell_centers()
+            ycentergrid = self.mg.ycell_centers()
+
+        x = xcentergrid[::istep, ::jstep]
+        y = ycentergrid[::istep, ::jstep]
         u = u[::istep, ::jstep]
         v = v[::istep, ::jstep]
         # normalize
@@ -730,9 +801,9 @@ class StructuredMapView(object):
 
         # rotate data
         x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation, 0.,
-                                  self.sr.yedge[0])
+                                  self.mg.yedge[0])
         x0r += self.sr.xul
-        y0r += self.sr.yul - self.sr.yedge[0]
+        y0r += self.sr.yul - self.mg.yedge[0]
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 
@@ -803,6 +874,7 @@ class VertexModelMap(object):
         self.layer = layer
         self.sr = None
 
+        # todo: rewrite for modelgrid instance!
         if sr is not None:
             self.sr = copy.deepcopy(sr)
 
@@ -1112,10 +1184,10 @@ class VertexModelMap(object):
             plotarray[idx] = 1
 
         if color is None:
-            if ftype in bc_color_dict:
-                c = bc_color_dict[ftype]
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
             else:
-                c = bc_color_dict['default']
+                c = plotutil.bc_color_dict['default']
         else:
             c = color
         cmap = matplotlib.colors.ListedColormap(['0', c])
@@ -1435,6 +1507,7 @@ class ModelMap(object):
                 extent=None, xul=None, yul=None, xll=None, yll=None,
                 rotation=0., length_multiplier=1.):
 
+        from ..plot import PlotMapView
         err_msg = "ModelMap will be replaced by " \
                   "PlotMapView(); Calling PlotMapView()"
         warnings.warn(err_msg, PendingDeprecationWarning)

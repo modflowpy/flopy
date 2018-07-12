@@ -806,7 +806,7 @@ class SpatialReference(object):
 
     def get_grid_lines(self):
         """
-            Get the grid lines as a list
+        Get the grid lines as a list
 
         """
         xmin = self.xedge[0]
@@ -840,10 +840,11 @@ class SpatialReference(object):
         Get a LineCollection of the grid
 
         """
-        from matplotlib.collections import LineCollection
+        from flopy.plot.plotbase import PlotMapView
 
-        lc = LineCollection(self.get_grid_lines(), **kwargs)
-        return lc
+        map = PlotMapView(sr=self)
+        ax = map.plot_grid(**kwargs)
+        return ax
 
     def get_xcenter_array(self):
         """
@@ -956,7 +957,7 @@ class SpatialReference(object):
             r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
         return r, c
 
-    def get_grid_map_plotter(self):
+    def get_grid_map_plotter(self, **kwargs):
         """
         Create a QuadMesh plotting object for this grid
 
@@ -965,10 +966,9 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        from matplotlib.collections import QuadMesh
-        verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
-        qm = QuadMesh(self.ncol, self.nrow, verts)
-        return qm
+        # why is this a seperate method it returns a similar repr
+        # as get_grid_line_collection!
+        return self.get_grid_line_collection(**kwargs)
 
     def plot_array(self, a, ax=None, **kwargs):
         """
@@ -983,11 +983,10 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        import matplotlib.pyplot as plt
-        if ax is None:
-            ax = plt.gca()
-        qm = ax.pcolormesh(self.xgrid, self.ygrid, a, **kwargs)
-        return qm
+        from flopy.plot.plotutil import PlotUtilities
+
+        ax = PlotUtilities._plot_array_helper(a, sr=self, axes=ax, **kwargs)
+        return ax
 
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
@@ -1234,38 +1233,12 @@ class SpatialReference(object):
         contour_set : ContourSet
 
         """
-        try:
-            import matplotlib.tri as tri
-        except:
-            tri = None
-        plot_triplot = False
-        if 'plot_triplot' in kwargs:
-            plot_triplot = kwargs.pop('plot_triplot')
-        if 'extent' in kwargs and tri is not None:
-            extent = kwargs.pop('extent')
-            idx = (self.xcentergrid >= extent[0]) & (
-                    self.xcentergrid <= extent[1]) & (
-                          self.ycentergrid >= extent[2]) & (
-                          self.ycentergrid <= extent[3])
-            a = a[idx].flatten()
-            xc = self.xcentergrid[idx].flatten()
-            yc = self.ycentergrid[idx].flatten()
-            triang = tri.Triangulation(xc, yc)
-            try:
-                amask = a.mask
-                mask = [False for i in range(triang.triangles.shape[0])]
-                for ipos, (n0, n1, n2) in enumerate(triang.triangles):
-                    if amask[n0] or amask[n1] or amask[n2]:
-                        mask[ipos] = True
-                triang.set_mask(mask)
-            except:
-                mask = None
-            contour_set = ax.tricontour(triang, a, **kwargs)
-            if plot_triplot:
-                ax.triplot(triang, color='black', marker='o', lw=0.75)
-        else:
-            contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
-                                     a, **kwargs)
+        from flopy.plot import PlotMapView
+
+        kwargs['ax'] = ax
+        map = PlotMapView(sr=self)
+        contour_set = map.contour_array(a=a, **kwargs)
+
         return contour_set
 
     @property
@@ -1740,9 +1713,9 @@ class SpatialReferenceUnstructured(SpatialReference):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        # todo: implement these methods for vertex
         from ..plot import plotutil
-        if ax is None:
-            ax = plt.gca()
+
         patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a,
                                               ax=ax)
         return patch_collection
@@ -1752,6 +1725,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         Get a patch collection of the grid
 
         """
+        # todo: implement vertex plotting methods
         from ..plot import plotutil
         edgecolor = kwargs.pop('colors')
         pc = plotutil.cvfd_to_patch_collection(self.verts, self.iverts)
@@ -1776,6 +1750,7 @@ class SpatialReferenceUnstructured(SpatialReference):
         contour_set : ContourSet
 
         """
+        # todo: implement vertex plotting methods.
         contour_set = ax.tricontour(self.xcenter, self.ycenter,
                                     a, **kwargs)
         return contour_set

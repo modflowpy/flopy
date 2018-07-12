@@ -1529,7 +1529,7 @@ class Transient2d(DataInterface):
         ext_filename = None
         name = self.name_base + str(kper + 1)
         ext_filename = self.ext_filename_base + str(kper) + '.ref'
-        u2d = Util2d(self._model, self.shape, _, arg,
+        u2d = Util2d(self._model, self.shape, self._dtype, arg,
                      fmtin=self.fmtin, name=name,
                      ext_filename=ext_filename,
                      locat=self.locat,
@@ -1919,6 +1919,8 @@ class Util2d(DataInterface):
             value = value.lower()
             assert value in self._acceptable_hows
             self._how = value
+        elif key == "model":
+            self._model = value
         else:
             super(Util2d, self).__setattr__(key, value)
 
@@ -2056,7 +2058,7 @@ class Util2d(DataInterface):
 
     def get_openclose_cr(self):
         cr = 'OPEN/CLOSE  {0:>30s} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
-            self._model_file_path, self.cnstnt_str,
+            self.model_file_path, self.cnstnt_str,
             self.format.fortran, self.iprn,
             self._name)
         return cr
@@ -2065,7 +2067,7 @@ class Util2d(DataInterface):
         locat = self._model.next_ext_unit()
         #if self.format.binary:
         #    locat = -1 * np.abs(locat)
-        self._model.add_external(self._model_file_path, locat,
+        self._model.add_external(self.model_file_path, locat,
                                 self.format.binary)
         if self.format.array_free_format:
             cr = 'EXTERNAL  {0:>30d} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
@@ -2130,7 +2132,7 @@ class Util2d(DataInterface):
                     # if the file already exists, remove it
                     if self._model.verbose:
                         print("Util2d warning: removing existing array " +
-                              "file {0}".format(self._model_file_path))
+                              "file {0}".format(self.model_file_path))
                     try:
                         os.remove(self.python_file_path)
                     except Exception as e:

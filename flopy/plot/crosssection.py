@@ -7,8 +7,7 @@ try:
 except:
     plt = None
 from . import plotutil
-from .plotutil import bc_color_dict
-from flopy.plot.plotbase import PlotCrossSection
+# from .plotutil import bc_color_dict
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
@@ -614,10 +613,10 @@ class StructuredCrossSection(object):
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
-            if ftype in bc_color_dict:
-                c = bc_color_dict[ftype]
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
             else:
-                c = bc_color_dict['default']
+                c = plotutil.bc_color_dict['default']
         else:
             c = color
         cmap = matplotlib.colors.ListedColormap(['none', c])
@@ -1432,6 +1431,8 @@ class ModelCrossSection(object):
     """
     def __new__(cls, ax=None, model=None, dis=None, line=None,
                 xul=None, yul=None, rotation=None, extent=None):
+
+        from flopy.plot.plotbase import PlotCrossSection
 
         err_msg = "ModelCrossSection will be replaced by " +\
             "PlotCrossSection(), Calling PlotCrossSection()"

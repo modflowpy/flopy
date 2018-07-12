@@ -456,13 +456,13 @@ class PlotUtilities(object):
                 if defaults['key'] is None:
                     names = ['{} location stress period {} layer {}'.format(
                              package.name[0], defaults['kper'] + 1, k + 1)
-                        for k in range(package.parent.nlay)]
+                        for k in range(package.parent.modelgrid.nlay)]
                     colorbar = False
                 else:
                     names = ['{} {} data stress period {} layer {}'.format(
                              package.name[0], defaults['key'],
                              defaults['kper'] + 1, k + 1)
-                             for k in range(package.parent.nlay)]
+                             for k in range(package.parent.modelgrid.nlay)]
                     colorbar = True
 
                 fignum = list(range(defaults['initial_fig'],
@@ -621,12 +621,12 @@ class PlotUtilities(object):
         if filename_base is not None:
             if mflay is not None:
                 i0 = int(mflay)
-                if i0 + 1 >= mflist.model.nlay:
-                    i0 = mflist.model.nlay - 1
+                if i0 + 1 >= mflist.model.modelgrid.nlay:
+                    i0 = mflist.model.modelgrid.nlay - 1
                 i1 = i0 + 1
             else:
                 i0 = 0
-                i1 = mflist.model.nlay
+                i1 = mflist.model.modelgrid.nlay
             # build filenames
             package_name = mflist.package.name[0].upper()
             filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(
@@ -638,11 +638,11 @@ class PlotUtilities(object):
             if key is None:
                 names = ['{} location stress period: {} layer: {}'.format(
                          mflist.package.name[0], kper + 1, k + 1)
-                         for k in range(mflist.model.nlay)]
+                         for k in range(mflist.model.modelgrid.nlay)]
             else:
                 names = ['{} {} stress period: {} layer: {}'.format(
                          mflist.package.name[0], key, kper + 1, k + 1)
-                         for k in range(mflist.model.nlay)]
+                         for k in range(mflist.model.modelgrid.nlay)]
 
         if key is None:
             axes = PlotUtilities._plot_bc_helper(mflist.package,
@@ -918,7 +918,7 @@ class PlotUtilities(object):
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
             title = '{} stress period {:d}'.format(
-                transient2d.name_base.replace('_', '').upper(),
+                transient2d.name.replace('_', '').upper(),
                 kper + 1)
 
             if filename_base is not None:
@@ -927,7 +927,7 @@ class PlotUtilities(object):
                 filename = None
 
             axes.append(PlotUtilities._plot_array_helper(
-                                            transient2d[kper].array,
+                                            transient2d.array[kper],
                                             transient2d.model,
                                             names=title,
                                             filenames=filename,
@@ -1030,6 +1030,7 @@ class PlotUtilities(object):
 
             if defaults['inactive']:
                 try:
+                    # todo: update this to take flopy6 idomain
                     ib = model.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
                 except:

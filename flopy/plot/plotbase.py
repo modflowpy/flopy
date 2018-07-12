@@ -1,8 +1,8 @@
 import sys
 import numpy as np
-from flopy.plot.map import StructuredMapView
-from flopy.plot.crosssection import StructuredCrossSection
-from flopy.plot import plotutil
+from ..plot.map import StructuredMapView
+from ..plot.crosssection import StructuredCrossSection
+from ..plot import plotutil
 
 try:
     import matplotlib.pyplot as plt
@@ -51,8 +51,8 @@ class PlotMapView(object):
     grid at (0, 0).
 
     """
-    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
-                 extent=None, xul=None, yul=None, xll=None, yll=None,
+    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., length_multiplier=1.):
 
         if plt is None:
@@ -64,7 +64,8 @@ class PlotMapView(object):
         tmp = True
         if tmp:
             self.__cls = StructuredMapView(sr=sr, ax=ax, model=model, dis=dis,
-                                           layer=layer, extent=extent, xul=xul,
+                                           modelgrid=modelgrid, layer=layer,
+                                           extent=extent, xul=xul,
                                            yul=yul, xll=xll, yll=yll, rotation=rotation,
                                            length_multiplier=length_multiplier)
         else:

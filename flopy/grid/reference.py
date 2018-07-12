@@ -628,10 +628,11 @@ class SpatialReference(object):
         Get a LineCollection of the grid
 
         """
-        from matplotlib.collections import LineCollection
+        # todo: move this into the modelgrid section ?
+        # from matplotlib.collections import LineCollection
 
-        lc = LineCollection(self.get_grid_lines(), **kwargs)
-        return lc
+        # lc = LineCollection(self.get_grid_lines(), **kwargs)
+        # return lc
 
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""

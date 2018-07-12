@@ -284,11 +284,16 @@ class LayerFile(object):
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                   .transpose()).transpose()
-        import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray, model=self.model, sr=self.sr,
-                                     axes=axes,
-                                     filenames=filenames,
-                                     mflay=mflay, **kwargs)
+
+        from flopy.plot.plotutil import PlotUtilities
+
+        return PlotUtilities._plot_array_helper(plotarray,
+                                                model=self.model,
+                                                sr=self.sr,
+                                                axes=axes,
+                                                filenames=filenames,
+                                                mflay=mflay,
+                                                **kwargs)
 
     def _build_index(self):
         """
