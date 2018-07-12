@@ -164,44 +164,41 @@ class SpatialReference(object):
     @property
     def xll(self):
         if self.origin_loc == 'll':
-            xll = self._xll if self._xll is not None else 0.
+            xll = self._xll or 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            xll = self._xul - (np.sin(self.theta) * self.ylength *
-                               self.length_multiplier)
+            _, sin_t = cos_sin(self.rotation)
+            xll = self._xul + (sin_t * self.ylength * self.length_multiplier)
         return xll
 
     @property
     def yll(self):
         if self.origin_loc == 'll':
-            yll = self._yll if self._yll is not None else 0.
+            yll = self._yll or 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            yll = self._yul - (np.cos(self.theta) * self.ylength *
-                               self.length_multiplier)
+            cos_t, _ = cos_sin(self.rotation)
+            yll = self._yul - (cos_t * self.ylength * self.length_multiplier)
         return yll
 
     @property
     def xul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            xul = self._xll + (np.sin(self.theta) * self.ylength *
-                               self.length_multiplier)
+            _, sin_t = cos_sin(self.rotation)
+            xul = self._xll - (sin_t * self.ylength * self.length_multiplier)
         if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            xul = self._xul if self._xul is not None else 0.
+            xul = self._xul or 0.
         return xul
 
     @property
     def yul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            yul = self._yll + (np.cos(self.theta) * self.ylength *
-                               self.length_multiplier)
-
+            cos_t, _ = cos_sin(self.rotation)
+            yul = self._yll + (cos_t * self.ylength * self.length_multiplier)
         if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            yul = self._yul if self._yul is not None else 0.
+            yul = self._yul or 0.
         return yul
 
     @property
@@ -484,18 +481,12 @@ class SpatialReference(object):
         elif key == "length_multiplier":
             super(SpatialReference, self). \
                 __setattr__("_length_multiplier", float(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
         elif key == "rotation":
             super(SpatialReference, self). \
                 __setattr__("rotation", float(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
         elif key == "lenuni":
             super(SpatialReference, self). \
                 __setattr__("_lenuni", int(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
         elif key == "units":
             value = value.lower()
             assert value in self.supported_units
@@ -641,11 +632,10 @@ class SpatialReference(object):
             self.origin_loc = 'ul'
 
         self.rotation = rotation
-        self._xll = xll if xll is not None else 0.
-        self._yll = yll if yll is not None else 0.
-        self._xul = xul if xul is not None else 0.
-        self._yul = yul if yul is not None else 0.
-        # self.set_origin(xul, yul, xll, yll)
+        self._xll = xll or 0.
+        self._yll = yll or 0.
+        self._xul = xul or 0.
+        self._yul = yul or 0.
         return
 
     def __repr__(self):
@@ -656,31 +646,6 @@ class SpatialReference(object):
         s += "lenuni:{0}; ".format(self.lenuni)
         s += "length_multiplier:{}".format(self.length_multiplier)
         return s
-
-    def set_origin(self, xul=None, yul=None, xll=None, yll=None):
-        if self.origin_loc == 'll':
-            # calculate coords for upper left corner
-            self._xll = xll if xll is not None else 0.
-            self.yll = yll if yll is not None else 0.
-            self.xul = self._xll + (np.sin(self.theta) * self.ylength *
-                                    self.length_multiplier)
-            self.yul = self.yll + (np.cos(self.theta) * self.ylength *
-                                   self.length_multiplier)
-
-        if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            self.xul = xul if xul is not None else 0.
-            self.yul = yul if yul is not None else 0.
-            self._xll = self.xul - (np.sin(self.theta) * self.ylength *
-                                    self.length_multiplier)
-            self.yll = self.yul - (np.cos(self.theta) * self.ylength *
-                                   self.length_multiplier)
-        self._reset()
-        return
-
-    @property
-    def theta(self):
-        return -self.rotation * np.pi / 180.
 
     @property
     def xlength(self):
@@ -746,17 +711,12 @@ class SpatialReference(object):
         """
         Given x and y array-like values calculate the rotation about an
         arbitrary origin and then return the rotated coordinates.  theta is in
-        degrees.
+        degrees, positive CCW.
 
         """
-        # jwhite changed on Oct 11 2016 - rotation is now positive CCW
-        # theta = -theta * np.pi / 180.
-        theta = theta * np.pi / 180.
-
-        xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-               (y - yorigin)
-        yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-               (y - yorigin)
+        cos_t, sin_t = cos_sin(theta)
+        xrot = xorigin + cos_t * (x - xorigin) - sin_t * (y - yorigin)
+        yrot = yorigin + sin_t * (x - xorigin) + cos_t * (y - yorigin)
         return xrot, yrot
 
     def transform(self, x, y, inverse=False):
@@ -2144,3 +2104,18 @@ def getproj4(epsg):
         text for a projection (*.prj) file.
     """
     return get_spatialreference(epsg, text='proj4')
+
+
+def cos_sin(deg):
+    """Return cos and sin for a given angle in degrees"""
+    deg = deg % 360.0
+    if deg == 0.0:
+        return 1.0, 0.0
+    elif deg == 90.0:
+        return 0.0, 1.0
+    elif deg == 180.0:
+        return -1.0, 0.0
+    elif deg == 270.0:
+        return 0.0, -1.0
+    rad = np.radians(deg)
+    return np.cos(rad), np.sin(rad)
