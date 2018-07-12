@@ -35,6 +35,14 @@ class PackageInterface(object):
             'must define get_model_dim_arrays in child '
             'class to use this base class')
 
+    @property
+    @abc.abstractmethod
+    def data_list(self):
+        # [data_object, data_object, ...]
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
@@ -189,9 +197,24 @@ class Package(PackageInterface):
     def name(self, name):
         self._name = name
 
+    @property
+    def data_list(self):
+        # return [data_object, data_object, ...]
+        dl = []
+        attrs = dir(self)
+        if 'sr' in attrs:
+            attrs.remove('sr')
+        if 'start_datetime' in attrs:
+            attrs.remove('start_datetime')
+        for attr in attrs:
+            if '__' in attr or 'data_list' in attr:
+                continue
+            dl.append(self.__getattribute__(attr))
+        return dl
+
     def export(self, f, **kwargs):
         from flopy import export
-        return export.utils.package_helper(f, self, **kwargs)
+        return export.utils.package_export(f, self, **kwargs)
 
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):

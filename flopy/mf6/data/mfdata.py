@@ -13,7 +13,7 @@ from ..data.mfstructure import DatumType, MFDataItemStructure
 from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
                              ConstIter, ArrayIndexIter, MultiList
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
-
+from ...datbase import DataInterface, DataType
 
 class MFComment(object):
     """
@@ -2315,7 +2315,7 @@ class MFTransient(object):
         return True
 
 
-class MFData(object):
+class MFData(DataInterface):
     """
     Base class for all data.  This class contains internal objects and methods
     that most end users will not need to access directly.
@@ -2359,11 +2359,12 @@ class MFData(object):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
+    def __init__(self, sim_data, model_or_sim, structure, enable=True, path=None,
                  dimensions=None, *args, **kwargs):
         # initialize
         self._current_key = None
         self._simulation_data = sim_data
+        self._model_or_sim = model_or_sim
         self.structure = structure
         self.enabled = enable
         self.repeating = False
@@ -2388,16 +2389,32 @@ class MFData(object):
         # tie this to the simulation dictionary
         sim_data.mfdata[self._path] = self
 
-    def __getattr__(self, name):
-         if name == 'array':
-            return self.get_data(apply_mult=True)
-         #return object.__getattribute__(self, name)
-
     def __repr__(self):
         return repr(self._get_storage_obj())
 
     def __str__(self):
         return str(self._get_storage_obj())
+
+    @property
+    def array(self):
+        return self.get_data(apply_mult=True)
+
+    @property
+    def name(self):
+        return self.structure.name
+
+    @property
+    def model(self):
+        if self._model_or_sim.type == 'Model':
+            return self._model_or_sim
+        else:
+            return None
+
+    @property
+    def data_type(self):
+        raise NotImplementedError(
+            'must define dat_type in child '
+            'class to use this base class')
 
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
@@ -2602,10 +2619,16 @@ class MFData(object):
 
 
 class MFMultiDimVar(MFData):
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
-        super(MFMultiDimVar, self).__init__(sim_data, structure, enable, path,
-                                            dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
+        super(MFMultiDimVar, self).__init__(sim_data, model_or_sim, structure,
+                                            enable, path, dimensions)
+
+    @property
+    def data_type(self):
+        raise NotImplementedError(
+            'must define dat_type in child '
+            'class to use this base class')
 
     def _get_internal_formatting_string(self, layer):
         if layer is None:

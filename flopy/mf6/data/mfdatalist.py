@@ -2,11 +2,13 @@ from collections import OrderedDict
 import math
 import sys
 import inspect
+import numpy as np
 from copy import deepcopy
 from ..data import mfstructure, mfdata
 from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
 from ...utils import datautil
+from ...datbase import DataListInterface, DataType
 
 
 class MFList(mfdata.MFMultiDimVar):
@@ -87,10 +89,10 @@ class MFList(mfdata.MFMultiDimVar):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFList, self).__init__(sim_data, structure, enable, path,
-                                     dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None, package=None):
+        super(MFList, self).__init__(sim_data, model_or_sim, structure, enable,
+                                     path, dimensions)
         try:
             self._data_storage = self._new_storage()
         except Exception as ex:
@@ -101,6 +103,7 @@ class MFList(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3],
                                   type_, value_, traceback_, None,
                                   sim_data.debug, ex)
+        self._package = package
         self._last_line_info = []
         self._data_line = None
         self._temp_dict = {}
@@ -116,6 +119,68 @@ class MFList(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3],
                                       type_, value_, traceback_, None,
                                       sim_data.debug, ex)
+
+    @property
+    def data_type(self):
+        return DataType.list
+
+    @property
+    def package(self):
+        return self._package
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype
+
+    @property
+    def array(self):
+        return self.masked_4D_arrays
+
+    def to_array(self, mask=False):
+        i0 = 3
+        if 'inode' in self.dtype.names:
+            raise NotImplementedError()
+        arrays = {}
+        model_grid = self._data_dimensions.get_model_grid()
+        for name in self.dtype.names[i0:]:
+            if not self.dtype.fields[name][0] == object:
+                arr = np.zeros((model_grid.num_layers, model_grid.num_rows,
+                                model_grid.num_columns))
+                arrays[name] = arr.copy()
+
+        sarr = self.get_data()
+
+        if np.isscalar(sarr):
+            # if there are no entries for this kper
+            if sarr == 0:
+                if mask:
+                    for name, arr in arrays.items():
+                        arrays[name][:] = np.NaN
+                return arrays
+            else:
+                raise Exception("MfList: something bad happened")
+
+        for name, arr in arrays.items():
+            cnt = np.zeros((model_grid.num_layers, model_grid.num_rows,
+                            model_grid.num_columns),
+                           dtype=np.float)
+            #print(name,kper)
+            for rec in sarr:
+                arr[rec['k'], rec['i'], rec['j']] += rec[name]
+                cnt[rec['k'], rec['i'], rec['j']] += 1.
+            # average keys that should not be added
+            if name != 'cond' and name != 'flux':
+                idx = cnt > 0.
+                arr[idx] /= cnt[idx]
+            if mask:
+                arr = np.ma.masked_where(cnt == 0., arr)
+                arr[cnt == 0.] = np.NaN
+
+            arrays[name] = arr.copy()
+        # elif mask:
+        #     for name, arr in arrays.items():
+        #         arrays[name][:] = np.NaN
+        return arrays
 
     def new_simulation(self, sim_data):
         try:
@@ -1257,7 +1322,7 @@ class MFList(mfdata.MFMultiDimVar):
         return True
 
 
-class MFTransientList(MFList, mfdata.MFTransient):
+class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW transient
     list data.
@@ -1316,16 +1381,72 @@ class MFTransientList(MFList, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True, path=None,
+                 dimensions=None, package=None):
         super(MFTransientList, self).__init__(sim_data=sim_data,
+                                              model_or_sim=model_or_sim,
                                               structure=structure,
                                               data=None,
                                               enable=enable,
                                               path=path,
-                                              dimensions=dimensions)
+                                              dimensions=dimensions,
+                                              package=package)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transientlist
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype
+
+    @property
+    def array(self):
+        return self.masked_4D_arrays
+
+    def to_array(self, kper=0, mask=False):
+        self.get_data_prep(kper)
+        return super(MFTransientList, self).to_array(mask)
+
+    @property
+    def masked_4D_arrays(self):
+        model_grid = self._data_dimensions.get_model_grid()
+        nper = self._data_dimensions.simulation_time.get_num_stress_periods()
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        m4ds = {}
+        for name, array in arrays.items():
+            m4d = np.zeros((nper, model_grid.num_layers,
+                            model_grid.num_rows, model_grid.num_columns))
+            m4d[0, :, :, :] = array
+            m4ds[name] = m4d
+        for kper in range(1, nper):
+            arrays = self.to_array(kper=kper, mask=True)
+            for name, array in arrays.items():
+                m4ds[name][kper, :, :, :] = array
+        return m4ds
+
+    def masked_4D_arrays_itr(self):
+        model_grid = self._data_dimensions.get_model_grid()
+        nper = self._data_dimensions.simulation_time.get_num_stress_periods()
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        for name, array in arrays.items():
+            m4d = np.zeros((nper, model_grid.num_layers,
+                            model_grid.num_rows, model_grid.num_columns))
+            m4d[0, :, :, :] = array
+            for kper in range(1, nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for tname, array in arrays.items():
+                    if tname == name:
+                        m4d[kper, :, :, :] = array
+            yield name, m4d
 
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
@@ -1420,10 +1541,12 @@ class MFMultipleList(MFTransientList):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None, package=None):
         super(MFMultipleList, self).__init__(sim_data=sim_data,
-                                            structure=structure,
-                                            enable=enable,
-                                            path=path,
-                                            dimensions=dimensions)
+                                             model_or_sim=model_or_sim,
+                                             structure=structure,
+                                             enable=enable,
+                                             path=path,
+                                             dimensions=dimensions,
+                                             package=package)

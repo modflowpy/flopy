@@ -293,7 +293,7 @@ class BaseModel(ModelInterface):
         #    f = pak.export(f)
         # return f
         from .export import utils
-        return utils.model_helper(f, self, **kwargs)
+        return utils.model_export(f, self, **kwargs)
 
     def add_package(self, p):
         """

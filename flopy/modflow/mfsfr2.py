@@ -1652,7 +1652,7 @@ class ModflowSfr2(Package):
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
             from flopy import export
-            return export.utils.package_helper(f, self, **kwargs)
+            return export.utils.package_export(f, self, **kwargs)
 
     def export_linkages(self, f, **kwargs):
         """Export linework shapefile showing all routing connections between SFR reaches.

@@ -75,6 +75,10 @@ class SimulationTime():
         return self.period_data['perlen'].values
 
     @property
+    def nper(self):
+        return len(self.period_data['perlen'].values)
+
+    @property
     def nstp(self):
         return self.period_data['nstp'].values
 
@@ -610,8 +614,8 @@ class StructuredModelGrid(ModelGrid):
         self._botm = botm
         self._idomain = idomain
         self._nlay = len(botm)
-        self._nrow = len(delr)
-        self._ncol = len(delc)
+        self._nrow = len(delc)
+        self._ncol = len(delr)
         self._sr.set_yedge(self.yedge[0])
 
     ####################

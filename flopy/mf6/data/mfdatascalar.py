@@ -57,14 +57,30 @@ class MFScalar(mfdata.MFData):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFScalar, self).__init__(sim_data, structure, enable, path,
-                                       dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFScalar, self).__init__(sim_data, model_or_sim, structure,
+                                       enable, path, dimensions)
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
             self.set_data(data)
+
+    @property
+    def dtype(self):
+        if self.structure.type == DatumType.double_precision:
+            return np.float32
+        elif self.structure.type == DatumType.integer:
+            return np.int
+        elif self.structure.type == DatumType.recarray or \
+                self.structure.type == DatumType.record or \
+                self.structure.type == DatumType.repeating_record:
+            for data_item_struct in self.structure.data_item_structures:
+                if data_item_struct.type == DatumType.double_precision:
+                    return np.float32
+                elif data_item_struct.type == DatumType.integer:
+                    return np.int
+        return None
 
     def has_data(self):
         try:
@@ -574,9 +590,10 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFScalarTransient, self).__init__(sim_data=sim_data,
+                                                model_or_sim=model_or_sim,
                                                 structure=structure,
                                                 enable=enable,
                                                 path=path,

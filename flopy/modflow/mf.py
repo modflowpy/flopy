@@ -9,8 +9,9 @@ import inspect
 import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
-from ..utils import mfreadnam, SpatialReference, TemporalReference
-from ..grid import modelgrid, reference
+from ..utils import mfreadnam
+from ..grid.reference import SpatialReference, TemporalReference
+from ..grid import modelgrid
 from .mfpar import ModflowPar
 
 
@@ -220,7 +221,7 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
-        tr = reference.TemporalReference(self.dis.itmuni, self.start_datetime)
+        tr = TemporalReference(self.dis.itmuni, self.start_datetime)
         data_frame = {'perlen': self.dis.perlen.array,
                       'nstp': self.dis.nstp.array,
                       'tsmult': self.dis.tsmult.array}
@@ -248,6 +249,7 @@ class Modflow(BaseModel):
             return self.sip.hclose, -999
         elif self.gmg is not None:
             return self.gmg.hclose, self.gmg.rclose
+        return None
 
     @property
     def nlay(self):
@@ -663,7 +665,7 @@ class Modflow(BaseModel):
             else:
                 itmuni = dis.itmuni
                 ref_attributes['lenuni'] = dis.lenuni
-            sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
+            sr = SpatialReference(delc=ml.dis.delc.array,
                                   **ref_attributes)
         else:
             sr = None

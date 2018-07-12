@@ -612,3 +612,10 @@ class PackageContainer(object):
     def register_package(self, package):
         path = (package.package_name,)
         return (path, None)
+
+    def export(self, f, **kwargs):
+        # for pak in self.packagelist:
+        #    f = pak.export(f)
+        # return f
+        from ..export import utils
+        return utils.model_export(f, self, **kwargs)

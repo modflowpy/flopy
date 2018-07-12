@@ -7,6 +7,8 @@ from ...utils import datautil
 from ...utils.datautil import MultiList
 from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
+from ...datbase import DataType
+
 
 class MFArray(mfdata.MFMultiDimVar):
     """
@@ -89,9 +91,9 @@ class MFArray(mfdata.MFMultiDimVar):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFArray, self).__init__(sim_data, structure, enable, path,
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFArray, self).__init__(sim_data, model_or_sim, structure, enable, path,
                                       dimensions)
         if self.structure.layered:
             try:
@@ -268,6 +270,17 @@ class MFArray(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
+
+    @property
+    def data_type(self):
+        if self.structure.layered:
+            return DataType.array3d
+        else:
+            return DataType.array2d
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype
 
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)
@@ -1092,16 +1105,21 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFTransientArray, self).__init__(sim_data=sim_data,
-                                              structure=structure,
-                                              data=None,
-                                              enable=enable,
-                                              path=path,
-                                              dimensions=dimensions)
+                                               model_or_sim=model_or_sim,
+                                               structure=structure,
+                                               data=None,
+                                               enable=enable,
+                                               path=path,
+                                               dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transient2d
 
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)
