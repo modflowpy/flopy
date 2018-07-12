@@ -29,7 +29,6 @@ Documentation
 FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
 
 
-
 Getting Started
 -----------------------------------------------
 
@@ -41,6 +40,19 @@ Getting Started
 
 ### [Python Script Examples](docs/script_examples.md)
 
+
+If You Get Stuck
+-----------------------------------------------
+
+Flopy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use Flopy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
+
+### Questions
+
+For a question for how to do something with Flopy, we ask our users to submit the question to stackoverflow.com and assign the flopy tag to the question.  Many of our recent questions have been related to MODFLOW or Python, and the Flopy developers cannot always respond to these inquiries.  The link for flopy questions on Stack Overflow is [here](https://stackoverflow.com/questions/tagged/flopy).
+
+### Bugs
+
+If you think you have discovered a bug in Flopy in which you feel that the program does not work as intended, then we ask you to submit a Github issue by clicking on the Issues link at the top of this page.
 
 
 FloPy Supported Packages
