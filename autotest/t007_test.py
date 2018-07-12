@@ -553,10 +553,20 @@ def test_dynamic_xll_yll():
     sr1 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=2,
                                        xll=xll, yll=yll, rotation=30)
+    assert sr1.xlength == 1250.0
+    assert sr1.ylength == 5000.0
+    np.testing.assert_almost_equal(
+        sr1.get_extent(), [-2213.2, 1369.3317547, 29.03, 4984.1570189])
+
     xul, yul = sr1.xul, sr1.yul
     sr1.length_multiplier = 1.0 / 3.281
     assert sr1.xll == xll
     assert sr1.yll == yll
+    assert sr1.xlength == 1250.0
+    assert sr1.ylength == 5000.0
+    np.testing.assert_almost_equal(
+        sr1.get_extent(), [-475.1628162, 616.7395778, 29.03, 1539.2790152])
+
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=2,
                                        xul=xul, yul=yul, rotation=30)
@@ -585,12 +595,12 @@ def test_dynamic_xll_yll():
     assert np.abs(sr4.xul - (xul + 10.)) < 1e-6 # these shouldn't move because ul has priority
     assert np.abs(sr4.yul - (yul + 21.)) < 1e-6
     assert np.abs(sr4.xll - sr4.xul) < 1e-6
-    assert np.abs(sr4.yll - (sr4.yul - sr4.yedge[0])) < 1e-6
+    assert np.abs(sr4.yll - (sr4.yul - sr4.ylength)) < 1e-6
     sr4.xll = 0.
     sr4.yll = 10.
     assert sr4.origin_loc == 'll'
     assert sr4.xul == 0.
-    assert sr4.yul == sr4.yedge[0] + 10.
+    assert sr4.yul == sr4.ylength + 10.
     sr4.xul = xul
     sr4.yul = yul
     assert sr4.origin_loc == 'ul'
@@ -604,10 +614,10 @@ def test_dynamic_xll_yll():
                                        rotation=0, epsg=26915)
     sr5.lenuni = 1
     assert sr5.length_multiplier == .3048
-    assert sr5.yul == sr5.yll + sr5.yedge[0] * sr5.length_multiplier
+    assert sr5.yul == sr5.yll + sr5.ylength * sr5.length_multiplier
     sr5.lenuni = 2
     assert sr5.length_multiplier == 1.
-    assert sr5.yul == sr5.yll + sr5.yedge[0]
+    assert sr5.yul == sr5.yll + sr5.ylength
     sr5.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
     assert sr5.units == 'feet'
     assert sr5.length_multiplier == 1/.3048

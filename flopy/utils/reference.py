@@ -57,6 +57,12 @@ class SpatialReference(object):
 
     Attributes
     ----------
+    xlength : float
+        horizontal length of model across columns (x-direction)
+
+    ylength : float
+        horizontal length of model across rows (y-direction)
+
     xedge : ndarray
         array of column edges
 
@@ -161,7 +167,7 @@ class SpatialReference(object):
             xll = self._xll if self._xll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            xll = self._xul - (np.sin(self.theta) * self.yedge[0] *
+            xll = self._xul - (np.sin(self.theta) * self.ylength *
                                self.length_multiplier)
         return xll
 
@@ -171,7 +177,7 @@ class SpatialReference(object):
             yll = self._yll if self._yll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            yll = self._yul - (np.cos(self.theta) * self.yedge[0] *
+            yll = self._yul - (np.cos(self.theta) * self.ylength *
                                self.length_multiplier)
         return yll
 
@@ -179,7 +185,7 @@ class SpatialReference(object):
     def xul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
+            xul = self._xll + (np.sin(self.theta) * self.ylength *
                                self.length_multiplier)
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
@@ -190,7 +196,7 @@ class SpatialReference(object):
     def yul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            yul = self._yll + (np.cos(self.theta) * self.yedge[0] *
+            yul = self._yll + (np.cos(self.theta) * self.ylength *
                                self.length_multiplier)
 
         if self.origin_loc == 'ul':
@@ -656,18 +662,18 @@ class SpatialReference(object):
             # calculate coords for upper left corner
             self._xll = xll if xll is not None else 0.
             self.yll = yll if yll is not None else 0.
-            self.xul = self._xll + (np.sin(self.theta) * self.yedge[0] *
+            self.xul = self._xll + (np.sin(self.theta) * self.ylength *
                                     self.length_multiplier)
-            self.yul = self.yll + (np.cos(self.theta) * self.yedge[0] *
+            self.yul = self.yll + (np.cos(self.theta) * self.ylength *
                                    self.length_multiplier)
 
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
             self.xul = xul if xul is not None else 0.
             self.yul = yul if yul is not None else 0.
-            self._xll = self.xul - (np.sin(self.theta) * self.yedge[0] *
+            self._xll = self.xul - (np.sin(self.theta) * self.ylength *
                                     self.length_multiplier)
-            self.yll = self.yul - (np.cos(self.theta) * self.yedge[0] *
+            self.yll = self.yul - (np.cos(self.theta) * self.ylength *
                                    self.length_multiplier)
         self._reset()
         return
@@ -675,6 +681,14 @@ class SpatialReference(object):
     @property
     def theta(self):
         return -self.rotation * np.pi / 180.
+
+    @property
+    def xlength(self):
+        return self.delr.sum()
+
+    @property
+    def ylength(self):
+        return self.delc.sum()
 
     @property
     def xedge(self):
@@ -774,15 +788,15 @@ class SpatialReference(object):
 
     def get_extent(self):
         """
-        Get the extent of the rotated and offset grid
+        Get the extent of the scaled, rotated and offset grid
 
         Return (xmin, xmax, ymin, ymax)
 
         """
-        x0 = self.xedge[0]
-        x1 = self.xedge[-1]
-        y0 = self.yedge[0]
-        y1 = self.yedge[-1]
+        x0 = 0.0
+        x1 = self.xlength
+        y0 = self.ylength
+        y1 = 0.0
 
         # upper left point
         x0r, y0r = self.transform(x0, y0)
@@ -808,14 +822,16 @@ class SpatialReference(object):
             Get the grid lines as a list
 
         """
-        xmin = self.xedge[0]
-        xmax = self.xedge[-1]
-        ymin = self.yedge[-1]
-        ymax = self.yedge[0]
+        xedge = self.xedge
+        yedge = self.yedge
+        xmin = xedge[0]
+        xmax = xedge[-1]
+        ymin = yedge[-1]
+        ymax = yedge[0]
         lines = []
         # Vertical lines
         for j in range(self.ncol + 1):
-            x0 = self.xedge[j]
+            x0 = xedge[j]
             x1 = x0
             y0 = ymin
             y1 = ymax
@@ -827,7 +843,7 @@ class SpatialReference(object):
         for i in range(self.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.yedge[i]
+            y0 = yedge[i]
             y1 = y0
             x0r, y0r = self.transform(x0, y0)
             x1r, y1r = self.transform(x1, y1)
@@ -881,7 +897,7 @@ class SpatialReference(object):
         rotated. Array is of size (nrow + 1)
 
         """
-        length_y = np.add.reduce(self.delc)
+        length_y = self.ylength
         yedge = np.concatenate(([length_y], length_y -
                                 np.add.accumulate(self.delc)))
         return yedge
