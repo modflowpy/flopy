@@ -280,7 +280,7 @@ class MFArray(mfdata.MFMultiDimVar):
 
     @property
     def dtype(self):
-        return self.get_data().dtype
+        return self.get_data().dtype.type
 
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)

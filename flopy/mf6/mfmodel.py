@@ -210,13 +210,13 @@ class MFModel(PackageContainer, ModelInterface):
     def modelgrid(self):
         tdis = self.simulation.get_package('tdis')
         itmuni = tdis.time_units.get_data()
-        start_date_time = tdis.start_data_time.get_data()
+        start_date_time = tdis.start_date_time.get_data()
         if itmuni is None:
             itmuni = 0
         if start_date_time is None:
             start_date_time = '01-01-1970'
         tr = TemporalReference(itmuni, start_date_time)
-        period_data = tdis.period_data.get_data()
+        period_data = tdis.perioddata.get_data()
         data_frame = {'perlen': period_data['perlen'],
                       'nstp': period_data['nstp'],
                       'tsmult': period_data['tsmult']}
@@ -242,7 +242,7 @@ class MFModel(PackageContainer, ModelInterface):
     @property
     def model_ws(self):
         file_mgr = self.simulation_data.mfpath
-        return file_mgr.get_model_path[self.name]
+        return file_mgr.get_model_path(self.name)
 
     @property
     def exename(self):
@@ -402,16 +402,17 @@ class MFModel(PackageContainer, ModelInterface):
         grid type : DiscritizationType
         """
         package_recarray = self.name_file.packages
+        structure = mfstructure.MFStructure()
         if package_recarray.search_data(
-                'dis{}'.format(self.structure.get_version_string()),
+                'dis{}'.format(structure.get_version_string()),
                 0) is not None:
             return DiscretizationType.DIS
         elif package_recarray.search_data(
-                'disv{}'.format(self.structure.get_version_string()),
+                'disv{}'.format(structure.get_version_string()),
                 0) is not None:
             return DiscretizationType.DISV
         elif package_recarray.search_data(
-                'disu{}'.format(self.structure.get_version_string()),
+                'disu{}'.format(structure.get_version_string()),
                 0) is not None:
             return DiscretizationType.DISU
 
@@ -428,7 +429,7 @@ class MFModel(PackageContainer, ModelInterface):
     def get_steadystate_list(self):
         ss_list = []
         tdis = self.simulation.get_package('tdis')
-        period_data = tdis.period_data.get_data()
+        period_data = tdis.perioddata.get_data()
         for index in range(0, len(period_data)):
             ss_list.append(True)
 

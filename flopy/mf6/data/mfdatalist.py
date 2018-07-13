@@ -130,16 +130,17 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     @property
     def dtype(self):
-        return self.get_data().dtype
+        return self.get_data().dtype.type
 
     def to_array(self, kper=None, mask=False):
         i0 = 1
-        if 'inode' in self.dtype.names:
+        data = self.get_data()
+        if 'inode' in data.dtype.names:
             raise NotImplementedError()
         arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
-        for name in self.dtype.names[i0:]:
-            if not self.dtype.fields[name][0] == object:
+        for name in data.dtype.names[i0:]:
+            if not data.dtype.fields[name][0] == object:
                 arr = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
                                 model_grid.num_columns()))
                 arrays[name] = arr.copy()
@@ -162,8 +163,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                            dtype=np.float)
             #print(name,kper)
             for rec in sarr:
-                arr[rec['k'], rec['i'], rec['j']] += rec[name]
-                cnt[rec['k'], rec['i'], rec['j']] += 1.
+                arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
+                    rec[name]
+                cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
             # average keys that should not be added
             if name != 'cond' and name != 'flux':
                 idx = cnt > 0.
@@ -1396,7 +1398,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     @property
     def dtype(self):
-        return self.get_data().dtype
+        return self.get_data().dtype.type
 
     @property
     def masked_4D_arrays(self):
@@ -1421,14 +1423,15 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     def masked_4D_arrays_itr(self):
         model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.simulation_time.get_num_stress_periods()
+        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
+            .get_num_stress_periods()
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
         # initialize these big arrays
         for name, array in arrays.items():
-            m4d = np.zeros((nper, model_grid.num_layers,
-                            model_grid.num_rows, model_grid.num_columns))
+            m4d = np.zeros((nper, model_grid.num_layers(),
+                            model_grid.num_rows(), model_grid.num_columns()))
             m4d[0, :, :, :] = array
             for kper in range(1, nper):
                 arrays = self.to_array(kper=kper, mask=True)

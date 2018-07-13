@@ -5,14 +5,14 @@ import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
 from ..mbase import BaseModel, ModelInterface
-from ..pakbase import Package
+from ..pakbase import PackageInterface
 from ..datbase import DataType, DataInterface, DataListInterface
 from . import NetCdf, netcdf
 from . import shapefile_utils
 
 
-NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
-                     np.int32: "i4"}
+NC_PRECISION_TYPE = {np.float64: "f8", np.float32: "f4", np.int: "i4",
+                     np.int64: "i4", np.int32: "i4"}
 
 path = os.path.split(netcdf.__file__)[0]
 with open(path + '/longnames.json') as f:
@@ -374,7 +374,7 @@ def model_export(f, ml, **kwargs):
 
 
 def package_export(f, pak, **kwargs):
-    assert isinstance(pak, Package)
+    assert isinstance(pak, PackageInterface)
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, pak.parent)
 
@@ -386,24 +386,25 @@ def package_export(f, pak, **kwargs):
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         for a in pak.data_list:
             if isinstance(a, DataInterface):
-                if a.data_type == DataType.array2d and len(a.array.shape) == 2 \
-                        and a.array.shape[1] > 0:
-                    try:
-                        f = array2d_export(f, a, **kwargs)
-                    except:
-                        f.logger.warn(
-                            "error adding {0} as variable".format(a.name))
-                elif a.data_type == DataType.array3d:
-                    f = array3d_export(f, a, **kwargs)
-                elif  a.data_type == DataType.transient2d:
-                    f = transient2d_export(f, a, **kwargs)
-                elif  a.data_type == DataType.list:
-                    f = mflist_export(f, a, **kwargs)
-                elif isinstance(a, list):
-                    for v in a:
-                        if isinstance(a, DataInterface) and \
-                                v.data_type == DataType.array3d:
-                            f = array3d_export(f, v, **kwargs)
+                if a.array is not None:
+                    if a.data_type == DataType.array2d and len(a.array.shape) == 2 \
+                            and a.array.shape[1] > 0:
+                        try:
+                            f = array2d_export(f, a, **kwargs)
+                        except:
+                            f.logger.warn(
+                                "error adding {0} as variable".format(a.name))
+                    elif a.data_type == DataType.array3d:
+                        f = array3d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transient2d:
+                        f = transient2d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transientlist:
+                        f = mflist_export(f, a, **kwargs)
+                    elif isinstance(a, list):
+                        for v in a:
+                            if isinstance(a, DataInterface) and \
+                                    v.data_type == DataType.array3d:
+                                f = array3d_export(f, v, **kwargs)
         return f
 
     else:
