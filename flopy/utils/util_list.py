@@ -77,6 +77,10 @@ class MfList(DataInterface, DataListInterface):
         else:
             self._model = model
         try:
+            self.mg = self._model.modelgrid
+        except:
+            self.mg = None
+        try:
             self.sr = self._model.sr
         except:
             self.sr = None

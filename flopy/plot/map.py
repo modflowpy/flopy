@@ -90,18 +90,26 @@ class StructuredMapView(object):
                 self.sr = copy.deepcopy(sr)
 
             else:
-                self.sr = SpatialReference(delc=np.array([]), xll=xll, xul=xul,
-                                           yul=yul, rotation=rotation,
-                                           length_multiplier=length_multiplier)
+                self.sr = sr
                 self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
                                               top=np.array([]), botm=np.array([]),
                                               idomain=np.array([]), sr=self.sr)
 
+        else:
+            self.sr = SpatialReference(delc=np.array([]), xll=xll, xul=xul,
+                                       yul=yul, rotation=rotation,
+                                       length_multiplier=length_multiplier)
+            self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
+                                          top=np.array([]), botm=np.array([]),
+                                          idomain=np.array([]), sr=self.sr)
+
+
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                 rotation != 0 or length_multiplier != 1.:
-            self.sr.length_multiplier = length_multiplier
+            # self.sr.length_multiplier = length_multiplier
             self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+            self.mg.sr = self.sr
 
         if ax is None:
             try:

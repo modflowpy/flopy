@@ -7,7 +7,6 @@ try:
 except:
     plt = None
 from . import plotutil
-# from .plotutil import bc_color_dict
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
@@ -45,24 +44,34 @@ class StructuredCrossSection(object):
 
     """
 
-    def __init__(self, ax=None, model=None, dis=None, line=None,
-                 xul=None, yul=None, rotation=None, extent=None):
+    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+                 line=None, xul=None, yul=None, rotation=None, extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelCrossSection method'
             raise ImportError(s)
 
         self.model = model
-        # todo: add sr to this!
-        if dis is None:
-            if model is None:
-                raise Exception('Cannot find discretization package')
-            else:
-                self.dis = model.get_package('DIS')
-                self.sr = copy.deepcopy(self.dis.parent.sr)
-        else:
+
+        if model is not None:
+            self.mg = model.modelgrid
+            self.sr = model.modelgrid.sr
+            self.dis = model.get_package("DIS")
+
+        elif modelgrid is not None:
+            self.mg = modelgrid
+            self.sr = modelgrid.sr
             self.dis = dis
-            self.sr = copy.deepcopy(dis.parent.sr)
+            if dis is None:
+                raise AssertionError("Cannot find model discretization package")
+
+        elif dis is not None:
+            self.mg = dis.parent.modelgrid
+            self.sr = dis.parent.modelgrid.sr
+            self.dis = dis
+
+        else:
+            raise Exception("Cannot find model discretization package")
 
         if line == None:
             s = 'line must be specified.'
@@ -90,20 +99,24 @@ class StructuredCrossSection(object):
         if rotation is not None:
             self.sr.rotation = rotation
 
+        # todo: check the spatial reference for xedge, ycenter....
+
         onkey = list(line.keys())[0]
         eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.sr.xedge[0] + eps,
-                    self.sr.ycenter[int(line[onkey])] - eps),
-                   (self.sr.xedge[-1] - eps,
-                    self.sr.ycenter[int(line[onkey])] + eps)]
+            ycenter = self.mg.ycell_centers()
+            pts = [(self.mg.xedge[0] + eps,
+                    ycenter[int(line[onkey])] - eps),
+                   (self.mg.xedge[-1] - eps,
+                    ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.sr.xcenter[int(line[onkey])] + eps,
-                    self.sr.yedge[0] - eps),
-                   (self.sr.xcenter[int(line[onkey])] - eps,
-                    self.sr.yedge[-1] + eps)]
+            xcenter = self.mg.xcell_centers()
+            pts = [(xcenter[int(line[onkey])] + eps,
+                    self.mg.yedge[0] - eps),
+                   (xcenter[int(line[onkey])] - eps,
+                    self.mg.yedge[-1] + eps)]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -120,8 +133,8 @@ class StructuredCrossSection(object):
         self.pts = np.array(pts)
 
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.sr.xedge,
-                                                 self.sr.yedge)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xedge,
+                                                 self.mg.yedge)
         if len(self.xpts) < 2:
             s = 'cross-section cannot be created\n.'
             s += '   less than 2 points intersect the model grid\n'
@@ -158,8 +171,8 @@ class StructuredCrossSection(object):
 
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 
@@ -236,15 +249,15 @@ class StructuredCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    a[k, :, :]))
             if self.laycbd[k] > 0:
                 ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
                 ta[:, :] = -1e9
                 vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.sr.xedge,
-                                                       self.sr.yedge, ta))
+                                                       self.mg.xedge,
+                                                       self.mg.yedge, ta))
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
@@ -301,8 +314,8 @@ class StructuredCrossSection(object):
         else:
             raise Exception('plot_array array must be a 2D or 3D array')
         for k in range(nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
 
@@ -350,15 +363,15 @@ class StructuredCrossSection(object):
         vpts = []
         for k in range(self.dis.nlay):
             # print('k', k, self.laycbd[k])
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
             if self.laycbd[k] > 0:
                 ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
                 ta[:, :] = self.dis.botm.array[k, :, :]
                 vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.sr.xedge,
-                                                       self.sr.yedge, ta))
+                                                       self.mg.xedge,
+                                                       self.mg.yedge, ta))
 
         vpts = np.ma.array(vpts, mask=False)
 
@@ -432,8 +445,8 @@ class StructuredCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
@@ -512,6 +525,7 @@ class StructuredCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+        # todo: update this for idomain, change to plot inactive!
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
@@ -599,6 +613,7 @@ class StructuredCrossSection(object):
 
         # Get the list data
         try:
+            # todo: this may need an update for flopy6
             mflist = p.stress_period_data[kper]
         except:
             raise Exception('Not a list-style boundary package')
@@ -737,15 +752,15 @@ class StructuredCrossSection(object):
         vpts = []
         ibpts = []
         for k in range(self.dis.nlay):
-            upts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, u[k, :, :]))
-            u2pts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                    self.sr.yedge,
+            upts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, u[k, :, :]))
+            u2pts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                    self.mg.yedge,
                                                     u2[k, :, :]))
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, v[k, :, :]))
-            ibpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                    self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, v[k, :, :]))
+            ibpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                    self.mg.yedge,
                                                     ib[k, :, :]))
         # convert upts, u2pts, and vpts to numpy arrays
         upts = np.array(upts)
@@ -912,8 +927,8 @@ class StructuredCrossSection(object):
                 v = vs[k, :, :]
                 idx = v < e
                 e[idx] = v[idx]
-            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, e))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, e))
         return np.array(zpts)
 
     def set_zcentergrid(self, vs):
@@ -937,8 +952,8 @@ class StructuredCrossSection(object):
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, e))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, e))
         vpts = np.array(vpts)
 
         zcentergrid = []
@@ -996,7 +1011,7 @@ class VertexCrossSection(object):
     """
     def __init__(self, ax=None, model=None, dis=None, sr=None, line=None,
                  xul=None, yul=None, rotation=None, extent=None):
-
+        # todo: will need to rewrite this for modelgrid class
         self.model = model
 
         if sr is None:

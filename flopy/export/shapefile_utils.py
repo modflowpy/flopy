@@ -19,7 +19,7 @@ def import_shapefile():
                         "importing shapefile - try pip install pyshp")
 
 
-def write_gridlines_shapefile(filename, sr):
+def write_gridlines_shapefile(filename, mg):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
     to polygons.
@@ -28,13 +28,14 @@ def write_gridlines_shapefile(filename, sr):
     ----------
     filename : string
         name of the shapefile to write
-    sr : spatial reference
+    mg : model grid
 
     Returns
     -------
     None
 
     """
+    # todo: needs update for model grid
     try:
         import shapefile
     except Exception as e:
@@ -43,13 +44,13 @@ def write_gridlines_shapefile(filename, sr):
 
     wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    for i, line in enumerate(sr.get_grid_lines()):
+    for i, line in enumerate(mg.get_grid_lines()):
         wr.poly([line])
         wr.record(i)
     wr.save(filename)
 
 
-def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
+def write_grid_shapefile(filename, mg, array_dict, nan_val=-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
 
@@ -57,8 +58,8 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     ----------
     filename : string
         name of the shapefile to write
-    sr : spatial reference instance
-        spatial reference object for model grid
+    mg : model grid instance
+        object for model grid
     array_dict : dict
        Dictionary of name and 2D array pairs.  Additional 2D arrays to add as
        attributes to the grid shapefile.
@@ -88,7 +89,7 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
         if array.ndim == 3:
             assert array.shape[0] == 1
             array = array[0, :, :]
-        assert array.shape == (sr.nrow, sr.ncol)
+        assert array.shape == (mg.nrow, mg.ncol)
         array[np.where(np.isnan(array))] = nan_val
         if array.dtype in [np.int, np.int32, np.int64]:
             wr.field(name, "N", 18, 0)
@@ -96,9 +97,14 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             wr.field(name, "N", 18, 12)
         arrays.append(array)
 
-    for i in range(sr.nrow):
-        for j in range(sr.ncol):
-            pts = sr.get_vertices(i, j)
+    for i in range(mg.nrow):
+        for j in range(mg.ncol):
+            try:
+                pts = mg.get_cell_vertices(i, j)
+            except AttributeError:
+                # support old style SR object
+                pts = mg.get_vertices(i, j)
+
             wr.poly(parts=[pts])
             rec = [i + 1, j + 1]
             for array in arrays:
@@ -107,10 +113,14 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     wr.save(filename)
     print('wrote {}'.format(filename))
 
-def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
+def write_grid_shapefile2(filename, mg, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
     sf = import_shapefile()
-    verts = copy.deepcopy(sr.vertices)
+    try:
+        verts = copy.deepcopy(mg.xyvertices())
+    except AttributeError:
+        # support old style SR for legacy!
+        verts = copy.deepcopy(mg.vertices)
 
     w = sf.Writer(5)  # polygon
     w.autoBalance = 1
@@ -123,9 +133,9 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
              [(name, arr.dtype) for name, arr in array_dict.items()]
 
     # set-up array of attributes of shape ncells x nattributes
-    node = list(range(1, sr.ncol * sr.nrow + 1))
-    col = list(range(1, sr.ncol + 1)) * sr.nrow
-    row = sorted(list(range(1, sr.nrow + 1)) * sr.ncol)
+    node = list(range(1, mg.ncol * mg.nrow + 1))
+    col = list(range(1, mg.ncol + 1)) * mg.nrow
+    row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
     at = np.vstack(
         [node, row, col] +
         [arr.ravel() for arr in array_dict.values()]).transpose()
@@ -195,7 +205,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if isinstance(a, Util2d) and a.shape == (ml.nrow, ml.ncol):
+                if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
                     name = a.name.lower()
                     array_dict[name] = a.array
                 elif isinstance(a, Util3d):
@@ -238,7 +248,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 array_dict[name] = u2d.array
 
     # write data arrays to a shapefile
-    write_grid_shapefile(filename, ml.sr, array_dict)
+    write_grid_shapefile(filename, ml.modelgrid, array_dict)
     # write the projection file
     if ml.sr.epsg is None:
         epsg = kwargs.get('epsg', None)

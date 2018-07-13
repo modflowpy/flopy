@@ -75,6 +75,7 @@ class PlotMapView(object):
         self.model = self.__cls.model
         self.layer = self.__cls.layer
         self.dis = self.__cls.dis
+        self.mg = self.__cls.mg
         self.sr = self.__cls.sr
         self.ax = self.__cls.ax
         # self._extent = self.__cls._extent
@@ -458,9 +459,9 @@ class PlotMapView(object):
             # todo: this is propably not applicable to vertex grid models! Add a check if needed!
             # todo: there should not be a sr.yedge array either.... however this refers to yorigin, so maybe if vertex/ unstructured; set to zero!
             x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
-                                      self.sr.yedge[0])
+                                      self.mg.yedge[0])
             x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
+            y0r += self.sr.yul - self.mg.yedge[0]
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer

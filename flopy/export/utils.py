@@ -493,7 +493,7 @@ def mflist_export(f, mfl, **kwargs):
                         n = fio.shape_attr_name(name, length=4)
                         aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
+            shapefile_utils.write_grid_shapefile(f, mfl.mg, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
@@ -504,9 +504,9 @@ def mflist_export(f, mfl, **kwargs):
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
-                verts = np.array(model_grid.get_vertices(ra.i, ra.j))
+                verts = np.array(model_grid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = model_grid.get_vertices(df.i.values, df.j.values)
+                verts = model_grid.get_cell_vertices(df.i.values, df.j.values)
                 ra = df.to_records(index=False)
             # write the projection file
             if sr.epsg is None:
@@ -603,7 +603,7 @@ def transient2d_export(f, t2d, **kwargs):
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, t2d.model.model_grid.sr,
+        shapefile_utils.write_grid_shapefile(f, t2d.model.model_grid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -712,7 +712,7 @@ def array3d_export(f, u3d, **kwargs):
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, u3d.model.model_grid.sr,
+        shapefile_utils.write_grid_shapefile(f, u3d.model.model_grid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -834,7 +834,7 @@ def array2d_export(f, u2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile(f, u2d.model.modelgrid.sr,
+        shapefile_utils.write_grid_shapefile(f, u2d.model.modelgrid,
                                              {name: u2d.array})
         return
 
