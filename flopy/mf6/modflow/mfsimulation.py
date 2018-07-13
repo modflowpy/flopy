@@ -378,7 +378,7 @@ class MFSimulation(PackageContainer):
                    '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
                                    self._exe_name)
 
-        for package in self.packagelist:
+        for package in self._packagelist:
             pk_str = package._get_data_str(formal, False)
             if formal:
                 if len(pk_str.strip()) > 0:
@@ -1141,7 +1141,7 @@ class MFSimulation(PackageContainer):
             if package.package_name is not None:
                 pname = package.package_name.lower()
             if package.package_type.lower() == 'tdis' and self._tdis_file is \
-                    not None and self._tdis_file in self.packagelist:
+                    not None and self._tdis_file in self._packagelist:
                 # tdis package already exists. there can be only one tdis
                 # package.  remove existing tdis package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1151,7 +1151,7 @@ class MFSimulation(PackageContainer):
                 self._remove_package(self._tdis_file)
             elif package.package_type.lower() == 'gnc' and \
                     package.filename in self._ghost_node_files and \
-                    self._ghost_node_files[package.filename] in self.packagelist:
+                    self._ghost_node_files[package.filename] in self._packagelist:
                 # gnc package with same file name already exists.  remove old
                 # gnc package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1163,7 +1163,7 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             elif package.package_type.lower() == 'mvr' and \
                      package.filename in self._mover_files and \
-                     self._mover_files[package.filename] in self.packagelist:
+                     self._mover_files[package.filename] in self._packagelist:
                 # mvr package with same file name already exists.  remove old
                 # mvr package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1296,6 +1296,11 @@ class MFSimulation(PackageContainer):
 
         return self.structure.model_struct_objs[model_type]
 
+    def get_ims_package(self, key):
+        if key in self._ims_files:
+            return self._ims_files[key]
+        return None
+
     def remove_model(self, model_name):
         """
         remove a model from the simulation.
@@ -1372,10 +1377,8 @@ class MFSimulation(PackageContainer):
                 rec_array = solution_recarray.get_data(solution_group_num[0])
             except MFDataException as mfde:
                 message = 'An error occurred while getting solution group' \
-                          '"{}" from the simulation name file.  The error ' \
-                          'occurred while replacing IMS file "{}" with "{}"' \
-                          'at index "{}"'.format(solution_group_num[0],
-                                                 item, new_item, index)
+                          '"{}" from the simulation name file' \
+                          '.'.format(solution_group_num[0])
                 raise MFDataException(mfdata_except=mfde,
                                       package='nam',
                                       message=message)

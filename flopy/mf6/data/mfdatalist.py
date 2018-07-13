@@ -11,7 +11,7 @@ from ...utils import datautil
 from ...datbase import DataListInterface, DataType
 
 
-class MFList(mfdata.MFMultiDimVar):
+class MFList(mfdata.MFMultiDimVar, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW
     scalar data.
@@ -132,20 +132,16 @@ class MFList(mfdata.MFMultiDimVar):
     def dtype(self):
         return self.get_data().dtype
 
-    @property
-    def array(self):
-        return self.masked_4D_arrays
-
-    def to_array(self, mask=False):
-        i0 = 3
+    def to_array(self, kper=None, mask=False):
+        i0 = 1
         if 'inode' in self.dtype.names:
             raise NotImplementedError()
         arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
         for name in self.dtype.names[i0:]:
             if not self.dtype.fields[name][0] == object:
-                arr = np.zeros((model_grid.num_layers, model_grid.num_rows,
-                                model_grid.num_columns))
+                arr = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
+                                model_grid.num_columns()))
                 arrays[name] = arr.copy()
 
         sarr = self.get_data()
@@ -161,8 +157,8 @@ class MFList(mfdata.MFMultiDimVar):
                 raise Exception("MfList: something bad happened")
 
         for name, arr in arrays.items():
-            cnt = np.zeros((model_grid.num_layers, model_grid.num_rows,
-                            model_grid.num_columns),
+            cnt = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
+                            model_grid.num_columns()),
                            dtype=np.float)
             #print(name,kper)
             for rec in sarr:
@@ -1403,17 +1399,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         return self.get_data().dtype
 
     @property
-    def array(self):
-        return self.masked_4D_arrays
-
-    def to_array(self, kper=0, mask=False):
-        self.get_data_prep(kper)
-        return super(MFTransientList, self).to_array(mask)
-
-    @property
     def masked_4D_arrays(self):
         model_grid = self._data_dimensions.get_model_grid()
-        nper = self._data_dimensions.simulation_time.get_num_stress_periods()
+        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
+            .get_num_stress_periods()
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
@@ -1448,10 +1437,22 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                         m4d[kper, :, :, :] = array
             yield name, m4d
 
+    def to_array(self, kper=0, mask=False):
+        self.get_data_prep(kper)
+        return super(MFTransientList, self).to_array(mask)
+
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
         self._data_storage[transient_key] = super(MFTransientList,
                                                   self)._new_storage()
+
+    def get_key_list(self, sorted=False):
+        if self._data_storage is None:
+            return []
+        keys = list(self._data_storage.keys())
+        if sorted:
+            keys.sort()
+        return keys
 
     def get_data(self, key=None, apply_mult=False):
         if key is None:

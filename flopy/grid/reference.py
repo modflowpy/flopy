@@ -660,7 +660,13 @@ class TemporalReference(object):
     itmuni_text = {v: k for k, v in itmuni_values.items()}
 
     def __init__(self, itmuni=4, start_datetime=None):
-        self.itmuni = itmuni
+        if isinstance(itmuni, str):
+            if itmuni in TemporalReference.itmuni_values:
+                self.itmuni = TemporalReference.itmuni_values[itmuni]
+            else:
+                raise Exception('invalid itmuni value: {}\n'.format(itmuni))
+        else:
+            self.itmuni = itmuni
         self.start_datetime = start_datetime
 
     @property

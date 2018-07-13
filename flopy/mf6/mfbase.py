@@ -426,7 +426,7 @@ class PackageContainer(object):
 
     Attributes
     ----------
-    packagelist : list
+    _packagelist : list
         packages contained in the package container
     package_type_dict : dictionary
         dictionary of packages by package type
@@ -453,7 +453,7 @@ class PackageContainer(object):
         self.type = 'PackageContainer'
         self.simulation_data = simulation_data
         self.name = name
-        self.packagelist = []
+        self._packagelist = []
         self.package_type_dict = {}
         self.package_name_dict = {}
         self.package_key_dict = {}
@@ -529,7 +529,7 @@ class PackageContainer(object):
 
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries
-        self.packagelist.append(package)
+        self._packagelist.append(package)
         if package.package_name is not None:
             self.package_name_dict[package.package_name.lower()] = package
         self.package_key_dict[path[-1].lower()] = package
@@ -538,7 +538,7 @@ class PackageContainer(object):
         self.package_type_dict[package.package_type.lower()].append(package)
 
     def _remove_package(self, package):
-        self.packagelist.remove(package)
+        self._packagelist.remove(package)
         if package.package_name is not None and \
                 package.package_name.lower() in self.package_name_dict:
             del self.package_name_dict[package.package_name.lower()]
@@ -578,7 +578,7 @@ class PackageContainer(object):
 
         """
         if name is None:
-            return self.packagelist[:]
+            return self._packagelist[:]
 
         # search for full package name
         if name.lower() in self.package_name_dict:
@@ -598,7 +598,7 @@ class PackageContainer(object):
                 return self.package_type_dict[name.lower()]
 
         # search for partial package name
-        for pp in self.packagelist:
+        for pp in self._packagelist:
             if pp.package_name is not None:
                 # get first package of the type requested
                 package_name = pp.package_name.lower()
@@ -612,10 +612,3 @@ class PackageContainer(object):
     def register_package(self, package):
         path = (package.package_name,)
         return (path, None)
-
-    def export(self, f, **kwargs):
-        # for pak in self.packagelist:
-        #    f = pak.export(f)
-        # return f
-        from ..export import utils
-        return utils.model_export(f, self, **kwargs)

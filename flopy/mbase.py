@@ -109,7 +109,7 @@ class ModelInterface(object):
             'class to use this base class')
 
     @abc.abstractmethod
-    def export(self, f, modelgrid, **kwargs):
+    def export(self, f, **kwargs):
         raise NotImplementedError(
             'must define export in child '
             'class to use this base class')

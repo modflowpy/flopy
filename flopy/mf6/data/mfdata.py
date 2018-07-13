@@ -2416,6 +2416,12 @@ class MFData(DataInterface):
             'must define dat_type in child '
             'class to use this base class')
 
+    @property
+    def dtype(self):
+        raise NotImplementedError(
+            'must define dtype in child '
+            'class to use this base class')
+
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
         self._data_storage = None

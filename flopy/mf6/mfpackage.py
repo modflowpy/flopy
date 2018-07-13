@@ -14,6 +14,7 @@ from .data import mfstructure, mfdata
 from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
+from ..pakbase import PackageInterface
 
 
 class MFBlockHeader(object):
@@ -1042,7 +1043,7 @@ class MFBlock(object):
                     return False
 
 
-class MFPackage(PackageContainer):
+class MFPackage(PackageContainer, PackageInterface):
     """
     Provides an interface for the user to specify data to build a package.
 
@@ -1200,9 +1201,21 @@ class MFPackage(PackageContainer):
         return self._get_data_str(False)
 
     @property
+    def name(self):
+        return self.package_name
+
+    @name.setter
+    def name(self, name):
+        self.package_name = name
+
+    @property
     def data_list(self):
         # return [data_object, data_object, ...]
         return self._data_list
+
+    def export(self, f, **kwargs):
+        from flopy import export
+        return export.utils.package_export(f, self, **kwargs)
 
     def _get_data_str(self, formal, show_data=True):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
@@ -1371,7 +1384,7 @@ class MFPackage(PackageContainer):
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
         # update sub-packages
-        for package in self.packagelist:
+        for package in self._packagelist:
             package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):

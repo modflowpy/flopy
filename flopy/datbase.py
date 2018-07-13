@@ -9,6 +9,8 @@ class DataType(Enum):
     transient3d = 4
     list = 5
     transientlist = 6
+    scalar = 7
+    transientscalar = 8
 
 
 class DataInterface(object):

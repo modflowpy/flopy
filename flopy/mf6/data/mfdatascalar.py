@@ -5,7 +5,7 @@ from ..data import mfstructure, mfdata
 from ...utils import datautil
 from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
-
+from ...datbase import DataType
 
 class MFScalar(mfdata.MFData):
     """
@@ -65,6 +65,10 @@ class MFScalar(mfdata.MFData):
         self._data_storage = self._new_storage()
         if data is not None:
             self.set_data(data)
+
+    @property
+    def data_type(self):
+        return DataType.scalar
 
     @property
     def dtype(self):
@@ -600,6 +604,10 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                                                 dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transientscalar
 
     def add_transient_key(self, key):
         super(MFScalarTransient, self).add_transient_key(key)
