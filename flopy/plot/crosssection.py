@@ -45,7 +45,8 @@ class StructuredCrossSection(object):
     """
 
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, xul=None, yul=None, rotation=None, extent=None):
+                 line=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., extent=None, length_multiplier=1.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelCrossSection method'
@@ -73,7 +74,16 @@ class StructuredCrossSection(object):
         else:
             raise Exception("Cannot find model discretization package")
 
-        if line == None:
+        # Set origin and rotation,
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
+                rotation != 0 or length_multiplier != 1.:
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul=xul, yul=yul,
+                                         xll=xll, yll=yll,
+                                         rotation=rotation)
+            self.mg.sr = self.sr
+
+        if line is None:
             s = 'line must be specified.'
             raise Exception(s)
 
@@ -90,16 +100,6 @@ class StructuredCrossSection(object):
             self.ax = plt.gca()
         else:
             self.ax = ax
-
-        # Set origin and rotation
-        if xul is not None:
-            self.sr.xul = xul
-        if yul is not None:
-            self.sr.yul = yul
-        if rotation is not None:
-            self.sr.rotation = rotation
-
-        # todo: check the spatial reference for xedge, ycenter....
 
         onkey = list(line.keys())[0]
         eps = 1.e-4
@@ -484,6 +484,7 @@ class StructuredCrossSection(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        # todo: change this to plot inactive and call idomain for Flopy6
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
@@ -1444,8 +1445,9 @@ class ModelCrossSection(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __new__(cls, ax=None, model=None, dis=None, line=None,
-                xul=None, yul=None, rotation=None, extent=None):
+    def __new__(cls, ax=None, model=None, dis=None, modelgrid=None,
+                line=None, xul=None, yul=None, xll=None, yll=None,
+                rotation=0., extent=None, length_multiplier=1.):
 
         from flopy.plot.plotbase import PlotCrossSection
 
@@ -1453,6 +1455,7 @@ class ModelCrossSection(object):
             "PlotCrossSection(), Calling PlotCrossSection()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
-        return PlotCrossSection(ax=ax, model=model, dis=dis, line=line,
-                                xul=xul, yul=yul, rotation=rotation,
-                                extent=extent)
+        return PlotCrossSection(ax=ax, model=model, dis=dis, modelgrid=modelgrid,
+                                line=line, xul=xul, yul=yul, xll=xll, yll=yll,
+                                rotation=rotation, extent=extent,
+                                length_multiplier=length_multiplier)

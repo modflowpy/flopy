@@ -558,8 +558,9 @@ class PlotCrossSection(object):
 
     """
 
-    def __init__(self, ax=None, model=None, dis=None, line=None,
-                 xul=None, yul=None, rotation=None, extent=None):
+    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+                 line=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., extent=None, length_multiplier=1.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
@@ -569,8 +570,11 @@ class PlotCrossSection(object):
         tmp = True
         if tmp:
             self.__cls = StructuredCrossSection(ax=ax, model=model, dis=dis,
+                                                modelgrid=modelgrid,
                                                 line=line, xul=xul, yul=yul,
-                                                rotation=rotation, extent=extent)
+                                                xll=xll, yll=yll,
+                                                rotation=rotation, extent=extent,
+                                                length_multiplier=length_multiplier)
         else:
             # todo: link up vertex cross sections here
             raise NotImplementedError()

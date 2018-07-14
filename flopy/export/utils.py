@@ -476,8 +476,11 @@ def mflist_export(f, mfl, **kwargs):
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
-        if mfl.model.modelgrid.sr is None:
-            raise Exception("MfList.to_shapefile: SpatialReference not set")
+
+        model_grid = mfl.mg
+
+        if model_grid is None:
+            raise Exception("MfList.to_shapefile: ModelGrid is not set")
         import flopy.utils.flopy_io as fio
         if kper is None:
             keys = mfl.data.keys()
@@ -494,14 +497,14 @@ def mflist_export(f, mfl, **kwargs):
                         n = fio.shape_attr_name(name, length=4)
                         aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile(f, mfl.mg, array_dict)
+            shapefile_utils.write_grid_shapefile(f, model_grid, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
             #if np.isscalar(kper):
             #    kper = [kper]
-            model_grid = mfl.model.modelgrid
-            sr = mfl.model.modelgrid.sr
+            model_grid = mfl.mg
+            sr = mfl.mg.sr
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]

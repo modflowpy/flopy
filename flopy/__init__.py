@@ -37,4 +37,5 @@ from . import plot
 from . import export
 from . import pest
 from . import mf6
+from . import grid
 from .mbase import run_model, which

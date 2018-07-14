@@ -103,12 +103,13 @@ class StructuredMapView(object):
                                           top=np.array([]), botm=np.array([]),
                                           idomain=np.array([]), sr=self.sr)
 
-
         # model map override spatial reference settings
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                 rotation != 0 or length_multiplier != 1.:
-            # self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul=xul, yul=yul,
+                                         xll=xll, yll=yll,
+                                         rotation=rotation)
             self.mg.sr = self.sr
 
         if ax is None:
