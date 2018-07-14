@@ -10,9 +10,11 @@ from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
                     MFInvalidTransientBlockHeaderException, VerbosityLevel, \
                     FlopyException
 from .data.mfstructure import DatumType
-from .data import mfstructure, mfdatautil, mfdata
+from .data import mfstructure, mfdata
+from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
+from ..pakbase import PackageInterface
 
 
 class MFBlockHeader(object):
@@ -84,7 +86,7 @@ class MFBlockHeader(object):
         if len(fixed_data) > 0:
             fixed_data = [tuple(fixed_data)]
         # create data object
-        new_data = MFBlock.data_factory(simulation_data,
+        new_data = MFBlock.data_factory(simulation_data, None,
                                         block_header_structure[0], True,
                                         var_path, dimensions, fixed_data)
         self.data_items.append(new_data)
@@ -285,43 +287,48 @@ class MFBlock(object):
 
     # return an MFScalar, MFList, or MFArray
     @staticmethod
-    def data_factory(sim_data, structure, enable, path, dimensions, data=None):
+    def data_factory(sim_data, model_or_sim, structure, enable, path, dimensions,
+                     data=None, package=None):
         data_type = structure.get_datatype()
         # examine the data structure and determine the data type
         if data_type == mfstructure.DataType.scalar_keyword or \
           data_type == mfstructure.DataType.scalar:
-            return mfdatascalar.MFScalar(sim_data, structure, data, enable,
-                                         path, dimensions)
+            return mfdatascalar.MFScalar(sim_data, model_or_sim, structure, data,
+                                         enable, path, dimensions)
         elif data_type == mfstructure.DataType.scalar_keyword_transient or \
           data_type == mfstructure.DataType.scalar_transient:
-            trans_scalar = mfdatascalar.MFScalarTransient(sim_data, structure,
+            trans_scalar = mfdatascalar.MFScalarTransient(sim_data,
+                                                          model_or_sim,
+                                                          structure,
                                                           enable, path,
                                                           dimensions)
             if data is not None:
                 trans_scalar.set_data(data, key=0)
             return trans_scalar
         elif data_type == mfstructure.DataType.array:
-            return mfdataarray.MFArray(sim_data, structure, data, enable, path,
-                                       dimensions)
+            return mfdataarray.MFArray(sim_data, model_or_sim, structure, data,
+                                       enable, path, dimensions)
         elif data_type == mfstructure.DataType.array_transient:
-            trans_array = mfdataarray.MFTransientArray(sim_data, structure,
-                                                       enable, path,
+            trans_array = mfdataarray.MFTransientArray(sim_data, model_or_sim,
+                                                       structure, enable, path,
                                                        dimensions)
             if data is not None:
                 trans_array.set_data(data, key=0)
             return trans_array
         elif data_type == mfstructure.DataType.list:
-            return mfdatalist.MFList(sim_data, structure, data, enable, path,
-                                     dimensions)
+            return mfdatalist.MFList(sim_data, model_or_sim, structure, data,
+                                     enable,path, dimensions, package)
         elif data_type == mfstructure.DataType.list_transient:
-            trans_list = mfdatalist.MFTransientList(sim_data, structure,
-                                                    enable, path, dimensions)
+            trans_list = mfdatalist.MFTransientList(sim_data, model_or_sim,
+                                                    structure, enable, path,
+                                                    dimensions, package)
             if data is not None:
                 trans_list.set_data(data, key=0, autofill=True)
             return trans_list
         elif data_type == mfstructure.DataType.list_multiple:
-            mult_list = mfdatalist.MFMultipleList(sim_data, structure, enable,
-                                                  path, dimensions)
+            mult_list = mfdatalist.MFMultipleList(sim_data, model_or_sim,
+                                                  structure, enable, path,
+                                                  dimensions, package)
             if data is not None:
                 mult_list.set_data(data, key=0, autofill=True)
             return mult_list
@@ -392,10 +399,10 @@ class MFBlock(object):
 
     def add_dataset(self, dataset_struct, data, var_path):
         try:
-            self.datasets[var_path[-1]] = self.data_factory(self._simulation_data,
-                                                            dataset_struct, True,
-                                                            var_path,
-                                                            self._dimensions, data)
+            self.datasets[var_path[-1]] = self.data_factory(
+                self._simulation_data, self._model_or_sim, dataset_struct,
+                True, var_path, self._dimensions, data,
+                self._container_package)
         except MFDataException as mfde:
             raise MFDataException(mfdata_except=mfde,
                                   model=self._container_package.model_name,
@@ -468,8 +475,11 @@ class MFBlock(object):
                 initial_val = [tuple(initial_val)]
             try:
                 new_data = MFBlock.data_factory(self._simulation_data,
-                                                dataset_struct, True, dataset_path,
-                                                self._dimensions, initial_val)
+                                                self._model_or_sim,
+                                                dataset_struct, True,
+                                                dataset_path, self._dimensions,
+                                                initial_val,
+                                                self._container_package)
             except MFDataException as mfde:
                 raise MFDataException(mfdata_except=mfde,
                                       model=self._container_package.model_name,
@@ -483,9 +493,12 @@ class MFBlock(object):
         else:
             try:
                 self.datasets[key] = self.data_factory(self._simulation_data,
+                                                       self._model_or_sim,
                                                        dataset_struct, True,
-                                                       dataset_path, initial_val,
-                                                       self._dimensions)
+                                                       dataset_path,
+                                                       self._dimensions,
+                                                       initial_val,
+                                                       self._container_package)
             except MFDataException as mfde:
                 raise MFDataException(mfdata_except=mfde,
                                       model=self._container_package.model_name,
@@ -567,12 +580,12 @@ class MFBlock(object):
         initial_comment = mfdata.MFComment('', '', 0)
         fd_block = fd
         line = fd_block.readline()
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.split_data_line(line)
         while mfdata.MFComment.is_comment(line, True):
             initial_comment.add_text(line)
             line = fd_block.readline()
-            arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+            arr_line = datautil.PyListUtil.split_data_line(line)
 
         # if block not empty
         if not (len(arr_line[0]) > 2 and arr_line[0][:3].upper() == 'END'):
@@ -591,7 +604,7 @@ class MFBlock(object):
                                     'r')
                     # read first line of external file
                     line = fd_block.readline()
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                    arr_line = datautil.PyListUtil.split_data_line(line)
                 except:
                     type_, value_, traceback_ = sys.exc_info()
                     message = 'Error reading external file specified in ' \
@@ -643,7 +656,7 @@ class MFBlock(object):
                                                         )
 
                 if next_line[1] is not None:
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(
+                    arr_line = datautil.PyListUtil.split_data_line(
                       next_line[1])
                 else:
                     arr_line = ''
@@ -654,7 +667,7 @@ class MFBlock(object):
                 while arr_line and (len(next_line[1]) <= 2 or
                                     arr_line[0][:3].upper() != 'END'):
                     next_line[1] = fd_block.readline().strip()
-                    arr_line = mfdatautil.ArrayUtil.split_data_line(
+                    arr_line = datautil.PyListUtil.split_data_line(
                         next_line[1])
                     if arr_line and (len(next_line[1]) <= 2 or
                                      arr_line[0][:3].upper() != 'END'):
@@ -678,7 +691,7 @@ class MFBlock(object):
                     line = ' '
                     while line != '':
                         line = fd_block.readline()
-                        arr_line = mfdatautil.ArrayUtil.\
+                        arr_line = datautil.PyListUtil.\
                             split_data_line(line)
                         if arr_line:
                             # determine if at end of block
@@ -704,9 +717,9 @@ class MFBlock(object):
         nothing_found = False
         next_line = [True, line]
         while next_line[0] and not nothing_found:
-            arr_line = mfdatautil.ArrayUtil.\
+            arr_line = datautil.PyListUtil.\
                 split_data_line(next_line[1])
-            key = mfdatautil.find_keyword(arr_line, self.datasets_keyword)
+            key = datautil.find_keyword(arr_line, self.datasets_keyword)
             if key is not None:
                 ds_name = self.datasets_keyword[key].name
                 try:
@@ -1030,7 +1043,7 @@ class MFBlock(object):
                     return False
 
 
-class MFPackage(PackageContainer):
+class MFPackage(PackageContainer, PackageInterface):
     """
     Provides an interface for the user to specify data to build a package.
 
@@ -1093,6 +1106,7 @@ class MFPackage(PackageContainer):
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
                  loading_package=False, parent_file=None):
         self._model_or_sim = model_or_sim
+        self._data_list = []
         self.package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
             self.model_name = model_or_sim.name
@@ -1185,6 +1199,23 @@ class MFPackage(PackageContainer):
 
     def __str__(self):
         return self._get_data_str(False)
+
+    @property
+    def name(self):
+        return self.package_name
+
+    @name.setter
+    def name(self, name):
+        self.package_name = name
+
+    @property
+    def data_list(self):
+        # return [data_object, data_object, ...]
+        return self._data_list
+
+    def export(self, f, **kwargs):
+        from flopy import export
+        return export.utils.package_export(f, self, **kwargs)
 
     def _get_data_str(self, formal, show_data=True):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
@@ -1334,8 +1365,10 @@ class MFPackage(PackageContainer):
                                                       self._model_or_sim, self)
                 dataset_struct = block.data_structures[var_name]
                 var_path = self.path + (key, var_name)
-                return self.blocks[block.name].add_dataset(dataset_struct,
-                                                           data, var_path)
+                ds = self.blocks[block.name].add_dataset(dataset_struct,
+                                                         data, var_path)
+                self._data_list.append(ds)
+                return ds
 
         message = 'Unable to find variable "{}" in package ' \
                   '"{}".'.format(var_name, self.package_type)
@@ -1351,7 +1384,7 @@ class MFPackage(PackageContainer):
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
         # update sub-packages
-        for package in self.packagelist:
+        for package in self._packagelist:
             package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):
@@ -1460,7 +1493,7 @@ class MFPackage(PackageContainer):
                     while line != '':
                         line = fd_input_file.readline()
                         self._store_comment(line, found_first_block)
-                        arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                        arr_line = datautil.PyListUtil.split_data_line(line)
                         if arr_line and (len(arr_line[0]) <= 2 or
                            arr_line[0][:3].upper() == 'END'):
                             break
@@ -1606,3 +1639,7 @@ class MFPackage(PackageContainer):
         else:
             return os.path.join(self._simulation_data.mfpath.get_sim_path(),
                                 self.filename)
+
+    def export(self, f, **kwargs):
+        from flopy import export
+        return export.utils.package_export(f, self, **kwargs)

@@ -112,11 +112,16 @@ class LayerFile(object):
         self.sr = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
-            self.sr = self.model.sr
+            self.mg = self.model.modelgrid
+            self.sr = self.model.modelgrid.sr
             self.dis = self.model.dis
         if 'dis' in kwargs.keys():
             self.dis = kwargs.pop('dis')
-            self.sr = self.dis.parent.sr
+            self.mg = self.dis.parent.modelgrid
+            self.sr = self.dis.parent.modelgrid.sr
+        if "modelgrid" in kwargs.keys():
+            self.mg = kwargs.pop('modelgrid')
+            self.sr = self.mg.sr
         if 'sr' in kwargs.keys():
             self.sr = kwargs.pop('sr')
         if len(kwargs.keys()) > 0:
@@ -185,7 +190,7 @@ class LayerFile(object):
                 attrib_dict[name] = plotarray[k]
 
         from ..export.shapefile_utils import write_grid_shapefile
-        write_grid_shapefile(filename, self.sr, attrib_dict)
+        write_grid_shapefile(filename, self.mg, attrib_dict)
 
     def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
              filename_base=None, **kwargs):
@@ -284,11 +289,16 @@ class LayerFile(object):
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                   .transpose()).transpose()
-        import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray, model=self.model, sr=self.sr,
-                                     axes=axes,
-                                     filenames=filenames,
-                                     mflay=mflay, **kwargs)
+
+        from flopy.plot.plotutil import PlotUtilities
+
+        return PlotUtilities._plot_array_helper(plotarray,
+                                                model=self.model,
+                                                sr=self.sr,
+                                                axes=axes,
+                                                filenames=filenames,
+                                                mflay=mflay,
+                                                **kwargs)
 
     def _build_index(self):
         """

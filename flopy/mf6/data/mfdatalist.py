@@ -2,13 +2,16 @@ from collections import OrderedDict
 import math
 import sys
 import inspect
+import numpy as np
 from copy import deepcopy
-from ..data import mfstructure, mfdatautil, mfdata
+from ..data import mfstructure, mfdata
 from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
+from ...utils import datautil
+from ...datbase import DataListInterface, DataType
 
 
-class MFList(mfdata.MFMultiDimVar):
+class MFList(mfdata.MFMultiDimVar, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW
     scalar data.
@@ -86,10 +89,10 @@ class MFList(mfdata.MFMultiDimVar):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFList, self).__init__(sim_data, structure, enable, path,
-                                     dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None, package=None):
+        super(MFList, self).__init__(sim_data, model_or_sim, structure, enable,
+                                     path, dimensions)
         try:
             self._data_storage = self._new_storage()
         except Exception as ex:
@@ -100,6 +103,7 @@ class MFList(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3],
                                   type_, value_, traceback_, None,
                                   sim_data.debug, ex)
+        self._package = package
         self._last_line_info = []
         self._data_line = None
         self._temp_dict = {}
@@ -115,6 +119,66 @@ class MFList(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3],
                                       type_, value_, traceback_, None,
                                       sim_data.debug, ex)
+
+    @property
+    def data_type(self):
+        return DataType.list
+
+    @property
+    def package(self):
+        return self._package
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype.type
+
+    def to_array(self, kper=None, mask=False):
+        i0 = 1
+        data = self.get_data()
+        if 'inode' in data.dtype.names:
+            raise NotImplementedError()
+        arrays = {}
+        model_grid = self._data_dimensions.get_model_grid()
+        for name in data.dtype.names[i0:]:
+            if not data.dtype.fields[name][0] == object:
+                arr = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
+                                model_grid.num_columns()))
+                arrays[name] = arr.copy()
+
+        sarr = self.get_data()
+
+        if np.isscalar(sarr):
+            # if there are no entries for this kper
+            if sarr == 0:
+                if mask:
+                    for name, arr in arrays.items():
+                        arrays[name][:] = np.NaN
+                return arrays
+            else:
+                raise Exception("MfList: something bad happened")
+
+        for name, arr in arrays.items():
+            cnt = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
+                            model_grid.num_columns()),
+                           dtype=np.float)
+            #print(name,kper)
+            for rec in sarr:
+                arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
+                    rec[name]
+                cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
+            # average keys that should not be added
+            if name != 'cond' and name != 'flux':
+                idx = cnt > 0.
+                arr[idx] /= cnt[idx]
+            if mask:
+                arr = np.ma.masked_where(cnt == 0., arr)
+                arr[cnt == 0.] = np.NaN
+
+            arrays[name] = arr.copy()
+        # elif mask:
+        #     for name, arr in arrays.items():
+        #         arrays[name][:] = np.NaN
+        return arrays
 
     def new_simulation(self, sim_data):
         try:
@@ -420,7 +484,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                         cellid_size)
                         data_size = 1
                         if len(resolved_shape) == 1 and \
-                                mfdatautil.DatumUtil.is_int(resolved_shape[0]):
+                                datautil.DatumUtil.is_int(resolved_shape[0]):
                             data_size = int(resolved_shape[0])
                             if data_size < 0:
                                 # unable to resolve data size based on shape, use
@@ -607,8 +671,8 @@ class MFList(mfdata.MFMultiDimVar):
                                                     pre_data_comments)
         # reset data line delimiter so that the next split_data_line will
         # automatically determine the delimiter
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.split_data_line(current_line)
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.split_data_line(current_line)
         if arr_line and (len(arr_line[0]) >= 2 and
                 arr_line[0][:3].upper() == 'END'):
             return [False, arr_line]
@@ -638,7 +702,7 @@ class MFList(mfdata.MFMultiDimVar):
             except MFDataException as err:
                 # this could possibly be a constant line.
                 line = file_handle.readline()
-                arr_line = mfdatautil.ArrayUtil.\
+                arr_line = datautil.PyListUtil.\
                     split_data_line(line)
                 if len(arr_line) >= 2 and arr_line[0].upper() == 'CONSTANT' \
                         and len(self.structure.data_item_structures) >= 2 and \
@@ -662,7 +726,7 @@ class MFList(mfdata.MFMultiDimVar):
                     line = ' '
                     while line != '':
                         line = file_handle.readline()
-                        arr_line = mfdatautil.ArrayUtil.\
+                        arr_line = datautil.PyListUtil.\
                             split_data_line(line)
                         if arr_line and (len(arr_line[0]) >= 2 and
                                 arr_line[0][:3].upper() == 'END'):
@@ -699,7 +763,7 @@ class MFList(mfdata.MFMultiDimVar):
         line = ' '
         while line != '':
             line = file_handle.readline()
-            arr_line = mfdatautil.ArrayUtil.\
+            arr_line = datautil.PyListUtil.\
                 split_data_line(line)
             if arr_line and (len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
@@ -711,7 +775,7 @@ class MFList(mfdata.MFMultiDimVar):
                 return [False, line]
             if recarray_len != 1 and \
                     not mfdata.MFComment.is_comment(arr_line, True):
-                key = mfdatautil.find_keyword(arr_line,
+                key = datautil.find_keyword(arr_line,
                                               self.structure.get_keywords())
                 if key is None:
                     # unexpected text, may be start of another record
@@ -1122,7 +1186,7 @@ class MFList(mfdata.MFMultiDimVar):
             model_grid = self._data_dimensions.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             cellid_tuple = ()
-            if not mfdatautil.DatumUtil.is_int(arr_line[data_index]) and \
+            if not datautil.DatumUtil.is_int(arr_line[data_index]) and \
                     arr_line[data_index].lower() == 'none':
                 # special case where cellid is 'none', store as tuple of
                 # 'none's
@@ -1149,7 +1213,7 @@ class MFList(mfdata.MFMultiDimVar):
                                           traceback_, comment,
                                           self._simulation_data.debug)
                 for index in range(data_index, cellid_size + data_index):
-                    if not mfdatautil.DatumUtil.is_int(arr_line[index]) or \
+                    if not datautil.DatumUtil.is_int(arr_line[index]) or \
                             int(arr_line[index]) < 0:
                         comment = 'Expected a integer or cell ID in ' \
                                   'data "{}" field "{}".  Found {} ' \
@@ -1249,14 +1313,14 @@ class MFList(mfdata.MFMultiDimVar):
         if cellid_size + data_index > len(arr_line):
             return False
         for index in range(data_index, cellid_size + data_index):
-            if not mfdatautil.DatumUtil.is_int(arr_line[index]):
+            if not datautil.DatumUtil.is_int(arr_line[index]):
                 return False
             if int(arr_line[index]) <= 0:
                 return False
         return True
 
 
-class MFTransientList(MFList, mfdata.MFTransient):
+class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     """
     Provides an interface for the user to access and update MODFLOW transient
     list data.
@@ -1315,21 +1379,83 @@ class MFTransientList(MFList, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True, path=None,
+                 dimensions=None, package=None):
         super(MFTransientList, self).__init__(sim_data=sim_data,
+                                              model_or_sim=model_or_sim,
                                               structure=structure,
                                               data=None,
                                               enable=enable,
                                               path=path,
-                                              dimensions=dimensions)
+                                              dimensions=dimensions,
+                                              package=package)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transientlist
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype.type
+
+    @property
+    def masked_4D_arrays(self):
+        model_grid = self._data_dimensions.get_model_grid()
+        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
+            .get_num_stress_periods()
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        m4ds = {}
+        for name, array in arrays.items():
+            m4d = np.zeros((nper, model_grid.num_layers,
+                            model_grid.num_rows, model_grid.num_columns))
+            m4d[0, :, :, :] = array
+            m4ds[name] = m4d
+        for kper in range(1, nper):
+            arrays = self.to_array(kper=kper, mask=True)
+            for name, array in arrays.items():
+                m4ds[name][kper, :, :, :] = array
+        return m4ds
+
+    def masked_4D_arrays_itr(self):
+        model_grid = self._data_dimensions.get_model_grid()
+        nper = self._data_dimensions.package_dim.model_dim[0].simulation_time \
+            .get_num_stress_periods()
+        # get the first kper
+        arrays = self.to_array(kper=0, mask=True)
+
+        # initialize these big arrays
+        for name, array in arrays.items():
+            m4d = np.zeros((nper, model_grid.num_layers(),
+                            model_grid.num_rows(), model_grid.num_columns()))
+            m4d[0, :, :, :] = array
+            for kper in range(1, nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for tname, array in arrays.items():
+                    if tname == name:
+                        m4d[kper, :, :, :] = array
+            yield name, m4d
+
+    def to_array(self, kper=0, mask=False):
+        self.get_data_prep(kper)
+        return super(MFTransientList, self).to_array(mask)
 
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
         self._data_storage[transient_key] = super(MFTransientList,
                                                   self)._new_storage()
+
+    def get_key_list(self, sorted=False):
+        if self._data_storage is None:
+            return []
+        keys = list(self._data_storage.keys())
+        if sorted:
+            keys.sort()
+        return keys
 
     def get_data(self, key=None, apply_mult=False):
         if key is None:
@@ -1419,10 +1545,12 @@ class MFMultipleList(MFTransientList):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None, package=None):
         super(MFMultipleList, self).__init__(sim_data=sim_data,
-                                            structure=structure,
-                                            enable=enable,
-                                            path=path,
-                                            dimensions=dimensions)
+                                             model_or_sim=model_or_sim,
+                                             structure=structure,
+                                             enable=enable,
+                                             path=path,
+                                             dimensions=dimensions,
+                                             package=package)

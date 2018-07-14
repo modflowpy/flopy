@@ -1672,7 +1672,7 @@ class ModflowSfr2(Package):
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
             from flopy import export
-            return export.utils.package_helper(f, self, **kwargs)
+            return export.utils.package_export(f, self, **kwargs)
 
     def export_linkages(self, f, **kwargs):
         """Export linework shapefile showing all routing connections between SFR reaches.
@@ -1807,11 +1807,17 @@ class check:
 
     def __init__(self, sfrpackage, verbose=True, level=1):
         self.sfr = copy.copy(sfrpackage)
-        self.sr = self.sfr.parent.sr
+
+        try:
+            self.mg = self.sfr.parent.modelgrid
+            self.sr = self.sfr.parent.modelgrid.sr
+        except AttributeError:
+            self.sr = self.sfr.parent.sr
 
         if self.sr is None and self.sfr.parent.dis is not None:
             self.sr = SpatialReference(delr=self.sfr.parent.dis.delr.array,
                                        delc=self.sfr.parent.dis.delc.array)
+
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -2024,11 +2030,18 @@ class check:
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
         # check reach connections for proximity
-        if self.sr is not None:
+        if self.mg is not None or self.sr is not None:
             rd = self.sfr.reach_data
             rd.sort(order=['reachID'])
-            x0 = self.sr.xcentergrid[rd.i, rd.j]
-            y0 = self.sr.ycentergrid[rd.i, rd.j]
+            try:
+                xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
+                del zc
+            except AttributeError:
+                xcentergrid = self.sr.xcentergrid
+                ycentergrid = self.sr.ycentergrid
+
+            x0 = xcentergrid[rd.i, rd.j]
+            y0 = ycentergrid[rd.i, rd.j]
             loc = dict(zip(rd.reachID, zip(x0, y0)))
 
             # compute distances between node centers of connected reaches
@@ -2048,8 +2061,15 @@ class check:
             dist = np.array(dist)
 
             # compute max width of reach nodes (hypotenuse for rectangular nodes)
-            dx = (self.sr.delr * self.sr.length_multiplier)[rd.j]
-            dy = (self.sr.delc * self.sr.length_multiplier)[rd.i]
+            try:
+                delr = self.mg.delr
+                delc = self.mg.delc
+            except AttributeError:
+                delr = self.sr.delr
+                delc = self.sr.delc
+
+            dx = (delr * self.sr.length_multiplier)[rd.j]
+            dy = (delc * self.sr.length_multiplier)[rd.i]
             hyp = np.sqrt(dx ** 2 + dy ** 2)
 
             # breaks are when the connection distance is greater than

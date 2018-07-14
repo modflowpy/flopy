@@ -15,7 +15,8 @@ from .mtphc import Mt3dPhc
 from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
-
+from ..grid.reference import SpatialReference, TemporalReference
+from ..grid import modelgrid
 
 class Mt3dList(Package):
     """
@@ -330,6 +331,32 @@ class Mt3dms(BaseModel):
     def __repr__(self):
         return 'MT3DMS model'
 
+    @property
+    def modelgrid(self):
+        tr = TemporalReference(self.mf.dis.itmuni, self.mf.start_datetime)
+        data_frame = {'perlen': self.mf.dis.perlen.array,
+                      'nstp': self.mf.dis.nstp.array,
+                      'tsmult': self.mf.dis.tsmult.array}
+        sim_time = modelgrid.SimulationTime(data_frame,
+                                            self.mf.dis.itmuni_dict[
+                                            self.mf.dis.itmuni], tr)
+        if self.mf.bas is not None:
+            ibound = self.btn.icbund.array
+        else:
+            ibound = None
+        return modelgrid.StructuredModelGrid(self.mf.dis.delc.array,
+                                             self.mf.dis.delr.array,
+                                             self.mf.dis.top.array,
+                                             self.mf.dis.botm.array, ibound,
+                                             self.mf.sr, sim_time,
+                                             self.mf.name,
+                                             self.mf.dis.steady.array)
+
+    @property
+    def solver_tols(self):
+        if self.gcg is not None:
+            return self.gcg.cclose, -999
+        return None
 
     @property
     def sr(self):

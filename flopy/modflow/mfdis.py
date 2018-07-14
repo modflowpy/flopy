@@ -14,7 +14,8 @@ import warnings
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, reference, check
+from ..utils import Util2d, Util3d, check
+from ..grid.reference import SpatialReference, TemporalReference
 from ..utils.flopy_io import line_parse
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
@@ -202,12 +203,14 @@ class ModflowDis(Package):
         if start_datetime is None:
             start_datetime = model._start_datetime
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-                                             self.lenuni, xul=xul, yul=yul,
-                                             rotation=rotation,
-                                             proj4_str=proj4_str)
-        self.tr = reference.TemporalReference(itmuni=self.itmuni,
-                                              start_datetime=start_datetime)
+        self.sr = SpatialReference(self.delc, self.lenuni,
+                                   xul=xul, yul=yul,
+                                   rotation=rotation,
+                                   proj4_str=proj4_str)
+
+        self.tr = TemporalReference(itmuni=self.itmuni,
+                                    start_datetime=start_datetime)
+
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()

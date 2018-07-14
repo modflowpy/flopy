@@ -4,14 +4,15 @@ import os
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
-from ..mbase import BaseModel
-from ..pakbase import Package
+from ..mbase import BaseModel, ModelInterface
+from ..pakbase import PackageInterface
+from ..datbase import DataType, DataInterface, DataListInterface
 from . import NetCdf, netcdf
 from . import shapefile_utils
 
 
-NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
-                     np.int32: "i4"}
+NC_PRECISION_TYPE = {np.float64: "f8", np.float32: "f4", np.int: "i4",
+                     np.int64: "i4", np.int32: "i4"}
 
 path = os.path.split(netcdf.__file__)[0]
 with open(path + '/longnames.json') as f:
@@ -340,8 +341,8 @@ def output_helper(f, ml, oudic, **kwargs):
     return f
 
 
-def model_helper(f, ml, **kwargs):
-    assert isinstance(ml, BaseModel)
+def model_export(f, ml, **kwargs):
+    assert isinstance(ml, ModelInterface)
     package_names = kwargs.get("package_names", None)
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
@@ -372,8 +373,8 @@ def model_helper(f, ml, **kwargs):
     return f
 
 
-def package_helper(f, pak, **kwargs):
-    assert isinstance(pak, Package)
+def package_export(f, pak, **kwargs):
+    assert isinstance(pak, PackageInterface)
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, pak.parent)
 
@@ -383,38 +384,34 @@ def package_helper(f, pak, **kwargs):
                                                       **kwargs)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
-        attrs = dir(pak)
-        if 'sr' in attrs:
-            attrs.remove('sr')
-        if 'start_datetime' in attrs:
-            attrs.remove('start_datetime')
-        for attr in attrs:
-            if '__' in attr:
-                continue
-            a = pak.__getattribute__(attr)
-            if isinstance(a, Util2d) and len(a.shape) == 2 and a.shape[1] > 0:
-                try:
-                    f = util2d_helper(f, a, **kwargs)
-                except:
-                    f.logger.warn(
-                        "error adding {0} as variable".format(a.name))
-            elif isinstance(a, Util3d):
-                f = util3d_helper(f, a, **kwargs)
-            elif isinstance(a, Transient2d):
-                f = transient2d_helper(f, a, **kwargs)
-            elif isinstance(a, MfList):
-                f = mflist_helper(f, a, **kwargs)
-            elif isinstance(a, list):
-                for v in a:
-                    if isinstance(v, Util3d):
-                        f = util3d_helper(f, v, **kwargs)
+        for a in pak.data_list:
+            if isinstance(a, DataInterface):
+                if a.array is not None:
+                    if a.data_type == DataType.array2d and len(a.array.shape) == 2 \
+                            and a.array.shape[1] > 0:
+                        try:
+                            f = array2d_export(f, a, **kwargs)
+                        except:
+                            f.logger.warn(
+                                "error adding {0} as variable".format(a.name))
+                    elif a.data_type == DataType.array3d:
+                        f = array3d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transient2d:
+                        f = transient2d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transientlist:
+                        f = mflist_export(f, a, **kwargs)
+                    elif isinstance(a, list):
+                        for v in a:
+                            if isinstance(a, DataInterface) and \
+                                    v.data_type == DataType.array3d:
+                                f = array3d_export(f, v, **kwargs)
         return f
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def generic_array_helper(f, array, var_name="generic_array",
+def generic_array_export(f, array, var_name="generic_array",
                          dimensions=("time", "layer", "y", "x"),
                          precision_str="f4", units="unitless", **kwargs):
     # assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
@@ -459,7 +456,7 @@ def generic_array_helper(f, array, var_name="generic_array",
     return f
 
 
-def mflist_helper(f, mfl, **kwargs):
+def mflist_export(f, mfl, **kwargs):
     """ export helper for MfList instances
 
     Parameters
@@ -468,8 +465,9 @@ def mflist_helper(f, mfl, **kwargs):
         mfl : MfList instance
 
     """
-    assert isinstance(mfl, MfList) \
-        , "mflist_helper only helps MfList instances"
+    assert isinstance(mfl, DataListInterface) and \
+           isinstance(mfl, DataInterface) \
+        , "mflist_helper only helps instances that support DataListInterface"
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, mfl.model)
@@ -478,8 +476,11 @@ def mflist_helper(f, mfl, **kwargs):
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
-        if mfl.sr is None:
-            raise Exception("MfList.to_shapefile: SpatialReference not set")
+
+        model_grid = mfl.mg
+
+        if model_grid is None:
+            raise Exception("MfList.to_shapefile: ModelGrid is not set")
         import flopy.utils.flopy_io as fio
         if kper is None:
             keys = mfl.data.keys()
@@ -496,19 +497,20 @@ def mflist_helper(f, mfl, **kwargs):
                         n = fio.shape_attr_name(name, length=4)
                         aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
+            shapefile_utils.write_grid_shapefile(f, model_grid, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
             #if np.isscalar(kper):
             #    kper = [kper]
-            sr = mfl.model.sr
+            model_grid = mfl.mg
+            sr = mfl.mg.sr
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
-                verts = np.array(sr.get_vertices(ra.i, ra.j))
+                verts = np.array(model_grid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = sr.get_vertices(df.i.values, df.j.values)
+                verts = model_grid.get_cell_vertices(df.i.values, df.j.values)
                 ra = df.to_records(index=False)
             # write the projection file
             if sr.epsg is None:
@@ -576,7 +578,7 @@ def mflist_helper(f, mfl, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def transient2d_helper(f, t2d, **kwargs):
+def transient2d_export(f, t2d, **kwargs):
     """ export helper for Transient2d instances
 
     Parameters
@@ -588,8 +590,9 @@ def transient2d_helper(f, t2d, **kwargs):
 
     """
 
-    assert isinstance(t2d, Transient2d) \
-        , "transient2d_helper only helps Transient2d instances"
+    assert isinstance(t2d, DataInterface) \
+        , "transient2d_helper only helps instances that support " \
+          "DataInterface"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -599,22 +602,20 @@ def transient2d_helper(f, t2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for kper in range(t2d.model.nper):
+        for kper in range(t2d.model.model_grid.sim_time.nper):
             u2d = t2d[kper]
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, t2d.model.sr, array_dict)
+        shapefile_utils.write_grid_shapefile(f, t2d.model.model_grid,
+                                             array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # mask the array is defined by any row col with at lease
         # one active cell
         mask = None
-        if t2d.model.bas6 is not None:
-            ibnd = np.abs(t2d.model.bas6.ibound.array).sum(axis=0)
-            mask = ibnd == 0
-        elif t2d.model.btn is not None:
-            ibnd = np.abs(t2d.model.btn.icbund.array).sum(axis=0)
+        if t2d.model.model_grid.idomain is not None:
+            ibnd = np.abs(t2d.model.model_grid.idomain).sum(axis=0)
             mask = ibnd == 0
 
         # f.log("getting 4D array for {0}".format(t2d.name_base))
@@ -638,7 +639,7 @@ def transient2d_helper(f, t2d, **kwargs):
                 #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
                 #        f.fillvalue
 
-        var_name = t2d.name_base.replace('_', '')
+        var_name = t2d.name.replace('_', '')
         if isinstance(f, dict):
             array[array == netcdf.FILLVALUE] = np.NaN
             f[var_name] = array
@@ -685,7 +686,7 @@ def transient2d_helper(f, t2d, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def util3d_helper(f, u3d, **kwargs):
+def array3d_export(f, u3d, **kwargs):
     """ export helper for Transient2d instances
 
     Parameters
@@ -697,8 +698,10 @@ def util3d_helper(f, u3d, **kwargs):
 
     """
 
-    assert isinstance(u3d, Util3d), "util3d_helper only helps Util3d instances"
-    assert len(u3d.shape) == 3, "util3d_helper only supports 3D arrays"
+    assert isinstance(u3d, DataInterface), "array3d_export only helps " \
+                                           "instances that support " \
+                                           "DataInterface"
+    assert len(u3d.array.shape) == 3, "array3d_export only supports 3D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -708,12 +711,12 @@ def util3d_helper(f, u3d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for ilay in range(u3d.model.nlay):
+        for ilay in range(u3d.model.model_grid.nlay):
             u2d = u3d[ilay]
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, u3d.model.sr,
+        shapefile_utils.write_grid_shapefile(f, u3d.model.model_grid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -732,10 +735,9 @@ def util3d_helper(f, u3d, **kwargs):
         # f.log("getting 3D array for {0}".format(var_name))
         #
         mask = None
-        if u3d.model.bas6 is not None and "ibound" not in var_name:
-            mask = u3d.model.bas6.ibound.array == 0
-        elif u3d.model.btn is not None and 'icbund' not in var_name:
-            mask = u3d.model.btn.icbund.array == 0
+        if u3d.model.modelgrid.idomain is not None and "ibound" not in \
+                var_name:
+            mask = u3d.model.modelgrid.idomain == 0
 
         if mask is not None and array.shape != mask.shape:
             # f.log("broadcasting 3D array for {0}".format(var_name))
@@ -749,10 +751,12 @@ def util3d_helper(f, u3d, **kwargs):
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                # if u3d.model.bas6 is not None and "ibound" not in var_name:
-                #    array[u3d.model.bas6.ibound.array == 0] = np.NaN
+                # if u3d.model.modelgrid.bas6 is not None and "ibound" not
+                # in var_name:
+                #    array[u3d.model.modelgrid.bas6.ibound.array == 0] =
+                # np.NaN
                 # elif u3d.model.btn is not None and 'icbund' not in var_name:
-                #    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                #    array[u3d.model.modelgrid.btn.icbund.array == 0] = np.NaN
                 if mask is not None:
                     array[mask] = np.NaN
                 array[array <= min_valid] = np.NaN
@@ -764,10 +768,10 @@ def util3d_helper(f, u3d, **kwargs):
                     array[mask] = netcdf.FILLVALUE
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u3d.model.bas6 is not None and "ibound" not in var_name:
-                    array[u3d.model.bas6.ibound.array == 0] = netcdf.FILLVALUE
-                elif u3d.model.btn is not None and 'icbund' not in var_name:
-                    array[u3d.model.btn.icbund.array == 0] = netcdf.FILLVALUE
+                if u3d.model.modelgrid.idomain is not None and "ibound" not\
+                        in var_name:
+                    array[u3d.model.modelgrid.idomain == 0] = \
+                        netcdf.FILLVALUE
 
         if isinstance(f, dict):
             f[var_name] = array
@@ -810,7 +814,7 @@ def util3d_helper(f, u3d, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def util2d_helper(f, u2d, **kwargs):
+def array2d_export(f, u2d, **kwargs):
     """ export helper for Util2d instances
 
     Parameters
@@ -821,8 +825,10 @@ def util2d_helper(f, u2d, **kwargs):
         max_valid : maximum valid value
 
     """
-    assert isinstance(u2d, Util2d), "util2d_helper only helps Util2d instances"
-    assert len(u2d.shape) == 2, "util2d_helper only supports 2D arrays"
+    assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
+                                           "instances that support " \
+                                           "DataInterface"
+    assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -832,12 +838,12 @@ def util2d_helper(f, u2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile(f, u2d.model.sr,
+        shapefile_utils.write_grid_shapefile(f, u2d.model.modelgrid,
                                              {name: u2d.array})
         return
 
     elif isinstance(f, str) and f.lower().endswith(".asc"):
-        u2d.model.sr.export_array(f, u2d.array, **kwargs)
+        u2d.model.modelgrid.export_array(f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -849,12 +855,10 @@ def util2d_helper(f, u2d, **kwargs):
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                if u2d.model.bas6 is not None and \
-                                "ibound" not in u2d.name.lower():
-                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = np.NaN
-                elif u2d.model.btn is not None and \
-                                "icbund" not in u2d.name.lower():
-                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = np.NaN
+                if u2d.model.modelgrid.idomain is not None and \
+                                "ibound" not in u2d.name.lower() and \
+                                "idomain" not in u2d.name.lower():
+                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -862,13 +866,11 @@ def util2d_helper(f, u2d, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u2d.model.bas6 is not None and \
-                                "ibound" not in u2d.name.lower():
-                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = \
-                        netcdf.FILLVALUE
-                elif u2d.model.btn is not None and \
+                if u2d.model.modelgrid.idomain is not None and \
+                                "ibound" not in u2d.name.lower() and \
+                                "idomain" not in u2d.name.lower() and \
                                 "icbund" not in u2d.name.lower():
-                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = \
+                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = \
                         netcdf.FILLVALUE
         var_name = u2d.name
         if isinstance(f, dict):

@@ -11,10 +11,15 @@ from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .utils.reference import SpatialReference, StructuredSpatialReference, \
                              VertexSpatialReference
-from .data import mfstructure, mfdatautil
+from .data import mfstructure
+from ..utils import datautil
+from ..grid.reference import SpatialReference, TemporalReference
+from ..grid import modelgrid
+from ..mbase import ModelInterface
+from .utils.mfenums import DiscretizationType
 
 
-class MFModel(PackageContainer):
+class MFModel(PackageContainer, ModelInterface):
     """
     MODFLOW Model Class.  Represents a single model in a simulation.
 
@@ -86,7 +91,7 @@ class MFModel(PackageContainer):
         self.simulation_data = simulation.simulation_data
         self.name = modelname
         self.name_file = None
-        self.version = version
+        self._version = version
         self.model_type = model_type
         self.type = 'Model'
 
@@ -117,9 +122,10 @@ class MFModel(PackageContainer):
         yul = kwargs.pop("yul", None)
         rotation = kwargs.pop("rotation", 0.)
         proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
-
+        self.start_datetime = None
         # check for extraneous kwargs
         if len(kwargs) > 0:
             kwargs_str = ', '.join(kwargs.keys())
@@ -180,7 +186,7 @@ class MFModel(PackageContainer):
         file_mgr = self.simulation_data.mfpath
         data_str = 'name = {}\nmodel_type = {}\nversion = {}\nmodel_' \
                    'relative_path = {}' \
-                   '\n\n'.format(self.name, self.model_type, self.version,
+                   '\n\n'.format(self.name, self.model_type, self._version,
                                  file_mgr.model_relative_path[self.name])
 
         for package in self.packagelist:
@@ -199,6 +205,66 @@ class MFModel(PackageContainer):
                                '{}\n'.format(data_str, package._get_pname(),
                                              pk_str)
         return data_str
+
+    @property
+    def modelgrid(self):
+        tdis = self.simulation.get_package('tdis')
+        itmuni = tdis.time_units.get_data()
+        start_date_time = tdis.start_date_time.get_data()
+        if itmuni is None:
+            itmuni = 0
+        if start_date_time is None:
+            start_date_time = '01-01-1970'
+        tr = TemporalReference(itmuni, start_date_time)
+        period_data = tdis.perioddata.get_data()
+        data_frame = {'perlen': period_data['perlen'],
+                      'nstp': period_data['nstp'],
+                      'tsmult': period_data['tsmult']}
+        sim_time = modelgrid.SimulationTime(data_frame, itmuni, tr)
+        if self.get_grid_type() == DiscretizationType.DIS:
+            dis = self.get_package('dis')
+            return modelgrid.StructuredModelGrid(dis.delc.array,
+                                                 dis.delr.array,
+                                                 dis.top.array,
+                                                 dis.botm.array,
+                                                 dis.idomain.array,
+                                                 self.sr, sim_time, self.name,
+                                                 self.get_steadystate_list())
+
+    @property
+    def packagelist(self):
+        return self._packagelist
+
+    @property
+    def namefile(self):
+        return self.model_nam_file
+
+    @property
+    def model_ws(self):
+        file_mgr = self.simulation_data.mfpath
+        return file_mgr.get_model_path(self.name)
+
+    @property
+    def exename(self):
+        return self.exe_name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def solver_tols(self):
+        ims = self.get_ims_package()
+        if ims is not None:
+            rclose = ims.rcloserecord.get_data()
+            if rclose is not None:
+                rclose = rclose[0][0]
+            return ims.inner_hclose.get_data(), rclose
+        return None
+
+    def export(self, f, **kwargs):
+        from ..export import utils
+        return utils.model_export(f, self, **kwargs)
 
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
@@ -325,6 +391,60 @@ class MFModel(PackageContainer):
                     VerbosityLevel.normal.value:
                 print('    writing package {}...'.format(pp._get_pname()))
             pp.write(ext_file_action=ext_file_action)
+
+    def get_grid_type(self):
+        """
+        Return the type of grid used by model 'model_name' in simulation
+        containing simulation data 'simulation_data'.
+
+        Returns
+        -------
+        grid type : DiscritizationType
+        """
+        package_recarray = self.name_file.packages
+        structure = mfstructure.MFStructure()
+        if package_recarray.search_data(
+                'dis{}'.format(structure.get_version_string()),
+                0) is not None:
+            return DiscretizationType.DIS
+        elif package_recarray.search_data(
+                'disv{}'.format(structure.get_version_string()),
+                0) is not None:
+            return DiscretizationType.DISV
+        elif package_recarray.search_data(
+                'disu{}'.format(structure.get_version_string()),
+                0) is not None:
+            return DiscretizationType.DISU
+
+        return DiscretizationType.UNDEFINED
+
+    def get_ims_package(self):
+        solution_group = self.simulation.name_file.solutiongroup.get_data()
+        for record in solution_group:
+            for model_name in record[2:]:
+                if model_name == self.name:
+                    return self.simulation.get_ims_package(record[1])
+        return None
+
+    def get_steadystate_list(self):
+        ss_list = []
+        tdis = self.simulation.get_package('tdis')
+        period_data = tdis.perioddata.get_data()
+        for index in range(0, len(period_data)):
+            ss_list.append(True)
+
+        storage = self.get_package('sto')
+        if storage is not None:
+            tr_keys = storage.transient.get_keys(True)
+            ss_keys = storage.steady_state.get_keys(True)
+            for key in tr_keys:
+                ss_list[key] = False
+                for ss_list_key in range(key + 1, len(ss_list)):
+                    for ss_key in ss_keys:
+                        if ss_key == ss_list_key:
+                            break
+                        ss_list[key] = False
+        return ss_list
 
     def is_valid(self):
         """
@@ -557,7 +677,7 @@ class MFModel(PackageContainer):
 
         # make sure path is unique
         if path in self._package_paths:
-            path_iter = mfdatautil.PathIter(path)
+            path_iter = datautil.PathIter(path)
             for new_path in path_iter:
                 if new_path not in self._package_paths:
                     path = new_path
@@ -574,7 +694,7 @@ class MFModel(PackageContainer):
             if package_struct is not None and \
               package_struct.multi_package_support:
                 # check for other registered packages of this type
-                name_iter = mfdatautil.NameIter(package.package_type, False)
+                name_iter = datautil.NameIter(package.package_type, False)
                 for package_name in name_iter:
                     if package_name not in self.package_name_dict:
                         package.package_name = package_name
@@ -670,7 +790,7 @@ class MFModel(PackageContainer):
 
         # clean up model type text
         model_type = self.structure.model_type
-        while mfdatautil.DatumUtil.is_int(model_type[-1]):
+        while datautil.DatumUtil.is_int(model_type[-1]):
             model_type = model_type[0:-1]
 
         # create package

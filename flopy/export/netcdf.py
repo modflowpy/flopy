@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 from .metadata import acdd
 import flopy
+from ..grid.modelgrid import ModelGrid, GridType, PointType
 
 # globals
 FILLVALUE = -99999.9
@@ -157,12 +158,14 @@ class NetCdf(object):
 
         self.forgive = bool(forgive)
 
-        assert model.dis is not None
         self.model = model
-        self.sr = model.sr
+        self.model_grid = model.modelgrid
+        self.sr = self.model_grid.sr
         if prj is not None:
             self.sr.prj = prj
-        self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
+        assert(self.model_grid.grid_type == GridType.structured)
+        self.shape = (self.model_grid.nlay, self.model_grid.nrow,
+                      self.model_grid.ncol)
 
         try:
             import dateutil.parser
@@ -172,22 +175,22 @@ class NetCdf(object):
             return None
 
         self.start_datetime = self._dt_str(dateutil.parser.parse(
-            self.model.start_datetime))
+            self.model_grid.sim_time.tr.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
 
-        proj4_str = self.model.sr.proj4_str
+        proj4_str = self.model_grid.sr.proj4_str
         if proj4_str is None:
             proj4_str = '+init=epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
         self.proj4_str = proj4_str
-        self.grid_units = LENUNI[self.model.sr.lenuni]
+        self.grid_units = LENUNI[self.model_grid.sr.lenuni]
         self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
-        self.time_units = ITMUNI[self.model.tr.itmuni]
+        self.time_units = ITMUNI[self.model_grid.sim_time.tr.itmuni]
 
         # this gives us confidence that every NetCdf instance
         # has the same attributes
@@ -582,15 +585,16 @@ class NetCdf(object):
 
         htol, rtol = -999, -999
         try:
-            htol, rtol = NetCdf.get_solver_H_R_tols(self.model)
+            htol, rtol = self.model.solver_tols()
         except Exception as e:
             self.logger.warn("unable to get solver tolerances:" + \
                              "{0}".format(str(e)))
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
-        for n, v in self.model.sr.attribute_dict.items():
+        for n, v in self.model_grid.sr.attribute_dict.items():
             self.global_attributes["flopy_sr_" + n] = v
-        self.global_attributes["start_datetime"] = self.model.start_datetime
+        self.global_attributes["start_datetime"] = \
+            self.model_grid.sim_time.tr.start_datetime
 
         self.fillvalue = FILLVALUE
 
@@ -633,14 +637,18 @@ class NetCdf(object):
             raise Exception("error building grid crs:\n{0}".format(str(e)))
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
 
-        vmin, vmax = self.model.dis.botm.array.min(), self.model.dis.top.array.max()
+        vmin, vmax = self.model_grid.botm.min(), \
+                     self.model_grid.top.max()
         if self.z_positive == 'down':
             vmin, vmax = vmax, vmin
         else:
-            self.zs = self.model.dis.zcentroids
+            self.zs = self.model_grid.get_cellcenters(PointType.modelxyz)[2].\
+                copy()
 
-        ys = self.model.sr.ycentergrid.copy()
-        xs = self.model.sr.xcentergrid.copy()
+        ys = self.model_grid.get_cellcenters(PointType.modelxyz)[1].\
+            copy()
+        xs = self.model_grid.get_cellcenters(PointType.modelxyz)[0].\
+            copy()
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
@@ -657,13 +665,13 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model.sr.xgrid[0, 0]
-        base_y = self.model.sr.ygrid[0, 0]
+        base_x = self.model_grid.xedgegrid()[0, 0]
+        base_y = self.model_grid.yedgegrid()[0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
 
         # get transformed bounds and record to check against ScienceBase later
-        xmin, ymin, xmax, ymax = self.model.sr.bounds
+        xmin, ymin, xmax, ymax = self.model_grid.bounds
         bbox = np.array([[xmin, ymin],
                          [xmin, ymax],
                          [xmax, ymax],
@@ -735,7 +743,7 @@ class NetCdf(object):
         self.log("creating dimensions")
         # time
         if time_values is None:
-            time_values = np.cumsum(self.model.dis.perlen)
+            time_values = np.cumsum(self.model_grid.sim_time.perlen)
         self.chunks["time"] = min(len(time_values), 100)
         self.nc.createDimension("time", len(time_values))
         self.nc.createDimension('layer', self.shape[0])
@@ -764,7 +772,7 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        sr = self.model.sr
+        sr = self.model_grid.sr
         attribs = {"units": sr.units, "standard_name": "elevation",
                    "long_name": NC_LONG_NAMES.get("elevation", "elevation"),
                    "axis": "Z",
@@ -772,8 +780,7 @@ class NetCdf(object):
                    "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[
-        :] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
+        elev[:] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
@@ -804,7 +811,7 @@ class NetCdf(object):
                    "axis": "X"}
         x = self.create_variable("x_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        x[:] = sr.xcentergrid
+        x[:] = self.model_grid.get_cellcenters()[0]
 
         # y
         self.log("creating y var")
@@ -815,7 +822,7 @@ class NetCdf(object):
                    "axis": "Y"}
         y = self.create_variable("y_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        y[:] = sr.ycentergrid
+        y[:] = self.model_grid.get_cellcenters()[1]
 
         # grid mapping variable
         attribs = self.sr.crs.grid_mapping_attribs
@@ -839,8 +846,8 @@ class NetCdf(object):
                                                   "Model grid cell spacing along a column"),
                    }
         delc = self.create_variable('delc', attribs, dimensions=('y',))
-        delc[:] = self.model.sr.delc[::-1] * self.model.sr.length_multiplier
-        if self.model.sr.rotation != 0:
+        delc[:] = self.model_grid.delc[::-1] * self.model_grid.sr.length_multiplier
+        if self.model_grid.sr.rotation != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
@@ -851,8 +858,8 @@ class NetCdf(object):
                                                   "Model grid cell spacing along a row"),
                    }
         delr = self.create_variable('delr', attribs, dimensions=('x',))
-        delr[:] = self.model.sr.delr[::-1] * self.model.sr.length_multiplier
-        if self.model.sr.rotation != 0:
+        delr[:] = self.model_grid.delr[::-1] * self.model_grid.sr.length_multiplier
+        if self.model_grid.sr.rotation != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
@@ -1105,13 +1112,3 @@ class NetCdf(object):
             json.dump(longnames, output, sort_keys=True, indent=2)
         return longnames
 
-    @staticmethod
-    def get_solver_H_R_tols(model):
-        if model.pcg is not None:
-            return model.pcg.hclose, model.pcg.rclose
-        elif model.nwt is not None:
-            return model.nwt.headtol, model.nwt.fluxtol
-        elif model.sip is not None:
-            return model.sip.hclose, -999
-        elif model.gmg is not None:
-            return model.gmg.hclose, model.gmg.rclose

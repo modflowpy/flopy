@@ -7,10 +7,11 @@ try:
 except:
     plt = None
 from . import plotutil
-from .plotutil import bc_color_dict
+import warnings
+warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class ModelCrossSection(object):
+class StructuredCrossSection(object):
     """
     Class to create a cross section of the model.
 
@@ -26,7 +27,7 @@ class ModelCrossSection(object):
         Dictionary with either "row", "column", or "line" key. If key
         is "row" or "column" key value should be the zero-based row or
         column index for cross-section. If key is "line" value should
-        be an array of (x, y) tuples with vertices of cross-section. 
+        be an array of (x, y) tuples with vertices of cross-section.
         Vertices should be in map coordinates consistent with xul,
         yul, and rotation.
     xul : float
@@ -43,75 +44,79 @@ class ModelCrossSection(object):
 
     """
 
-    def __init__(self, ax=None, model=None, dis=None, line=None,
-                 xul=None, yul=None, rotation=None, extent=None):
+    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+                 line=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., extent=None, length_multiplier=1.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelCrossSection method'
-            raise Exception(s)
+            raise ImportError(s)
 
         self.model = model
-        if dis is None:
-            if model is None:
-                raise Exception('Cannot find discretization package')
-            else:
-                self.dis = model.get_package('DIS')
-                self.sr = copy.deepcopy(self.dis.parent.sr)
-        else:
+
+        if model is not None:
+            self.mg = model.modelgrid
+            self.sr = model.modelgrid.sr
+            self.dis = model.get_package("DIS")
+
+        elif modelgrid is not None:
+            self.mg = modelgrid
+            self.sr = modelgrid.sr
             self.dis = dis
-            self.sr = copy.deepcopy(dis.parent.sr)
-        if line == None:
+            if dis is None:
+                raise AssertionError("Cannot find model discretization package")
+
+        elif dis is not None:
+            self.mg = dis.parent.modelgrid
+            self.sr = dis.parent.modelgrid.sr
+            self.dis = dis
+
+        else:
+            raise Exception("Cannot find model discretization package")
+
+        # Set origin and rotation,
+        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
+                rotation != 0 or length_multiplier != 1.:
+            self.sr.length_multiplier = length_multiplier
+            self.sr.set_spatialreference(xul=xul, yul=yul,
+                                         xll=xll, yll=yll,
+                                         rotation=rotation)
+            self.mg.sr = self.sr
+
+        if line is None:
             s = 'line must be specified.'
             raise Exception(s)
 
         linekeys = [linekeys.lower() for linekeys in list(line.keys())]
 
-        if len(linekeys) < 1:
+        if len(linekeys) != 1:
             s = 'only row, column, or line can be specified in line dictionary.\n'
             s += 'keys specified: '
             for k in linekeys:
                 s += '{} '.format(k)
-            raise Exception(s)
-
-        if 'row' in linekeys and 'column' in linekeys:
-            s = 'row and column cannot both be specified in line dictionary.'
-            raise Exception(s)
-
-        if 'row' in linekeys and 'line' in linekeys:
-            s = 'row and line cannot both be specified in line dictionary.'
-            raise Exception(s)
-
-        if 'column' in linekeys and 'line' in linekeys:
-            s = 'column and line cannot both be specified in line dictionary.'
-            raise Exception(s)
+            raise AssertionError(s)
 
         if ax is None:
             self.ax = plt.gca()
         else:
             self.ax = ax
 
-        # Set origin and rotation
-        if xul is not None:
-            self.sr.xul = xul
-        if yul is not None:
-            self.sr.yul = yul
-        if rotation is not None:
-            self.sr.rotation = rotation
-
         onkey = list(line.keys())[0]
         eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            pts = [(self.sr.xedge[0] + eps,
-                    self.sr.ycenter[int(line[onkey])] - eps),
-                   (self.sr.xedge[-1] - eps,
-                    self.sr.ycenter[int(line[onkey])] + eps)]
+            ycenter = self.mg.ycell_centers()
+            pts = [(self.mg.xedge[0] + eps,
+                    ycenter[int(line[onkey])] - eps),
+                   (self.mg.xedge[-1] - eps,
+                    ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            pts = [(self.sr.xcenter[int(line[onkey])] + eps,
-                    self.sr.yedge[0] - eps),
-                   (self.sr.xcenter[int(line[onkey])] - eps,
-                    self.sr.yedge[-1] + eps)]
+            xcenter = self.mg.xcell_centers()
+            pts = [(xcenter[int(line[onkey])] + eps,
+                    self.mg.yedge[0] - eps),
+                   (xcenter[int(line[onkey])] - eps,
+                    self.mg.yedge[-1] + eps)]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -128,8 +133,8 @@ class ModelCrossSection(object):
         self.pts = np.array(pts)
 
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.sr.xedge,
-                                                 self.sr.yedge)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xedge,
+                                                 self.mg.yedge)
         if len(self.xpts) < 2:
             s = 'cross-section cannot be created\n.'
             s += '   less than 2 points intersect the model grid\n'
@@ -166,8 +171,8 @@ class ModelCrossSection(object):
 
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 
@@ -218,7 +223,7 @@ class ModelCrossSection(object):
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as a patch collection.
-        
+
         Parameters
         ----------
         a : numpy.ndarray
@@ -244,15 +249,15 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    a[k, :, :]))
             if self.laycbd[k] > 0:
                 ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
                 ta[:, :] = -1e9
                 vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.sr.xedge,
-                                                       self.sr.yedge, ta))
+                                                       self.mg.xedge,
+                                                       self.mg.yedge, ta))
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
@@ -309,8 +314,8 @@ class ModelCrossSection(object):
         else:
             raise Exception('plot_array array must be a 2D or 3D array')
         for k in range(nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
 
@@ -323,7 +328,7 @@ class ModelCrossSection(object):
             plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
         return plot
 
-    def plot_fill_between(self, a, colors=['blue', 'red'],
+    def plot_fill_between(self, a, colors=('blue', 'red'),
                           masked_values=None, head=None, **kwargs):
         """
         Plot a three-dimensional array as lines.
@@ -332,6 +337,8 @@ class ModelCrossSection(object):
         ----------
         a : numpy.ndarray
             Three-dimensional array to plot.
+        colors: list
+            matplotlib fill colors, two required
         masked_values : iterable of floats, ints
             Values to mask.
         head : numpy.ndarray
@@ -356,15 +363,15 @@ class ModelCrossSection(object):
         vpts = []
         for k in range(self.dis.nlay):
             # print('k', k, self.laycbd[k])
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
             if self.laycbd[k] > 0:
                 ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
                 ta[:, :] = self.dis.botm.array[k, :, :]
                 vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.sr.xedge,
-                                                       self.sr.yedge, ta))
+                                                       self.mg.xedge,
+                                                       self.mg.yedge, ta))
 
         vpts = np.ma.array(vpts, mask=False)
 
@@ -438,8 +445,8 @@ class ModelCrossSection(object):
 
         vpts = []
         for k in range(self.dis.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge,
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
@@ -458,6 +465,40 @@ class ModelCrossSection(object):
         contour_set = self.ax.contour(self.xcentergrid, zcentergrid,
                                       vpts, **kwargs)
         return contour_set
+
+    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+        """
+        Make a plot of inactive cells.  If not specified, then pull ibound
+        from the self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+
+        color_noflow : string
+            (Default is 'black')
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        # todo: change this to plot inactive and call idomain for Flopy6
+        if ibound is None:
+            bas = self.model.get_package('BAS6')
+            ibound = bas.ibound.array
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        patches = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
+        return patches
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     head=None, **kwargs):
@@ -485,6 +526,7 @@ class ModelCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+        # todo: update this for idomain, change to plot inactive!
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
@@ -572,6 +614,7 @@ class ModelCrossSection(object):
 
         # Get the list data
         try:
+            # todo: this may need an update for flopy6
             mflist = p.stress_period_data[kper]
         except:
             raise Exception('Not a list-style boundary package')
@@ -586,10 +629,10 @@ class ModelCrossSection(object):
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
-            if ftype in bc_color_dict:
-                c = bc_color_dict[ftype]
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
             else:
-                c = bc_color_dict['default']
+                c = plotutil.bc_color_dict['default']
         else:
             c = color
         cmap = matplotlib.colors.ListedColormap(['none', c])
@@ -713,15 +756,15 @@ class ModelCrossSection(object):
         vpts = []
         ibpts = []
         for k in range(self.dis.nlay):
-            upts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, u[k, :, :]))
-            u2pts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                    self.sr.yedge,
+            upts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, u[k, :, :]))
+            u2pts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                    self.mg.yedge,
                                                     u2[k, :, :]))
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, v[k, :, :]))
-            ibpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                    self.sr.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, v[k, :, :]))
+            ibpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                    self.mg.yedge,
                                                     ib[k, :, :]))
         # convert upts, u2pts, and vpts to numpy arrays
         upts = np.array(upts)
@@ -797,8 +840,6 @@ class ModelCrossSection(object):
         else:
             vmax = None
 
-        v = []
-
         colors = []
         for k in range(zpts.shape[0] - 1):
             for idx in range(0, len(self.xpts) - 1, 2):
@@ -832,7 +873,7 @@ class ModelCrossSection(object):
     def get_grid_line_collection(self, **kwargs):
         """
         Get a LineCollection of the grid
-        
+
         Parameters
         ----------
         **kwargs : dictionary
@@ -890,13 +931,13 @@ class ModelCrossSection(object):
                 v = vs[k, :, :]
                 idx = v < e
                 e[idx] = v[idx]
-            zpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, e))
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, e))
         return np.array(zpts)
 
     def set_zcentergrid(self, vs):
         """
-        Get an array of z elevations at the center of a cell that is based 
+        Get an array of z elevations at the center of a cell that is based
         on minimum of cell top elevation (self.elev) or passed vs numpy.ndarray
 
         Parameters
@@ -915,8 +956,8 @@ class ModelCrossSection(object):
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, self.sr.xedge,
-                                                   self.sr.yedge, e))
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
+                                                   self.mg.yedge, e))
         vpts = np.array(vpts)
 
         zcentergrid = []
@@ -962,3 +1003,462 @@ class ModelCrossSection(object):
         ymax = self.zpts.max()
 
         return (xmin, xmax, ymin, ymax)
+
+
+class VertexCrossSection(object):
+    """
+    Class to create a cross section of the model from a VertexGrid
+
+    Parameters
+    ----------
+
+    """
+    def __init__(self, ax=None, model=None, dis=None, sr=None, line=None,
+                 xul=None, yul=None, rotation=None, extent=None):
+        # todo: will need to rewrite this for modelgrid class
+        self.model = model
+
+        if sr is None:
+            if dis is None:
+                if model is None:
+                    raise AssertionError("Cannot find a SpatialReference object")
+
+                else:
+                    self.dis = model.get_package("DIS")
+                    self.sr = copy.deepcopy(self.dis.sr)
+            else:
+                self.dis = dis
+                self.sr = copy.deepcopy(dis.sr)
+        else:
+            self.dis = dis
+            self.sr = copy.deepcopy(sr)
+
+        if line is None:
+            err_msg = 'line must be specified.'
+            raise Exception(err_msg)
+
+        linekeys = [linekeys.lower() for linekeys in list(line.keys())]
+
+        if len(linekeys) != 1:
+            s = 'only row, column, or line can be specified in line dictionary.\n'
+            s += 'keys specified: '
+            for k in linekeys:
+                s += '{} '.format(k)
+            raise Exception(s)
+
+        elif "line" not in linekeys:
+            s = "only line can be specified in line dictionary " \
+                "for vertex Discretization"
+            raise AssertionError(s)
+
+        onkey = linekeys[0]
+
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
+
+        self.direction = "xy"
+
+        # Set origin and rotation, not sure if this applies, but we can include it!
+        if xul is not None:
+            self.sr.xul = xul
+        if yul is not None:
+            self.sr.yul = yul
+        if rotation is not None:
+            self.sr.rotation = rotation
+
+        # convert pts list to a numpy array
+        pts = line[onkey]
+        self.pts = np.array(pts)
+        #todo: look into spatial refernce to see what is there for vertex grids!
+
+        # get points along the line
+        # todo: after crafting this spartial refernce code, send the dictionary item to a plotutil method!
+        self.xpts = plotutil.line_intersect_vertex_grid(self.pts, self.sr.xydict)
+        # xpts returns xy intersection locations of line by cell
+
+        if len(self.xpts) < 2:
+            s = 'cross-section cannot be created\n.'
+            s += '   less than 2 points intersect the model grid\n'
+            s += '   {} points intersect the grid.'.format(len(self.xpts))
+            raise Exception(s)
+
+        top = self.dis.top
+        botm = self.dis.botm
+        elev = [top.copy()]
+        for k in range(self.dis.nlay):
+            elev.append(botm[k, :])
+
+        self.elev = np.array(elev)
+        self.layer0 = 0
+        self.layer1 = self.dis.nlay + 1
+
+        zpts = []
+        for k in range(self.layer0, self.layer1):
+            # todo: craft code that accomplishes this! It grabs the cell values from a dict and list!
+            zpts.append(plotutil.cell_value_points_from_dict(self.xpts, self.elev[k, :]))
+        self.zpts = zpts
+
+        xcentergrid = []
+        zcentergrid = []
+        xparr = []
+        zparr = []
+
+        # todo: redo this section
+        if self.dis.nlay == 1:
+            for k in range(1, len(zpts)):
+                xp = {}
+                zp = {}
+                for i, value in zpts[k].items():
+                    try:
+                        xparr.append([self.xpts[i][0][0], self.xpts[i][-1][0]])
+                        zparr.append([value, zpts[k - 1][i]])
+                        # todo: this should be set to a dictionary correct. Currently its being overwritten each loop!
+                        # todo: then it'll be the same as the following code after else:
+                        xp = 0.5 * (self.xpts[i][0][0] + self.xpts[i][-1][0])
+                        zp = 0.5 * (value + self.zpts[k - 1][i])
+
+                    except:
+                        break
+                xcentergrid.append(xp)
+                zcentergrid.append(zp)
+
+        else:
+            for k in range(1, len(zpts)):
+                xp = {}
+                zp = {}
+                for i, value in zpts[k].items():
+                    try:
+                        xparr.append([self.xpts[i][0][0], self.xpts[i][-1][0]])
+                        zparr.append([value, zpts[k - 1][i]])
+                        xp[i] = 0.5 * (self.xpts[i][0][0] + self.xpts[i][-1][0])
+                        zp[i] = 0.5 * (value + zpts[k - 1][i])
+
+                    except:
+                        break
+                xcentergrid.append(xp)
+                zcentergrid.append(zp)
+
+        self.xparr = np.array(xparr)
+        self.zparr = np.array(zparr)
+
+        self.xcentergrid = xcentergrid
+        self.zcentergrid = zcentergrid
+
+    def plot_array(self, a, masked_values=None, head=None, **kwargs):
+        """
+        Plot a three-dimensional array as a patch collection.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Three-dimensional array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_surface(self, a, masked_values=None, **kwargs):
+        """
+        Plot a two- or three-dimensional array as line(s).
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Two- or three-dimensional array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.plot
+
+        Returns
+        -------
+        plot : list containing matplotlib.plot objects
+        """
+        raise NotImplementedError()
+
+    def plot_fill_between(self, a, colors=('blue', 'red'),
+                          masked_values=None, head=None, **kwargs):
+        """
+        Plot a three-dimensional array as lines.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Three-dimensional array to plot.
+        colors: list
+            matplotlib fill colors, two required
+        masked_values : iterable of floats, ints
+            Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.plot
+
+        Returns
+        -------
+        plot : list containing matplotlib.fillbetween objects
+
+        """
+        raise NotImplementedError()
+
+    def contour_array(self, a, masked_values=None, head=None, **kwargs):
+        """
+        Contour a three-dimensional array.
+
+        Parameters
+        ----------
+        a : numpy.ndarray
+            Three-dimensional array to plot.
+        masked_values : iterable of floats, ints
+            Values to mask.
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.pyplot.contour
+
+        Returns
+        -------
+        contour_set : matplotlib.pyplot.contour
+
+        """
+        raise NotImplementedError()
+
+    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
+        """
+        Make a plot of inactive cells.  If not specified, then pull ibound
+        from the self.ml
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+
+        color_noflow : string
+            (Default is 'black')
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        raise NotImplementedError()
+
+    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
+                    head=None, **kwargs):
+        """
+        Make a plot of ibound.  If not specified, then pull ibound from the
+        self.model
+
+        Parameters
+        ----------
+        ibound : numpy.ndarray
+            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        color_noflow : string
+            (Default is 'black')
+        color_ch : string
+            Color for constant heads (Default is 'blue'.)
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_grid(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+            kwargs : ax, colors.  The remaining kwargs are passed into the
+                the LineCollection constructor.
+
+        Returns
+        -------
+            lc : matplotlib.collections.LineCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+                head=None, **kwargs):
+        """
+        Plot boundary conditions locations for a specific boundary
+        type from a flopy model
+
+        Parameters
+        ----------
+        ftype : string
+            Package name string ('WEL', 'GHB', etc.). (Default is None)
+        package : flopy.modflow.Modflow package class instance
+            flopy package class instance. (Default is None)
+        kper : int
+            Stress period to plot
+        color : string
+            matplotlib color string. (Default is None)
+        head : numpy.ndarray
+            Three-dimensional array to set top of patches to the minimum
+            of the top of a layer or the head value. Used to create
+            patches that conform to water-level elevations.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
+
+        """
+        raise NotImplementedError()
+
+    def plot_discharge(self, frf, fff, flf=None, head=None,
+                       kstep=1, hstep=1, normalize=False,
+                       **kwargs):
+        """
+        Use quiver to plot vectors.
+
+        Parameters
+        ----------
+        frf : numpy.ndarray
+            MODFLOW's 'flow right face'
+        fff : numpy.ndarray
+            MODFLOW's 'flow front face'
+        flf : numpy.ndarray
+            MODFLOW's 'flow lower face' (Default is None.)
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then will assume confined
+            conditions in order to calculated saturated thickness.
+        kstep : int
+            layer frequency to plot. (Default is 1.)
+        hstep : int
+            horizontal frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
+        kwargs : dictionary
+            Keyword arguments passed to plt.quiver()
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            Vectors
+
+        """
+        raise NotImplementedError()
+
+    def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
+        """
+        Get a PatchCollection of plotarray in unmasked cells
+
+        Parameters
+        ----------
+        zpts : numpy.ndarray
+            array of z elevations that correspond to the x, y, and horizontal
+            distance along the cross-section (self.xpts). Constructed using
+            plotutil.cell_value_points().
+        plotarray : numpy.ndarray
+            Three-dimensional array to attach to the Patch Collection.
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        patches : matplotlib.collections.PatchCollection
+
+        """
+        raise NotImplementedError()
+
+    def get_grid_line_collection(self, **kwargs):
+        """
+        Get a LineCollection of the grid
+
+        Parameters
+        ----------
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.LineCollection
+
+        Returns
+        -------
+        linecollection : matplotlib.collections.LineCollection
+        """
+        raise NotImplementedError()
+
+    def get_extent(self):
+        """
+        Get the extent of the rotated and offset grid
+
+        Return (xmin, xmax, ymin, ymax)
+        """
+        raise NotImplementedError()
+
+
+class ModelCrossSection(object):
+    """
+    Class to create a cross section of the model.
+
+    Parameters
+    ----------
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
+    line : dict
+        Dictionary with either "row", "column", or "line" key. If key
+        is "row" or "column" key value should be the zero-based row or
+        column index for cross-section. If key is "line" value should
+        be an array of (x, y) tuples with vertices of cross-section.
+        Vertices should be in map coordinates consistent with xul,
+        yul, and rotation.
+    xul : float
+        x coordinate for upper left corner
+    yul : float
+        y coordinate for upper left corner.  The default is the sum of the
+        delc array.
+    rotation : float
+        Angle of grid rotation around the upper left corner.  A positive value
+        indicates clockwise rotation.  Angles are in degrees. Default is None
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
+
+    """
+    def __new__(cls, ax=None, model=None, dis=None, modelgrid=None,
+                line=None, xul=None, yul=None, xll=None, yll=None,
+                rotation=0., extent=None, length_multiplier=1.):
+
+        from flopy.plot.plotbase import PlotCrossSection
+
+        err_msg = "ModelCrossSection will be replaced by " +\
+            "PlotCrossSection(), Calling PlotCrossSection()"
+        warnings.warn(err_msg, PendingDeprecationWarning)
+
+        return PlotCrossSection(ax=ax, model=model, dis=dis, modelgrid=modelgrid,
+                                line=line, xul=xul, yul=yul, xll=xll, yll=yll,
+                                rotation=rotation, extent=extent,
+                                length_multiplier=length_multiplier)

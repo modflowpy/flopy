@@ -248,10 +248,10 @@ def test_export_array():
                                    load_only=['DIS', 'BAS6'])
     m.sr.rotation = 45.
     nodata = -9999
-    m.sr.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array, nodata=nodata)
+    m.modelgrid.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array, nodata=nodata)
     arr = np.loadtxt(os.path.join(tpth, 'fb.asc'), skiprows=6)
 
-    m.sr.write_shapefile(os.path.join(tpth, 'grid.shp'))
+    m.modelgrid.write_shapefile(os.path.join(tpth, 'grid.shp'))
     # check bounds
     with open(os.path.join(tpth, 'fb.asc')) as src:
         for line in src:
@@ -259,18 +259,18 @@ def test_export_array():
                 val = float(line.strip().split()[-1])
                 # ascii grid origin will differ if it was unrotated
                 if rotate:
-                    assert np.abs(val - m.sr.bounds[0]) < 1e-6
+                    assert np.abs(val - m.modelgrid.bounds[0]) < 1e-6
                 else:
                     assert np.abs(val - m.sr.xll) < 1e-6
             if 'yllcorner' in line.lower():
                 val = float(line.strip().split()[-1])
                 if rotate:
-                    assert np.abs(val - m.sr.bounds[1]) < 1e-6
+                    assert np.abs(val - m.modelgrid.bounds[1]) < 1e-6
                 else:
                     assert np.abs(val - m.sr.yll) < 1e-6
             if 'cellsize' in line.lower():
                 val = float(line.strip().split()[-1])
-                rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.sr.delr[0] * m.sr.length_multiplier
+                rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.modelgrid.delr[0] * m.sr.length_multiplier
                 #assert np.abs(val - rot_cellsize) < 1e-6
                 break
     rotate = False
@@ -287,8 +287,9 @@ def test_export_array():
     except:
         pass
     if rasterio is not None:
-        m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array,
-                          nodata=nodata)
+        m.modelgrid.export_array(os.path.join(tpth, 'fb.tif'),
+                                 m.dis.top.array,
+                                 nodata=nodata)
         with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
             arr = src.read(1)
         assert src.shape == (m.nrow, m.ncol)
@@ -311,13 +312,13 @@ def test_mbase_sr():
     dis = flopy.modflow.ModflowDis(ml, nrow=10, ncol=5, delr=np.arange(5),
                                    xul=500)
     print(ml.sr)
-    assert ml.sr.xul == 500
-    assert ml.sr.yll == -10
+    assert ml.modelgrid.sr.xul == 500
+    assert ml.modelgrid.sr.yll == -10
     ml.model_ws = tpth
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
-    assert ml1.sr == ml.sr
+    assert ml1.sr == ml.modelgrid.sr
     assert ml1.start_datetime == ml.start_datetime
 
 def test_free_format_flag():
@@ -393,7 +394,8 @@ def test_sr():
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
-    x, y = ms.sr.xcenter, ms.sr.ycenter[0]
+    x = ms.modelgrid.xcell_centers()
+    y = ms.modelgrid.ycell_centers()[0]
     xt, yt = sr.transform(x, y)
     assert np.sum(xt - sr.xcentergrid[0]) < 1e-3
     x, y = ms.sr.xcenter[0], ms.sr.ycenter
@@ -455,7 +457,7 @@ def test_epsgs():
     # (also tests sr.crs parsing of geographic crs info)
     delr = np.ones(10)
     delc = np.ones(10)
-    sr = flopy.utils.SpatialReference(delr=delr,
+    sr = flopy.grid.reference.SpatialReference(
                                       delc=delc,
                                       )
     sr.epsg = 102733
@@ -746,18 +748,20 @@ def test_sr_with_Map():
     plt.close()
 
     # transformation in m.sr
-    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                      delc=m.dis.delc.array,
-                                      xll=xll, yll=yll, rotation=rotation)
-    m.sr = copy.deepcopy(sr)
+    sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
+                                               xll=xll, yll=yll,
+                                               rotation=rotation)
+    m.modelgrid.sr = copy.deepcopy(sr)
     modelmap = flopy.plot.ModelMap(model=m)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
 
     # transformation assign from sr instance
-    m.sr._reset()
-    m.sr.set_spatialreference()
+    m.modelgrid.sr._reset()
+    m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
+                                        xll=xll, yll=yll,
+                                        rotation=rotation)
     modelmap = flopy.plot.ModelMap(model=m, sr=sr)
     lc = modelmap.plot_grid()
     check_vertices()
@@ -959,7 +963,7 @@ if __name__ == '__main__':
     # export_netcdf(namfile)
     # test_freyberg_export()
     #test_export_array()
-    test_write_shapefile()
+    #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

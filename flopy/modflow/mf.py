@@ -9,7 +9,9 @@ import inspect
 import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
-from ..utils import mfreadnam, SpatialReference, TemporalReference
+from ..utils import mfreadnam
+from ..grid.reference import SpatialReference, TemporalReference
+from ..grid import modelgrid
 from .mfpar import ModflowPar
 
 
@@ -216,6 +218,38 @@ class Modflow(BaseModel):
     #     next_unit = self.__next_ext_unit + 1
     #     self.__next_ext_unit += 1
     #     return next_unit
+
+    @property
+    def modelgrid(self):
+        tr = TemporalReference(self.dis.itmuni, self.start_datetime)
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
+        sim_time = modelgrid.SimulationTime(data_frame,
+                                            self.dis.itmuni_dict[
+                                            self.dis.itmuni], tr)
+        if self.bas is not None:
+            ibound = self.bas.ibound.array
+        else:
+            ibound = None
+        return modelgrid.StructuredModelGrid(self.dis.delc.array,
+                                             self.dis.delr.array,
+                                             self.dis.top.array,
+                                             self.dis.botm.array, ibound,
+                                             self.sr, sim_time, self.name,
+                                             self.dis.steady.array)
+
+    @property
+    def solver_tols(self):
+        if self.pcg is not None:
+            return self.pcg.hclose, self.pcg.rclose
+        elif self.nwt is not None:
+            return self.nwt.headtol, self.nwt.fluxtol
+        elif self.sip is not None:
+            return self.sip.hclose, -999
+        elif self.gmg is not None:
+            return self.gmg.hclose, self.gmg.rclose
+        return None
 
     @property
     def nlay(self):
@@ -622,7 +656,7 @@ class Modflow(BaseModel):
             else:
                 itmuni = dis.itmuni
                 ref_attributes['lenuni'] = dis.lenuni
-            sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
+            sr = SpatialReference(delc=ml.dis.delc.array,
                                   **ref_attributes)
         else:
             sr = None

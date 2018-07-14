@@ -9,6 +9,19 @@ import os
 import sys
 import math
 import numpy as np
+from flopy.utils import MfList, Util2d, Util3d, Transient2d
+from flopy.plot.plotbase import PlotMapView
+
+try:
+    import shapefile
+except ImportError:
+    shapefile = None
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
 try:
     from matplotlib.colors import LinearSegmentedColormap
 
@@ -274,324 +287,993 @@ except:
     pass
 
 
-
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
                  'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy',
                  'STR': 'purple', 'SFR': 'blue'}
 
 
-def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
-                       names=None, filenames=None, fignum=None,
-                       mflay=None, **kwargs):
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        s = 'Could not import matplotlib.  Must install matplotlib ' +\
-            ' in order to plot LayerFile data.'
-        raise Exception(s)
-
-    import flopy.plot.map as map
-    
-
-    # reshape 2d arrays to 3d for convenience
-    if len(plotarray.shape) == 2:
-        plotarray = plotarray.reshape((1, plotarray.shape[0],
-                                       plotarray.shape[1]))
-
-    # parse keyword arguments
-    if 'figsize' in kwargs:
-        figsize = kwargs.pop('figsize')
-    else:
-        figsize = None
-
-    if 'masked_values' in kwargs:
-        masked_values = kwargs.pop('masked_values')
-    else:
-        masked_values = None
-
-    if 'pcolor' in kwargs:
-        pcolor = kwargs.pop('pcolor')
-    else:
-        pcolor = True
-
-    if 'inactive' in kwargs:
-        inactive = kwargs.pop('inactive')
-    else:
-        inactive = True
-
-    if 'contour' in kwargs:
-        contourdata = kwargs.pop('contour')
-    else:
-        contourdata = False
-
-    if 'clabel' in kwargs:
-        clabel = kwargs.pop('clabel')
-    else:
-        clabel = False
-
-    if 'colorbar' in kwargs:
-        cb = kwargs.pop('colorbar')
-    else:
-        cb = False
-
-    if 'grid' in kwargs:
-        grid = kwargs.pop('grid')
-    else:
-        grid = False
-
-    if 'levels' in kwargs:
-        levels = kwargs.pop('levels')
-    else:
-        levels = None
-
-    if 'colors' in kwargs:
-        colors = kwargs.pop('colors')
-    else:
-        colors = 'black'
-    
-    if 'dpi' in kwargs:
-        dpi = kwargs.pop('dpi')
-    else:
-        dpi = None
-    
-    if 'fmt' in kwargs:
-        fmt = kwargs.pop('fmt')
-    else:
-        fmt = '%1.3f'
-    
-    if mflay is not None:
-        i0 = int(mflay)
-        if i0+1 >= plotarray.shape[0]:
-            i0 = plotarray.shape[0] - 1
-        i1 = i0 + 1
-    else:
-        i0 = 0
-        i1 = plotarray.shape[0]
-    
-    if names is not None:
-        if not isinstance(names, list):
-            names = [names]
-        assert len(names) == plotarray.shape[0]
-    
-    if filenames is not None:
-        if not isinstance(filenames, list):
-            filenames = [filenames]
-        assert len(filenames) == plotarray.shape[0]
-    
-    if fignum is not None:
-        if not isinstance(fignum, list):
-            fignum = [fignum]
-        assert len(fignum) == plotarray.shape[0]
-        # check for existing figures
-        f0 = fignum[0]
-        for i in plt.get_fignums():
-            if i >= f0:
-                f0 = i + 1
-        finc = f0 - fignum[0]
-        for idx in range(len(fignum)):
-            fignum[idx] += finc
-    else:
-        #fignum = np.arange(i0, i1)
-        # check for existing figures
-        f0 = 0
-        for i in plt.get_fignums():
-            if i >= f0:
-                f0 += 1
-        f1 = f0 + (i1 - i0)
-        fignum = np.arange(f0, f1)
+class PlotException(Exception):
+    def __init__(self, message):
+        super(PlotException, self).__init__(message)
 
 
-    if axes is not None:
-        if not isinstance(axes, list):
-            axes = [axes]
-        assert len(axes) == plotarray.shape[0]
-    # prepare some axis objects for use
-    else:
+class PlotUtilities(object):
+    """
+    Class which groups a collection of plotting utilities
+    which Flopy and Flopy6 can use to generate map based plots
+    """
+
+    @staticmethod
+    def _plot_model_helper(model, SelPackList, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        model input data from a model instance
+
+        Args:
+            model: Flopy model instance
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            **kwargs : dict
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+        Returns:
+            axes : list
+                Empty list is returned if filename_base is not None. Otherwise
+                a list of matplotlib.pyplot.axis are returned.
+        """
+        # valid keyword arguments
+        defaults = {"kper": 0, "mflay": None, "filename_base": None,
+                    "file_extension": "png", "key": None}
+
+        for key in defaults:
+            if key in kwargs:
+                if key == 'file_extension':
+                    defaults[key] = kwargs[key].replace(".", "")
+                else:
+                    defaults[key] = kwargs[key]
+
+                kwargs.pop(key)
+
         axes = []
-        for idx, k in enumerate(range(i0, i1)):
-            fig = plt.figure(figsize=figsize, num=fignum[idx])
-            ax = plt.subplot(1, 1, 1, aspect='equal')
-            if names is not None:
-                title = names[k]
+        ifig = 0
+        if SelPackList is None:
+            for p in model.packagelist:
+                caxs = p.plot(initial_fig=ifig,
+                              filename_base=defaults['filename_base'],
+                              file_extension=defaults['file_extension'],
+                              kper=defaults['kper'],
+                              mflay=defaults['mflay'],
+                              key=defaults['key'])
+                # unroll nested lists of axes into a single list of axes
+                if isinstance(caxs, list):
+                    for c in caxs:
+                        axes.append(c)
+                else:
+                    axes.append(caxs)
+                # update next active figure number
+                ifig = len(axes) + 1
+
+        else:
+            for pon in SelPackList:
+                for p in model.packagelist:
+                    if pon in p.name:
+                        if model.verbose:
+                            print('   Plotting Package: ', p.name[0])
+                        caxs = p.plot(initial_fig=ifig,
+                                      filename_base=defaults['filename_base'],
+                                      file_extension=defaults['file_extension'],
+                                      kper=defaults['kper'],
+                                      mflay=defaults['mflay'],
+                                      key=defaults['key'])
+                        # unroll nested lists of axes into a single list of axes
+                        if isinstance(caxs, list):
+                            for c in caxs:
+                                axes.append(c)
+                        else:
+                            axes.append(caxs)
+                        # update next active figure number
+                        ifig = len(axes) + 1
+                        break
+        if model.verbose:
+            print(' ')
+        return axes
+
+    @staticmethod
+    def _plot_package_helper(package, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        package input data
+
+        Parameters
+        ----------
+        package: flopy.pakbase.Package instance supplied for plotting
+
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return. (default is
+                zero)
+            key : str
+                MfList dictionary key. (default is None)
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
+
+        """
+        defaults = {"kper": 0, 'filename_base': None,
+                    "file_extension": "png", 'mflay': None,
+                    "key": None, "initial_fig": 0}
+
+        for key in defaults:
+            if key in kwargs:
+                if key == "file_extension":
+                    defaults[key] = kwargs[key].replace(".", "")
+                elif key == "initial_fig":
+                    defaults[key] = int(kwargs[key])
+                else:
+                    defaults[key] = kwargs[key]
+
+                kwargs.pop(key)
+
+        inc = package.parent.nlay
+        if defaults['mflay'] is not None:
+            inc = 1
+
+        axes = []
+        for item, value in package.__dict__.items():
+            caxs = []
+            if isinstance(value, MfList):
+                if package.parent.verbose:
+                    print('plotting {} package MfList instance: {}'.format(
+                          package.name[0], item))
+                if defaults['key'] is None:
+                    names = ['{} location stress period {} layer {}'.format(
+                             package.name[0], defaults['kper'] + 1, k + 1)
+                        for k in range(package.parent.modelgrid.nlay)]
+                    colorbar = False
+                else:
+                    names = ['{} {} data stress period {} layer {}'.format(
+                             package.name[0], defaults['key'],
+                             defaults['kper'] + 1, k + 1)
+                             for k in range(package.parent.modelgrid.nlay)]
+                    colorbar = True
+
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + inc))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(value.plot(defaults['key'],
+                                       names,
+                                       defaults['kper'],
+                                       filename_base=defaults['filename_base'],
+                                       file_extension=defaults['file_extension'],
+                                       mflay=defaults['mflay'],
+                                       fignum=fignum, colorbar=colorbar,
+                                       **kwargs))
+
+            elif isinstance(value, Util3d):
+                if package.parent.verbose:
+                    print('plotting {} package Util3d instance: {}'.format(
+                          package.name[0], item))
+                # fignum = list(range(ifig, ifig + inc))
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + value.shape[0]))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(
+                    value.plot(filename_base=defaults['filename_base'],
+                               file_extension=defaults['file_extension'],
+                               mflay=defaults['mflay'],
+                               fignum=fignum,
+                               colorbar=True))
+
+            elif isinstance(value, Util2d):
+                if len(value.shape) == 2:
+                    if package.parent.verbose:
+                        print('plotting {} package Util2d instance: {}'.format(
+                              package.name[0], item))
+                    fignum = list(range(defaults['initial_fig'],
+                                        defaults['initial_fig'] + 1))
+                    defaults['initial_fig'] = fignum[-1] + 1
+                    caxs.append(
+                        value.plot(filename_base=defaults['filename_base'],
+                                   file_extension=defaults['file_extension'],
+                                   fignum=fignum, colorbar=True))
+
+            elif isinstance(value, Transient2d):
+                if package.parent.verbose:
+                    print(
+                          'plotting {} package Transient2d instance: {}'.format(
+                           package.name[0], item))
+                fignum = list(range(defaults['initial_fig'],
+                                    defaults['initial_fig'] + inc))
+                defaults['initial_fig'] = fignum[-1] + 1
+                caxs.append(
+                    value.plot(filename_base=defaults['filename_base'],
+                               file_extension=defaults['file_extension'],
+                               kper=defaults['kper'],
+                               fignum=fignum, colorbar=True))
+
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, Util3d):
+                        if package.parent.verbose:
+                            print(
+                                  'plotting {} package Util3d instance: {}'.format(
+                                  package.name[0], item))
+                        fignum = list(range(defaults['initial_fig'],
+                                            defaults['initial_fig'] + inc))
+                        defaults['initial_fig'] = fignum[-1] + 1
+                        caxs.append(
+                            v.plot(filename_base=defaults['filename_base'],
+                                   file_extension=defaults['file_extension'],
+                                   mflay=defaults['mflay'],
+                                   fignum=fignum, colorbar=True))
             else:
-                klay = k
-                if mflay is not None:
-                    klay = int(mflay)
-                title = '{} Layer {}'.format('data', klay+1)
-            ax.set_title(title)
-            axes.append(ax)
-   
-    for idx, k in enumerate(range(i0, i1)):
-        fig = plt.figure(num=fignum[idx])
-        mm = map.ModelMap(ax=axes[idx], model=model, sr=sr, layer=k)
-        if pcolor:
-            cm = mm.plot_array(plotarray[k], masked_values=masked_values,
-                               ax=axes[idx], **kwargs)
-            if cb:
-                label = ''
-                if not isinstance(cb,bool):
-                    label = str(cb)
-                plt.colorbar(cm, ax=axes[idx], shrink=0.5,label=label)
-
-        if contourdata:
-            cl = mm.contour_array(plotarray[k], masked_values=masked_values,
-                                  ax=axes[idx], colors=colors, levels=levels, **kwargs)
-            if clabel:
-                axes[idx].clabel(cl, fmt=fmt,**kwargs)
-
-        if grid:
-            mm.plot_grid(ax=axes[idx])
-
-        if inactive:
-            try:
-                ib = model.bas6.ibound.array
-                mm.plot_inactive(ibound=ib, ax=axes[idx])
-            except:
                 pass
 
-    if len(axes) == 1:
-        axes = axes[0]
-    if filenames is not None:
-        for idx, k in enumerate(range(i0, i1)):
-            fig = plt.figure(num=fignum[idx])
-            fig.savefig(filenames[idx], dpi=dpi)
-            print('    created...{}'.format(os.path.basename(filenames[idx])))
-        # there will be nothing to return when done
-        axes = None
-        plt.close('all')
-    return axes
-
-
-def _plot_bc_helper(package, kper,
-                    axes=None, names=None, filenames=None, fignum=None,
-                    mflay=None, **kwargs):
-    try:
-        import matplotlib.pyplot as plt
-    except:
-        s = 'Could not import matplotlib.  Must install matplotlib ' +\
-            ' in order to plot boundary condition data.'
-        raise Exception(s)
-
-    import flopy.plot.map as map
-
-    # reshape 2d arrays to 3d for convenience
-    ftype = package.name[0]
-
-    nlay = package.parent.nlay
-
-    # parse keyword arguments
-    if 'figsize' in kwargs:
-        figsize = kwargs.pop('figsize')
-    else:
-        figsize = None
-
-    if 'inactive' in kwargs:
-        inactive = kwargs.pop('inactive')
-    else:
-        inactive = True
-
-    if 'grid' in kwargs:
-        grid = kwargs.pop('grid')
-    else:
-        grid = False
-
-    if 'dpi' in kwargs:
-        dpi = kwargs.pop('dpi')
-    else:
-        dpi = None
-
-    if 'masked_values' in kwargs:
-        kwargs.pop('masked_values ')
-
-    if mflay is not None:
-        i0 = int(mflay)
-        if i0+1 >= nlay:
-            i0 = nlay - 1
-        i1 = i0 + 1
-    else:
-        i0 = 0
-        i1 = nlay
-
-    if names is not None:
-        if not isinstance(names, list):
-            names = [names]
-        assert len(names) == nlay
-
-    if filenames is not None:
-        if not isinstance(filenames, list):
-            filenames = [filenames]
-        assert len(filenames) == (i1 - i0)
-
-    if fignum is not None:
-        if not isinstance(fignum, list):
-            fignum = [fignum]
-        assert len(fignum) == (i1 - i0)
-        # check for existing figures
-        f0 = fignum[0]
-        for i in plt.get_fignums():
-            if i >= f0:
-                f0 = i + 1
-        finc = f0 - fignum[0]
-        for idx in range(len(fignum)):
-            fignum[idx] += finc
-    else:
-        #fignum = np.arange(i0, i1)
-        # check for existing figures
-        f0 = 0
-        for i in plt.get_fignums():
-            if i >= f0:
-                f0 += 1
-        f1 = f0 + (i1 - i0)
-        fignum = np.arange(f0, f1)
-
-    if axes is not None:
-        if not isinstance(axes, list):
-            axes = [axes]
-        assert len(axes) == i1 - i0
-    # prepare some axis objects for use
-    else:
-        axes = []
-        for idx, k in enumerate(range(i0, i1)):
-            fig = plt.figure(figsize=figsize, num=fignum[idx])
-            ax = plt.subplot(1, 1, 1, aspect='equal')
-            if names is not None:
-                title = names[k]
+            # unroll nested lists os axes into a single list of axes
+            if isinstance(caxs, list):
+                for c in caxs:
+                    if isinstance(c, list):
+                        for cc in c:
+                            axes.append(cc)
+                    else:
+                        axes.append(c)
             else:
-                klay = k
-                if mflay is not None:
-                    klay = int(mflay)
-                title = '{} Layer {}'.format('data', klay+1)
-            ax.set_title(title)
-            axes.append(ax)
+                axes.append(caxs)
 
-    for idx, k in enumerate(range(i0, i1)):
-        mm = map.ModelMap(ax=axes[idx], model=package.parent, layer=k)
-        fig = plt.figure(num=fignum[idx])
-        qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
+        return axes
 
-        if grid:
-            mm.plot_grid(ax=axes[idx])
+    @staticmethod
+    def _plot_mflist_helper(mflist, key=None, names=None, kper=0,
+                            filename_base=None, file_extension=None,
+                            mflay=None, **kwargs):
+        """
+        Plot stress period boundary condition (MfList) data for a specified
+        stress period
 
-        if inactive:
+        Parameters
+        ----------
+        mflist: flopy.utils.util_list.MfList object
+
+        key : str
+            MfList dictionary key. (default is None)
+        names : list
+            List of names for figure titles. (default is None)
+        kper : int
+            MODFLOW zero-based stress period number to return. (default is zero)
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        :return:
+        """
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0 + 1 >= mflist.model.modelgrid.nlay:
+                    i0 = mflist.model.modelgrid.nlay - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = mflist.model.modelgrid.nlay
+            # build filenames
+            package_name = mflist.package.name[0].upper()
+            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(
+                filename_base, package_name,
+                kper + 1, k + 1, fext)
+                         for k in range(i0, i1)]
+
+        if names is None:
+            if key is None:
+                names = ['{} location stress period: {} layer: {}'.format(
+                         mflist.package.name[0], kper + 1, k + 1)
+                         for k in range(mflist.model.modelgrid.nlay)]
+            else:
+                names = ['{} {} stress period: {} layer: {}'.format(
+                         mflist.package.name[0], key, kper + 1, k + 1)
+                         for k in range(mflist.model.modelgrid.nlay)]
+
+        if key is None:
+            axes = PlotUtilities._plot_bc_helper(mflist.package,
+                                                 kper,
+                                                 names=names,
+                                                 filenames=filenames,
+                                                 mflay=mflay, **kwargs)
+        else:
+            arr_dict = mflist.to_array(kper, mask=True)
+
             try:
-                ib = package.parent.bas6.ibound.array
-                mm.plot_inactive(ibound=ib, ax=axes[idx])
+                arr = arr_dict[key]
             except:
-                pass
+                err_msg = 'Cannot find key to plot\n'
+                err_msg += '  Provided key={}\n  Available keys='.format(key)
+                for name, arr in arr_dict.items():
+                    err_msg += '{}, '.format(name)
+                err_msg += '\n'
+                raise PlotException(err_msg)
 
-    if len(axes) == 1:
-        axes = axes[0]
+            axes = PlotUtilities._plot_array_helper(arr,
+                                                    model=mflist.model,
+                                                    names=names,
+                                                    filenames=filenames,
+                                                    mflay=mflay,
+                                                    **kwargs)
+        return axes
 
-    if filenames is not None:
+    @staticmethod
+    def _plot_util2d_helper(util2d, title=None, filename_base=None,
+                            file_extension=None, fignum=None, **kwargs):
+        """
+        Plot 2-D model input data
+
+        Parameters
+        ----------
+        util2d : flopy.util.util_array.Util2d object
+        title : str
+            Plot title. If a plot title is not provide one will be
+            created based on data name (self.name). (default is None)
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+
+        """
+        if title is None:
+            title = util2d.name
+
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        filename = None
+        if filename_base is not None:
+            filename = '{}_{}.{}'.format(filename_base,
+                                         util2d.name, fext)
+
+        axes = PlotUtilities._plot_array_helper(util2d.array,
+                                                util2d.model,
+                                                names=title,
+                                                filenames=filename,
+                                                fignum=fignum,
+                                                **kwargs)
+        return axes
+
+    @staticmethod
+    def _plot_util3d_helper(util3d, filename_base=None,
+                            file_extension=None, mflay=None,
+                            fignum=None, **kwargs):
+        """
+        Plot 3-D model input data
+
+        Parameters
+        ----------
+        util3d : flopy.util.util_array.Util3d object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        names = ['{} layer {}'.format(util3d.name[k], k + 1) for k in
+                 range(util3d.shape[0])]
+
+        filenames = None
+        if filename_base is not None:
+            if mflay is not None:
+                i0 = int(mflay)
+                if i0 + 1 >= util3d.shape[0]:
+                    i0 = util3d.shape[0] - 1
+                i1 = i0 + 1
+            else:
+                i0 = 0
+                i1 = util3d.shape[0]
+            # build filenames
+            filenames = ['{}_{}_Layer{}.{}'.format(
+                filename_base, util3d.name[k],
+                k + 1, fext)
+                         for k in range(i0, i1)]
+
+        axes = PlotUtilities._plot_array_helper(util3d.array,
+                                                util3d.model,
+                                                names=names,
+                                                filenames=filenames,
+                                                mflay=mflay,
+                                                fignum=fignum,
+                                                **kwargs)
+        return axes
+
+    @staticmethod
+    def _plot_transient2d_helper(transient2d, filename_base=None,
+                                 file_extension=None, kper=0,
+                                 fignum=None, **kwargs):
+        """
+        Plot transient 2-D model input data
+
+        Parameters
+        ----------
+        transient2d : flopy.utils.util_array.Transient2D object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        if isinstance(kper, int):
+            k0 = kper
+            k1 = kper + 1
+
+        elif isinstance(kper, str):
+            if kper.lower() == "all":
+                k0 = 0
+                k1 = transient2d.model.nper
+            else:
+                k0 = int(kper)
+                k1 = k0 + 1
+
+        else:
+            k0 = int(kper)
+            k1 = k0 + 1
+
+        if fignum is not None:
+            if not isinstance(fignum, list):
+                fignum = list(fignum)
+        else:
+            fignum = list(range(k0, k1))
+
+        if 'mflay' in kwargs:
+            kwargs.pop('mflay')
+
+        axes = []
+        for idx, kper in enumerate(range(k0, k1)):
+            title = '{} stress period {:d}'.format(
+                transient2d.name.replace('_', '').upper(),
+                kper + 1)
+
+            if filename_base is not None:
+                filename = filename_base + '_{:05d}.{}'.format(kper + 1, fext)
+            else:
+                filename = None
+
+            axes.append(PlotUtilities._plot_array_helper(
+                                            transient2d.array[kper],
+                                            transient2d.model,
+                                            names=title,
+                                            filenames=filename,
+                                            fignum=fignum[idx],
+                                            **kwargs))
+        return axes
+
+    @staticmethod
+    def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
+                           names=None, filenames=None, fignum=None,
+                           mflay=None, **kwargs):
+        """
+        Helper method to plot array objects
+
+        Parameters:
+            plotarray : np.array object
+            model: fp.modflow.Modflow object
+                optional if spatial reference is provided
+            sr: fp.utils.SpatialReference object
+                object that defines the spatial orientation of a modflow
+                grid within flopy. Optional if model object is provided
+            axes: matplotlib.axes object
+                existing matplotlib axis object to layer additional
+                plotting on to. Optional.
+            names: list
+                list of figure titles (optional)
+            filenames: list
+                list of filenames to save figures to (optional)
+            fignum:
+                list of figure numbers (optional)
+            mflay: int
+                modflow model layer
+            **kwargs:
+                keyword arguments
+
+        Returns:
+             axes: list matplotlib.axes object
+        """
+
+        defaults = {'figsize': None, 'masked_values': None,
+                    'pcolor': True, 'inactive': True,
+                    'contour': False, 'clabel': False,
+                    'colorbar': False, 'grid': False,
+                    'levels': None, 'colors': "black",
+                    'dpi': None, 'fmt': "%1.3f"}
+
+        # check that matplotlib is installed
+        if plt is None:
+            err_msg = 'Could not import matplotlib. ' \
+                      'Must install matplotlib ' + \
+                      ' in order to plot LayerFile data.'
+            raise PlotException(err_msg)
+
+        # filter defaults from kwargs
+        for key in defaults:
+            if key in kwargs:
+                defaults[key] = kwargs.pop(key)
+
+        # reshape 2d arrays to 3d for convenience
+        if len(plotarray.shape) == 2:
+            plotarray = plotarray.reshape((1, plotarray.shape[0],
+                                           plotarray.shape[1]))
+
+        # setup plotting routines
+        # consider refactoring maxlay to nlay
+        maxlay = plotarray.shape[0]
+        i0, i1 = PlotUtilities._set_layer_range(mflay, maxlay)
+        names = PlotUtilities._set_names(names, maxlay)
+        filenames = PlotUtilities._set_names(filenames, maxlay)
+        fignum = PlotUtilities._set_fignum(fignum, maxlay, i0, i1)
+        axes = PlotUtilities._set_axes(axes, mflay, maxlay, i0, i1,
+                                       defaults, names, fignum)
+
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            fig.savefig(filenames[idx], dpi=dpi)
-            plt.close(fignum[idx])
-            print('    created...{}'.format(os.path.basename(filenames[idx])))
-        # there will be nothing to return when done
-        axes = None
-        plt.close('all')
-    return axes
+            mm = PlotMapView(ax=axes[idx], model=model, sr=sr, layer=k)
+            if defaults['pcolor']:
+                cm = mm.plot_array(plotarray[k],
+                                   masked_values=defaults['masked_values'],
+                                   ax=axes[idx], **kwargs)
+
+                if defaults['colorbar']:
+                    label = ''
+                    if not isinstance(defaults['colorbar'], bool):
+                        label = str(defaults['colorbar'])
+                    plt.colorbar(cm, ax=axes[idx], shrink=0.5, label=label)
+
+            if defaults['contour']:
+                cl = mm.contour_array(plotarray[k],
+                                      masked_values=defaults['masked_values'],
+                                      ax=axes[idx],
+                                      colors=defaults['colors'],
+                                      levels=defaults['levels'],
+                                      **kwargs)
+                if defaults['clabel']:
+                    axes[idx].clabel(cl, fmt=defaults['fmt'],**kwargs)
+
+            if defaults['grid']:
+                mm.plot_grid(ax=axes[idx])
+
+            if defaults['inactive']:
+                try:
+                    # todo: update this to take flopy6 idomain
+                    ib = model.bas6.ibound.array
+                    mm.plot_inactive(ibound=ib, ax=axes[idx])
+                except:
+                    pass
+
+        if len(axes) == 1:
+            axes = axes[0]
+
+        if filenames is not None:
+            for idx, k in enumerate(range(i0, i1)):
+                fig = plt.figure(num=fignum[idx])
+                fig.savefig(filenames[idx], dpi=defaults['dpi'])
+                print('    created...{}'.format(os.path.basename(filenames[idx])))
+            # there will be nothing to return when done
+            axes = None
+            plt.close('all')
+
+        return axes
+
+    @staticmethod
+    def _plot_bc_helper(package, kper,
+                        axes=None, names=None, filenames=None, fignum=None,
+                        mflay=None, **kwargs):
+        """
+            Helper method to plot bc objects from flopy packages
+
+            Parameters:
+                package : flopy.pakbase.Package objects
+                axes: matplotlib.axes object
+                    existing matplotlib axis object to layer additional
+                    plotting on to. Optional.
+                names: list
+                    list of figure titles (optional)
+                filenames: list
+                    list of filenames to save figures to (optional)
+                fignum:
+                    list of figure numbers (optional)
+                mflay: int
+                    modflow model layer
+                **kwargs:
+                    keyword arguments
+
+            Returns:
+                 axes: list matplotlib.axes object
+        """
+
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' +\
+                ' in order to plot boundary condition data.'
+            raise PlotException(s)
+
+        defaults = {'figsize': None, "inactive": True,
+                    'grid': False, "dpi": None,
+                    "masked_values": None}
+
+        # parse kwargs
+        for key in defaults:
+            if key in kwargs:
+                defaults[key] = kwargs.pop(key)
+
+        ftype = package.name[0]
+        nlay = package.parent.nlay
+
+        # set up plotting routines
+        i0, i1 = PlotUtilities._set_layer_range(mflay, nlay)
+        names = PlotUtilities._set_names(names, nlay)
+        filenames = PlotUtilities._set_names(filenames, i1 - i0)
+        fignum = PlotUtilities._set_fignum(fignum, nlay, i0, i1)
+        axes = PlotUtilities._set_axes(axes, mflay, nlay, i0, i1,
+                                       defaults, names, fignum)
+
+        for idx, k in enumerate(range(i0, i1)):
+            mm = PlotMapView(ax=axes[idx], model=package.parent, layer=k)
+            fig = plt.figure(num=fignum[idx])
+            qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
+
+            if defaults['grid']:
+                mm.plot_grid(ax=axes[idx])
+
+            if defaults['inactive']:
+                try:
+                    ib = package.parent.bas6.ibound.array
+                    mm.plot_inactive(ibound=ib, ax=axes[idx])
+                except:
+                    pass
+
+        if len(axes) == 1:
+            axes = axes[0]
+
+        if filenames is not None:
+            for idx, k in enumerate(range(i0, i1)):
+                fig = plt.figure(num=fignum[idx])
+                fig.savefig(filenames[idx], dpi=defaults['dpi'])
+                plt.close(fignum[idx])
+                print('    created...{}'.format(os.path.basename(filenames[idx])))
+            # there will be nothing to return when done
+            axes = None
+            plt.close('all')
+
+        return axes
+
+    @staticmethod
+    def _set_layer_range(mflay, maxlay):
+        """
+        Re-usable method to check for mflay and set
+        the range of plottable layers
+
+        Parameters:
+
+            mflay: (int)
+            maxlay: (int)
+                maximum number of layers in the plotting array
+
+        Returns:
+            i0, i1:  (int), (int)
+                minimum and maximum bounds on the layer range
+        """
+        if mflay is not None:
+            i0 = int(mflay)
+            if i0+1 >= maxlay:
+                i0 = maxlay - 1
+            i1 = i0 + 1
+        else:
+            i0 = 0
+            i1 = maxlay
+
+        return i0, i1
+
+    @staticmethod
+    def _set_names(names, maxlay):
+        """
+        Checks the supplied name variable for shape
+
+        Parameters:
+
+            names: (list), (str)
+                if names is not none, asserts that there is
+                a name supplied for each plot that will be
+                generated
+
+            maxlay: (int)
+                maximum number of layers in the plotting array
+
+        Returns:
+            names:  (list) or (None)
+                list of names or None
+        """
+        if names is not None:
+            if not isinstance(names, list):
+                names = [names]
+            assert len(names) == maxlay
+        return names
+
+    @staticmethod
+    def _set_fignum(fignum, maxlay, i0, i1):
+        """
+        Method to generate a list of matplotlib figure
+        numbers to join to figure objects. Checks
+        for existing figures.
+
+        Parameters:
+            fignum: (list)
+                list of figure numbers
+            maxlay: (int)
+                maximum number of layers in the plotting array
+            i0: (int)
+                minimum layer range
+            i1: (int)
+                maximum layer range
+
+        Returns:
+            fignum (list)
+        """
+        if fignum is not None:
+            if not isinstance(fignum, list):
+                fignum = [fignum]
+            assert len(fignum) == maxlay
+            # check for existing figures
+            f0 = fignum[0]
+            for i in plt.get_fignums():
+                if i >= f0:
+                    f0 = i + 1
+            finc = f0 - fignum[0]
+            for idx in range(len(fignum)):
+                fignum[idx] += finc
+        else:
+            # check for existing figures
+            f0 = 0
+            for i in plt.get_fignums():
+                if i >= f0:
+                    f0 += 1
+            f1 = f0 + (i1 - i0)
+            fignum = np.arange(f0, f1)
+
+        return fignum
+
+    @staticmethod
+    def _set_axes(axes, mflay, maxlay, i0, i1,
+                  defaults, names, fignum):
+        """
+        Method to prepare axes objects for plotting
+
+        Parameters
+            axes: (list)
+                matplotlib.axes objects
+            mflay: (int)
+                layer to plot or None
+            i0: (int)
+                minimum range of layers to plot
+            i1: (int)
+                maximum range of layers to plot
+            defaults: (dict)
+                the default dictionary from the parent plotting method
+            fignum: (list)
+                list of figure numbers
+
+        Returns
+            axes: (list)
+                matplotlib.axes objects
+        """
+        if axes is not None:
+            if not isinstance(axes, list):
+                axes = [axes]
+            assert len(axes) == maxlay
+
+        else:
+            # prepare some axis objects for use
+            axes = []
+            for idx, k in enumerate(range(i0, i1)):
+                fig = plt.figure(figsize=defaults['figsize'],
+                                 num=fignum[idx])
+                ax = plt.subplot(1, 1, 1, aspect='equal')
+                if names is not None:
+                    title = names[k]
+                else:
+                    klay = k
+                    if mflay is not None:
+                        klay = int(mflay)
+                    title = '{} Layer {}'.format('data', klay+1)
+                ax.set_title(title)
+                axes.append(ax)
+
+        return axes
 
 
 class SwiConcentration():
@@ -679,7 +1361,6 @@ class SwiConcentration():
             return conc[layer, :, :]
 
 
-
 def shapefile_extents(shp):
     """
     Determine the extents of a shapefile
@@ -702,11 +1383,10 @@ def shapefile_extents(shp):
     >>> extent = flopy.plot.plotutil.shapefile_extents(fshp)
 
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     nshp = len(shapes)
@@ -745,11 +1425,10 @@ def shapefile_get_vertices(shp):
     >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
     
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     nshp = len(shapes)
@@ -797,11 +1476,10 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
             Patch collection of shapes in the shapefile
 
     """
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
+        raise PlotException(s)
+
     from matplotlib.patches import Polygon, Circle, Path, PathPatch
     from matplotlib.collections import PatchCollection
     sf = shapefile.Reader(shp)
@@ -875,13 +1553,9 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
 
     """
 
-    try:
-        import shapefile
-    except:
+    if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
-        raise Exception(s)
-    import numpy as np
-    import matplotlib.pyplot as plt
+        raise PlotException(s)
 
     if 'vmin' in kwargs:
         vmin = kwargs.pop('vmin')

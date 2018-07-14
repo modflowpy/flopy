@@ -1,10 +1,11 @@
 import sys, inspect
 import numpy as np
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
+from ..data import mfstructure, mfdata
+from ...utils import datautil
 from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
-
+from ...datbase import DataType
 
 class MFScalar(mfdata.MFData):
     """
@@ -56,14 +57,34 @@ class MFScalar(mfdata.MFData):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFScalar, self).__init__(sim_data, structure, enable, path,
-                                       dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFScalar, self).__init__(sim_data, model_or_sim, structure,
+                                       enable, path, dimensions)
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
             self.set_data(data)
+
+    @property
+    def data_type(self):
+        return DataType.scalar
+
+    @property
+    def dtype(self):
+        if self.structure.type == DatumType.double_precision:
+            return np.float32
+        elif self.structure.type == DatumType.integer:
+            return np.int
+        elif self.structure.type == DatumType.recarray or \
+                self.structure.type == DatumType.record or \
+                self.structure.type == DatumType.repeating_record:
+            for data_item_struct in self.structure.data_item_structures:
+                if data_item_struct.type == DatumType.double_precision:
+                    return np.float32
+                elif data_item_struct.type == DatumType.integer:
+                    return np.int
+        return None
 
     def has_data(self):
         try:
@@ -373,8 +394,8 @@ class MFScalar(mfdata.MFData):
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
 
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         # verify keyword
         index_num, aux_var_index = self._load_keyword(arr_line, 0)
@@ -573,15 +594,20 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFScalarTransient, self).__init__(sim_data=sim_data,
+                                                model_or_sim=model_or_sim,
                                                 structure=structure,
                                                 enable=enable,
                                                 path=path,
                                                 dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transientscalar
 
     def add_transient_key(self, key):
         super(MFScalarTransient, self).add_transient_key(key)

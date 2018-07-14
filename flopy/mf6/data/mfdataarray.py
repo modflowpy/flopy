@@ -2,10 +2,13 @@ import sys, inspect, copy
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
-from ..data.mfdatautil import MultiList
+from ..data import mfdatautil, mfdata
+from ...utils import datautil
+from ...utils.datautil import MultiList
 from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
+from ...datbase import DataType
+
 
 class MFArray(mfdata.MFMultiDimVar):
     """
@@ -88,9 +91,9 @@ class MFArray(mfdata.MFMultiDimVar):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFArray, self).__init__(sim_data, structure, enable, path,
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFArray, self).__init__(sim_data, model_or_sim, structure, enable, path,
                                       dimensions)
         if self.structure.layered:
             try:
@@ -267,6 +270,17 @@ class MFArray(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
+
+    @property
+    def data_type(self):
+        if self.structure.layered:
+            return DataType.array3d
+        else:
+            return DataType.array2d
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype.type
 
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)
@@ -468,8 +482,8 @@ class MFArray(mfdata.MFMultiDimVar):
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         package_dim = self._data_dimensions.package_dim
         if len(arr_line) > 2:
@@ -575,8 +589,8 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         di_struct = self.structure.data_item_structures[0]
-        if not di_struct.just_data or mfdatautil.max_tuple_abs_size(layer) > 0:
-            arr_line = mfdatautil.ArrayUtil.\
+        if not di_struct.just_data or datautil.max_tuple_abs_size(layer) > 0:
+            arr_line = datautil.PyListUtil.\
                 split_data_line(file_handle.readline())
         layer_storage = storage.layer_storage[layer]
         # if constant
@@ -933,7 +947,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        data_iter = mfdatautil.ArrayUtil.next_item(data)
+        data_iter = datautil.PyListUtil.next_item(data)
         indent_str = self._simulation_data.indent_string
         for item, last_item, new_list, nesting_change in data_iter:
             # increment data/layer counts
@@ -1091,16 +1105,21 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFTransientArray, self).__init__(sim_data=sim_data,
-                                              structure=structure,
-                                              data=None,
-                                              enable=enable,
-                                              path=path,
-                                              dimensions=dimensions)
+                                               model_or_sim=model_or_sim,
+                                               structure=structure,
+                                               data=None,
+                                               enable=enable,
+                                               path=path,
+                                               dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transient2d
 
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)

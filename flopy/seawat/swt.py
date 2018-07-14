@@ -392,7 +392,5 @@ class Seawat(BaseModel):
             ms._mt = mt
         ms._mf = mf
 
-
-
         # return model object
         return ms
