@@ -238,7 +238,7 @@ def test_export_array():
 
     try:
         from scipy.ndimage import rotate
-    except:
+    except ImportError:
         rotate = False
         pass
 
@@ -284,7 +284,7 @@ def test_export_array():
     try:
         # test GeoTIFF export
         import rasterio
-    except:
+    except ImportError:
         pass
     if rasterio is not None:
         m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array,
@@ -294,6 +294,11 @@ def test_export_array():
         assert src.shape == (m.nrow, m.ncol)
         assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
         assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
+        np.testing.assert_almost_equal(
+            src.affine,
+            [176.7766952966369, 176.77669529663686, 619653.0,
+             176.77669529663686, -176.7766952966369, 3353277.0, 0.0, 0.0, 1.0])
+
 
 def test_mbase_sr():
     import numpy as np

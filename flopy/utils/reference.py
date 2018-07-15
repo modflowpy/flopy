@@ -5,6 +5,7 @@ Module spatial referencing for flopy model objects
 import sys
 import os
 import numpy as np
+from warnings import warn
 
 
 class SpatialReference(object):
@@ -91,6 +92,10 @@ class SpatialReference(object):
         1D array of cell vertices for whole grid in C-style (row-major) order
         (same as np.ravel())
 
+    geotransform : tuple
+        GDAL-ordered geotransform tuple for exporting rasters. If delc or delr
+        are not constant, model cell size is determined from the median, and a
+        warning is shown.
 
     Notes
     -----
@@ -964,7 +969,7 @@ class SpatialReference(object):
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
                      **kwargs):
-        """Write a numpy array to Arc Ascii grid
+        """Write a numpy array to Arc Ascii grid, GeoTIFF,
         or shapefile with the model reference.
 
         Parameters
@@ -973,7 +978,7 @@ class SpatialReference(object):
             Path of output file. Export format is determined by
             file extention.
             '.asc'  Arc Ascii grid
-            '.tif'  GeoTIFF (requries rasterio package)
+            '.tif'  GeoTIFF (requires rasterio package)
             '.shp'  Shapefile
         a : 2D numpy.ndarray
             Array to export
@@ -1049,18 +1054,14 @@ class SpatialReference(object):
             try:
                 import rasterio
                 from rasterio import Affine
-            except:
+            except ImportError:
                 print('GeoTIFF export requires the rasterio package.')
                 return
-            dxdy = self.delc[0] * self.length_multiplier
-            trans = Affine.translation(self.xul, self.yul) * \
-                    Affine.rotation(self.rotation) * \
-                    Affine.scale(dxdy, -dxdy)
 
             # third dimension is the number of bands
             a = a.copy()
             if len(a.shape) == 2:
-                a = np.reshape(a, (1, a.shape[0], a.shape[1]))
+                a.shape = (1,) + a.shape
             if a.dtype.name == 'int64':
                 a = a.astype('int32')
                 dtype = rasterio.int32
@@ -1081,7 +1082,7 @@ class SpatialReference(object):
                     'dtype': dtype,
                     'driver': 'GTiff',
                     'crs': self.proj4_str,
-                    'transform': trans
+                    'transform': Affine.from_gdal(*self.geotransform)
                     }
             meta.update(kwargs)
             with rasterio.open(filename, 'w', **meta) as dst:
@@ -1264,6 +1265,36 @@ class SpatialReference(object):
         ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
         self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
         """
+
+    @property
+    def geotransform(self):
+        """Returns GDAL-ordered geotransform tuple"""
+        c, f = self.xul, self.yul
+        dx = self.delc[0] * self.length_multiplier
+        if self.delc.min() != self.delc.max():
+            dx = np.median(self.delc) * self.length_multiplier
+            warn('delc values range from {0} to {1}; '
+                 'using median of {2} for raster dx'
+                 .format(self.delc.min(), self.delc.max(), dx))
+        dy = self.delr[0] * self.length_multiplier
+        if self.delr.min() != self.delr.max():
+            dy = np.median(self.delr) * self.length_multiplier
+            warn('delr values range from {0} to {1}; '
+                 'using median of {2} for raster dy'
+                 .format(self.delr.min(), self.delr.max(), dy))
+        rotation = self.rotation
+        if rotation != 0:
+            cr, sr = cos_sin(rotation)
+            a = cr * dx
+            b = -sr * -dy
+            d = sr * dx
+            e = cr * -dy
+        else:
+            a = dx
+            e = -dy
+            b = d = 0.0
+        # GDAL order of affine transformation coefficients
+        return c, a, b, f, d, e
 
     def interpolate(self, a, xi, method='nearest'):
         """
