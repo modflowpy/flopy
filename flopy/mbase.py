@@ -1301,8 +1301,8 @@ class BaseModel(object):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination',
-              async=False, cargs=None):
+              normal_msg='normal termination', async=False,
+              cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
     communicates with the model's stdout asynchronously and reports
