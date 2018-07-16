@@ -221,7 +221,7 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
-        tr = TemporalReference(self.dis.itmuni, self.start_datetime)
+        tr = TemporalReference(self.dis.itmuni, self._start_datetime)
         data_frame = {'perlen': self.dis.perlen.array,
                       'nstp': self.dis.nstp.array,
                       'tsmult': self.dis.tsmult.array}

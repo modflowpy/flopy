@@ -635,8 +635,6 @@ class SpatialReference(object):
         # return lc
 
 
-
-
 class TemporalReference(object):
     """For now, just a container to hold start time and time units files
     outside of DIS package."""

@@ -20,7 +20,7 @@ else:
 from datetime import datetime
 import copy
 import numpy as np
-from flopy import utils
+from flopy import utils, grid
 from .version import __version__
 
 if sys.version_info >= (3, 3):
@@ -1011,14 +1011,14 @@ class BaseModel(ModelInterface):
         elif key == "model_ws":
             self.change_model_ws(value)
         elif key == "sr":
-            assert isinstance(value, utils.SpatialReference)
+            assert isinstance(value, grid.reference.SpatialReference)
             if self.dis is not None:
                 self.dis.sr = value
             else:
                 raise Exception("cannot set SpatialReference -"
                                 "ModflowDis not found")
         elif key == "tr":
-            assert isinstance(value, utils.TemporalReference)
+            assert isinstance(value, grid.reference.TemporalReference)
             if self.dis is not None:
                 self.dis.tr = value
             else:
@@ -1061,7 +1061,7 @@ class BaseModel(ModelInterface):
 
         """
 
-        return run_model(self.exe_name, self.namefile, model_ws=self.model_ws,
+        return run_model(self._exe_name, self.namefile, model_ws=self.model_ws,
                          silent=silent, pause=pause, report=report,
                          normal_msg=normal_msg)
 

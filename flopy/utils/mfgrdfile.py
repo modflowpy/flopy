@@ -2,7 +2,8 @@ import numpy as np
 import collections
 
 from ..utils.utils_def import FlopyBinaryData
-from ..utils.reference import SpatialReference
+from ..grid.reference import SpatialReference
+from ..grid.modelgrid import StructuredModelGrid
 
 class MfGrdFile(FlopyBinaryData):
 
@@ -96,27 +97,29 @@ class MfGrdFile(FlopyBinaryData):
             self._datadict[key] = v
 
         # set the spatial reference
-        self.sr = self._set_spatialreference()
+        self.mg = self._set_modelgrid()
 
-    def _set_spatialreference(self):
+    def _set_modelgrid(self):
         try:
             if self._grid == 'DISV':
-                sr = None
+                mg = None
             elif self._grid == 'DIS':
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
+                top, botm = self._datadict['TOP'], self._datadict['BOTM']
                 xorigin, yorigin, rot = self._datadict['XORIGIN'], \
                                         self._datadict['YORIGIN'], \
                                         self._datadict['ANGROT']
-                sr = SpatialReference(delr=delr, delc=delc,
-                                      xll=xorigin, yll=yorigin, rotation=rot)
+                sr = SpatialReference(delc=delc, xll=xorigin, yll=yorigin,
+                                      rotation=rot)
+                mg = StructuredModelGrid(delc, delr, top, botm, None, sr)
         except:
-            sr = None
+            mg = None
             print('could not set spatial reference for {}'.format(self.file.name))
 
-        return sr
+        return mg
 
     def get_spatialreference(self):
-        return self.sr
+        return self.mg.sr
 
     def get_centroids(self):
         x, y = None, None
@@ -126,8 +129,8 @@ class MfGrdFile(FlopyBinaryData):
                 y = self._datadict['CELLY']
             elif self._grid == 'DIS':
                 nlay = self._datadict['NLAY']
-                x = np.tile(self.sr.xcentergrid.flatten(), nlay)
-                y = np.tile(self.sr.ycentergrid.flatten(), nlay)
+                x = np.tile(self.mg.xcell_centers().flatten(), nlay)
+                y = np.tile(self.mg.xcell_centers().flatten(), nlay)
         except:
             print('could not return centroids' +
                   ' for {}'.format(self.file.name))
@@ -161,7 +164,7 @@ class MfGrdFile(FlopyBinaryData):
                     for i in range(nrow):
                         for j in range(ncol):
                             ivlist = []
-                            v = self.sr.get_vertices(i, j)
+                            v = self.mg.get_cell_vertices(i, j)
                             for (x, y) in v:
                                 verts.append((x, y))
                                 ivlist.append(iv)

@@ -134,8 +134,8 @@ class LayerFile(object):
         # now that we read the data and know nrow and ncol,
         # we can make a generic sr if needed
         if self.sr is None:
-            self.sr = flopy.utils.SpatialReference(np.ones(self.ncol),
-                                                   np.ones(self.nrow), 0)
+            self.sr = flopy.grid.reference.SpatialReference(
+                np.ones(self.ncol), 0)
         return
 
     def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None,

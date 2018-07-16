@@ -5,6 +5,7 @@ from ..modflow import Modflow
 from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
+from ..grid import modelgrid, reference
 
 class SeawatList(Package):
     """
@@ -140,6 +141,25 @@ class Seawat(BaseModel):
         self.mfnam_packages['vsc'] = SeawatVsc
         return
 
+    @property
+    def modelgrid(self):
+        tr = reference.TemporalReference(self.dis.itmuni, self._start_datetime)
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
+        sim_time = modelgrid.SimulationTime(data_frame,
+                                            self.dis.itmuni_dict[
+                                            self.dis.itmuni], tr)
+        if self.bas is not None:
+            ibound = self.bas.ibound.array
+        else:
+            ibound = None
+        return modelgrid.StructuredModelGrid(self.dis.delc.array,
+                                             self.dis.delr.array,
+                                             self.dis.top.array,
+                                             self.dis.botm.array, ibound,
+                                             self.sr, sim_time, self.name,
+                                             self.dis.steady.array)
     @property
     def nlay(self):
         if (self.dis):

@@ -10,7 +10,7 @@ from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
-from ..utils import SpatialReference
+from ..grid.reference import SpatialReference
 from ..utils.recarray_utils import create_empty_recarray
 
 try:
@@ -1794,10 +1794,6 @@ class check:
         except AttributeError:
             self.sr = self.sfr.parent.sr
 
-        if self.sr is None and self.sfr.parent.dis is not None:
-            self.sr = SpatialReference(delr=self.sfr.parent.dis.delr.array,
-                                       delc=self.sfr.parent.dis.delc.array)
-
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -2010,15 +2006,15 @@ class check:
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
         # check reach connections for proximity
-        if self.mg is not None or self.sr is not None:
+        if self.mg is not None or self.mg is not None:
             rd = self.sfr.reach_data
             rd.sort(order=['reachID'])
             try:
                 xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
                 del zc
             except AttributeError:
-                xcentergrid = self.sr.xcentergrid
-                ycentergrid = self.sr.ycentergrid
+                xcentergrid = self.mg.xcell_centers
+                ycentergrid = self.mg.ycell_centers
 
             x0 = xcentergrid[rd.i, rd.j]
             y0 = ycentergrid[rd.i, rd.j]
@@ -2041,12 +2037,8 @@ class check:
             dist = np.array(dist)
 
             # compute max width of reach nodes (hypotenuse for rectangular nodes)
-            try:
-                delr = self.mg.delr
-                delc = self.mg.delc
-            except AttributeError:
-                delr = self.sr.delr
-                delc = self.sr.delc
+            delr = self.mg.delr
+            delc = self.mg.delc
 
             dx = (delr * self.sr.length_multiplier)[rd.j]
             dy = (delc * self.sr.length_multiplier)[rd.i]

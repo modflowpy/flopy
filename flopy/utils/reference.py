@@ -118,6 +118,9 @@ class SpatialReference(object):
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str=None, epsg=None, prj=None, units=None,
                  length_multiplier=None):
+        warnings.warn("This SpatialReference class has been deprecated. The "
+                      "updated SptialReference class is in grid/reference.py",
+                      category=DeprecationWarning)
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
@@ -2035,6 +2038,8 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
     prj : str
         text for a projection (*.prj) file.
     """
+    warnings.warn("This getprj has been deprecated. The updated getprj is in "
+                  "grid/reference.py", category=DeprecationWarning)
     epsgfile = epsgRef()
     wktstr = None
     try:
@@ -2069,6 +2074,10 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     """
     from flopy.utils.flopy_io import get_url_text
+
+    warnings.warn("This get_spatialreference has been deprecated. The updated "
+                  "get_spatialreference is in grid/reference.py",
+                  category=DeprecationWarning)
 
     epsg_categories = ['epsg', 'esri']
     for cat in epsg_categories:
@@ -2106,4 +2115,7 @@ def getproj4(epsg):
     prj : str
         text for a projection (*.prj) file.
     """
+    warnings.warn("This getproj4 has been deprecated. The updated getprj4 is "
+                  "in grid/reference.py", category=DeprecationWarning)
+
     return get_spatialreference(epsg, text='proj4')
