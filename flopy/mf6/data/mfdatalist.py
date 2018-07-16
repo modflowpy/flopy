@@ -130,7 +130,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     @property
     def dtype(self):
-        return self.get_data().dtype.type
+        return self.get_data().dtype
 
     def to_array(self, kper=None, mask=False):
         i0 = 1
@@ -1398,7 +1398,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     @property
     def dtype(self):
-        return self.get_data().dtype.type
+        return self.get_data().dtype
 
     @property
     def masked_4D_arrays(self):
