@@ -224,7 +224,7 @@ class ModelGrid(object):
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
             cache_data.out_of_date = True
-        self._sr.set_yedge(self.yedge[0])
+        self._sr.set_yedge(self.yedge)
 
     ############################
     # from spatial reference
@@ -1126,7 +1126,6 @@ class VertexModelGrid(ModelGrid):
         self.cell2d = cell2d
         self._nlay = nlay
         self._ncpl = ncpl
-        self._sr.set_yedge(self.yedge[0])
 
     def get_model_dim_arrays(self):
         if self.grid_type() == GridType.layered_vertex:

@@ -18,7 +18,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
-from flopy.utils.reference import SpatialReference
+from flopy.grid.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -275,8 +275,8 @@ def test_export():
     fm = flopy.modflow
     m = fm.Modflow()
     dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
-    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array)
-    m.sr.write_shapefile(os.path.join(outpath, 'grid.shp'))
+    m.sr = SpatialReference(xul=0.0, yul=0.0, delc=m.dis.delc.array)
+    m.export(os.path.join(outpath, 'grid.shp'))
     r, d = create_sfr_data()
     sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
     sfr.segment_data[0]['flow'][-1] = 1e4

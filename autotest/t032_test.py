@@ -15,6 +15,7 @@ import flopy
 from flopy.utils.geometry import Polygon
 from flopy.utils.reference import SpatialReference
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
+from flopy.export.netcdf import NetCdf
 from flopy.utils.reference import getprj, epsgRef
 
 mpth = os.path.join('temp', 't032')
@@ -33,6 +34,12 @@ def test_polygon_from_ij():
     dis = flopy.modflow.ModflowDis(nrow=10, ncol=10,
                                    nlay=2, delr=100, delc=100,
                                    top=3, botm=botm, model=m)
+
+    ncdf = NetCdf('toy.model.nc', m)
+    ncdf.write()
+
+    m.export('toy_model_two.nc')
+    dis.export('toy_model_dis.nc')
 
     m.sr = SpatialReference(delr=m.dis.delr * .3048, delc=m.dis.delc * .3048,
                             xul=600000, yul=5170000,
