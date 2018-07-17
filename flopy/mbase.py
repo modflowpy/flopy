@@ -1301,7 +1301,7 @@ class BaseModel(object):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination', async=False,
+              normal_msg='normal termination', use_async=False,
               cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
@@ -1330,7 +1330,7 @@ def run_model(exe_name, namefile, model_ws='./',
     normal_msg : str
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
-    async : boolean
+    use_async : boolean
         asynchonously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
@@ -1400,7 +1400,7 @@ def run_model(exe_name, namefile, model_ws='./',
     proc = sp.Popen(argv,
                     stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
 
-    if not async:
+    if not use_async:
         while True:
             line = proc.stdout.readline()
             c = line.decode('utf-8')
