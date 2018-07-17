@@ -222,8 +222,8 @@ class MFModel(PackageContainer, ModelInterface):
                                                  dis.top.array,
                                                  dis.botm.array,
                                                  dis.idomain.array,
-                                                 self.sr, sim_time, self.name,
-                                                 self.get_steadystate_list())
+                                                 self.sr, sim_time, self.name)#,
+                                                 # self.get_steadystate_list())
 
     @property
     def packagelist(self):

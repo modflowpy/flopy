@@ -1097,7 +1097,14 @@ class PlotUtilities(object):
                 defaults[key] = kwargs.pop(key)
 
         ftype = package.name[0]
-        nlay = package.parent.nlay
+
+        # flopy-modflow vs. flopy-modflow6 trap
+        try:
+            model = package.parent
+        except AttributeError:
+            model = package._model_or_sim
+
+        nlay = model.modelgrid.nlay
 
         # set up plotting routines
         i0, i1 = PlotUtilities._set_layer_range(mflay, nlay)
@@ -1108,7 +1115,7 @@ class PlotUtilities(object):
                                        defaults, names, fignum)
 
         for idx, k in enumerate(range(i0, i1)):
-            mm = PlotMapView(ax=axes[idx], model=package.parent, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
             qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
 
@@ -1116,6 +1123,7 @@ class PlotUtilities(object):
                 mm.plot_grid(ax=axes[idx])
 
             if defaults['inactive']:
+                # todo: update this for idomain!
                 try:
                     ib = package.parent.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
