@@ -228,8 +228,8 @@ class Modflow(BaseModel):
         sim_time = modelgrid.SimulationTime(data_frame,
                                             self.dis.itmuni_dict[
                                             self.dis.itmuni], tr)
-        if self.bas is not None:
-            ibound = self.bas.ibound.array
+        if self.bas6 is not None:
+            ibound = self.bas6.ibound.array
         else:
             ibound = None
         return modelgrid.StructuredModelGrid(self.dis.delc.array,

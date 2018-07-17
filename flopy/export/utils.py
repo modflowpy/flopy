@@ -602,20 +602,20 @@ def transient2d_export(f, t2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for kper in range(t2d.model.model_grid.sim_time.nper):
+        for kper in range(t2d.model.modelgrid.sim_time.nper):
             u2d = t2d[kper]
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, t2d.model.model_grid,
+        shapefile_utils.write_grid_shapefile(f, t2d.model.modelgrid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # mask the array is defined by any row col with at lease
         # one active cell
         mask = None
-        if t2d.model.model_grid.idomain is not None:
-            ibnd = np.abs(t2d.model.model_grid.idomain).sum(axis=0)
+        if t2d.model.modelgrid.idomain is not None:
+            ibnd = np.abs(t2d.model.modelgrid.idomain).sum(axis=0)
             mask = ibnd == 0
 
         # f.log("getting 4D array for {0}".format(t2d.name_base))
@@ -711,12 +711,12 @@ def array3d_export(f, u3d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for ilay in range(u3d.model.model_grid.nlay):
+        for ilay in range(u3d.model.modelgrid.nlay):
             u2d = u3d[ilay]
             name = '{}_{:03d}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, u3d.model.model_grid,
+        shapefile_utils.write_grid_shapefile(f, u3d.model.modelgrid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):

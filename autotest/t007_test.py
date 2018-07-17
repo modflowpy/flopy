@@ -699,33 +699,34 @@ def test_read_usgs_model_reference():
 
 
 def test_rotation():
+    from flopy.grid.modelgrid import PointType
     m = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
-                                        xul=xul, yul=yul, rotation=45.)
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
+                                       xul=xul, yul=yul, rotation=45.)
     xll, yll = m.sr.xll, m.sr.yll
-    assert np.abs(m.dis.sr.xgrid[0, 0] - xul) < 1e-4
-    assert np.abs(m.dis.sr.ygrid[0, 0] - yul) < 1e-4
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    mg = m.modelgrid
+    assert np.abs(mg.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg.yedgegrid()[0, 0] - yul) < 1e-4
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=-45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
+    mg2 = m.modelgrid
+    assert mg2.xedgegrid()[0, 0] == xul
+    assert mg2.yedgegrid()[0, 0] == yul
     xll2, yll2 = m.sr.xll, m.sr.yll
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll2, yll=yll2, rotation=-45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    mg3 = m.modelgrid
+    assert mg3.xedgegrid()[0, 0] == xul
+    assert mg3.yedgegrid()[0, 0] == yul
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll, yll=yll, rotation=45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
+    mg4 = m.modelgrid
+    assert mg4.xedgegrid()[0, 0] == xul
+    assert mg4.yedgegrid()[0, 0] == yul
 
 
 def test_sr_with_Map():
@@ -797,13 +798,13 @@ def test_get_vertices():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
-                                        xul=xul, yul=yul, rotation=45.)
-    a1 = np.array(m.sr.vertices)
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
+                                       xul=xul, yul=yul, rotation=45.)
+    mg = m.modelgrid
+    a1 = np.array(mg.xyvertices())
     j = np.array(list(range(ncol)) * nrow)
     i = np.array(sorted(list(range(nrow)) * ncol))
-    a2 = np.array(m.sr.get_vertices(i, j))
+    a2 = np.array(mg.get_cell_vertices(i, j))
     assert np.array_equal(a1, a2)
 
 def test_get_rc_from_node_coordinates():
@@ -953,6 +954,7 @@ def build_sfr_netcdf():
 if __name__ == '__main__':
     #test_shapefile()
     # test_shapefile_ibound()
+    #test_netcdf()
     # test_netcdf_overloads()
     #test_netcdf_classmethods()
     # build_netcdf()
@@ -971,7 +973,7 @@ if __name__ == '__main__':
     #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
-    # export_netcdf(namfile)
+    #export_netcdf(namefile)
     #test_freyberg_export()
     #test_export_array()
     #test_write_shapefile()
