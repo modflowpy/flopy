@@ -972,7 +972,7 @@ class PlotUtilities(object):
                     'contour': False, 'clabel': False,
                     'colorbar': False, 'grid': False,
                     'levels': None, 'colors': "black",
-                    'dpi': None, 'fmt': "%1.3f"}
+                    'dpi': None, 'fmt': "%1.3f", 'modelgrid': None}
 
         # check that matplotlib is installed
         if plt is None:
@@ -981,10 +981,14 @@ class PlotUtilities(object):
                       ' in order to plot LayerFile data.'
             raise PlotException(err_msg)
 
+        mg = None
         # filter defaults from kwargs
         for key in defaults:
             if key in kwargs:
-                defaults[key] = kwargs.pop(key)
+                if key == "modelgrid":
+                    mg = kwargs.pop("modelgrid")
+                else:
+                    defaults[key] = kwargs.pop(key)
 
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2:
@@ -1003,7 +1007,8 @@ class PlotUtilities(object):
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            mm = PlotMapView(ax=axes[idx], model=model, sr=sr, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=model, sr=sr,
+                             modelgrid=mg, layer=k)
             if defaults['pcolor']:
                 cm = mm.plot_array(plotarray[k],
                                    masked_values=defaults['masked_values'],
