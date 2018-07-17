@@ -80,7 +80,7 @@ class SpatialReference(object):
     def __init__(self, delc=np.array([]), lenuni=2,
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str=None, epsg=None, prj=None, units=None,
-                 length_multiplier=None, yedge=None):
+                 length_multiplier=None):
         self._lenuni = lenuni
         self._proj4_str = proj4_str
         self._epsg = epsg
