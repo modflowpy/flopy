@@ -98,14 +98,13 @@ class Vtk(object):
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
         dis = self.model.dis
+        mg = self.model.modelgrid
         z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
                        dis.botm.array])
         if shared_vertex:
-            verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(dis.nlay,
-                                                            z, ibound=ibound)
+            verts, iverts = mg.get_3d_shared_vertex_connectivity()
         else:
-            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, z,
-                                                              ibound=ibound)
+            verts, iverts = mg.get_3d_vertex_connectivity()
 
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)

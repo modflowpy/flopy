@@ -13,10 +13,10 @@ import shutil
 import numpy as np
 import flopy
 from flopy.utils.geometry import Polygon
-from flopy.utils.reference import SpatialReference
+from flopy.grid.reference import SpatialReference
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
 from flopy.export.netcdf import NetCdf
-from flopy.utils.reference import getprj, epsgRef
+from flopy.grid.reference import getprj, epsgRef
 
 mpth = os.path.join('temp', 't032')
 # make the directory if it does not exist
@@ -41,7 +41,7 @@ def test_polygon_from_ij():
     m.export('toy_model_two.nc')
     dis.export('toy_model_dis.nc')
 
-    m.sr = SpatialReference(delr=m.dis.delr * .3048, delc=m.dis.delc * .3048,
+    m.sr = SpatialReference(delc=m.dis.delc * .3048,
                             xul=600000, yul=5170000,
                             proj4_str='EPSG:26715', rotation=-45)
 
@@ -52,7 +52,8 @@ def test_polygon_from_ij():
                                ('stuff', '<f4'), ('stuf', '|b1'),
                                ('stf', np.object)]).view(np.recarray)
 
-    get_vertices = m.sr.get_vertices  # function to get the referenced vertices for a model cell
+    get_vertices = m.modelgrid.xyvertices()  # function to get the referenced
+    # vertices for a model cell
     geoms = [Polygon(get_vertices(i, j)) for i, j in
              zip(recarray.i, recarray.j)]
 

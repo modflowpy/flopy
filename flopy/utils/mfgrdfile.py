@@ -96,7 +96,7 @@ class MfGrdFile(FlopyBinaryData):
                     v = self.read_real()
             self._datadict[key] = v
 
-        # set the spatial reference
+        # set the model grid
         self.mg = self._set_modelgrid()
 
     def _set_modelgrid(self):
