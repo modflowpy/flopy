@@ -1035,8 +1035,8 @@ class PlotUtilities(object):
 
             if defaults['inactive']:
                 try:
-                    # todo: update this to take flopy6 idomain
-                    ib = model.bas6.ibound.array
+                    ib = model.modelgrid.idomain
+                    # ib = model.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
                 except:
                     pass
@@ -1123,9 +1123,8 @@ class PlotUtilities(object):
                 mm.plot_grid(ax=axes[idx])
 
             if defaults['inactive']:
-                # todo: update this for idomain!
                 try:
-                    ib = package.parent.bas6.ibound.array
+                    ib = model.modelgrid.idomain
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
                 except:
                     pass
