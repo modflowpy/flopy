@@ -616,7 +616,6 @@ class StructuredModelGrid(ModelGrid):
         self._nlay = len(botm)
         self._nrow = len(delc)
         self._ncol = len(delr)
-        self._sr.set_yedge(self.yedge[0])
 
     ####################
     # Properties
