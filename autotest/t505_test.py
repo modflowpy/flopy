@@ -5,7 +5,7 @@ import numpy as np
 import flopy
 import flopy.utils.binaryfile as bf
 from flopy.mf6.data.mfdata import DataStorageType
-from flopy.mf6.data.mfdatautil import ArrayUtil
+from flopy.utils.datautil import PyListUtil
 from flopy.mf6.mfbase import FlopyException
 from flopy.mf6.modflow.mfgwf import ModflowGwf
 from flopy.mf6.modflow.mfgwfchd import ModflowGwfchd
@@ -209,7 +209,7 @@ def np001():
 
 
     # verify external file contents
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
     ic_data = ic_package.strt
     ic_array = ic_data.get_data()
     assert array_util.array_comp(ic_array, [[[100.0, 100.0, 100.0, 100.0,
@@ -351,7 +351,7 @@ def np002():
         assert pymake.compare_heads(None, None, files1=head_file,
                                     files2=head_new, outfile=outfile)
 
-        array_util = ArrayUtil()
+        array_util = PyListUtil()
         budget_frf = sim.simulation_data.mfdata[
             (model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_frf_valid, budget_frf)

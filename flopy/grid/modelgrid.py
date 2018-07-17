@@ -831,7 +831,7 @@ class StructuredModelGrid(ModelGrid):
                               self._botm[l, :, :]) / 2.
             if point_type == PointType.spatialxyz:
                 # transform x and y
-                x, y = self.sr.transform(x_mesh, y_mesh)
+                x_mesh, y_mesh = self.sr.transform(x_mesh, y_mesh)
             # store in cache
             self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
         return self._cache_dict[cache_index].data
