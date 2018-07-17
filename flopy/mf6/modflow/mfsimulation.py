@@ -891,7 +891,7 @@ class MFSimulation(PackageContainer):
 
     def run_simulation(self, silent=None, pause=False, report=False,
                        normal_msg='normal termination',
-                       async=False, cargs=None):
+                       use_async=False, cargs=None):
         """
         Run the simulation.
         """
@@ -904,7 +904,7 @@ class MFSimulation(PackageContainer):
         return run_model(self.exe_name, None,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
-                         normal_msg=normal_msg, async=async, cargs=cargs)
+                         normal_msg=normal_msg, use_async=use_async, cargs=cargs)
 
     def delete_output_files(self):
         """
