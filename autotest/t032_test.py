@@ -52,9 +52,8 @@ def test_polygon_from_ij():
                                ('stuff', '<f4'), ('stuf', '|b1'),
                                ('stf', np.object)]).view(np.recarray)
 
-    get_vertices = m.modelgrid.xyvertices()  # function to get the referenced
     # vertices for a model cell
-    geoms = [Polygon(get_vertices(i, j)) for i, j in
+    geoms = [Polygon(m.modelgrid.get_cell_vertices(i, j)) for i, j in
              zip(recarray.i, recarray.j)]
 
     assert geoms[0].type == 'Polygon'

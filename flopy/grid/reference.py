@@ -532,7 +532,7 @@ class SpatialReference(object):
         return {"xul": self.xul, "yul": self.yul, "rotation": self.rotation,
                 "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, delc=None, xul=None, yul=None, xll=None,
+    def set_spatialreference(self, delc=np.array([]), xul=None, yul=None, xll=None,
                              yll=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
