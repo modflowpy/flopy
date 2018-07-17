@@ -78,7 +78,8 @@ class StructuredCrossSection(object):
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                 rotation != 0 or length_multiplier != 1.:
             self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(xul=xul, yul=yul,
+            self.sr.set_spatialreference(delc=self.mg.delc,
+                                         xul=xul, yul=yul,
                                          xll=xll, yll=yll,
                                          rotation=rotation)
             self.mg.sr = self.sr

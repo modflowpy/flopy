@@ -714,19 +714,19 @@ def test_rotation():
     m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=-45.)
     mg2 = m.modelgrid
-    assert mg2.xedgegrid()[0, 0] == xul
-    assert mg2.yedgegrid()[0, 0] == yul
+    assert np.abs(mg2.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg2.yedgegrid()[0, 0] - yul) < 1e-4
     xll2, yll2 = m.sr.xll, m.sr.yll
     m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll2, yll=yll2, rotation=-45.)
     mg3 = m.modelgrid
-    assert mg3.xedgegrid()[0, 0] == xul
-    assert mg3.yedgegrid()[0, 0] == yul
+    assert np.abs(mg3.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg3.yedgegrid()[0, 0] - yul) < 1e-4
     m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll, yll=yll, rotation=45.)
     mg4 = m.modelgrid
-    assert mg4.xedgegrid()[0, 0] == xul
-    assert mg4.yedgegrid()[0, 0] == yul
+    assert np.abs(mg4.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg4.yedgegrid()[0, 0] - yul) < 1e-4
 
 
 def test_sr_with_Map():
