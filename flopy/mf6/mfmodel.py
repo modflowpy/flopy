@@ -120,7 +120,7 @@ class MFModel(PackageContainer, ModelInterface):
         xul = kwargs.pop("xul", None)
         yul = kwargs.pop("yul", None)
         rotation = kwargs.pop("rotation", 0.)
-        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        proj4_str = kwargs.pop("proj4_str", None)
 
         self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
                                    proj4_str=proj4_str)
