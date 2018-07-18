@@ -11,7 +11,8 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..grid.reference import SpatialReference, TemporalReference
-from ..grid import modelgrid
+from ..grid.structuredmodelgrid import StructuredModelGrid
+from ..grid.modelgrid import SimulationTime
 from .mfpar import ModflowPar
 
 
@@ -225,19 +226,19 @@ class Modflow(BaseModel):
         data_frame = {'perlen': self.dis.perlen.array,
                       'nstp': self.dis.nstp.array,
                       'tsmult': self.dis.tsmult.array}
-        sim_time = modelgrid.SimulationTime(data_frame,
-                                            self.dis.itmuni_dict[
-                                            self.dis.itmuni], tr)
+        sim_time = SimulationTime(data_frame,
+                                  self.dis.itmuni_dict[
+                                  self.dis.itmuni], tr)
         if self.bas6 is not None:
             ibound = self.bas6.ibound.array
         else:
             ibound = None
-        return modelgrid.StructuredModelGrid(self.dis.delc.array,
-                                             self.dis.delr.array,
-                                             self.dis.top.array,
-                                             self.dis.botm.array, ibound,
-                                             self.sr, sim_time, self.name,
-                                             self.dis.steady.array)
+        return StructuredModelGrid(self.dis.delc.array,
+                                   self.dis.delr.array,
+                                   self.dis.top.array,
+                                   self.dis.botm.array, ibound,
+                                   self.sr, sim_time, self.name,
+                                   self.dis.steady.array)
 
     @property
     def solver_tols(self):

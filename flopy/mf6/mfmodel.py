@@ -12,7 +12,8 @@ from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
 from ..grid.reference import SpatialReference, TemporalReference
-from ..grid import modelgrid
+from ..grid.modelgrid import SimulationTime
+from ..grid.structuredmodelgrid import StructuredModelGrid
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 
@@ -214,16 +215,16 @@ class MFModel(PackageContainer, ModelInterface):
         data_frame = {'perlen': period_data['perlen'],
                       'nstp': period_data['nstp'],
                       'tsmult': period_data['tsmult']}
-        sim_time = modelgrid.SimulationTime(data_frame, itmuni, tr)
+        sim_time = SimulationTime(data_frame, itmuni, tr)
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
-            return modelgrid.StructuredModelGrid(dis.delc.array,
-                                                 dis.delr.array,
-                                                 dis.top.array,
-                                                 dis.botm.array,
-                                                 dis.idomain.array,
-                                                 self.sr, sim_time, self.name)#,
-                                                 # self.get_steadystate_list())
+            return StructuredModelGrid(dis.delc.array,
+                                       dis.delr.array,
+                                       dis.top.array,
+                                       dis.botm.array,
+                                       dis.idomain.array,
+                                       self.sr, sim_time, self.name)#,
+                                     # self.get_steadystate_list())
 
     @property
     def packagelist(self):

@@ -11,7 +11,8 @@ except ImportError:
 from . import plotutil
 # from flopy.plot.plotutil import bc_color_dict
 from ..utils import SpatialReference as DepreciatedSpatialReference
-from ..grid.modelgrid import StructuredModelGrid, VertexModelGrid
+from ..grid.structuredmodelgrid import StructuredModelGrid
+from ..grid.vertexmodelgrid import VertexModelGrid
 from ..grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
