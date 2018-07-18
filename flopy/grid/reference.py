@@ -77,9 +77,10 @@ class SpatialReference(object):
                      'centimeters': 3}
     lenuni_text = {v: k for k, v in lenuni_values.items()}
 
-    def __init__(self, delc=np.array([]), lenuni=2, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0.0, proj4_str=None, epsg=None, prj=None, units=None,
-                 length_multiplier=None, yedge=None):
+    def __init__(self, delc=np.array([]), lenuni=2,
+                 xul=None, yul=None, xll=None, yll=None, rotation=0.0,
+                 proj4_str=None, epsg=None, prj=None, units=None,
+                 length_multiplier=None):
         self._lenuni = lenuni
         self._proj4_str = proj4_str
         self._epsg = epsg
@@ -94,10 +95,6 @@ class SpatialReference(object):
         self._length_multiplier = length_multiplier
         self._reset()
         self.set_spatialreference(delc, xul, yul, xll, yll, rotation)
-        self._yedge = yedge
-
-    def set_yedge(self, yedge):
-        self._yedge = yedge
 
     @property
     def xll(self):
@@ -105,7 +102,7 @@ class SpatialReference(object):
             xll = self._xll if self._xll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            xll = self._xul - (np.sin(self.theta) * self._yedge *
+            xll = self._xul - (np.sin(self.theta) * self._yedge[0] *
                                self.length_multiplier)
         return xll
 
@@ -115,7 +112,7 @@ class SpatialReference(object):
             yll = self._yll if self._yll is not None else 0.
         elif self.origin_loc == 'ul':
             # calculate coords for lower left corner
-            yll = self._yul - (np.cos(self.theta) * self._yedge *
+            yll = self._yul - (np.cos(self.theta) * self._yedge[0] *
                                self.length_multiplier)
         return yll
 
@@ -123,7 +120,7 @@ class SpatialReference(object):
     def xul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            xul = self._xll + (np.sin(self.theta) * self._yedge *
+            xul = self._xll + (np.sin(self.theta) * self._yedge[0] *
                                self.length_multiplier)
         if self.origin_loc == 'ul':
             # calculate coords for lower left corner
@@ -134,7 +131,7 @@ class SpatialReference(object):
     def yul(self):
         if self.origin_loc == 'll':
             # calculate coords for upper left corner
-            yul = self._yll + (np.cos(self.theta) * self._yedge *
+            yul = self._yll + (np.cos(self.theta) * self._yedge[0] *
                                self.length_multiplier)
 
         if self.origin_loc == 'ul':
@@ -185,6 +182,10 @@ class SpatialReference(object):
     @property
     def lenuni(self):
         return self._lenuni
+
+    @lenuni.setter
+    def lenuni(self, lenuni):
+        self._lenuni = lenuni
 
     def _parse_units_from_proj4(self):
         units = None
@@ -531,7 +532,7 @@ class SpatialReference(object):
         return {"xul": self.xul, "yul": self.yul, "rotation": self.rotation,
                 "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, delc=None, xul=None, yul=None, xll=None,
+    def set_spatialreference(self, delc=np.array([]), xul=None, yul=None, xll=None,
                              yll=None, rotation=0.0):
         """
             set spatial reference - can be called from model instance
@@ -563,11 +564,20 @@ class SpatialReference(object):
         self._xul = xul if xul is not None else 0.
         self._yul = yul if yul is not None else 0.
         # self.set_origin(xul, yul, xll, yll)
+
+        length_y = np.add.reduce(delc)
+        self._yedge = np.concatenate(([length_y], length_y -
+                                np.add.accumulate(delc)))
+
         return
+
+    def set_yedge(self, yedge):
+        self._yedge = yedge
 
     def __repr__(self):
         s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ". \
             format(self.xul, self.yul, self.rotation)
+
         s += "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
         s += "lenuni:{0}; ".format(self.lenuni)
@@ -633,8 +643,6 @@ class SpatialReference(object):
 
         # lc = LineCollection(self.get_grid_lines(), **kwargs)
         # return lc
-
-
 
 
 class TemporalReference(object):

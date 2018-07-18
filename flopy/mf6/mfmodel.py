@@ -9,8 +9,6 @@ from .mfbase import PackageContainer, ExtFileAction, PackageContainerType, \
                     VerbosityLevel
 from .mfpackage import MFPackage
 from .coordinates import modeldimensions
-from .utils.reference import SpatialReference, StructuredSpatialReference, \
-                             VertexSpatialReference
 from .data import mfstructure
 from ..utils import datautil
 from ..grid.reference import SpatialReference, TemporalReference
@@ -165,14 +163,10 @@ class MFModel(PackageContainer, ModelInterface):
 
     def __setattr__(self, key, value):
         if key == "sr":
-            if not (isinstance(value, SpatialReference) or
-                   isinstance(value, StructuredSpatialReference) or
-                   isinstance(value, VertexSpatialReference)):
+            if not isinstance(value, SpatialReference):
                 raise FlopyException('Unable to set attribute "sr" with '
                                      'type {}. Attribute "sr" must be of type '
-                                     '"SpatialReference", '
-                                     '"StructuredSpatialReference", '
-                                     'or "VertexSpatialReference"'
+                                     '"SpatialReference""'
                                      '.'.format(type(value)))
         super(MFModel, self).__setattr__(key, value)
 
@@ -228,8 +222,8 @@ class MFModel(PackageContainer, ModelInterface):
                                                  dis.top.array,
                                                  dis.botm.array,
                                                  dis.idomain.array,
-                                                 self.sr, sim_time, self.name,
-                                                 self.get_steadystate_list())
+                                                 self.sr, sim_time, self.name)#,
+                                                 # self.get_steadystate_list())
 
     @property
     def packagelist(self):

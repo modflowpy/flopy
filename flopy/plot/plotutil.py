@@ -972,7 +972,7 @@ class PlotUtilities(object):
                     'contour': False, 'clabel': False,
                     'colorbar': False, 'grid': False,
                     'levels': None, 'colors': "black",
-                    'dpi': None, 'fmt': "%1.3f"}
+                    'dpi': None, 'fmt': "%1.3f", 'modelgrid': None}
 
         # check that matplotlib is installed
         if plt is None:
@@ -981,10 +981,14 @@ class PlotUtilities(object):
                       ' in order to plot LayerFile data.'
             raise PlotException(err_msg)
 
+        mg = None
         # filter defaults from kwargs
         for key in defaults:
             if key in kwargs:
-                defaults[key] = kwargs.pop(key)
+                if key == "modelgrid":
+                    mg = kwargs.pop("modelgrid")
+                else:
+                    defaults[key] = kwargs.pop(key)
 
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2:
@@ -1003,7 +1007,8 @@ class PlotUtilities(object):
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            mm = PlotMapView(ax=axes[idx], model=model, sr=sr, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=model, sr=sr,
+                             modelgrid=mg, layer=k)
             if defaults['pcolor']:
                 cm = mm.plot_array(plotarray[k],
                                    masked_values=defaults['masked_values'],
@@ -1030,8 +1035,8 @@ class PlotUtilities(object):
 
             if defaults['inactive']:
                 try:
-                    # todo: update this to take flopy6 idomain
-                    ib = model.bas6.ibound.array
+                    ib = model.modelgrid.idomain
+                    # ib = model.bas6.ibound.array
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
                 except:
                     pass
@@ -1092,7 +1097,14 @@ class PlotUtilities(object):
                 defaults[key] = kwargs.pop(key)
 
         ftype = package.name[0]
-        nlay = package.parent.nlay
+
+        # flopy-modflow vs. flopy-modflow6 trap
+        try:
+            model = package.parent
+        except AttributeError:
+            model = package._model_or_sim
+
+        nlay = model.modelgrid.nlay
 
         # set up plotting routines
         i0, i1 = PlotUtilities._set_layer_range(mflay, nlay)
@@ -1103,7 +1115,7 @@ class PlotUtilities(object):
                                        defaults, names, fignum)
 
         for idx, k in enumerate(range(i0, i1)):
-            mm = PlotMapView(ax=axes[idx], model=package.parent, layer=k)
+            mm = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
             qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
 
@@ -1112,7 +1124,7 @@ class PlotUtilities(object):
 
             if defaults['inactive']:
                 try:
-                    ib = package.parent.bas6.ibound.array
+                    ib = model.modelgrid.idomain
                     mm.plot_inactive(ibound=ib, ax=axes[idx])
                 except:
                     pass

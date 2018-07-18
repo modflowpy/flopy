@@ -10,8 +10,8 @@ def test_mfgrddis():
     dis = flopy.utils.MfGrdFile(fn, verbose=True)
 
     iverts, verts = dis.get_verts()
-    sr = dis.get_spatialreference()
-    extents = sr.get_extent()
+    mg = dis.mg
+    extents = mg.get_extent()
     vertc = dis.get_centroids()
     errmsg = 'extents {} of {} '.format(extents, grbnam) + \
              'does not equal (0.0, 8000.0, 0.0, 8000.0)'

@@ -18,7 +18,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
-from flopy.utils.reference import SpatialReference
+from flopy.grid.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')
@@ -275,8 +275,9 @@ def test_export():
     fm = flopy.modflow
     m = fm.Modflow()
     dis = fm.ModflowDis(m, 1, 10, 10, lenuni=2, itmuni=4)
-    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array)
-    m.sr.write_shapefile(os.path.join(outpath, 'grid.shp'))
+    m.sr = SpatialReference(xul=0.0, yul=0.0, delc=m.dis.delc.array)
+    m.sr.origin_loc = "ll"
+    m.export(os.path.join(outpath, 'grid.shp'))
     r, d = create_sfr_data()
     sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})
     sfr.segment_data[0]['flow'][-1] = 1e4
@@ -299,7 +300,7 @@ def test_export():
     assert ra.ireach0.sum() == sfr.reach_data.ireach.sum()
     y = np.concatenate([np.array(g.exterior)[:, 1] for g in ra.geometry])
     x = np.concatenate([np.array(g.exterior)[:, 0] for g in ra.geometry])
-    assert (x.min(), y.min(), x.max(), y.max()) == m.sr.bounds
+    assert (x.min(), y.min(), x.max(), y.max()) == m.modelgrid.bounds
     assert ra[(ra.iseg0 == 2) & (ra.ireach0 == 1)]['geometry'][0].bounds \
         == (6.0, 2.0, 7.0, 3.0)
 
@@ -450,12 +451,12 @@ def test_sfr_plot():
 
 if __name__ == '__main__':
     #test_sfr()
-    test_sfr_renumbering()
+    # test_sfr_renumbering()
     #test_example()
-    #test_export()
+    # test_export()
     #test_transient_example()
     #test_sfr_plot()
-    test_assign_layers()
-    test_SfrFile()
-    test_const()
+    # test_assign_layers()
+    # test_SfrFile()
+    # test_const()
     pass

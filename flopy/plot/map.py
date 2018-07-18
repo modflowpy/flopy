@@ -107,10 +107,16 @@ class StructuredMapView(object):
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                 rotation != 0 or length_multiplier != 1.:
             self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(xul=xul, yul=yul,
-                                         xll=xll, yll=yll,
-                                         rotation=rotation)
-            self.mg.sr = self.sr
+            if isinstance(sr, DepreciatedSpatialReference):
+                self.sr.set_spatialreference(xul=xul, yul=yul,
+                                             xll=xll, yll=yll,
+                                             rotation=rotation)
+            else:
+                self.sr.set_spatialreference(delc=self.mg.delc,
+                                             xul=xul, yul=yul,
+                                             xll=xll, yll=yll,
+                                             rotation=rotation)
+                self.mg.sr = self.sr
 
         if ax is None:
             try:
@@ -434,28 +440,55 @@ p
             raise Exception('Cannot find package to plot')
 
         # Get the list data
-        try:
-            mflist = p.stress_period_data[kper]
-        except Exception as e:
-            raise Exception('Not a list-style boundary package:' + str(e))
+
+        # try:
+        #    mflist = p.stress_period_data.data[kper]
+        #except AttributeError:
+            # todo: sanity check on this fp6 code!
+            # todo: kper doesn't work, doesn't seem to return all data!
+        #    mflist = p.stress_period_data.array # [kper]
+        # else:
+        #    raise Exception('Not a list-style boundary package:')
+
+        # use a general expression to get stress period data
+        arr_dict = p.stress_period_data.to_array(kper)
+        if not arr_dict:
+            return None
+
+        for key in arr_dict:
+            fluxes = arr_dict[key]
+            break
 
         # Return if MfList is None
-        if mflist is None:
-            return None
+        # if mflist is None:
+        #    return None
         nlay = self.model.modelgrid.nlay
 
         # Plot the list locations
         plotarray = np.zeros((nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
         if plotAll:
-            idx = [mflist['i'], mflist['j']]
+            #try:
+            #    idx = [mflist['i'], mflist['j']]
+            #except ValueError:
+            #    idx = [[v[1] for v in mflist['cellid']],
+            #           [v[2] for v in mflist['cellid']]]
             # plotarray[:, idx] = 1
+            t = np.sum(fluxes, axis=0)
             pa = np.zeros((self.mg.nrow, self.mg.ncol), dtype=np.int)
-            pa[idx] = 1
+            pa[t != 0] = 1
             for k in range(nlay):
                 plotarray[k, :, :] = pa.copy()
         else:
-            idx = [mflist['k'], mflist['i'], mflist['j']]
-            plotarray[idx] = 1
+            # try:
+            #     idx = [mflist['k'], mflist['i'], mflist['j']]
+            # except ValueError:
+            # todo: sanity check on this fp6 code
+            #     k = [v[0] for v in mflist['cellid']]
+            #     i = [v[1] for v in mflist['cellid']]
+            #     j = [v[2] for v in mflist['cellid']]
+            #     idx = [k, i, j]
+
+            plotarray[fluxes != 0] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)

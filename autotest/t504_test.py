@@ -4,7 +4,7 @@ import numpy as np
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.mf6.data.mfdatautil import ArrayUtil
+from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.mfbase import VerbosityLevel
 
@@ -45,12 +45,15 @@ def test001a_tharmonic():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'flow15_flow_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'flow15_flow_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
                             verbosity_level=VerbosityLevel.quiet)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    model = sim.get_model(model_name)
+    model.export('tharmonic.nc')
 
     # write simulation to new location
     sim.write_simulation()
@@ -140,7 +143,7 @@ def test003_gwfs_disv():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'model_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'model_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
@@ -292,7 +295,7 @@ def test006_gwf3():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'flow_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'flow_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
@@ -785,13 +788,13 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
+    test001a_tharmonic()
     test036_twrihfb()
     test027_timeseriestest()
     test006_2models_mvr()
     test045_lake2tr()
     test001e_uzf_3lay()
     test045_lake1ss_table()
-    test001a_tharmonic()
     test003_gwfs_disv()
     test005_advgw_tidal()
     test006_gwf3()

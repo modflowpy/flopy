@@ -110,7 +110,7 @@ def export_shapefile(namfile):
     return
 
 def test_freyberg_export():
-    from flopy.utils.reference import SpatialReference
+    from flopy.grid.reference import SpatialReference
     namfile = 'freyberg.nam'
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
@@ -124,14 +124,12 @@ def test_freyberg_export():
     m.drn.stress_period_data.export(outshp, sparse=True)
     assert os.path.exists(outshp)
     remove_shp(outshp)
-    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
-                            epsg=5070)
+    m.sr = SpatialReference(delc=m.dis.delc.array, epsg=5070)
     # test export with an sr, regardless of whether or not wkt was found
     m.drn.stress_period_data.export(outshp, sparse=True)
     assert os.path.exists(outshp)
     remove_shp(outshp)
-    m.sr = SpatialReference(delr=m.dis.delr.array, delc=m.dis.delc.array,
-                            epsg=3070)
+    m.sr = SpatialReference(delc=m.dis.delc.array, epsg=3070)
     # if wkt text was fetched from spatialreference.org
     if m.sr.wkt is not None:
         # test default package export
@@ -376,15 +374,10 @@ def test_sr():
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
 
     # test instantiation of an empty sr object
-    sr = flopy.utils.reference.SpatialReference()
+    sr = flopy.grid.reference.SpatialReference()
 
     # test instantiation of SR with xul, yul and no grid
-    sr = flopy.utils.reference.SpatialReference(xul=1, yul=1)
-
-    xul, yul = 321., 123.
-    sr = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
-                                      delc=ms.dis.delc.array, lenuni=3,
-                                      xul=xul, yul=yul, rotation=20)
+    sr = flopy.grid.reference.SpatialReference(xul=1, yul=1)
 
     #txt = 'yul does not approximately equal 100 - ' + \
     #      '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
@@ -392,15 +385,22 @@ def test_sr():
     ms.sr.xul = 111
     assert ms.sr.xul == 111
 
+    xul, yul = 321., 123.
+    ms.sr = flopy.grid.reference.SpatialReference(delc=ms.dis.delc.array,
+                                               lenuni=3, xul=xul, yul=yul,
+                                               rotation=20)
+    sr = ms.sr
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
-    x = ms.modelgrid.xcell_centers()
-    y = ms.modelgrid.ycell_centers()[0]
+    mg = ms.modelgrid
+    x = mg.xcell_centers(flopy.grid.modelgrid.PointType.modelxyz)
+    y = mg.ycell_centers(flopy.grid.modelgrid.PointType.modelxyz)[0]
     xt, yt = sr.transform(x, y)
-    assert np.sum(xt - sr.xcentergrid[0]) < 1e-3
-    x, y = ms.sr.xcenter[0], ms.sr.ycenter
+    assert np.sum(xt - mg.xcell_centers()[0]) < 1e-3
+    x, y = mg.xcell_centers(flopy.grid.modelgrid.PointType.modelxyz)[0], \
+           mg.ycell_centers(flopy.grid.modelgrid.PointType.modelxyz)
     xt, yt = sr.transform(x, y)
-    assert np.sum(yt - sr.ycentergrid[:, 0]) < 1e-3
+    assert np.sum(yt - mg.ycell_centers()) < 1e-3
 
     # test inverse transform
     x0, y0 = 9.99, 2.49
@@ -411,13 +411,15 @@ def test_sr():
 
     # test input using ul vs ll
     xll, yll = sr.xll, sr.yll
-    sr2 = flopy.utils.SpatialReference(delr=ms.dis.delr.array,
-                                       delc=ms.dis.delc.array, lenuni=3,
-                                       xll=xll, yll=yll, rotation=20)
+    ms.sr = flopy.grid.reference.SpatialReference(delc=ms.dis.delc.array,
+                                                  lenuni=3, xll=xll, yll=yll,
+                                                  rotation=20)
+    sr2 = ms.sr
+    mg2 = ms.modelgrid
     assert sr2.xul == sr.xul
     assert sr2.yul == sr.yul
-    assert np.array_equal(sr.xcentergrid, sr2.xcentergrid)
-    assert np.array_equal(sr.ycentergrid, sr2.ycentergrid)
+    assert np.array_equal(mg.xcell_centers(), mg2.xcell_centers())
+    assert np.array_equal(mg.ycell_centers(), mg2.ycell_centers())
 
     ms.sr.lenuni = 1
     assert ms.sr.lenuni == 1
@@ -470,6 +472,8 @@ def test_epsgs():
 def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
     delr, delc = 250, 500
+    top = 100
+    botm = 50
     xll, yll = 286.80, 29.03
 
     print(np.__version__)
@@ -478,35 +482,39 @@ def test_sr_scaling():
     dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
                                    delr=delr,
                                    delc=delc)
-    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=3,
-                                          xll=xll, yll=yll, rotation=0)
+    ms2.sr = flopy.grid.reference.SpatialReference(delc=ms2.dis.delc.array,
+                                                   lenuni=3, xll=xll,
+                                                   yll=yll, rotation=0)
     ms2.sr.epsg = 26715
     ms2.dis.export(os.path.join(spth, 'dis2.shp'))
     ms3 = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
                                    delr=delr,
-                                   delc=delc)
-    ms3.sr = flopy.utils.SpatialReference(delr=ms3.dis.delr.array,
-                                          delc=ms2.dis.delc.array, lenuni=2,
-                                          length_multiplier=2.,
-                                          xll=xll, yll=yll, rotation=0)
+                                   delc=delc, top=top, botm=botm)
+    ms3.sr = flopy.grid.reference.SpatialReference(delc=ms2.dis.delc.array,
+                                                   lenuni=2,
+                                                   length_multiplier=2.,
+                                                   xll=xll, yll=yll,
+                                                   rotation=0)
     ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
 
     # check that the origin(s) are maintained
-    assert np.array_equal(ms3.sr.get_vertices(nrow - 1, 0)[1],
+    mg3 = ms3.modelgrid
+    assert np.array_equal(mg3.get_cell_vertices(nrow - 1, 0)[1],
                           [ms3.sr.xll, ms3.sr.yll])
-
-    assert np.allclose(ms3.sr.get_vertices(nrow - 1, 0)[1],
-                       ms2.sr.get_vertices(nrow - 1, 0)[1])
+    mg2 = ms2.modelgrid
+    assert np.allclose(mg3.get_cell_vertices(nrow - 1, 0)[1],
+                       mg2.get_cell_vertices(nrow - 1, 0)[1])
 
     # check that the upper left corner is computed correctly
     # in this case, length_multiplier overrides the given units
-    def check_size(sr):
-        xur, yur = sr.get_vertices(0, ncol - 1)[3]
-        assert np.abs(xur - (xll + sr.length_multiplier * delr * ncol)) < 1e-4
-        assert np.abs(yur - (yll + sr.length_multiplier * delc * nrow)) < 1e-4
-    check_size(ms3.sr)
+    def check_size(mg):
+        xur, yur = mg.get_cell_vertices(0, ncol - 1)[3]
+        assert np.abs(xur - (xll + mg.sr.length_multiplier * delr * ncol)) < \
+               1e-4
+        assert np.abs(yur - (yll + mg.sr.length_multiplier * delc * nrow)) < \
+               1e-4
+    check_size(mg3)
 
     # run the same tests but with units specified instead of a length multiplier
     ms2 = flopy.modflow.Modflow()
@@ -515,33 +523,35 @@ def test_sr_scaling():
                                    lenuni=1 # feet; should have no effect on SR
                                    # (model not supplied to SR)
                                    )
-    ms2.sr = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
-                                          delc=ms2.dis.delc.array,
-                                          lenuni=2, # meters
-                                          epsg=26715,  # meters, listed on spatialreference.org
-                                          xll=xll, yll=yll, rotation=0)
+    ms2.sr = flopy.grid.reference.SpatialReference(delc=ms2.dis.delc.array,
+                                                   lenuni=2, # meters
+                                                   epsg=26715,  # meters,
+                                                   # listed
+                                               # on spatialreference.org
+                                                   xll=xll, yll=yll,
+                                                   rotation=0)
     assert ms2.sr.model_length_units == 'meters'
     assert ms2.sr.length_multiplier == 1.
     ms2.sr.lenuni = 1 # feet; test dynamic setting
     assert ms2.sr.model_length_units == 'feet'
-    check_size(ms2.sr)
+    check_size(mg2)
     assert ms2.sr.length_multiplier == .3048
     ms2.sr.lenuni = 3 # centimeters
     assert ms2.sr.model_length_units == 'centimeters'
-    check_size(ms2.sr)
+    check_size(mg2)
     assert ms2.sr.length_multiplier == 0.01
     ms2.sr.lenuni = 2 # meters
-    check_size(ms2.sr)
+    check_size(mg2)
     ms2.sr.units = 'meters'
     ms2.sr.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
     assert ms2.sr.proj4_str == '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
     assert ms2.sr.units == 'feet'
     assert ms2.sr.length_multiplier == 1/.3048
-    check_size(ms2.sr)
+    check_size(mg2)
     ms2.sr.epsg = 6610 # meters, not listed on spatialreference.org but understood by pyproj
     assert ms2.sr.units == 'meters'
     assert ms2.sr.proj4_str is not None
-    check_size(ms2.sr)
+    check_size(mg2)
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -622,10 +632,11 @@ def test_namfile_readwrite():
     m = fm.Modflow(modelname='junk', model_ws=os.path.join('temp', 't007'))
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
                         delc=delc)
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array, lenuni=3,
-                                        length_multiplier=.3048,
-                                        xll=xll, yll=yll, rotation=30)
+    m.sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
+                                                 lenuni=3,
+                                                 length_multiplier=.3048,
+                                                 xll=xll, yll=yll,
+                                                 rotation=30)
 
     # test reading and writing of SR information to namfile
     m.write_input()
@@ -688,33 +699,34 @@ def test_read_usgs_model_reference():
 
 
 def test_rotation():
+    from flopy.grid.modelgrid import PointType
     m = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
-                                        xul=xul, yul=yul, rotation=45.)
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
+                                       xul=xul, yul=yul, rotation=45.)
     xll, yll = m.sr.xll, m.sr.yll
-    assert np.abs(m.dis.sr.xgrid[0, 0] - xul) < 1e-4
-    assert np.abs(m.dis.sr.ygrid[0, 0] - yul) < 1e-4
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    mg = m.modelgrid
+    assert np.abs(mg.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg.yedgegrid()[0, 0] - yul) < 1e-4
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xul=xul, yul=yul, rotation=-45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
+    mg2 = m.modelgrid
+    assert np.abs(mg2.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg2.yedgegrid()[0, 0] - yul) < 1e-4
     xll2, yll2 = m.sr.xll, m.sr.yll
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll2, yll=yll2, rotation=-45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
+    mg3 = m.modelgrid
+    assert np.abs(mg3.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg3.yedgegrid()[0, 0] - yul) < 1e-4
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
                                         xll=xll, yll=yll, rotation=45.)
-    assert m.dis.sr.xgrid[0, 0] == xul
-    assert m.dis.sr.ygrid[0, 0] == yul
+    mg4 = m.modelgrid
+    assert np.abs(mg4.xedgegrid()[0, 0] - xul) < 1e-4
+    assert np.abs(mg4.yedgegrid()[0, 0] - yul) < 1e-4
 
 
 def test_sr_with_Map():
@@ -786,13 +798,13 @@ def test_get_vertices():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
-                                        delc=m.dis.delc.array,
-                                        xul=xul, yul=yul, rotation=45.)
-    a1 = np.array(m.sr.vertices)
+    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
+                                       xul=xul, yul=yul, rotation=45.)
+    mg = m.modelgrid
+    a1 = np.array(mg.xyvertices())
     j = np.array(list(range(ncol)) * nrow)
     i = np.array(sorted(list(range(nrow)) * ncol))
-    a2 = np.array(m.sr.get_vertices(i, j))
+    a2 = np.array(mg.get_cell_vertices(i, j))
     assert np.array_equal(a1, a2)
 
 def test_get_rc_from_node_coordinates():
@@ -942,6 +954,7 @@ def build_sfr_netcdf():
 if __name__ == '__main__':
     #test_shapefile()
     # test_shapefile_ibound()
+    #test_netcdf()
     # test_netcdf_overloads()
     #test_netcdf_classmethods()
     # build_netcdf()
@@ -960,8 +973,8 @@ if __name__ == '__main__':
     #test_export_output()
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
-    # export_netcdf(namfile)
-    # test_freyberg_export()
+    #export_netcdf(namefile)
+    #test_freyberg_export()
     #test_export_array()
     #test_write_shapefile()
     #test_wkt_parse()
