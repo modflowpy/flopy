@@ -16,7 +16,8 @@ from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
 from ..grid.reference import TemporalReference
-from ..grid import modelgrid
+from ..grid.modelgrid import SimulationTime
+from ..grid.structuredmodelgrid import StructuredModelGrid
 
 class Mt3dList(Package):
     """
@@ -337,20 +338,20 @@ class Mt3dms(BaseModel):
         data_frame = {'perlen': self.mf.dis.perlen.array,
                       'nstp': self.mf.dis.nstp.array,
                       'tsmult': self.mf.dis.tsmult.array}
-        sim_time = modelgrid.SimulationTime(data_frame,
-                                            self.mf.dis.itmuni_dict[
-                                            self.mf.dis.itmuni], tr)
+        sim_time = SimulationTime(data_frame,
+                                  self.mf.dis.itmuni_dict[
+                                  self.mf.dis.itmuni], tr)
         if self.mf.bas is not None:
             ibound = self.btn.icbund.array
         else:
             ibound = None
-        return modelgrid.StructuredModelGrid(self.mf.dis.delc.array,
-                                             self.mf.dis.delr.array,
-                                             self.mf.dis.top.array,
-                                             self.mf.dis.botm.array, ibound,
-                                             self.mf.sr, sim_time,
-                                             self.mf.name,
-                                             self.mf.dis.steady.array)
+        return StructuredModelGrid(self.mf.dis.delc.array,
+                                   self.mf.dis.delr.array,
+                                   self.mf.dis.top.array,
+                                   self.mf.dis.botm.array, ibound,
+                                   self.mf.sr, sim_time,
+                                   self.mf.name,
+                                   self.mf.dis.steady.array)
 
     @property
     def solver_tols(self):

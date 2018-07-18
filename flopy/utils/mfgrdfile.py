@@ -3,7 +3,7 @@ import collections
 
 from ..utils.utils_def import FlopyBinaryData
 from ..grid.reference import SpatialReference
-from ..grid.modelgrid import StructuredModelGrid
+from ..grid.structuredmodelgrid import StructuredModelGrid
 
 class MfGrdFile(FlopyBinaryData):
 

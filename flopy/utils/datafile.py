@@ -7,6 +7,8 @@ from __future__ import print_function
 import os
 import numpy as np
 import flopy.utils
+from flopy.grid.reference import SpatialReference
+from flopy.grid.structuredmodelgrid import StructuredModelGrid
 
 
 class Header(object):
@@ -135,14 +137,17 @@ class LayerFile(object):
         # now that we read the data and know nrow and ncol,
         # we can make a generic sr if needed
         if self.mg is None:
-            self.sr = flopy.grid.reference.SpatialReference(delc=np.ones((self.nrow,)), xul=0., yul=0.,
-                                                            rotation=0.)
+            self.sr = SpatialReference(delc=np.ones((self.nrow,)), xul=0.,
+                                       yul=0., rotation=0.)
 
-            self.mg = flopy.grid.modelgrid.StructuredModelGrid(delc=np.ones((self.nrow,)), delr=np.ones(self.ncol,),
-                                                               top=np.ones((self.nrow, self.ncol)),
-                                                               botm=((self.nlay, self.nrow, self.ncol)),
-                                                               idomain=np.ones((self.nlay, self.nrow, self.ncol)),
-                                                               sr=self.sr)
+            self.mg = StructuredModelGrid(delc=np.ones((self.nrow,)),
+                                          delr=np.ones(self.ncol,),
+                                          top=np.ones((self.nrow, self.ncol)),
+                                          botm=((self.nlay, self.nrow,
+                                                self.ncol)),
+                                          idomain=np.ones((self.nlay,
+                                                          self.nrow, self.ncol)),
+                                          sr=self.sr)
         return
 
     def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None,

@@ -1,3 +1,4 @@
 from .reference import SpatialReference
-from .modelgrid import StructuredModelGrid, VertexModelGrid, SimulationTime, \
-                       PointType
+from .modelgrid import ModelGrid, SimulationTime, PointType, LocationType, \
+                       TimeType
+from .structuredmodelgrid import StructuredModelGrid
