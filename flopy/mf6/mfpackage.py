@@ -1105,6 +1105,7 @@ class MFPackage(PackageContainer, PackageInterface):
     """
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
                  loading_package=False, parent_file=None):
+
         self._model_or_sim = model_or_sim
         self._data_list = []
         self.package_type = package_type
@@ -1125,6 +1126,8 @@ class MFPackage(PackageContainer, PackageInterface):
 
         super(MFPackage, self).__init__(model_or_sim.simulation_data,
                                         self.model_name)
+
+        self.parent = model_or_sim
         self._simulation_data = model_or_sim.simulation_data
         self.parent_file = parent_file
         self.blocks = OrderedDict()
@@ -1207,6 +1210,14 @@ class MFPackage(PackageContainer, PackageInterface):
     @name.setter
     def name(self, name):
         self.package_name = name
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        self._parent = parent
 
     @property
     def data_list(self):
