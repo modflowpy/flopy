@@ -76,14 +76,6 @@ class MfList(DataInterface, DataListInterface):
             self._model = package.parent
         else:
             self._model = model
-        try:
-            self.mg = self._model.modelgrid
-        except:
-            self.mg = None
-        try:
-            self.sr = self._model.sr
-        except:
-            self.sr = None
         if dtype is None:
             assert isinstance(self.package.dtype, np.dtype)
             self.__dtype = self.package.dtype
@@ -104,6 +96,14 @@ class MfList(DataInterface, DataListInterface):
     @property
     def name(self):
         return self.package.name
+
+    @property
+    def mg(self):
+        return self._model.modelgrid
+
+    @property
+    def sr(self):
+        return self.mg.sr
 
     @property
     def model(self):
