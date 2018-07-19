@@ -310,7 +310,8 @@ class LayerFile(object):
                                                 axes=axes,
                                                 filenames=filenames,
                                                 mflay=mflay,
-                                                modelgrid=self.mg)
+                                                modelgrid=self.mg,
+                                                **kwargs)
 
     def _build_index(self):
         """

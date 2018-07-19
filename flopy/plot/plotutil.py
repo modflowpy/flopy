@@ -442,10 +442,12 @@ class PlotUtilities(object):
 
                 kwargs.pop(key)
 
+        # todo: change this reference (package.model.nlay) after interface
         inc = package.parent.nlay
         if defaults['mflay'] is not None:
             inc = 1
 
+        # todo: all package.parent calls will have to be changed. Add model to package_interface
         axes = []
         for item, value in package.__dict__.items():
             caxs = []
@@ -1525,6 +1527,7 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
     return pc
 
 
+# todo: move these to PlotUtilities
 def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
                    edgecolor='scaled', facecolor='scaled',
                    a=None, masked_values=None, idx=None, **kwargs):
@@ -1611,6 +1614,7 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     return pc
 
 
+# todo: move this under the appropriate plotting Class
 def cvfd_to_patch_collection(verts, iverts):
     """
     Create a patch collection from control volume vertices and incidence list

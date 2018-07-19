@@ -103,7 +103,7 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        self.__cls.plot_array(a=a, masked_values=masked_values, **kwargs)
+        return self.__cls.plot_array(a=a, masked_values=masked_values, **kwargs)
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
@@ -124,8 +124,8 @@ class PlotMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        return self.__cls.plot_array(a=a, masked_values=masked_values,
-                                     **kwargs)
+        return self.__cls.contour_array(a=a, masked_values=masked_values,
+                                        **kwargs)
 
     def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
         """
