@@ -130,6 +130,8 @@ def test_freyberg_export():
     assert os.path.exists(outshp)
     remove_shp(outshp)
     m.sr = SpatialReference(delc=m.dis.delc.array, epsg=3070)
+    # verify that attributes have same sr as parent
+    assert m.drn.stress_period_data.sr == m.sr
     # if wkt text was fetched from spatialreference.org
     if m.sr.wkt is not None:
         # test default package export
@@ -142,7 +144,7 @@ def test_freyberg_export():
         remove_shp(outshp)
 
         # test default package export to higher level dir
-        outshp = os.path.join('..', namfile[:-4] + '_dis.shp')
+        outshp = os.path.join(spth, namfile[:-4] + '_dis.shp')
         m.dis.export(outshp)
         prjfile = outshp.replace('.shp', '.prj')
         with open(prjfile) as src:
@@ -155,6 +157,7 @@ def test_freyberg_export():
         m.drn.stress_period_data.export(outshp,
                                         sparse=True)
         prjfile = outshp.replace('.shp', '.prj')
+        assert os.path.exists(prjfile)
         with open(prjfile) as src:
             prjtxt = src.read()
         assert prjtxt == m.sr.wkt
@@ -290,9 +293,9 @@ def test_export_array():
                                  nodata=nodata)
         with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
             arr = src.read(1)
-        assert src.shape == (m.nrow, m.ncol)
-        assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
-        assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
+            assert src.shape == (m.nrow, m.ncol)
+            assert np.abs(src.bounds[0] - m.modelgrid.bounds[0]) < 1e-6
+            assert np.abs(src.bounds[1] - m.modelgrid.bounds[1]) < 1e-6
 
 def test_mbase_sr():
     import numpy as np
@@ -974,8 +977,8 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     #export_netcdf(namefile)
-    #test_freyberg_export()
-    #test_export_array()
+    test_freyberg_export()
+    test_export_array()
     #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
