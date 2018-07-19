@@ -512,14 +512,11 @@ def mflist_export(f, mfl, **kwargs):
             elif df is not None:
                 verts = model_grid.get_cell_vertices(df.i.values, df.j.values)
                 ra = df.to_records(index=False)
-            # write the projection file
-            if sr.epsg is None:
-                epsg = kwargs.get('epsg', None)
-            else:
-                epsg = sr.epsg
+            epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             polys = np.array([Polygon(v) for v in verts])
-            recarray2shp(ra, geoms=polys, shpname=f, epsg=epsg, prj=prj)
+            recarray2shp(ra, geoms=polys, shpname=f,
+                         sr=sr, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
