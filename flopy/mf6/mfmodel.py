@@ -749,6 +749,8 @@ class MFModel(PackageContainer, ModelInterface):
         Examples
         --------
         """
+        if ref_path is not None:
+            fname = os.path.join(ref_path, fname)
         sim_struct = mfstructure.MFStructure().sim_struct
         if (ftype in self.structure.package_struct_objs and
           self.structure.package_struct_objs[ftype].multi_package_support) or \
