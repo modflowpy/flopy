@@ -50,6 +50,13 @@ class DataInterface(object):
             'must define name in child '
             'class to use this base class')
 
+    @property
+    @abc.abstractmethod
+    def grid(self):
+        raise NotImplementedError(
+            'must define name in child '
+            'class to use this base class')
+
 
 class DataListInterface(object):
     @property
