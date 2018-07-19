@@ -5,7 +5,7 @@ import copy
 import shutil
 import numpy as np
 import numpy.lib.recfunctions as rf
-
+from ..datbase import DataType, DataInterface, DataListInterface
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
 
@@ -150,7 +150,7 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=-1.0e9,
     w.save(filename)
     print('wrote {}'.format(filename))
     # write the projection file
-    write_prj(filename, epsg, prj)
+    write_prj(filename, mg, epsg, prj)
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None,
@@ -197,33 +197,58 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
 
     for pname in package_names:
         pak = ml.get_package(pname)
+        attrs = dir(pak)
         if pak is not None:
-            attrs = dir(pak)
             if 'sr' in attrs:
                 attrs.remove('sr')
             if 'start_datetime' in attrs:
                 attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
-                    name = a.name.lower()
+                if not hasattr(a, 'data_type'):
+                    continue
+                #if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
+                if a.data_type == DataType.array2d and a.array.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
+                    name = shape_attr_name(a.name, keep_layer=True)
+                    #name = a.name.lower()
                     array_dict[name] = a.array
-                elif isinstance(a, Util3d):
-                    for i, u2d in enumerate(a):
-                        # name = u2d.name.lower().replace(' ', '_')
-                        name = shape_attr_name(u2d.name)
-                        name += '_{:03d}'.format(i + 1)
-                        array_dict[name] = u2d.array
-                elif isinstance(a, Transient2d):
+                elif a.data_type == DataType.array3d: #elif isinstance(a, Util3d):
+                    for ilay in range(a.model.modelgrid.nlay):
+                        name = '{}_{:03d}'.format(
+                            shape_attr_name(a.name), ilay + 1)
+                        if isinstance(a, Util3d):
+                            arr = a[ilay].array
+                        elif a.array is not None:
+                            arr = a[ilay]
+                        else:
+                            continue
+                        array_dict[name] = arr
+                    #for i, u2d in enumerate(a):
+                    #    # name = u2d.name.lower().replace(' ', '_')
+                    #    name = shape_attr_name(u2d.name)
+                    #    name += '_{:03d}'.format(i + 1)
+                    #    array_dict[name] = u2d.array
+                elif a.data_type == DataType.transient2d: #elif isinstance(a, Transient2d):
                     kpers = list(a.transient_2ds.keys())
                     kpers.sort()
-                    for kper in kpers:
-                        u2d = a.transient_2ds[kper]
-                        # name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
-                        name = shape_attr_name(u2d.name)
-                        name = "{}_{:03d}".format(name, kper + 1)
+                    for kper in range(a.model.modelgrid.sim_time.nper):
+                        u2d = a[kper]
+                        name = '{}_{:03d}'.format(
+                            shape_attr_name(u2d.name), kper + 1)
                         array_dict[name] = u2d.array
-                elif isinstance(a, MfList):
+                    #for kper in kpers:
+                    #    u2d = a.transient_2ds[kper]
+                    #    # name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
+                    #    name = shape_attr_name(u2d.name)
+                    #    name = "{}_{:03d}".format(name, kper + 1)
+                    #    array_dict[name] = u2d.array
+                elif a.data_type == DataType.transientlist: #elif isinstance(a, MfList):
+                    try:
+                        list(a.masked_4D_arrays_itr())
+                    except:
+                        continue
+                    for name, array in a.masked_4D_arrays_itr():
+                        j=2
                     kpers = a.data.keys()
                     for kper in kpers:
                         try:
@@ -233,29 +258,37 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                             continue
                         for name, array in arrays.items():
                             for k in range(array.shape[0]):
-                                # aname = name + "{0:03d}{1:02d}".format(kper, k)
-                                name = shape_attr_name(name, length=4)
-                                aname = "{}{:03d}{:03d}".format(name, k + 1,
-                                                                kper + 1)
-                                array_dict[aname] = array[k].astype(np.float32)
+                                # aname = name+"{0:03d}_{1:02d}".format(kk, k)
+                                n = shape_attr_name(name, length=4)
+                                aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
+                                array_dict[aname] = array[k]
+                        #for name, array in arrays.items():
+                        #    for k in range(array.shape[0]):
+                        #        # aname = name + "{0:03d}{1:02d}".format(kper, k)
+                        #        name = shape_attr_name(name, length=4)
+                        #        aname = "{}{:03d}{:03d}".format(name, k + 1,
+                        #                                        kper + 1)
+                        #        array_dict[aname] = array[k].astype(np.float32)
                 elif isinstance(a, list):
                     for v in a:
-                        if isinstance(v, Util3d):
-                            for i, u2d in enumerate(v):
-                                # name = u2d.name.lower().replace(' ', '_')
-                                name = shape_attr_name(u2d.name)
-                                name += '_{:03d}'.format(i + 1)
+                        #if isinstance(v, Util3d):
+                        #    for i, u2d in enumerate(v):
+                        #        # name = u2d.name.lower().replace(' ', '_')
+                        #        name = shape_attr_name(u2d.name)
+                        #        name += '_{:03d}'.format(i + 1)
+                        #        array_dict[name] = u2d.array
+                        if isinstance(a, DataInterface) and \
+                                v.data_type == DataType.array3d:
+                            for ilay in range(a.model.modelgrid.nlay):
+                                u2d = a[ilay]
+                                name = '{}_{:03d}'.format(
+                                    shape_attr_name(u2d.name), ilay + 1)
                                 array_dict[name] = u2d.array
-
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.modelgrid, array_dict)
-    # write the projection file
-    if ml.sr.epsg is None:
-        epsg = kwargs.get('epsg', None)
-    else:
-        epsg = ml.sr.epsg
+    epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
-    write_prj(filename, epsg, prj)
+    write_prj(filename, ml.sr, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -388,7 +421,8 @@ def shp2recarray(shpname):
     return recarray
 
 
-def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
+def recarray2shp(recarray, geoms, shpname='recarray.shp', sr=None,
+                 epsg=None, prj=None,
                  **kwargs):
     """
     Write a numpy record array to a shapefile, using a corresponding
@@ -460,23 +494,44 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
             w.point(*geoms[i].pyshp_parts)
             w.record(*r)
     w.save(shpname)
-    write_prj(shpname, epsg, prj)
+    write_prj(shpname, sr, epsg, prj)
     print('wrote {}'.format(shpname))
 
 
-def write_prj(shpname, epsg=None, prj=None):
-    # write the projection file
+def write_prj(shpname, sr=None, epsg=None, prj=None,
+              wkt_string=None):
+    # projection file name
     prjname = shpname.replace('.shp', '.prj')
-    # write projection file from epsg code
+
+    from flopy.grid import SpatialReference
+    from flopy.utils.reference import SpatialReference as OGsr
+
+    if sr is not None and \
+            not isinstance(sr, SpatialReference) and \
+            not isinstance(sr, OGsr):
+        try:
+            sr = sr.sr
+        except:
+            raise TypeError('Unrecognized input type for "sr"')
+    # figure which CRS option to use
+    # prioritize args over SpatialReference
+    # no proj4 option because it is too difficult
+    # to create prjfile from proj4 string without OGR
+    prjtxt = wkt_string
     if epsg is not None:
         prjtxt = getprj(epsg)
-        if prjtxt is not None:
-            with open(prjname, 'w') as output:
-                output.write(prjtxt)
     # copy a supplied prj file
     elif prj is not None:
         shutil.copy(prj, prjname)
+    elif sr is not None:
+        if sr.wkt is not None:
+            prjtxt = sr.wkt
     else:
         print('No CRS information for writing a .prj file.\n'
               'Supply an epsg code or .prj file path to the '
-              'model spatial reference or .export() method.')
+              'model spatial reference or .export() method.'
+              '(writing .prj files from proj4 strings not supported)'
+              )
+    if prjtxt is not None:
+        with open(prjname, 'w') as output:
+            output.write(prjtxt)
