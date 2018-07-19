@@ -172,12 +172,16 @@ class SpatialReference(object):
         if self._wkt is None:
             if self.prj is not None:
                 with open(self.prj) as src:
-                    wkt = src.read()
+                    self._wkt = src.read()
             elif self.epsg is not None:
-                wkt = getprj(self.epsg)
-            return wkt
+                self._wkt = getprj(self.epsg)
+            return self._wkt
         else:
             return self._wkt
+
+    @wkt.setter
+    def wkt(self, wkt_string):
+        self._wkt = wkt_string
 
     @property
     def lenuni(self):
@@ -478,6 +482,8 @@ class SpatialReference(object):
         if other.rotation != self.rotation:
             return False
         if other.proj4_str != self.proj4_str:
+            return False
+        if other.length_multiplier != self.length_multiplier:
             return False
         return True
 
