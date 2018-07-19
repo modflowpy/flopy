@@ -1205,7 +1205,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
     @property
     def name(self):
-        return self.package_name
+        return [self.package_name]
 
     @name.setter
     def name(self, name):
