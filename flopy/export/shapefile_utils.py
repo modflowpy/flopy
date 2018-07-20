@@ -195,6 +195,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
+    nrow, ncol = ml.modelgrid.nrow, ml.modelgrid.ncol
     for pname in package_names:
         pak = ml.get_package(pname)
         attrs = dir(pak)
@@ -205,37 +206,52 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if not hasattr(a, 'data_type'):
+                if a is None or not hasattr(a, 'data_type'):
                     continue
                 #if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
-                if a.data_type == DataType.array2d and a.array.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
+                if a.data_type == DataType.array2d and a.array.shape == (nrow, ncol):
                     name = shape_attr_name(a.name, keep_layer=True)
                     #name = a.name.lower()
                     array_dict[name] = a.array
                 elif a.data_type == DataType.array3d: #elif isinstance(a, Util3d):
                     for ilay in range(a.model.modelgrid.nlay):
-                        name = '{}_{:03d}'.format(
-                            shape_attr_name(a.name), ilay + 1)
                         if isinstance(a, Util3d):
                             arr = a[ilay].array
+                            aname = shape_attr_name(a[ilay].name)
                         elif a.array is not None:
                             arr = a[ilay]
+                            aname = shape_attr_name(a.name)
                         else:
                             continue
+                        assert arr.shape == (nrow, ncol)
+                        name = '{}_{:03d}'.format(aname, ilay + 1)
                         array_dict[name] = arr
                     #for i, u2d in enumerate(a):
                     #    # name = u2d.name.lower().replace(' ', '_')
                     #    name = shape_attr_name(u2d.name)
                     #    name += '_{:03d}'.format(i + 1)
                     #    array_dict[name] = u2d.array
-                elif a.data_type == DataType.transient2d: #elif isinstance(a, Transient2d):
-                    kpers = list(a.transient_2ds.keys())
-                    kpers.sort()
-                    for kper in range(a.model.modelgrid.sim_time.nper):
-                        u2d = a[kper]
-                        name = '{}_{:03d}'.format(
-                            shape_attr_name(u2d.name), kper + 1)
-                        array_dict[name] = u2d.array
+                elif a.data_type == DataType.transient2d:#elif isinstance(a, Transient2d):
+                    try: # Not sure how best to check if an object has array data
+                        a.array
+                    except:
+                        print('Failed to get data for {} array, {} package'.format(a.name,
+                                                                                   pak.name[0]))
+                        continue
+                    for kper in range(a.array.shape[0]):
+                        name = '{}{:03d}'.format(
+                            shape_attr_name(a.name), kper + 1)
+                        arr = a.array[kper][0]
+                        assert arr.shape == (nrow, ncol)
+                        array_dict[name] = arr
+
+                    #kpers = list(a.transient_2ds.keys())
+                    #kpers.sort()
+                    #for kper in range(a.model.modelgrid.sim_time.nper):
+                    #    u2d = a[kper]
+                    #    name = '{}_{:03d}'.format(
+                    #        shape_attr_name(u2d.name), kper + 1)
+                    #    array_dict[name] = u2d.array
                     #for kper in kpers:
                     #    u2d = a.transient_2ds[kper]
                     #    # name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
@@ -248,20 +264,26 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                     except:
                         continue
                     for name, array in a.masked_4D_arrays_itr():
-                        j=2
-                    kpers = a.data.keys()
-                    for kper in kpers:
-                        try:
-                            arrays = a.to_array(kper)
-                        except:
-                            print("error exporting MfList in pak {0} to shapefile".format(pname))
-                            continue
-                        for name, array in arrays.items():
-                            for k in range(array.shape[0]):
-                                # aname = name+"{0:03d}_{1:02d}".format(kk, k)
+                        for kper in range(array.shape[0]):
+                            for k in range(array.shape[1]):
                                 n = shape_attr_name(name, length=4)
-                                aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
-                                array_dict[aname] = array[k]
+                                aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
+                                arr = array[kper][k]
+                                assert arr.shape == (nrow, ncol)
+                                array_dict[aname] = arr
+                        #kpers = a.data.keys()
+                        #for kper in kpers:
+                        #    try:
+                        #        arrays = a.to_array(kper)
+                        #    except:
+                        #        print("error exporting MfList in pak {0} to shapefile".format(pname))
+                        #        continue
+                        #    for name, array in arrays.items():
+                        #        for k in range(array.shape[0]):
+                        #            # aname = name+"{0:03d}_{1:02d}".format(kk, k)
+                        #            n = shape_attr_name(name, length=4)
+                        #            aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
+                        #            array_dict[aname] = array[k]
                         #for name, array in arrays.items():
                         #    for k in range(array.shape[0]):
                         #        # aname = name + "{0:03d}{1:02d}".format(kper, k)
@@ -283,7 +305,9 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 u2d = a[ilay]
                                 name = '{}_{:03d}'.format(
                                     shape_attr_name(u2d.name), ilay + 1)
-                                array_dict[name] = u2d.array
+                                arr = u2d.array
+                                assert arr.shape == (nrow, ncol)
+                                array_dict[name] = arr
     # write data arrays to a shapefile
     write_grid_shapefile(filename, ml.modelgrid, array_dict)
     epsg = kwargs.get('epsg', None)
@@ -321,6 +345,9 @@ def shape_attr_name(name, length=6, keep_layer=False):
     >>> 'averyl'
 
     """
+    # kludges
+    if name == 'model_top':
+        name = 'top'
     # replace spaces with "_"
     n = name.lower().replace(' ', '_')
     # exclude "_layer_X" portion of string
