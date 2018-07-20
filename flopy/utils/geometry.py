@@ -51,6 +51,15 @@ class Polygon:
         self.exterior = tuple(map(tuple, exterior))
         self.interiors = tuple() if interiors is None else (map(tuple, i) for i in interiors)
 
+    def __eq__(self, other):
+        if not isinstance(other, Polygon):
+            return False
+        if other.exterior != self.exterior:
+            return False
+        if other.interiors != self.interiors:
+            return False
+        return True
+
     @property
     def _exterior_x(self):
         return [x for x, y in self.exterior]
@@ -158,6 +167,17 @@ class LineString:
         if len(self.coords[0]) == 3:
             self.has_z = True
 
+    def __eq__(self, other):
+        if not isinstance(other, LineString):
+            return False
+        if other.x != self.x:
+            return False
+        if other.y != self.y:
+            return False
+        if other.z != self.z:
+            return False
+        return True
+
     @property
     def x(self):
         return[c[0] for c in self.coords]
@@ -246,6 +266,17 @@ class Point:
         self.coords = coordinates
         if len(coordinates) == 3:
             self.has_z = True
+
+    def __eq__(self, other):
+        if not isinstance(other, Point):
+            return False
+        if other.x != self.x:
+            return False
+        if other.y != self.y:
+            return False
+        if other.z != self.z:
+            return False
+        return True
 
     @property
     def x(self):
