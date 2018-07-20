@@ -1112,7 +1112,7 @@ class PlotUtilities(object):
         i0, i1 = PlotUtilities._set_layer_range(mflay, nlay)
         names = PlotUtilities._set_names(names, nlay)
         filenames = PlotUtilities._set_names(filenames, i1 - i0)
-        fignum = PlotUtilities._set_fignum(fignum, nlay, i0, i1)
+        fignum = PlotUtilities._set_fignum(fignum, i1 - i0, i0, i1)
         axes = PlotUtilities._set_axes(axes, mflay, nlay, i0, i1,
                                        defaults, names, fignum)
 

@@ -74,16 +74,16 @@ class StructuredMapView(object):
         self.sr = None
 
         if model is not None:
-            self.mg = model.modelgrid
-            self.sr = model.modelgrid.sr
+            self.mg = copy.deepcopy(model.modelgrid)
+            self.sr = copy.deepcopy(model.modelgrid.sr)
 
         elif modelgrid is not None:
-            self.mg = modelgrid
-            self.sr = modelgrid.sr
+            self.mg = copy.deepcopy(modelgrid)
+            self.sr = copy.deepcopy(modelgrid.sr)
 
         elif dis is not None:
-            self.mg = dis.parent.modelgrid
-            self.sr = dis.parent.modelgrid.sr
+            self.mg = copy.deepcopy(dis.parent.modelgrid)
+            self.sr = copy.deepcopy(dis.parent.modelgrid.sr)
 
         elif sr is not None:
             if isinstance(sr, DepreciatedSpatialReference):
@@ -286,13 +286,13 @@ class StructuredMapView(object):
                 triang.set_mask(mask)
             except:
                 mask = None
-            contour_set = ax.tricontour(triang, a, **kwargs)
+            contour_set = ax.tricontour(triang, plotarray, **kwargs)
             if plot_triplot:
                 ax.triplot(triang, color='black', marker='o', lw=0.75)
         else:
 
             contour_set = ax.contour(xcentergrid, ycentergrid,
-                                     a, **kwargs)
+                                     plotarray, **kwargs)
 
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])

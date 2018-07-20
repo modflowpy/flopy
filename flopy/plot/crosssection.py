@@ -7,7 +7,9 @@ try:
 except:
     plt = None
 from . import plotutil
+from flopy.grid.modelgrid import LocationType
 import warnings
+import copy
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
@@ -55,20 +57,20 @@ class StructuredCrossSection(object):
         self.model = model
 
         if model is not None:
-            self.mg = model.modelgrid
-            self.sr = model.modelgrid.sr
+            self.mg = copy.deepcopy(model.modelgrid)
+            self.sr = copy.deepcopy(model.modelgrid.sr)
             self.dis = model.get_package("DIS")
 
         elif modelgrid is not None:
-            self.mg = modelgrid
-            self.sr = modelgrid.sr
+            self.mg = copy.deepcopy(modelgrid)
+            self.sr = copy.deepcopy(modelgrid.sr)
             self.dis = dis
             if dis is None:
                 raise AssertionError("Cannot find model discretization package")
 
         elif dis is not None:
-            self.mg = dis.parent.modelgrid
-            self.sr = dis.parent.modelgrid.sr
+            self.mg = copy.deepcopy(dis.parent.modelgrid)
+            self.sr = copy.deepcopy(dis.parent.modelgrid.sr)
             self.dis = dis
 
         else:
@@ -76,7 +78,7 @@ class StructuredCrossSection(object):
 
         # Set origin and rotation,
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-                rotation != 0 or length_multiplier != 1.:
+               rotation != 0 or length_multiplier != 1.:
             self.sr.length_multiplier = length_multiplier
             self.sr.set_spatialreference(delc=self.mg.delc,
                                          xul=xul, yul=yul,
@@ -106,14 +108,14 @@ class StructuredCrossSection(object):
         eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            ycenter = self.mg.ycell_centers()
+            ycenter = self.mg.ycell_centers(LocationType.modelxyz).T[0]
             pts = [(self.mg.xedge[0] + eps,
                     ycenter[int(line[onkey])] - eps),
                    (self.mg.xedge[-1] - eps,
                     ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            xcenter = self.mg.xcell_centers()
+            xcenter = self.mg.xcell_centers(LocationType.modelxyz)[0, :]
             pts = [(xcenter[int(line[onkey])] + eps,
                     self.mg.yedge[0] - eps),
                    (xcenter[int(line[onkey])] - eps,
