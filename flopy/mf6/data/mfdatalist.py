@@ -132,7 +132,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     def dtype(self):
         return self.get_data().dtype
 
-    def to_array(self, kper=None, mask=False):
+    def to_array(self, mask=False):
         i0 = 1
         data = self.get_data()
         if 'inode' in data.dtype.names:
