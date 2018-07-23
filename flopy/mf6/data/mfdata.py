@@ -2399,16 +2399,16 @@ class MFData(object):
         # tie this to the simulation dictionary
         sim_data.mfdata[self._path] = self
 
-    def __getattr__(self, name):
-         if name == 'array':
-            return self.get_data(apply_mult=True)
-         #return object.__getattribute__(self, name)
-
     def __repr__(self):
         return repr(self._get_storage_obj())
 
     def __str__(self):
         return str(self._get_storage_obj())
+
+    @property
+    def array(self):
+        kwargs = {'array': True}
+        return self.get_data(apply_mult=True, **kwargs)
 
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data

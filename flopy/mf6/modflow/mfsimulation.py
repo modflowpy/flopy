@@ -561,7 +561,7 @@ class MFSimulation(PackageContainer):
                                                              )]
 
         try:
-            solution_groups = solution_recarray.get_data()
+            solution_group_list = solution_recarray.get_data()
         except MFDataException as mfde:
             message = 'Error occurred while loading solution groups from ' \
                       'the simulation name file.'
@@ -569,13 +569,14 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-        for solution_info in solution_groups:
-            ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
-                                        pname=solution_info[2])
-            if verbosity_level.value >= VerbosityLevel.normal.value:
-                print('  loading ims package {}..'
-                      '.'.format(ims_file._get_pname()))
-            ims_file.load(strict)
+        for solution_group in solution_group_list:
+            for solution_info in solution_group:
+                ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
+                                            pname=solution_info[2])
+                if verbosity_level.value >= VerbosityLevel.normal.value:
+                    print('  loading ims package {}..'
+                          '.'.format(ims_file._get_pname()))
+                ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         return instance
