@@ -352,6 +352,25 @@ class StructuredModelGrid(ModelGrid):
         f.write('\n')
         return
 
+    def plot(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+p
+        """
+        from flopy.plot import PlotMapView
+
+        mm = PlotMapView(modelgrid=self)
+        return mm.plot_grid(**kwargs)
+
     def plot_array(self, a, ax=None, **kwargs):
         """
         Create a QuadMesh plot of the specified array using pcolormesh

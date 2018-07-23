@@ -2408,7 +2408,8 @@ class MFData(DataInterface):
 
     @property
     def array(self):
-        return self.get_data(apply_mult=True)
+        kwargs = {'array': True}
+        return self.get_data(apply_mult=True, **kwargs)
 
     @property
     def name(self):

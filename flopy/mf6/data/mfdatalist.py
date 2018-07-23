@@ -134,22 +134,24 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def to_array(self, mask=False):
         i0 = 1
-        data = self.get_data()
-        if 'inode' in data.dtype.names:
+        sarr = self.get_data()
+        if not isinstance(sarr, list):
+            sarr = [sarr]
+        if len(sarr) == 0:
+            return None
+        if 'inode' in sarr[0].dtype.names:
             raise NotImplementedError()
         arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
-        for name in data.dtype.names[i0:]:
-            if not data.dtype.fields[name][0] == object:
+        for name in sarr[0].dtype.names[i0:]:
+            if not sarr[0].dtype.fields[name][0] == object:
                 arr = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
                                 model_grid.num_columns()))
                 arrays[name] = arr.copy()
 
-        sarr = self.get_data()
-
-        if np.isscalar(sarr):
+        if np.isscalar(sarr[0]):
             # if there are no entries for this kper
-            if sarr == 0:
+            if sarr[0] == 0:
                 if mask:
                     for name, arr in arrays.items():
                         arrays[name][:] = np.NaN
@@ -162,10 +164,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                             model_grid.num_columns()),
                            dtype=np.float)
             #print(name,kper)
-            for rec in sarr:
-                arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
-                    rec[name]
-                cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
+            for sp_rec in sarr:
+                for rec in sp_rec:
+                    arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
+                        rec[name]
+                    cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
             # average keys that should not be added
             if name != 'cond' and name != 'flux':
                 idx = cnt > 0.
@@ -210,7 +213,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, apply_mult=False):
+    def get_data(self, apply_mult=False, **kwargs):
         try:
             if self._get_storage_obj() is None:
                 return None
@@ -1461,7 +1464,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
     @property
     def dtype(self):
-        return self.get_data().dtype
+        data = self.get_data()
+        if len(data) > 0:
+            return data[0].dtype
+        else:
+            return None
 
     @property
     def masked_4D_arrays(self):
@@ -1520,11 +1527,33 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             keys.sort()
         return keys
 
-    def get_data(self, key=None, apply_mult=False):
-        if key is None:
-            key = self._current_key
-        self.get_data_prep(key)
-        return super(MFTransientList, self).get_data(apply_mult=apply_mult)
+    def get_data(self, key=None, apply_mult=False, **kwargs):
+        if self._data_storage is not None and len(self._data_storage) > 0:
+            if key is None:
+                if 'array' in kwargs:
+                    output = []
+                    sim_time = self._data_dimensions.package_dim.model_dim[
+                        0].simulation_time
+                    num_sp = sim_time.get_num_stress_periods()
+                    for sp in range(0, num_sp):
+                        if sp in self._data_storage:
+                            self.get_data_prep(sp)
+                            output.append(super(MFTransientList, self).get_data(
+                                apply_mult=apply_mult))
+                        else:
+                            output.append(None)
+                    return output
+                else:
+                    output = []
+                    for key in self._data_storage.keys():
+                        self.get_data_prep(key)
+                        output.append(super(MFTransientList, self).get_data(
+                            apply_mult=apply_mult))
+                    return output
+            self.get_data_prep(key)
+            return super(MFTransientList, self).get_data(apply_mult=apply_mult)
+        else:
+            return None
 
     def set_data(self, data, key=None, autofill=False):
         if (isinstance(data, dict) or isinstance(data, OrderedDict)) and \
@@ -1682,3 +1711,7 @@ class MFMultipleList(MFTransientList):
                                              path=path,
                                              dimensions=dimensions,
                                              package=package)
+
+    def get_data(self, key=None, apply_mult=False, **kwargs):
+        return super(MFMultipleList, self).get_data(key=key,
+                                                    apply_mult=apply_mult)

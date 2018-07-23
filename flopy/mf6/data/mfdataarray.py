@@ -412,23 +412,30 @@ class MFArray(mfdata.MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, layer=None, apply_mult=False):
+    def get_data(self, layer=None, apply_mult=False, **kwargs):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
         if isinstance(layer, int):
             layer = (layer,)
-        try:
-            return self._get_storage_obj().get_data(layer, apply_mult)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'getting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
+        storage = self._get_storage_obj()
+        if storage is not None:
+            try:
+                data = self._get_storage_obj().get_data(layer, apply_mult)
+                if 'array' in kwargs and kwargs['array'] \
+                        and isinstance(self, MFTransientArray):
+                    data = np.expand_dims(data, 0)
+                return data
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'getting data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
+        return None
 
     def set_data(self, data, multiplier=[1.0], layer=None):
         if self._get_storage_obj() is None:
@@ -1187,11 +1194,42 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
         self._data_storage[transient_key] = super(MFTransientArray,
                                                   self)._new_storage()
 
-    def get_data(self, key=None, apply_mult=True):
-        if key is None:
-            key = self._current_key
-        self.get_data_prep(key)
-        return super(MFTransientArray, self).get_data(apply_mult=apply_mult)
+    def get_data(self, key=None, apply_mult=True, **kwargs):
+        if self._data_storage is not None and len(self._data_storage) > 0:
+            if key is None:
+                output = None
+                sim_time = self._data_dimensions.package_dim.model_dim[
+                    0].simulation_time
+                num_sp = sim_time.get_num_stress_periods()
+                data = None
+                for sp in range(0, num_sp):
+                    if sp in self._data_storage:
+                        self.get_data_prep(sp)
+                        data = super(MFTransientArray, self).get_data(
+                            apply_mult=apply_mult, **kwargs)
+                        data = np.expand_dims(data, 0)
+                    else:
+                        if data is None:
+                            # get any data
+                            self.get_data_prep(self._data_storage.key()[0])
+                            data = super(MFTransientArray, self).get_data(
+                                apply_mult=apply_mult, **kwargs)
+                            data = np.expand_dims(data, 0)
+                        if self.structure.type == DatumType.integer:
+                            data = np.full_like(data, 0)
+                        else:
+                            data = np.full_like(data, 0.0)
+                    if output is None:
+                        output = data
+                    else:
+                        output = np.concatenate((output, data))
+                return output
+            else:
+                self.get_data_prep(key)
+                return super(MFTransientArray, self).get_data(
+                    apply_mult=apply_mult)
+        else:
+            return None
 
     def set_data(self, data, multiplier=[1.0], layer=None, key=None):
         if isinstance(data, dict) or isinstance(data, OrderedDict):

@@ -100,7 +100,7 @@ class MFScalar(mfdata.MFData):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, apply_mult=False):
+    def get_data(self, apply_mult=False, **kwargs):
         try:
             return self._get_storage_obj().get_data(apply_mult=apply_mult)
         except Exception as ex:
@@ -631,7 +631,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             data_found = super(MFScalarTransient, self).has_data()
         return data_found
 
-    def get_data(self, key=0):
+    def get_data(self, key=0, **kwargs):
         self.get_data_prep(key)
         return super(MFScalarTransient, self).get_data()
 
