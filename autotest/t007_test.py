@@ -7,6 +7,7 @@ import os
 import shutil
 import numpy as np
 import flopy
+import warnings
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
@@ -236,68 +237,118 @@ def test_write_shapefile():
 
 def test_export_array():
 
-    try:
-        from scipy.ndimage import rotate
-    except ImportError:
-        rotate = False
-        pass
-
     namfile = 'freyberg.nam'
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
                                    load_only=['DIS', 'BAS6'])
-    m.sr.rotation = 45.
     nodata = -9999
-    m.sr.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array, nodata=nodata)
-    arr = np.loadtxt(os.path.join(tpth, 'fb.asc'), skiprows=6)
+    # write a simple unrotated Arc Ascii grid file first
+    m.sr.rotation = 0.
+    assert m.sr.geotransform == (619653.0, 250.0, 0.0, 3353277.0, 0.0, -250.0)
+    assert m.sr.bounds == (619653.0, 3343277.0, 624653.0, 3353277.0)
+    m.sr.export_array(os.path.join(tpth, 'fb-unrotated.asc'), m.dis.top.array,
+                      nodata=nodata)
+    with open(os.path.join(tpth, 'fb-unrotated.asc')) as src:
+        split_lines = list(src.readline().split() for _ in range(6))
+        header = {x[0]: int(x[1]) for x in split_lines[0:2]}
+        header.update({x[0]: float(x[1]) for x in split_lines[2:6]})
+        arr = np.loadtxt(src).reshape((m.nrow, m.ncol))
+    assert header == {'ncols': 20, 'nrows': 40,
+                      'xllcorner': 619653.0, 'yllcorner': 3343277.0,
+                      'cellsize': 250.0, 'NODATA_value': -9999.0}
+    np.testing.assert_almost_equal(arr, m.dis.top.array)
 
-    m.sr.write_shapefile(os.path.join(tpth, 'grid.shp'))
-    # check bounds
-    with open(os.path.join(tpth, 'fb.asc')) as src:
-        for line in src:
-            if 'xllcorner' in line.lower():
-                val = float(line.strip().split()[-1])
-                # ascii grid origin will differ if it was unrotated
-                if rotate:
-                    assert np.abs(val - m.sr.bounds[0]) < 1e-6
-                else:
-                    assert np.abs(val - m.sr.xll) < 1e-6
-            if 'yllcorner' in line.lower():
-                val = float(line.strip().split()[-1])
-                if rotate:
-                    assert np.abs(val - m.sr.bounds[1]) < 1e-6
-                else:
-                    assert np.abs(val - m.sr.yll) < 1e-6
-            if 'cellsize' in line.lower():
-                val = float(line.strip().split()[-1])
-                rot_cellsize = np.cos(np.radians(m.sr.rotation)) * m.sr.delr[0] * m.sr.length_multiplier
-                #assert np.abs(val - rot_cellsize) < 1e-6
-                break
-    rotate = False
-    rasterio = None
-    if rotate:
-        rotated = rotate(m.dis.top.array, m.sr.rotation, cval=nodata)
-
-    if rotate:
-        assert rotated.shape == arr.shape
-
-    try:
-        # test GeoTIFF export
-        import rasterio
-    except ImportError:
+    # modify rotation
+    m.sr.rotation = 45.
+    np.testing.assert_almost_equal(
+        m.sr.geotransform,
+        (619653.0, 176.7766952966369, 176.77669529663686,
+         3353277.0, 176.77669529663686, -176.7766952966369))
+    np.testing.assert_almost_equal(
+        m.sr.bounds,
+        (619653.0, 3346205.9321881346, 630259.6017177983, 3356812.5339059327))
+    m.sr.write_shapefile(os.path.join(tpth, 'grid.shp'))  # TODO: now what?
+    try:  # test Arc Ascii grid export on rotated grid
+        # TODO: consider removing this feature (e.g. see summary stats)
+        from scipy.ndimage import rotate
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            m.sr.export_array(os.path.join(tpth, 'fb.asc'), m.dis.top.array,
+                              nodata=nodata)
+        with open(os.path.join(tpth, 'fb.asc')) as src:
+            split_lines = list(src.readline().split() for _ in range(6))
+            header = {x[0]: int(x[1]) for x in split_lines[0:2]}
+            header.update({x[0]: float(x[1]) for x in split_lines[2:6]})
+            vals = np.ma.masked_equal(np.loadtxt(src), nodata)
+        expected = {
+            'ncols': 42, 'nrows': 42, 'xllcorner': 619653.0,
+            'yllcorner': 3346205.932188, 'cellsize': 252.53813613805409,
+            'NODATA_value': -9999.0}
+        assert set(header.keys()) == set(expected.keys())
+        for key in header.keys():
+            np.testing.assert_approx_equal(
+                header[key], expected[key], err_msg=key)
+        # Note: these are different than original values due to spline interp
+        np.testing.assert_almost_equal(vals.min(), -2.6153745651245117)
+        np.testing.assert_almost_equal(vals.mean(), 4.645456585243616)
+        np.testing.assert_almost_equal(vals.max(), 19.73752784729004)
+    except ImportError:  # scipy not available
         pass
-    if rasterio is not None:
+
+    try:  # test GeoTIFF export
+        import rasterio
         m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array,
                           nodata=nodata)
         with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
             arr = src.read(1)
+        # array should have identical values
+        np.testing.assert_equal(arr, m.dis.top.array)
         assert src.shape == (m.nrow, m.ncol)
-        assert np.abs(src.bounds[0] - m.sr.bounds[0]) < 1e-6
-        assert np.abs(src.bounds[1] - m.sr.bounds[1]) < 1e-6
+        # Note: rasterio doesn't properly represent bounds for rotated rasters
+        np.testing.assert_almost_equal(src.bounds[0:2], m.sr.bounds[0:2])
         np.testing.assert_almost_equal(
             src.affine,
             [176.7766952966369, 176.77669529663686, 619653.0,
              176.77669529663686, -176.7766952966369, 3353277.0, 0.0, 0.0, 1.0])
+    except ImportError:  # rasterio not available
+        rasterio = False
+
+    # export arrays with different grid spacings in x and y directions
+    nlay, nrow, ncol = 1, 10, 5
+    delr, delc = 250, 500
+    xll, yll = 286.80, 29.03
+    m = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   delr=delr, delc=delc)
+    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                      delc=m.dis.delc.array, lenuni=2,
+                                      xll=xll, yll=yll)
+    np.testing.assert_almost_equal(
+        sr.geotransform, (286.8, 250.0, 0.0, 5029.03, 0.0, -500.0))
+    sr.export_array(os.path.join(tpth, 'dxdy.asc'), m.dis.top.array,
+                    nodata=nodata)
+    with open(os.path.join(tpth, 'dxdy.asc')) as src:
+        split_lines = list(src.readline().split() for _ in range(7))
+        header = {x[0]: int(x[1]) for x in split_lines[0:2]}
+        header.update({x[0]: float(x[1]) for x in split_lines[2:7]})
+        arr = np.loadtxt(src).reshape((m.nrow, m.ncol))
+    assert header == {'ncols': 5, 'nrows': 10,
+                      'xllcorner': 286.8, 'yllcorner': 29.03,
+                      'dx': 250.0, 'dy': 500.0, 'NODATA_value': -9999.0}
+    np.testing.assert_almost_equal(arr, m.dis.top.array)
+    if rasterio:
+        sr.export_array(os.path.join(tpth, 'dxdy.tif'), m.dis.top.array,
+                        nodata=nodata)
+        with rasterio.open(os.path.join(tpth, 'dxdy.tif')) as src:
+            arr = src.read(1)
+        np.testing.assert_equal(arr, m.dis.top.array)
+        assert src.shape == (10, 5)
+        # Note: rasterio doesn't properly represent bounds for rotated rasters
+        np.testing.assert_almost_equal(src.bounds[0:2], sr.bounds[0:2])
+        np.testing.assert_equal(
+            src.affine,
+            [250.0, 0.0, 286.8,
+             0.0, -500.0, 5029.03, 0.0, 0.0, 1.0])
 
 
 def test_mbase_sr():
@@ -560,8 +611,14 @@ def test_dynamic_xll_yll():
                                        xll=xll, yll=yll, rotation=30)
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
+    assert sr1.dx == 500.0
+    assert sr1.dy == 250.0
     np.testing.assert_almost_equal(
         sr1.get_extent(), [-2213.2, 1369.3317547, 29.03, 4984.1570189])
+    np.testing.assert_almost_equal(
+        sr1.geotransform,
+        (-2213.2, 433.01270189221935, 125.0,
+         4359.157018922193, 250.0, -216.50635094610968))
 
     xul, yul = sr1.xul, sr1.yul
     sr1.length_multiplier = 1.0 / 3.281
@@ -569,8 +626,14 @@ def test_dynamic_xll_yll():
     assert sr1.yll == yll
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
+    assert sr1.dx == 500.0
+    assert sr1.dy == 250.0
     np.testing.assert_almost_equal(
         sr1.get_extent(), [-475.1628162, 616.7395778, 29.03, 1539.2790152])
+    np.testing.assert_almost_equal(
+        sr1.geotransform,
+        (-475.1628162145685, 131.97583111618997, 38.098140810728424,
+         1348.7883111618996, 76.19628162145685, -65.98791555809498))
 
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=2,

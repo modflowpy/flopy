@@ -92,10 +92,14 @@ class SpatialReference(object):
         1D array of cell vertices for whole grid in C-style (row-major) order
         (same as np.ravel())
 
+    dx : float
+        cell column width, or median for non-uniform widths along rows (delr)
+
+    dy : float
+        cell row height, or median for non-uniform widths along columns (delc)
+
     geotransform : tuple
-        GDAL-ordered geotransform tuple for exporting rasters. If delc or delr
-        are not constant, model cell size is determined from the median, and a
-        warning is shown.
+        GDAL-ordered geotransform tuple for exporting rasters
 
     Notes
     -----
@@ -976,7 +980,7 @@ class SpatialReference(object):
         ----------
         filename : str
             Path of output file. Export format is determined by
-            file extention.
+            file extension.
             '.asc'  Arc Ascii grid
             '.tif'  GeoTIFF (requires rasterio package)
             '.shp'  Shapefile
@@ -986,7 +990,7 @@ class SpatialReference(object):
             Value to assign to np.nan entries (default -9999)
         fieldname : str
             Attribute field name for array values (shapefile export only).
-            (default 'values')
+            (default 'value')
         kwargs: 
             keyword arguments to np.savetxt (ascii) 
             rasterio.open (GeoTIFF)
@@ -994,63 +998,70 @@ class SpatialReference(object):
             
         Notes
         -----
-        Rotated grids will be either be unrotated prior to export,
-        using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
-        included in their transform property (GeoTiff format). In either case
-        the pixels will be displayed in the (unrotated) projected geographic coordinate system,
-        so the pixels will no longer align exactly with the model grid
-        (as displayed from a shapefile, for example). A key difference between
-        Arc Ascii and GeoTiff (besides disk usage) is that the
-        unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
-        will have the same number of rows and pixels as the original.
+        Raster formats normally expect a uniform grid. If the spacing of rows
+        and columns are different, the Arc Ascii format will use dx and dy
+        instead of cellsize, as supported by GDAL and Golden Surfer (but
+        possibly not other software). Furthermore, if variable spacings are
+        used for either rows or columns, dx and/or dy are determined from
+        the median spacing distance, as described by a warning message.
+
+        Rotated grids are supported by GeoTIFF, and the output will preserve
+        the same values and dimension as the array. However, Arc Ascii formats
+        do no support rotation, and will be resampled using a spline
+        interpolation using scipy.ndimage.rotate, if available. As a result,
+        rotated Arc Ascii exports will have different values and dimensions,
+        and a warning message will be shown.
         """
-
-        if filename.lower().endswith(".asc"):
-            if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
-                    or self.delr[0] != self.delc[0]:
-                raise ValueError('Arc ascii arrays require a uniform grid.')
-
-            xll, yll = self.xll, self.yll
-            cellsize = self.delr[0] * self.length_multiplier
-            fmt = kwargs.get('fmt', '%.18e')
-            a = a.copy()
-            a[np.isnan(a)] = nodata
+        ext = os.path.splitext(filename)[1].lower()
+        if ext == ".asc":
+            cellsize = None
+            rotate = False
             if self.rotation != 0:
                 try:
                     from scipy.ndimage import rotate
-                    a = rotate(a, self.rotation, cval=nodata)
-                    height_rot, width_rot = a.shape
-                    xmin, ymin, xmax, ymax = self.bounds
-                    dx = (xmax - xmin) / width_rot
-                    dy = (ymax - ymin) / height_rot
-                    cellsize = np.max((dx, dy))
-                    # cellsize = np.cos(np.radians(self.rotation)) * cellsize
-                    xll, yll = xmin, ymin
                 except ImportError:
-                    print('scipy package required to export rotated grid.')
-                    pass
-
-            filename = '.'.join(
-                filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
-            nrow, ncol = a.shape
+                    print('scipy package required to export rotated '
+                          'Arc Ascii grid.')
+            if rotate:
+                # TODO: consider removing this feature
+                warn('using spline interpolation to potentially modify '
+                     'raster values in exported Arc Ascii file')
+                a = rotate(a, self.rotation, cval=nodata)
+                height_rot, width_rot = a.shape
+                xmin, ymin, xmax, ymax = self.bounds
+                dx = (xmax - xmin) / width_rot
+                dy = (ymax - ymin) / height_rot
+                cellsize = np.max((dx, dy))
+                # cellsize = np.cos(np.radians(self.rotation)) * cellsize
+                xll, yll = xmin, ymin
+            else:
+                xll, yll = self.xll, self.yll
+                dx = self.dx * self.length_multiplier
+                dy = self.dy * self.length_multiplier
+                if dx == dy:
+                    cellsize = dx
+            fmt = kwargs.get('fmt', '%.18e')
+            a = a.copy()
             a[np.isnan(a)] = nodata
-            txt = 'ncols  {:d}\n'.format(ncol)
-            txt += 'nrows  {:d}\n'.format(nrow)
-            txt += 'xllcorner  {:f}\n'.format(xll)
-            txt += 'yllcorner  {:f}\n'.format(yll)
-            txt += 'cellsize  {}\n'.format(cellsize)
+            nrow, ncol = a.shape
+            txt = (
+                'ncols  {:d}\n'
+                'nrows  {:d}\n'
+                'xllcorner  {:f}\n'
+                'yllcorner  {:f}\n'
+                .format(ncol, nrow, xll, yll))
+            if cellsize:
+                txt += 'cellsize  {}\n'.format(cellsize)
+            else:  # supported by GDAL, Surfer, but possibly not others
+                txt += 'dx  {}\ndy  {}\n'.format(dx, dy)
             # ensure that nodata fmt consistent w values
             txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
             with open(filename, 'w') as output:
                 output.write(txt)
-            with open(filename, 'ab') as output:
                 np.savetxt(output, a, **kwargs)
             print('wrote {}'.format(filename))
 
-        elif filename.lower().endswith(".tif"):
-            if len(np.unique(self.delr)) != len(np.unique(self.delc)) != 1 \
-                    or self.delr[0] != self.delc[0]:
-                raise ValueError('GeoTIFF export require a uniform grid.')
+        elif ext == ".tif":
             try:
                 import rasterio
                 from rasterio import Affine
@@ -1089,7 +1100,7 @@ class SpatialReference(object):
                 dst.write(a)
             print('wrote {}'.format(filename))
 
-        elif filename.lower().endswith(".shp"):
+        elif ext == ".shp":
             from ..export.shapefile_utils import write_grid_shapefile2
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
@@ -1098,6 +1109,9 @@ class SpatialReference(object):
             write_grid_shapefile2(filename, self, array_dict={fieldname: a},
                                   nan_val=nodata,
                                   epsg=epsg, prj=prj)
+        else:
+            raise ValueError('export_array: filename extension {!r} not '
+                             'supported'.format(ext))
 
     def export_contours(self, filename, contours,
                         fieldname='level', epsg=None, prj=None,
@@ -1267,21 +1281,31 @@ class SpatialReference(object):
         """
 
     @property
+    def dx(self):
+        dx = self.delr[0]
+        if self.delr.min() != self.delr.max():
+            dx = np.median(self.delr)
+            warn('delr values range from {0} to {1}; '
+                 'using median of {2} for dx'
+                 .format(self.delr.min(), self.delr.max(), dx))
+        return dx
+
+    @property
+    def dy(self):
+        dy = self.delc[0]
+        if self.delc.min() != self.delc.max():
+            dy = np.median(self.delc)
+            warn('delc values range from {0} to {1}; '
+                 'using median of {2} for dy'
+                 .format(self.delc.min(), self.delc.max(), dy))
+        return dy
+
+    @property
     def geotransform(self):
         """Returns GDAL-ordered geotransform tuple"""
         c, f = self.xul, self.yul
-        dx = self.delc[0] * self.length_multiplier
-        if self.delc.min() != self.delc.max():
-            dx = np.median(self.delc) * self.length_multiplier
-            warn('delc values range from {0} to {1}; '
-                 'using median of {2} for raster dx'
-                 .format(self.delc.min(), self.delc.max(), dx))
-        dy = self.delr[0] * self.length_multiplier
-        if self.delr.min() != self.delr.max():
-            dy = np.median(self.delr) * self.length_multiplier
-            warn('delr values range from {0} to {1}; '
-                 'using median of {2} for raster dy'
-                 .format(self.delr.min(), self.delr.max(), dy))
+        dx = self.dx * self.length_multiplier
+        dy = self.dy * self.length_multiplier
         rotation = self.rotation
         if rotation != 0:
             cr, sr = cos_sin(rotation)
