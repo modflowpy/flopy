@@ -1279,6 +1279,65 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
             return None
         return self._data_storage[self._current_key]
 
-    def plot(self, kper=None, filename_base=None, file_extension=None, mflay=None,
-             fignum=None, **kwargs):
-        raise NotImplementedError()
+    def plot(self, kper=None, filename_base=None, file_extension=None,
+             mflay=None, fignum=None, **kwargs):
+        """
+        Plot transient array model input data
+
+        Parameters
+        ----------
+        transient2d : flopy.utils.util_array.Transient2D object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        # todo: possibly include a check for 2d vs 3d transient arrays
+        axes = PlotUtilities._plot_transient2d_helper(self,
+                                                      filename_base=filename_base,
+                                                      file_extension=file_extension,
+                                                      kper=kper,
+                                                      fignum=fignum,
+                                                      **kwargs)
+        return axes

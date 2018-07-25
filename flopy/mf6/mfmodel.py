@@ -810,3 +810,43 @@ class MFModel(PackageContainer, ModelInterface):
         if parent_package is not None:
             # register child package with the parent package
             parent_package._add_package(package, package.path)
+
+    def plot(self, SelPackList=None, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        model input data from a model instance
+
+        Args:
+            model: Flopy model instance
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            **kwargs : dict
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+        Returns:
+            axes : list
+                Empty list is returned if filename_base is not None. Otherwise
+                a list of matplotlib.pyplot.axis are returned.
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        axes = PlotUtilities._plot_model_helper(self,
+                                                SelPackList=SelPackList,
+                                                **kwargs)
+
+        return axes
