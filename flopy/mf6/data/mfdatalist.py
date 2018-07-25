@@ -1378,6 +1378,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         """
         from flopy.plot import PlotUtilities
 
+        if 'cellid' not in self.dtype.names:
+            return
+
         axes = PlotUtilities._plot_mflist_helper(mflist=self, key=key, kper=None,
                                                  names=names, filename_base=None,
                                                  file_extension=None,
@@ -1663,6 +1666,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             a list of matplotlib.pyplot.axis is returned.
         """
         from flopy.plot import PlotUtilities
+
+        if 'cellid' not in self.dtype.names:
+            return
+
         axes = PlotUtilities._plot_mflist_helper(self, key=key, names=names,
                                                  kper=kper, filename_base=filename_base,
                                                  file_extension=file_extension, mflay=mflay,

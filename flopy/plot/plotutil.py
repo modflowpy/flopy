@@ -10,6 +10,9 @@ import sys
 import math
 import numpy as np
 from flopy.utils import MfList, Util2d, Util3d, Transient2d
+from flopy.mf6.data.mfdataarray import MFArray, MFTransientArray
+from flopy.mf6.data.mfdatalist import MFList as FP6MFList
+from flopy.mf6.data.mfdatalist import MFTransientList
 from flopy.plot.plotbase import PlotMapView
 
 try:
@@ -442,8 +445,8 @@ class PlotUtilities(object):
 
                 kwargs.pop(key)
 
-        # todo: change this reference (package.model.nlay) after interface
-        inc = package.parent.nlay
+        # todo: test this with flopy 3
+        inc = package.parent.modelgrid.nlay
         if defaults['mflay'] is not None:
             inc = 1
 
@@ -451,7 +454,7 @@ class PlotUtilities(object):
         axes = []
         for item, value in package.__dict__.items():
             caxs = []
-            if isinstance(value, MfList):
+            if isinstance(value, MfList) or isinstance(value, MFTransientList):
                 if package.parent.verbose:
                     print('plotting {} package MfList instance: {}'.format(
                           package.name[0], item))
@@ -470,14 +473,17 @@ class PlotUtilities(object):
                 fignum = list(range(defaults['initial_fig'],
                                     defaults['initial_fig'] + inc))
                 defaults['initial_fig'] = fignum[-1] + 1
-                caxs.append(value.plot(defaults['key'],
-                                       names,
-                                       defaults['kper'],
-                                       filename_base=defaults['filename_base'],
-                                       file_extension=defaults['file_extension'],
-                                       mflay=defaults['mflay'],
-                                       fignum=fignum, colorbar=colorbar,
-                                       **kwargs))
+                ax = value.plot(defaults['key'],
+                                names,
+                                defaults['kper'],
+                                filename_base=defaults['filename_base'],
+                                file_extension=defaults['file_extension'],
+                                mflay=defaults['mflay'],
+                                fignum=fignum, colorbar=colorbar,
+                                **kwargs)
+
+                if ax is not None:
+                    caxs.append(ax)
 
             elif isinstance(value, Util3d):
                 if package.parent.verbose:
@@ -536,6 +542,29 @@ class PlotUtilities(object):
                                    file_extension=defaults['file_extension'],
                                    mflay=defaults['mflay'],
                                    fignum=fignum, colorbar=True))
+
+            elif isinstance(value, MFArray):
+                if value.array is not None:
+                    if len(value.array.shape) == 2:
+                        fignum = list(range(defaults['initial_fig'],
+                                            defaults['initial_fig'] + 1))
+                        defaults['initial_fig'] = fignum[-1] + 1
+                        caxs.append(
+                            value.plot(filename_base=defaults['filename_base'],
+                                       file_extension=defaults['file_extension'],
+                                       fignum=fignum, colorbar=True))
+                    elif len(value.array.shape) == 3:
+                        fignum = list(range(defaults['initial_fig'],
+                                            defaults['initial_fig'] + inc))
+                        defaults['initial_fig'] = fignum[-1] + 1
+                        caxs.append(
+                            value.plot(filename_base=defaults['filename_base'],
+                                       file_extension=defaults['file_extension'],
+                                       mflay=defaults['mflay'],
+                                       fignum=fignum, colorbar=True))
+                    else:
+                        pass
+
             else:
                 pass
 
@@ -805,26 +834,32 @@ class PlotUtilities(object):
         else:
             fext = 'png'
 
-        names = ['{} layer {}'.format(util3d.name[k], k + 1) for k in
-                 range(util3d.shape[0])]
+        # flopy6 adaption
+        array = util3d.array
+        name = util3d.name
+        if isinstance(name, str):
+            name = [name] * array.shape[0]
+
+        names = ['{} layer {}'.format(name[k], k + 1) for k in
+                 range(array.shape[0])]
 
         filenames = None
         if filename_base is not None:
             if mflay is not None:
                 i0 = int(mflay)
-                if i0 + 1 >= util3d.shape[0]:
-                    i0 = util3d.shape[0] - 1
+                if i0 + 1 >= array.shape[0]:
+                    i0 = array.shape[0] - 1
                 i1 = i0 + 1
             else:
                 i0 = 0
-                i1 = util3d.shape[0]
+                i1 = array.shape[0]
             # build filenames
             filenames = ['{}_{}_Layer{}.{}'.format(
                 filename_base, util3d.name[k],
                 k + 1, fext)
                          for k in range(i0, i1)]
 
-        axes = PlotUtilities._plot_array_helper(util3d.array,
+        axes = PlotUtilities._plot_array_helper(array,
                                                 util3d.model,
                                                 names=names,
                                                 filenames=filenames,

@@ -1057,7 +1057,7 @@ class MFArray(mfdata.MFMultiDimVar):
         return True
 
     def plot(self, filename_base=None, file_extension=None, mflay=None,
-             fignum=None, **kwargs):
+             fignum=None, title=None, **kwargs):
         """
         Plot 3-D model input data
 
@@ -1108,13 +1108,24 @@ class MFArray(mfdata.MFMultiDimVar):
         """
         from flopy.plot import PlotUtilities
 
-        # todo: trap for array shape here or potentially in util3d helper?
-        axes = PlotUtilities._plot_util3d_helper(self,
-                                                 filename_base=filename_base,
-                                                 file_extension=file_extension,
-                                                 mflay=mflay,
-                                                 fignum=fignum,
-                                                 **kwargs)
+        if len(self.array.shape) == 2:
+            axes = PlotUtilities._plot_util2d_helper(self,
+                                                     title=title,
+                                                     filename_base=filename_base,
+                                                     file_extension=file_extension,
+                                                     fignum=fignum,
+                                                     **kwargs)
+        elif len(self.array.shape) == 3:
+            # todo: trap for array shape here or potentially in util3d helper?
+            axes = PlotUtilities._plot_util3d_helper(self,
+                                                     filename_base=filename_base,
+                                                     file_extension=file_extension,
+                                                     mflay=mflay,
+                                                     fignum=fignum,
+                                                     **kwargs)
+        else:
+            axes = None
+
         return axes
 
 
