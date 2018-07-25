@@ -938,6 +938,47 @@ class PlotUtilities(object):
         return axes
 
     @staticmethod
+    def _plot_scalar_helper(scalar, filename_base=None,
+                            file_extension=None, **kwargs):
+        """
+        Helper method to plot scalar objects
+
+        Parameters:
+            scalar : flopy.mf6.data.mfscalar object
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+
+        Returns:
+             axes: list matplotlib.axes object
+        """
+        if file_extension is not None:
+            fext = file_extension
+        else:
+            fext = 'png'
+
+        if 'mflay' in kwargs:
+            kwargs.pop('mflay')
+
+        title = '{}'.format(scalar.name.replace('_', '').upper())
+
+        if filename_base is not None:
+            filename = filename_base + '.{}'.format(fext)
+        else:
+            filename = None
+
+        axes = PlotUtilities._plot_array_helper(scalar.array,
+                                                scalar.model,
+                                                names=title,
+                                                filenames=filename,
+                                                **kwargs)
+        return axes
+
+    @staticmethod
     def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
                            names=None, filenames=None, fignum=None,
                            mflay=None, **kwargs):
