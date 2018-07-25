@@ -1058,6 +1058,7 @@ class SpatialReference(object):
             txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
             with open(filename, 'w') as output:
                 output.write(txt)
+            with open(filename, 'ab') as output:  # for Python 3
                 np.savetxt(output, a, **kwargs)
             print('wrote {}'.format(filename))
 

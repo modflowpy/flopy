@@ -611,14 +611,14 @@ def test_dynamic_xll_yll():
                                        xll=xll, yll=yll, rotation=30)
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
-    assert sr1.dx == 500.0
-    assert sr1.dy == 250.0
+    assert sr1.dx == 250.0
+    assert sr1.dy == 500.0
     np.testing.assert_almost_equal(
-        sr1.get_extent(), [-2213.2, 1369.3317547, 29.03, 4984.1570189])
+        sr1.get_extent(), (-2213.2, 1369.3317547, 29.03, 4984.1570189))
     np.testing.assert_almost_equal(
         sr1.geotransform,
-        (-2213.2, 433.01270189221935, 125.0,
-         4359.157018922193, 250.0, -216.50635094610968))
+        (-2213.2, 216.50635094610968, 250.0,
+         4359.157018922193, 125.0, -433.01270189221935))
 
     xul, yul = sr1.xul, sr1.yul
     sr1.length_multiplier = 1.0 / 3.281
@@ -626,14 +626,14 @@ def test_dynamic_xll_yll():
     assert sr1.yll == yll
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
-    assert sr1.dx == 500.0
-    assert sr1.dy == 250.0
+    assert sr1.dx == 250.0
+    assert sr1.dy == 500.0
     np.testing.assert_almost_equal(
-        sr1.get_extent(), [-475.1628162, 616.7395778, 29.03, 1539.2790152])
+        sr1.get_extent(), (-475.1628162, 616.7395778, 29.03, 1539.2790152))
     np.testing.assert_almost_equal(
         sr1.geotransform,
-        (-475.1628162145685, 131.97583111618997, 38.098140810728424,
-         1348.7883111618996, 76.19628162145685, -65.98791555809498))
+        (-475.1628162145685, 65.987915558094983, 76.196281621456848,
+         1348.7883111618996, 38.098140810728424, -131.97583111618997))
 
     sr2 = flopy.utils.SpatialReference(delr=ms2.dis.delr.array,
                                        delc=ms2.dis.delc.array, lenuni=2,
