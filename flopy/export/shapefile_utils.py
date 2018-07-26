@@ -50,7 +50,7 @@ def write_gridlines_shapefile(filename, mg):
     wr.save(filename)
 
 
-def write_grid_shapefile(filename, mg, array_dict, nan_val=-1.0e9):
+def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
     """
     Write a grid shapefile array_dict attributes.
 
@@ -90,11 +90,15 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=-1.0e9):
             assert array.shape[0] == 1
             array = array[0, :, :]
         assert array.shape == (mg.nrow, mg.ncol)
-        array[np.where(np.isnan(array))] = nan_val
-        if array.dtype in [np.int, np.int32, np.int64]:
-            wr.field(name, "N", 18, 0)
+        if array.dtype in [np.float, np.float32, np.float64]:
+            array[np.where(np.isnan(array))] = nan_val
         else:
-            wr.field(name, "N", 18, 12)
+            j=2
+        #if array.dtype in [np.int, np.int32, np.int64]:
+        #    wr.field(name, "N", 18, 0)
+        #else:
+        #    wr.field(name, "F", 18, 12)
+        wr.field(name, *get_pyshp_field_info(array.dtype.name))
         arrays.append(array)
 
     for i in range(mg.nrow):
@@ -113,7 +117,7 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=-1.0e9):
     wr.save(filename)
     print('wrote {}'.format(filename))
 
-def write_grid_shapefile2(filename, mg, array_dict, nan_val=-1.0e9,
+def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                           epsg=None, prj=None):
     sf = import_shapefile()
     try:
@@ -131,6 +135,9 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=-1.0e9,
               ('row', np.dtype('int')),
               ('column', np.dtype('int'))] + \
              [(name, arr.dtype) for name, arr in array_dict.items()]
+    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in dtypes}
+    for n in names:
+        w.field(n, *fieldinfo[n])
 
     # set-up array of attributes of shape ncells x nattributes
     node = list(range(1, mg.ncol * mg.nrow + 1))
@@ -139,10 +146,8 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=-1.0e9,
     at = np.vstack(
         [node, row, col] +
         [arr.ravel() for arr in array_dict.values()]).transpose()
-    at[np.isnan(at)] = nan_val
-
-    for i, npdtype in enumerate(dtypes):
-        w.field(names[i], *get_pyshp_field_info(npdtype[1].name))
+    if at.dtype in [np.float, np.float32, np.float64]:
+        at[np.isnan(at)] = nan_val
 
     for i, r in enumerate(at):
         w.poly([verts[i]])
@@ -214,8 +219,18 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                     #name = a.name.lower()
                     array_dict[name] = a.array
                 elif a.data_type == DataType.array3d: #elif isinstance(a, Util3d):
-                    for ilay in range(a.model.modelgrid.nlay):
+                    try: # Not sure how best to check if an object has array data
+                        assert a.array is not None
+                    except:
+                        print('Failed to get data for {} array, {} package'.format(a.name,
+                                                                                   pak.name[0]))
+                        continue
+                    for ilay in range(a.array.shape[0]):
                         if isinstance(a, Util3d):
+                            try:
+                                a[ilay].array
+                            except:
+                                j=2
                             arr = a[ilay].array
                             aname = shape_attr_name(a[ilay].name)
                         elif a.array is not None:
@@ -233,7 +248,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                     #    array_dict[name] = u2d.array
                 elif a.data_type == DataType.transient2d:#elif isinstance(a, Transient2d):
                     try: # Not sure how best to check if an object has array data
-                        a.array
+                        assert a.array is not None
                     except:
                         print('Failed to get data for {} array, {} package'.format(a.name,
                                                                                    pak.name[0]))
@@ -270,6 +285,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
                                 arr = array[kper][k]
                                 assert arr.shape == (nrow, ncol)
+                                if np.all(np.isnan(arr)):
+                                    continue
                                 array_dict[aname] = arr
                         #kpers = a.data.keys()
                         #for kper in kpers:
@@ -309,7 +326,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 assert arr.shape == (nrow, ncol)
                                 array_dict[name] = arr
     # write data arrays to a shapefile
-    write_grid_shapefile(filename, ml.modelgrid, array_dict)
+    write_grid_shapefile2(filename, ml.modelgrid, array_dict)
     epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
     write_prj(filename, ml.sr, epsg, prj)

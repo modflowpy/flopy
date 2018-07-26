@@ -965,7 +965,7 @@ if __name__ == '__main__':
     #test_sr()
     #test_mbase_sr()
     #test_rotation()
-    #test_sr_with_Map()
+    test_sr_with_Map()
     #test_epsgs()
     #test_sr_scaling()
     #test_read_usgs_model_reference()
@@ -977,9 +977,9 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     # for namfile in ["fhb.nam"]:
     #export_netcdf(namefile)
-    test_freyberg_export()
-    test_export_array()
-    #test_write_shapefile()
+    #test_freyberg_export()
+    #test_export_array()
+    test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

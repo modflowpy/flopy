@@ -201,8 +201,8 @@ class LayerFile(object):
                 name = attrib_name + '{0:03d}'.format(k)
                 attrib_dict[name] = plotarray[k]
 
-        from ..export.shapefile_utils import write_grid_shapefile
-        write_grid_shapefile(filename, self.mg, attrib_dict)
+        from ..export.shapefile_utils import write_grid_shapefile2
+        write_grid_shapefile2(filename, self.mg, attrib_dict)
 
     def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
              filename_base=None, **kwargs):

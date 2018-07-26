@@ -55,7 +55,7 @@ def test_mf6_grid_shp_export():
 
     # Recharge package (transient 2d)
     rech = {0: 0.001, 1: 0.002}
-    #rch = fm.ModflowRch(m, rech=rech)
+    rch = fm.ModflowRch(m, rech=rech)
 
     # mf6 version of same model
     mf6name = 'junk6'
@@ -86,9 +86,16 @@ def test_mf6_grid_shp_export():
     spd6[1] = spd6[0]
     irch = np.zeros((nrow, ncol))
     riv6 = fp6.ModflowGwfriv(gwf, stress_period_data=spd6)
-    #rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
+    rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
+    #rch6.export('{}/mf6.shp'.format(tmpdir))
     m.export('{}/mfnwt.shp'.format(tmpdir))
     gwf.export('{}/mf6.shp'.format(tmpdir))
+
+    riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
+    rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
+    for k, v in rivspdarrays.items():
+        assert np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6
+        pass
 
     # check that the two shapefiles are the same
     ra = shp2recarray('{}/mfnwt.shp'.format(tmpdir))
@@ -100,13 +107,42 @@ def test_mf6_grid_shp_export():
     # fields
     different_fields = list(set(ra.dtype.names).difference(ra6.dtype.names))
     different_fields = [f for f in different_fields
-                        if 'thick' not in f]
+                        if 'thick' not in f
+                        and 'rech' not in f]
     assert len(different_fields) == 0
+    for l in np.arange(m.nlay)+1:
+        assert np.sum(np.abs(ra['rech_{:03d}'.format(l)] - ra6['rechar{:03d}'.format(l)])) < 1e-6
     common_fields = set(ra.dtype.names).intersection(ra6.dtype.names)
     common_fields.remove('geometry')
     # array values
     for c in common_fields:
         assert np.sum(np.abs(ra[c] - ra6[c])) < 1e-6
+        pass
+
+def test_huge_shapefile():
+    nlay = 2
+    nrow = 200
+    ncol = 200
+    top = 1
+    nper = 2
+    perlen = 1
+    nstp = 1
+    tsmult = 1
+    perioddata = [[perlen, nstp, tsmult]] * 2
+    botm = np.zeros((nlay, nrow, ncol))
+
+    sr = SpatialReference(delc=np.ones(nrow),
+                          xll=10, yll=10
+                          )
+
+
+    m = fm.Modflow('junk', version='mfnwt', model_ws=tmpdir)
+    dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol,
+                        nper=nper, perlen=perlen, nstp=nstp,
+                        tsmult=tsmult,
+                        top=top, botm=botm)
+    m.export('{}/huge.shp'.format(tmpdir))
 
 if __name__ == '__main__':
     test_mf6_grid_shp_export()
+    test_huge_shapefile()
