@@ -165,10 +165,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                            dtype=np.float)
             #print(name,kper)
             for sp_rec in sarr:
-                for rec in sp_rec:
-                    arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
-                        rec[name]
-                    cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
+                if sp_rec is not None:
+                    for rec in sp_rec:
+                        arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
+                            rec[name]
+                        cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
             # average keys that should not be added
             if name != 'cond' and name != 'flux':
                 idx = cnt > 0.
