@@ -766,7 +766,7 @@ def test_sr_with_Map():
     sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
                                                xll=xll, yll=yll,
                                                rotation=rotation)
-    m.modelgrid.sr = copy.deepcopy(sr)
+    m.sr = copy.deepcopy(sr)
     modelmap = flopy.plot.ModelMap(model=m)
     lc = modelmap.plot_grid()
     check_vertices()
