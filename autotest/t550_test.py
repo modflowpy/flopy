@@ -76,7 +76,7 @@ def test_mf6_grid_shp_export():
 
     # Riv6
     spd6 = fp6.ModflowGwfriv.stress_period_data.empty(gwf, maxbound=len(spd))
-    spd6[0]['cellid'] = cellid(spd.k, spd.i, spd.j, m.nrow, m.ncol)
+    #spd6[0]['cellid'] = cellid(spd.k, spd.i, spd.j, m.nrow, m.ncol)
     spd6[0]['cellid'] = list(zip(spd.k, spd.i, spd.j))
     for c in spd.dtype.names:
         if c in spd6[0].dtype.names:
@@ -84,7 +84,7 @@ def test_mf6_grid_shp_export():
     # MFTransient list apparently requires entries for additional stress periods,
     # even if they are the same
     spd6[1] = spd6[0]
-    irch = np.zeros((nrow, ncol))
+    #irch = np.zeros((nrow, ncol))
     riv6 = fp6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
     #rch6.export('{}/mf6.shp'.format(tmpdir))
@@ -94,7 +94,7 @@ def test_mf6_grid_shp_export():
     riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
     rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
     for k, v in rivspdarrays.items():
-        assert np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6
+        assert np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6, "variable {} is not equal".format(k)
         pass
 
     # check that the two shapefiles are the same
