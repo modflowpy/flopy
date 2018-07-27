@@ -407,6 +407,13 @@ class MFSimulation(PackageContainer):
                                '{}\n'.format(data_str, model.name, mod_str)
         return data_str
 
+    @property
+    def model_names(self):
+        """
+        Returns a list of model names associated with this simulation
+        """
+        return self._models.keys()
+
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
              sim_ws='.', strict=True, verbosity_level=VerbosityLevel.normal):
@@ -1442,3 +1449,43 @@ class MFSimulation(PackageContainer):
                         return True
         return False
 
+
+    def plot(self, model_list=None, SelPackList=None, **kwargs):
+        """
+        Method to plot a whole simulation or a series of models
+        that are part of a simualtion
+
+        Parameters:
+            model_list: (list) list of model names to plot, if none
+                all models will be plotted
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            kwargs:
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+
+        Returns:
+             axes: (list) matplotlib.pyplot.axes objects
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        axes = PlotUtilities._plot_simulation_helper(self,
+                                                     model_list=model_list,
+                                                     SelPackList=SelPackList,
+                                                     **kwargs)
+        return axes

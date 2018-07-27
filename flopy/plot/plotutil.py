@@ -307,6 +307,93 @@ class PlotUtilities(object):
     """
 
     @staticmethod
+    def _plot_simulation_helper(simulation, model_list,
+                                SelPackList, **kwargs):
+        """
+        Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
+        model input data from a model instance
+
+        Args:
+            model: Flopy model instance
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            **kwargs : dict
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+        Returns:
+            axes : list
+                Empty list is returned if filename_base is not None. Otherwise
+                a list of matplotlib.pyplot.axis are returned.
+        """
+        # todo: add downstream capability for formatting model names into figure titles, etc...
+        # todo: decide whether we plot one model at a time or join the models in each plot....
+        defaults = {"kper": 0, "mflay": None, "filename_base": None,
+                    "file_extension": "png", "key": None}
+
+        for key in defaults:
+            if key in kwargs:
+                if key == 'file_extension':
+                    defaults[key] = kwargs[key].replace(".", "")
+                else:
+                    defaults[key] = kwargs[key]
+
+                kwargs.pop(key)
+
+        filename_base = defaults['filename_base']
+
+        if model_list is None:
+            model_list = simulation.model_names
+
+
+        axes = []
+        ifig = 0
+        for model_name in model_list:
+            model = simulation.get_model(model_name)
+
+            model_filename_base = None
+            if filename_base is not None:
+                model_filename_base = filename_base + "_" + model_name
+
+            if model.verbose:
+                print("   Plotting Model:   ", model_name)
+
+            caxs = model.plot(SelPackList=SelPackList,
+                              kper=defaults['kper'],
+                              mflay=defaults['mflay'],
+                              filename_base=model_filename_base,
+                              file_extension=defaults['file_extension'],
+                              key=defaults['key'],
+                              initial_fig=ifig,
+                              model_name=model_name,
+                              **kwargs)
+
+            if isinstance(caxs, list):
+                for c in caxs:
+                    axes.append(c)
+            else:
+                axes.append(caxs)
+
+            ifig = len(axes) + 1
+
+        return axes
+
+
+    @staticmethod
     def _plot_model_helper(model, SelPackList, **kwargs):
         """
         Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
@@ -341,7 +428,8 @@ class PlotUtilities(object):
         """
         # valid keyword arguments
         defaults = {"kper": 0, "mflay": None, "filename_base": None,
-                    "file_extension": "png", "key": None}
+                    "file_extension": "png", "key": None, "model_name": "",
+                    "initial_fig": 0}
 
         for key in defaults:
             if key in kwargs:
@@ -353,7 +441,7 @@ class PlotUtilities(object):
                 kwargs.pop(key)
 
         axes = []
-        ifig = 0
+        ifig = defaults['initial_fig']
         if SelPackList is None:
             for p in model.packagelist:
                 caxs = p.plot(initial_fig=ifig,
@@ -361,7 +449,8 @@ class PlotUtilities(object):
                               file_extension=defaults['file_extension'],
                               kper=defaults['kper'],
                               mflay=defaults['mflay'],
-                              key=defaults['key'])
+                              key=defaults['key'],
+                              model_name=defaults['model_name'])
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
@@ -382,7 +471,8 @@ class PlotUtilities(object):
                                       file_extension=defaults['file_extension'],
                                       kper=defaults['kper'],
                                       mflay=defaults['mflay'],
-                                      key=defaults['key'])
+                                      key=defaults['key'],
+                                      model_name=defaults['model_name'])
                         # unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
                             for c in caxs:
@@ -432,7 +522,8 @@ class PlotUtilities(object):
         """
         defaults = {"kper": 0, 'filename_base': None,
                     "file_extension": "png", 'mflay': None,
-                    "key": None, "initial_fig": 0}
+                    "key": None, "initial_fig": 0,
+                    "model_name": ""}
 
         for key in defaults:
             if key in kwargs:
@@ -445,7 +536,8 @@ class PlotUtilities(object):
 
                 kwargs.pop(key)
 
-        # todo: test this with flopy 3
+        model_name = defaults.pop("model_name")
+
         inc = package.parent.modelgrid.nlay
         if defaults['mflay'] is not None:
             inc = 1
@@ -459,13 +551,14 @@ class PlotUtilities(object):
                     print('plotting {} package MfList instance: {}'.format(
                           package.name[0], item))
                 if defaults['key'] is None:
-                    names = ['{} location stress period {} layer {}'.format(
-                             package.name[0], defaults['kper'] + 1, k + 1)
+                    names = ['{} {} location stress period {} layer {}'.format(
+                             model_name, package.name[0],
+                             defaults['kper'] + 1, k + 1)
                         for k in range(package.parent.modelgrid.nlay)]
                     colorbar = False
                 else:
-                    names = ['{} {} data stress period {} layer {}'.format(
-                             package.name[0], defaults['key'],
+                    names = ['{} {} {} data stress period {} layer {}'.format(
+                             model_name, package.name[0], defaults['key'],
                              defaults['kper'] + 1, k + 1)
                              for k in range(package.parent.modelgrid.nlay)]
                     colorbar = True
@@ -498,6 +591,7 @@ class PlotUtilities(object):
                                file_extension=defaults['file_extension'],
                                mflay=defaults['mflay'],
                                fignum=fignum,
+                               model_name=model_name,
                                colorbar=True))
 
             elif isinstance(value, Util2d):
@@ -511,7 +605,8 @@ class PlotUtilities(object):
                     caxs.append(
                         value.plot(filename_base=defaults['filename_base'],
                                    file_extension=defaults['file_extension'],
-                                   fignum=fignum, colorbar=True))
+                                   fignum=fignum, model_name=model_name,
+                                   colorbar=True))
 
             elif isinstance(value, Transient2d):
                 if package.parent.verbose:
@@ -541,7 +636,8 @@ class PlotUtilities(object):
                             v.plot(filename_base=defaults['filename_base'],
                                    file_extension=defaults['file_extension'],
                                    mflay=defaults['mflay'],
-                                   fignum=fignum, colorbar=True))
+                                   fignum=fignum, model_name=model_name,
+                                   colorbar=True))
 
             elif isinstance(value, MFArray):
                 if value.array is not None:
@@ -552,7 +648,8 @@ class PlotUtilities(object):
                         caxs.append(
                             value.plot(filename_base=defaults['filename_base'],
                                        file_extension=defaults['file_extension'],
-                                       fignum=fignum, colorbar=True))
+                                       fignum=fignum, model_name=model_name,
+                                       colorbar=True))
                     elif len(value.array.shape) == 3:
                         fignum = list(range(defaults['initial_fig'],
                                             defaults['initial_fig'] + inc))
@@ -561,7 +658,8 @@ class PlotUtilities(object):
                             value.plot(filename_base=defaults['filename_base'],
                                        file_extension=defaults['file_extension'],
                                        mflay=defaults['mflay'],
-                                       fignum=fignum, colorbar=True))
+                                       fignum=fignum, model_name=model_name,
+                                       colorbar=True))
                     else:
                         pass
 
@@ -648,6 +746,10 @@ class PlotUtilities(object):
         else:
             fext = 'png'
 
+        model_name = ""
+        if "model_name" in kwargs:
+            model_name = kwargs.pop('model_name') + " "
+
         filenames = None
         if filename_base is not None:
             if mflay is not None:
@@ -667,12 +769,13 @@ class PlotUtilities(object):
 
         if names is None:
             if key is None:
-                names = ['{} location stress period: {} layer: {}'.format(
-                         mflist.package.name[0], kper + 1, k + 1)
+                names = ['{}{} location stress period: {} layer: {}'.format(
+                         model_name, mflist.package.name[0], kper + 1, k + 1)
                          for k in range(mflist.model.modelgrid.nlay)]
             else:
-                names = ['{} {} stress period: {} layer: {}'.format(
-                         mflist.package.name[0], key, kper + 1, k + 1)
+                names = ['{}{} {} stress period: {} layer: {}'.format(
+                         model_name, mflist.package.name[0],
+                         key, kper + 1, k + 1)
                          for k in range(mflist.model.modelgrid.nlay)]
 
         if key is None:
@@ -755,8 +858,12 @@ class PlotUtilities(object):
             a list of matplotlib.pyplot.axis is returned.
 
         """
+        model_name = ""
+        if "model_name" in kwargs:
+            model_name = kwargs.pop("model_name") + " "
+
         if title is None:
-            title = util2d.name
+            title = "{}{}".format(model_name, util2d.name)
 
         if file_extension is not None:
             fext = file_extension
@@ -829,6 +936,10 @@ class PlotUtilities(object):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
         """
+        model_name = ""
+        if "model_name" in kwargs:
+            model_name = kwargs.pop('model_name')
+
         if file_extension is not None:
             fext = file_extension
         else:
@@ -840,7 +951,8 @@ class PlotUtilities(object):
         if isinstance(name, str):
             name = [name] * array.shape[0]
 
-        names = ['{} layer {}'.format(name[k], k + 1) for k in
+        names = ['{}{} layer {}'.format(model_name,
+                                        name[k], k + 1) for k in
                  range(array.shape[0])]
 
         filenames = None
