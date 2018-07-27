@@ -202,6 +202,13 @@ class MFModel(PackageContainer, ModelInterface):
         return data_str
 
     @property
+    def nper(self):
+        try:
+            return self.simulation.tdis.nper.array
+        except AttributeError:
+            return None
+
+    @property
     def modelgrid(self):
         tdis = self.simulation.get_package('tdis')
         itmuni = tdis.time_units.get_data()

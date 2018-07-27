@@ -1047,6 +1047,7 @@ class PlotUtilities(object):
             if kper.lower() == "all":
                 k0 = 0
                 k1 = transient2d.model.nper
+
             else:
                 k0 = int(kper)
                 k1 = k0 + 1

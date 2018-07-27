@@ -1,0 +1,1819 @@
+                                   MODFLOW 6
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                       VERSION mf6.0.2 February 23, 2018
+
+   MODFLOW 6 compiled Feb 21 2018 10:49:51 with IFORT compiler (ver. 18.0.1)
+
+This software has been approved for release by the U.S. Geological 
+Survey (USGS). Although the software has been subjected to rigorous 
+review, the USGS reserves the right to update the software as needed 
+pursuant to further analysis and review. No warranty, expressed or 
+implied, is made by the USGS or the U.S. Government as to the 
+functionality of the software and related material nor shall the 
+fact of release constitute any such warranty. Furthermore, the 
+software is released on condition that neither the USGS nor the U.S. 
+Government shall be held liable for any damages resulting from its 
+authorized or unauthorized use. Also refer to the USGS Water 
+Resources Software User Rights Notice for complete use, copyright, 
+and distribution information.
+
+
+MODFLOW was compiled using uniform precision.
+Precision of REAL variables: 15
+
+
+ OPENED freyberg.dis
+ FILE TYPE:DIS6                   UNIT 1005   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.ic
+ FILE TYPE:IC6                    UNIT 1006   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.oc
+ FILE TYPE:OC6                    UNIT 1007   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.npf
+ FILE TYPE:NPF6                   UNIT 1008   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.sto
+ FILE TYPE:STO6                   UNIT 1009   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.chd
+ FILE TYPE:CHD6                   UNIT 1010   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.riv
+ FILE TYPE:RIV6                   UNIT 1011   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.wel
+ FILE TYPE:WEL6                   UNIT 1012   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+
+ OPENED freyberg.rch
+ FILE TYPE:RCH6                   UNIT 1013   STATUS:OLD                 
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL          
+ ACTION:READ                
+
+ NAMEFILE OPTIONS:
+    STRESS PACKAGE INPUT WILL BE PRINTED FOR ALL MODEL STRESS PACKAGES
+    PACKAGE FLOWS WILL BE PRINTED FOR ALL MODEL PACKAGES
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+
+ DIS -- STRUCTURED GRID DISCRETIZATION PACKAGE, VERSION 2 : 3/27/2014 - INPUT READ FROM UNIT 1005
+
+
+ PROCESSING DISCRETIZATION OPTIONS
+    MODEL LENGTH UNIT IS METERS
+ END OF DISCRETIZATION OPTIONS
+ PROCESSING DISCRETIZATION DIMENSIONS
+    NLAY =       1
+    NROW =      40
+    NCOL =      20
+ END OF DISCRETIZATION DIMENSIONS
+ PROCESSING GRIDDATA
+
+                     DELR =   250.0000    
+
+                     DELC =   250.0000    
+
+ TOP ELEVATION OF LAYER 1 =   35.00000    
+ END PROCESSING GRIDDATA
+
+ THE SPECIFIED IDOMAIN RESULTS IN A REDUCED NUMBER OF CELLS.
+ NUMBER OF USER NODES:     800
+ NUMBER OF NODES IN SOLUTION:     705
+
+
+
+ NPF -- NODE PROPERTY FLOW PACKAGE, VERSION 1, 3/30/2015 INPUT READ FROM UNIT 1008
+
+
+ PROCESSING NPF OPTIONS
+    CELL-BY-CELL FLOW INFORMATION WILL BE SAVED TO BINARY FILE WHENEVER ICBCFL IS NOT ZERO.
+ END OF NPF OPTIONS
+
+ WEL   -- WEL PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM UNIT 1012
+
+ PROCESSING WEL OPTIONS
+    LISTS OF WEL CELLS WILL BE PRINTED.
+    WEL FLOWS WILL BE PRINTED TO LISTING FILE.
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END OF WEL OPTIONS
+
+ PROCESSING WEL DIMENSIONS
+    MAXBOUND =       6
+ END OF WEL DIMENSIONS
+
+ RIV   -- RIV PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM UNIT 1011
+
+ PROCESSING RIV OPTIONS
+    LISTS OF RIV CELLS WILL BE PRINTED.
+    RIV FLOWS WILL BE PRINTED TO LISTING FILE.
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END OF RIV OPTIONS
+
+ PROCESSING RIV DIMENSIONS
+    MAXBOUND =      40
+ END OF RIV DIMENSIONS
+
+ RCH   -- RCH PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM UNIT 1013
+
+ PROCESSING RCH OPTIONS
+    RECHARGE INPUT WILL BE READ AS ARRAY(S).
+    LISTS OF RCH CELLS WILL BE PRINTED.
+    RCH FLOWS WILL BE PRINTED TO LISTING FILE.
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END OF RCH OPTIONS
+
+ CHD   -- CHD PACKAGE, VERSION 8, 2/22/2014 INPUT READ FROM UNIT 1010
+
+ PROCESSING CHD OPTIONS
+    LISTS OF CHD CELLS WILL BE PRINTED.
+    CHD FLOWS WILL BE PRINTED TO LISTING FILE.
+    FLOWS WILL BE SAVED TO BUDGET FILE SPECIFIED IN OUTPUT CONTROL
+ END OF CHD OPTIONS
+
+ PROCESSING CHD DIMENSIONS
+    MAXBOUND =      10
+ END OF CHD DIMENSIONS
+
+ IC -- INITIAL CONDITIONS PACKAGE, VERSION 8, 3/28/2015 INPUT READ FROM UNIT 1006
+ PROCESSING IC OPTIONS
+ END OF IC OPTIONS
+ PROCESSING GRIDDATA
+ END PROCESSING GRIDDATA
+ PROCESSING GRIDDATA
+
+                ICELLTYPE = 1
+ K22 not provided.  Assuming K22 = K.
+ END PROCESSING GRIDDATA
+
+ STO -- STORAGE PACKAGE, VERSION 1, 5/19/2014 INPUT READ FROM UNIT 1009
+
+
+ PROCESSING STORAGE OPTIONS
+    CELL-BY-CELL FLOW INFORMATION WILL BE SAVED TO BINARY FILE WHENEVER ICBCFL IS NOT ZERO.
+ END OF STORAGE OPTIONS
+ PROCESSING GRIDDATA
+
+                 ICONVERT = 1
+
+         SPECIFIC STORAGE =  0.1000000E-04
+
+           SPECIFIC YIELD =  0.2000000    
+ END PROCESSING GRIDDATA
+    BINARY GRID INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1015
+      FILE NAME: C:\Users\jlarsen\Desktop\flopy-ogw\trunk\examples\data\mf6-freyberg\freyberg.dis.grb
+
+ OPENED C:\Users\jlarsen\Desktop\flopy-ogw\trunk\examples\data\mf6-freyberg\freyberg.dis.grb
+ FILE TYPE:DATA(BINARY)   UNIT 1015   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+      THE LAST TIME STEP WILL BE PRINTED
+      THE LAST TIME STEP WILL BE PRINTED
+ PROCESSING OC OPTIONS
+    BUDGET INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1016
+      FILE NAME: freyberg.cbc
+
+ OPENED freyberg.cbc
+ FILE TYPE:DATA(BINARY)   UNIT 1016   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+    HEAD INFORMATION WILL BE WRITTEN TO:
+      UNIT NUMBER: 1017
+      FILE NAME: freyberg.hds
+
+ OPENED freyberg.hds
+ FILE TYPE:DATA(BINARY)   UNIT 1017   STATUS:REPLACE             
+ FORMAT:UNFORMATTED            ACCESS:STREAM              
+ ACTION:READWRITE           
+
+ END OF OC OPTIONS
+
+ BEGIN READING OUTPUT CONTROL FOR STRESS PERIOD 1
+      ALL TIME STEPS WILL BE PRINTED
+      ALL TIME STEPS WILL BE SAVED
+      ALL TIME STEPS WILL BE SAVED
+
+ END READING OUTPUT CONTROL FOR STRESS PERIOD 1
+
+
+ UPDATING STORAGE VALUES
+ END UPDATING STORAGE VALUES
+
+
+ STRESS PERIOD 1 IS STEADY-STATE
+
+
+ WEL NO.  LAYER    ROW    COL     STRESS RATE         
+ -----------------------------------------------------
+      1      1      9     16     -0.8200E-02
+      2      1     11     13     -0.4100E-02
+      3      1     20     14     -0.3900E-02
+      4      1     26     10     -0.8300E-03
+      5      1     29      6     -0.7200E-03
+      6      1     34     12     -0.4300E-02
+
+ RIV NO.  LAYER    ROW    COL           STAGE     CONDUCTANCE      BOTTOM EL.         
+ -------------------------------------------------------------------------------------
+      1      1      1     15       20.10          0.5000E-01       20.00    
+      2      1      2     15       19.87          0.5000E-01       19.75    
+      3      1      3     15       19.65          0.5000E-01       19.50    
+      4      1      4     15       19.42          0.5000E-01       19.25    
+      5      1      5     15       19.19          0.5000E-01       19.00    
+      6      1      6     15       18.97          0.5000E-01       18.75    
+      7      1      7     15       18.74          0.5000E-01       18.50    
+      8      1      8     15       18.51          0.5000E-01       18.25    
+      9      1      9     15       18.28          0.5000E-01       18.00    
+     10      1     10     15       19.06          0.5000E-01       17.75    
+     11      1     11     15       17.83          0.5000E-01       17.50    
+     12      1     12     15       17.60          0.5000E-01       17.25    
+     13      1     13     15       17.38          0.5000E-01       17.00    
+     14      1     14     15       17.15          0.5000E-01       16.75    
+     15      1     15     15       16.92          0.5000E-01       16.50    
+     16      1     16     15       16.70          0.5000E-01       16.25    
+     17      1     17     15       16.47          0.5000E-01       16.00    
+     18      1     18     15       16.24          0.5000E-01       15.75    
+     19      1     19     15       16.02          0.5000E-01       15.50    
+     20      1     20     15       15.79          0.5000E-01       15.25    
+     21      1     21     15       15.56          0.5000E-01       15.00    
+     22      1     22     15       15.33          0.5000E-01       14.75    
+     23      1     23     15       15.11          0.5000E-01       14.50    
+     24      1     24     15       14.88          0.5000E-01       14.25    
+     25      1     25     15       14.65          0.5000E-01       14.00    
+     26      1     26     15       14.43          0.5000E-01       13.75    
+     27      1     27     15       14.20          0.5000E-01       13.50    
+     28      1     28     15       13.97          0.5000E-01       13.25    
+     29      1     29     15       13.75          0.5000E-01       13.00    
+     30      1     30     15       13.52          0.5000E-01       12.75    
+     31      1     31     15       13.29          0.5000E-01       12.50    
+     32      1     32     15       13.07          0.5000E-01       12.25    
+     33      1     33     15       12.84          0.5000E-01       12.00    
+     34      1     34     15       12.61          0.5000E-01       11.75    
+     35      1     35     15       12.38          0.5000E-01       11.50    
+     36      1     36     15       12.16          0.5000E-01       11.25    
+     37      1     37     15       11.93          0.5000E-01       11.00    
+     38      1     38     15       11.70          0.5000E-01       10.75    
+     39      1     39     15       11.48          0.5000E-01       10.50    
+     40      1     40     15       11.25          0.5000E-01       10.25    
+
+                 RECHARGE =  0.1600000E-08
+
+ CHD NO.  LAYER    ROW    COL            HEAD         
+ -----------------------------------------------------
+      1      1     40      6       16.90    
+      2      1     40      7       16.40    
+      3      1     40      8       16.10    
+      4      1     40      9       15.60    
+      5      1     40     10       15.10    
+      6      1     40     11       15.10    
+      7      1     40     12       14.00    
+      8      1     40     13       13.00    
+      9      1     40     14       12.50    
+     10      1     40     15       12.00    
+ UBDSV1 SAVING           STO-SS ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV1 SAVING           STO-SY ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING              WEL IN MODEL GWF_1            PACKAGE GWF_1           CONNECTED TO MODEL GWF_1            PACKAGE WEL-1            ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+
+              WEL (WEL-1)   PERIOD 1   STEP 1
+ BOUNDARY        1  CELL             (1,9,16)   RATE   -8.200000E-03
+ BOUNDARY        2  CELL            (1,11,13)   RATE   -4.100000E-03
+ BOUNDARY        3  CELL            (1,20,14)   RATE   -3.900000E-03
+ BOUNDARY        4  CELL            (1,26,10)   RATE   -8.300000E-04
+ BOUNDARY        5  CELL             (1,29,6)   RATE   -7.200000E-04
+ BOUNDARY        6  CELL            (1,34,12)   RATE   -4.300000E-03
+
+ UBDSV06 SAVING              RIV IN MODEL GWF_1            PACKAGE GWF_1           CONNECTED TO MODEL GWF_1            PACKAGE RIV-1            ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+
+              RIV (RIV-1)   PERIOD 1   STEP 1
+ BOUNDARY        1  CELL             (1,1,15)   RATE   -6.092134E-04
+ BOUNDARY        2  CELL             (1,2,15)   RATE   -1.340253E-03
+ BOUNDARY        3  CELL             (1,3,15)   RATE   -1.379729E-03
+ BOUNDARY        4  CELL             (1,4,15)   RATE   -1.536603E-03
+ BOUNDARY        5  CELL             (1,5,15)   RATE   -1.697197E-03
+ BOUNDARY        6  CELL             (1,6,15)   RATE   -1.580538E-03
+ BOUNDARY        7  CELL             (1,7,15)   RATE   -1.075709E-03
+ BOUNDARY        8  CELL             (1,8,15)   RATE   -5.177257E-04
+ BOUNDARY        9  CELL             (1,9,15)   RATE   -5.923917E-05
+ BOUNDARY       10  CELL            (1,10,15)   RATE    4.194038E-03
+ BOUNDARY       11  CELL            (1,11,15)   RATE   -1.763369E-03
+ BOUNDARY       12  CELL            (1,12,15)   RATE   -8.443313E-04
+ BOUNDARY       13  CELL            (1,13,15)   RATE   -1.131398E-03
+ BOUNDARY       14  CELL            (1,14,15)   RATE   -1.378825E-03
+ BOUNDARY       15  CELL            (1,15,15)   RATE   -1.257905E-03
+ BOUNDARY       16  CELL            (1,16,15)   RATE   -1.231774E-03
+ BOUNDARY       17  CELL            (1,17,15)   RATE   -1.225991E-03
+ BOUNDARY       18  CELL            (1,18,15)   RATE   -1.239705E-03
+ BOUNDARY       19  CELL            (1,19,15)   RATE   -9.670811E-04
+ BOUNDARY       20  CELL            (1,20,15)   RATE   -1.852732E-04
+ BOUNDARY       21  CELL            (1,21,15)   RATE   -1.017358E-03
+ BOUNDARY       22  CELL            (1,22,15)   RATE   -1.423533E-03
+ BOUNDARY       23  CELL            (1,23,15)   RATE   -1.625203E-03
+ BOUNDARY       24  CELL            (1,24,15)   RATE   -1.722846E-03
+ BOUNDARY       25  CELL            (1,25,15)   RATE   -1.881756E-03
+ BOUNDARY       26  CELL            (1,26,15)   RATE   -2.121145E-03
+ BOUNDARY       27  CELL            (1,27,15)   RATE   -1.698359E-03
+ BOUNDARY       28  CELL            (1,28,15)   RATE   -1.727794E-03
+ BOUNDARY       29  CELL            (1,29,15)   RATE   -1.563086E-03
+ BOUNDARY       30  CELL            (1,30,15)   RATE   -1.637959E-03
+ BOUNDARY       31  CELL            (1,31,15)   RATE   -1.274389E-03
+ BOUNDARY       32  CELL            (1,32,15)   RATE   -8.220170E-04
+ BOUNDARY       33  CELL            (1,33,15)   RATE   -1.138926E-03
+ BOUNDARY       34  CELL            (1,34,15)   RATE   -9.691632E-04
+ BOUNDARY       35  CELL            (1,35,15)   RATE   -1.072346E-03
+ BOUNDARY       36  CELL            (1,36,15)   RATE   -1.196251E-03
+ BOUNDARY       37  CELL            (1,37,15)   RATE   -1.269929E-03
+ BOUNDARY       38  CELL            (1,38,15)   RATE   -9.737525E-04
+ BOUNDARY       39  CELL            (1,39,15)   RATE   -1.236512E-03
+
+ UBDSV06 SAVING              RCH IN MODEL GWF_1            PACKAGE GWF_1           CONNECTED TO MODEL GWF_1            PACKAGE RCH-1            ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+
+              RCH (RCH-1)   PERIOD 1   STEP 1
+ BOUNDARY        1  CELL              (1,1,1)   RATE    1.000000E-04
+ BOUNDARY        2  CELL              (1,1,2)   RATE    1.000000E-04
+ BOUNDARY        3  CELL              (1,1,3)   RATE    1.000000E-04
+ BOUNDARY        4  CELL              (1,1,4)   RATE    1.000000E-04
+ BOUNDARY        5  CELL              (1,1,5)   RATE    1.000000E-04
+ BOUNDARY        6  CELL              (1,1,6)   RATE    1.000000E-04
+ BOUNDARY        7  CELL              (1,1,7)   RATE    1.000000E-04
+ BOUNDARY        8  CELL              (1,1,8)   RATE    1.000000E-04
+ BOUNDARY        9  CELL              (1,1,9)   RATE    1.000000E-04
+ BOUNDARY       10  CELL             (1,1,10)   RATE    1.000000E-04
+ BOUNDARY       11  CELL             (1,1,11)   RATE    1.000000E-04
+ BOUNDARY       12  CELL             (1,1,12)   RATE    1.000000E-04
+ BOUNDARY       13  CELL             (1,1,13)   RATE    1.000000E-04
+ BOUNDARY       14  CELL             (1,1,14)   RATE    1.000000E-04
+ BOUNDARY       15  CELL             (1,1,15)   RATE    1.000000E-04
+ BOUNDARY       16  CELL             (1,1,16)   RATE    1.000000E-04
+ BOUNDARY       17  CELL             (1,1,17)   RATE    1.000000E-04
+ BOUNDARY       18  CELL             (1,1,18)   RATE    1.000000E-04
+ BOUNDARY       19  CELL             (1,1,19)   RATE    1.000000E-04
+ BOUNDARY       20  CELL             (1,1,20)   RATE    1.000000E-04
+ BOUNDARY       21  CELL              (1,2,1)   RATE    1.000000E-04
+ BOUNDARY       22  CELL              (1,2,2)   RATE    1.000000E-04
+ BOUNDARY       23  CELL              (1,2,3)   RATE    1.000000E-04
+ BOUNDARY       24  CELL              (1,2,4)   RATE    1.000000E-04
+ BOUNDARY       25  CELL              (1,2,5)   RATE    1.000000E-04
+ BOUNDARY       26  CELL              (1,2,6)   RATE    1.000000E-04
+ BOUNDARY       27  CELL              (1,2,7)   RATE    1.000000E-04
+ BOUNDARY       28  CELL              (1,2,8)   RATE    1.000000E-04
+ BOUNDARY       29  CELL              (1,2,9)   RATE    1.000000E-04
+ BOUNDARY       30  CELL             (1,2,10)   RATE    1.000000E-04
+ BOUNDARY       31  CELL             (1,2,11)   RATE    1.000000E-04
+ BOUNDARY       32  CELL             (1,2,12)   RATE    1.000000E-04
+ BOUNDARY       33  CELL             (1,2,13)   RATE    1.000000E-04
+ BOUNDARY       34  CELL             (1,2,14)   RATE    1.000000E-04
+ BOUNDARY       35  CELL             (1,2,15)   RATE    1.000000E-04
+ BOUNDARY       36  CELL             (1,2,16)   RATE    1.000000E-04
+ BOUNDARY       37  CELL             (1,2,17)   RATE    1.000000E-04
+ BOUNDARY       38  CELL             (1,2,18)   RATE    1.000000E-04
+ BOUNDARY       39  CELL             (1,2,19)   RATE    1.000000E-04
+ BOUNDARY       40  CELL             (1,2,20)   RATE    1.000000E-04
+ BOUNDARY       41  CELL              (1,3,1)   RATE    1.000000E-04
+ BOUNDARY       42  CELL              (1,3,2)   RATE    1.000000E-04
+ BOUNDARY       43  CELL              (1,3,3)   RATE    1.000000E-04
+ BOUNDARY       44  CELL              (1,3,4)   RATE    1.000000E-04
+ BOUNDARY       45  CELL              (1,3,5)   RATE    1.000000E-04
+ BOUNDARY       46  CELL              (1,3,6)   RATE    1.000000E-04
+ BOUNDARY       47  CELL              (1,3,7)   RATE    1.000000E-04
+ BOUNDARY       48  CELL              (1,3,8)   RATE    1.000000E-04
+ BOUNDARY       49  CELL              (1,3,9)   RATE    1.000000E-04
+ BOUNDARY       50  CELL             (1,3,10)   RATE    1.000000E-04
+ BOUNDARY       51  CELL             (1,3,11)   RATE    1.000000E-04
+ BOUNDARY       52  CELL             (1,3,12)   RATE    1.000000E-04
+ BOUNDARY       53  CELL             (1,3,13)   RATE    1.000000E-04
+ BOUNDARY       54  CELL             (1,3,14)   RATE    1.000000E-04
+ BOUNDARY       55  CELL             (1,3,15)   RATE    1.000000E-04
+ BOUNDARY       56  CELL             (1,3,16)   RATE    1.000000E-04
+ BOUNDARY       57  CELL             (1,3,17)   RATE    1.000000E-04
+ BOUNDARY       58  CELL             (1,3,18)   RATE    1.000000E-04
+ BOUNDARY       59  CELL             (1,3,19)   RATE    1.000000E-04
+ BOUNDARY       60  CELL             (1,3,20)   RATE    1.000000E-04
+ BOUNDARY       61  CELL              (1,4,1)   RATE    1.000000E-04
+ BOUNDARY       62  CELL              (1,4,2)   RATE    1.000000E-04
+ BOUNDARY       63  CELL              (1,4,3)   RATE    1.000000E-04
+ BOUNDARY       64  CELL              (1,4,4)   RATE    1.000000E-04
+ BOUNDARY       65  CELL              (1,4,5)   RATE    1.000000E-04
+ BOUNDARY       66  CELL              (1,4,6)   RATE    1.000000E-04
+ BOUNDARY       67  CELL              (1,4,7)   RATE    1.000000E-04
+ BOUNDARY       68  CELL              (1,4,8)   RATE    1.000000E-04
+ BOUNDARY       69  CELL              (1,4,9)   RATE    1.000000E-04
+ BOUNDARY       70  CELL             (1,4,10)   RATE    1.000000E-04
+ BOUNDARY       71  CELL             (1,4,11)   RATE    1.000000E-04
+ BOUNDARY       72  CELL             (1,4,12)   RATE    1.000000E-04
+ BOUNDARY       73  CELL             (1,4,13)   RATE    1.000000E-04
+ BOUNDARY       74  CELL             (1,4,14)   RATE    1.000000E-04
+ BOUNDARY       75  CELL             (1,4,15)   RATE    1.000000E-04
+ BOUNDARY       76  CELL             (1,4,16)   RATE    1.000000E-04
+ BOUNDARY       77  CELL             (1,4,17)   RATE    1.000000E-04
+ BOUNDARY       78  CELL             (1,4,18)   RATE    1.000000E-04
+ BOUNDARY       79  CELL             (1,4,19)   RATE    1.000000E-04
+ BOUNDARY       80  CELL             (1,4,20)   RATE    1.000000E-04
+ BOUNDARY       81  CELL              (1,5,1)   RATE    1.000000E-04
+ BOUNDARY       82  CELL              (1,5,2)   RATE    1.000000E-04
+ BOUNDARY       83  CELL              (1,5,3)   RATE    1.000000E-04
+ BOUNDARY       84  CELL              (1,5,4)   RATE    1.000000E-04
+ BOUNDARY       85  CELL              (1,5,5)   RATE    1.000000E-04
+ BOUNDARY       86  CELL              (1,5,6)   RATE    1.000000E-04
+ BOUNDARY       87  CELL              (1,5,7)   RATE    1.000000E-04
+ BOUNDARY       88  CELL              (1,5,8)   RATE    1.000000E-04
+ BOUNDARY       89  CELL              (1,5,9)   RATE    1.000000E-04
+ BOUNDARY       90  CELL             (1,5,10)   RATE    1.000000E-04
+ BOUNDARY       91  CELL             (1,5,11)   RATE    1.000000E-04
+ BOUNDARY       92  CELL             (1,5,12)   RATE    1.000000E-04
+ BOUNDARY       93  CELL             (1,5,13)   RATE    1.000000E-04
+ BOUNDARY       94  CELL             (1,5,14)   RATE    1.000000E-04
+ BOUNDARY       95  CELL             (1,5,15)   RATE    1.000000E-04
+ BOUNDARY       96  CELL             (1,5,16)   RATE    1.000000E-04
+ BOUNDARY       97  CELL             (1,5,17)   RATE    1.000000E-04
+ BOUNDARY       98  CELL             (1,5,18)   RATE    1.000000E-04
+ BOUNDARY       99  CELL             (1,5,19)   RATE    1.000000E-04
+ BOUNDARY      100  CELL             (1,5,20)   RATE    1.000000E-04
+ BOUNDARY      101  CELL              (1,6,1)   RATE    1.000000E-04
+ BOUNDARY      102  CELL              (1,6,2)   RATE    1.000000E-04
+ BOUNDARY      103  CELL              (1,6,3)   RATE    1.000000E-04
+ BOUNDARY      104  CELL              (1,6,4)   RATE    1.000000E-04
+ BOUNDARY      105  CELL              (1,6,5)   RATE    1.000000E-04
+ BOUNDARY      106  CELL              (1,6,6)   RATE    1.000000E-04
+ BOUNDARY      107  CELL              (1,6,7)   RATE    1.000000E-04
+ BOUNDARY      108  CELL              (1,6,8)   RATE    1.000000E-04
+ BOUNDARY      109  CELL              (1,6,9)   RATE    1.000000E-04
+ BOUNDARY      110  CELL             (1,6,10)   RATE    1.000000E-04
+ BOUNDARY      111  CELL             (1,6,11)   RATE    1.000000E-04
+ BOUNDARY      112  CELL             (1,6,12)   RATE    1.000000E-04
+ BOUNDARY      113  CELL             (1,6,13)   RATE    1.000000E-04
+ BOUNDARY      114  CELL             (1,6,14)   RATE    1.000000E-04
+ BOUNDARY      115  CELL             (1,6,15)   RATE    1.000000E-04
+ BOUNDARY      116  CELL             (1,6,16)   RATE    1.000000E-04
+ BOUNDARY      117  CELL             (1,6,17)   RATE    1.000000E-04
+ BOUNDARY      118  CELL             (1,6,18)   RATE    1.000000E-04
+ BOUNDARY      119  CELL             (1,6,19)   RATE    1.000000E-04
+ BOUNDARY      120  CELL             (1,6,20)   RATE    1.000000E-04
+ BOUNDARY      121  CELL              (1,7,1)   RATE    1.000000E-04
+ BOUNDARY      122  CELL              (1,7,2)   RATE    1.000000E-04
+ BOUNDARY      123  CELL              (1,7,3)   RATE    1.000000E-04
+ BOUNDARY      124  CELL              (1,7,4)   RATE    1.000000E-04
+ BOUNDARY      125  CELL              (1,7,5)   RATE    1.000000E-04
+ BOUNDARY      126  CELL              (1,7,6)   RATE    1.000000E-04
+ BOUNDARY      127  CELL              (1,7,7)   RATE    1.000000E-04
+ BOUNDARY      128  CELL              (1,7,8)   RATE    1.000000E-04
+ BOUNDARY      129  CELL              (1,7,9)   RATE    1.000000E-04
+ BOUNDARY      130  CELL             (1,7,10)   RATE    1.000000E-04
+ BOUNDARY      131  CELL             (1,7,11)   RATE    1.000000E-04
+ BOUNDARY      132  CELL             (1,7,12)   RATE    1.000000E-04
+ BOUNDARY      133  CELL             (1,7,13)   RATE    1.000000E-04
+ BOUNDARY      134  CELL             (1,7,14)   RATE    1.000000E-04
+ BOUNDARY      135  CELL             (1,7,15)   RATE    1.000000E-04
+ BOUNDARY      136  CELL             (1,7,16)   RATE    1.000000E-04
+ BOUNDARY      137  CELL             (1,7,17)   RATE    1.000000E-04
+ BOUNDARY      138  CELL             (1,7,18)   RATE    1.000000E-04
+ BOUNDARY      139  CELL             (1,7,19)   RATE    1.000000E-04
+ BOUNDARY      140  CELL             (1,7,20)   RATE    1.000000E-04
+ BOUNDARY      141  CELL              (1,8,1)   RATE    1.000000E-04
+ BOUNDARY      142  CELL              (1,8,2)   RATE    1.000000E-04
+ BOUNDARY      143  CELL              (1,8,3)   RATE    1.000000E-04
+ BOUNDARY      144  CELL              (1,8,4)   RATE    1.000000E-04
+ BOUNDARY      145  CELL              (1,8,5)   RATE    1.000000E-04
+ BOUNDARY      146  CELL              (1,8,6)   RATE    1.000000E-04
+ BOUNDARY      147  CELL              (1,8,7)   RATE    1.000000E-04
+ BOUNDARY      148  CELL              (1,8,8)   RATE    1.000000E-04
+ BOUNDARY      149  CELL              (1,8,9)   RATE    1.000000E-04
+ BOUNDARY      150  CELL             (1,8,10)   RATE    1.000000E-04
+ BOUNDARY      151  CELL             (1,8,11)   RATE    1.000000E-04
+ BOUNDARY      152  CELL             (1,8,12)   RATE    1.000000E-04
+ BOUNDARY      153  CELL             (1,8,13)   RATE    1.000000E-04
+ BOUNDARY      154  CELL             (1,8,14)   RATE    1.000000E-04
+ BOUNDARY      155  CELL             (1,8,15)   RATE    1.000000E-04
+ BOUNDARY      156  CELL             (1,8,16)   RATE    1.000000E-04
+ BOUNDARY      157  CELL             (1,8,17)   RATE    1.000000E-04
+ BOUNDARY      158  CELL             (1,8,18)   RATE    1.000000E-04
+ BOUNDARY      159  CELL             (1,8,19)   RATE    1.000000E-04
+ BOUNDARY      160  CELL             (1,8,20)   RATE    1.000000E-04
+ BOUNDARY      161  CELL              (1,9,1)   RATE    1.000000E-04
+ BOUNDARY      162  CELL              (1,9,2)   RATE    1.000000E-04
+ BOUNDARY      163  CELL              (1,9,3)   RATE    1.000000E-04
+ BOUNDARY      164  CELL              (1,9,4)   RATE    1.000000E-04
+ BOUNDARY      165  CELL              (1,9,8)   RATE    1.000000E-04
+ BOUNDARY      166  CELL              (1,9,9)   RATE    1.000000E-04
+ BOUNDARY      167  CELL             (1,9,10)   RATE    1.000000E-04
+ BOUNDARY      168  CELL             (1,9,11)   RATE    1.000000E-04
+ BOUNDARY      169  CELL             (1,9,12)   RATE    1.000000E-04
+ BOUNDARY      170  CELL             (1,9,13)   RATE    1.000000E-04
+ BOUNDARY      171  CELL             (1,9,14)   RATE    1.000000E-04
+ BOUNDARY      172  CELL             (1,9,15)   RATE    1.000000E-04
+ BOUNDARY      173  CELL             (1,9,16)   RATE    1.000000E-04
+ BOUNDARY      174  CELL             (1,9,17)   RATE    1.000000E-04
+ BOUNDARY      175  CELL             (1,9,18)   RATE    1.000000E-04
+ BOUNDARY      176  CELL             (1,9,19)   RATE    1.000000E-04
+ BOUNDARY      177  CELL             (1,9,20)   RATE    1.000000E-04
+ BOUNDARY      178  CELL             (1,10,1)   RATE    1.000000E-04
+ BOUNDARY      179  CELL             (1,10,2)   RATE    1.000000E-04
+ BOUNDARY      180  CELL             (1,10,3)   RATE    1.000000E-04
+ BOUNDARY      181  CELL             (1,10,4)   RATE    1.000000E-04
+ BOUNDARY      182  CELL             (1,10,9)   RATE    1.000000E-04
+ BOUNDARY      183  CELL            (1,10,10)   RATE    1.000000E-04
+ BOUNDARY      184  CELL            (1,10,11)   RATE    1.000000E-04
+ BOUNDARY      185  CELL            (1,10,12)   RATE    1.000000E-04
+ BOUNDARY      186  CELL            (1,10,13)   RATE    1.000000E-04
+ BOUNDARY      187  CELL            (1,10,14)   RATE    1.000000E-04
+ BOUNDARY      188  CELL            (1,10,15)   RATE    1.000000E-04
+ BOUNDARY      189  CELL            (1,10,16)   RATE    1.000000E-04
+ BOUNDARY      190  CELL            (1,10,17)   RATE    1.000000E-04
+ BOUNDARY      191  CELL            (1,10,18)   RATE    1.000000E-04
+ BOUNDARY      192  CELL            (1,10,19)   RATE    1.000000E-04
+ BOUNDARY      193  CELL            (1,10,20)   RATE    1.000000E-04
+ BOUNDARY      194  CELL             (1,11,1)   RATE    1.000000E-04
+ BOUNDARY      195  CELL             (1,11,2)   RATE    1.000000E-04
+ BOUNDARY      196  CELL             (1,11,3)   RATE    1.000000E-04
+ BOUNDARY      197  CELL             (1,11,4)   RATE    1.000000E-04
+ BOUNDARY      198  CELL             (1,11,9)   RATE    1.000000E-04
+ BOUNDARY      199  CELL            (1,11,10)   RATE    1.000000E-04
+ BOUNDARY      200  CELL            (1,11,11)   RATE    1.000000E-04
+ BOUNDARY      201  CELL            (1,11,12)   RATE    1.000000E-04
+ BOUNDARY      202  CELL            (1,11,13)   RATE    1.000000E-04
+ BOUNDARY      203  CELL            (1,11,14)   RATE    1.000000E-04
+ BOUNDARY      204  CELL            (1,11,15)   RATE    1.000000E-04
+ BOUNDARY      205  CELL            (1,11,16)   RATE    1.000000E-04
+ BOUNDARY      206  CELL            (1,11,17)   RATE    1.000000E-04
+ BOUNDARY      207  CELL            (1,11,18)   RATE    1.000000E-04
+ BOUNDARY      208  CELL            (1,11,19)   RATE    1.000000E-04
+ BOUNDARY      209  CELL            (1,11,20)   RATE    1.000000E-04
+ BOUNDARY      210  CELL             (1,12,1)   RATE    1.000000E-04
+ BOUNDARY      211  CELL             (1,12,2)   RATE    1.000000E-04
+ BOUNDARY      212  CELL             (1,12,3)   RATE    1.000000E-04
+ BOUNDARY      213  CELL             (1,12,4)   RATE    1.000000E-04
+ BOUNDARY      214  CELL             (1,12,9)   RATE    1.000000E-04
+ BOUNDARY      215  CELL            (1,12,10)   RATE    1.000000E-04
+ BOUNDARY      216  CELL            (1,12,11)   RATE    1.000000E-04
+ BOUNDARY      217  CELL            (1,12,12)   RATE    1.000000E-04
+ BOUNDARY      218  CELL            (1,12,13)   RATE    1.000000E-04
+ BOUNDARY      219  CELL            (1,12,14)   RATE    1.000000E-04
+ BOUNDARY      220  CELL            (1,12,15)   RATE    1.000000E-04
+ BOUNDARY      221  CELL            (1,12,16)   RATE    1.000000E-04
+ BOUNDARY      222  CELL            (1,12,17)   RATE    1.000000E-04
+ BOUNDARY      223  CELL            (1,12,18)   RATE    1.000000E-04
+ BOUNDARY      224  CELL            (1,12,19)   RATE    1.000000E-04
+ BOUNDARY      225  CELL            (1,12,20)   RATE    1.000000E-04
+ BOUNDARY      226  CELL             (1,13,1)   RATE    1.000000E-04
+ BOUNDARY      227  CELL             (1,13,2)   RATE    1.000000E-04
+ BOUNDARY      228  CELL             (1,13,3)   RATE    1.000000E-04
+ BOUNDARY      229  CELL             (1,13,4)   RATE    1.000000E-04
+ BOUNDARY      230  CELL             (1,13,9)   RATE    1.000000E-04
+ BOUNDARY      231  CELL            (1,13,10)   RATE    1.000000E-04
+ BOUNDARY      232  CELL            (1,13,11)   RATE    1.000000E-04
+ BOUNDARY      233  CELL            (1,13,12)   RATE    1.000000E-04
+ BOUNDARY      234  CELL            (1,13,13)   RATE    1.000000E-04
+ BOUNDARY      235  CELL            (1,13,14)   RATE    1.000000E-04
+ BOUNDARY      236  CELL            (1,13,15)   RATE    1.000000E-04
+ BOUNDARY      237  CELL            (1,13,16)   RATE    1.000000E-04
+ BOUNDARY      238  CELL            (1,13,17)   RATE    1.000000E-04
+ BOUNDARY      239  CELL            (1,13,18)   RATE    1.000000E-04
+ BOUNDARY      240  CELL            (1,13,19)   RATE    1.000000E-04
+ BOUNDARY      241  CELL            (1,13,20)   RATE    1.000000E-04
+ BOUNDARY      242  CELL             (1,14,1)   RATE    1.000000E-04
+ BOUNDARY      243  CELL             (1,14,2)   RATE    1.000000E-04
+ BOUNDARY      244  CELL             (1,14,3)   RATE    1.000000E-04
+ BOUNDARY      245  CELL             (1,14,4)   RATE    1.000000E-04
+ BOUNDARY      246  CELL             (1,14,9)   RATE    1.000000E-04
+ BOUNDARY      247  CELL            (1,14,10)   RATE    1.000000E-04
+ BOUNDARY      248  CELL            (1,14,11)   RATE    1.000000E-04
+ BOUNDARY      249  CELL            (1,14,12)   RATE    1.000000E-04
+ BOUNDARY      250  CELL            (1,14,13)   RATE    1.000000E-04
+ BOUNDARY      251  CELL            (1,14,14)   RATE    1.000000E-04
+ BOUNDARY      252  CELL            (1,14,15)   RATE    1.000000E-04
+ BOUNDARY      253  CELL            (1,14,16)   RATE    1.000000E-04
+ BOUNDARY      254  CELL            (1,14,17)   RATE    1.000000E-04
+ BOUNDARY      255  CELL            (1,14,18)   RATE    1.000000E-04
+ BOUNDARY      256  CELL            (1,14,19)   RATE    1.000000E-04
+ BOUNDARY      257  CELL            (1,14,20)   RATE    1.000000E-04
+ BOUNDARY      258  CELL             (1,15,1)   RATE    1.000000E-04
+ BOUNDARY      259  CELL             (1,15,2)   RATE    1.000000E-04
+ BOUNDARY      260  CELL             (1,15,3)   RATE    1.000000E-04
+ BOUNDARY      261  CELL             (1,15,4)   RATE    1.000000E-04
+ BOUNDARY      262  CELL             (1,15,9)   RATE    1.000000E-04
+ BOUNDARY      263  CELL            (1,15,10)   RATE    1.000000E-04
+ BOUNDARY      264  CELL            (1,15,11)   RATE    1.000000E-04
+ BOUNDARY      265  CELL            (1,15,12)   RATE    1.000000E-04
+ BOUNDARY      266  CELL            (1,15,13)   RATE    1.000000E-04
+ BOUNDARY      267  CELL            (1,15,14)   RATE    1.000000E-04
+ BOUNDARY      268  CELL            (1,15,15)   RATE    1.000000E-04
+ BOUNDARY      269  CELL            (1,15,16)   RATE    1.000000E-04
+ BOUNDARY      270  CELL            (1,15,17)   RATE    1.000000E-04
+ BOUNDARY      271  CELL            (1,15,18)   RATE    1.000000E-04
+ BOUNDARY      272  CELL            (1,15,19)   RATE    1.000000E-04
+ BOUNDARY      273  CELL            (1,15,20)   RATE    1.000000E-04
+ BOUNDARY      274  CELL             (1,16,1)   RATE    1.000000E-04
+ BOUNDARY      275  CELL             (1,16,2)   RATE    1.000000E-04
+ BOUNDARY      276  CELL             (1,16,3)   RATE    1.000000E-04
+ BOUNDARY      277  CELL             (1,16,4)   RATE    1.000000E-04
+ BOUNDARY      278  CELL             (1,16,9)   RATE    1.000000E-04
+ BOUNDARY      279  CELL            (1,16,10)   RATE    1.000000E-04
+ BOUNDARY      280  CELL            (1,16,11)   RATE    1.000000E-04
+ BOUNDARY      281  CELL            (1,16,12)   RATE    1.000000E-04
+ BOUNDARY      282  CELL            (1,16,13)   RATE    1.000000E-04
+ BOUNDARY      283  CELL            (1,16,14)   RATE    1.000000E-04
+ BOUNDARY      284  CELL            (1,16,15)   RATE    1.000000E-04
+ BOUNDARY      285  CELL            (1,16,16)   RATE    1.000000E-04
+ BOUNDARY      286  CELL            (1,16,17)   RATE    1.000000E-04
+ BOUNDARY      287  CELL            (1,16,18)   RATE    1.000000E-04
+ BOUNDARY      288  CELL            (1,16,19)   RATE    1.000000E-04
+ BOUNDARY      289  CELL            (1,16,20)   RATE    1.000000E-04
+ BOUNDARY      290  CELL             (1,17,1)   RATE    1.000000E-04
+ BOUNDARY      291  CELL             (1,17,2)   RATE    1.000000E-04
+ BOUNDARY      292  CELL             (1,17,3)   RATE    1.000000E-04
+ BOUNDARY      293  CELL             (1,17,4)   RATE    1.000000E-04
+ BOUNDARY      294  CELL             (1,17,9)   RATE    1.000000E-04
+ BOUNDARY      295  CELL            (1,17,10)   RATE    1.000000E-04
+ BOUNDARY      296  CELL            (1,17,11)   RATE    1.000000E-04
+ BOUNDARY      297  CELL            (1,17,12)   RATE    1.000000E-04
+ BOUNDARY      298  CELL            (1,17,13)   RATE    1.000000E-04
+ BOUNDARY      299  CELL            (1,17,14)   RATE    1.000000E-04
+ BOUNDARY      300  CELL            (1,17,15)   RATE    1.000000E-04
+ BOUNDARY      301  CELL            (1,17,16)   RATE    1.000000E-04
+ BOUNDARY      302  CELL            (1,17,17)   RATE    1.000000E-04
+ BOUNDARY      303  CELL            (1,17,18)   RATE    1.000000E-04
+ BOUNDARY      304  CELL            (1,17,19)   RATE    1.000000E-04
+ BOUNDARY      305  CELL            (1,17,20)   RATE    1.000000E-04
+ BOUNDARY      306  CELL             (1,18,1)   RATE    1.000000E-04
+ BOUNDARY      307  CELL             (1,18,2)   RATE    1.000000E-04
+ BOUNDARY      308  CELL             (1,18,3)   RATE    1.000000E-04
+ BOUNDARY      309  CELL             (1,18,4)   RATE    1.000000E-04
+ BOUNDARY      310  CELL             (1,18,9)   RATE    1.000000E-04
+ BOUNDARY      311  CELL            (1,18,10)   RATE    1.000000E-04
+ BOUNDARY      312  CELL            (1,18,11)   RATE    1.000000E-04
+ BOUNDARY      313  CELL            (1,18,12)   RATE    1.000000E-04
+ BOUNDARY      314  CELL            (1,18,13)   RATE    1.000000E-04
+ BOUNDARY      315  CELL            (1,18,14)   RATE    1.000000E-04
+ BOUNDARY      316  CELL            (1,18,15)   RATE    1.000000E-04
+ BOUNDARY      317  CELL            (1,18,16)   RATE    1.000000E-04
+ BOUNDARY      318  CELL            (1,18,17)   RATE    1.000000E-04
+ BOUNDARY      319  CELL            (1,18,18)   RATE    1.000000E-04
+ BOUNDARY      320  CELL            (1,18,19)   RATE    1.000000E-04
+ BOUNDARY      321  CELL            (1,18,20)   RATE    1.000000E-04
+ BOUNDARY      322  CELL             (1,19,1)   RATE    1.000000E-04
+ BOUNDARY      323  CELL             (1,19,2)   RATE    1.000000E-04
+ BOUNDARY      324  CELL             (1,19,3)   RATE    1.000000E-04
+ BOUNDARY      325  CELL             (1,19,4)   RATE    1.000000E-04
+ BOUNDARY      326  CELL             (1,19,9)   RATE    1.000000E-04
+ BOUNDARY      327  CELL            (1,19,10)   RATE    1.000000E-04
+ BOUNDARY      328  CELL            (1,19,11)   RATE    1.000000E-04
+ BOUNDARY      329  CELL            (1,19,12)   RATE    1.000000E-04
+ BOUNDARY      330  CELL            (1,19,13)   RATE    1.000000E-04
+ BOUNDARY      331  CELL            (1,19,14)   RATE    1.000000E-04
+ BOUNDARY      332  CELL            (1,19,15)   RATE    1.000000E-04
+ BOUNDARY      333  CELL            (1,19,16)   RATE    1.000000E-04
+ BOUNDARY      334  CELL            (1,19,17)   RATE    1.000000E-04
+ BOUNDARY      335  CELL            (1,19,18)   RATE    1.000000E-04
+ BOUNDARY      336  CELL            (1,19,19)   RATE    1.000000E-04
+ BOUNDARY      337  CELL            (1,19,20)   RATE    1.000000E-04
+ BOUNDARY      338  CELL             (1,20,1)   RATE    1.000000E-04
+ BOUNDARY      339  CELL             (1,20,2)   RATE    1.000000E-04
+ BOUNDARY      340  CELL             (1,20,3)   RATE    1.000000E-04
+ BOUNDARY      341  CELL             (1,20,4)   RATE    1.000000E-04
+ BOUNDARY      342  CELL             (1,20,9)   RATE    1.000000E-04
+ BOUNDARY      343  CELL            (1,20,10)   RATE    1.000000E-04
+ BOUNDARY      344  CELL            (1,20,11)   RATE    1.000000E-04
+ BOUNDARY      345  CELL            (1,20,12)   RATE    1.000000E-04
+ BOUNDARY      346  CELL            (1,20,13)   RATE    1.000000E-04
+ BOUNDARY      347  CELL            (1,20,14)   RATE    1.000000E-04
+ BOUNDARY      348  CELL            (1,20,15)   RATE    1.000000E-04
+ BOUNDARY      349  CELL            (1,20,16)   RATE    1.000000E-04
+ BOUNDARY      350  CELL            (1,20,17)   RATE    1.000000E-04
+ BOUNDARY      351  CELL            (1,20,18)   RATE    1.000000E-04
+ BOUNDARY      352  CELL            (1,20,19)   RATE    1.000000E-04
+ BOUNDARY      353  CELL            (1,20,20)   RATE    1.000000E-04
+ BOUNDARY      354  CELL             (1,21,1)   RATE    1.000000E-04
+ BOUNDARY      355  CELL             (1,21,2)   RATE    1.000000E-04
+ BOUNDARY      356  CELL             (1,21,3)   RATE    1.000000E-04
+ BOUNDARY      357  CELL             (1,21,4)   RATE    1.000000E-04
+ BOUNDARY      358  CELL             (1,21,9)   RATE    1.000000E-04
+ BOUNDARY      359  CELL            (1,21,10)   RATE    1.000000E-04
+ BOUNDARY      360  CELL            (1,21,11)   RATE    1.000000E-04
+ BOUNDARY      361  CELL            (1,21,12)   RATE    1.000000E-04
+ BOUNDARY      362  CELL            (1,21,13)   RATE    1.000000E-04
+ BOUNDARY      363  CELL            (1,21,14)   RATE    1.000000E-04
+ BOUNDARY      364  CELL            (1,21,15)   RATE    1.000000E-04
+ BOUNDARY      365  CELL            (1,21,16)   RATE    1.000000E-04
+ BOUNDARY      366  CELL            (1,21,17)   RATE    1.000000E-04
+ BOUNDARY      367  CELL            (1,21,18)   RATE    1.000000E-04
+ BOUNDARY      368  CELL            (1,21,19)   RATE    1.000000E-04
+ BOUNDARY      369  CELL            (1,21,20)   RATE    1.000000E-04
+ BOUNDARY      370  CELL             (1,22,1)   RATE    1.000000E-04
+ BOUNDARY      371  CELL             (1,22,2)   RATE    1.000000E-04
+ BOUNDARY      372  CELL             (1,22,3)   RATE    1.000000E-04
+ BOUNDARY      373  CELL             (1,22,4)   RATE    1.000000E-04
+ BOUNDARY      374  CELL             (1,22,7)   RATE    1.000000E-04
+ BOUNDARY      375  CELL             (1,22,8)   RATE    1.000000E-04
+ BOUNDARY      376  CELL             (1,22,9)   RATE    1.000000E-04
+ BOUNDARY      377  CELL            (1,22,10)   RATE    1.000000E-04
+ BOUNDARY      378  CELL            (1,22,11)   RATE    1.000000E-04
+ BOUNDARY      379  CELL            (1,22,12)   RATE    1.000000E-04
+ BOUNDARY      380  CELL            (1,22,13)   RATE    1.000000E-04
+ BOUNDARY      381  CELL            (1,22,14)   RATE    1.000000E-04
+ BOUNDARY      382  CELL            (1,22,15)   RATE    1.000000E-04
+ BOUNDARY      383  CELL            (1,22,16)   RATE    1.000000E-04
+ BOUNDARY      384  CELL            (1,22,17)   RATE    1.000000E-04
+ BOUNDARY      385  CELL            (1,22,18)   RATE    1.000000E-04
+ BOUNDARY      386  CELL            (1,22,19)   RATE    1.000000E-04
+ BOUNDARY      387  CELL            (1,22,20)   RATE    1.000000E-04
+ BOUNDARY      388  CELL             (1,23,1)   RATE    1.000000E-04
+ BOUNDARY      389  CELL             (1,23,2)   RATE    1.000000E-04
+ BOUNDARY      390  CELL             (1,23,3)   RATE    1.000000E-04
+ BOUNDARY      391  CELL             (1,23,4)   RATE    1.000000E-04
+ BOUNDARY      392  CELL             (1,23,5)   RATE    1.000000E-04
+ BOUNDARY      393  CELL             (1,23,7)   RATE    1.000000E-04
+ BOUNDARY      394  CELL             (1,23,8)   RATE    1.000000E-04
+ BOUNDARY      395  CELL             (1,23,9)   RATE    1.000000E-04
+ BOUNDARY      396  CELL            (1,23,10)   RATE    1.000000E-04
+ BOUNDARY      397  CELL            (1,23,11)   RATE    1.000000E-04
+ BOUNDARY      398  CELL            (1,23,12)   RATE    1.000000E-04
+ BOUNDARY      399  CELL            (1,23,13)   RATE    1.000000E-04
+ BOUNDARY      400  CELL            (1,23,14)   RATE    1.000000E-04
+ BOUNDARY      401  CELL            (1,23,15)   RATE    1.000000E-04
+ BOUNDARY      402  CELL            (1,23,16)   RATE    1.000000E-04
+ BOUNDARY      403  CELL            (1,23,17)   RATE    1.000000E-04
+ BOUNDARY      404  CELL            (1,23,18)   RATE    1.000000E-04
+ BOUNDARY      405  CELL            (1,23,19)   RATE    1.000000E-04
+ BOUNDARY      406  CELL            (1,23,20)   RATE    1.000000E-04
+ BOUNDARY      407  CELL             (1,24,1)   RATE    1.000000E-04
+ BOUNDARY      408  CELL             (1,24,2)   RATE    1.000000E-04
+ BOUNDARY      409  CELL             (1,24,3)   RATE    1.000000E-04
+ BOUNDARY      410  CELL             (1,24,4)   RATE    1.000000E-04
+ BOUNDARY      411  CELL             (1,24,5)   RATE    1.000000E-04
+ BOUNDARY      412  CELL             (1,24,6)   RATE    1.000000E-04
+ BOUNDARY      413  CELL             (1,24,7)   RATE    1.000000E-04
+ BOUNDARY      414  CELL             (1,24,8)   RATE    1.000000E-04
+ BOUNDARY      415  CELL             (1,24,9)   RATE    1.000000E-04
+ BOUNDARY      416  CELL            (1,24,10)   RATE    1.000000E-04
+ BOUNDARY      417  CELL            (1,24,11)   RATE    1.000000E-04
+ BOUNDARY      418  CELL            (1,24,12)   RATE    1.000000E-04
+ BOUNDARY      419  CELL            (1,24,13)   RATE    1.000000E-04
+ BOUNDARY      420  CELL            (1,24,14)   RATE    1.000000E-04
+ BOUNDARY      421  CELL            (1,24,15)   RATE    1.000000E-04
+ BOUNDARY      422  CELL            (1,24,16)   RATE    1.000000E-04
+ BOUNDARY      423  CELL            (1,24,17)   RATE    1.000000E-04
+ BOUNDARY      424  CELL            (1,24,18)   RATE    1.000000E-04
+ BOUNDARY      425  CELL            (1,24,19)   RATE    1.000000E-04
+ BOUNDARY      426  CELL            (1,24,20)   RATE    1.000000E-04
+ BOUNDARY      427  CELL             (1,25,1)   RATE    1.000000E-04
+ BOUNDARY      428  CELL             (1,25,2)   RATE    1.000000E-04
+ BOUNDARY      429  CELL             (1,25,3)   RATE    1.000000E-04
+ BOUNDARY      430  CELL             (1,25,4)   RATE    1.000000E-04
+ BOUNDARY      431  CELL             (1,25,5)   RATE    1.000000E-04
+ BOUNDARY      432  CELL             (1,25,6)   RATE    1.000000E-04
+ BOUNDARY      433  CELL             (1,25,7)   RATE    1.000000E-04
+ BOUNDARY      434  CELL             (1,25,8)   RATE    1.000000E-04
+ BOUNDARY      435  CELL             (1,25,9)   RATE    1.000000E-04
+ BOUNDARY      436  CELL            (1,25,10)   RATE    1.000000E-04
+ BOUNDARY      437  CELL            (1,25,11)   RATE    1.000000E-04
+ BOUNDARY      438  CELL            (1,25,12)   RATE    1.000000E-04
+ BOUNDARY      439  CELL            (1,25,13)   RATE    1.000000E-04
+ BOUNDARY      440  CELL            (1,25,14)   RATE    1.000000E-04
+ BOUNDARY      441  CELL            (1,25,15)   RATE    1.000000E-04
+ BOUNDARY      442  CELL            (1,25,16)   RATE    1.000000E-04
+ BOUNDARY      443  CELL            (1,25,17)   RATE    1.000000E-04
+ BOUNDARY      444  CELL            (1,25,18)   RATE    1.000000E-04
+ BOUNDARY      445  CELL            (1,25,19)   RATE    1.000000E-04
+ BOUNDARY      446  CELL            (1,25,20)   RATE    1.000000E-04
+ BOUNDARY      447  CELL             (1,26,1)   RATE    1.000000E-04
+ BOUNDARY      448  CELL             (1,26,2)   RATE    1.000000E-04
+ BOUNDARY      449  CELL             (1,26,3)   RATE    1.000000E-04
+ BOUNDARY      450  CELL             (1,26,4)   RATE    1.000000E-04
+ BOUNDARY      451  CELL             (1,26,5)   RATE    1.000000E-04
+ BOUNDARY      452  CELL             (1,26,6)   RATE    1.000000E-04
+ BOUNDARY      453  CELL             (1,26,7)   RATE    1.000000E-04
+ BOUNDARY      454  CELL             (1,26,8)   RATE    1.000000E-04
+ BOUNDARY      455  CELL             (1,26,9)   RATE    1.000000E-04
+ BOUNDARY      456  CELL            (1,26,10)   RATE    1.000000E-04
+ BOUNDARY      457  CELL            (1,26,11)   RATE    1.000000E-04
+ BOUNDARY      458  CELL            (1,26,12)   RATE    1.000000E-04
+ BOUNDARY      459  CELL            (1,26,13)   RATE    1.000000E-04
+ BOUNDARY      460  CELL            (1,26,14)   RATE    1.000000E-04
+ BOUNDARY      461  CELL            (1,26,15)   RATE    1.000000E-04
+ BOUNDARY      462  CELL            (1,26,16)   RATE    1.000000E-04
+ BOUNDARY      463  CELL            (1,26,17)   RATE    1.000000E-04
+ BOUNDARY      464  CELL            (1,26,18)   RATE    1.000000E-04
+ BOUNDARY      465  CELL            (1,26,19)   RATE    1.000000E-04
+ BOUNDARY      466  CELL            (1,26,20)   RATE    1.000000E-04
+ BOUNDARY      467  CELL             (1,27,1)   RATE    1.000000E-04
+ BOUNDARY      468  CELL             (1,27,2)   RATE    1.000000E-04
+ BOUNDARY      469  CELL             (1,27,3)   RATE    1.000000E-04
+ BOUNDARY      470  CELL             (1,27,4)   RATE    1.000000E-04
+ BOUNDARY      471  CELL             (1,27,5)   RATE    1.000000E-04
+ BOUNDARY      472  CELL             (1,27,6)   RATE    1.000000E-04
+ BOUNDARY      473  CELL             (1,27,7)   RATE    1.000000E-04
+ BOUNDARY      474  CELL             (1,27,8)   RATE    1.000000E-04
+ BOUNDARY      475  CELL             (1,27,9)   RATE    1.000000E-04
+ BOUNDARY      476  CELL            (1,27,10)   RATE    1.000000E-04
+ BOUNDARY      477  CELL            (1,27,11)   RATE    1.000000E-04
+ BOUNDARY      478  CELL            (1,27,12)   RATE    1.000000E-04
+ BOUNDARY      479  CELL            (1,27,13)   RATE    1.000000E-04
+ BOUNDARY      480  CELL            (1,27,14)   RATE    1.000000E-04
+ BOUNDARY      481  CELL            (1,27,15)   RATE    1.000000E-04
+ BOUNDARY      482  CELL            (1,27,16)   RATE    1.000000E-04
+ BOUNDARY      483  CELL            (1,27,17)   RATE    1.000000E-04
+ BOUNDARY      484  CELL            (1,27,18)   RATE    1.000000E-04
+ BOUNDARY      485  CELL            (1,27,19)   RATE    1.000000E-04
+ BOUNDARY      486  CELL            (1,27,20)   RATE    1.000000E-04
+ BOUNDARY      487  CELL             (1,28,1)   RATE    1.000000E-04
+ BOUNDARY      488  CELL             (1,28,2)   RATE    1.000000E-04
+ BOUNDARY      489  CELL             (1,28,3)   RATE    1.000000E-04
+ BOUNDARY      490  CELL             (1,28,4)   RATE    1.000000E-04
+ BOUNDARY      491  CELL             (1,28,5)   RATE    1.000000E-04
+ BOUNDARY      492  CELL             (1,28,6)   RATE    1.000000E-04
+ BOUNDARY      493  CELL             (1,28,7)   RATE    1.000000E-04
+ BOUNDARY      494  CELL             (1,28,8)   RATE    1.000000E-04
+ BOUNDARY      495  CELL             (1,28,9)   RATE    1.000000E-04
+ BOUNDARY      496  CELL            (1,28,10)   RATE    1.000000E-04
+ BOUNDARY      497  CELL            (1,28,11)   RATE    1.000000E-04
+ BOUNDARY      498  CELL            (1,28,12)   RATE    1.000000E-04
+ BOUNDARY      499  CELL            (1,28,13)   RATE    1.000000E-04
+ BOUNDARY      500  CELL            (1,28,14)   RATE    1.000000E-04
+ BOUNDARY      501  CELL            (1,28,15)   RATE    1.000000E-04
+ BOUNDARY      502  CELL            (1,28,16)   RATE    1.000000E-04
+ BOUNDARY      503  CELL            (1,28,17)   RATE    1.000000E-04
+ BOUNDARY      504  CELL            (1,28,18)   RATE    1.000000E-04
+ BOUNDARY      505  CELL            (1,28,19)   RATE    1.000000E-04
+ BOUNDARY      506  CELL            (1,28,20)   RATE    1.000000E-04
+ BOUNDARY      507  CELL             (1,29,1)   RATE    1.000000E-04
+ BOUNDARY      508  CELL             (1,29,2)   RATE    1.000000E-04
+ BOUNDARY      509  CELL             (1,29,3)   RATE    1.000000E-04
+ BOUNDARY      510  CELL             (1,29,4)   RATE    1.000000E-04
+ BOUNDARY      511  CELL             (1,29,5)   RATE    1.000000E-04
+ BOUNDARY      512  CELL             (1,29,6)   RATE    1.000000E-04
+ BOUNDARY      513  CELL             (1,29,7)   RATE    1.000000E-04
+ BOUNDARY      514  CELL             (1,29,8)   RATE    1.000000E-04
+ BOUNDARY      515  CELL             (1,29,9)   RATE    1.000000E-04
+ BOUNDARY      516  CELL            (1,29,10)   RATE    1.000000E-04
+ BOUNDARY      517  CELL            (1,29,11)   RATE    1.000000E-04
+ BOUNDARY      518  CELL            (1,29,12)   RATE    1.000000E-04
+ BOUNDARY      519  CELL            (1,29,13)   RATE    1.000000E-04
+ BOUNDARY      520  CELL            (1,29,14)   RATE    1.000000E-04
+ BOUNDARY      521  CELL            (1,29,15)   RATE    1.000000E-04
+ BOUNDARY      522  CELL            (1,29,16)   RATE    1.000000E-04
+ BOUNDARY      523  CELL            (1,29,17)   RATE    1.000000E-04
+ BOUNDARY      524  CELL            (1,29,18)   RATE    1.000000E-04
+ BOUNDARY      525  CELL            (1,29,19)   RATE    1.000000E-04
+ BOUNDARY      526  CELL            (1,29,20)   RATE    1.000000E-04
+ BOUNDARY      527  CELL             (1,30,1)   RATE    1.000000E-04
+ BOUNDARY      528  CELL             (1,30,2)   RATE    1.000000E-04
+ BOUNDARY      529  CELL             (1,30,3)   RATE    1.000000E-04
+ BOUNDARY      530  CELL             (1,30,4)   RATE    1.000000E-04
+ BOUNDARY      531  CELL             (1,30,5)   RATE    1.000000E-04
+ BOUNDARY      532  CELL             (1,30,6)   RATE    1.000000E-04
+ BOUNDARY      533  CELL             (1,30,7)   RATE    1.000000E-04
+ BOUNDARY      534  CELL             (1,30,8)   RATE    1.000000E-04
+ BOUNDARY      535  CELL             (1,30,9)   RATE    1.000000E-04
+ BOUNDARY      536  CELL            (1,30,10)   RATE    1.000000E-04
+ BOUNDARY      537  CELL            (1,30,11)   RATE    1.000000E-04
+ BOUNDARY      538  CELL            (1,30,12)   RATE    1.000000E-04
+ BOUNDARY      539  CELL            (1,30,13)   RATE    1.000000E-04
+ BOUNDARY      540  CELL            (1,30,14)   RATE    1.000000E-04
+ BOUNDARY      541  CELL            (1,30,15)   RATE    1.000000E-04
+ BOUNDARY      542  CELL            (1,30,16)   RATE    1.000000E-04
+ BOUNDARY      543  CELL            (1,30,17)   RATE    1.000000E-04
+ BOUNDARY      544  CELL            (1,30,18)   RATE    1.000000E-04
+ BOUNDARY      545  CELL            (1,30,19)   RATE    1.000000E-04
+ BOUNDARY      546  CELL            (1,30,20)   RATE    1.000000E-04
+ BOUNDARY      547  CELL             (1,31,1)   RATE    1.000000E-04
+ BOUNDARY      548  CELL             (1,31,2)   RATE    1.000000E-04
+ BOUNDARY      549  CELL             (1,31,3)   RATE    1.000000E-04
+ BOUNDARY      550  CELL             (1,31,4)   RATE    1.000000E-04
+ BOUNDARY      551  CELL             (1,31,5)   RATE    1.000000E-04
+ BOUNDARY      552  CELL             (1,31,6)   RATE    1.000000E-04
+ BOUNDARY      553  CELL             (1,31,7)   RATE    1.000000E-04
+ BOUNDARY      554  CELL             (1,31,8)   RATE    1.000000E-04
+ BOUNDARY      555  CELL             (1,31,9)   RATE    1.000000E-04
+ BOUNDARY      556  CELL            (1,31,10)   RATE    1.000000E-04
+ BOUNDARY      557  CELL            (1,31,11)   RATE    1.000000E-04
+ BOUNDARY      558  CELL            (1,31,12)   RATE    1.000000E-04
+ BOUNDARY      559  CELL            (1,31,13)   RATE    1.000000E-04
+ BOUNDARY      560  CELL            (1,31,14)   RATE    1.000000E-04
+ BOUNDARY      561  CELL            (1,31,15)   RATE    1.000000E-04
+ BOUNDARY      562  CELL            (1,31,16)   RATE    1.000000E-04
+ BOUNDARY      563  CELL            (1,31,17)   RATE    1.000000E-04
+ BOUNDARY      564  CELL            (1,31,18)   RATE    1.000000E-04
+ BOUNDARY      565  CELL            (1,31,19)   RATE    1.000000E-04
+ BOUNDARY      566  CELL            (1,31,20)   RATE    1.000000E-04
+ BOUNDARY      567  CELL             (1,32,1)   RATE    1.000000E-04
+ BOUNDARY      568  CELL             (1,32,2)   RATE    1.000000E-04
+ BOUNDARY      569  CELL             (1,32,3)   RATE    1.000000E-04
+ BOUNDARY      570  CELL             (1,32,4)   RATE    1.000000E-04
+ BOUNDARY      571  CELL             (1,32,5)   RATE    1.000000E-04
+ BOUNDARY      572  CELL             (1,32,6)   RATE    1.000000E-04
+ BOUNDARY      573  CELL             (1,32,7)   RATE    1.000000E-04
+ BOUNDARY      574  CELL             (1,32,8)   RATE    1.000000E-04
+ BOUNDARY      575  CELL             (1,32,9)   RATE    1.000000E-04
+ BOUNDARY      576  CELL            (1,32,10)   RATE    1.000000E-04
+ BOUNDARY      577  CELL            (1,32,11)   RATE    1.000000E-04
+ BOUNDARY      578  CELL            (1,32,12)   RATE    1.000000E-04
+ BOUNDARY      579  CELL            (1,32,13)   RATE    1.000000E-04
+ BOUNDARY      580  CELL            (1,32,14)   RATE    1.000000E-04
+ BOUNDARY      581  CELL            (1,32,15)   RATE    1.000000E-04
+ BOUNDARY      582  CELL            (1,32,16)   RATE    1.000000E-04
+ BOUNDARY      583  CELL            (1,32,17)   RATE    1.000000E-04
+ BOUNDARY      584  CELL            (1,32,18)   RATE    1.000000E-04
+ BOUNDARY      585  CELL            (1,32,19)   RATE    1.000000E-04
+ BOUNDARY      586  CELL            (1,32,20)   RATE    1.000000E-04
+ BOUNDARY      587  CELL             (1,33,2)   RATE    1.000000E-04
+ BOUNDARY      588  CELL             (1,33,3)   RATE    1.000000E-04
+ BOUNDARY      589  CELL             (1,33,4)   RATE    1.000000E-04
+ BOUNDARY      590  CELL             (1,33,5)   RATE    1.000000E-04
+ BOUNDARY      591  CELL             (1,33,6)   RATE    1.000000E-04
+ BOUNDARY      592  CELL             (1,33,7)   RATE    1.000000E-04
+ BOUNDARY      593  CELL             (1,33,8)   RATE    1.000000E-04
+ BOUNDARY      594  CELL             (1,33,9)   RATE    1.000000E-04
+ BOUNDARY      595  CELL            (1,33,10)   RATE    1.000000E-04
+ BOUNDARY      596  CELL            (1,33,11)   RATE    1.000000E-04
+ BOUNDARY      597  CELL            (1,33,12)   RATE    1.000000E-04
+ BOUNDARY      598  CELL            (1,33,13)   RATE    1.000000E-04
+ BOUNDARY      599  CELL            (1,33,14)   RATE    1.000000E-04
+ BOUNDARY      600  CELL            (1,33,15)   RATE    1.000000E-04
+ BOUNDARY      601  CELL            (1,33,16)   RATE    1.000000E-04
+ BOUNDARY      602  CELL            (1,33,17)   RATE    1.000000E-04
+ BOUNDARY      603  CELL            (1,33,18)   RATE    1.000000E-04
+ BOUNDARY      604  CELL            (1,33,19)   RATE    1.000000E-04
+ BOUNDARY      605  CELL            (1,33,20)   RATE    1.000000E-04
+ BOUNDARY      606  CELL             (1,34,3)   RATE    1.000000E-04
+ BOUNDARY      607  CELL             (1,34,4)   RATE    1.000000E-04
+ BOUNDARY      608  CELL             (1,34,5)   RATE    1.000000E-04
+ BOUNDARY      609  CELL             (1,34,6)   RATE    1.000000E-04
+ BOUNDARY      610  CELL             (1,34,7)   RATE    1.000000E-04
+ BOUNDARY      611  CELL             (1,34,8)   RATE    1.000000E-04
+ BOUNDARY      612  CELL             (1,34,9)   RATE    1.000000E-04
+ BOUNDARY      613  CELL            (1,34,10)   RATE    1.000000E-04
+ BOUNDARY      614  CELL            (1,34,11)   RATE    1.000000E-04
+ BOUNDARY      615  CELL            (1,34,12)   RATE    1.000000E-04
+ BOUNDARY      616  CELL            (1,34,13)   RATE    1.000000E-04
+ BOUNDARY      617  CELL            (1,34,14)   RATE    1.000000E-04
+ BOUNDARY      618  CELL            (1,34,15)   RATE    1.000000E-04
+ BOUNDARY      619  CELL            (1,34,16)   RATE    1.000000E-04
+ BOUNDARY      620  CELL            (1,34,17)   RATE    1.000000E-04
+ BOUNDARY      621  CELL            (1,34,18)   RATE    1.000000E-04
+ BOUNDARY      622  CELL            (1,34,19)   RATE    1.000000E-04
+ BOUNDARY      623  CELL            (1,34,20)   RATE    1.000000E-04
+ BOUNDARY      624  CELL             (1,35,4)   RATE    1.000000E-04
+ BOUNDARY      625  CELL             (1,35,5)   RATE    1.000000E-04
+ BOUNDARY      626  CELL             (1,35,6)   RATE    1.000000E-04
+ BOUNDARY      627  CELL             (1,35,7)   RATE    1.000000E-04
+ BOUNDARY      628  CELL             (1,35,8)   RATE    1.000000E-04
+ BOUNDARY      629  CELL             (1,35,9)   RATE    1.000000E-04
+ BOUNDARY      630  CELL            (1,35,10)   RATE    1.000000E-04
+ BOUNDARY      631  CELL            (1,35,11)   RATE    1.000000E-04
+ BOUNDARY      632  CELL            (1,35,12)   RATE    1.000000E-04
+ BOUNDARY      633  CELL            (1,35,13)   RATE    1.000000E-04
+ BOUNDARY      634  CELL            (1,35,14)   RATE    1.000000E-04
+ BOUNDARY      635  CELL            (1,35,15)   RATE    1.000000E-04
+ BOUNDARY      636  CELL            (1,35,16)   RATE    1.000000E-04
+ BOUNDARY      637  CELL            (1,35,17)   RATE    1.000000E-04
+ BOUNDARY      638  CELL            (1,35,18)   RATE    1.000000E-04
+ BOUNDARY      639  CELL            (1,35,19)   RATE    1.000000E-04
+ BOUNDARY      640  CELL            (1,35,20)   RATE    1.000000E-04
+ BOUNDARY      641  CELL             (1,36,5)   RATE    1.000000E-04
+ BOUNDARY      642  CELL             (1,36,6)   RATE    1.000000E-04
+ BOUNDARY      643  CELL             (1,36,7)   RATE    1.000000E-04
+ BOUNDARY      644  CELL             (1,36,8)   RATE    1.000000E-04
+ BOUNDARY      645  CELL             (1,36,9)   RATE    1.000000E-04
+ BOUNDARY      646  CELL            (1,36,10)   RATE    1.000000E-04
+ BOUNDARY      647  CELL            (1,36,11)   RATE    1.000000E-04
+ BOUNDARY      648  CELL            (1,36,12)   RATE    1.000000E-04
+ BOUNDARY      649  CELL            (1,36,13)   RATE    1.000000E-04
+ BOUNDARY      650  CELL            (1,36,14)   RATE    1.000000E-04
+ BOUNDARY      651  CELL            (1,36,15)   RATE    1.000000E-04
+ BOUNDARY      652  CELL            (1,36,16)   RATE    1.000000E-04
+ BOUNDARY      653  CELL            (1,36,17)   RATE    1.000000E-04
+ BOUNDARY      654  CELL            (1,36,18)   RATE    1.000000E-04
+ BOUNDARY      655  CELL            (1,36,19)   RATE    1.000000E-04
+ BOUNDARY      656  CELL             (1,37,5)   RATE    1.000000E-04
+ BOUNDARY      657  CELL             (1,37,6)   RATE    1.000000E-04
+ BOUNDARY      658  CELL             (1,37,7)   RATE    1.000000E-04
+ BOUNDARY      659  CELL             (1,37,8)   RATE    1.000000E-04
+ BOUNDARY      660  CELL             (1,37,9)   RATE    1.000000E-04
+ BOUNDARY      661  CELL            (1,37,10)   RATE    1.000000E-04
+ BOUNDARY      662  CELL            (1,37,11)   RATE    1.000000E-04
+ BOUNDARY      663  CELL            (1,37,12)   RATE    1.000000E-04
+ BOUNDARY      664  CELL            (1,37,13)   RATE    1.000000E-04
+ BOUNDARY      665  CELL            (1,37,14)   RATE    1.000000E-04
+ BOUNDARY      666  CELL            (1,37,15)   RATE    1.000000E-04
+ BOUNDARY      667  CELL            (1,37,16)   RATE    1.000000E-04
+ BOUNDARY      668  CELL            (1,37,17)   RATE    1.000000E-04
+ BOUNDARY      669  CELL            (1,37,18)   RATE    1.000000E-04
+ BOUNDARY      670  CELL            (1,37,19)   RATE    1.000000E-04
+ BOUNDARY      671  CELL             (1,38,6)   RATE    1.000000E-04
+ BOUNDARY      672  CELL             (1,38,7)   RATE    1.000000E-04
+ BOUNDARY      673  CELL             (1,38,8)   RATE    1.000000E-04
+ BOUNDARY      674  CELL             (1,38,9)   RATE    1.000000E-04
+ BOUNDARY      675  CELL            (1,38,10)   RATE    1.000000E-04
+ BOUNDARY      676  CELL            (1,38,11)   RATE    1.000000E-04
+ BOUNDARY      677  CELL            (1,38,12)   RATE    1.000000E-04
+ BOUNDARY      678  CELL            (1,38,13)   RATE    1.000000E-04
+ BOUNDARY      679  CELL            (1,38,14)   RATE    1.000000E-04
+ BOUNDARY      680  CELL            (1,38,15)   RATE    1.000000E-04
+ BOUNDARY      681  CELL            (1,38,16)   RATE    1.000000E-04
+ BOUNDARY      682  CELL            (1,38,17)   RATE    1.000000E-04
+ BOUNDARY      683  CELL            (1,38,18)   RATE    1.000000E-04
+ BOUNDARY      684  CELL             (1,39,6)   RATE    1.000000E-04
+ BOUNDARY      685  CELL             (1,39,7)   RATE    1.000000E-04
+ BOUNDARY      686  CELL             (1,39,8)   RATE    1.000000E-04
+ BOUNDARY      687  CELL             (1,39,9)   RATE    1.000000E-04
+ BOUNDARY      688  CELL            (1,39,10)   RATE    1.000000E-04
+ BOUNDARY      689  CELL            (1,39,11)   RATE    1.000000E-04
+ BOUNDARY      690  CELL            (1,39,12)   RATE    1.000000E-04
+ BOUNDARY      691  CELL            (1,39,13)   RATE    1.000000E-04
+ BOUNDARY      692  CELL            (1,39,14)   RATE    1.000000E-04
+ BOUNDARY      693  CELL            (1,39,15)   RATE    1.000000E-04
+ BOUNDARY      694  CELL            (1,39,16)   RATE    1.000000E-04
+ BOUNDARY      695  CELL            (1,39,17)   RATE    1.000000E-04
+
+ UBDSV06 SAVING              CHD IN MODEL GWF_1            PACKAGE GWF_1           CONNECTED TO MODEL GWF_1            PACKAGE CHD-1            ON UNIT   1016 AT TIME STEP      1, STRESS PERIOD      1
+
+              CHD (CHD-1)   PERIOD 1   STEP 1
+ BOUNDARY        1  CELL             (1,40,6)   RATE   -4.222442E-04
+ BOUNDARY        2  CELL             (1,40,7)   RATE   -1.049258E-03
+ BOUNDARY        3  CELL             (1,40,8)   RATE   -9.046823E-04
+ BOUNDARY        4  CELL             (1,40,9)   RATE   -7.035832E-04
+ BOUNDARY        5  CELL            (1,40,10)   RATE   -6.216521E-04
+ BOUNDARY        6  CELL            (1,40,11)   RATE    1.026642E-04
+ BOUNDARY        7  CELL            (1,40,12)   RATE   -3.170348E-04
+ BOUNDARY        8  CELL            (1,40,13)   RATE   -3.753762E-04
+ BOUNDARY        9  CELL            (1,40,14)   RATE   -3.401423E-05
+ BOUNDARY       10  CELL            (1,40,15)   RATE    7.547557E-05
+
+    CALCULATED INTERCELL FLOW FOR PERIOD 1 STEP 1
+(1,1,1): (1,1,2) -1.443985E-04 (1,2,1) 4.439760E-05
+(1,1,2): (1,1,1) 1.443985E-04 (1,1,3) -2.882011E-04 (1,2,2) 4.379591E-05
+(1,1,3): (1,1,2) 2.882011E-04 (1,1,4) -4.107254E-04 (1,2,3) 2.252530E-05
+(1,1,4): (1,1,3) 4.107254E-04 (1,1,5) -5.263396E-04 (1,2,4) 1.562059E-05
+(1,1,5): (1,1,4) 5.263396E-04 (1,1,6) -6.754378E-04 (1,2,5) 4.910627E-05
+(1,1,6): (1,1,5) 6.754378E-04 (1,1,7) -8.115040E-04 (1,2,6) 3.607546E-05
+(1,1,7): (1,1,6) 8.115040E-04 (1,1,8) -9.188809E-04 (1,2,7) 7.384764E-06
+(1,1,8): (1,1,7) 9.188809E-04 (1,1,9) -1.005510E-03 (1,2,8) -1.336368E-05
+(1,1,9): (1,1,8) 1.005510E-03 (1,1,10) -1.060793E-03 (1,2,9) -4.471115E-05
+(1,1,10): (1,1,9) 1.060793E-03 (1,1,11) -1.047113E-03 (1,2,10) -1.136751E-04
+(1,1,11): (1,1,10) 1.047113E-03 (1,1,12) -1.020942E-03 (1,2,11) -1.261673E-04
+(1,1,12): (1,1,11) 1.020942E-03 (1,1,13) -9.966201E-04 (1,2,12) -1.243192E-04
+(1,1,13): (1,1,12) 9.966201E-04 (1,1,14) -9.815244E-04 (1,2,13) -1.150942E-04
+(1,1,14): (1,1,13) 9.815244E-04 (1,1,15) -8.863809E-04 (1,2,14) -1.951442E-04
+(1,1,15): (1,1,14) 8.863809E-04 (1,1,16) -2.796507E-05 (1,2,15) -3.492042E-04
+(1,1,16): (1,1,15) 2.796507E-05 (1,1,17) 5.048504E-05 (1,2,16) -1.784501E-04
+(1,1,17): (1,1,16) -5.048504E-05 (1,1,18) 4.914900E-05 (1,2,17) -9.866397E-05
+(1,1,18): (1,1,17) -4.914900E-05 (1,1,19) 4.275514E-05 (1,2,18) -9.360614E-05
+(1,1,19): (1,1,18) -4.275514E-05 (1,1,20) 3.100009E-05 (1,2,19) -8.824494E-05
+(1,1,20): (1,1,19) -3.100009E-05 (1,2,20) -6.899991E-05
+(1,2,1): (1,1,1) -4.439760E-05 (1,2,2) -1.428301E-04 (1,3,1) 8.723486E-05
+(1,2,2): (1,1,2) -4.379591E-05 (1,2,1) 1.428301E-04 (1,2,3) -2.801442E-04 (1,3,2) 8.111016E-05
+(1,2,3): (1,1,3) -2.252530E-05 (1,2,2) 2.801442E-04 (1,2,4) -4.035321E-04 (1,3,3) 4.591354E-05
+(1,2,4): (1,1,4) -1.562059E-05 (1,2,3) 4.035321E-04 (1,2,5) -5.571891E-04 (1,3,4) 6.927966E-05
+(1,2,5): (1,1,5) -4.910627E-05 (1,2,4) 5.571891E-04 (1,2,6) -6.776520E-04 (1,3,5) 6.957102E-05
+(1,2,6): (1,1,6) -3.607546E-05 (1,2,5) 6.776520E-04 (1,2,7) -7.790242E-04 (1,3,6) 3.744963E-05
+(1,2,7): (1,1,7) -7.384764E-06 (1,2,6) 7.790242E-04 (1,2,8) -8.810930E-04 (1,3,7) 9.452774E-06
+(1,2,8): (1,1,8) 1.336368E-05 (1,2,7) 8.810930E-04 (1,2,9) -9.676800E-04 (1,3,8) -2.677865E-05
+(1,2,9): (1,1,9) 4.471115E-05 (1,2,8) 9.676800E-04 (1,2,10) -1.034419E-03 (1,3,9) -7.797576E-05
+(1,2,10): (1,1,10) 1.136751E-04 (1,2,9) 1.034419E-03 (1,2,11) -1.100566E-03 (1,3,10) -1.475306E-04
+(1,2,11): (1,1,11) 1.261673E-04 (1,2,10) 1.100566E-03 (1,2,12) -1.109875E-03 (1,3,11) -2.168600E-04
+(1,2,12): (1,1,12) 1.243192E-04 (1,2,11) 1.109875E-03 (1,2,13) -1.089104E-03 (1,3,12) -2.450898E-04
+(1,2,13): (1,1,13) 1.150942E-04 (1,2,12) 1.089104E-03 (1,2,14) -1.063012E-03 (1,3,13) -2.411836E-04
+(1,2,14): (1,1,14) 1.951442E-04 (1,2,13) 1.063012E-03 (1,2,15) -1.081766E-03 (1,3,14) -2.763871E-04
+(1,2,15): (1,1,15) 3.492042E-04 (1,2,14) 1.081766E-03 (1,2,16) 1.338733E-04 (1,3,15) -3.245922E-04
+(1,2,16): (1,1,16) 1.784501E-04 (1,2,15) -1.338733E-04 (1,2,17) 1.046233E-04 (1,3,16) -2.492001E-04
+(1,2,17): (1,1,17) 9.866397E-05 (1,2,16) -1.046233E-04 (1,2,18) 6.525444E-05 (1,3,17) -1.592951E-04
+(1,2,18): (1,1,18) 9.360614E-05 (1,2,17) -6.525444E-05 (1,2,19) 5.171505E-05 (1,3,18) -1.800668E-04
+(1,2,19): (1,1,19) 8.824494E-05 (1,2,18) -5.171505E-05 (1,2,20) 3.390894E-05 (1,3,19) -1.704388E-04
+(1,2,20): (1,1,20) 6.899991E-05 (1,2,19) -3.390894E-05 (1,3,20) -1.350910E-04
+(1,3,1): (1,2,1) -8.723486E-05 (1,3,2) -1.592009E-04 (1,4,1) 1.464379E-04
+(1,3,2): (1,2,2) -8.111016E-05 (1,3,1) 1.592009E-04 (1,3,3) -2.866651E-04 (1,4,2) 1.085685E-04
+(1,3,3): (1,2,3) -4.591354E-05 (1,3,2) 2.866651E-04 (1,3,4) -4.222832E-04 (1,4,3) 8.152973E-05
+(1,3,4): (1,2,4) -6.927966E-05 (1,3,3) 4.222832E-04 (1,3,5) -5.756982E-04 (1,4,4) 1.226952E-04
+(1,3,5): (1,2,5) -6.957102E-05 (1,3,4) 5.756982E-04 (1,3,6) -7.092715E-04 (1,4,5) 1.031485E-04
+(1,3,6): (1,2,6) -3.744963E-05 (1,3,5) 7.092715E-04 (1,3,7) -8.410283E-04 (1,4,6) 6.921380E-05
+(1,3,7): (1,2,7) -9.452774E-06 (1,3,6) 8.410283E-04 (1,3,8) -9.447404E-04 (1,4,7) 1.317030E-05
+(1,3,8): (1,2,8) 2.677865E-05 (1,3,7) 9.447404E-04 (1,3,9) -1.009001E-03 (1,4,8) -6.251433E-05
+(1,3,9): (1,2,9) 7.797576E-05 (1,3,8) 1.009001E-03 (1,3,10) -1.008275E-03 (1,4,9) -1.787006E-04
+(1,3,10): (1,2,10) 1.475306E-04 (1,3,9) 1.008275E-03 (1,3,11) -9.683368E-04 (1,4,10) -2.874700E-04
+(1,3,11): (1,2,11) 2.168600E-04 (1,3,10) 9.683368E-04 (1,3,12) -9.494072E-04 (1,4,11) -3.357917E-04
+(1,3,12): (1,2,12) 2.450898E-04 (1,3,11) 9.494072E-04 (1,3,13) -9.662157E-04 (1,4,12) -3.282834E-04
+(1,3,13): (1,2,13) 2.411836E-04 (1,3,12) 9.662157E-04 (1,3,14) -1.049337E-03 (1,4,13) -2.580624E-04
+(1,3,14): (1,2,14) 2.763871E-04 (1,3,13) 1.049337E-03 (1,3,15) -1.093555E-03 (1,4,14) -3.321667E-04
+(1,3,15): (1,2,15) 3.245922E-04 (1,3,14) 1.093555E-03 (1,3,16) 1.896525E-04 (1,4,15) -3.280713E-04
+(1,3,16): (1,2,16) 2.492001E-04 (1,3,15) -1.896525E-04 (1,3,17) 1.411609E-04 (1,4,16) -3.007085E-04
+(1,3,17): (1,2,17) 1.592951E-04 (1,3,16) -1.411609E-04 (1,3,18) 9.344789E-05 (1,4,17) -2.115821E-04
+(1,3,18): (1,2,18) 1.800668E-04 (1,3,17) -9.344789E-05 (1,3,19) 7.331770E-05 (1,4,18) -2.599366E-04
+(1,3,19): (1,2,19) 1.704388E-04 (1,3,18) -7.331770E-05 (1,3,20) 3.529475E-05 (1,4,19) -2.324159E-04
+(1,3,20): (1,2,20) 1.350910E-04 (1,3,19) -3.529475E-05 (1,4,20) -1.997962E-04
+(1,4,1): (1,3,1) -1.464379E-04 (1,4,2) -1.176226E-04 (1,5,1) 1.640650E-04
+(1,4,2): (1,3,2) -1.085685E-04 (1,4,1) 1.176226E-04 (1,4,3) -2.352785E-04 (1,5,2) 1.262200E-04
+(1,4,3): (1,3,3) -8.152973E-05 (1,4,2) 2.352785E-04 (1,4,4) -3.997930E-04 (1,5,3) 1.460407E-04
+(1,4,4): (1,3,4) -1.226952E-04 (1,4,3) 3.997930E-04 (1,4,5) -5.728098E-04 (1,5,4) 1.957102E-04
+(1,4,5): (1,3,5) -1.031485E-04 (1,4,4) 5.728098E-04 (1,4,6) -6.935815E-04 (1,5,5) 1.239214E-04
+(1,4,6): (1,3,6) -6.921380E-05 (1,4,5) 6.935815E-04 (1,4,7) -8.045358E-04 (1,5,6) 8.017420E-05
+(1,4,7): (1,3,7) -1.317030E-05 (1,4,6) 8.045358E-04 (1,4,8) -9.836704E-04 (1,5,7) 9.231063E-05
+(1,4,8): (1,3,8) 6.251433E-05 (1,4,7) 9.836704E-04 (1,4,9) -1.052401E-03 (1,5,8) -9.377655E-05
+(1,4,9): (1,3,9) 1.787006E-04 (1,4,8) 1.052401E-03 (1,4,10) -1.051337E-03 (1,5,9) -2.797615E-04
+(1,4,10): (1,3,10) 2.874700E-04 (1,4,9) 1.051337E-03 (1,4,11) -1.102767E-03 (1,5,10) -3.360399E-04
+(1,4,11): (1,3,11) 3.357917E-04 (1,4,10) 1.102767E-03 (1,4,12) -1.162431E-03 (1,5,11) -3.761281E-04
+(1,4,12): (1,3,12) 3.282834E-04 (1,4,11) 1.162431E-03 (1,4,13) -1.231241E-03 (1,5,12) -3.594748E-04
+(1,4,13): (1,3,13) 2.580624E-04 (1,4,12) 1.231241E-03 (1,4,14) -1.233534E-03 (1,5,13) -3.557701E-04
+(1,4,14): (1,3,14) 3.321667E-04 (1,4,13) 1.233534E-03 (1,4,15) -1.256886E-03 (1,5,14) -4.088125E-04
+(1,4,15): (1,3,15) 3.280713E-04 (1,4,14) 1.256886E-03 (1,4,16) 2.332090E-04 (1,5,15) -3.815643E-04
+(1,4,16): (1,3,16) 3.007085E-04 (1,4,15) -2.332090E-04 (1,4,17) 1.508025E-04 (1,5,16) -3.183019E-04
+(1,4,17): (1,3,17) 2.115821E-04 (1,4,16) -1.508025E-04 (1,4,18) 1.210433E-04 (1,5,17) -2.818229E-04
+(1,4,18): (1,3,18) 2.599366E-04 (1,4,17) -1.210433E-04 (1,4,19) 8.230482E-05 (1,5,18) -3.211981E-04
+(1,4,19): (1,3,19) 2.324159E-04 (1,4,18) -8.230482E-05 (1,4,20) 4.423155E-05 (1,5,19) -2.943426E-04
+(1,4,20): (1,3,20) 1.997962E-04 (1,4,19) -4.423155E-05 (1,5,20) -2.555646E-04
+(1,5,1): (1,4,1) -1.640650E-04 (1,5,2) -1.384687E-04 (1,6,1) 2.025363E-04
+(1,5,2): (1,4,2) -1.262200E-04 (1,5,1) 1.384687E-04 (1,5,3) -2.853303E-04 (1,6,2) 1.730783E-04
+(1,5,3): (1,4,3) -1.460407E-04 (1,5,2) 2.853303E-04 (1,5,4) -4.566027E-04 (1,6,3) 2.173099E-04
+(1,5,4): (1,4,4) -1.957102E-04 (1,5,3) 4.566027E-04 (1,5,5) -6.164301E-04 (1,6,4) 2.555327E-04
+(1,5,5): (1,4,5) -1.239214E-04 (1,5,4) 6.164301E-04 (1,5,6) -7.655208E-04 (1,6,5) 1.730104E-04
+(1,5,6): (1,4,6) -8.017420E-05 (1,5,5) 7.655208E-04 (1,5,7) -8.856968E-04 (1,6,6) 1.003551E-04
+(1,5,7): (1,4,7) -9.231063E-05 (1,5,6) 8.856968E-04 (1,5,8) -8.538223E-04 (1,6,7) -3.955927E-05
+(1,5,8): (1,4,8) 9.377655E-05 (1,5,7) 8.538223E-04 (1,5,9) -9.192750E-04 (1,6,8) -1.283191E-04
+(1,5,9): (1,4,9) 2.797615E-04 (1,5,8) 9.192750E-04 (1,5,10) -1.125300E-03 (1,6,9) -1.737335E-04
+(1,5,10): (1,4,10) 3.360399E-04 (1,5,9) 1.125300E-03 (1,5,11) -1.209432E-03 (1,6,10) -3.519072E-04
+(1,5,11): (1,4,11) 3.761281E-04 (1,5,10) 1.209432E-03 (1,5,12) -1.191698E-03 (1,6,11) -4.938618E-04
+(1,5,12): (1,4,12) 3.594748E-04 (1,5,11) 1.191698E-03 (1,5,13) -1.191277E-03 (1,6,12) -4.598971E-04
+(1,5,13): (1,4,13) 3.557701E-04 (1,5,12) 1.191277E-03 (1,5,14) -1.244918E-03 (1,6,13) -4.021292E-04
+(1,5,14): (1,4,14) 4.088125E-04 (1,5,13) 1.244918E-03 (1,5,15) -1.367912E-03 (1,6,14) -3.858177E-04
+(1,5,15): (1,4,15) 3.815643E-04 (1,5,14) 1.367912E-03 (1,5,16) 2.163515E-04 (1,6,15) -3.686313E-04
+(1,5,16): (1,4,16) 3.183019E-04 (1,5,15) -2.163515E-04 (1,5,17) 1.649951E-04 (1,6,16) -3.669455E-04
+(1,5,17): (1,4,17) 2.818229E-04 (1,5,16) -1.649951E-04 (1,5,18) 1.632831E-04 (1,6,17) -3.801109E-04
+(1,5,18): (1,4,18) 3.211981E-04 (1,5,17) -1.632831E-04 (1,5,19) 1.185581E-04 (1,6,18) -3.764731E-04
+(1,5,19): (1,4,19) 2.943426E-04 (1,5,18) -1.185581E-04 (1,5,20) 6.600398E-05 (1,6,19) -3.417885E-04
+(1,5,20): (1,4,20) 2.555646E-04 (1,5,19) -6.600398E-05 (1,6,20) -2.895607E-04
+(1,6,1): (1,5,1) -2.025363E-04 (1,6,2) -1.278819E-04 (1,7,1) 2.304212E-04
+(1,6,2): (1,5,2) -1.730783E-04 (1,6,1) 1.278819E-04 (1,6,3) -2.627913E-04 (1,7,2) 2.079853E-04
+(1,6,3): (1,5,3) -2.173099E-04 (1,6,2) 2.627913E-04 (1,6,4) -4.215248E-04 (1,7,3) 2.760440E-04
+(1,6,4): (1,5,4) -2.555327E-04 (1,6,3) 4.215248E-04 (1,6,5) -5.746695E-04 (1,7,4) 3.086734E-04
+(1,6,5): (1,5,5) -1.730104E-04 (1,6,4) 5.746695E-04 (1,6,6) -6.466168E-04 (1,7,5) 1.449514E-04
+(1,6,6): (1,5,6) -1.003551E-04 (1,6,5) 6.466168E-04 (1,6,7) -7.090908E-04 (1,7,6) 6.282998E-05
+(1,6,7): (1,5,7) 3.955927E-05 (1,6,6) 7.090908E-04 (1,6,8) -8.266179E-04 (1,7,7) -2.202933E-05
+(1,6,8): (1,5,8) 1.283191E-04 (1,6,7) 8.266179E-04 (1,6,9) -8.533857E-04 (1,7,8) -2.015475E-04
+(1,6,9): (1,5,9) 1.737335E-04 (1,6,8) 8.533857E-04 (1,6,10) -8.432362E-04 (1,7,9) -2.838797E-04
+(1,6,10): (1,5,10) 3.519072E-04 (1,6,9) 8.432362E-04 (1,6,11) -9.034027E-04 (1,7,10) -3.917393E-04
+(1,6,11): (1,5,11) 4.938618E-04 (1,6,10) 9.034027E-04 (1,6,12) -1.052455E-03 (1,7,11) -4.448088E-04
+(1,6,12): (1,5,12) 4.598971E-04 (1,6,11) 1.052455E-03 (1,6,13) -1.126248E-03 (1,7,12) -4.861045E-04
+(1,6,13): (1,5,13) 4.021292E-04 (1,6,12) 1.126248E-03 (1,6,14) -1.195719E-03 (1,7,13) -4.326588E-04
+(1,6,14): (1,5,14) 3.858177E-04 (1,6,13) 1.195719E-03 (1,6,15) -1.298747E-03 (1,7,14) -3.827891E-04
+(1,6,15): (1,5,15) 3.686313E-04 (1,6,14) 1.298747E-03 (1,6,16) 1.426602E-04 (1,7,15) -3.295005E-04
+(1,6,16): (1,5,16) 3.669455E-04 (1,6,15) -1.426602E-04 (1,6,17) 2.058807E-04 (1,7,16) -5.301660E-04
+(1,6,17): (1,5,17) 3.801109E-04 (1,6,16) -2.058807E-04 (1,6,18) 2.193926E-04 (1,7,17) -4.936228E-04
+(1,6,18): (1,5,18) 3.764731E-04 (1,6,17) -2.193926E-04 (1,6,19) 1.730853E-04 (1,7,18) -4.301657E-04
+(1,6,19): (1,5,19) 3.417885E-04 (1,6,18) -1.730853E-04 (1,6,20) 6.834259E-05 (1,7,19) -3.370459E-04
+(1,6,20): (1,5,20) 2.895607E-04 (1,6,19) -6.834259E-05 (1,7,20) -3.212181E-04
+(1,7,1): (1,6,1) -2.304212E-04 (1,7,2) -1.277007E-04 (1,8,1) 2.581272E-04
+(1,7,2): (1,6,2) -2.079853E-04 (1,7,1) 1.277007E-04 (1,7,3) -3.101226E-04 (1,8,2) 2.904048E-04
+(1,7,3): (1,6,3) -2.760440E-04 (1,7,2) 3.101226E-04 (1,7,4) -4.622893E-04 (1,8,3) 3.282118E-04
+(1,7,4): (1,6,4) -3.086734E-04 (1,7,3) 4.622893E-04 (1,7,5) -6.754732E-04 (1,8,4) 4.218558E-04
+(1,7,5): (1,6,5) -1.449514E-04 (1,7,4) 6.754732E-04 (1,7,6) -7.861254E-04 (1,8,5) 1.555957E-04
+(1,7,6): (1,6,6) -6.282998E-05 (1,7,5) 7.861254E-04 (1,7,7) -8.646857E-04 (1,8,6) 4.139732E-05
+(1,7,7): (1,6,7) 2.202933E-05 (1,7,6) 8.646857E-04 (1,7,8) -9.577808E-04 (1,8,7) -2.892974E-05
+(1,7,8): (1,6,8) 2.015475E-04 (1,7,7) 9.577808E-04 (1,7,9) -9.302047E-04 (1,8,8) -3.291194E-04
+(1,7,9): (1,6,9) 2.838797E-04 (1,7,8) 9.302047E-04 (1,7,10) -9.008058E-04 (1,8,9) -4.132765E-04
+(1,7,10): (1,6,10) 3.917393E-04 (1,7,9) 9.008058E-04 (1,7,11) -8.546979E-04 (1,8,10) -5.378467E-04
+(1,7,11): (1,6,11) 4.448088E-04 (1,7,10) 8.546979E-04 (1,7,12) -8.931548E-04 (1,8,11) -5.063509E-04
+(1,7,12): (1,6,12) 4.861045E-04 (1,7,11) 8.931548E-04 (1,7,13) -9.318574E-04 (1,8,12) -5.474014E-04
+(1,7,13): (1,6,13) 4.326588E-04 (1,7,12) 9.318574E-04 (1,7,14) -9.524019E-04 (1,8,13) -5.121148E-04
+(1,7,14): (1,6,14) 3.827891E-04 (1,7,13) 9.524019E-04 (1,7,15) -1.008202E-03 (1,8,14) -4.269894E-04
+(1,7,15): (1,6,15) 3.295005E-04 (1,7,14) 1.008202E-03 (1,7,16) -4.303646E-05 (1,8,15) -3.189564E-04
+(1,7,16): (1,6,16) 5.301660E-04 (1,7,15) 4.303646E-05 (1,7,17) 2.558283E-04 (1,8,16) -9.290307E-04
+(1,7,17): (1,6,17) 4.936228E-04 (1,7,16) -2.558283E-04 (1,7,18) 2.807394E-04 (1,8,17) -6.185340E-04
+(1,7,18): (1,6,18) 4.301657E-04 (1,7,17) -2.807394E-04 (1,7,19) 1.789541E-04 (1,8,18) -4.283804E-04
+(1,7,19): (1,6,19) 3.370459E-04 (1,7,18) -1.789541E-04 (1,7,20) 9.563687E-05 (1,8,19) -3.537286E-04
+(1,7,20): (1,6,20) 3.212181E-04 (1,7,19) -9.563687E-05 (1,8,20) -3.255812E-04
+(1,8,1): (1,7,1) -2.581272E-04 (1,8,2) -1.058841E-04 (1,9,1) 2.640153E-04
+(1,8,2): (1,7,2) -2.904048E-04 (1,8,1) 1.058841E-04 (1,8,3) -2.623123E-04 (1,9,2) 3.468380E-04
+(1,8,3): (1,7,3) -3.282118E-04 (1,8,2) 2.623123E-04 (1,8,4) -5.139521E-04 (1,9,3) 4.798584E-04
+(1,8,4): (1,7,4) -4.218558E-04 (1,8,3) 5.139521E-04 (1,8,5) -1.068731E-03 (1,9,4) 8.766435E-04
+(1,8,5): (1,7,5) -1.555957E-04 (1,8,4) 1.068731E-03 (1,8,6) -1.013154E-03
+(1,8,6): (1,7,6) -4.139732E-05 (1,8,5) 1.013154E-03 (1,8,7) -1.071763E-03
+(1,8,7): (1,7,7) 2.892974E-05 (1,8,6) 1.071763E-03 (1,8,8) -1.200698E-03
+(1,8,8): (1,7,8) 3.291194E-04 (1,8,7) 1.200698E-03 (1,8,9) -7.785259E-04 (1,9,8) -8.512954E-04
+(1,8,9): (1,7,9) 4.132765E-04 (1,8,8) 7.785259E-04 (1,8,10) -6.755164E-04 (1,9,9) -6.162880E-04
+(1,8,10): (1,7,10) 5.378467E-04 (1,8,9) 6.755164E-04 (1,8,11) -7.187552E-04 (1,9,10) -5.946092E-04
+(1,8,11): (1,7,11) 5.063509E-04 (1,8,10) 7.187552E-04 (1,8,12) -8.287594E-04 (1,9,11) -4.963460E-04
+(1,8,12): (1,7,12) 5.474014E-04 (1,8,11) 8.287594E-04 (1,8,13) -8.759648E-04 (1,9,12) -6.001955E-04
+(1,8,13): (1,7,13) 5.121148E-04 (1,8,12) 8.759648E-04 (1,8,14) -9.245905E-04 (1,9,13) -5.634890E-04
+(1,8,14): (1,7,14) 4.269894E-04 (1,8,13) 9.245905E-04 (1,8,15) -1.049372E-03 (1,9,14) -4.022090E-04
+(1,8,15): (1,7,15) 3.189564E-04 (1,8,14) 1.049372E-03 (1,8,16) -6.178914E-04 (1,9,15) -3.327103E-04
+(1,8,16): (1,7,16) 9.290307E-04 (1,8,15) 6.178914E-04 (1,8,17) 4.854608E-04 (1,9,16) -2.132383E-03
+(1,8,17): (1,7,17) 6.185340E-04 (1,8,16) -4.854608E-04 (1,8,18) 4.114647E-04 (1,9,17) -6.445379E-04
+(1,8,18): (1,7,18) 4.283804E-04 (1,8,17) -4.114647E-04 (1,8,19) 2.701351E-04 (1,9,18) -3.870509E-04
+(1,8,19): (1,7,19) 3.537286E-04 (1,8,18) -2.701351E-04 (1,8,20) 1.308852E-04 (1,9,19) -3.144786E-04
+(1,8,20): (1,7,20) 3.255812E-04 (1,8,19) -1.308852E-04 (1,9,20) -2.946960E-04
+(1,9,1): (1,8,1) -2.640153E-04 (1,9,2) -8.625589E-05 (1,10,1) 2.502703E-04
+(1,9,2): (1,8,2) -3.468380E-04 (1,9,1) 8.625589E-05 (1,9,3) -1.779045E-04 (1,10,2) 3.384931E-04
+(1,9,3): (1,8,3) -4.798584E-04 (1,9,2) 1.779045E-04 (1,9,4) -1.996629E-04 (1,10,3) 4.016318E-04
+(1,9,4): (1,8,4) -8.766435E-04 (1,9,3) 1.996629E-04 (1,10,4) 5.770081E-04
+(1,9,8): (1,8,8) 8.512954E-04 (1,9,9) -9.512969E-04
+(1,9,9): (1,8,9) 6.162880E-04 (1,9,8) 9.512969E-04 (1,9,10) -7.175217E-04 (1,10,9) -9.500654E-04
+(1,9,10): (1,8,10) 5.946092E-04 (1,9,9) 7.175217E-04 (1,9,11) -6.961736E-04 (1,10,10) -7.159594E-04
+(1,9,11): (1,8,11) 4.963460E-04 (1,9,10) 6.961736E-04 (1,9,12) -7.439618E-04 (1,10,11) -5.485581E-04
+(1,9,12): (1,8,12) 6.001955E-04 (1,9,11) 7.439618E-04 (1,9,13) -7.930425E-04 (1,10,12) -6.511147E-04
+(1,9,13): (1,8,13) 5.634890E-04 (1,9,12) 7.930425E-04 (1,9,14) -7.192416E-04 (1,10,13) -7.372899E-04
+(1,9,14): (1,8,14) 4.022090E-04 (1,9,13) 7.192416E-04 (1,9,15) -9.379002E-04 (1,10,14) -2.835513E-04
+(1,9,15): (1,8,15) 3.327103E-04 (1,9,14) 9.379002E-04 (1,9,16) -2.273344E-03 (1,10,15) 9.619728E-04
+(1,9,16): (1,8,16) 2.132383E-03 (1,9,15) 2.273344E-03 (1,9,17) 1.781205E-03 (1,10,16) 1.913069E-03
+(1,9,17): (1,8,17) 6.445379E-04 (1,9,16) -1.781205E-03 (1,9,18) 7.690907E-04 (1,10,17) 2.675764E-04
+(1,9,18): (1,8,18) 3.870509E-04 (1,9,17) -7.690907E-04 (1,9,19) 3.873837E-04 (1,10,18) -1.053439E-04
+(1,9,19): (1,8,19) 3.144786E-04 (1,9,18) -3.873837E-04 (1,9,20) 1.565214E-04 (1,10,19) -1.836163E-04
+(1,9,20): (1,8,20) 2.946960E-04 (1,9,19) -1.565214E-04 (1,10,20) -2.381746E-04
+(1,10,1): (1,9,1) -2.502703E-04 (1,10,2) -6.425721E-05 (1,11,1) 2.145198E-04
+(1,10,2): (1,9,2) -3.384931E-04 (1,10,1) 6.425721E-05 (1,10,3) -9.623886E-05 (1,11,2) 2.704753E-04
+(1,10,3): (1,9,3) -4.016318E-04 (1,10,2) 9.623886E-05 (1,10,4) -9.148657E-05 (1,11,3) 2.968779E-04
+(1,10,4): (1,9,4) -5.770081E-04 (1,10,3) 9.148657E-05 (1,11,4) 3.855285E-04
+(1,10,9): (1,9,9) 9.500654E-04 (1,10,10) -4.104364E-04 (1,11,9) -6.396285E-04
+(1,10,10): (1,9,10) 7.159594E-04 (1,10,9) 4.104364E-04 (1,10,11) -6.185807E-04 (1,11,10) -6.078165E-04
+(1,10,11): (1,9,11) 5.485581E-04 (1,10,10) 6.185807E-04 (1,10,12) -7.942459E-04 (1,11,11) -4.728937E-04
+(1,10,12): (1,9,12) 6.511147E-04 (1,10,11) 7.942459E-04 (1,10,13) -8.757076E-04 (1,11,12) -6.696532E-04
+(1,10,13): (1,9,13) 7.372899E-04 (1,10,12) 8.757076E-04 (1,10,14) -2.272165E-04 (1,11,13) -1.485781E-03
+(1,10,14): (1,9,14) 2.835513E-04 (1,10,13) 2.272165E-04 (1,10,15) 3.071129E-04 (1,11,14) -9.178816E-04
+(1,10,15): (1,9,15) -9.619728E-04 (1,10,14) -3.071129E-04 (1,10,16) -1.478036E-03 (1,11,15) -1.546915E-03
+(1,10,16): (1,9,16) -1.913069E-03 (1,10,15) 1.478036E-03 (1,10,17) 2.815263E-04 (1,11,16) 5.350627E-05
+(1,10,17): (1,9,17) -2.675764E-04 (1,10,16) -2.815263E-04 (1,10,18) 4.141154E-04 (1,11,17) 3.498722E-05
+(1,10,18): (1,9,18) 1.053439E-04 (1,10,17) -4.141154E-04 (1,10,19) 2.847432E-04 (1,11,18) -7.597178E-05
+(1,10,19): (1,9,19) 1.836163E-04 (1,10,18) -2.847432E-04 (1,10,20) 1.537726E-04 (1,11,19) -1.526457E-04
+(1,10,20): (1,9,20) 2.381746E-04 (1,10,19) -1.537726E-04 (1,11,20) -1.844020E-04
+(1,11,1): (1,10,1) -2.145198E-04 (1,11,2) -4.971169E-05 (1,12,1) 1.642211E-04
+(1,11,2): (1,10,2) -2.704753E-04 (1,11,1) 4.971169E-05 (1,11,3) -5.256733E-05 (1,12,2) 1.733318E-04
+(1,11,3): (1,10,3) -2.968779E-04 (1,11,2) 5.256733E-05 (1,11,4) -4.984986E-05 (1,12,3) 1.941626E-04
+(1,11,4): (1,10,4) -3.855285E-04 (1,11,3) 4.984986E-05 (1,12,4) 2.356813E-04
+(1,11,9): (1,10,9) 6.396285E-04 (1,11,10) -2.837584E-04 (1,12,9) -4.558692E-04
+(1,11,10): (1,10,10) 6.078165E-04 (1,11,9) 2.837584E-04 (1,11,11) -5.053110E-04 (1,12,10) -4.862646E-04
+(1,11,11): (1,10,11) 4.728937E-04 (1,11,10) 5.053110E-04 (1,11,12) -7.401590E-04 (1,12,11) -3.380462E-04
+(1,11,12): (1,10,12) 6.696532E-04 (1,11,11) 7.401590E-04 (1,11,13) -1.378240E-03 (1,12,12) -1.315726E-04
+(1,11,13): (1,10,13) 1.485781E-03 (1,11,12) 1.378240E-03 (1,11,14) 5.351413E-04 (1,12,13) 6.008372E-04
+(1,11,14): (1,10,14) 9.178816E-04 (1,11,13) -5.351413E-04 (1,11,15) -3.021796E-04 (1,12,14) -1.805615E-04
+(1,11,15): (1,10,15) 1.546915E-03 (1,11,14) 3.021796E-04 (1,11,16) 1.568575E-04 (1,12,15) -3.425833E-04
+(1,11,16): (1,10,16) -5.350627E-05 (1,11,15) -1.568575E-04 (1,11,17) 2.304095E-04 (1,12,16) -1.200458E-04
+(1,11,17): (1,10,17) -3.498722E-05 (1,11,16) -2.304095E-04 (1,11,18) 2.629463E-04 (1,12,17) -9.754954E-05
+(1,11,18): (1,10,18) 7.597178E-05 (1,11,17) -2.629463E-04 (1,11,19) 2.024292E-04 (1,12,18) -1.154547E-04
+(1,11,19): (1,10,19) 1.526457E-04 (1,11,18) -2.024292E-04 (1,11,20) 1.088481E-04 (1,12,19) -1.590646E-04
+(1,11,20): (1,10,20) 1.844020E-04 (1,11,19) -1.088481E-04 (1,12,20) -1.755539E-04
+(1,12,1): (1,11,1) -1.642211E-04 (1,12,2) -1.996453E-05 (1,13,1) 8.417745E-05
+(1,12,2): (1,11,2) -1.733318E-04 (1,12,1) 1.996453E-05 (1,12,3) -3.269075E-05 (1,13,2) 8.605767E-05
+(1,12,3): (1,11,3) -1.941626E-04 (1,12,2) 3.269075E-05 (1,12,4) -2.500421E-05 (1,13,3) 8.647997E-05
+(1,12,4): (1,11,4) -2.356813E-04 (1,12,3) 2.500421E-05 (1,13,4) 1.106772E-04
+(1,12,9): (1,11,9) 4.558692E-04 (1,12,10) -2.251912E-04 (1,13,9) -3.306772E-04
+(1,12,10): (1,11,10) 4.862646E-04 (1,12,9) 2.251912E-04 (1,12,11) -4.782426E-04 (1,13,10) -3.332132E-04
+(1,12,11): (1,11,11) 3.380462E-04 (1,12,10) 4.782426E-04 (1,12,12) -6.538263E-04 (1,13,11) -2.624629E-04
+(1,12,12): (1,11,12) 1.315726E-04 (1,12,11) 6.538263E-04 (1,12,13) -7.198089E-04 (1,13,12) -1.655904E-04
+(1,12,13): (1,11,13) -6.008372E-04 (1,12,12) 7.198089E-04 (1,12,14) -2.901040E-04 (1,13,13) 7.113214E-05
+(1,12,14): (1,11,14) 1.805615E-04 (1,12,13) 2.901040E-04 (1,12,15) -4.236410E-04 (1,13,14) -1.470251E-04
+(1,12,15): (1,11,15) 3.425833E-04 (1,12,14) 4.236410E-04 (1,12,16) 2.815821E-04 (1,13,15) -3.034750E-04
+(1,12,16): (1,11,16) 1.200458E-04 (1,12,15) -2.815821E-04 (1,12,17) 2.554120E-04 (1,13,16) -1.938756E-04
+(1,12,17): (1,11,17) 9.754954E-05 (1,12,16) -2.554120E-04 (1,12,18) 2.419813E-04 (1,13,17) -1.841188E-04
+(1,12,18): (1,11,18) 1.154547E-04 (1,12,17) -2.419813E-04 (1,12,19) 1.878312E-04 (1,13,18) -1.613046E-04
+(1,12,19): (1,11,19) 1.590646E-04 (1,12,18) -1.878312E-04 (1,12,20) 9.724274E-05 (1,13,19) -1.684762E-04
+(1,12,20): (1,11,20) 1.755539E-04 (1,12,19) -9.724274E-05 (1,13,20) -1.783111E-04
+(1,13,1): (1,12,1) -8.417745E-05 (1,13,2) -7.465099E-06 (1,14,1) -8.362503E-06
+(1,13,2): (1,12,2) -8.605767E-05 (1,13,1) 7.465099E-06 (1,13,3) -1.726432E-05 (1,14,2) -4.143005E-06
+(1,13,3): (1,12,3) -8.647997E-05 (1,13,2) 1.726432E-05 (1,13,4) -2.301592E-05 (1,14,3) -7.765368E-06
+(1,13,4): (1,12,4) -1.106772E-04 (1,13,3) 2.301592E-05 (1,14,4) -1.233903E-05
+(1,13,9): (1,12,9) 3.306772E-04 (1,13,10) -2.047659E-04 (1,14,9) -2.259107E-04
+(1,13,10): (1,12,10) 3.332132E-04 (1,13,9) 2.047659E-04 (1,13,11) -3.953751E-04 (1,14,10) -2.426039E-04
+(1,13,11): (1,12,11) 2.624629E-04 (1,13,10) 3.953751E-04 (1,13,12) -5.823029E-04 (1,14,11) -1.755351E-04
+(1,13,12): (1,12,12) 1.655904E-04 (1,13,11) 5.823029E-04 (1,13,13) -7.129948E-04 (1,14,12) -1.348988E-04
+(1,13,13): (1,12,13) -7.113214E-05 (1,13,12) 7.129948E-04 (1,13,14) -6.250447E-04 (1,14,13) -1.168184E-04
+(1,13,14): (1,12,14) 1.470251E-04 (1,13,13) 6.250447E-04 (1,13,15) -6.430636E-04 (1,14,14) -2.290067E-04
+(1,13,15): (1,12,15) 3.034750E-04 (1,13,14) 6.430636E-04 (1,13,16) 4.187427E-04 (1,14,15) -3.338838E-04
+(1,13,16): (1,12,16) 1.938756E-04 (1,13,15) -4.187427E-04 (1,13,17) 3.494559E-04 (1,14,16) -2.245888E-04
+(1,13,17): (1,12,17) 1.841188E-04 (1,13,16) -3.494559E-04 (1,13,18) 2.512402E-04 (1,14,17) -1.859031E-04
+(1,13,18): (1,12,18) 1.613046E-04 (1,13,17) -2.512402E-04 (1,13,19) 1.672496E-04 (1,14,18) -1.773140E-04
+(1,13,19): (1,12,19) 1.684762E-04 (1,13,18) -1.672496E-04 (1,13,20) 8.225678E-05 (1,14,19) -1.834833E-04
+(1,13,20): (1,12,20) 1.783111E-04 (1,13,19) -8.225678E-05 (1,14,20) -1.960543E-04
+(1,14,1): (1,13,1) 8.362503E-06 (1,14,2) -2.910004E-06 (1,15,1) -1.054564E-04
+(1,14,2): (1,13,2) 4.143005E-06 (1,14,1) 2.910004E-06 (1,14,3) -2.038200E-05 (1,15,2) -8.666981E-05
+(1,14,3): (1,13,3) 7.765368E-06 (1,14,2) 2.038200E-05 (1,14,4) -2.771006E-05 (1,15,3) -1.004349E-04
+(1,14,4): (1,13,4) 1.233903E-05 (1,14,3) 2.771006E-05 (1,15,4) -1.400491E-04
+(1,14,9): (1,13,9) 2.259107E-04 (1,14,10) -1.832292E-04 (1,15,9) -1.426811E-04
+(1,14,10): (1,13,10) 2.426039E-04 (1,14,9) 1.832292E-04 (1,14,11) -3.635379E-04 (1,15,10) -1.622950E-04
+(1,14,11): (1,13,11) 1.755351E-04 (1,14,10) 3.635379E-04 (1,14,12) -4.825097E-04 (1,15,11) -1.565631E-04
+(1,14,12): (1,13,12) 1.348988E-04 (1,14,11) 4.825097E-04 (1,14,13) -5.406221E-04 (1,15,12) -1.767865E-04
+(1,14,13): (1,13,13) 1.168184E-04 (1,14,12) 5.406221E-04 (1,14,14) -6.178136E-04 (1,15,13) -1.396271E-04
+(1,14,14): (1,13,14) 2.290067E-04 (1,14,13) 6.178136E-04 (1,14,15) -7.612923E-04 (1,15,14) -1.855286E-04
+(1,14,15): (1,13,15) 3.338838E-04 (1,14,14) 7.612923E-04 (1,14,16) 4.816534E-04 (1,15,15) -2.980044E-04
+(1,14,16): (1,13,16) 2.245888E-04 (1,14,15) -4.816534E-04 (1,14,17) 3.813574E-04 (1,15,16) -2.242927E-04
+(1,14,17): (1,13,17) 1.859031E-04 (1,14,16) -3.813574E-04 (1,14,18) 2.662885E-04 (1,15,17) -1.708343E-04
+(1,14,18): (1,13,18) 1.773140E-04 (1,14,17) -2.662885E-04 (1,14,19) 1.671358E-04 (1,15,18) -1.781613E-04
+(1,14,19): (1,13,19) 1.834833E-04 (1,14,18) -1.671358E-04 (1,14,20) 8.136760E-05 (1,15,19) -1.977152E-04
+(1,14,20): (1,13,20) 1.960543E-04 (1,14,19) -8.136760E-05 (1,15,20) -2.146867E-04
+(1,15,1): (1,14,1) 1.054564E-04 (1,15,2) -4.430067E-06 (1,16,1) -2.010287E-04
+(1,15,2): (1,14,2) 8.666981E-05 (1,15,1) 4.430067E-06 (1,15,3) -2.404126E-05 (1,16,2) -1.670561E-04
+(1,15,3): (1,14,3) 1.004349E-04 (1,15,2) 2.404126E-05 (1,15,4) -1.963807E-05 (1,16,3) -2.048360E-04
+(1,15,4): (1,14,4) 1.400491E-04 (1,15,3) 1.963807E-05 (1,16,4) -2.596873E-04
+(1,15,9): (1,14,9) 1.426811E-04 (1,15,10) -1.550751E-04 (1,16,9) -8.760575E-05
+(1,15,10): (1,14,10) 1.622950E-04 (1,15,9) 1.550751E-04 (1,15,11) -3.080162E-04 (1,16,10) -1.093538E-04
+(1,15,11): (1,14,11) 1.565631E-04 (1,15,10) 3.080162E-04 (1,15,12) -4.540368E-04 (1,16,11) -1.105423E-04
+(1,15,12): (1,14,12) 1.767865E-04 (1,15,11) 4.540368E-04 (1,15,13) -5.500820E-04 (1,16,12) -1.807413E-04
+(1,15,13): (1,14,13) 1.396271E-04 (1,15,12) 5.500820E-04 (1,15,14) -5.881012E-04 (1,16,13) -2.016082E-04
+(1,15,14): (1,14,14) 1.855286E-04 (1,15,13) 5.881012E-04 (1,15,15) -6.575788E-04 (1,16,14) -2.160515E-04
+(1,15,15): (1,14,15) 2.980044E-04 (1,15,14) 6.575788E-04 (1,15,16) 4.438018E-04 (1,16,15) -2.414807E-04
+(1,15,16): (1,14,16) 2.242927E-04 (1,15,15) -4.438018E-04 (1,15,17) 3.334449E-04 (1,16,16) -2.139358E-04
+(1,15,17): (1,14,17) 1.708343E-04 (1,15,16) -3.334449E-04 (1,15,18) 2.325902E-04 (1,16,17) -1.699796E-04
+(1,15,18): (1,14,18) 1.781613E-04 (1,15,17) -2.325902E-04 (1,15,19) 1.667866E-04 (1,16,18) -2.123578E-04
+(1,15,19): (1,14,19) 1.977152E-04 (1,15,18) -1.667866E-04 (1,15,20) 8.086369E-05 (1,16,19) -2.117922E-04
+(1,15,20): (1,14,20) 2.146867E-04 (1,15,19) -8.086369E-05 (1,16,20) -2.338230E-04
+(1,16,1): (1,15,1) 2.010287E-04 (1,16,2) -1.260006E-05 (1,17,1) -2.884305E-04
+(1,16,2): (1,15,2) 1.670561E-04 (1,16,1) 1.260006E-05 (1,16,3) -1.514507E-05 (1,17,2) -2.645078E-04
+(1,16,3): (1,15,3) 2.048360E-04 (1,16,2) 1.514507E-05 (1,16,4) -4.827192E-06 (1,17,3) -3.151526E-04
+(1,16,4): (1,15,4) 2.596873E-04 (1,16,3) 4.827192E-06 (1,17,4) -3.645153E-04
+(1,16,9): (1,15,9) 8.760575E-05 (1,16,10) -1.454575E-04 (1,17,9) -4.214793E-05
+(1,16,10): (1,15,10) 1.093538E-04 (1,16,9) 1.454575E-04 (1,16,11) -2.905753E-04 (1,17,10) -6.423615E-05
+(1,16,11): (1,15,11) 1.105423E-04 (1,16,10) 2.905753E-04 (1,16,12) -4.121648E-04 (1,17,11) -8.895272E-05
+(1,16,12): (1,15,12) 1.807413E-04 (1,16,11) 4.121648E-04 (1,16,13) -5.273920E-04 (1,17,12) -1.655140E-04
+(1,16,13): (1,15,13) 2.016082E-04 (1,16,12) 5.273920E-04 (1,16,14) -6.106381E-04 (1,17,13) -2.183624E-04
+(1,16,14): (1,15,14) 2.160515E-04 (1,16,13) 6.106381E-04 (1,16,15) -6.769687E-04 (1,17,14) -2.497215E-04
+(1,16,15): (1,15,15) 2.414807E-04 (1,16,14) 6.769687E-04 (1,16,16) 4.572763E-04 (1,17,15) -2.439520E-04
+(1,16,16): (1,15,16) 2.139358E-04 (1,16,15) -4.572763E-04 (1,16,17) 3.596451E-04 (1,17,16) -2.163046E-04
+(1,16,17): (1,15,17) 1.699796E-04 (1,16,16) -3.596451E-04 (1,16,18) 2.739142E-04 (1,17,17) -1.842486E-04
+(1,16,18): (1,15,18) 2.123578E-04 (1,16,17) -2.739142E-04 (1,16,19) 1.818369E-04 (1,17,18) -2.202805E-04
+(1,16,19): (1,15,19) 2.117922E-04 (1,16,18) -1.818369E-04 (1,16,20) 8.247785E-05 (1,17,19) -2.124331E-04
+(1,16,20): (1,15,20) 2.338230E-04 (1,16,19) -8.247785E-05 (1,17,20) -2.513452E-04
+(1,17,1): (1,16,1) 2.884305E-04 (1,17,2) -2.164811E-05 (1,18,1) -3.667822E-04
+(1,17,2): (1,16,2) 2.645078E-04 (1,17,1) 2.164811E-05 (1,17,3) -2.011211E-05 (1,18,2) -3.660359E-04
+(1,17,3): (1,16,3) 3.151526E-04 (1,17,2) 2.011211E-05 (1,17,4) 5.968527E-06 (1,18,3) -4.412317E-04
+(1,17,4): (1,16,4) 3.645153E-04 (1,17,3) -5.968527E-06 (1,18,4) -4.585482E-04
+(1,17,9): (1,16,9) 4.214793E-05 (1,17,10) -1.616934E-04 (1,18,9) 1.954589E-05
+(1,17,10): (1,16,10) 6.423615E-05 (1,17,9) 1.616934E-04 (1,17,11) -3.177545E-04 (1,18,10) -8.175230E-06
+(1,17,11): (1,16,11) 8.895272E-05 (1,17,10) 3.177545E-04 (1,17,12) -4.796886E-04 (1,18,11) -2.701881E-05
+(1,17,12): (1,16,12) 1.655140E-04 (1,17,11) 4.796886E-04 (1,17,13) -6.209763E-04 (1,18,12) -1.242263E-04
+(1,17,13): (1,16,13) 2.183624E-04 (1,17,12) 6.209763E-04 (1,17,14) -6.594304E-04 (1,18,13) -2.799086E-04
+(1,17,14): (1,16,14) 2.497215E-04 (1,17,13) 6.594304E-04 (1,17,15) -6.811408E-04 (1,18,14) -3.280116E-04
+(1,17,15): (1,16,15) 2.439520E-04 (1,17,14) 6.811408E-04 (1,17,16) 4.438639E-04 (1,18,15) -2.429667E-04
+(1,17,16): (1,16,16) 2.163046E-04 (1,17,15) -4.438639E-04 (1,17,17) 3.500872E-04 (1,18,16) -2.225279E-04
+(1,17,17): (1,16,17) 1.842486E-04 (1,17,16) -3.500872E-04 (1,17,18) 2.707019E-04 (1,18,17) -2.048633E-04
+(1,17,18): (1,16,18) 2.202805E-04 (1,17,17) -2.707019E-04 (1,17,19) 1.783213E-04 (1,18,18) -2.278999E-04
+(1,17,19): (1,16,19) 2.124331E-04 (1,17,18) -1.783213E-04 (1,17,20) 8.768178E-05 (1,18,19) -2.217936E-04
+(1,17,20): (1,16,20) 2.513452E-04 (1,17,19) -8.768178E-05 (1,18,20) -2.636634E-04
+(1,18,1): (1,17,1) 3.667822E-04 (1,18,2) -2.320409E-05 (1,19,1) -4.435787E-04
+(1,18,2): (1,17,2) 3.660359E-04 (1,18,1) 2.320409E-05 (1,18,3) -4.150372E-05 (1,19,2) -4.477286E-04
+(1,18,3): (1,17,3) 4.412317E-04 (1,18,2) 4.150372E-05 (1,18,4) 5.455848E-06 (1,19,3) -5.881891E-04
+(1,18,4): (1,17,4) 4.585482E-04 (1,18,3) -5.455848E-06 (1,19,4) -5.530944E-04
+(1,18,9): (1,17,9) -1.954589E-05 (1,18,10) -1.698553E-04 (1,19,9) 8.940171E-05
+(1,18,10): (1,17,10) 8.175230E-06 (1,18,9) 1.698553E-04 (1,18,11) -3.579878E-04 (1,19,10) 7.995695E-05
+(1,18,11): (1,17,11) 2.701881E-05 (1,18,10) 3.579878E-04 (1,18,12) -5.150798E-04 (1,19,11) 3.007293E-05
+(1,18,12): (1,17,12) 1.242263E-04 (1,18,11) 5.150798E-04 (1,18,13) -6.656405E-04 (1,19,12) -7.366570E-05
+(1,18,13): (1,17,13) 2.799086E-04 (1,18,12) 6.656405E-04 (1,18,14) -7.195619E-04 (1,19,13) -3.259872E-04
+(1,18,14): (1,17,14) 3.280116E-04 (1,18,13) 7.195619E-04 (1,18,15) -6.225978E-04 (1,19,14) -5.249763E-04
+(1,18,15): (1,17,15) 2.429667E-04 (1,18,14) 6.225978E-04 (1,18,16) 5.202616E-04 (1,19,15) -2.461219E-04
+(1,18,16): (1,17,16) 2.225279E-04 (1,18,15) -5.202616E-04 (1,18,17) 4.292455E-04 (1,19,16) -2.315118E-04
+(1,18,17): (1,17,17) 2.048633E-04 (1,18,16) -4.292455E-04 (1,18,18) 3.187262E-04 (1,19,17) -1.943441E-04
+(1,18,18): (1,17,18) 2.278999E-04 (1,18,17) -3.187262E-04 (1,18,19) 2.015180E-04 (1,19,18) -2.106917E-04
+(1,18,19): (1,17,19) 2.217936E-04 (1,18,18) -2.015180E-04 (1,18,20) 1.102012E-04 (1,19,19) -2.304768E-04
+(1,18,20): (1,17,20) 2.636634E-04 (1,18,19) -1.102012E-04 (1,19,20) -2.534623E-04
+(1,19,1): (1,18,1) 4.435787E-04 (1,19,2) -3.097665E-05 (1,20,1) -5.126020E-04
+(1,19,2): (1,18,2) 4.477286E-04 (1,19,1) 3.097665E-05 (1,19,3) -4.440216E-05 (1,20,2) -5.342946E-04
+(1,19,3): (1,18,3) 5.881891E-04 (1,19,2) 4.440216E-05 (1,19,4) -3.021081E-05 (1,20,3) -7.023771E-04
+(1,19,4): (1,18,4) 5.530944E-04 (1,19,3) 3.021081E-05 (1,20,4) -6.833067E-04
+(1,19,9): (1,18,9) -8.940171E-05 (1,19,10) -1.960477E-04 (1,20,9) 1.854500E-04
+(1,19,10): (1,18,10) -7.995695E-05 (1,19,9) 1.960477E-04 (1,19,11) -3.836994E-04 (1,20,10) 1.676085E-04
+(1,19,11): (1,18,11) -3.007293E-05 (1,19,10) 3.836994E-04 (1,19,12) -5.377893E-04 (1,20,11) 8.416235E-05
+(1,19,12): (1,18,12) 7.366570E-05 (1,19,11) 5.377893E-04 (1,19,13) -6.757395E-04 (1,20,12) -3.571576E-05
+(1,19,13): (1,18,13) 3.259872E-04 (1,19,12) 6.757395E-04 (1,19,14) -7.966947E-04 (1,20,13) -3.050322E-04
+(1,19,14): (1,18,14) 5.249763E-04 (1,19,13) 7.966947E-04 (1,19,15) -3.281626E-04 (1,20,14) -1.093509E-03
+(1,19,15): (1,18,15) 2.461219E-04 (1,19,14) 3.281626E-04 (1,19,16) 5.434810E-04 (1,20,15) -2.506856E-04
+(1,19,16): (1,18,16) 2.315118E-04 (1,19,15) -5.434810E-04 (1,19,17) 4.312981E-04 (1,20,16) -2.193289E-04
+(1,19,17): (1,18,17) 1.943441E-04 (1,19,16) -4.312981E-04 (1,19,18) 3.274386E-04 (1,20,17) -1.904845E-04
+(1,19,18): (1,18,18) 2.106917E-04 (1,19,17) -3.274386E-04 (1,19,19) 2.315751E-04 (1,20,18) -2.148282E-04
+(1,19,19): (1,18,19) 2.304768E-04 (1,19,18) -2.315751E-04 (1,19,20) 1.127484E-04 (1,20,19) -2.116501E-04
+(1,19,20): (1,18,20) 2.534623E-04 (1,19,19) -1.127484E-04 (1,20,20) -2.407138E-04
+(1,20,1): (1,19,1) 5.126020E-04 (1,20,2) -2.803720E-05 (1,21,1) -5.845645E-04
+(1,20,2): (1,19,2) 5.342946E-04 (1,20,1) 2.803720E-05 (1,20,3) -6.622889E-05 (1,21,2) -5.960944E-04
+(1,20,3): (1,19,3) 7.023771E-04 (1,20,2) 6.622889E-05 (1,20,4) -8.560722E-05 (1,21,3) -7.829952E-04
+(1,20,4): (1,19,4) 6.833067E-04 (1,20,3) 8.560722E-05 (1,21,4) -8.689140E-04
+(1,20,9): (1,19,9) -1.854500E-04 (1,20,10) -2.703832E-04 (1,21,9) 3.558340E-04
+(1,20,10): (1,19,10) -1.676085E-04 (1,20,9) 2.703832E-04 (1,20,11) -4.856237E-04 (1,21,10) 2.828487E-04
+(1,20,11): (1,19,11) -8.416235E-05 (1,20,10) 4.856237E-04 (1,20,12) -6.560643E-04 (1,21,11) 1.546024E-04
+(1,20,12): (1,19,12) 3.571576E-05 (1,20,11) 6.560643E-04 (1,20,13) -9.256714E-04 (1,21,12) 1.338908E-04
+(1,20,13): (1,19,13) 3.050322E-04 (1,20,12) 9.256714E-04 (1,20,14) -1.464090E-03 (1,21,13) 1.333856E-04
+(1,20,14): (1,19,14) 1.093509E-03 (1,20,13) 1.464090E-03 (1,20,15) 5.167318E-04 (1,21,14) 7.256692E-04
+(1,20,15): (1,19,15) 2.506856E-04 (1,20,14) -5.167318E-04 (1,20,16) 5.560417E-04 (1,21,15) -2.047236E-04
+(1,20,16): (1,19,16) 2.193289E-04 (1,20,15) -5.560417E-04 (1,20,17) 4.444370E-04 (1,21,16) -2.077242E-04
+(1,20,17): (1,19,17) 1.904845E-04 (1,20,16) -4.444370E-04 (1,20,18) 3.343829E-04 (1,21,17) -1.804304E-04
+(1,20,18): (1,19,18) 2.148282E-04 (1,20,17) -3.343829E-04 (1,20,19) 2.221042E-04 (1,21,18) -2.025496E-04
+(1,20,19): (1,19,19) 2.116501E-04 (1,20,18) -2.221042E-04 (1,20,20) 1.003698E-04 (1,21,19) -1.899157E-04
+(1,20,20): (1,19,20) 2.407138E-04 (1,20,19) -1.003698E-04 (1,21,20) -2.403440E-04
+(1,21,1): (1,20,1) 5.845645E-04 (1,21,2) -6.281309E-05 (1,22,1) -6.217506E-04
+(1,21,2): (1,20,2) 5.960944E-04 (1,21,1) 6.281309E-05 (1,21,3) -1.142371E-04 (1,22,2) -6.446649E-04
+(1,21,3): (1,20,3) 7.829952E-04 (1,21,2) 1.142371E-04 (1,21,4) -1.083877E-04 (1,22,3) -8.888415E-04
+(1,21,4): (1,20,4) 8.689140E-04 (1,21,3) 1.083877E-04 (1,22,4) -1.077301E-03
+(1,21,9): (1,20,9) -3.558340E-04 (1,21,10) -4.049212E-04 (1,22,9) 6.607560E-04
+(1,21,10): (1,20,10) -2.828487E-04 (1,21,9) 4.049212E-04 (1,21,11) -5.809473E-04 (1,22,10) 3.588741E-04
+(1,21,11): (1,20,11) -1.546024E-04 (1,21,10) 5.809473E-04 (1,21,12) -7.287261E-04 (1,22,11) 2.023806E-04
+(1,21,12): (1,20,12) -1.338908E-04 (1,21,11) 7.287261E-04 (1,21,13) -8.011870E-04 (1,22,12) 1.063513E-04
+(1,21,13): (1,20,13) -1.333856E-04 (1,21,12) 8.011870E-04 (1,21,14) -8.439260E-04 (1,22,13) 7.612431E-05
+(1,21,14): (1,20,14) -7.256692E-04 (1,21,13) 8.439260E-04 (1,21,15) -3.846206E-04 (1,22,14) 1.663636E-04
+(1,21,15): (1,20,15) 2.047236E-04 (1,21,14) 3.846206E-04 (1,21,16) 5.481090E-04 (1,22,15) -2.200971E-04
+(1,21,16): (1,20,16) 2.077242E-04 (1,21,15) -5.481090E-04 (1,21,17) 4.317218E-04 (1,22,16) -1.913370E-04
+(1,21,17): (1,20,17) 1.804304E-04 (1,21,16) -4.317218E-04 (1,21,18) 3.160983E-04 (1,22,17) -1.648069E-04
+(1,21,18): (1,20,18) 2.025496E-04 (1,21,17) -3.160983E-04 (1,21,19) 2.088093E-04 (1,22,18) -1.952606E-04
+(1,21,19): (1,20,19) 1.899157E-04 (1,21,18) -2.088093E-04 (1,21,20) 1.101779E-04 (1,22,19) -1.912843E-04
+(1,21,20): (1,20,20) 2.403440E-04 (1,21,19) -1.101779E-04 (1,22,20) -2.301662E-04
+(1,22,1): (1,21,1) 6.217506E-04 (1,22,2) -9.860917E-05 (1,23,1) -6.231397E-04
+(1,22,2): (1,21,2) 6.446649E-04 (1,22,1) 9.860917E-05 (1,22,3) -1.647567E-04 (1,23,2) -6.785140E-04
+(1,22,3): (1,21,3) 8.888415E-04 (1,22,2) 1.647567E-04 (1,22,4) -2.038356E-04 (1,23,3) -9.497588E-04
+(1,22,4): (1,21,4) 1.077301E-03 (1,22,3) 2.038356E-04 (1,23,4) -1.381135E-03
+(1,22,7): (1,22,8) -5.103716E-04 (1,23,7) 4.103722E-04
+(1,22,8): (1,22,7) 5.103716E-04 (1,22,9) -8.509612E-04 (1,23,8) 2.405899E-04
+(1,22,9): (1,21,9) -6.607560E-04 (1,22,8) 8.509612E-04 (1,22,10) -6.990477E-04 (1,23,9) 4.088420E-04
+(1,22,10): (1,21,10) -3.588741E-04 (1,22,9) 6.990477E-04 (1,22,11) -6.934266E-04 (1,23,10) 2.532527E-04
+(1,22,11): (1,21,11) -2.023806E-04 (1,22,10) 6.934266E-04 (1,22,12) -7.342806E-04 (1,23,11) 1.432343E-04
+(1,22,12): (1,21,12) -1.063513E-04 (1,22,11) 7.342806E-04 (1,22,13) -8.117458E-04 (1,23,12) 8.381629E-05
+(1,22,13): (1,21,13) -7.612431E-05 (1,22,12) 8.117458E-04 (1,22,14) -8.706993E-04 (1,23,13) 3.507748E-05
+(1,22,14): (1,21,14) -1.663636E-04 (1,22,13) 8.706993E-04 (1,22,15) -7.540106E-04 (1,23,14) -5.032511E-05
+(1,22,15): (1,21,15) 2.200971E-04 (1,22,14) 7.540106E-04 (1,22,16) 5.644148E-04 (1,23,15) -2.149909E-04
+(1,22,16): (1,21,16) 1.913370E-04 (1,22,15) -5.644148E-04 (1,22,17) 4.706126E-04 (1,23,16) -1.975348E-04
+(1,22,17): (1,21,17) 1.648069E-04 (1,22,16) -4.706126E-04 (1,22,18) 3.677650E-04 (1,23,17) -1.619593E-04
+(1,22,18): (1,21,18) 1.952606E-04 (1,22,17) -3.677650E-04 (1,22,19) 2.443158E-04 (1,23,18) -1.718114E-04
+(1,22,19): (1,21,19) 1.912843E-04 (1,22,18) -2.443158E-04 (1,22,20) 1.266497E-04 (1,23,19) -1.736182E-04
+(1,22,20): (1,21,20) 2.301662E-04 (1,22,19) -1.266497E-04 (1,23,20) -2.035164E-04
+(1,23,1): (1,22,1) 6.231397E-04 (1,23,2) -1.353558E-04 (1,24,1) -5.877810E-04
+(1,23,2): (1,22,2) 6.785140E-04 (1,23,1) 1.353558E-04 (1,23,3) -2.394119E-04 (1,24,2) -6.744549E-04
+(1,23,3): (1,22,3) 9.497588E-04 (1,23,2) 2.394119E-04 (1,23,4) -4.873778E-04 (1,24,3) -8.017897E-04
+(1,23,4): (1,22,4) 1.381135E-03 (1,23,3) 4.873778E-04 (1,23,5) -1.035677E-03 (1,24,4) -9.328330E-04
+(1,23,5): (1,23,4) 1.035677E-03 (1,24,5) -1.135676E-03
+(1,23,7): (1,22,7) -4.103722E-04 (1,23,8) -4.924006E-04 (1,24,7) 8.027722E-04
+(1,23,8): (1,22,8) -2.405899E-04 (1,23,7) 4.924006E-04 (1,23,9) -6.955423E-04 (1,24,8) 3.437318E-04
+(1,23,9): (1,22,9) -4.088420E-04 (1,23,8) 6.955423E-04 (1,23,10) -7.398186E-04 (1,24,9) 3.531175E-04
+(1,23,10): (1,22,10) -2.532527E-04 (1,23,9) 7.398186E-04 (1,23,11) -7.477714E-04 (1,24,10) 1.612053E-04
+(1,23,11): (1,22,11) -1.432343E-04 (1,23,10) 7.477714E-04 (1,23,12) -7.806628E-04 (1,24,11) 7.612553E-05
+(1,23,12): (1,22,12) -8.381629E-05 (1,23,11) 7.806628E-04 (1,23,13) -8.171227E-04 (1,24,12) 2.027609E-05
+(1,23,13): (1,22,13) -3.507748E-05 (1,23,12) 8.171227E-04 (1,23,14) -8.790856E-04 (1,24,13) -2.959782E-06
+(1,23,14): (1,22,14) 5.032511E-05 (1,23,13) 8.790856E-04 (1,23,15) -9.303691E-04 (1,24,14) -9.904143E-05
+(1,23,15): (1,22,15) 2.149909E-04 (1,23,14) 9.303691E-04 (1,23,16) 6.054677E-04 (1,24,15) -2.256264E-04
+(1,23,16): (1,22,16) 1.975348E-04 (1,23,15) -6.054677E-04 (1,23,17) 4.487126E-04 (1,24,16) -1.407797E-04
+(1,23,17): (1,22,17) 1.619593E-04 (1,23,16) -4.487126E-04 (1,23,18) 3.241633E-04 (1,24,17) -1.374100E-04
+(1,23,18): (1,22,18) 1.718114E-04 (1,23,17) -3.241633E-04 (1,23,19) 2.238139E-04 (1,24,18) -1.714620E-04
+(1,23,19): (1,22,19) 1.736182E-04 (1,23,18) -2.238139E-04 (1,23,20) 1.271456E-04 (1,24,19) -1.769499E-04
+(1,23,20): (1,22,20) 2.035164E-04 (1,23,19) -1.271456E-04 (1,24,20) -1.763709E-04
+(1,24,1): (1,23,1) 5.877810E-04 (1,24,2) -1.677232E-04 (1,25,1) -5.200562E-04
+(1,24,2): (1,23,2) 6.744549E-04 (1,24,1) 1.677232E-04 (1,24,3) -3.279745E-04 (1,25,2) -6.142012E-04
+(1,24,3): (1,23,3) 8.017897E-04 (1,24,2) 3.279745E-04 (1,24,4) -5.262496E-04 (1,25,3) -7.035110E-04
+(1,24,4): (1,23,4) 9.328330E-04 (1,24,3) 5.262496E-04 (1,24,5) -9.683011E-04 (1,25,4) -5.907767E-04
+(1,24,5): (1,23,5) 1.135676E-03 (1,24,4) 9.683011E-04 (1,24,6) -1.581342E-03 (1,25,5) -6.226316E-04
+(1,24,6): (1,24,5) 1.581342E-03 (1,24,7) -1.465393E-03 (1,25,6) -2.159472E-04
+(1,24,7): (1,23,7) -8.027722E-04 (1,24,6) 1.465393E-03 (1,24,8) -1.033370E-03 (1,25,7) 2.707477E-04
+(1,24,8): (1,23,8) -3.437318E-04 (1,24,7) 1.033370E-03 (1,24,9) -1.094371E-03 (1,25,8) 3.047310E-04
+(1,24,9): (1,23,9) -3.531175E-04 (1,24,8) 1.094371E-03 (1,24,10) -9.648313E-04 (1,25,9) 1.235775E-04
+(1,24,10): (1,23,10) -1.612053E-04 (1,24,9) 9.648313E-04 (1,24,11) -8.951943E-04 (1,25,10) -8.432316E-06
+(1,24,11): (1,23,11) -7.612553E-05 (1,24,10) 8.951943E-04 (1,24,12) -9.359215E-04 (1,25,11) 1.685219E-05
+(1,24,12): (1,23,12) -2.027609E-05 (1,24,11) 9.359215E-04 (1,24,13) -9.922826E-04 (1,25,12) -2.336299E-05
+(1,24,13): (1,23,13) 2.959782E-06 (1,24,12) 9.922826E-04 (1,24,14) -1.045207E-03 (1,25,13) -5.003585E-05
+(1,24,14): (1,23,14) 9.904143E-05 (1,24,13) 1.045207E-03 (1,24,15) -1.086097E-03 (1,25,14) -1.581506E-04
+(1,24,15): (1,23,15) 2.256264E-04 (1,24,14) 1.086097E-03 (1,24,16) 5.491441E-04 (1,25,15) -2.380236E-04
+(1,24,16): (1,23,16) 1.407797E-04 (1,24,15) -5.491441E-04 (1,24,17) 4.477890E-04 (1,25,16) -1.394245E-04
+(1,24,17): (1,23,17) 1.374100E-04 (1,24,16) -4.477890E-04 (1,24,18) 3.590419E-04 (1,25,17) -1.486629E-04
+(1,24,18): (1,23,18) 1.714620E-04 (1,24,17) -3.590419E-04 (1,24,19) 2.325195E-04 (1,25,18) -1.449396E-04
+(1,24,19): (1,23,19) 1.769499E-04 (1,24,18) -2.325195E-04 (1,24,20) 1.192131E-04 (1,25,19) -1.636435E-04
+(1,24,20): (1,23,20) 1.763709E-04 (1,24,19) -1.192131E-04 (1,25,20) -1.571577E-04
+(1,25,1): (1,24,1) 5.200562E-04 (1,25,2) -1.648755E-04 (1,26,1) -4.551799E-04
+(1,25,2): (1,24,2) 6.142012E-04 (1,25,1) 1.648755E-04 (1,25,3) -3.624702E-04 (1,26,2) -5.166076E-04
+(1,25,3): (1,24,3) 7.035110E-04 (1,25,2) 3.624702E-04 (1,25,4) -5.726700E-04 (1,26,3) -5.933081E-04
+(1,25,4): (1,24,4) 5.907767E-04 (1,25,3) 5.726700E-04 (1,25,5) -8.079827E-04 (1,26,4) -4.554589E-04
+(1,25,5): (1,24,5) 6.226316E-04 (1,25,4) 8.079827E-04 (1,25,6) -1.139559E-03 (1,26,5) -3.910542E-04
+(1,25,6): (1,24,6) 2.159472E-04 (1,25,5) 1.139559E-03 (1,25,7) -1.286361E-03 (1,26,6) -1.691458E-04
+(1,25,7): (1,24,7) -2.707477E-04 (1,25,6) 1.286361E-03 (1,25,8) -1.121208E-03 (1,26,7) 5.593770E-06
+(1,25,8): (1,24,8) -3.047310E-04 (1,25,7) 1.121208E-03 (1,25,9) -9.776980E-04 (1,26,8) 6.121948E-05
+(1,25,9): (1,24,9) -1.235775E-04 (1,25,8) 9.776980E-04 (1,25,10) -1.023986E-03 (1,26,9) 6.986413E-05
+(1,25,10): (1,24,10) 8.432316E-06 (1,25,9) 1.023986E-03 (1,25,11) -1.025271E-03 (1,26,10) -1.071488E-04
+(1,25,11): (1,24,11) -1.685219E-05 (1,25,10) 1.025271E-03 (1,25,12) -1.034697E-03 (1,26,11) -7.372276E-05
+(1,25,12): (1,24,12) 2.336299E-05 (1,25,11) 1.034697E-03 (1,25,13) -1.015360E-03 (1,26,12) -1.427003E-04
+(1,25,13): (1,24,13) 5.003585E-05 (1,25,12) 1.015360E-03 (1,25,14) -1.061905E-03 (1,26,13) -1.034915E-04
+(1,25,14): (1,24,14) 1.581506E-04 (1,25,13) 1.061905E-03 (1,25,15) -1.189012E-03 (1,26,14) -1.310427E-04
+(1,25,15): (1,24,15) 2.380236E-04 (1,25,14) 1.189012E-03 (1,25,16) 5.865896E-04 (1,26,15) -2.318714E-04
+(1,25,16): (1,24,16) 1.394245E-04 (1,25,15) -5.865896E-04 (1,25,17) 4.613251E-04 (1,26,16) -1.141599E-04
+(1,25,17): (1,24,17) 1.486629E-04 (1,25,16) -4.613251E-04 (1,25,18) 3.541589E-04 (1,26,17) -1.414967E-04
+(1,25,18): (1,24,18) 1.449396E-04 (1,25,17) -3.541589E-04 (1,25,19) 2.498640E-04 (1,26,18) -1.406447E-04
+(1,25,19): (1,24,19) 1.636435E-04 (1,25,18) -2.498640E-04 (1,25,20) 1.255797E-04 (1,26,19) -1.393592E-04
+(1,25,20): (1,24,20) 1.571577E-04 (1,25,19) -1.255797E-04 (1,26,20) -1.315779E-04
+(1,26,1): (1,25,1) 4.551799E-04 (1,26,2) -1.418548E-04 (1,27,1) -4.133245E-04
+(1,26,2): (1,25,2) 5.166076E-04 (1,26,1) 1.418548E-04 (1,26,3) -3.288044E-04 (1,27,2) -4.296623E-04
+(1,26,3): (1,25,3) 5.933081E-04 (1,26,2) 3.288044E-04 (1,26,4) -5.447349E-04 (1,27,3) -4.773785E-04
+(1,26,4): (1,25,4) 4.554589E-04 (1,26,3) 5.447349E-04 (1,26,5) -7.759695E-04 (1,27,4) -3.242204E-04
+(1,26,5): (1,25,5) 3.910542E-04 (1,26,4) 7.759695E-04 (1,26,6) -1.015781E-03 (1,27,5) -2.512391E-04
+(1,26,6): (1,25,6) 1.691458E-04 (1,26,5) 1.015781E-03 (1,26,7) -1.094280E-03 (1,27,6) -1.906448E-04
+(1,26,7): (1,25,7) -5.593770E-06 (1,26,6) 1.094280E-03 (1,26,8) -1.182906E-03 (1,27,7) -5.780079E-06
+(1,26,8): (1,25,8) -6.121948E-05 (1,26,7) 1.182906E-03 (1,26,9) -1.224212E-03 (1,27,8) 2.523244E-06
+(1,26,9): (1,25,9) -6.986413E-05 (1,26,8) 1.224212E-03 (1,26,10) -1.291007E-03 (1,27,9) 3.665734E-05
+(1,26,10): (1,25,10) 1.071488E-04 (1,26,9) 1.291007E-03 (1,26,11) -9.116021E-04 (1,27,10) 2.434436E-04
+(1,26,11): (1,25,11) 7.372276E-05 (1,26,10) 9.116021E-04 (1,26,12) -1.033532E-03 (1,27,11) -5.179389E-05
+(1,26,12): (1,25,12) 1.427003E-04 (1,26,11) 1.033532E-03 (1,26,13) -1.035279E-03 (1,27,12) -2.409543E-04
+(1,26,13): (1,25,13) 1.034915E-04 (1,26,12) 1.035279E-03 (1,26,14) -1.182173E-03 (1,27,13) -5.659747E-05
+(1,26,14): (1,25,14) 1.310427E-04 (1,26,13) 1.182173E-03 (1,26,15) -1.353817E-03 (1,27,14) -5.939837E-05
+(1,26,15): (1,25,15) 2.318714E-04 (1,26,14) 1.353817E-03 (1,26,16) 6.345946E-04 (1,27,15) -1.991394E-04
+(1,26,16): (1,25,16) 1.141599E-04 (1,26,15) -6.345946E-04 (1,26,17) 5.228739E-04 (1,27,16) -1.024393E-04
+(1,26,17): (1,25,17) 1.414967E-04 (1,26,16) -5.228739E-04 (1,26,18) 4.004194E-04 (1,27,17) -1.190423E-04
+(1,26,18): (1,25,18) 1.406447E-04 (1,26,17) -4.004194E-04 (1,26,19) 2.556541E-04 (1,27,18) -9.587938E-05
+(1,26,19): (1,25,19) 1.393592E-04 (1,26,18) -2.556541E-04 (1,26,20) 1.194666E-04 (1,27,19) -1.031718E-04
+(1,26,20): (1,25,20) 1.315779E-04 (1,26,19) -1.194666E-04 (1,27,20) -1.121113E-04
+(1,27,1): (1,26,1) 4.133245E-04 (1,27,2) -1.570888E-04 (1,28,1) -3.562336E-04
+(1,27,2): (1,26,2) 4.296623E-04 (1,27,1) 1.570888E-04 (1,27,3) -3.084537E-04 (1,28,2) -3.783024E-04
+(1,27,3): (1,26,3) 4.773785E-04 (1,27,2) 3.084537E-04 (1,27,4) -5.098537E-04 (1,28,3) -3.759816E-04
+(1,27,4): (1,26,4) 3.242204E-04 (1,27,3) 5.098537E-04 (1,27,5) -6.144747E-04 (1,28,4) -3.195980E-04
+(1,27,5): (1,26,5) 2.512391E-04 (1,27,4) 6.144747E-04 (1,27,6) -7.372857E-04 (1,28,5) -2.284256E-04
+(1,27,6): (1,26,6) 1.906448E-04 (1,27,5) 7.372857E-04 (1,27,7) -9.262287E-04 (1,28,6) -1.016980E-04
+(1,27,7): (1,26,7) 5.780079E-06 (1,27,6) 9.262287E-04 (1,27,8) -9.953559E-04 (1,28,7) -3.665077E-05
+(1,27,8): (1,26,8) -2.523244E-06 (1,27,7) 9.953559E-04 (1,27,9) -9.957589E-04 (1,28,8) -9.707474E-05
+(1,27,9): (1,26,9) -3.665734E-05 (1,27,8) 9.957589E-04 (1,27,10) -8.823089E-04 (1,28,9) -1.767934E-04
+(1,27,10): (1,26,10) -2.434436E-04 (1,27,9) 8.823089E-04 (1,27,11) -5.799363E-04 (1,28,10) -1.589297E-04
+(1,27,11): (1,26,11) 5.179389E-05 (1,27,10) 5.799363E-04 (1,27,12) -6.382560E-04 (1,28,11) -9.347469E-05
+(1,27,12): (1,26,12) 2.409543E-04 (1,27,11) 6.382560E-04 (1,27,13) -8.899472E-04 (1,28,12) -8.926338E-05
+(1,27,13): (1,26,13) 5.659747E-05 (1,27,12) 8.899472E-04 (1,27,14) -9.402559E-04 (1,28,13) -1.062893E-04
+(1,27,14): (1,26,14) 5.939837E-05 (1,27,13) 9.402559E-04 (1,27,15) -9.952769E-04 (1,28,14) -1.043773E-04
+(1,27,15): (1,26,15) 1.991394E-04 (1,27,14) 9.952769E-04 (1,27,16) 5.606420E-04 (1,28,15) -1.567000E-04
+(1,27,16): (1,26,16) 1.024393E-04 (1,27,15) -5.606420E-04 (1,27,17) 4.652249E-04 (1,28,16) -1.070221E-04
+(1,27,17): (1,26,17) 1.190423E-04 (1,27,16) -4.652249E-04 (1,27,18) 3.333327E-04 (1,28,17) -8.715013E-05
+(1,27,18): (1,26,18) 9.587938E-05 (1,27,17) -3.333327E-04 (1,27,19) 2.198124E-04 (1,28,18) -8.235908E-05
+(1,27,19): (1,26,19) 1.031718E-04 (1,27,18) -2.198124E-04 (1,27,20) 1.138058E-04 (1,28,19) -9.716518E-05
+(1,27,20): (1,26,20) 1.121113E-04 (1,27,19) -1.138058E-04 (1,28,20) -9.830540E-05
+(1,28,1): (1,27,1) 3.562336E-04 (1,28,2) -1.639737E-04 (1,29,1) -2.922566E-04
+(1,28,2): (1,27,2) 3.783024E-04 (1,28,1) 1.639737E-04 (1,28,3) -2.679793E-04 (1,29,2) -3.743019E-04
+(1,28,3): (1,27,3) 3.759816E-04 (1,28,2) 2.679793E-04 (1,28,4) -4.241902E-04 (1,29,3) -3.197764E-04
+(1,28,4): (1,27,4) 3.195980E-04 (1,28,3) 4.241902E-04 (1,28,5) -5.761146E-04 (1,29,4) -2.676751E-04
+(1,28,5): (1,27,5) 2.284256E-04 (1,28,4) 5.761146E-04 (1,28,6) -6.632556E-04 (1,29,5) -2.412838E-04
+(1,28,6): (1,27,6) 1.016980E-04 (1,28,5) 6.632556E-04 (1,28,7) -6.507121E-04 (1,29,6) -2.142371E-04
+(1,28,7): (1,27,7) 3.665077E-05 (1,28,6) 6.507121E-04 (1,28,8) -8.301335E-04 (1,29,7) 4.277438E-05
+(1,28,8): (1,27,8) 9.707474E-05 (1,28,7) 8.301335E-04 (1,28,9) -9.871454E-04 (1,29,8) -4.006321E-05
+(1,28,9): (1,27,9) 1.767934E-04 (1,28,8) 9.871454E-04 (1,28,10) -8.306130E-04 (1,29,9) -4.333255E-04
+(1,28,10): (1,27,10) 1.589297E-04 (1,28,9) 8.306130E-04 (1,28,11) -8.870964E-04 (1,29,10) -2.024472E-04
+(1,28,11): (1,27,11) 9.347469E-05 (1,28,10) 8.870964E-04 (1,28,12) -9.539202E-04 (1,29,11) -1.266518E-04
+(1,28,12): (1,27,12) 8.926338E-05 (1,28,11) 9.539202E-04 (1,28,13) -9.204107E-04 (1,29,12) -2.227734E-04
+(1,28,13): (1,27,13) 1.062893E-04 (1,28,12) 9.204107E-04 (1,28,14) -9.646603E-04 (1,29,13) -1.620403E-04
+(1,28,14): (1,27,14) 1.043773E-04 (1,28,13) 9.646603E-04 (1,28,15) -1.026910E-03 (1,29,14) -1.421278E-04
+(1,28,15): (1,27,15) 1.567000E-04 (1,28,14) 1.026910E-03 (1,28,16) 5.988731E-04 (1,29,15) -1.546908E-04
+(1,28,16): (1,27,16) 1.070221E-04 (1,28,15) -5.988731E-04 (1,28,17) 4.705179E-04 (1,29,16) -7.866687E-05
+(1,28,17): (1,27,17) 8.715013E-05 (1,28,16) -4.705179E-04 (1,28,18) 3.426367E-04 (1,29,17) -5.926897E-05
+(1,28,18): (1,27,18) 8.235908E-05 (1,28,17) -3.426367E-04 (1,28,19) 2.253797E-04 (1,29,18) -6.510205E-05
+(1,28,19): (1,27,19) 9.716518E-05 (1,28,18) -2.253797E-04 (1,28,20) 1.103429E-04 (1,29,19) -8.212836E-05
+(1,28,20): (1,27,20) 9.830540E-05 (1,28,19) -1.103429E-04 (1,29,20) -8.796245E-05
+(1,29,1): (1,28,1) 2.922566E-04 (1,29,2) -1.458605E-04 (1,30,1) -2.463916E-04
+(1,29,2): (1,28,2) 3.743019E-04 (1,29,1) 1.458605E-04 (1,29,3) -2.672056E-04 (1,30,2) -3.529602E-04
+(1,29,3): (1,28,3) 3.197764E-04 (1,29,2) 2.672056E-04 (1,29,4) -3.744738E-04 (1,30,3) -3.125144E-04
+(1,29,4): (1,28,4) 2.676751E-04 (1,29,3) 3.744738E-04 (1,29,5) -4.870492E-04 (1,30,4) -2.551040E-04
+(1,29,5): (1,28,5) 2.412838E-04 (1,29,4) 4.870492E-04 (1,29,6) -6.624690E-04 (1,30,5) -1.658671E-04
+(1,29,6): (1,28,6) 2.142371E-04 (1,29,5) 6.624690E-04 (1,29,7) -3.677873E-04 (1,30,6) 1.110820E-04
+(1,29,7): (1,28,7) -4.277438E-05 (1,29,6) 3.677873E-04 (1,29,8) -3.835510E-04 (1,30,7) -4.145568E-05
+(1,29,8): (1,28,8) 4.006321E-05 (1,29,7) 3.835510E-04 (1,29,9) -4.793304E-04 (1,30,8) -4.428276E-05
+(1,29,9): (1,28,9) 4.333255E-04 (1,29,8) 4.793304E-04 (1,29,10) -9.355326E-04 (1,30,9) -7.712258E-05
+(1,29,10): (1,28,10) 2.024472E-04 (1,29,9) 9.355326E-04 (1,29,11) -9.305617E-04 (1,30,10) -3.074179E-04
+(1,29,11): (1,28,11) 1.266518E-04 (1,29,10) 9.305617E-04 (1,29,12) -9.430987E-04 (1,30,11) -2.141151E-04
+(1,29,12): (1,28,12) 2.227734E-04 (1,29,11) 9.430987E-04 (1,29,13) -9.272943E-04 (1,30,12) -3.385780E-04
+(1,29,13): (1,28,13) 1.620403E-04 (1,29,12) 9.272943E-04 (1,29,14) -9.143352E-04 (1,30,13) -2.749999E-04
+(1,29,14): (1,28,14) 1.421278E-04 (1,29,13) 9.143352E-04 (1,29,15) -9.992719E-04 (1,30,14) -1.571917E-04
+(1,29,15): (1,28,15) 1.546908E-04 (1,29,14) 9.992719E-04 (1,29,16) 4.688227E-04 (1,30,15) -1.597003E-04
+(1,29,16): (1,28,16) 7.866687E-05 (1,29,15) -4.688227E-04 (1,29,17) 3.598447E-04 (1,30,16) -6.968888E-05
+(1,29,17): (1,28,17) 5.926897E-05 (1,29,16) -3.598447E-04 (1,29,18) 2.775974E-04 (1,30,17) -7.702172E-05
+(1,29,18): (1,28,18) 6.510205E-05 (1,29,17) -2.775974E-04 (1,29,19) 1.865359E-04 (1,30,18) -7.404055E-05
+(1,29,19): (1,28,19) 8.212836E-05 (1,29,18) -1.865359E-04 (1,29,20) 9.685451E-05 (1,30,19) -9.244704E-05
+(1,29,20): (1,28,20) 8.796245E-05 (1,29,19) -9.685451E-05 (1,30,20) -9.110782E-05
+(1,30,1): (1,29,1) 2.463916E-04 (1,30,2) -1.346012E-04 (1,31,1) -2.117855E-04
+(1,30,2): (1,29,2) 3.529602E-04 (1,30,1) 1.346012E-04 (1,30,3) -3.193831E-04 (1,31,2) -2.681799E-04
+(1,30,3): (1,29,3) 3.125144E-04 (1,30,2) 3.193831E-04 (1,30,4) -4.350093E-04 (1,31,3) -2.968941E-04
+(1,30,4): (1,29,4) 2.551040E-04 (1,30,3) 4.350093E-04 (1,30,5) -4.827282E-04 (1,31,4) -3.073913E-04
+(1,30,5): (1,29,5) 1.658671E-04 (1,30,4) 4.827282E-04 (1,30,6) -4.383362E-04 (1,31,5) -3.102664E-04
+(1,30,6): (1,29,6) -1.110820E-04 (1,30,5) 4.383362E-04 (1,30,7) -2.361703E-04 (1,31,6) -1.910877E-04
+(1,30,7): (1,29,7) 4.145568E-05 (1,30,6) 2.361703E-04 (1,30,8) -2.863575E-04 (1,31,7) -9.126692E-05
+(1,30,8): (1,29,8) 4.428276E-05 (1,30,7) 2.863575E-04 (1,30,9) -3.275111E-04 (1,31,8) -1.031286E-04
+(1,30,9): (1,29,9) 7.712258E-05 (1,30,8) 3.275111E-04 (1,30,10) -3.892840E-04 (1,31,9) -1.153490E-04
+(1,30,10): (1,29,10) 3.074179E-04 (1,30,9) 3.892840E-04 (1,30,11) -6.074360E-04 (1,31,10) -1.892653E-04
+(1,30,11): (1,29,11) 2.141151E-04 (1,30,10) 6.074360E-04 (1,30,12) -7.037095E-04 (1,31,11) -2.178414E-04
+(1,30,12): (1,29,12) 3.385780E-04 (1,30,11) 7.037095E-04 (1,30,13) -8.427322E-04 (1,31,12) -2.995553E-04
+(1,30,13): (1,29,13) 2.749999E-04 (1,30,12) 8.427322E-04 (1,30,14) -9.111521E-04 (1,31,13) -3.065805E-04
+(1,30,14): (1,29,14) 1.571917E-04 (1,30,13) 9.111521E-04 (1,30,15) -1.015807E-03 (1,31,14) -1.525377E-04
+(1,30,15): (1,29,15) 1.597003E-04 (1,30,14) 1.015807E-03 (1,30,16) 4.880572E-04 (1,31,15) -1.256062E-04
+(1,30,16): (1,29,16) 6.968888E-05 (1,30,15) -4.880572E-04 (1,30,17) 3.673415E-04 (1,31,16) -4.897317E-05
+(1,30,17): (1,29,17) 7.702172E-05 (1,30,16) -3.673415E-04 (1,30,18) 2.717246E-04 (1,31,17) -8.140476E-05
+(1,30,18): (1,29,18) 7.404055E-05 (1,30,17) -2.717246E-04 (1,30,19) 1.582644E-04 (1,31,18) -6.058040E-05
+(1,30,19): (1,29,19) 9.244704E-05 (1,30,18) -1.582644E-04 (1,30,20) 7.088978E-05 (1,31,19) -1.050725E-04
+(1,30,20): (1,29,20) 9.110782E-05 (1,30,19) -7.088978E-05 (1,31,20) -1.202179E-04
+(1,31,1): (1,30,1) 2.117855E-04 (1,31,2) -1.564230E-04 (1,32,1) -1.553574E-04
+(1,31,2): (1,30,2) 2.681799E-04 (1,31,1) 1.564230E-04 (1,31,3) -2.745798E-04 (1,32,2) -2.500212E-04
+(1,31,3): (1,30,3) 2.968941E-04 (1,31,2) 2.745798E-04 (1,31,4) -3.448701E-04 (1,32,3) -3.266050E-04
+(1,31,4): (1,30,4) 3.073913E-04 (1,31,3) 3.448701E-04 (1,31,5) -3.257005E-04 (1,32,4) -4.265640E-04
+(1,31,5): (1,30,5) 3.102664E-04 (1,31,4) 3.257005E-04 (1,31,6) -2.612481E-04 (1,32,5) -4.747243E-04
+(1,31,6): (1,30,6) 1.910877E-04 (1,31,5) 2.612481E-04 (1,31,7) -2.935025E-04 (1,32,6) -2.588359E-04
+(1,31,7): (1,30,7) 9.126692E-05 (1,31,6) 2.935025E-04 (1,31,8) -3.959136E-04 (1,32,7) -8.885491E-05
+(1,31,8): (1,30,8) 1.031286E-04 (1,31,7) 3.959136E-04 (1,31,9) -4.524050E-04 (1,32,8) -1.466371E-04
+(1,31,9): (1,30,9) 1.153490E-04 (1,31,8) 4.524050E-04 (1,31,10) -5.471892E-04 (1,32,9) -1.205640E-04
+(1,31,10): (1,30,10) 1.892653E-04 (1,31,9) 5.471892E-04 (1,31,11) -6.299303E-04 (1,32,10) -2.065240E-04
+(1,31,11): (1,30,11) 2.178414E-04 (1,31,10) 6.299303E-04 (1,31,12) -7.477188E-04 (1,32,11) -2.000526E-04
+(1,31,12): (1,30,12) 2.995553E-04 (1,31,11) 7.477188E-04 (1,31,13) -7.902906E-04 (1,32,12) -3.569834E-04
+(1,31,13): (1,30,13) 3.065805E-04 (1,31,12) 7.902906E-04 (1,31,14) -8.045233E-04 (1,32,13) -3.923481E-04
+(1,31,14): (1,30,14) 1.525377E-04 (1,31,13) 8.045233E-04 (1,31,15) -8.032639E-04 (1,32,14) -2.537974E-04
+(1,31,15): (1,30,15) 1.256062E-04 (1,31,14) 8.032639E-04 (1,31,16) 3.141646E-04 (1,32,15) -6.864658E-05
+(1,31,16): (1,30,16) 4.897317E-05 (1,31,15) -3.141646E-04 (1,31,17) 2.289109E-04 (1,32,16) -6.371941E-05
+(1,31,17): (1,30,17) 8.140476E-05 (1,31,16) -2.289109E-04 (1,31,18) 1.588877E-04 (1,32,17) -1.113816E-04
+(1,31,18): (1,30,18) 6.058040E-05 (1,31,17) -1.588877E-04 (1,31,19) 8.621258E-05 (1,32,18) -8.790532E-05
+(1,31,19): (1,30,19) 1.050725E-04 (1,31,18) -8.621258E-05 (1,31,20) 5.029022E-05 (1,32,19) -1.691503E-04
+(1,31,20): (1,30,20) 1.202179E-04 (1,31,19) -5.029022E-05 (1,32,20) -1.699276E-04
+(1,32,1): (1,31,1) 1.553574E-04 (1,32,2) -2.553540E-04
+(1,32,2): (1,31,2) 2.500212E-04 (1,32,1) 2.553540E-04 (1,32,3) -3.143636E-04 (1,33,2) -2.910069E-04
+(1,32,3): (1,31,3) 3.266050E-04 (1,32,2) 3.143636E-04 (1,32,4) -4.297135E-04 (1,33,3) -3.112542E-04
+(1,32,4): (1,31,4) 4.265640E-04 (1,32,3) 4.297135E-04 (1,32,5) -4.485766E-04 (1,33,4) -5.077023E-04
+(1,32,5): (1,31,5) 4.747243E-04 (1,32,4) 4.485766E-04 (1,32,6) -4.179728E-04 (1,33,5) -6.053335E-04
+(1,32,6): (1,31,6) 2.588359E-04 (1,32,5) 4.179728E-04 (1,32,7) -1.633506E-04 (1,33,6) -6.134633E-04
+(1,32,7): (1,31,7) 8.885491E-05 (1,32,6) 1.633506E-04 (1,32,8) -2.279189E-04 (1,33,7) -1.242872E-04
+(1,32,8): (1,31,8) 1.466371E-04 (1,32,7) 2.279189E-04 (1,32,9) -4.747423E-04 (1,33,8) 1.854870E-07
+(1,32,9): (1,31,9) 1.205640E-04 (1,32,8) 4.747423E-04 (1,32,10) -6.735408E-04 (1,33,9) -2.176366E-05
+(1,32,10): (1,31,10) 2.065240E-04 (1,32,9) 6.735408E-04 (1,32,11) -6.593441E-04 (1,33,10) -3.207205E-04
+(1,32,11): (1,31,11) 2.000526E-04 (1,32,10) 6.593441E-04 (1,32,12) -6.454355E-04 (1,33,11) -3.139600E-04
+(1,32,12): (1,31,12) 3.569834E-04 (1,32,11) 6.454355E-04 (1,32,13) -5.827520E-04 (1,33,12) -5.196665E-04
+(1,32,13): (1,31,13) 3.923481E-04 (1,32,12) 5.827520E-04 (1,32,14) -7.012527E-04 (1,33,13) -3.738468E-04
+(1,32,14): (1,31,14) 2.537974E-04 (1,32,13) 7.012527E-04 (1,32,15) -4.840183E-04 (1,33,14) -5.710324E-04
+(1,32,15): (1,31,15) 6.864658E-05 (1,32,14) 4.840183E-04 (1,32,16) 2.440946E-04 (1,33,15) -7.474318E-05
+(1,32,16): (1,31,16) 6.371941E-05 (1,32,15) -2.440946E-04 (1,32,17) 2.278544E-04 (1,33,16) -1.474793E-04
+(1,32,17): (1,31,17) 1.113816E-04 (1,32,16) -2.278544E-04 (1,32,18) 1.595468E-04 (1,33,17) -1.430740E-04
+(1,32,18): (1,31,18) 8.790532E-05 (1,32,17) -1.595468E-04 (1,32,19) 1.105798E-04 (1,33,18) -1.389384E-04
+(1,32,19): (1,31,19) 1.691503E-04 (1,32,18) -1.105798E-04 (1,32,20) 5.304721E-05 (1,33,19) -2.116179E-04
+(1,32,20): (1,31,20) 1.699276E-04 (1,32,19) -5.304721E-05 (1,33,20) -2.168804E-04
+(1,33,2): (1,32,2) 2.910069E-04 (1,33,3) -3.910041E-04
+(1,33,3): (1,32,3) 3.112542E-04 (1,33,2) 3.910041E-04 (1,33,4) -4.515226E-04 (1,34,3) -3.507320E-04
+(1,33,4): (1,32,4) 5.077023E-04 (1,33,3) 4.515226E-04 (1,33,5) -5.082944E-04 (1,34,4) -5.509272E-04
+(1,33,5): (1,32,5) 6.053335E-04 (1,33,4) 5.082944E-04 (1,33,6) -5.902944E-04 (1,34,5) -6.233348E-04
+(1,33,6): (1,32,6) 6.134633E-04 (1,33,5) 5.902944E-04 (1,33,7) -7.727750E-04 (1,34,6) -5.309878E-04
+(1,33,7): (1,32,7) 1.242872E-04 (1,33,6) 7.727750E-04 (1,33,8) -5.079125E-04 (1,34,7) -4.891523E-04
+(1,33,8): (1,32,8) -1.854870E-07 (1,33,7) 5.079125E-04 (1,33,9) -1.475880E-04 (1,34,8) -4.601423E-04
+(1,33,9): (1,32,9) 2.176366E-05 (1,33,8) 1.475880E-04 (1,33,10) -2.092276E-04 (1,34,9) -6.012422E-05
+(1,33,10): (1,32,10) 3.207205E-04 (1,33,9) 2.092276E-04 (1,33,11) -5.763073E-04 (1,34,10) -5.364138E-05
+(1,33,11): (1,32,11) 3.139600E-04 (1,33,10) 5.763073E-04 (1,33,12) -6.545218E-04 (1,34,11) -3.357447E-04
+(1,33,12): (1,32,12) 5.196665E-04 (1,33,11) 6.545218E-04 (1,33,13) -1.264007E-04 (1,34,12) -1.147785E-03
+(1,33,13): (1,32,13) 3.738468E-04 (1,33,12) 1.264007E-04 (1,33,14) -2.806491E-04 (1,34,13) -3.195999E-04
+(1,33,14): (1,32,14) 5.710324E-04 (1,33,13) 2.806491E-04 (1,33,15) -5.936128E-04 (1,34,14) -3.580687E-04
+(1,33,15): (1,32,15) 7.474318E-05 (1,33,14) 5.936128E-04 (1,33,16) 5.022026E-04 (1,34,15) -1.316336E-04
+(1,33,16): (1,32,16) 1.474793E-04 (1,33,15) -5.022026E-04 (1,33,17) 3.683214E-04 (1,34,16) -1.135981E-04
+(1,33,17): (1,32,17) 1.430740E-04 (1,33,16) -3.683214E-04 (1,33,18) 2.487544E-04 (1,34,17) -1.235069E-04
+(1,33,18): (1,32,18) 1.389384E-04 (1,33,17) -2.487544E-04 (1,33,19) 1.921812E-04 (1,34,18) -1.823651E-04
+(1,33,19): (1,32,19) 2.116179E-04 (1,33,18) -1.921812E-04 (1,33,20) 8.473042E-05 (1,34,19) -2.041675E-04
+(1,33,20): (1,32,20) 2.168804E-04 (1,33,19) -8.473042E-05 (1,34,20) -2.321504E-04
+(1,34,3): (1,33,3) 3.507320E-04 (1,34,4) -4.507302E-04
+(1,34,4): (1,33,4) 5.509272E-04 (1,34,3) 4.507302E-04 (1,34,5) -6.091455E-04 (1,35,4) -4.925079E-04
+(1,34,5): (1,33,5) 6.233348E-04 (1,34,4) 6.091455E-04 (1,34,6) -5.685168E-04 (1,35,5) -7.639616E-04
+(1,34,6): (1,33,6) 5.309878E-04 (1,34,5) 5.685168E-04 (1,34,7) -6.414128E-04 (1,35,6) -5.580939E-04
+(1,34,7): (1,33,7) 4.891523E-04 (1,34,6) 6.414128E-04 (1,34,8) -6.957397E-04 (1,35,7) -5.348273E-04
+(1,34,8): (1,33,8) 4.601423E-04 (1,34,7) 6.957397E-04 (1,34,9) -8.232049E-04 (1,35,8) -4.326791E-04
+(1,34,9): (1,33,9) 6.012422E-05 (1,34,8) 8.232049E-04 (1,34,10) -8.795675E-04 (1,35,9) -1.037624E-04
+(1,34,10): (1,33,10) 5.364138E-05 (1,34,9) 8.795675E-04 (1,34,11) -1.045764E-03 (1,35,10) 1.255419E-05
+(1,34,11): (1,33,11) 3.357447E-04 (1,34,10) 1.045764E-03 (1,34,12) -1.663179E-03 (1,35,11) 1.816731E-04
+(1,34,12): (1,33,12) 1.147785E-03 (1,34,11) 1.663179E-03 (1,34,13) 6.025671E-04 (1,35,12) 7.864658E-04
+(1,34,13): (1,33,13) 3.195999E-04 (1,34,12) -6.025671E-04 (1,34,14) 3.446771E-05 (1,35,13) 1.485007E-04
+(1,34,14): (1,33,14) 3.580687E-04 (1,34,13) -3.446771E-05 (1,34,15) -3.476755E-04 (1,35,14) -7.592495E-05
+(1,34,15): (1,33,15) 1.316336E-04 (1,34,14) 3.476755E-04 (1,34,16) 5.150335E-04 (1,35,15) -1.251799E-04
+(1,34,16): (1,33,16) 1.135981E-04 (1,34,15) -5.150335E-04 (1,34,17) 4.381059E-04 (1,35,16) -1.366705E-04
+(1,34,17): (1,33,17) 1.235069E-04 (1,34,16) -4.381059E-04 (1,34,18) 3.595153E-04 (1,35,17) -1.449161E-04
+(1,34,18): (1,33,18) 1.823651E-04 (1,34,17) -3.595153E-04 (1,34,19) 2.451976E-04 (1,35,18) -1.680472E-04
+(1,34,19): (1,33,19) 2.041675E-04 (1,34,18) -2.451976E-04 (1,34,20) 1.627456E-04 (1,35,19) -2.217158E-04
+(1,34,20): (1,33,20) 2.321504E-04 (1,34,19) -1.627456E-04 (1,35,20) -1.694060E-04
+(1,35,4): (1,34,4) 4.925079E-04 (1,35,5) -5.925059E-04
+(1,35,5): (1,34,5) 7.639616E-04 (1,35,4) 5.925059E-04 (1,35,6) -5.423934E-04 (1,36,5) -9.140711E-04
+(1,35,6): (1,34,6) 5.580939E-04 (1,35,5) 5.423934E-04 (1,35,7) -5.098211E-04 (1,36,6) -6.906660E-04
+(1,35,7): (1,34,7) 5.348273E-04 (1,35,6) 5.098211E-04 (1,35,8) -5.905646E-04 (1,36,7) -5.540844E-04
+(1,35,8): (1,34,8) 4.326791E-04 (1,35,7) 5.905646E-04 (1,35,9) -6.582604E-04 (1,36,8) -4.649852E-04
+(1,35,9): (1,34,9) 1.037624E-04 (1,35,8) 6.582604E-04 (1,35,10) -6.164545E-04 (1,36,9) -2.455702E-04
+(1,35,10): (1,34,10) -1.255419E-05 (1,35,9) 6.164545E-04 (1,35,11) -6.451605E-04 (1,36,10) -5.874044E-05
+(1,35,11): (1,34,11) -1.816731E-04 (1,35,10) 6.451605E-04 (1,35,12) -5.920794E-04 (1,36,11) 2.858918E-05
+(1,35,12): (1,34,12) -7.864658E-04 (1,35,11) 5.920794E-04 (1,35,13) -1.596890E-04 (1,36,12) 2.540767E-04
+(1,35,13): (1,34,13) -1.485007E-04 (1,35,12) 1.596890E-04 (1,35,14) -2.689078E-04 (1,36,13) 1.577197E-04
+(1,35,14): (1,34,14) 7.592495E-05 (1,35,13) 2.689078E-04 (1,35,15) -4.102493E-04 (1,36,14) -3.458301E-05
+(1,35,15): (1,34,15) 1.251799E-04 (1,35,14) 4.102493E-04 (1,35,16) 5.642126E-04 (1,36,15) -1.272962E-04
+(1,35,16): (1,34,16) 1.366705E-04 (1,35,15) -5.642126E-04 (1,35,17) 4.492002E-04 (1,36,16) -1.216581E-04
+(1,35,17): (1,34,17) 1.449161E-04 (1,35,16) -4.492002E-04 (1,35,18) 3.251484E-04 (1,36,17) -1.208640E-04
+(1,35,18): (1,34,18) 1.680472E-04 (1,35,17) -3.251484E-04 (1,35,19) 2.316343E-04 (1,36,18) -1.745323E-04
+(1,35,19): (1,34,19) 2.217158E-04 (1,35,18) -2.316343E-04 (1,35,20) 2.694090E-04 (1,36,19) -3.594895E-04
+(1,35,20): (1,34,20) 1.694060E-04 (1,35,19) -2.694090E-04
+(1,36,5): (1,35,5) 9.140711E-04 (1,36,6) -4.427677E-04 (1,37,5) -5.713020E-04
+(1,36,6): (1,35,6) 6.906660E-04 (1,36,5) 4.427677E-04 (1,36,7) -4.957248E-04 (1,37,6) -7.377084E-04
+(1,36,7): (1,35,7) 5.540844E-04 (1,36,6) 4.957248E-04 (1,36,8) -4.812007E-04 (1,37,7) -6.686082E-04
+(1,36,8): (1,35,8) 4.649852E-04 (1,36,7) 4.812007E-04 (1,36,9) -4.877277E-04 (1,37,8) -5.584586E-04
+(1,36,9): (1,35,9) 2.455702E-04 (1,36,8) 4.877277E-04 (1,36,10) -3.882434E-04 (1,37,9) -4.450551E-04
+(1,36,10): (1,35,10) 5.874044E-05 (1,36,9) 3.882434E-04 (1,36,11) -4.416715E-04 (1,37,10) -1.053137E-04
+(1,36,11): (1,35,11) -2.858918E-05 (1,36,10) 4.416715E-04 (1,36,12) -4.847163E-04 (1,37,11) -2.836629E-05
+(1,36,12): (1,35,12) -2.540767E-04 (1,36,11) 4.847163E-04 (1,36,13) -4.150527E-04 (1,37,12) 8.441328E-05
+(1,36,13): (1,35,13) -1.577197E-04 (1,36,12) 4.150527E-04 (1,36,14) -4.327142E-04 (1,37,13) 7.538147E-05
+(1,36,14): (1,35,14) 3.458301E-05 (1,36,13) 4.327142E-04 (1,36,15) -5.448494E-04 (1,37,14) -2.244739E-05
+(1,36,15): (1,35,15) 1.272962E-04 (1,36,14) 5.448494E-04 (1,36,16) 5.462833E-04 (1,37,15) -1.221785E-04
+(1,36,16): (1,35,16) 1.216581E-04 (1,36,15) -5.462833E-04 (1,36,17) 4.081126E-04 (1,37,16) -8.348761E-05
+(1,36,17): (1,35,17) 1.208640E-04 (1,36,16) -4.081126E-04 (1,36,18) 3.354196E-04 (1,37,17) -1.481710E-04
+(1,36,18): (1,35,18) 1.745323E-04 (1,36,17) -3.354196E-04 (1,36,19) 2.564515E-04 (1,37,18) -1.955632E-04
+(1,36,19): (1,35,19) 3.594895E-04 (1,36,18) -2.564515E-04 (1,37,19) -2.030338E-04
+(1,37,5): (1,36,5) 5.713020E-04 (1,37,6) -6.713012E-04
+(1,37,6): (1,36,6) 7.377084E-04 (1,37,5) 6.713012E-04 (1,37,7) -4.407664E-04 (1,38,6) -1.068242E-03
+(1,37,7): (1,36,7) 6.686082E-04 (1,37,6) 4.407664E-04 (1,37,8) -4.098072E-04 (1,38,7) -7.995665E-04
+(1,37,8): (1,36,8) 5.584586E-04 (1,37,7) 4.098072E-04 (1,37,9) -4.247787E-04 (1,38,8) -6.434872E-04
+(1,37,9): (1,36,9) 4.450551E-04 (1,37,8) 4.247787E-04 (1,37,10) -4.281529E-04 (1,38,9) -5.416810E-04
+(1,37,10): (1,36,10) 1.053137E-04 (1,37,9) 4.281529E-04 (1,37,11) -4.769625E-04 (1,38,10) -1.565050E-04
+(1,37,11): (1,36,11) 2.836629E-05 (1,37,10) 4.769625E-04 (1,37,12) -4.794856E-04 (1,38,11) -1.258436E-04
+(1,37,12): (1,36,12) -8.441328E-05 (1,37,11) 4.794856E-04 (1,37,13) -4.248615E-04 (1,38,12) -7.021116E-05
+(1,37,13): (1,36,13) -7.538147E-05 (1,37,12) 4.248615E-04 (1,37,14) -4.570564E-04 (1,38,13) 7.576472E-06
+(1,37,14): (1,36,14) 2.244739E-05 (1,37,13) 4.570564E-04 (1,37,15) -5.756174E-04 (1,38,14) -3.886050E-06
+(1,37,15): (1,36,15) 1.221785E-04 (1,37,14) 5.756174E-04 (1,37,16) 5.639105E-04 (1,38,15) -9.177756E-05
+(1,37,16): (1,36,16) 8.348761E-05 (1,37,15) -5.639105E-04 (1,37,17) 4.824160E-04 (1,38,16) -1.019934E-04
+(1,37,17): (1,36,17) 1.481710E-04 (1,37,16) -4.824160E-04 (1,37,18) 4.036504E-04 (1,38,17) -1.694060E-04
+(1,37,18): (1,36,18) 1.955632E-04 (1,37,17) -4.036504E-04 (1,37,19) 3.030315E-04 (1,38,18) -1.949451E-04
+(1,37,19): (1,36,19) 2.030338E-04 (1,37,18) -3.030315E-04
+(1,38,6): (1,37,6) 1.068242E-03 (1,38,7) -2.739899E-04 (1,39,6) -8.942535E-04
+(1,38,7): (1,37,7) 7.995665E-04 (1,38,6) 2.739899E-04 (1,38,8) -3.060105E-04 (1,39,7) -8.675450E-04
+(1,38,8): (1,37,8) 6.434872E-04 (1,38,7) 3.060105E-04 (1,38,9) -2.847194E-04 (1,39,8) -7.647776E-04
+(1,38,9): (1,37,9) 5.416810E-04 (1,38,8) 2.847194E-04 (1,38,10) -2.580592E-04 (1,39,9) -6.683406E-04
+(1,38,10): (1,37,10) 1.565050E-04 (1,38,9) 2.580592E-04 (1,38,11) -2.707335E-04 (1,39,10) -2.438308E-04
+(1,38,11): (1,37,11) 1.258436E-04 (1,38,10) 2.707335E-04 (1,38,12) -3.166703E-04 (1,39,11) -1.799069E-04
+(1,38,12): (1,37,12) 7.021116E-05 (1,38,11) 3.166703E-04 (1,38,13) -3.069935E-04 (1,39,12) -1.798883E-04
+(1,38,13): (1,37,13) -7.576472E-06 (1,38,12) 3.069935E-04 (1,38,14) -3.059413E-04 (1,39,13) -9.347582E-05
+(1,38,14): (1,37,14) 3.886050E-06 (1,38,13) 3.059413E-04 (1,38,15) -3.709991E-04 (1,39,14) -3.882822E-05
+(1,38,15): (1,37,15) 9.177756E-05 (1,38,14) 3.709991E-04 (1,38,16) 4.835966E-04 (1,39,15) -7.262061E-05
+(1,38,16): (1,37,16) 1.019934E-04 (1,38,15) -4.835966E-04 (1,38,17) 3.741217E-04 (1,39,16) -9.251852E-05
+(1,38,17): (1,37,17) 1.694060E-04 (1,38,16) -3.741217E-04 (1,38,18) 2.949482E-04 (1,39,17) -1.902333E-04
+(1,38,18): (1,37,18) 1.949451E-04 (1,38,17) -2.949482E-04
+(1,39,6): (1,38,6) 8.942535E-04 (1,39,7) -1.944674E-04 (1,40,6) -7.997879E-04
+(1,39,7): (1,38,7) 8.675450E-04 (1,39,6) 1.944674E-04 (1,39,8) -2.925423E-04 (1,40,7) -8.694693E-04
+(1,39,8): (1,38,8) 7.647776E-04 (1,39,7) 2.925423E-04 (1,39,9) -2.209246E-04 (1,40,8) -9.363944E-04
+(1,39,9): (1,38,9) 6.683406E-04 (1,39,8) 2.209246E-04 (1,39,10) -3.324652E-04 (1,40,9) -6.567991E-04
+(1,39,10): (1,38,10) 2.438308E-04 (1,39,9) 3.324652E-04 (1,39,11) -2.373265E-04 (1,40,10) -4.389691E-04
+(1,39,11): (1,38,11) 1.799069E-04 (1,39,10) 2.373265E-04 (1,39,12) -3.219485E-04 (1,40,11) -1.952846E-04
+(1,39,12): (1,38,12) 1.798883E-04 (1,39,11) 3.219485E-04 (1,39,13) -3.608224E-04 (1,40,12) -2.410145E-04
+(1,39,13): (1,38,13) 9.347582E-05 (1,39,12) 3.608224E-04 (1,39,14) -3.012425E-04 (1,40,13) -2.530559E-04
+(1,39,14): (1,38,14) 3.882822E-05 (1,39,13) 3.012425E-04 (1,39,15) -3.709159E-04 (1,40,14) -6.915481E-05
+(1,39,15): (1,38,15) 7.262061E-05 (1,39,14) 3.709159E-04 (1,39,16) 4.827508E-04 (1,40,15) 2.102243E-04
+(1,39,16): (1,38,16) 9.251852E-05 (1,39,15) -4.827508E-04 (1,39,17) 2.902325E-04
+(1,39,17): (1,38,17) 1.902333E-04 (1,39,16) -2.902325E-04
+(1,40,6): (1,39,6) 7.997879E-04 (1,40,7) -3.775437E-04
+(1,40,7): (1,39,7) 8.694693E-04 (1,40,6) 3.775437E-04 (1,40,8) -1.977550E-04
+(1,40,8): (1,39,8) 9.363944E-04 (1,40,7) 1.977550E-04 (1,40,9) -2.294671E-04
+(1,40,9): (1,39,9) 6.567991E-04 (1,40,8) 2.294671E-04 (1,40,10) -1.826830E-04
+(1,40,10): (1,39,10) 4.389691E-04 (1,40,9) 1.826830E-04 (1,40,11) 0.00000
+(1,40,11): (1,39,11) 1.952846E-04 (1,40,10) 0.00000 (1,40,12) -2.979488E-04
+(1,40,12): (1,39,12) 2.410145E-04 (1,40,11) 2.979488E-04 (1,40,13) -2.219286E-04
+(1,40,13): (1,39,13) 2.530559E-04 (1,40,12) 2.219286E-04 (1,40,14) -9.960818E-05
+(1,40,14): (1,39,14) 6.915481E-05 (1,40,13) 9.960818E-05 (1,40,15) -1.347488E-04
+(1,40,15): (1,39,15) -2.102243E-04 (1,40,14) 1.347488E-04
+
+ HEAD WILL BE SAVED ON UNIT 1017 AT END OF TIME STEP    1, STRESS PERIOD    1
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME    
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE         
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE         
+                 WEL =           0.0000                   WEL =           0.0000     WEL-1           
+                 RIV =       4.1940E-02                   RIV =       4.1940E-03     RIV-1           
+                 RCH =           0.6950                   RCH =       6.9500E-02     RCH-1           
+                 CHD =       2.1022E-03                   CHD =       2.1022E-04     CHD-1           
+
+            TOTAL IN =           0.7390              TOTAL IN =       7.3904E-02
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE         
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE         
+                 WEL =           0.2205                   WEL =       2.2050E-02     WEL-1           
+                 RIV =           0.4739                   RIV =       4.7394E-02     RIV-1           
+                 RCH =           0.0000                   RCH =           0.0000     RCH-1           
+                 CHD =       4.4599E-02                   CHD =       4.4599E-03     CHD-1           
+
+           TOTAL OUT =           0.7390             TOTAL OUT =       7.3904E-02
+
+            IN - OUT =       1.4758E-06              IN - OUT =       1.4758E-07
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  10.000     0.16667     2.77778E-03 1.15741E-04 3.16881E-07
+ STRESS PERIOD TIME  10.000     0.16667     2.77778E-03 1.15741E-04 3.16881E-07
+         TOTAL TIME  10.000     0.16667     2.77778E-03 1.15741E-04 3.16881E-07

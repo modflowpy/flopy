@@ -1,0 +1,18 @@
+BEGIN OPTIONS
+  LIST freyberg.lst
+  PRINT_INPUT
+  PRINT_FLOWS
+  SAVE_FLOWS
+END OPTIONS
+
+BEGIN PACKAGES
+  DIS6  freyberg.dis
+  IC6   freyberg.ic
+  OC6   freyberg.oc
+  NPF6  freyberg.npf
+  STO6  freyberg.sto
+  CHD6  freyberg.chd
+  RIV6  freyberg.riv
+  WEL6  freyberg.wel
+  RCH6  freyberg.rch
+END PACKAGES
