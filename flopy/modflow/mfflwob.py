@@ -81,7 +81,7 @@ class ModflowFlwob(Package):
     def __init__(self, model, nqfb=0, nqcfb=0, nqtfb=0, iufbobsv=0,
                  tomultfb=1.0, nqobfb=[], nqclfb=[], obsnam=[], irefsp=[],
                  toffset=[], flwobs=[], layer=[], row=[], column=[], factor=[],
-                 flowtype=None,
+                 flowtype=None, no_print=False, options=None,
                  extension=['chob', 'obc', 'gbob', 'obg', 'drob',
                             'obd', 'rvob', 'obr'],
                  unitnumber=[40, 140, 41, 141, 42, 142,
@@ -166,6 +166,13 @@ class ModflowFlwob(Package):
 
         # putting in some more checks here
 
+        self.no_print = no_print
+        self.np = 0
+        if options is None:
+            options = []
+        if self.no_print:
+            options.append('NOPRINT')
+        self.options = options
 
         # add checks for input compliance (obsnam length, etc.)
         self.parent.add_package(self)
