@@ -263,7 +263,7 @@ class ModflowHob(Package):
     """
 
     def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
-                 obs_data=None, hobname=None,
+                 obs_data=None, hobname=None, no_print=False, options=None,
                  extension='hob', unitnumber=None, filenames=None):
         """
         Package constructor
@@ -321,6 +321,14 @@ class ModflowHob(Package):
 
         # set self.obs_data
         self.obs_data = obs_data
+
+        self.no_print = no_print
+        self.np = 0
+        if options is None:
+            options = []
+        if self.no_print:
+            options.append('NOPRINT')
+        self.options = options
 
         # add checks for input compliance (obsnam length, etc.)
         self.parent.add_package(self)
