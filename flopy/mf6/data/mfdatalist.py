@@ -132,9 +132,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     def dtype(self):
         return self.get_data().dtype
 
-    def to_array(self, mask=False):
+    def to_array(self, kper=0, mask=False):
         i0 = 1
-        sarr = self.get_data()
+        sarr = self.get_data(key=kper)
         if not isinstance(sarr, list):
             sarr = [sarr]
         if len(sarr) == 0:
@@ -1515,8 +1515,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             yield name, m4d
 
     def to_array(self, kper=0, mask=False):
-        self.get_data_prep(kper)
-        return super(MFTransientList, self).to_array(mask)
+        return super(MFTransientList, self).to_array(kper, mask)
 
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
