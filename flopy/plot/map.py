@@ -355,6 +355,7 @@ class StructuredMapView(object):
         if ibound is None:
             bas = self.model.get_package('BAS6')
             ibound = bas.ibound.array
+
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)

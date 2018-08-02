@@ -1308,7 +1308,8 @@ class PlotUtilities(object):
         for idx, k in enumerate(range(i0, i1)):
             mm = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
-            qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx])
+            qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
+                            color=package.bc_color)
 
             if defaults['grid']:
                 mm.plot_grid(ax=axes[idx])

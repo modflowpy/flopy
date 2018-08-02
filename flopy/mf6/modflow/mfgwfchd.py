@@ -166,7 +166,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
                  obs_filerecord=None, maxbound=None, stress_period_data=None,
                  fname=None, pname=None, parent_file=None):
         super(ModflowGwfchd, self).__init__(model, "chd", fname, pname,
-                                            loading_package, parent_file)        
+                                            loading_package, parent_file)
 
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
@@ -181,3 +181,4 @@ class ModflowGwfchd(mfpackage.MFPackage):
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
         self.stress_period_data = self.build_mfdata("stress_period_data", 
                                                     stress_period_data)
+        self.bc_color = "blue"

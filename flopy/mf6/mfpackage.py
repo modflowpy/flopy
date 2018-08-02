@@ -1183,6 +1183,7 @@ class MFPackage(PackageContainer, PackageInterface):
         # init variables that may be used later
         self.post_block_comments = None
         self.last_error = None
+        self.bc_color = "black"
 
     def __setattr__(self, name, value):
         if hasattr(self, name):
