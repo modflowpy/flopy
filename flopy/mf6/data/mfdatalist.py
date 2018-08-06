@@ -146,7 +146,7 @@ class MFList(mfdata.MFMultiDimVar):
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, apply_mult=False):
+    def get_data(self, apply_mult=False, **kwargs):
         try:
             if self._get_storage_obj() is None:
                 return None
@@ -1331,11 +1331,33 @@ class MFTransientList(MFList, mfdata.MFTransient):
         self._data_storage[transient_key] = super(MFTransientList,
                                                   self)._new_storage()
 
-    def get_data(self, key=None, apply_mult=False):
-        if key is None:
-            key = self._current_key
-        self.get_data_prep(key)
-        return super(MFTransientList, self).get_data(apply_mult=apply_mult)
+    def get_data(self, key=None, apply_mult=False, **kwargs):
+        if self._data_storage is not None and len(self._data_storage) > 0:
+            if key is None:
+                if 'array' in kwargs:
+                    output = []
+                    sim_time = self._data_dimensions.package_dim.model_dim[
+                        0].simulation_time
+                    num_sp = sim_time.get_num_stress_periods()
+                    for sp in range(0, num_sp):
+                        if sp in self._data_storage:
+                            self.get_data_prep(sp)
+                            output.append(super(MFTransientList, self).get_data(
+                                apply_mult=apply_mult))
+                        else:
+                            output.append(None)
+                    return output
+                else:
+                    output = []
+                    for key in self._data_storage.keys():
+                        self.get_data_prep(key)
+                        output.append(super(MFTransientList, self).get_data(
+                            apply_mult=apply_mult))
+                    return output
+            self.get_data_prep(key)
+            return super(MFTransientList, self).get_data(apply_mult=apply_mult)
+        else:
+            return None
 
     def set_data(self, data, key=None, autofill=False):
         if (isinstance(data, dict) or isinstance(data, OrderedDict)) and \
@@ -1426,3 +1448,9 @@ class MFMultipleList(MFTransientList):
                                             enable=enable,
                                             path=path,
                                             dimensions=dimensions)
+
+    def get_data(self, key=None, apply_mult=False, **kwargs):
+        return super(MFMultipleList, self).get_data(key=key,
+                                                    apply_mult=apply_mult)
+
+

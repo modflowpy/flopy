@@ -308,8 +308,8 @@ class MFSimulation(PackageContainer):
         self.dimensions = None
         self.type = 'Simulation'
 
-        self._version = version
-        self._exe_name = exe_name
+        self.version = version
+        self.exe_name = exe_name
         self._models = collections.OrderedDict()
         self._tdis_file = None
         self._exchange_files = collections.OrderedDict()
@@ -376,7 +376,7 @@ class MFSimulation(PackageContainer):
         file_mgt = self.simulation_data.mfpath
         data_str = 'sim_name = {}\nsim_path = {}\nexe_name = ' \
                    '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
-                                   self._exe_name)
+                                   self.exe_name)
 
         for package in self.packagelist:
             pk_str = package._get_data_str(formal, False)
@@ -561,7 +561,7 @@ class MFSimulation(PackageContainer):
                                                              )]
 
         try:
-            solution_groups = solution_recarray.get_data()
+            solution_group_list = solution_recarray.get_data()
         except MFDataException as mfde:
             message = 'Error occurred while loading solution groups from ' \
                       'the simulation name file.'
@@ -569,13 +569,14 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-        for solution_info in solution_groups:
-            ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
-                                        pname=solution_info[2])
-            if verbosity_level.value >= VerbosityLevel.normal.value:
-                print('  loading ims package {}..'
-                      '.'.format(ims_file._get_pname()))
-            ims_file.load(strict)
+        for solution_group in solution_group_list:
+            for solution_info in solution_group:
+                ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
+                                            pname=solution_info[2])
+                if verbosity_level.value >= VerbosityLevel.normal.value:
+                    print('  loading ims package {}..'
+                          '.'.format(ims_file._get_pname()))
+                ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         return instance
@@ -891,7 +892,7 @@ class MFSimulation(PackageContainer):
 
     def run_simulation(self, silent=None, pause=False, report=False,
                        normal_msg='normal termination',
-                       async=False, cargs=None):
+                       use_async=False, cargs=None):
         """
         Run the simulation.
         """
@@ -901,10 +902,10 @@ class MFSimulation(PackageContainer):
                 silent = False
             else:
                 silent = True
-        return run_model(self._exe_name, None,
+        return run_model(self.exe_name, None,
                          self.simulation_data.mfpath.get_sim_path(),
                          silent=silent, pause=pause, report=report,
-                         normal_msg=normal_msg, async=async, cargs=cargs)
+                         normal_msg=normal_msg, use_async=use_async, cargs=cargs)
 
     def delete_output_files(self):
         """

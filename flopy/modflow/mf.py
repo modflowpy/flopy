@@ -523,6 +523,10 @@ class Modflow(BaseModel):
 
         """
 
+        # try to tack on '.nam' if missing from the filename
+        if not f.lower().endswith('.nam'):
+            f += '.nam'
+
         # Determine model name from 'f', without any extension or path
         modelname = os.path.splitext(os.path.basename(f))[0]
 
