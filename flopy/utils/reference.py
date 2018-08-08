@@ -92,14 +92,12 @@ class SpatialReference(object):
         1D array of cell vertices for whole grid in C-style (row-major) order
         (same as np.ravel())
 
-    dx : float
-        cell column width, or median for non-uniform widths along rows (delr)
-
-    dy : float
-        cell row height, or median for non-uniform widths along columns (delc)
+    resolution : tuple
+        model grid resolution (dx, dy) with length multiplier applied
 
     geotransform : tuple
-        GDAL-ordered geotransform tuple for exporting rasters
+        GDAL-ordered geotransform tuple for exporting rasters with uniform
+        grid spacings. Raises ValueError if grid spacing is not uniform.
 
     Notes
     -----
@@ -1036,8 +1034,7 @@ class SpatialReference(object):
                 xll, yll = xmin, ymin
             else:
                 xll, yll = self.xll, self.yll
-                dx = self.dx * self.length_multiplier
-                dy = self.dy * self.length_multiplier
+                dx, dy = self.resolution
                 if dx == dy:
                     cellsize = dx
             fmt = kwargs.get('fmt', '%.18e')
@@ -1282,31 +1279,23 @@ class SpatialReference(object):
         """
 
     @property
-    def dx(self):
-        dx = self.delr[0]
+    def resolution(self):
+        """Returns model grid resolution with length multiplier applied"""
+        dx = self.delr[0] * self.length_multiplier
+        dy = self.delc[0] * self.length_multiplier
         if self.delr.min() != self.delr.max():
-            dx = np.median(self.delr)
-            warn('delr values range from {0} to {1}; '
-                 'using median of {2} for dx'
-                 .format(self.delr.min(), self.delr.max(), dx))
-        return dx
-
-    @property
-    def dy(self):
-        dy = self.delc[0]
+            dx = None
         if self.delc.min() != self.delc.max():
-            dy = np.median(self.delc)
-            warn('delc values range from {0} to {1}; '
-                 'using median of {2} for dy'
-                 .format(self.delc.min(), self.delc.max(), dy))
-        return dy
+            dy = None
+        return dx, dy
 
     @property
     def geotransform(self):
         """Returns GDAL-ordered geotransform tuple"""
         c, f = self.xul, self.yul
-        dx = self.dx * self.length_multiplier
-        dy = self.dy * self.length_multiplier
+        dx, dy = self.resolution
+        if not all([dx, dy]):
+            raise ValueError('model grid is not uniform')
         rotation = self.rotation
         if rotation != 0:
             cr, sr = cos_sin(rotation)

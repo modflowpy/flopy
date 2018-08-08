@@ -297,6 +297,8 @@ def test_export_array():
 
     try:  # test GeoTIFF export
         import rasterio
+        from distutils.version import LooseVersion
+        rasterio_post101 = LooseVersion(rasterio.__version__) >= '1.0.1'
         m.sr.export_array(os.path.join(tpth, 'fb.tif'), m.dis.top.array,
                           nodata=nodata)
         with rasterio.open(os.path.join(tpth, 'fb.tif')) as src:
@@ -304,8 +306,10 @@ def test_export_array():
         # array should have identical values
         np.testing.assert_equal(arr, m.dis.top.array)
         assert src.shape == (m.nrow, m.ncol)
-        # Note: rasterio doesn't properly represent bounds for rotated rasters
-        np.testing.assert_almost_equal(src.bounds[0:2], m.sr.bounds[0:2])
+        if rasterio_post101:
+            np.testing.assert_almost_equal(src.bounds, m.sr.bounds)
+        else:  # Note: older rasterio had incomplete bounds on rotated rasters
+            np.testing.assert_almost_equal(src.bounds[0:2], m.sr.bounds[0:2])
         np.testing.assert_almost_equal(
             src.affine,
             [176.7766952966369, 176.77669529663686, 619653.0,
@@ -343,8 +347,10 @@ def test_export_array():
             arr = src.read(1)
         np.testing.assert_equal(arr, m.dis.top.array)
         assert src.shape == (10, 5)
-        # Note: rasterio doesn't properly represent bounds for rotated rasters
-        np.testing.assert_almost_equal(src.bounds[0:2], sr.bounds[0:2])
+        if rasterio_post101:
+            np.testing.assert_almost_equal(src.bounds, sr.bounds)
+        else:  # Note: older rasterio had incomplete bounds on rotated rasters
+            np.testing.assert_almost_equal(src.bounds[0:2], sr.bounds[0:2])
         np.testing.assert_equal(
             src.affine,
             [250.0, 0.0, 286.8,
@@ -611,8 +617,7 @@ def test_dynamic_xll_yll():
                                        xll=xll, yll=yll, rotation=30)
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
-    assert sr1.dx == 250.0
-    assert sr1.dy == 500.0
+    assert sr1.resolution == (250.0, 500.0)
     np.testing.assert_almost_equal(
         sr1.get_extent(), (-2213.2, 1369.3317547, 29.03, 4984.1570189))
     np.testing.assert_almost_equal(
@@ -626,8 +631,8 @@ def test_dynamic_xll_yll():
     assert sr1.yll == yll
     assert sr1.xlength == 1250.0
     assert sr1.ylength == 5000.0
-    assert sr1.dx == 250.0
-    assert sr1.dy == 500.0
+    np.testing.assert_almost_equal(
+        sr1.resolution, (76.1962816, 152.3925632))
     np.testing.assert_almost_equal(
         sr1.get_extent(), (-475.1628162, 616.7395778, 29.03, 1539.2790152))
     np.testing.assert_almost_equal(
