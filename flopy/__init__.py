@@ -38,5 +38,5 @@ from . import export
 from . import pest
 from . import mf6
 from . import grid
-from . import proposed_grid
+# from . import proposed_grid
 from .mbase import run_model, which
