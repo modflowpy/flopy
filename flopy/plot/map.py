@@ -79,8 +79,11 @@ class StructuredMapView(object):
 
         elif modelgrid is not None:
             self.mg = copy.deepcopy(modelgrid)
-            self.sr = copy.deepcopy(modelgrid.sr)
-
+            # todo: remove statement once model grid/spatial reference is finalized
+            try:
+                self.sr = copy.deepcopy(modelgrid.sr)
+            except:
+                self.sr = None
         elif dis is not None:
             self.mg = copy.deepcopy(dis.parent.modelgrid)
             self.sr = copy.deepcopy(dis.parent.modelgrid.sr)
@@ -136,7 +139,11 @@ class StructuredMapView(object):
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.mg.get_extent()
+            # todo: Remove try statements once model_grid is finalized!
+            try:
+                self._extent = self.mg.get_extent()
+            except:
+                self._extent = self.mg.extent
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -158,6 +165,9 @@ class StructuredMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if not isinstance(a, np.ndarray):
+            a = np.array(a)
+
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
         elif a.ndim == 2:
@@ -190,6 +200,7 @@ class StructuredMapView(object):
             vmin = kwargs.pop('vmin')
         else:
             vmin = None
+
         if 'vmax' in kwargs:
             vmax = kwargs.pop('vmax')
         else:
@@ -229,7 +240,7 @@ class StructuredMapView(object):
         """
         try:
             import matplotlib.tri as tri
-        except:
+        except ImportError:
             tri = None
 
         try:
@@ -267,7 +278,6 @@ class StructuredMapView(object):
 
         if 'extent' in kwargs and tri is not None:
             extent = kwargs.pop('extent')
-
 
             idx = (xcentergrid >= extent[0]) & (
                    xcentergrid <= extent[1]) & (
@@ -318,8 +328,11 @@ class StructuredMapView(object):
 
         """
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except:
+                ibound = self.model.dis.idomain.array
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -333,7 +346,7 @@ class StructuredMapView(object):
         return quadmesh
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    **kwargs):
+                    color_vpt="red", **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -346,6 +359,8 @@ class StructuredMapView(object):
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        color_vpt: string
+            Color for vertical pass through cells (Default is "red".)
 
         Returns
         -------
@@ -353,8 +368,12 @@ class StructuredMapView(object):
 
         """
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except:
+                ibound = self.model.dis.idomain.array
+                color_ch = color_vpt
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -392,7 +411,12 @@ p
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = LineCollection(self.mg.get_grid_lines(), **kwargs)
+        # todo: Remove try statements once model_grid is finalized!
+        try:
+            lc = LineCollection(self.mg.get_grid_lines(), **kwargs)
+        except:
+            lc = LineCollection(self.mg.grid_lines, **kwargs)
+
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])

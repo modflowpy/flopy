@@ -143,10 +143,18 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             raise NotImplementedError()
         arrays = {}
         model_grid = self._data_dimensions.get_model_grid()
+
+        if model_grid._grid_type.value == 1:
+            shape = (model_grid.num_layers(), model_grid.num_rows(),
+                     model_grid.num_columns())
+        elif model_grid._grid_type.value == 2:
+            shape = (model_grid.num_layers(), model_grid.num_cells_per_layer())
+        else:
+            shape = (model_grid.num_cells_per_layer(),)
+
         for name in sarr[0].dtype.names[i0:]:
             if not sarr[0].dtype.fields[name][0] == object:
-                arr = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
-                                model_grid.num_columns()))
+                arr = np.zeros(shape)
                 arrays[name] = arr.copy()
 
         if np.isscalar(sarr[0]):
@@ -160,16 +168,13 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 raise Exception("MfList: something bad happened")
 
         for name, arr in arrays.items():
-            cnt = np.zeros((model_grid.num_layers(), model_grid.num_rows(),
-                            model_grid.num_columns()),
-                           dtype=np.float)
+            cnt = np.zeros(shape, dtype=np.float)
             #print(name,kper)
             for sp_rec in sarr:
                 if sp_rec is not None:
                     for rec in sp_rec:
-                        arr[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] +=\
-                            rec[name]
-                        cnt[rec['cellid'][0], rec['cellid'][1], rec['cellid'][2]] += 1.
+                        arr[rec['cellid']] += rec[name]
+                        cnt[rec['cellid']] += 1.
             # average keys that should not be added
             if name != 'cond' and name != 'flux':
                 idx = cnt > 0.

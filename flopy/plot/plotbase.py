@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from ..plot.map import StructuredMapView
+from ..plot.vmap import VertexMapView
 from ..plot.crosssection import StructuredCrossSection
 from ..plot import plotutil
 
@@ -61,7 +62,7 @@ class PlotMapView(object):
             raise ImportError(s)
 
         # todo: make a descision about the model grid type here!
-        tmp = True
+        tmp = False
         if tmp:
             self.__cls = StructuredMapView(sr=sr, ax=ax, model=model, dis=dis,
                                            modelgrid=modelgrid, layer=layer,
@@ -70,7 +71,11 @@ class PlotMapView(object):
                                            length_multiplier=length_multiplier)
         else:
             # todo: link up vertex plotting methods
-            raise NotImplementedError()
+            self.__cls = VertexMapView(sr=sr, ax=ax, model=model, dis=dis,
+                                       modelgrid=modelgrid, layer=layer,
+                                       extent=extent, xul=xul, yul=yul, xll=xll,
+                                       yll=yll, rotation=rotation,
+                                       length_multiplier=length_multiplier)
 
         self.model = self.__cls.model
         self.layer = self.__cls.layer
@@ -145,11 +150,11 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        return self.__cls.plot_inactive(ibound=ibound, color_noflow=color_noflow,
+        return self.__cls.plot_inactive(ibound, color_noflow=color_noflow,
                                         **kwargs)
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    **kwargs):
+                    color_vpt='red', **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -168,8 +173,9 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        return self.__cls.plot_ibound(ibound=ibound, color_noflow=color_noflow,
-                                      color_ch=color_ch, **kwargs)
+        return self.__cls.plot_ibound(ibound, color_noflow=color_noflow,
+                                      color_ch=color_ch, color_vpt=color_vpt,
+                                      **kwargs)
 
     def plot_grid(self, **kwargs):
         """
@@ -325,8 +331,9 @@ class PlotMapView(object):
 
         return contour_set
 
-    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
-                       jstep=1, normalize=False, **kwargs):
+    def plot_discharge(self, frf=None, fff=None, fja=None, dis=None,
+                       flf=None, head=None, istep=1, jstep=1,
+                       normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -360,9 +367,13 @@ class PlotMapView(object):
         """
         # todo: figure out the preparation for plotting discharge.... if user should do
         # todo: frf, fff, flf or flopy should auto-process these data!
-        return self.__cls.plot_discharge(frf=frf, fff=fff, dis=dis, flf=flf, head=head,
-                                         istep=istep, jstep=jstep, normalize=normalize,
-                                         **kwargs)
+        if self.mg.grid_type == "vertex":
+            return self.__cls.plot_discharge(fja=fja, dis=dis, head=head, istep=istep,
+                                             normalize=normalize, **kwargs)
+        else:
+            return self.__cls.plot_discharge(frf=frf, fff=fff, dis=dis, flf=flf, head=head,
+                                             istep=istep, jstep=jstep, normalize=normalize,
+                                             **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """

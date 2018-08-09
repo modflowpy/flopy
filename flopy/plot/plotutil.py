@@ -1983,31 +1983,157 @@ def saturated_thickness(head, top, botm, laytyp, mask_values=None):
         Saturated thickness of shape (nlay, nrow, ncol).
 
     """
-    nlay, nrow, ncol = head.shape
+
+    if head.ndim == 3:
+        head = np.copy(head)
+        nlay, nrow, ncol = head.shape
+        ncpl = nrow * ncol
+        head.shape = (nlay, ncpl)
+        top.shape = (nlay, ncpl)
+        botm.shape = (nlay, ncpl)
+
+    else:
+        nrow, ncol = None, None
+        nlay, ncpl = head.shape
+
     sat_thk = np.empty(head.shape, dtype=head.dtype)
+
     for k in range(nlay):
         if k == 0:
             t = top
         else:
-            t = botm[k-1, :, :]
-        sat_thk[k, :, :] = t - botm[k, :, :]
+            t = botm[k-1, :]
+        sat_thk[k, :] = t - botm[k, :]
+
     for k in range(nlay):
         if laytyp[k] != 0:
-            dh = np.zeros((nrow, ncol), dtype=head.dtype)
-            s = sat_thk[k, :, :]
+            dh = np.zeros((ncpl,), dtype=head.dtype)
+            s = sat_thk[k, :]
 
             for mv in mask_values:
-                idx = (head[k, :, :] == mv)
+                idx = (head[k, :] == mv)
                 dh[idx] = s[idx]
 
             if k == 0:
                 t = top
             else:
-                t = botm[k-1, :, :]
-            t = np.where(head[k, :, :] > t, t, head[k, :, :])
-            dh = np.where(dh == 0, t - botm[k, :, :], dh)
-            sat_thk[k, :, :] = dh[:, :]
+                t = botm[k-1, :]
+            t = np.where(head[k, :] > t, t, head[k, :])
+            dh = np.where(dh == 0, t - botm[k, :], dh)
+            sat_thk[k, :] = dh[:]
+
+    if nrow is not None and ncol is not None:
+        sat_thk.shape = (nlay, nrow, ncol)
+
     return sat_thk
+
+
+def vectorize_flow(ja, dis):
+    """
+    Method to take discretization info. and a FLOW JA FACE array
+    and create 1d list of fluid vectors in the flow right face, and flow front
+    face directions. Used with the quiver plot. Can be extended to return cell
+    averaged flow in vector directions as well.
+
+    Parameters
+    ----------
+    ja: ndarray:
+        1d flow ja face array from the cell by cell flow file
+    dis: (object)
+        Dis object <StructuredDisFile> or <VertexDisFile>
+
+    Returns
+    -------
+    frf_arr = array of flow right face values
+    fff_arr = array of flow forward face values
+    """
+    # todo: update this guy! Complete overhaul needed!!!!!! Does not currently work!
+    frf_arr = []
+    fff_arr = []
+    flf_arr = []
+
+    disja = dis.ja - 1 # create a list based indexing option
+    ia = dis.ia
+    nlay = dis.nlay
+    zcenter = dis.zcenter_array
+
+    if isinstance(dis, VertexDisFile):
+        xcenter = np.tile(dis.sr.xcenter_array, nlay)
+        ycenter = np.tile(dis.sr.ycenter_array, nlay)
+        ncpl = dis.sr.ncpl
+
+    elif isinstance(dis, StructuredDisFile):
+        ncpl = dis.nrow * dis.ncol
+        xcenter = dis.sr.xcentergrid
+        ycenter = dis.sr.ycentergrid
+        xcenter = np.tile(xcenter.reshape(-1), nlay)
+        ycenter = np.tile(ycenter.reshape(-1), nlay)
+
+    else:
+        raise AssertionError('distype not supported by quiver function')
+
+    con_arr = []
+    flux_arr = []
+    for i in range(1, len(ia)):
+        lji = ia[i-1]
+        uji = ia[i] - 1
+        con_arr.append(disja[lji:uji])
+        flux_arr.append(ja[lji:uji])
+
+
+    xcon_arr = []
+    ycon_arr = []
+    zcon_arr = []
+    xy_angle_arr = []
+    xz_angle_arr = []
+    for i, j in enumerate(con_arr):
+        xtmp = xcenter[j] - xcenter[i]
+        ytmp = ycenter[j] - ycenter[i]
+        ztmp = zcenter[j] - zcenter[i]
+        compare = xtmp + ytmp
+        xtmp[compare == 0.] = np.nan
+        ytmp[compare == 0.] = np.nan
+        ztmp[ztmp == 0.] = np.nan
+        xcon_arr.append(xtmp)
+        ycon_arr.append(ytmp)
+        xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
+        xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
+
+
+    for i, cell in enumerate(xy_angle_arr):
+        frf, fff = 0., 0.
+        for j, angle in enumerate(cell):
+            if angle < 0.:
+                angle += 360
+
+            if 0. <= angle < 90:
+                frf += flux_arr[i][j] * ((90. - angle)/90.)
+                fff += flux_arr[i][j] * (angle/90.)
+
+            elif 90. <= angle < 180.:
+                fff += flux_arr[i][j] * ((180. - angle)/90.)
+
+            elif 270 < angle < 360.:
+                frf += flux_arr[i][j] * ((angle - 270.)/90.)
+
+            else:
+                pass
+        frf_arr.append(frf)
+        fff_arr.append(fff)
+
+    # todo: debug this relationship
+    for i, cell in enumerate(xz_angle_arr):
+        flf = 0.
+        for j, angle in enumerate(cell):
+            if 0. <= angle < 90:
+                flf += flux_arr[i][j] * ((90. - angle)/90.)
+
+            else:
+                pass
+        flf_arr.append(flf)
+
+    return np.array(frf_arr), np.array(fff_arr), np.array(flf_arr)
+
 
 
 def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
@@ -2329,6 +2455,9 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
     return np.array(vcell)
 
+
+def create_patch(xverts, yverts):
+    return Polygon(zip(xverts, yverts))
 
 
 
