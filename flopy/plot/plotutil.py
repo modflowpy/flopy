@@ -2028,7 +2028,7 @@ def saturated_thickness(head, top, botm, laytyp, mask_values=None):
     return sat_thk
 
 
-def vectorize_flow(ja, dis):
+def vectorize_flow(fja, model_grid, idomain):
     """
     Method to take discretization info. and a FLOW JA FACE array
     and create 1d list of fluid vectors in the flow right face, and flow front
@@ -2052,35 +2052,35 @@ def vectorize_flow(ja, dis):
     fff_arr = []
     flf_arr = []
 
-    disja = dis.ja - 1 # create a list based indexing option
-    ia = dis.ia
-    nlay = dis.nlay
-    zcenter = dis.zcenter_array
+    # create a jagged connection array from the model_grid
+    ca = create_connection_array(model_grid)
+    ja = create_ja(ca, idomain)
 
-    if isinstance(dis, VertexDisFile):
-        xcenter = np.tile(dis.sr.xcenter_array, nlay)
-        ycenter = np.tile(dis.sr.ycenter_array, nlay)
-        ncpl = dis.sr.ncpl
+    nlay = model_grid.nlay
 
-    elif isinstance(dis, StructuredDisFile):
-        ncpl = dis.nrow * dis.ncol
-        xcenter = dis.sr.xcentergrid
-        ycenter = dis.sr.ycentergrid
-        xcenter = np.tile(xcenter.reshape(-1), nlay)
-        ycenter = np.tile(ycenter.reshape(-1), nlay)
+    iac = [len(i) for i in ja]
+    # create an accumulated set of indicies for finding fluxes from fja
+    ia = np.add.accumulate([0] + iac)
+
+
+    # zcenter = model_grid.zcenters
+
+    if model_grid.grid_type == "vertex":
+        xcenter = np.tile(model_grid.sr.xcenters, nlay)
+        ycenter = np.tile(model_grid.sr.ycenters, nlay)
+        ncpl = model_grid.ncpl
 
     else:
         raise AssertionError('distype not supported by quiver function')
 
-    con_arr = []
     flux_arr = []
     for i in range(1, len(ia)):
         lji = ia[i-1]
         uji = ia[i] - 1
-        con_arr.append(disja[lji:uji])
-        flux_arr.append(ja[lji:uji])
+        flux_arr.append(fja[lji:uji])
 
-
+    print('break')
+    """
     xcon_arr = []
     ycon_arr = []
     zcon_arr = []
@@ -2098,7 +2098,6 @@ def vectorize_flow(ja, dis):
         ycon_arr.append(ytmp)
         xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
         xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
-
 
     for i, cell in enumerate(xy_angle_arr):
         frf, fff = 0., 0.
@@ -2133,7 +2132,99 @@ def vectorize_flow(ja, dis):
         flf_arr.append(flf)
 
     return np.array(frf_arr), np.array(fff_arr), np.array(flf_arr)
+    """
 
+def create_ja(ca, idomain):
+    """
+    Uses a connection array and the idomain to build
+    a full jagged array for flows.
+
+    Parameters
+        ca: (list) connection array
+        idomain: np.ndarray Modflow6 idomain array
+
+    Returns
+        ja: (np.ndarray)
+    """
+    # todo: create a connection array for each layer,
+    # todo: pop off cells and connections where idomain == 0
+    # todo: add positional connections for up and down and return
+    # todo: as a jagged array.
+
+    return
+
+
+def create_connection_array(model_grid):
+    """
+    Uses a triangulation matrix to crate a grid connection
+    array in the x, y dimension; for Vertex Grids
+
+    Method could be extended to include the z-direction
+    for true unstructured grids with a little effort.
+
+    Parameters:
+        model_grid: (VertexModelGrid)
+        idomain: idomain array
+
+    Returns:
+         list of connections
+    """
+    xverts = model_grid.sr.xgrid
+    yverts = model_grid.sr.ygrid
+    # use a triangulation matrix scheme to find connections!
+
+    iac = []
+    for cell, xv_set in enumerate(xverts):
+
+        yv_set = yverts[cell]
+        conn = []
+        for ix, x0 in enumerate(xv_set):
+            x1 = xv_set[ix - 1]
+            y0 = yv_set[ix]
+            y1 = yv_set[ix - 1]
+
+            xlen = x1 - x0
+            ylen = y1 - y0
+            dist = hypot(xlen, ylen)
+
+            xlen0 = xverts - x0
+            ylen0 = yverts - y0
+            dist0 = hypot(xlen0, ylen0)
+
+            xlen1 = xverts - x1
+            ylen1 = yverts - y1
+            dist1 = hypot(xlen1, ylen1)
+
+            distance = abs((dist0 + dist1) - dist)
+
+            intersection = np.where(distance < 1e-04)
+
+            if len(intersection) > 0:
+                cells, counts = np.unique(intersection[0], return_counts=True)
+
+                for ix, count in enumerate(counts):
+                    if cells[ix] != cell:
+                        if count >= 2:
+                            conn.append(int(cells[ix]))
+                        elif count == 1:
+                            # check that this is not a shared corner vertex!
+                            # if is is not, then add it to connection list!
+                            if x0 not in xverts[cell] or x1 not in xverts[cell]:
+                                if y0 not in yverts[cell] or y1 not in yverts[cell]:
+                                    conn.append(int(cells[ix]))
+        if not conn:
+            raise Exception("Something went wrong finding connections!")
+
+        iac.append([cell] + sorted(conn))
+
+    return iac
+
+
+def hypot(xdist, ydist):
+    """
+    Calculate the absolute distance from a point
+    """
+    return np.sqrt(xdist ** 2 + ydist **2)
 
 
 def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
@@ -2455,9 +2546,6 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
     return np.array(vcell)
 
-
-def create_patch(xverts, yverts):
-    return Polygon(zip(xverts, yverts))
 
 
 

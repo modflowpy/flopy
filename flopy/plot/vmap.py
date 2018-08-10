@@ -596,8 +596,10 @@ class VertexMapView(object):
         sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
                                                mask_values=[hnoflo, hdry])
 
-        # todo: continue development from here!!!!!
-        frf, fff, flf = plotutil.vectorize_flow(fja, dis)
+
+
+        frf, fff, flf = plotutil.vectorize_flow(fja, model_grid=self.mg,
+                                                idomain=dis.idomain.array)
 
         return
 
