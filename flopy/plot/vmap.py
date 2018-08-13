@@ -576,9 +576,9 @@ class VertexMapView(object):
         delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
         delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
 
+        # todo: get hnoflow and hdry from the proper place
         hnoflo = 999.
         hdry = 999.
-        # todo: get hnoflow and hdry from the proper place
 
         if head is None:
             head = np.zeros(botm.shape)
@@ -593,15 +593,18 @@ class VertexMapView(object):
 
         laytyp = np.zeros((nlay,))
 
-        sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
-                                               mask_values=[hnoflo, hdry])
+        sat_thk = plotutil.PlotUtilities.\
+            saturated_thickness(head, top,
+                                botm, laytyp,
+                                mask_values=[hnoflo, hdry])
 
+        frf, fff = plotutil.UnstructuredPlotUtilities.\
+            vectorize_flow(fja, model_grid=self.mg,
+                           idomain=dis.idomain.array)
 
-        frf, fff = plotutil.vectorize_flow(fja, model_grid=self.mg,
-                                           idomain=dis.idomain.array)
-
-        qx, qy, qz = plotutil.unstructured_specific_discharge(frf, fff, None,
-                                                              delr, delc, sat_thk)
+        qx, qy, qz = plotutil.UnstructuredPlotUtilities.\
+            specific_discharge(frf, fff, None,
+                               delr, delc, sat_thk)
 
         # Select the correct layer slice
         u = qx[self.layer, :]
@@ -704,13 +707,15 @@ if __name__ == "__main__":
     #ax = map.plot_bc(package=chd)
     #plt.show()
 
-    cbc = os.path.join(ws, "expected_output", "model_adj.cbc")
-    hds = os.path.join(ws, "expected_output", "model_adj.hds")
+    cbc = os.path.join(ws, "model.cbc")
+    hds = os.path.join(ws, "model.hds")
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
-    fja = cbc.get_data(text="FLOW JA FACE")
+    print(cbc.get_unique_record_names())
+
+    fja = cbc.get_data(text="FLOW-JA-FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)

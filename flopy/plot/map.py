@@ -675,12 +675,16 @@ p
         if head is None or laytyp is None:
             head = np.zeros(botm.shape, np.float32)
             laytyp = np.zeros((nlay,), dtype=np.int)
-        sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
-                                               [hnoflo, hdry])
+
+        # calculate the saturated thickness
+        sat_thk = plotutil.PlotUtilities.\
+            saturated_thickness(head, top, botm, laytyp,
+                                [hnoflo, hdry])
 
         # Calculate specific discharge
-        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
-                                                          delc, sat_thk)
+        qx, qy, qz = plotutil.PlotUtilities.\
+            centered_specific_discharge(frf, fff, flf, delr,
+                                        delc, sat_thk)
 
         # Select correct slice
         u = qx[self.layer, :, :]

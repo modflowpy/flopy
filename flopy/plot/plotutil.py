@@ -1479,6 +1479,559 @@ class PlotUtilities(object):
 
         return axes
 
+    @staticmethod
+    def saturated_thickness(head, top, botm, laytyp, mask_values=None):
+        """
+        Calculate the saturated thickness.
+
+        Parameters
+        ----------
+        head : numpy.ndarray
+            head array
+        top : numpy.ndarray
+            top array of shape (nrow, ncol)
+        botm : numpy.ndarray
+            botm array of shape (nlay, nrow, ncol)
+        laytyp : numpy.ndarray
+            confined (0) or convertible (1) of shape (nlay)
+        mask_values : list of floats
+            If head is one of these values, then set sat to top - bot
+
+        Returns
+        -------
+        sat_thk : numpy.ndarray
+            Saturated thickness of shape (nlay, nrow, ncol).
+
+        """
+
+        if head.ndim == 3:
+            head = np.copy(head)
+            nlay, nrow, ncol = head.shape
+            ncpl = nrow * ncol
+            head.shape = (nlay, ncpl)
+            top.shape = (nlay, ncpl)
+            botm.shape = (nlay, ncpl)
+
+        else:
+            nrow, ncol = None, None
+            nlay, ncpl = head.shape
+
+        sat_thk = np.empty(head.shape, dtype=head.dtype)
+
+        for k in range(nlay):
+            if k == 0:
+                t = top
+            else:
+                t = botm[k - 1, :]
+            sat_thk[k, :] = t - botm[k, :]
+
+        for k in range(nlay):
+            if laytyp[k] != 0:
+                dh = np.zeros((ncpl,), dtype=head.dtype)
+                s = sat_thk[k, :]
+
+                for mv in mask_values:
+                    idx = (head[k, :] == mv)
+                    dh[idx] = s[idx]
+
+                if k == 0:
+                    t = top
+                else:
+                    t = botm[k - 1, :]
+                t = np.where(head[k, :] > t, t, head[k, :])
+                dh = np.where(dh == 0, t - botm[k, :], dh)
+                sat_thk[k, :] = dh[:]
+
+        if nrow is not None and ncol is not None:
+            sat_thk.shape = (nlay, nrow, ncol)
+
+        return sat_thk
+
+    @staticmethod
+    def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
+        """
+        Using the MODFLOW discharge, calculate the cell centered specific discharge
+        by dividing by the flow width and then averaging to the cell center.
+
+        Parameters
+        ----------
+        Qx : numpy.ndarray
+            MODFLOW 'flow right face'
+        Qy : numpy.ndarray
+            MODFLOW 'flow front face'.  The sign on this array will be flipped
+            by this function so that the y axis is positive to north.
+        Qz : numpy.ndarray
+            MODFLOW 'flow lower face'.  The sign on this array will be flipped by
+            this function so that the z axis is positive in the upward direction.
+        delr : numpy.ndarray
+            MODFLOW delr array
+        delc : numpy.ndarray
+            MODFLOW delc array
+        sat_thk : numpy.ndarray
+            Saturated thickness for each cell
+
+        Returns
+        -------
+        (qx, qy, qz) : tuple of numpy.ndarrays
+            Specific discharge arrays that have been interpolated to cell centers.
+
+        """
+        qx = None
+        qy = None
+        qz = None
+
+        if Qx is not None:
+
+            nlay, nrow, ncol = Qx.shape
+            qx = np.zeros(Qx.shape, dtype=Qx.dtype)
+
+            for k in range(nlay):
+                for j in range(ncol - 1):
+                    area = delc[:] * 0.5 * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
+                    idx = area > 0.
+                    qx[k, idx, j] = Qx[k, idx, j] / area[idx]
+
+            qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol - 1] + qx[:, :, 1:ncol])
+            qx[:, :, 0] = 0.5 * qx[:, :, 0]
+
+        if Qy is not None:
+
+            nlay, nrow, ncol = Qy.shape
+            qy = np.zeros(Qy.shape, dtype=Qy.dtype)
+
+            for k in range(nlay):
+                for i in range(nrow - 1):
+                    area = delr[:] * 0.5 * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
+                    idx = area > 0.
+                    qy[k, i, idx] = Qy[k, i, idx] / area[idx]
+
+            qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow - 1, :] + qy[:, 1:nrow, :])
+            qy[:, 0, :] = 0.5 * qy[:, 0, :]
+            qy = -qy
+
+        if Qz is not None:
+            qz = np.zeros(Qz.shape, dtype=Qz.dtype)
+            dr = delr.reshape((1, delr.shape[0]))
+            dc = delc.reshape((delc.shape[0], 1))
+            area = dr * dc
+            for k in range(nlay):
+                qz[k, :, :] = Qz[k, :, :] / area[:, :]
+            qz[1:, :, :] = 0.5 * (qz[0:nlay - 1, :, :] + qz[1:nlay, :, :])
+            qz[0, :, :] = 0.5 * qz[0, :, :]
+            qz = -qz
+
+        return (qx, qy, qz)
+
+
+class UnstructuredPlotUtilities(object):
+    """
+    Collection of unstructured grid and vertex grid compatible
+    plotting helper functions
+    """
+
+    @staticmethod
+    def create_connection_array(model_grid):
+        """
+        Uses a triangulation matrix to crate a grid connection
+        array in the x, y dimension; for Vertex Grids
+
+        Method could be extended to include the z-direction
+        for true unstructured grids with a little effort.
+
+        Parameters:
+            model_grid: (VertexModelGrid)
+            idomain: idomain array
+
+        Returns:
+             list of connections
+        """
+        xverts = model_grid.sr.xgrid
+        yverts = model_grid.sr.ygrid
+        # use a triangulation matrix scheme to find connections!
+
+        iac = []
+        for cell, xv_set in enumerate(xverts):
+
+            yv_set = yverts[cell]
+            conn = []
+            for ix, x0 in enumerate(xv_set):
+                x1 = xv_set[ix - 1]
+                y0 = yv_set[ix]
+                y1 = yv_set[ix - 1]
+
+                xlen = x1 - x0
+                ylen = y1 - y0
+                dist = UnstructuredPlotUtilities.hypot(xlen, ylen)
+
+                xlen0 = xverts - x0
+                ylen0 = yverts - y0
+                dist0 = UnstructuredPlotUtilities.hypot(xlen0, ylen0)
+
+                xlen1 = xverts - x1
+                ylen1 = yverts - y1
+                dist1 = UnstructuredPlotUtilities.hypot(xlen1, ylen1)
+
+                distance = abs((dist0 + dist1) - dist)
+
+                intersection = np.where(distance < 1e-04)
+
+                if len(intersection) > 0:
+                    cells, counts = np.unique(intersection[0], return_counts=True)
+
+                    for ix, count in enumerate(counts):
+                        if cells[ix] != cell:
+                            if count >= 2:
+                                conn.append(int(cells[ix]))
+                            elif count == 1:
+                                # check that this is not a shared corner vertex!
+                                # if is is not, then add it to connection list!
+                                if x0 not in xverts[cell] or x1 not in xverts[cell]:
+                                    if y0 not in yverts[cell] or y1 not in yverts[cell]:
+                                        conn.append(int(cells[ix]))
+            if not conn:
+                raise Exception("Something went wrong finding connections!")
+
+            iac.append([cell] + sorted(conn))
+
+        return iac
+
+    @staticmethod
+    def hypot(xdist, ydist):
+        """
+        Calculate the absolute distance from a point
+        """
+        return np.sqrt(xdist ** 2 + ydist ** 2)
+
+    @staticmethod
+    def create_ja(ca, idomain):
+        """
+        Uses a connection array and the idomain to build
+        a full jagged array for flows.
+
+        Parameters
+            ca: (list) connection array
+            idomain: np.ndarray Modflow6 idomain array
+
+        Returns
+            ja: (np.ndarray)
+        """
+        nlay = idomain.shape[0]
+        ncpl = len(idomain[0])
+        ja = []
+
+        for lay in range(nlay):
+            for cell in ca:
+                if idomain[lay][cell[0]] < 1:
+                    pass
+
+                else:
+                    # look for connections at top and bottom
+                    x = []
+                    for ix, c in enumerate(cell):
+                        if ix == 0:
+                            x.append(c + (lay * ncpl))
+                            t = UnstructuredPlotUtilities.\
+                                find_upper_connection(idomain, lay,
+                                                      cell[0],
+                                                      ncpl=ncpl,
+                                                      ilay=lay)
+                            if t is not None:
+                                x.append(t)
+
+                        else:
+                            if idomain[lay][c] > 0:
+                                x.append(c + (lay * ncpl))
+
+                    t = UnstructuredPlotUtilities.\
+                        find_lower_connection(idomain, lay,
+                                              cell[0],
+                                              ncpl=ncpl,
+                                              ilay=lay)
+
+                    if t is not None:
+                        x.append(t)
+
+                    if x:
+                        ja.append(x)
+
+        return ja
+
+    @staticmethod
+    def find_upper_connection(idomain, lay, c, ncpl, ilay):
+        """
+        Recursive function to find connections for ja. Includes vertical
+        pass through support.
+
+        Parameters:
+            idomain: (np.ndarray) idomain model array
+            lay: (int) current layer
+            c: (int) cell number, zero based
+            ncpl: (int) number of cells per layer
+            ilay: (int) initial layer number corresponding to c
+        :return:
+        """
+        if lay - 1 < 0:
+            return None
+
+        ncadj = (lay - ilay) + 1
+
+        if idomain[lay - 1][c] <= 0:
+            if lay - 2 < 0:
+                return None
+            try:
+                if idomain[lay - 2][c] > 0:
+                    cell = c + (ilay * ncpl) - ((ncadj + 1) * ncpl)
+
+                elif idomain[lay - 2][c] == 0:
+                    return None
+
+                else:
+                    cell = UnstructuredPlotUtilities.\
+                        find_lower_connection(idomain, lay + 1,
+                                              c, ncpl, ilay)
+            except IndexError:
+                return None
+
+        else:
+            return c + (ilay * ncpl) - (ncpl * ncadj)
+
+        return cell
+
+    @staticmethod
+    def find_lower_connection(idomain, lay, c, ncpl, ilay):
+        """
+        Recursive function to find connections for ja. Includes vertical
+        pass through support.
+
+        Parameters:
+            idomain: (np.ndarray) idomain model array
+            lay: (int) current layer
+            c: (int) cell number, zero based
+            ncpl: (int) number of cells per layer
+            ilay: (int) initial layer number
+
+        :return:
+        """
+        if lay + 1 == len(idomain):
+            return None
+
+        ncadj = (lay - ilay) + 1
+
+        if idomain[lay + 1][c] <= 0:
+            try:
+                if idomain[lay + 2][c] > 0:
+                    cell = c + (ilay * ncpl) + ((ncadj + 1) * ncpl)
+
+                elif idomain[lay + 2][c] == 0:
+                    return None
+
+                else:
+                    cell = UnstructuredPlotUtilities.\
+                        find_lower_connection(idomain, lay + 1,
+                                              c, ncpl, ilay)
+
+            except IndexError:
+                return None
+
+        else:
+            return c + (ilay * ncpl) + (ncpl * ncadj)
+
+        return cell
+
+    @staticmethod
+    def vectorize_flow(fja, model_grid, idomain):
+        """
+        Method to take discretization info. and a FLOW JA FACE array
+        and create 1d list of fluid vectors in the flow right face, and flow front
+        face directions. Used with the quiver plot. Can be extended to return cell
+        averaged flow in vector directions as well.
+
+        Parameters
+        ----------
+        ja: ndarray:
+            1d flow ja face array from the cell by cell flow file
+        dis: (object)
+            Dis object <StructuredDisFile> or <VertexDisFile>
+
+        Returns
+        -------
+        frf_arr = array of flow right face values
+        fff_arr = array of flow forward face values
+        """
+        # todo: update this to include flf
+        # create a jagged connection array from the model_grid
+        ca = UnstructuredPlotUtilities.create_connection_array(model_grid)
+        ja = UnstructuredPlotUtilities.create_ja(ca, idomain)
+
+        nlay = model_grid.nlay
+
+        # iac = [len(i) for i in ja]
+        # create an accumulated set of indicies for finding fluxes from fja
+        # ia = np.add.accumulate([0] + iac)
+
+        # zcenter = model_grid.zcenters
+
+        if model_grid.grid_type == "vertex":
+            xcenter = np.tile(model_grid.xcenters, nlay)
+            ycenter = np.tile(model_grid.ycenters, nlay)
+            ncpl = model_grid.ncpl
+
+        else:
+            raise AssertionError('distype not supported by quiver function')
+
+        frf_arr = np.zeros((nlay, ncpl))
+        fff_arr = np.zeros((nlay, ncpl))
+        flf_arr = np.zeros((nlay, ncpl))
+
+        flux_arr = []
+        i = 0
+        for cell in ja:
+            t = []
+            for c in cell:
+                t.append(fja[i])
+                i += 1
+            flux_arr.append(t)
+
+        xcon_arr = []
+        ycon_arr = []
+        zcon_arr = []
+        xy_angle_arr = []
+        xz_angle_arr = []
+        for j in ja:
+            i = j[0]
+            xtmp = xcenter[j] - xcenter[i]
+            ytmp = ycenter[j] - ycenter[i]
+            # ztmp = zcenter[j] - zcenter[i]
+            compare = xtmp + ytmp
+            xtmp[compare == 0.] = np.nan
+            ytmp[compare == 0.] = np.nan
+            # ztmp[ztmp == 0.] = np.nan
+            xcon_arr.append(xtmp)
+            ycon_arr.append(ytmp)
+            xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
+            # xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
+
+        for i, cell in enumerate(xy_angle_arr):
+            frf, fff = 0., 0.
+            for j, angle in enumerate(cell):
+                if angle < 0.:
+                    angle += 360
+
+                if 0. <= angle < 90:
+                    frf += flux_arr[i][j] * ((90. - angle) / 90.)
+                    fff += flux_arr[i][j] * (angle / 90.)
+
+                elif 90. <= angle < 180.:
+                    fff += flux_arr[i][j] * ((180. - angle) / 90.)
+
+                elif 270 < angle < 360.:
+                    frf += flux_arr[i][j] * ((angle - 270.) / 90.)
+
+                else:
+                    pass
+
+            cell_num = ja[i][0]
+            if cell_num >= ncpl:
+                lay = cell_num // ncpl
+                while cell_num >= ncpl:
+                    cell_num -= ncpl
+            else:
+                lay = 0
+
+            frf_arr[lay][cell_num] = frf
+            fff_arr[lay][cell_num] = fff
+
+        # todo: debug this relationship, more thought is needed for this one!
+        # todo: solution probably is updating to take the absolute value of the angle in eval and the equation!
+        # for i, cell in enumerate(xz_angle_arr):
+        #    flf = 0.
+        #    for j, angle in enumerate(cell):
+        #        if 0. <= angle < 90:
+        #            flf += flux_arr[i][j] * ((90. - angle)/90.)
+
+        #        else:
+        #            pass
+        #    flf_arr.append(flf)
+
+        frf_arr.shape = (nlay, -1)
+        fff_arr.shape = (nlay, -1)
+
+        return frf_arr, fff_arr  # , np.array(flf_arr)
+
+    @staticmethod
+    def specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
+        """
+        Using the MODFLOW discharge, calculate the specific discharge
+        by dividing by the flow width
+
+        Not cell centered due to the large quantity of required information
+        for unstructured/vertex grid to perform this calculation
+
+        Parameters
+        ----------
+        Qx : numpy.ndarray
+            MODFLOW 'flow right face'
+        Qy : numpy.ndarray
+            MODFLOW 'flow front face'.  The sign on this array will be flipped
+            by this function so that the y axis is positive to north.
+        Qz : numpy.ndarray
+            MODFLOW 'flow lower face'.  The sign on this array will be flipped by
+            this function so that the z axis is positive in the upward direction.
+        delr : numpy.ndarray
+            MODFLOW delr array
+        delc : numpy.ndarray
+            MODFLOW delc array
+        sat_thk : numpy.ndarray
+            Saturated thickness for each cell
+
+        Returns
+        -------
+        (qx, qy, qz) : tuple of numpy.ndarrays
+            Specific discharge arrays
+
+        """
+        qx = None
+        qy = None
+        qz = None
+
+        if Qx is not None:
+
+            if len(Qx.shape) != 1:
+                nlay, ncpl = Qx.shape
+            else:
+                nlay = 1
+                ncpl = Qx.shape[0]
+
+            qx = np.zeros(Qx.shape, dtype=Qx.dtype)
+            qx = Qx / (delc * sat_thk)
+            qx = -qx
+
+        if Qy is not None:
+
+            if len(Qy.shape) != 1:
+                nlay, ncpl = Qy.shape
+            else:
+                nlay = 1
+                ncpl = Qy.shape[0]
+
+            qy = np.zeros(Qy.shape, dtype=Qy.dtype)
+            qy = Qy / (delr * sat_thk)
+            qy = -qy
+
+        if Qz is not None:
+
+            if len(Qz.shape) != 1:
+                nlay, ncpl = Qz.shape
+            else:
+                nlay = 1
+                ncpl = Qz.shape[0]
+
+            qz = np.zeros(Qz.shape, dtype=Qz.dtype)
+            qz = Qz / (delr * sat_thk)
+            qz = -qz
+
+        return (qx, qy, qz)
+
 
 class SwiConcentration():
     """
@@ -1960,555 +2513,6 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
     return pc
 
 
-def saturated_thickness(head, top, botm, laytyp, mask_values=None):
-    """
-    Calculate the saturated thickness.
-
-    Parameters
-    ----------
-    head : numpy.ndarray
-        head array
-    top : numpy.ndarray
-        top array of shape (nrow, ncol)
-    botm : numpy.ndarray
-        botm array of shape (nlay, nrow, ncol)
-    laytyp : numpy.ndarray
-        confined (0) or convertible (1) of shape (nlay)
-    mask_values : list of floats
-        If head is one of these values, then set sat to top - bot
-
-    Returns
-    -------
-    sat_thk : numpy.ndarray
-        Saturated thickness of shape (nlay, nrow, ncol).
-
-    """
-
-    if head.ndim == 3:
-        head = np.copy(head)
-        nlay, nrow, ncol = head.shape
-        ncpl = nrow * ncol
-        head.shape = (nlay, ncpl)
-        top.shape = (nlay, ncpl)
-        botm.shape = (nlay, ncpl)
-
-    else:
-        nrow, ncol = None, None
-        nlay, ncpl = head.shape
-
-    sat_thk = np.empty(head.shape, dtype=head.dtype)
-
-    for k in range(nlay):
-        if k == 0:
-            t = top
-        else:
-            t = botm[k-1, :]
-        sat_thk[k, :] = t - botm[k, :]
-
-    for k in range(nlay):
-        if laytyp[k] != 0:
-            dh = np.zeros((ncpl,), dtype=head.dtype)
-            s = sat_thk[k, :]
-
-            for mv in mask_values:
-                idx = (head[k, :] == mv)
-                dh[idx] = s[idx]
-
-            if k == 0:
-                t = top
-            else:
-                t = botm[k-1, :]
-            t = np.where(head[k, :] > t, t, head[k, :])
-            dh = np.where(dh == 0, t - botm[k, :], dh)
-            sat_thk[k, :] = dh[:]
-
-    if nrow is not None and ncol is not None:
-        sat_thk.shape = (nlay, nrow, ncol)
-
-    return sat_thk
-
-
-def vectorize_flow(fja, model_grid, idomain):
-    """
-    Method to take discretization info. and a FLOW JA FACE array
-    and create 1d list of fluid vectors in the flow right face, and flow front
-    face directions. Used with the quiver plot. Can be extended to return cell
-    averaged flow in vector directions as well.
-
-    Parameters
-    ----------
-    ja: ndarray:
-        1d flow ja face array from the cell by cell flow file
-    dis: (object)
-        Dis object <StructuredDisFile> or <VertexDisFile>
-
-    Returns
-    -------
-    frf_arr = array of flow right face values
-    fff_arr = array of flow forward face values
-    """
-    # todo: update this guy! Complete overhaul needed!!!!!! Does not currently work!
-    # create a jagged connection array from the model_grid
-    ca = create_connection_array(model_grid)
-    ja = create_ja(ca, idomain)
-
-    nlay = model_grid.nlay
-
-    iac = [len(i) for i in ja]
-    # create an accumulated set of indicies for finding fluxes from fja
-    ia = np.add.accumulate([0] + iac)
-
-    # zcenter = model_grid.zcenters
-
-    if model_grid.grid_type == "vertex":
-        xcenter = np.tile(model_grid.xcenters, nlay)
-        ycenter = np.tile(model_grid.ycenters, nlay)
-        ncpl = model_grid.ncpl
-
-    else:
-        raise AssertionError('distype not supported by quiver function')
-
-    frf_arr = np.zeros((nlay, ncpl))
-    fff_arr = np.zeros((nlay, ncpl))
-    flf_arr = np.zeros((nlay, ncpl))
-
-    flux_arr = []
-    i = 0
-    for cell in ja:
-        t = []
-        for c in cell:
-            t.append(fja[i])
-            i += 1
-        flux_arr.append(t)
-        # lji = ia[i-1]
-        # uji = ia[i] - 1
-        # flux_arr.append(fja[lji:uji])
-
-    xcon_arr = []
-    ycon_arr = []
-    zcon_arr = []
-    xy_angle_arr = []
-    xz_angle_arr = []
-    for j in ja:
-        i = j[0]
-        xtmp = xcenter[j] - xcenter[i]
-        ytmp = ycenter[j] - ycenter[i]
-        # ztmp = zcenter[j] - zcenter[i]
-        compare = xtmp + ytmp
-        xtmp[compare == 0.] = np.nan
-        ytmp[compare == 0.] = np.nan
-        # ztmp[ztmp == 0.] = np.nan
-        xcon_arr.append(xtmp)
-        ycon_arr.append(ytmp)
-        xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
-        # xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
-
-    for i, cell in enumerate(xy_angle_arr):
-        frf, fff = 0., 0.
-        for j, angle in enumerate(cell):
-            if angle < 0.:
-                angle += 360
-
-            if 0. <= angle < 90:
-                frf += flux_arr[i][j] * ((90. - angle)/90.)
-                fff += flux_arr[i][j] * (angle/90.)
-
-            elif 90. <= angle < 180.:
-                fff += flux_arr[i][j] * ((180. - angle)/90.)
-
-            elif 270 < angle < 360.:
-                frf += flux_arr[i][j] * ((angle - 270.)/90.)
-
-            else:
-                pass
-
-        cell_num = ja[i][0]
-        if cell_num >= ncpl:
-            lay = cell_num // ncpl
-            while cell_num >= ncpl:
-                cell_num -= ncpl
-        else:
-            lay = 0
-
-        frf_arr[lay][cell_num] = frf
-        fff_arr[lay][cell_num] = fff
-
-    # todo: debug this relationship, more thought is needed for this one!
-    # todo: solution probably is updating to take the absolute value of the angle in eval and the equation!
-    # for i, cell in enumerate(xz_angle_arr):
-    #    flf = 0.
-    #    for j, angle in enumerate(cell):
-    #        if 0. <= angle < 90:
-    #            flf += flux_arr[i][j] * ((90. - angle)/90.)
-
-    #        else:
-    #            pass
-    #    flf_arr.append(flf)
-
-    frf_arr.shape = (nlay, -1)
-    fff_arr.shape = (nlay, -1)
-
-    return frf_arr, fff_arr #, np.array(flf_arr)
-
-
-def create_ja(ca, idomain):
-    """
-    Uses a connection array and the idomain to build
-    a full jagged array for flows.
-
-    Parameters
-        ca: (list) connection array
-        idomain: np.ndarray Modflow6 idomain array
-
-    Returns
-        ja: (np.ndarray)
-    """
-    # todo: create a connection array for each layer,
-    # todo: pop off cells and connections where idomain == 0
-    # todo: add positional connections for up and down and return
-    # todo: as a jagged array.
-    nlay = idomain.shape[0]
-    ncpl = len(idomain[0])
-    ja = []
-
-    for lay in range(nlay):
-        for cell in ca:
-            if idomain[lay][cell[0]] < 1:
-                pass
-
-            else:
-                # look for connections at top and bottom
-                x = []
-                for ix, c in enumerate(cell):
-                    if ix == 0:
-                        x.append(c + (lay * ncpl))
-                        t = find_upper_connection(idomain, lay,
-                                                  cell[0],
-                                                  ncpl=ncpl,
-                                                  ilay=lay)
-                        if t is not None:
-                            x.append(t)
-
-                    else:
-                        if idomain[lay][c] > 0:
-                            x.append(c + (lay * ncpl))
-
-                t = find_lower_connection(idomain, lay,
-                                          cell[0],
-                                          ncpl=ncpl,
-                                          ilay=lay)
-
-                if t is not None:
-                    x.append(t)
-
-                if x:
-                    ja.append(x)
-
-    return ja
-
-
-def find_upper_connection(idomain, lay, c, ncpl, ilay):
-    """
-    Recursive function to find connections for ja. Includes vertical
-    pass through support.
-
-    Parameters:
-        idomain: (np.ndarray) idomain model array
-        lay: (int) current layer
-        c: (int) cell number, zero based
-        ncpl: (int) number of cells per layer
-        ilay: (int) initial layer number corresponding to c
-    :return:
-    """
-    if lay - 1 < 0:
-        return None
-
-    ncadj = (lay - ilay) + 1
-
-    if idomain[lay - 1][c] <= 0:
-        if lay - 2 < 0:
-            return None
-        try:
-            if idomain[lay - 2][c] > 0:
-                cell = c + (ilay * ncpl) - ((ncadj + 1) * ncpl)
-
-            elif idomain[lay - 2][c] == 0:
-                return None
-
-            else:
-                cell = find_lower_connection(idomain, lay + 1,
-                                             c, ncpl, ilay)
-        except IndexError:
-            return None
-
-    else:
-        return c + (ilay * ncpl) - (ncpl * ncadj)
-
-    return cell
-
-
-def find_lower_connection(idomain, lay, c, ncpl, ilay):
-    """
-    Recursive function to find connections for ja. Includes vertical
-    pass through support.
-
-    Parameters:
-        idomain: (np.ndarray) idomain model array
-        lay: (int) current layer
-        c: (int) cell number, zero based
-        ncpl: (int) number of cells per layer
-        ilay: (int) initial layer number
-
-    :return:
-    """
-    if lay + 1 == len(idomain):
-        return None
-
-    ncadj = (lay - ilay) + 1
-
-    if idomain[lay + 1][c] <= 0:
-        try:
-            if idomain[lay + 2][c] > 0:
-                cell =  c + (ilay * ncpl) + ((ncadj + 1) * ncpl)
-
-            elif idomain[lay + 2][c] == 0:
-                return None
-
-            else:
-                cell = find_lower_connection(idomain, lay + 1,
-                                             c, ncpl, ilay)
-
-        except IndexError:
-            return None
-
-    else:
-        return c + (ilay * ncpl) + (ncpl * ncadj)
-
-    return cell
-
-
-def create_connection_array(model_grid):
-    """
-    Uses a triangulation matrix to crate a grid connection
-    array in the x, y dimension; for Vertex Grids
-
-    Method could be extended to include the z-direction
-    for true unstructured grids with a little effort.
-
-    Parameters:
-        model_grid: (VertexModelGrid)
-        idomain: idomain array
-
-    Returns:
-         list of connections
-    """
-    xverts = model_grid.sr.xgrid
-    yverts = model_grid.sr.ygrid
-    # use a triangulation matrix scheme to find connections!
-
-    iac = []
-    for cell, xv_set in enumerate(xverts):
-
-        yv_set = yverts[cell]
-        conn = []
-        for ix, x0 in enumerate(xv_set):
-            x1 = xv_set[ix - 1]
-            y0 = yv_set[ix]
-            y1 = yv_set[ix - 1]
-
-            xlen = x1 - x0
-            ylen = y1 - y0
-            dist = hypot(xlen, ylen)
-
-            xlen0 = xverts - x0
-            ylen0 = yverts - y0
-            dist0 = hypot(xlen0, ylen0)
-
-            xlen1 = xverts - x1
-            ylen1 = yverts - y1
-            dist1 = hypot(xlen1, ylen1)
-
-            distance = abs((dist0 + dist1) - dist)
-
-            intersection = np.where(distance < 1e-04)
-
-            if len(intersection) > 0:
-                cells, counts = np.unique(intersection[0], return_counts=True)
-
-                for ix, count in enumerate(counts):
-                    if cells[ix] != cell:
-                        if count >= 2:
-                            conn.append(int(cells[ix]))
-                        elif count == 1:
-                            # check that this is not a shared corner vertex!
-                            # if is is not, then add it to connection list!
-                            if x0 not in xverts[cell] or x1 not in xverts[cell]:
-                                if y0 not in yverts[cell] or y1 not in yverts[cell]:
-                                    conn.append(int(cells[ix]))
-        if not conn:
-            raise Exception("Something went wrong finding connections!")
-
-        iac.append([cell] + sorted(conn))
-
-    return iac
-
-
-def hypot(xdist, ydist):
-    """
-    Calculate the absolute distance from a point
-    """
-    return np.sqrt(xdist ** 2 + ydist **2)
-
-
-def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
-    """
-    Using the MODFLOW discharge, calculate the cell centered specific discharge
-    by dividing by the flow width and then averaging to the cell center.
-
-    Parameters
-    ----------
-    Qx : numpy.ndarray
-        MODFLOW 'flow right face'
-    Qy : numpy.ndarray
-        MODFLOW 'flow front face'.  The sign on this array will be flipped
-        by this function so that the y axis is positive to north.
-    Qz : numpy.ndarray
-        MODFLOW 'flow lower face'.  The sign on this array will be flipped by
-        this function so that the z axis is positive in the upward direction.
-    delr : numpy.ndarray
-        MODFLOW delr array
-    delc : numpy.ndarray
-        MODFLOW delc array
-    sat_thk : numpy.ndarray
-        Saturated thickness for each cell
-
-    Returns
-    -------
-    (qx, qy, qz) : tuple of numpy.ndarrays
-        Specific discharge arrays that have been interpolated to cell centers.
-
-    """
-    qx = None
-    qy = None
-    qz = None
-
-    if Qx is not None:
-
-        nlay, nrow, ncol = Qx.shape
-        qx = np.zeros(Qx.shape, dtype=Qx.dtype)
-
-        for k in range(nlay):
-            for j in range(ncol-1):
-                area = delc[:] * 0.5 * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
-                idx = area > 0.
-                qx[k, idx, j] = Qx[k, idx, j] / area[idx]
-
-        qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol-1] + qx[:, :, 1:ncol])
-        qx[:, :, 0] = 0.5 * qx[:, :, 0]
-
-    if Qy is not None:
-
-        nlay, nrow, ncol = Qy.shape
-        qy = np.zeros(Qy.shape, dtype=Qy.dtype)
-
-        for k in range(nlay):
-            for i in range(nrow-1):
-                area = delr[:] * 0.5 * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
-                idx = area > 0.
-                qy[k, i, idx] = Qy[k, i, idx] / area[idx]
-
-        qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow-1, :] + qy[:, 1:nrow, :])
-        qy[:, 0, :] = 0.5 * qy[:, 0, :]
-        qy = -qy
-
-
-    if Qz is not None:
-        qz = np.zeros(Qz.shape, dtype=Qz.dtype)
-        dr = delr.reshape((1, delr.shape[0]))
-        dc = delc.reshape((delc.shape[0], 1))
-        area = dr * dc
-        for k in range(nlay):
-            qz[k, :, :] = Qz[k, :, :] / area[:, :]
-        qz[1:, :, :] = 0.5 * (qz[0:nlay-1, :, :] + qz[1:nlay, :, :])
-        qz[0, :, :] = 0.5 * qz[0, :, :]
-        qz = -qz
-
-
-    return (qx, qy, qz)
-
-
-def unstructured_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
-    """
-    Using the MODFLOW discharge, calculate the specific discharge
-    by dividing by the flow width
-
-    Not cell centered due to the large quantity of required information
-    for unstructured/vertex grid to perform this calculation
-
-    Parameters
-    ----------
-    Qx : numpy.ndarray
-        MODFLOW 'flow right face'
-    Qy : numpy.ndarray
-        MODFLOW 'flow front face'.  The sign on this array will be flipped
-        by this function so that the y axis is positive to north.
-    Qz : numpy.ndarray
-        MODFLOW 'flow lower face'.  The sign on this array will be flipped by
-        this function so that the z axis is positive in the upward direction.
-    delr : numpy.ndarray
-        MODFLOW delr array
-    delc : numpy.ndarray
-        MODFLOW delc array
-    sat_thk : numpy.ndarray
-        Saturated thickness for each cell
-
-    Returns
-    -------
-    (qx, qy, qz) : tuple of numpy.ndarrays
-        Specific discharge arrays
-
-    """
-    qx = None
-    qy = None
-    qz = None
-
-    if Qx is not None:
-
-        if len(Qx.shape) != 1:
-            nlay, ncpl = Qx.shape
-        else:
-            nlay = 1
-            ncpl = Qx.shape[0]
-
-        qx = np.zeros(Qx.shape, dtype=Qx.dtype)
-        qx = Qx/(delc * sat_thk)
-        qx = -qx
-
-    if Qy is not None:
-
-        if len(Qy.shape) !=1:
-            nlay, ncpl = Qy.shape
-        else:
-            nlay = 1
-            ncpl = Qy.shape[0]
-
-        qy = np.zeros(Qy.shape, dtype=Qy.dtype)
-        qy = Qy / (delr * sat_thk)
-        qy = -qy
-
-    if Qz is not None:
-
-        if len(Qz.shape) != 1:
-            nlay, ncpl = Qz.shape
-        else:
-            nlay = 1
-            ncpl = Qz.shape[0]
-
-        qz = np.zeros(Qz.shape, dtype=Qz.dtype)
-        qz = Qz / (delr * sat_thk)
-        qz = -qz
-
-    return (qx, qy, qz)
 
 
 def findrowcolumn(pt, xedge, yedge):
