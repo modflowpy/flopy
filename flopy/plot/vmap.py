@@ -598,12 +598,12 @@ class VertexMapView(object):
                                 botm, laytyp,
                                 mask_values=[hnoflo, hdry])
 
-        frf, fff = plotutil.UnstructuredPlotUtilities.\
+        frf, fff, flf = plotutil.UnstructuredPlotUtilities.\
             vectorize_flow(fja, model_grid=self.mg,
                            idomain=dis.idomain.array)
 
         qx, qy, qz = plotutil.UnstructuredPlotUtilities.\
-            specific_discharge(frf, fff, None,
+            specific_discharge(frf, fff, flf,
                                delr, delc, sat_thk)
 
         # Select the correct layer slice
@@ -672,8 +672,12 @@ if __name__ == "__main__":
     # todo: build out model grid methods!
     x = t.xgrid
     y = t.ygrid
+    t0 = t.top
+    t1 = t.botm
+    z = t.zgrid
     xc = t.xcenters
     yc = t.ycenters
+    zc = t.zcenters
     lc = t.grid_lines
     e = t.extent
 

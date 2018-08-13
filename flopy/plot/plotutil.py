@@ -1676,7 +1676,8 @@ class UnstructuredPlotUtilities(object):
                 intersection = np.where(distance < 1e-04)
 
                 if len(intersection) > 0:
-                    cells, counts = np.unique(intersection[0], return_counts=True)
+                    cells, counts = np.unique(intersection[0],
+                                              return_counts=True)
 
                     for ix, count in enumerate(counts):
                         if cells[ix] != cell:
@@ -1865,15 +1866,10 @@ class UnstructuredPlotUtilities(object):
 
         nlay = model_grid.nlay
 
-        # iac = [len(i) for i in ja]
-        # create an accumulated set of indicies for finding fluxes from fja
-        # ia = np.add.accumulate([0] + iac)
-
-        # zcenter = model_grid.zcenters
-
         if model_grid.grid_type == "vertex":
             xcenter = np.tile(model_grid.xcenters, nlay)
             ycenter = np.tile(model_grid.ycenters, nlay)
+            zcenter = np.ravel(model_grid.zcenters)
             ncpl = model_grid.ncpl
 
         else:
@@ -1892,24 +1888,27 @@ class UnstructuredPlotUtilities(object):
                 i += 1
             flux_arr.append(t)
 
-        xcon_arr = []
-        ycon_arr = []
-        zcon_arr = []
+        # xcon_arr = []
+        # ycon_arr = []
+        # zcon_arr = []
         xy_angle_arr = []
         xz_angle_arr = []
         for j in ja:
             i = j[0]
             xtmp = xcenter[j] - xcenter[i]
             ytmp = ycenter[j] - ycenter[i]
-            # ztmp = zcenter[j] - zcenter[i]
+            ztmp = zcenter[j] - zcenter[i]
+            xytmp = xtmp + ytmp
             compare = xtmp + ytmp
+            xyzcompare = xytmp + ztmp
             xtmp[compare == 0.] = np.nan
             ytmp[compare == 0.] = np.nan
-            # ztmp[ztmp == 0.] = np.nan
-            xcon_arr.append(xtmp)
-            ycon_arr.append(ytmp)
+            ztmp[xyzcompare == 0.] = np.nan
+            xytmp[xyzcompare == 0.] = np.nan
+            # xcon_arr.append(xtmp)
+            # ycon_arr.append(ytmp)
             xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
-            # xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
+            xz_angle_arr.append(np.arctan2(ztmp, xytmp) * -180 / np.pi)
 
         for i, cell in enumerate(xy_angle_arr):
             frf, fff = 0., 0.
@@ -1941,22 +1940,32 @@ class UnstructuredPlotUtilities(object):
             frf_arr[lay][cell_num] = frf
             fff_arr[lay][cell_num] = fff
 
-        # todo: debug this relationship, more thought is needed for this one!
-        # todo: solution probably is updating to take the absolute value of the angle in eval and the equation!
-        # for i, cell in enumerate(xz_angle_arr):
-        #    flf = 0.
-        #    for j, angle in enumerate(cell):
-        #        if 0. <= angle < 90:
-        #            flf += flux_arr[i][j] * ((90. - angle)/90.)
+        for i, cell in enumerate(xz_angle_arr):
+            flf = 0.
+            for j, angle in enumerate(cell):
+                if angle < 0.:
+                    angle += 360
 
-        #        else:
-        #            pass
-        #    flf_arr.append(flf)
+                if 0. <= angle < 90:
+                    flf += flux_arr[i][j] * (angle / 90.)
 
-        frf_arr.shape = (nlay, -1)
-        fff_arr.shape = (nlay, -1)
+                elif 90 <= angle < 180:
+                    flf += flux_arr[i][j] * ((180 - angle) / 90.)
 
-        return frf_arr, fff_arr  # , np.array(flf_arr)
+                else:
+                    pass
+
+            cell_num = ja[i][0]
+            if cell_num >= ncpl:
+                lay = cell_num // ncpl
+                while cell_num >= ncpl:
+                    cell_num -= ncpl
+            else:
+                lay = 0
+
+            flf_arr[lay][cell_num] = flf
+
+        return frf_arr, fff_arr, flf_arr
 
     @staticmethod
     def specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
