@@ -591,17 +591,51 @@ class VertexMapView(object):
 
         # todo: get laytyp from npf or other package that defines confined unconfined
 
-        laytyp = np.ones((nlay,))
+        laytyp = np.zeros((nlay,))
 
         sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
                                                mask_values=[hnoflo, hdry])
 
 
+        frf, fff = plotutil.vectorize_flow(fja, model_grid=self.mg,
+                                           idomain=dis.idomain.array)
 
-        frf, fff, flf = plotutil.vectorize_flow(fja, model_grid=self.mg,
-                                                idomain=dis.idomain.array)
+        qx, qy, qz = plotutil.unstructured_specific_discharge(frf, fff, None,
+                                                              delr, delc, sat_thk)
 
-        return
+        # Select the correct layer slice
+        u = qx[self.layer, :]
+        v = qy[self.layer, :]
+
+        # apply step
+        x = self.mg.sr.xcenters[::istep]
+        y = self.mg.sr.ycenters[::istep]
+        u = u[::istep]
+        v = v[::istep]
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # mask discharge in inactive cells
+        idomain = dis.idomain.array
+        idx = (idomain[self.layer, ::istep] == 0)
+        idx[idomain[self.layer, ::istep] == -1] = 1
+
+        u[idx] = np.nan
+        v[idx] = np.nan
+
+        # Rotate and plot
+        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.rotation)
+        quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
+        return quiver
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         return NotImplementedError()
@@ -609,6 +643,7 @@ class VertexMapView(object):
     def plot_endpoint(self, ep, direction="ending", selection=None,
                       selection_direction=None, **kwargs):
         return NotImplementedError()
+
 
 if __name__ == "__main__":
     import os
@@ -646,12 +681,13 @@ if __name__ == "__main__":
     sr_lc = t.sr.grid_lines
     sr_e = t.sr.extent
 
-    map = PlotMapView(modelgrid=t)
-    # ax = map.plot_array(a=dis.botm.array)
-    # plt.show()
-    # arr = np.random.rand(100) * 100
-    # ax = map.contour_array(a=arr)
-    # plt.show()
+    map = PlotMapView(modelgrid=t, layer=0)
+    #ax = map.plot_array(a=dis.botm.array)
+    #plt.show()
+
+    #arr = np.random.rand(100) * 100
+    #ax = map.contour_array(a=arr)
+    #plt.show()
 
     #idomain = np.ones(100, dtype=np.int)
     #r = np.random.randint(0, 100, size=25)
@@ -661,11 +697,13 @@ if __name__ == "__main__":
     #ax = map.plot_ibound(idomain)
     #plt.show()
 
-    # ax = map.plot_grid()
-    # plt.show()
-    # chd = ml.get_package("CHD")
-    # ax = map.plot_bc(package=chd)
-    # plt.show()
+    #ax = map.plot_grid()
+    #plt.show()
+
+    #chd = ml.get_package("CHD")
+    #ax = map.plot_bc(package=chd)
+    #plt.show()
+
     cbc = os.path.join(ws, "expected_output", "model_adj.cbc")
     hds = os.path.join(ws, "expected_output", "model_adj.hds")
 
@@ -677,5 +715,6 @@ if __name__ == "__main__":
     head.shape = (4, -1)
     print(head.ndim)
 
-    map.plot_discharge(fja=fja, head=head, dis=dis)
+    ax = map.plot_discharge(fja=fja, head=head, dis=dis)
+    plt.show()
     print('break')

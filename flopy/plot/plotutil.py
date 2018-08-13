@@ -2048,10 +2048,6 @@ def vectorize_flow(fja, model_grid, idomain):
     fff_arr = array of flow forward face values
     """
     # todo: update this guy! Complete overhaul needed!!!!!! Does not currently work!
-    frf_arr = []
-    fff_arr = []
-    flf_arr = []
-
     # create a jagged connection array from the model_grid
     ca = create_connection_array(model_grid)
     ja = create_ja(ca, idomain)
@@ -2062,42 +2058,50 @@ def vectorize_flow(fja, model_grid, idomain):
     # create an accumulated set of indicies for finding fluxes from fja
     ia = np.add.accumulate([0] + iac)
 
-
     # zcenter = model_grid.zcenters
 
     if model_grid.grid_type == "vertex":
-        xcenter = np.tile(model_grid.sr.xcenters, nlay)
-        ycenter = np.tile(model_grid.sr.ycenters, nlay)
+        xcenter = np.tile(model_grid.xcenters, nlay)
+        ycenter = np.tile(model_grid.ycenters, nlay)
         ncpl = model_grid.ncpl
 
     else:
         raise AssertionError('distype not supported by quiver function')
 
-    flux_arr = []
-    for i in range(1, len(ia)):
-        lji = ia[i-1]
-        uji = ia[i] - 1
-        flux_arr.append(fja[lji:uji])
+    frf_arr = np.zeros((nlay, ncpl))
+    fff_arr = np.zeros((nlay, ncpl))
+    flf_arr = np.zeros((nlay, ncpl))
 
-    print('break')
-    """
+    flux_arr = []
+    i = 0
+    for cell in ja:
+        t = []
+        for c in cell:
+            t.append(fja[i])
+            i += 1
+        flux_arr.append(t)
+        # lji = ia[i-1]
+        # uji = ia[i] - 1
+        # flux_arr.append(fja[lji:uji])
+
     xcon_arr = []
     ycon_arr = []
     zcon_arr = []
     xy_angle_arr = []
     xz_angle_arr = []
-    for i, j in enumerate(con_arr):
+    for j in ja:
+        i = j[0]
         xtmp = xcenter[j] - xcenter[i]
         ytmp = ycenter[j] - ycenter[i]
-        ztmp = zcenter[j] - zcenter[i]
+        # ztmp = zcenter[j] - zcenter[i]
         compare = xtmp + ytmp
         xtmp[compare == 0.] = np.nan
         ytmp[compare == 0.] = np.nan
-        ztmp[ztmp == 0.] = np.nan
+        # ztmp[ztmp == 0.] = np.nan
         xcon_arr.append(xtmp)
         ycon_arr.append(ytmp)
         xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
-        xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
+        # xz_angle_arr.append(np.arctan2(ztmp, xtmp) * -180 / np.pi)
 
     for i, cell in enumerate(xy_angle_arr):
         frf, fff = 0., 0.
@@ -2117,22 +2121,35 @@ def vectorize_flow(fja, model_grid, idomain):
 
             else:
                 pass
-        frf_arr.append(frf)
-        fff_arr.append(fff)
 
-    # todo: debug this relationship
-    for i, cell in enumerate(xz_angle_arr):
-        flf = 0.
-        for j, angle in enumerate(cell):
-            if 0. <= angle < 90:
-                flf += flux_arr[i][j] * ((90. - angle)/90.)
+        cell_num = ja[i][0]
+        if cell_num >= ncpl:
+            lay = cell_num // ncpl
+            while cell_num >= ncpl:
+                cell_num -= ncpl
+        else:
+            lay = 0
 
-            else:
-                pass
-        flf_arr.append(flf)
+        frf_arr[lay][cell_num] = frf
+        fff_arr[lay][cell_num] = fff
 
-    return np.array(frf_arr), np.array(fff_arr), np.array(flf_arr)
-    """
+    # todo: debug this relationship, more thought is needed for this one!
+    # todo: solution probably is updating to take the absolute value of the angle in eval and the equation!
+    # for i, cell in enumerate(xz_angle_arr):
+    #    flf = 0.
+    #    for j, angle in enumerate(cell):
+    #        if 0. <= angle < 90:
+    #            flf += flux_arr[i][j] * ((90. - angle)/90.)
+
+    #        else:
+    #            pass
+    #    flf_arr.append(flf)
+
+    frf_arr.shape = (nlay, -1)
+    fff_arr.shape = (nlay, -1)
+
+    return frf_arr, fff_arr #, np.array(flf_arr)
+
 
 def create_ja(ca, idomain):
     """
@@ -2150,8 +2167,124 @@ def create_ja(ca, idomain):
     # todo: pop off cells and connections where idomain == 0
     # todo: add positional connections for up and down and return
     # todo: as a jagged array.
+    nlay = idomain.shape[0]
+    ncpl = len(idomain[0])
+    ja = []
 
-    return
+    for lay in range(nlay):
+        for cell in ca:
+            if idomain[lay][cell[0]] < 1:
+                pass
+
+            else:
+                # look for connections at top and bottom
+                x = []
+                for ix, c in enumerate(cell):
+                    if ix == 0:
+                        x.append(c + (lay * ncpl))
+                        t = find_upper_connection(idomain, lay,
+                                                  cell[0],
+                                                  ncpl=ncpl,
+                                                  ilay=lay)
+                        if t is not None:
+                            x.append(t)
+
+                    else:
+                        if idomain[lay][c] > 0:
+                            x.append(c + (lay * ncpl))
+
+                t = find_lower_connection(idomain, lay,
+                                          cell[0],
+                                          ncpl=ncpl,
+                                          ilay=lay)
+
+                if t is not None:
+                    x.append(t)
+
+                if x:
+                    ja.append(x)
+
+    return ja
+
+
+def find_upper_connection(idomain, lay, c, ncpl, ilay):
+    """
+    Recursive function to find connections for ja. Includes vertical
+    pass through support.
+
+    Parameters:
+        idomain: (np.ndarray) idomain model array
+        lay: (int) current layer
+        c: (int) cell number, zero based
+        ncpl: (int) number of cells per layer
+        ilay: (int) initial layer number corresponding to c
+    :return:
+    """
+    if lay - 1 < 0:
+        return None
+
+    ncadj = (lay - ilay) + 1
+
+    if idomain[lay - 1][c] <= 0:
+        if lay - 2 < 0:
+            return None
+        try:
+            if idomain[lay - 2][c] > 0:
+                cell = c + (ilay * ncpl) - ((ncadj + 1) * ncpl)
+
+            elif idomain[lay - 2][c] == 0:
+                return None
+
+            else:
+                cell = find_lower_connection(idomain, lay + 1,
+                                             c, ncpl, ilay)
+        except IndexError:
+            return None
+
+    else:
+        return c + (ilay * ncpl) - (ncpl * ncadj)
+
+    return cell
+
+
+def find_lower_connection(idomain, lay, c, ncpl, ilay):
+    """
+    Recursive function to find connections for ja. Includes vertical
+    pass through support.
+
+    Parameters:
+        idomain: (np.ndarray) idomain model array
+        lay: (int) current layer
+        c: (int) cell number, zero based
+        ncpl: (int) number of cells per layer
+        ilay: (int) initial layer number
+
+    :return:
+    """
+    if lay + 1 == len(idomain):
+        return None
+
+    ncadj = (lay - ilay) + 1
+
+    if idomain[lay + 1][c] <= 0:
+        try:
+            if idomain[lay + 2][c] > 0:
+                cell =  c + (ilay * ncpl) + ((ncadj + 1) * ncpl)
+
+            elif idomain[lay + 2][c] == 0:
+                return None
+
+            else:
+                cell = find_lower_connection(idomain, lay + 1,
+                                             c, ncpl, ilay)
+
+        except IndexError:
+            return None
+
+    else:
+        return c + (ilay * ncpl) + (ncpl * ncadj)
+
+    return cell
 
 
 def create_connection_array(model_grid):
@@ -2302,7 +2435,80 @@ def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
 
 
     return (qx, qy, qz)
-    
+
+
+def unstructured_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
+    """
+    Using the MODFLOW discharge, calculate the specific discharge
+    by dividing by the flow width
+
+    Not cell centered due to the large quantity of required information
+    for unstructured/vertex grid to perform this calculation
+
+    Parameters
+    ----------
+    Qx : numpy.ndarray
+        MODFLOW 'flow right face'
+    Qy : numpy.ndarray
+        MODFLOW 'flow front face'.  The sign on this array will be flipped
+        by this function so that the y axis is positive to north.
+    Qz : numpy.ndarray
+        MODFLOW 'flow lower face'.  The sign on this array will be flipped by
+        this function so that the z axis is positive in the upward direction.
+    delr : numpy.ndarray
+        MODFLOW delr array
+    delc : numpy.ndarray
+        MODFLOW delc array
+    sat_thk : numpy.ndarray
+        Saturated thickness for each cell
+
+    Returns
+    -------
+    (qx, qy, qz) : tuple of numpy.ndarrays
+        Specific discharge arrays
+
+    """
+    qx = None
+    qy = None
+    qz = None
+
+    if Qx is not None:
+
+        if len(Qx.shape) != 1:
+            nlay, ncpl = Qx.shape
+        else:
+            nlay = 1
+            ncpl = Qx.shape[0]
+
+        qx = np.zeros(Qx.shape, dtype=Qx.dtype)
+        qx = Qx/(delc * sat_thk)
+        qx = -qx
+
+    if Qy is not None:
+
+        if len(Qy.shape) !=1:
+            nlay, ncpl = Qy.shape
+        else:
+            nlay = 1
+            ncpl = Qy.shape[0]
+
+        qy = np.zeros(Qy.shape, dtype=Qy.dtype)
+        qy = Qy / (delr * sat_thk)
+        qy = -qy
+
+    if Qz is not None:
+
+        if len(Qz.shape) != 1:
+            nlay, ncpl = Qz.shape
+        else:
+            nlay = 1
+            ncpl = Qz.shape[0]
+
+        qz = np.zeros(Qz.shape, dtype=Qz.dtype)
+        qz = Qz / (delr * sat_thk)
+        qz = -qz
+
+    return (qx, qy, qz)
 
 
 def findrowcolumn(pt, xedge, yedge):
