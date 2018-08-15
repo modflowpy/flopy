@@ -14,7 +14,7 @@ from flopy.plot import plotutil
 # from flopy.plot.plotutil import bc_color_dict
 from flopy.utils import SpatialReference as DepreciatedSpatialReference
 from flopy.grid.structuredmodelgrid import StructuredModelGrid
-from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
+# from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
 from flopy.grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
@@ -589,10 +589,13 @@ class VertexMapView(object):
         if len(fja.shape) == 4:
             fja = fja[0][0][0]
 
-        # todo: get laytyp from npf or other package that defines confined unconfined
-
         laytyp = np.zeros((nlay,))
 
+        if self.model is not None:
+            if self.model.sto is not None:
+                laytyp = np.zeros((nlay,))# self.model.sto.iconvert.array
+
+        # todo: update saturated thickness for the new iconvert array!
         sat_thk = plotutil.PlotUtilities.\
             saturated_thickness(head, top,
                                 botm, laytyp,
@@ -663,6 +666,9 @@ if __name__ == "__main__":
     ml = sim.get_model("gwf_1")
 
     dis = ml.dis
+    sto = ml.sto
+
+    print('break')
 
     t = VertexModelGrid(dis.vertices, dis.cell2d,
                         top=dis.top, botm=dis.botm,

@@ -1538,6 +1538,7 @@ class PlotUtilities(object):
                     t = top
                 else:
                     t = botm[k - 1, :]
+
                 t = np.where(head[k, :] > t, t, head[k, :])
                 dh = np.where(dh == 0, t - botm[k, :], dh)
                 sat_thk[k, :] = dh[:]
