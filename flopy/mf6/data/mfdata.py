@@ -1087,9 +1087,20 @@ class DataStorage(object):
                             new_data = np.rec.array(data,
                                                     self._recarray_type_list)
                         except:
+                            data_expected = []
+                            for data_type in self._recarray_type_list:
+                                data_expected.append('<{}>'.format(
+                                    data_type[0]))
                             message = 'An error occurred when storing data ' \
-                                      '"{}" in a recarray.'.format(
-                                          self.data_dimensions.structure.name)
+                                      '"{}" in a recarray. {} data is a one ' \
+                                      'or two dimensional list containing ' \
+                                      'the variables "{}" (some variables ' \
+                                      'may be optional, see MF6 ' \
+                                      'documentation), but data "{}" was ' \
+                                      'supplied.'.format(
+                                          self.data_dimensions.structure.name,
+                                          self.data_dimensions.structure.name,
+                                          ' '.join(data_expected), data)
                             type_, value_, traceback_ = sys.exc_info()
                             raise MFDataException(
                                 self.data_dimensions.structure.get_model(),
@@ -2388,16 +2399,16 @@ class MFData(object):
         # tie this to the simulation dictionary
         sim_data.mfdata[self._path] = self
 
-    def __getattr__(self, name):
-         if name == 'array':
-            return self.get_data(apply_mult=True)
-         #return object.__getattribute__(self, name)
-
     def __repr__(self):
         return repr(self._get_storage_obj())
 
     def __str__(self):
         return str(self._get_storage_obj())
+
+    @property
+    def array(self):
+        kwargs = {'array': True}
+        return self.get_data(apply_mult=True, **kwargs)
 
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data

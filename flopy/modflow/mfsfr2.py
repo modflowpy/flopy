@@ -915,6 +915,26 @@ class ModflowSfr2(Package):
                     log.write(','.join(map(str, line)) + '\n')
         self.reach_data['k'] = layers
 
+    def deactivate_ibound_above(self):
+        """Sets ibound to 0 for all cells above active SFR cells.
+
+        Parameters
+        ----------
+        none
+
+        Notes
+        -----
+        This routine updates the ibound array of the flopy.model.ModflowBas6 instance. To produce a
+        new BAS6 package file, model.write() or flopy.model.ModflowBas6.write()
+        must be run.
+        """
+        ib = self.parent.bas6.ibound.array
+        deact_lays = [list(range(i)) for i in self.reach_data.k]
+        for ks, i, j in zip(deact_lays, self.reach_data.i, self.reach_data.j):
+            for k in ks:
+                ib[k, i, j] = 0
+        self.parent.bas6.ibound = ib
+
     def get_outlets(self, level=0, verbose=True):
         """Traces all routing connections from each headwater to the outlet.
         """
