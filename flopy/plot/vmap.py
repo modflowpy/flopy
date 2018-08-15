@@ -14,7 +14,6 @@ from flopy.plot import plotutil
 # from flopy.plot.plotutil import bc_color_dict
 from flopy.utils import SpatialReference as DepreciatedSpatialReference
 from flopy.grid.structuredmodelgrid import StructuredModelGrid
-# from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
 from flopy.grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
@@ -656,6 +655,7 @@ if __name__ == "__main__":
     import flopy as fp
     from flopy.plot.plotbase import PlotMapView
     import flopy.utils.binaryfile as bf
+    from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
 
     ws = "../../examples/data/mf6/test003_gwfs_disv"
     name = "mfsim.nam"
