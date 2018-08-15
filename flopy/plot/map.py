@@ -184,7 +184,7 @@ class StructuredMapView(object):
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
-            ax = np.copy(self.ax)
+            ax = self.ax
 
         try:
             # check if this is an old style spatial reference
@@ -266,7 +266,7 @@ class StructuredMapView(object):
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
-            ax = np.copy(self.ax)
+            ax = self.ax
 
         if 'colors' in kwargs.keys():
             if 'cmap' in kwargs.keys():
@@ -406,7 +406,7 @@ p
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
-            ax = np.copy(self.ax)
+            ax = self.ax
 
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
@@ -712,7 +712,7 @@ p
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
-            ax = np.copy(self.ax)
+            ax = self.ax
 
         # mask discharge in inactive cells
         idx = (ib[self.layer, ::istep, ::jstep] == 0)

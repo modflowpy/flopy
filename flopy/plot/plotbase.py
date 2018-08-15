@@ -62,8 +62,16 @@ class PlotMapView(object):
             raise ImportError(s)
 
         # todo: make a descision about the model grid type here!
-        tmp = False
-        if tmp:
+        # todo: will be much simplier when there aren't three potential
+        # todo: modelgrid/spatial reference types .....
+        try:
+            tmp = modelgrid.grid_type
+            if not isinstance(tmp, str):
+                tmp = "structured"
+        except:
+            tmp = "structured"
+
+        if tmp == "structured":
             self.__cls = StructuredMapView(sr=sr, ax=ax, model=model, dis=dis,
                                            modelgrid=modelgrid, layer=layer,
                                            extent=extent, xul=xul,
