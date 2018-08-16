@@ -28,7 +28,7 @@ class MtListBudget(object):
     --------
     >>> mt_list = MtListBudget("my_mt3d.list")
     >>> incremental, cumulative = mt_list.get_budget()
-    >>> df_in, df_out = mt_list.get_dataframes(start_datetime="10-21-2015")
+    >>> gw_df, sw_df = mt_list.parse(start_datetime="10-21-2015")
 
     """
 
