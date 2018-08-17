@@ -156,7 +156,7 @@ class Mt3dUzt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dUzt.defaultunit()
+            unitnumber = Mt3dUzt.reservedunit()
         elif unitnumber == 0:
             unitnumber = Mt3dUzt.reservedunit()
 
@@ -364,7 +364,7 @@ class Mt3dUzt(Package):
                         incgwet = max(incgwet, incgweticomp)
                         if incgwet == 1:
                             break
-                    f_uzt.write('{:10d}          # INCGWET - SP {1:5d}\n'
+                    f_uzt.write('{0:10d}          # INCGWET - SP {1:5d}\n'
                                 .format(incgwet, kper + 1))
                     if incgwet == 1:
                         for t2d in self.cgwet:
