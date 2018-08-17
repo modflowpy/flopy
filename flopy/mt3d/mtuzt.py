@@ -25,9 +25,9 @@ class Mt3dUzt(Package):
         written out.
     iet : int
         Is a flag that indicates whether or not ET is being simulated in the 
-        UZF1 flow package.  If ET is not being simulated, IET informs FMI 
-        package not to look for UZET and GWET arrays in the flow-tranpsort 
-        link file.
+        UZF1 flow package (=0 indicates that ET is not being simulated).  
+        If ET is not being simulated, IET informs FMI package not to look 
+        for UZET and GWET arrays in the flow-tranpsort link file.
     iuzfbnd : array of ints
         Specifies which row/column indices variably-saturated transport will 
         be simulated in.
@@ -364,7 +364,7 @@ class Mt3dUzt(Package):
                         incgwet = max(incgwet, incgweticomp)
                         if incgwet == 1:
                             break
-                    f_uzt.write('{:10d}          # INCGWET - SP {1:5d}\n'
+                    f_uzt.write('{0:10d}          # INCGWET - SP {1:5d}\n'
                                 .format(incgwet, kper + 1))
                     if incgwet == 1:
                         for t2d in self.cgwet:
@@ -672,7 +672,7 @@ class Mt3dUzt(Package):
 
     @staticmethod
     def defaultunit():
-        return 47
+        return 7
 
     @staticmethod
     def reservedunit():
