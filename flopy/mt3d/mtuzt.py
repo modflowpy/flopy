@@ -156,7 +156,7 @@ class Mt3dUzt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dUzt.reservedunit()
+            unitnumber = Mt3dUzt.defaultunit()
         elif unitnumber == 0:
             unitnumber = Mt3dUzt.reservedunit()
 
@@ -672,7 +672,7 @@ class Mt3dUzt(Package):
 
     @staticmethod
     def defaultunit():
-        return 47
+        return 7
 
     @staticmethod
     def reservedunit():
