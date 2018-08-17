@@ -704,6 +704,7 @@ def test_rotation():
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
                                    delr=250.,
                                    delc=250., top=10, botm=0)
+    assert m.sr.rotation == m._rotation
     xul, yul = 500000, 2934000
     m.sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
                                         delc=m.dis.delc.array,

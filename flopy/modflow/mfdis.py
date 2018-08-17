@@ -118,7 +118,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=None, filenames=None,
-                 xul=None, yul=None, rotation=0.0,
+                 xul=None, yul=None, rotation=None,  # 0.0,
                  proj4_str=None, start_datetime=None):
 
         # set default unit number of one is not specified
