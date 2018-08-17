@@ -687,6 +687,7 @@ class StructuredCrossSection(object):
             pivot = 'middle'
 
         # Calculate specific discharge
+        # todo: update this to handle flopy6 and flopy 3!
         ib = self.model.bas6.ibound.array
         delr = self.dis.delr.array
         delc = self.dis.delc.array
@@ -713,12 +714,15 @@ class StructuredCrossSection(object):
             head[0, :, :] = top
             if nlay > 1:
                 head[1:, :, :] = botm[:-1, :, :]
-        sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
-                                               [hnoflo, hdry])
+
+        sat_thk = plotutil.PlotUtilities.\
+            saturated_thickness(head, top, botm,
+                                laytyp, [hnoflo, hdry])
 
         # Calculate specific discharge
-        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
-                                                          delc, sat_thk)
+        qx, qy, qz = plotutil.PlotUtilities.\
+            centered_specific_discharge(frf, fff, flf,
+                                        delr, delc, sat_thk)
 
         if qz is None:
             qz = np.zeros((qx.shape), dtype=np.float)

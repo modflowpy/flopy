@@ -589,10 +589,9 @@ class VertexMapView(object):
             fja = fja[0][0][0]
 
         laytyp = np.zeros((nlay,))
-
         if self.model is not None:
             if self.model.sto is not None:
-                laytyp = np.zeros((nlay,))# self.model.sto.iconvert.array
+                laytyp = self.model.sto.iconvert.array
 
         # todo: update saturated thickness for the new iconvert array!
         sat_thk = plotutil.PlotUtilities.\

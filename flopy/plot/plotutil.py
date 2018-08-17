@@ -1503,7 +1503,7 @@ class PlotUtilities(object):
             Saturated thickness of shape (nlay, nrow, ncol).
 
         """
-
+        # todo: update the laytyp based on flopy6 or flopy2005!
         if head.ndim == 3:
             head = np.copy(head)
             nlay, nrow, ncol = head.shape
@@ -1511,37 +1511,50 @@ class PlotUtilities(object):
             head.shape = (nlay, ncpl)
             top.shape = (nlay, ncpl)
             botm.shape = (nlay, ncpl)
+            if laytyp.ndim == 3:
+                laytyp.shape = (nlay, ncpl)
 
         else:
             nrow, ncol = None, None
             nlay, ncpl = head.shape
 
-        sat_thk = np.empty(head.shape, dtype=head.dtype)
+        # cast a laytyp flag for each cell if modflow-2005 based,
+        # which makes it consistent with the mf6 iconvert array
+        if laytyp.ndim == 1:
+            t = np.zeros(head.shape)
+            for ix, lay in enumerate(laytyp):
+                t[ix, :] = laytyp[ix]
+            laytyp = t
+            del t
+
+        sat_thk_conf = np.empty(head.shape, dtype=head.dtype)
+        sat_thk_unconf = np.empty(head.shape, dtype=head.dtype)
 
         for k in range(nlay):
             if k == 0:
                 t = top
             else:
                 t = botm[k - 1, :]
-            sat_thk[k, :] = t - botm[k, :]
+            sat_thk_conf[k, :] = t - botm[k, :]
 
         for k in range(nlay):
-            if laytyp[k] != 0:
-                dh = np.zeros((ncpl,), dtype=head.dtype)
-                s = sat_thk[k, :]
+            dh = np.zeros((ncpl,), dtype=head.dtype)
+            s = sat_thk_conf[k, :]
 
-                for mv in mask_values:
-                    idx = (head[k, :] == mv)
-                    dh[idx] = s[idx]
+            for mv in mask_values:
+                idx = (head[k, :] == mv)
+                dh[idx] = s[idx]
 
-                if k == 0:
-                    t = top
-                else:
-                    t = botm[k - 1, :]
+            if k == 0:
+                t = top
+            else:
+                t = botm[k - 1, :]
 
-                t = np.where(head[k, :] > t, t, head[k, :])
-                dh = np.where(dh == 0, t - botm[k, :], dh)
-                sat_thk[k, :] = dh[:]
+            t = np.where(head[k, :] > t, t, head[k, :])
+            dh = np.where(dh == 0, t - botm[k, :], dh)
+            sat_thk_unconf[k, :] = dh[:]
+
+        sat_thk = np.where(laytyp != 0, sat_thk_unconf, sat_thk_conf)
 
         if nrow is not None and ncol is not None:
             sat_thk.shape = (nlay, nrow, ncol)
