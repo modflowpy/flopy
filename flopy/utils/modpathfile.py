@@ -8,7 +8,10 @@ important classes that can be accessed by the user.
 """
 
 import numpy as np
-from numpy.lib.recfunctions import append_fields
+try:
+    from numpy.lib.recfunctions import append_fields
+except:
+    pass
 from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
