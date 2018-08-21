@@ -502,9 +502,32 @@ class EndpointFile():
         return dtype
 
     def _add_particleid(self):
+
+        # add particle ids for earlier version of MODPATH
         if self.version < 6:
-            pids = np.arange(1, self._data.shape[0]+1, 1, dtype=np.int)
-            self._data = append_fields(self._data, 'particleid', pids)
+            # create particle ids
+            shaped = self._data.shape[0]
+            pids = np.arange(1, shaped + 1, 1, dtype=np.int)
+            # determine numpy version
+            npv = np.__version__
+            v = [int(s) for s in npv.split('.')]
+            # for numpy version 1.14 and higher
+            if v[0] > 1 or (v[0] == 1 and v[1] > 13):
+                self._data = append_fields(self._data, 'particleid', pids)
+            # numpy versions prior to 1.14
+            else:
+                # create new dtype
+                dtype = [('particleid', np.int)]
+                for name in self._data.dtype.names:
+                    dtype.append((name, self._data.dtype[name]))
+                    print(self._data.dtype[name])
+                dtype = np.dtype(dtype)
+                # create new array with new dtype and fill with available data
+                data = np.zeros(shaped, dtype=dtype)
+                data['particleid'] = pids
+                for name in self._data.dtype.names:
+                    data[name] = self._data[name]
+                self._data = data.copy()
         return
 
     def get_maxid(self):

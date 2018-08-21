@@ -288,6 +288,6 @@ def test_mp5_load():
     return
 
 if __name__ == '__main__':
-    test_modpath()
     test_mp5_load()
+    test_modpath()
     test_pathline_plot()
