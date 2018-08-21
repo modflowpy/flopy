@@ -376,14 +376,14 @@ class ModelMap(object):
         # Plot the list locations
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         if plotAll:
-            idx = [mflist['i'], mflist['j']]
+            idx = (mflist['i'], mflist['j'])
             # plotarray[:, idx] = 1
             pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
             pa[idx] = 1
             for k in range(nlay):
                 plotarray[k, :, :] = pa.copy()
         else:
-            idx = [mflist['k'], mflist['i'], mflist['j']]
+            idx = (mflist['k'], mflist['i'], mflist['j'])
             plotarray[idx] = 1
 
         # mask the plot array
