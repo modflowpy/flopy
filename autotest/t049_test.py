@@ -240,7 +240,7 @@ def test_mp5_load():
     # load endpoint data
     fpth = os.path.join('..', 'examples', 'data', 'mp5', 'm.ept')
     try:
-        endobj = flopy.utils.EndpointFile(fpth)
+        endobj = flopy.utils.EndpointFile(fpth, verbose=True)
     except:
         assert False, 'could not load endpoint file'
 
@@ -288,6 +288,6 @@ def test_mp5_load():
     return
 
 if __name__ == '__main__':
+    #test_modpath()
+    #test_pathline_plot()
     test_mp5_load()
-    test_modpath()
-    test_pathline_plot()

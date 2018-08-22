@@ -106,29 +106,32 @@ class PathlineFile():
            Build numpy dtype for the MODPATH 6 pathline file.
         """
         if self.version == 3 or self.version == 5:
-            dtype = np.dtype([("particleid", np.int),
+            dtype = np.dtype([("particleid", np.int32),
                               ("x", np.float32),
                               ("y", np.float32),
                               ("zloc", np.float32),
                               ("z", np.float32),
                               ("time", np.float32),
-                              ("j", np.int),
-                              ("i", np.int),
-                              ("k", np.int),
-                              ("cumulativetimestep", np.int)])
+                              ("j", np.int32),
+                              ("i", np.int32),
+                              ("k", np.int32),
+                              ("cumulativetimestep", np.int32)])
         elif self.version == 6:
-            dtype = np.dtype([("particleid", np.int),
-                              ("particlegroup", np.int),
-                              ("timepointindex", np.int),
-                              ("cumulativetimestep", np.int),
+            dtype = np.dtype([("particleid", np.int32),
+                              ("particlegroup", np.int32),
+                              ("timepointindex", np.int32),
+                              ("cumulativetimestep", np.int32),
                               ("time", np.float32), ("x", np.float32),
                               ("y", np.float32), ("z", np.float32),
-                              ("k", np.int), ("i", np.int), ("j", np.int),
-                              ("grid", np.int), ("xloc", np.float32),
+                              ("k", np.int32), ("i", np.int32),
+                              ("j", np.int32),
+                              ("grid", np.int32), ("xloc", np.float32),
                               ("yloc", np.float32), ("zloc", np.float32),
-                              ("linesegmentindex", np.int)])
-        outdtype = np.dtype([("x", np.float32), ("y", np.float32), ("z", np.float32),
-                             ("time", np.float32), ("k", np.int), ("id", np.int)])
+                              ("linesegmentindex", np.int32)])
+        outdtype = np.dtype([("x", np.float32), ("y", np.float32),
+                             ("z", np.float32),
+                             ("time", np.float32), ("k", np.int32),
+                             ("id", np.int32)])
         return dtype, outdtype
 
     def get_maxid(self):
@@ -340,12 +343,12 @@ class PathlineFile():
                                 ra.k[loc_inds],
                                 ra.i[loc_inds],
                                 ra.j[loc_inds]))
-            pthdata = np.array(pthdata, dtype=[('particleid', np.int),
-                                               ('particlegroup', np.int),
+            pthdata = np.array(pthdata, dtype=[('particleid', np.int32),
+                                               ('particlegroup', np.int32),
                                                ('time', np.float),
-                                               ('k', np.int),
-                                               ('i', np.int),
-                                               ('j', np.int)
+                                               ('k', np.int32),
+                                               ('i', np.int32),
+                                               ('j', np.int32)
                                                ]).view(np.recarray)
         # geometry for each row in PathLine file
         else:
@@ -410,6 +413,7 @@ class EndpointFile():
 
         """
         self.fname = filename
+        self.verbose = verbose
         self._build_index()
         self.dtype = self._get_dtypes()
         self._data = loadtxt(self.file, dtype=self.dtype,
@@ -465,40 +469,44 @@ class EndpointFile():
             else:
                 break
         self.file.seek(0)
+        if self.verbose:
+            print('MODPATH version {} endpoint file'.format(self.version))
 
     def _get_dtypes(self):
         """
            Build numpy dtype for the MODPATH 6 endpoint file.
         """
         if self.version == 3 or self.version == 5:
-            dtype = np.dtype([('finalzone', np.int), ('j', np.int),
-                              ('i', np.int), ('k', np.int),
+            dtype = np.dtype([('finalzone', np.int32), ('j', np.int32),
+                              ('i', np.int32), ('k', np.int32),
                               ('x', np.float32), ('y', np.float32),
                               ('z', np.float32), ('zloc', np.float32),
                               ('finaltime', np.float32),
                               ('x0', np.float32), ('y0', np.float32),
                               ('zloc0', np.float32),
-                              ('j0', np.int), ('i0', np.int), ('k0', np.int),
-                              ('initialzone', np.int),
-                              ("cumulativetimestep", np.int),
-                              ("ipcode", np.int),
+                              ('j0', np.int32), ('i0', np.int32),
+                              ('k0', np.int32),
+                              ('initialzone', np.int32),
+                              ("cumulativetimestep", np.int32),
+                              ("ipcode", np.int32),
                               ('initialtime', np.float32)])
         elif self.version == 6:
-            dtype = np.dtype([("particleid", np.int),
-                              ("particlegroup", np.int),
-                              ('status', np.int), ('initialtime', np.float32),
+            dtype = np.dtype([("particleid", np.int32),
+                              ("particlegroup", np.int32),
+                              ('status', np.int32),
+                              ('initialtime', np.float32),
                               ('finaltime', np.float32),
-                              ('initialgrid', np.int),
-                              ('k0', np.int), ('i0', np.int),
-                              ('j0', np.int), ('initialcellface', np.int),
-                              ('initialzone', np.int), ('xloc0', np.float32),
+                              ('initialgrid', np.int32),
+                              ('k0', np.int32), ('i0', np.int32),
+                              ('j0', np.int32), ('initialcellface', np.int32),
+                              ('initialzone', np.int32), ('xloc0', np.float32),
                               ('yloc0', np.float32), ('zloc0', np.float32),
                               ('x0', np.float32), ('y0', np.float32),
                               ('z0', np.float32),
-                              ('finalgrid', np.int), ('k', np.int),
-                              ('i', np.int), ('j', np.int),
-                              ('finalcellface', np.int),
-                              ('finalzone', np.int), ('xloc', np.float32),
+                              ('finalgrid', np.int32), ('k', np.int32),
+                              ('i', np.int32), ('j', np.int32),
+                              ('finalcellface', np.int32),
+                              ('finalzone', np.int32), ('xloc', np.float32),
                               ('yloc', np.float32), ('zloc', np.float32),
                               ('x', np.float32), ('y', np.float32),
                               ('z', np.float32), ('label', '|S40')])
@@ -510,26 +518,40 @@ class EndpointFile():
         if self.version < 6:
             # create particle ids
             shaped = self._data.shape[0]
-            pids = np.arange(1, shaped + 1, 1, dtype=np.int)
+            pids = np.arange(1, shaped + 1, 1, dtype=np.int32)
             # determine numpy version
             npv = np.__version__
             v = [int(s) for s in npv.split('.')]
+            if self.verbose:
+                print('numpy version {}'.format(npv))
             # for numpy version 1.14 and higher
             if v[0] > 1 or (v[0] == 1 and v[1] > 13):
                 self._data = append_fields(self._data, 'particleid', pids)
             # numpy versions prior to 1.14
             else:
+                if self.verbose:
+                    print(self._data.dtype)
                 # create new dtype
-                dtype = [('particleid', np.int)]
+                dtype = [("particleid", 'int32')]
                 for name in self._data.dtype.names:
-                    dtype.append((name, self._data.dtype[name]))
-                    print(self._data.dtype[name])
+                    dtype.append((name, str(self._data.dtype[name])))
+                if self.verbose:
+                    print('new dtype')
+                    for idx, d in enumerate(dtype):
+                        print('{} {}'.format(idx, d))
                 dtype = np.dtype(dtype)
+                if self.verbose:
+                    print(dtype)
                 # create new array with new dtype and fill with available data
                 data = np.zeros(shaped, dtype=dtype)
+                if self.verbose:
+                    print('new data shape {}'.format(data.shape))
+                    print('\nFilling new data array')
                 data['particleid'] = pids
                 for name in self._data.dtype.names:
                     data[name] = self._data[name]
+                if self.verbose:
+                    print('replacing data with copy of new data array')
                 self._data = data.copy()
         return
 
