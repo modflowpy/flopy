@@ -532,9 +532,10 @@ class EndpointFile():
                 if self.verbose:
                     print(self._data.dtype)
                 # create new dtype
-                dtype = [("particleid", 'int32')]
+                dtype = [("particleid", np.int32)]
+                pids = np.array(pids, dtype=np.dtype(dtype))
                 for name in self._data.dtype.names:
-                    dtype.append((name, str(self._data.dtype[name])))
+                    dtype.append((name, self._data.dtype[name]))
                 if self.verbose:
                     print('new dtype')
                     for idx, d in enumerate(dtype):
@@ -546,8 +547,18 @@ class EndpointFile():
                 data = np.zeros(shaped, dtype=dtype)
                 if self.verbose:
                     print('new data shape {}'.format(data.shape))
-                    print('\nFilling new data array')
-                data['particleid'] = pids
+                    print('\nFilling new structured data array')
+                # add particle id to new array
+                if self.verbose:
+                    msg = 'writing particleid (pids) to new ' + \
+                          'structured data array'
+                    print(msg)
+                data['particleid'] = pids['particleid']
+                # add remaining data to the new array
+                if self.verbose:
+                    msg = 'writing remaining data to new ' + \
+                          'structured data array'
+                    print(msg)
                 for name in self._data.dtype.names:
                     data[name] = self._data[name]
                 if self.verbose:
@@ -735,5 +746,8 @@ class EndpointFile():
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
         # convert back to one-based
         for n in self.kijnames:
-            epd[n] += 1
+            try:
+                epd[n] += 1
+            except:
+                pass
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
