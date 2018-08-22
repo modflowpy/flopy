@@ -8,6 +8,7 @@ MODFLOW Guide
 
 """
 
+import re
 import sys
 import numpy as np
 from ..pakbase import Package
@@ -213,20 +214,26 @@ class ModflowBas(Package):
         #f_bas.write('%s\n' % self.heading)
         f_bas.write('{0:s}\n'.format(self.heading))
         # Second line: format specifier
-        self.options = ''
+        opts = []
         if self.ixsec:
-            self.options += 'XSECTION'
+            opts.append('XSECTION')
         if self.ichflg:
-            self.options += ' CHTOCH'
+            opts.append('CHTOCH')
         if self.ifrefm:
-            self.options += ' FREE'
+            opts.append('FREE')
         if self.stoper is not None:
-            self.options += ' STOPERROR {0}'.format(self.stoper)
-        f_bas.write('{0:s}\n'.format(self.options))
+            opts.append('STOPERROR {0}'.format(self.stoper))
+        self.options = ' '.join(opts)
+        f_bas.write(self.options + '\n')
         # IBOUND array
         f_bas.write(self.ibound.get_file_entry())
         # Head in inactive cells
-        f_bas.write('{0:15.6G}\n'.format(self.hnoflo))
+        str_hnoflo = str(self.hnoflo).rjust(10)
+        if not self.ifrefm and len(str_hnoflo) > 10:
+            # write fixed-width no more than 10 characters
+            str_hnoflo = '{0:10.4G}'.format(self.hnoflo)
+            assert len(str_hnoflo) <= 10, str_hnoflo
+        f_bas.write(str_hnoflo + '\n')
         # Starting heads array
         f_bas.write(self.strt.get_file_entry())
         # Close file
@@ -282,29 +289,19 @@ class ModflowBas(Package):
             if line[0] != '#':
                 break
         #dataset 1 -- options
-        line = line.upper()
+        # only accept alphanumeric characters, as well as '+', '-' and '.'
+        line = re.sub(r'[^A-Z0-9\.\-\+]', ' ', line.upper())
         opts = line.strip().split()
-        ixsec = False
-        ichflg = False
-        ifrefm = False
-        iprinttime = False
-        ishowp = False
-        istoperror = False
-        stoper = None
-        if 'XSECTION' in opts:
-            ixsec = True
-        if 'CHTOCH' in opts:
-            ichflg = True
-        if 'FREE' in opts:
-            ifrefm = True
-        if 'PRINTTIME' in opts:
-            iprinttime = True
-        if 'SHOWPROGRESS' in opts:
-            ishowp = True
+        ixsec = 'XSECTION' in opts
+        ichflg = 'CHTOCH' in opts
+        ifrefm = 'FREE' in opts
+        iprinttime = 'PRINTTIME' in opts
+        ishowp = 'SHOWPROGRESS' in opts
         if 'STOPERROR' in opts:
-            istoperror = True
             i = opts.index('STOPERROR')
             stoper = np.float32(opts[i+1])
+        else:
+            stoper = None
         #get nlay,nrow,ncol if not passed
         if nlay is None and nrow is None and ncol is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
