@@ -477,19 +477,20 @@ class EndpointFile():
            Build numpy dtype for the MODPATH 6 endpoint file.
         """
         if self.version == 3 or self.version == 5:
-            dtype = np.dtype([('finalzone', np.int32), ('j', np.int32),
-                              ('i', np.int32), ('k', np.int32),
-                              ('x', np.float32), ('y', np.float32),
-                              ('z', np.float32), ('zloc', np.float32),
-                              ('finaltime', np.float32),
-                              ('x0', np.float32), ('y0', np.float32),
-                              ('zloc0', np.float32),
-                              ('j0', np.int32), ('i0', np.int32),
-                              ('k0', np.int32),
-                              ('initialzone', np.int32),
-                              ("cumulativetimestep", np.int32),
-                              ("ipcode", np.int32),
-                              ('initialtime', np.float32)])
+            dtype = self._get_mp35_dtype()
+            # dtype = np.dtype([('finalzone', np.int32), ('j', np.int32),
+            #                   ('i', np.int32), ('k', np.int32),
+            #                   ('x', np.float32), ('y', np.float32),
+            #                   ('z', np.float32), ('zloc', np.float32),
+            #                   ('finaltime', np.float32),
+            #                   ('x0', np.float32), ('y0', np.float32),
+            #                   ('zloc0', np.float32),
+            #                   ('j0', np.int32), ('i0', np.int32),
+            #                   ('k0', np.int32),
+            #                   ('initialzone', np.int32),
+            #                   ("cumulativetimestep", np.int32),
+            #                   ("ipcode", np.int32),
+            #                   ('initialtime', np.float32)])
         elif self.version == 6:
             dtype = np.dtype([("particleid", np.int32),
                               ("particlegroup", np.int32),
@@ -512,6 +513,25 @@ class EndpointFile():
                               ('z', np.float32), ('label', '|S40')])
         return dtype
 
+    def _get_mp35_dtype(self, add_id=False):
+        dtype = [('finalzone', np.int32), ('j', np.int32),
+                 ('i', np.int32), ('k', np.int32),
+                 ('x', np.float32), ('y', np.float32),
+                 ('z', np.float32), ('zloc', np.float32),
+                 ('finaltime', np.float32),
+                 ('x0', np.float32), ('y0', np.float32),
+                 ('zloc0', np.float32),
+                 ('j0', np.int32), ('i0', np.int32),
+                 ('k0', np.int32),
+                 ('initialzone', np.int32),
+                 ("cumulativetimestep", np.int32),
+                 ("ipcode", np.int32),
+                 ('initialtime', np.float32)]
+        if add_id:
+            dtype.insert(0, ("particleid", np.int32))
+        return np.dtype(dtype)
+
+
     def _add_particleid(self):
 
         # add particle ids for earlier version of MODPATH
@@ -531,16 +551,25 @@ class EndpointFile():
             else:
                 if self.verbose:
                     print(self._data.dtype)
+                # convert pids to structured array
+                pids = np.array(pids,
+                                dtype=np.dtype([('particleid', np.int32)]))
                 # create new dtype
-                dtype = [("particleid", np.int32)]
-                pids = np.array(pids, dtype=np.dtype(dtype))
-                for name in self._data.dtype.names:
-                    dtype.append((name, self._data.dtype[name]))
-                if self.verbose:
-                    print('new dtype')
-                    for idx, d in enumerate(dtype):
-                        print('{} {}'.format(idx, d))
-                dtype = np.dtype(dtype)
+                dtype = self._get_mp35_dtype(add_id=True)
+                # dtype = np.dtype([("particleid", np.int32),
+                #                   ('finalzone', np.int32), ('j', np.int32),
+                #                   ('i', np.int32), ('k', np.int32),
+                #                   ('x', np.float32), ('y', np.float32),
+                #                   ('z', np.float32), ('zloc', np.float32),
+                #                   ('finaltime', np.float32),
+                #                   ('x0', np.float32), ('y0', np.float32),
+                #                   ('zloc0', np.float32),
+                #                   ('j0', np.int32), ('i0', np.int32),
+                #                   ('k0', np.int32),
+                #                   ('initialzone', np.int32),
+                #                   ("cumulativetimestep", np.int32),
+                #                   ("ipcode", np.int32),
+                #                   ('initialtime', np.float32)])
                 if self.verbose:
                     print(dtype)
                 # create new array with new dtype and fill with available data
