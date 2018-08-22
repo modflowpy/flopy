@@ -723,9 +723,9 @@ class EndpointFile():
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
         raslice = ra_slice(ra, ['k', 'i', 'j'])
-        dest_cells = np.array(dest_cells, dtype=[('k', int),
-                                                 ('i', int),
-                                                 ('j', int)])
+        dest_cells = np.array(dest_cells, dtype=[('k', np.int32),
+                                                 ('i', np.int32),
+                                                 ('j', np.int32)])
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
         return epdest
