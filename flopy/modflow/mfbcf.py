@@ -133,9 +133,9 @@ class ModflowBcf(Package):
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Set values of all parameters
-        self.intercellt = Util2d(model, (nlay,), np.int, intercellt,
+        self.intercellt = Util2d(model, (nlay,), np.int32, intercellt,
                                  name='laycon', locat=self.unit_number[0])
-        self.laycon = Util2d(model, (nlay,), np.int, laycon, name='laycon',
+        self.laycon = Util2d(model, (nlay,), np.int32, laycon, name='laycon',
                              locat=self.unit_number[0])
         self.trpy = Util2d(model, (nlay,), np.float32, trpy,
                            name='Anisotropy factor', locat=self.unit_number[0])
@@ -316,8 +316,8 @@ class ModflowBcf(Package):
                 lcode = lcode.replace(' ', '0')
                 t.append(lcode)
                 istart += 2
-        intercellt = np.zeros(nlay, dtype=np.int)
-        laycon = np.zeros(nlay, dtype=np.int)
+        intercellt = np.zeros(nlay, dtype=np.int32)
+        laycon = np.zeros(nlay, dtype=np.int32)
         for k in range(nlay):
             if len(t[k]) > 1:
                 intercellt[k] = int(t[k][0])

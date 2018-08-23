@@ -206,13 +206,13 @@ class Mt3dUzt(Package):
         self.iet = iet
 
         if iuzfbnd is not None:
-            self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int,
+            self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int32,
                                   iuzfbnd, name='iuzfbnd',
                                   locat=self.unit_number[0])
         # set iuzfbnd based on UZF input file
         else:
-            arr = np.zeros((nlay, nrow, ncol), dtype=np.int)
-            self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int,
+            arr = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+            self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int32,
                                   arr, name='iuzfbnd',
                                   locat=self.unit_number[0])
 
@@ -453,7 +453,7 @@ class Mt3dUzt(Package):
         # Item 3 [IUZFBND(NROW,NCOL) (one array for each layer)]
         if model.verbose:
             print('   loading IUZFBND...')
-        iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int, 'iuzfbnd',
+        iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int32, 'iuzfbnd',
                               ext_unit_dict)
 
         # Item 4 [WC(NROW,NCOL) (one array for each layer)]

@@ -13,6 +13,7 @@ import shutil
 import copy
 import numbers
 import numpy as np
+from warnings import warn
 from ..utils.binaryfile import BinaryHeader
 from ..utils.flopy_io import line_parse
 
@@ -56,7 +57,7 @@ class ArrayFormat(object):
 
     Methods
     -------
-    get_default_numpy_fmt : (dtype : [np.int,np.float32])
+    get_default_numpy_fmt : (dtype : [np.int32, np.float32])
         a static method to get a default numpy dtype - used for loading
     decode_fortran_descriptor : (fd : str)
         a static method to decode fortran descriptors into npl, format,
@@ -121,7 +122,7 @@ class ArrayFormat(object):
         return bool(self._freeformat_model)
 
     def _set_defaults(self):
-        if self.dtype in [int, np.int, np.int32]:
+        if self.dtype == np.int32:
             self._npl = self._npl_full
             self._format = self.default_int_format
             self._width = self.default_int_width
@@ -144,14 +145,14 @@ class ArrayFormat(object):
 
     @staticmethod
     def get_default_numpy_fmt(dtype):
-        if dtype == np.int:
+        if dtype == np.int32:
             return "%10d"
         elif dtype == np.float32:
             return "%15.6E"
         else:
             raise Exception(
                 "ArrayFormat.get_default_numpy_fmt(): unrecognized " + \
-                "dtype, must be np.int or np.float32")
+                "dtype, must be np.int32 or np.float32")
 
     @classmethod
     def integer(cls):
@@ -199,7 +200,7 @@ class ArrayFormat(object):
             value = value.upper()
             assert value.upper() in self._fmts
             if value == 'I':
-                assert self.dtype in [int, np.int, np.int32]
+                assert self.dtype == np.int32, self.dtype
                 self._format = value
                 self._decimal = None
             else:
@@ -220,9 +221,9 @@ class ArrayFormat(object):
                       "than default of {0}".format(self.default_float_width))
                 self._width = width
         elif key == "decimal":
-            if self.dtype in [int, np.int, np.int32]:
+            if self.dtype == np.int32:
                 raise Exception("cannot set decimal for integer dtypes")
-            else:
+            elif self.dtype == np.float32:
                 value = int(value)
                 if value < self.default_float_decimal:
                     print("ArrayFormat warning: setting decimal " +
@@ -233,6 +234,8 @@ class ArrayFormat(object):
                           " less than current value of " +
                           "{0}".format(self.default_float_decimal))
                 self._decimal = int(value)
+            else:
+                raise TypeError(self.dtype)
 
         elif key == "entries" \
                 or key == "entires_per_line" \
@@ -440,7 +443,7 @@ class Util3d(object):
         this package will be added.
     shape : length 3 tuple
         shape of the 3-D array, typically (nlay,nrow,ncol)
-    dtype : [np.int,np.float32,np.bool]
+    dtype : [np.int32, np.float32, np.bool]
         the type of the data
     value : variable
         the data to be assigned to the 3-D array.
@@ -606,9 +609,8 @@ class Util3d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.hk.to_shapefile('test_hk.shp')
         """
-        import warnings
-        warnings.warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()")
+        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
+             DeprecationWarning)
 
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         #
@@ -883,7 +885,7 @@ class Transient3d(object):
         this package will be added.
     shape : length 3 tuple
         shape of the 3-D transient arrays, typically (nlay,nrow,ncol)
-    dtype : [np.int,np.float32,np.bool]
+    dtype : [np.int32, np.float32, np.bool]
         the type of the data
     value : variable
         the data to be assigned to the 3-D arrays. Typically a dict
@@ -1103,7 +1105,7 @@ class Transient2d(object):
         this package will be added.
     shape : length 2 tuple
         shape of the 2-D transient arrays, typically (nrow,ncol)
-    dtype : [np.int,np.float32,np.bool]
+    dtype : [np.int32, np.float32, np.bool]
         the type of the data
     value : variable
         the data to be assigned to the 2-D arrays. Typically a dict
@@ -1299,9 +1301,8 @@ class Transient2d(object):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
         """
-        import warnings
-        warnings.warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()")
+        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
+             DeprecationWarning)
 
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         #
@@ -1555,7 +1556,7 @@ class Util2d(object):
         this package will be added.
     shape : lenght 3 tuple
         shape of the 3-D array
-    dtype : [np.int,np.float32,np.bool]
+    dtype : [np.int32, np.float32, np.bool]
         the type of the data
     value : variable
         the data to be assigned to the 2-D array.
@@ -1634,9 +1635,9 @@ class Util2d(object):
         only creates arrays as needed, 
         otherwise functions with strings or constants
         shape = 1-d or 2-d tuple
-        value =  an instance of string,list,np.int,np.float32,np.bool or np.ndarray
-        vtype = str,np.int,np.float32,np.bool, or np.ndarray
-        dtype = np.int, or np.float32
+        value =  an instance of string, list, np.int32, np.float32, np.bool or np.ndarray
+        vtype = str, np.int32, np.float32, np.bool, or np.ndarray
+        dtype = np.int32, or np.float32
         if ext_filename is passed, scalars are written externally as arrays
         model instance bool attribute "array_free_format" used for generating control record
         model instance string attribute "external_path" 
@@ -1658,8 +1659,16 @@ class Util2d(object):
             return
 
         # some defense
-        if dtype not in [np.int, np.int32, np.float32, np.bool]:
-            raise Exception('Util2d:unsupported dtype: ' + str(dtype))
+        if dtype != np.int32 and np.issubdtype(dtype, np.integer):
+            # Modflow only uses 4-byte integers
+            dtype = np.dtype(dtype)
+            if np.dtype(int).itemsize != 4:
+                # show warning for platforms where int is not 4-bytes
+                warn('Util2d: setting integer dtype from {0} to int32'
+                     .format(dtype))
+            dtype = np.int32
+        if dtype not in [np.int32, np.float32, np.bool]:
+            raise TypeError('Util2d:unsupported dtype: ' + str(dtype))
 
         if name is not None:
             name = name.lower()
@@ -1706,7 +1715,7 @@ class Util2d(object):
 
     def _decide_how(self):
         # if a constant was passed in
-        if self.vtype in [np.int, np.float32]:
+        if self.vtype in [np.int32, np.float32]:
             self._how = "constant"
         # if a filename was passed in or external path was set
         elif self.model.external_path is not None or \
@@ -1829,9 +1838,8 @@ class Util2d(object):
         >>> ml.dis.top.as_shapefile('test_top.shp')
         """
 
-        import warnings
-        warnings.warn(
-            "Deprecation warning: to_shapefile() is deprecated. use .export()")
+        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
+             DeprecationWarning)
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         # name = shape_attr_name(self.name, keep_layer=True)
         # write_grid_shapefile(filename, self.model.dis.sr, {name: self.array})
@@ -1846,13 +1854,13 @@ class Util2d(object):
 
     # overloads, tries to avoid creating arrays if possible
     def __add__(self, other):
-        if self.vtype in [np.int, np.float32] and self.vtype == other.vtype:
+        if self.vtype in [np.int32, np.float32] and self.vtype == other.vtype:
             return self.__value + other.get_value()
         else:
             return self.array + other.array
 
     def __sub__(self, other):
-        if self.vtype in [np.int, np.float32] and self.vtype == other.vtype:
+        if self.vtype in [np.int32, np.float32] and self.vtype == other.vtype:
             return self.__value - other.get_value()
         else:
             return self.array - other.array
@@ -2002,7 +2010,7 @@ class Util2d(object):
 
         if self.format.array_free_format:
             lay_space = '{0:>27s}'.format('')
-            if self.vtype in [int, np.int]:
+            if self.vtype in [int, np.int32]:
                 lay_space = '{0:>32s}'.format('')
             cr = 'CONSTANT ' + self.format.py[1].format(value)
             cr = '{0:s}{1:s}#{2:<30s}\n'.format(cr, lay_space,
@@ -2025,7 +2033,7 @@ class Util2d(object):
             locat = 0
         if locat is 0:
             fformat = ''
-        if self.dtype == np.int:
+        if self.dtype == np.int32:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
                 .format(locat, value, fformat,
                         self.iprn, self.name)
@@ -2034,8 +2042,9 @@ class Util2d(object):
                 .format(locat, value, fformat,
                         self.iprn, self.name)
         else:
-            raise Exception('Util2d: error generating fixed-format ' +
-                            ' control record, dtype must be np.int or np.float32')
+            raise Exception(
+                'Util2d: error generating fixed-format control record, '
+                'dtype must be np.int32 or np.float32')
         return cr
 
     def get_internal_cr(self):
@@ -2150,7 +2159,7 @@ class Util2d(object):
                 return self.get_openclose_cr()
 
         elif how == "constant":
-            if self.vtype not in [int, np.float32]:
+            if self.vtype not in [np.int32, np.float32]:
                 u = np.unique(self._array)
                 assert u.shape[
                            0] == 1, "Util2d error: 'how' is constant, but array " + \
@@ -2199,7 +2208,7 @@ class Util2d(object):
         if isinstance(self.cnstnt,str):
             print("WARNING: cnstnt is str for {0}".format(self.name))
             return self._array.astype(self.dtype)
-        if isinstance(self.cnstnt, int):
+        if isinstance(self.cnstnt, (int, np.int32)):
             cnstnt = self.cnstnt
         else:
             if self.cnstnt == 0.0:
@@ -2430,11 +2439,18 @@ class Util2d(object):
     def load_bin(shape, file_in, dtype, bintype=None):
         import flopy.utils.binaryfile as bf
         nrow, ncol = shape
-        if bintype is not None and not np.issubdtype(dtype, np.integer):
+        if dtype != np.int32 and np.issubdtype(dtype, np.integer):
+            # Modflow only uses 4-byte integers
+            dtype = np.dtype(dtype)
+            if dtype.itemsize != 4:
+                # show warning for platforms where int is not 4-bytes
+                warn('Util2d: setting integer dtype from {0} to int32'
+                     .format(dtype))
+            dtype = np.int32
+        header_data = None
+        if bintype is not None and np.issubdtype(dtype, np.floating):
             header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
-        else:
-            header_data = None
         data = np.fromfile(file_in, dtype=dtype, count=nrow * ncol)
         data.resize(nrow, ncol)
         return [header_data, data]
@@ -2479,7 +2495,7 @@ class Util2d(object):
             if os.path.exists(value):
                 self.__value = value
                 return
-            elif self.dtype == np.int:
+            elif self.dtype == np.int32:
                 try:
                     self.__value = int(value)
                 except:
@@ -2496,9 +2512,9 @@ class Util2d(object):
                                         value))
 
         elif np.isscalar(value):
-            if self.dtype == np.int:
+            if self.dtype == np.int32:
                 try:
-                    self.__value = np.int(value)
+                    self.__value = int(value)
                 except:
                     raise Exception('Util2d:could not cast scalar ' +
                                     'value to type "int": ' + str(value))
