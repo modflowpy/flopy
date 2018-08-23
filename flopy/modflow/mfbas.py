@@ -120,7 +120,7 @@ class ModflowBas(Package):
         self.url = 'bas6.htm'
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        self.ibound = Util3d(model, (nlay, nrow, ncol), np.int, ibound,
+        self.ibound = Util3d(model, (nlay, nrow, ncol), np.int32, ibound,
                               name='ibound', locat=self.unit_number[0])
         self.strt = Util3d(model, (nlay, nrow, ncol), np.float32, strt,
                             name='strt', locat=self.unit_number[0])
@@ -306,7 +306,7 @@ class ModflowBas(Package):
         if nlay is None and nrow is None and ncol is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         #dataset 2 -- ibound
-        ibound = Util3d.load(f, model, (nlay, nrow, ncol), np.int, 'ibound',
+        ibound = Util3d.load(f, model, (nlay, nrow, ncol), np.int32, 'ibound',
                               ext_unit_dict)
         #print ibound.array
         #dataset 3 -- hnoflo

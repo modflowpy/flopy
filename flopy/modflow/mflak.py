@@ -357,7 +357,7 @@ class ModflowLak(Package):
             err = 'lakarr and bdlknc must be specified'
             raise Exception(err)
         nrow, ncol, nlay, nper = self.parent.get_nrow_ncol_nlay_nper()
-        self.lakarr = Transient3d(model, (nlay, nrow, ncol), np.int,
+        self.lakarr = Transient3d(model, (nlay, nrow, ncol), np.int32,
                                   lakarr, name='lakarr_')
         self.bdlknc = Transient3d(model, (nlay, nrow, ncol), np.float32,
                                   bdlknc, name='bdlknc_')
@@ -672,7 +672,7 @@ class ModflowLak(Package):
                     print("   reading lak dataset 5 - " +
                           "for stress period {}".format(iper + 1))
                 name = 'LKARR_StressPeriod_{}'.format(iper)
-                lakarr = Util3d.load(f, model, (nlay, nrow, ncol), np.int,
+                lakarr = Util3d.load(f, model, (nlay, nrow, ncol), np.int32,
                                      name, ext_unit_dict)
                 if model.verbose:
                     print("   reading lak dataset 6 - " +
@@ -746,7 +746,7 @@ class ModflowLak(Package):
                 flux_data[iper] = ds9
 
         # convert lake data to Transient3d objects
-        lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int,
+        lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int32,
                                lake_loc, name='lakarr_')
         lake_lknc = Transient3d(model, (nlay, nrow, ncol), np.float32,
                                 lake_lknc, name='bdlknc_')

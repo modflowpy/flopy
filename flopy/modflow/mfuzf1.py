@@ -435,14 +435,14 @@ class ModflowUzf1(Package):
 
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
-        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int, iuzfbnd,
+        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int32, iuzfbnd,
                               name='iuzfbnd')
 
         # If IRUNFLG > 0: Read item 3
         # Data Set 3
         # [IRUNBND (NCOL, NROW)] -- U2DINT
         if irunflg > 0:
-            self.irunbnd = Util2d(model, (nrow, ncol), np.int, irunbnd,
+            self.irunbnd = Util2d(model, (nrow, ncol), np.int32, irunbnd,
                                   name='irunbnd')
 
         # IF the absolute value of IUZFOPT = 1: Read item 4.
@@ -722,11 +722,11 @@ class ModflowUzf1(Package):
                                            ext_unit_dict)
 
         # dataset 2
-        load_util2d('iuzfbnd', np.int)
+        load_util2d('iuzfbnd', np.int32)
 
         # dataset 3
         if irunflg > 0:
-            load_util2d('irunbnd', np.int)
+            load_util2d('irunbnd', np.int32)
 
         # dataset 4
         if iuzfopt in [0, 1]:
