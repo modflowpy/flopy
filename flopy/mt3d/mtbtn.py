@@ -778,24 +778,22 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading LAYCON...')
-        laycon = np.empty((nlay), np.int)
+        laycon = np.empty((nlay), np.int32)
         laycon = read1d(f, laycon)
         if model.verbose:
             print('   LAYCON {}'.format(laycon))
 
         if model.verbose:
             print('   loading DELR...')
-        delr = Util2d.load(f, model, (ncol, 1), np.float32, 'delr',
+        delr = Util2d.load(f, model, (ncol,), np.float32, 'delr',
                             ext_unit_dict, array_format="mt3d")
-        delr = delr.array.reshape((ncol))
         if model.verbose:
             print('   DELR {}'.format(delr))
 
         if model.verbose:
             print('   loading DELC...')
-        delc = Util2d.load(f, model, (nrow, 1), np.float32, 'delc',
+        delc = Util2d.load(f, model, (nrow,), np.float32, 'delc',
                             ext_unit_dict, array_format="mt3d")
-        delc = delc.array.reshape((nrow))
         if model.verbose:
             print('   DELC {}'.format(delc))
 

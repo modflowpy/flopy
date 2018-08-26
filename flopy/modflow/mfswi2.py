@@ -586,9 +586,8 @@ class ModflowSwi2(Package):
             if line[0] != '#':
                 f.seek(ipos)
                 break
-        nu = Util2d.load(f, model, (1, nnu), np.float32, 'nu',
+        nu = Util2d.load(f, model, (nnu,), np.float32, 'nu',
                          ext_unit_dict)
-        nu = nu.array.reshape((nnu))
 
         # read dataset 5
         if model.verbose:

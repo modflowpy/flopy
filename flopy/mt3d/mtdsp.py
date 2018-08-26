@@ -299,13 +299,13 @@ class Mt3dDsp(Package):
 
         if model.verbose:
             print('   loading TRPT...')
-        trpt = Util2d.load(f, model, (nlay, 1), np.float32, 'trpt',
+        trpt = Util2d.load(f, model, (nlay,), np.float32, 'trpt',
                            ext_unit_dict, array_format="mt3d",
                            array_free_format=False)
 
         if model.verbose:
             print('   loading TRPV...')
-        trpv = Util2d.load(f, model, (nlay, 1), np.float32, 'trpv',
+        trpv = Util2d.load(f, model, (nlay,), np.float32, 'trpv',
                            ext_unit_dict, array_format="mt3d",
                            array_free_format=False)
 
@@ -325,12 +325,12 @@ class Mt3dDsp(Package):
 
 
         else:
-            dmcoef = Util2d.load(f, model, (nlay, 1), np.float32,
+            dmcoef = Util2d.load(f, model, (nlay,), np.float32,
                                'dmcoef1', ext_unit_dict, array_format="mt3d")
             # if model.mcomp > 1:
             #     for icomp in range(2, model.mcomp + 1):
             #         name = "dmcoef" + str(icomp + 1)
-            #         u2d = Util2d.load(f, model, (nlay, 1), np.float32, name,
+            #         u2d = Util2d.load(f, model, (nlay,), np.float32, name,
             #                     ext_unit_dict, array_format="mt3d")
             #         kwargs[name] = u2d
 
