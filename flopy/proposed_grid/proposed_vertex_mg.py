@@ -51,6 +51,8 @@ class VertexModelGrid(object):
         self.__yvertex_dict = None
         self.__xcenters_dict = None
         self.__ycenters_dict = None
+        if self.__sr is not None:
+            self.__sr.model_grid = self
 
     def __setattr__(self, key, value):
         clear_cache = True
@@ -420,6 +422,7 @@ if __name__ == "__main__":
                         idomain=dis.idomain, xoffset=10.,
                         yoffset=0, rotation=-25)
 
+    print('break')
     # todo: build out model grid methods!
     x = t.xgrid
     y = t.ygrid

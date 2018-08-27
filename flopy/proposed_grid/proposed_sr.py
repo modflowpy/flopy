@@ -36,8 +36,8 @@ class SpatialReference(object):
         """
         Clears cached arrays
         """
-        self.__xcenter = None
-        self.__ycenter = None
+        self.__xcenters = None
+        self.__ycenters = None
         self.__xgrid = None
         self.__ygrid = None
         self.__xedge = None
@@ -74,7 +74,7 @@ class SpatialReference(object):
             super(SpatialReference, self). \
                 __setattr__("_SpatialReference__rotation", float(value))
 
-        elif key == "model_grid":
+        elif key in ("model_grid"):
             super(SpatialReference, self). \
                 __setattr__("_SpatialReference__model_grid", value)
             self.__model_grid.sr = self

@@ -41,6 +41,8 @@ class StructuredModelGrid(object):
         self.__ygrid = None
         self.__xedges = None
         self.__yedges = None
+        if self.__sr is not None:
+            self.__sr.model_grid = self
 
     def __setattr__(self, key, value):
         clear_cache = True
@@ -346,7 +348,7 @@ class StructuredModelGrid(object):
 
 
 if __name__ == "__main__":
-
+    import matplotlib.pyplot as plt
     delc = np.ones((10,)) * 1
     delr = np.ones((10,)) * 1
 
@@ -357,6 +359,22 @@ if __name__ == "__main__":
                             rotation=45, origin_location="ul",
                             length_multiplier=1.)
 
+    sr = SpatialReference(10, 20, rotation=35)
+
+    t.sr = sr
+
+    plt.scatter(np.ravel(t.sr.xcenters), np.ravel(t.sr.ycenters), c="b")
+    t.sr.plot_grid_lines()
+    plt.show()
+    plt.close()
+
+    delc = np.ones(10,) * 2
+    t.delc = delc
+
+    plt.scatter(np.ravel(t.sr.xcenters), np.ravel(t.sr.ycenters), c="b")
+    t.sr.plot_grid_lines()
+    plt.show()
+
     x = t.xgrid
     y = t.ygrid
     xc = t.xcenters
@@ -364,8 +382,6 @@ if __name__ == "__main__":
     extent = t.extent
     grid = t.grid_lines
 
-    sr = SpatialReference(10, 20, rotation=35)
-    t.sr = sr
 
     print('break')
 
@@ -376,6 +392,6 @@ if __name__ == "__main__":
     sr_extent = t.sr.extent
     sr_grid = t.sr.grid_lines
 
-    t.plot_grid_lines()
-
+    t.sr.plot_grid_lines()
+    plt.show()
     print('break')
