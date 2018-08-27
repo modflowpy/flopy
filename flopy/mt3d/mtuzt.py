@@ -25,9 +25,9 @@ class Mt3dUzt(Package):
         written out.
     iet : int
         Is a flag that indicates whether or not ET is being simulated in the 
-        UZF1 flow package.  If ET is not being simulated, IET informs FMI 
-        package not to look for UZET and GWET arrays in the flow-tranpsort 
-        link file.
+        UZF1 flow package (=0 indicates that ET is not being simulated).  
+        If ET is not being simulated, IET informs FMI package not to look 
+        for UZET and GWET arrays in the flow-tranpsort link file.
     iuzfbnd : array of ints
         Specifies which row/column indices variably-saturated transport will 
         be simulated in.
@@ -206,13 +206,13 @@ class Mt3dUzt(Package):
         self.iet = iet
 
         if iuzfbnd is not None:
-            self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int,
+            self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int32,
                                   iuzfbnd, name='iuzfbnd',
                                   locat=self.unit_number[0])
         # set iuzfbnd based on UZF input file
         else:
-            arr = np.zeros((nlay, nrow, ncol), dtype=np.int)
-            self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int,
+            arr = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+            self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int32,
                                   arr, name='iuzfbnd',
                                   locat=self.unit_number[0])
 
@@ -364,7 +364,7 @@ class Mt3dUzt(Package):
                         incgwet = max(incgwet, incgweticomp)
                         if incgwet == 1:
                             break
-                    f_uzt.write('{:10d}          # INCGWET - SP {1:5d}\n'
+                    f_uzt.write('{0:10d}          # INCGWET - SP {1:5d}\n'
                                 .format(incgwet, kper + 1))
                     if incgwet == 1:
                         for t2d in self.cgwet:
@@ -453,7 +453,7 @@ class Mt3dUzt(Package):
         # Item 3 [IUZFBND(NROW,NCOL) (one array for each layer)]
         if model.verbose:
             print('   loading IUZFBND...')
-        iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int, 'iuzfbnd',
+        iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int32, 'iuzfbnd',
                               ext_unit_dict)
 
         # Item 4 [WC(NROW,NCOL) (one array for each layer)]
@@ -672,7 +672,7 @@ class Mt3dUzt(Package):
 
     @staticmethod
     def defaultunit():
-        return 47
+        return 7
 
     @staticmethod
     def reservedunit():

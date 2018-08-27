@@ -140,7 +140,7 @@ class ModflowRch(Package):
         self.rech = Transient2d(model, (nrow, ncol), np.float32,
                                 rech, name='rech_')
         if self.nrchop == 2:
-            self.irch = Transient2d(model, (nrow, ncol), np.int,
+            self.irch = Transient2d(model, (nrow, ncol), np.int32,
                                     irch + 1, name='irch_')  # irch+1, as irch is zero based
         else:
             self.irch = None
@@ -395,7 +395,7 @@ class ModflowRch(Package):
                     if model.verbose:
                         print('   loading irch stress period {0:3d}...'.format(
                             iper + 1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.int, 'irch',
+                    t = Util2d.load(f, model, (nrow, ncol), np.int32, 'irch',
                                     ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch

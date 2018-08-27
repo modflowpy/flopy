@@ -112,6 +112,20 @@ def export_shapefile(namfile):
 def test_freyberg_export():
     from flopy.grid.reference import SpatialReference
     namfile = 'freyberg.nam'
+
+    # steady state
+    model_ws = '../examples/data/freyberg'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws,
+                                   check=False, verbose=False)
+    # test export at model, package and object levels
+    m.export('{}/model.shp'.format(spth))
+    m.wel.export('{}/wel.shp'.format(spth))
+    m.lpf.hk.export('{}/hk.shp'.format(spth))
+    m.riv.stress_period_data.export('{}/riv_spd.shp'.format(spth))
+
+    # transient
+    # (doesn't work at model level because the total size of
+    #  the attribute fields exceeds the shapefile limit)
     model_ws = '../examples/data/freyberg_multilayer_transient/'
     m = flopy.modflow.Modflow.load(namfile, model_ws=model_ws, verbose=False,
                                    load_only=['DIS', 'BAS6', 'NWT', 'OC',

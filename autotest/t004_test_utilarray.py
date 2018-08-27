@@ -2,6 +2,7 @@ import os
 import shutil
 import numpy as np
 import flopy
+import warnings
 from flopy.utils.util_array import Util2d, Util3d, Transient2d, Transient3d
 
 out_dir = os.path.join("temp", "t004")
@@ -137,13 +138,22 @@ def test_util2d():
 
     # test binary integer file
     fname = os.path.join(out_dir, 'test.int')
-    e8 = np.arange(3 * 4).reshape((3, 4)) - 1
+    e8 = np.arange(3 * 4, dtype=np.int32).reshape((3, 4)) - 1
     with open(fname, 'wb') as fp:
         fp.write(e8.tobytes())
-    h8, a8 = Util2d.load_bin((3, 4), fname, np.int)
+    h8, a8 = Util2d.load_bin((3, 4), fname, np.int32)
     assert h8 is None  # no header_dtype
     np.testing.assert_equal(a8, e8)
 
+    # check warning if wrong integer type is used to read 4-byte integers
+    # e.g. on platforms where int -> int64
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        h8, a8 = Util2d.load_bin((3, 4), fname, np.int64)
+        assert len(w) == 1
+        assert a8.dtype == np.int32
+        assert h8 is None  # no header_dtype
+        np.testing.assert_equal(a8, e8)
     return
 
 

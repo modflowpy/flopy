@@ -235,7 +235,7 @@ class ModflowSwi2(Package):
         nobs = 0
         if obslrc is not None:
             if isinstance(obslrc, list) or isinstance(obslrc, tuple):
-                obslrc = np.array(obslrc, dtype=np.int)
+                obslrc = np.array(obslrc, dtype=np.int32)
             if isinstance(obslrc, np.ndarray):
                 if obslrc.ndim == 1 and obslrc.size == 3:
                     obslrc = obslrc.reshape((1, 3))
@@ -334,7 +334,7 @@ class ModflowSwi2(Package):
                                     zeta[i], name='zeta_' + str(i + 1)))
         self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz,
                           name='ssz')
-        self.isource = Util3d(model, (nlay, nrow, ncol), np.int, isource,
+        self.isource = Util3d(model, (nlay, nrow, ncol), np.int32, isource,
                               name='isource')
         #
         self.obsnam = obsnam
@@ -626,7 +626,7 @@ class ModflowSwi2(Package):
             if line[0] != '#':
                 f.seek(ipos)
                 break
-        isource = Util3d.load(f, model, (nlay, nrow, ncol), np.int,
+        isource = Util3d.load(f, model, (nlay, nrow, ncol), np.int32,
                               'isource', ext_unit_dict)
 
         # read dataset 8
