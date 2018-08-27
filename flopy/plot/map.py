@@ -774,7 +774,7 @@ p
             considered. (default is 'ending')
         selection : tuple
             tuple that defines the zero-base layer, row, column location
-            (l, r, c) to use to make a selection of particle endpoints.
+            (l, r, c) or (l, nnode) to use to make a selection of particle endpoints.
             The selection could be a well location to determine capture zone
             for the well. If selection is None, all particle endpoints for
             the user-sepcified direction will be plotted. (default is None)

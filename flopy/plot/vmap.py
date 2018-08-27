@@ -96,7 +96,8 @@ class VertexMapView(object):
             else:
                 self.sr = sr
 
-                # todo: change this to VertexModelGrid
+                # todo: change this to VertexModelGrid,
+                # todo: when VMG is finished and incorporated
                 self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
                                               top=np.array([]), botm=np.array([]),
                                               idomain=np.array([]), sr=self.sr)
@@ -107,6 +108,7 @@ class VertexMapView(object):
                                        length_multiplier=length_multiplier)
 
             # todo: change this to VertexModelGrid
+            # todo: when VMG is finished and incorporated
             self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
                                           top=np.array([]), botm=np.array([]),
                                           idomain=np.array([]), sr=self.sr)
@@ -271,14 +273,14 @@ class VertexMapView(object):
                     xcentergrid <= extent[1]) & (
                           ycentergrid >= extent[2]) & (
                           ycentergrid <= extent[3])
-            a = a[idx].flatten()
+            plotarray = plotarray[idx].flatten()
             xcentergrid = xcentergrid[idx].flatten()
             ycentergrid = ycentergrid[idx].flatten()
 
         triang = tri.Triangulation(xcentergrid, ycentergrid)
 
         try:
-            amask = a.mask
+            amask = plotarray.mask
             mask = [False for i in range(triang.triangles.shape[0])]
             for ipos, (n0, n1, n2) in enumerate(triang.triangles):
                 if amask[n0] or amask[n1] or amask[n2]:
@@ -642,11 +644,11 @@ class VertexMapView(object):
         return quiver
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
-        return NotImplementedError()
+        return NotImplementedError("MODPATH 7 support is not yet implemented")
 
     def plot_endpoint(self, ep, direction="ending", selection=None,
                       selection_direction=None, **kwargs):
-        return NotImplementedError()
+        return NotImplementedError("MODPATH 7 support is not yet implemented")
 
 
 if __name__ == "__main__":
@@ -730,5 +732,6 @@ if __name__ == "__main__":
     print(head.ndim)
 
     ax = map.plot_discharge(fja=fja, head=head, dis=dis)
+    map.plot_grid()
     plt.show()
     print('break')

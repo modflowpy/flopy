@@ -3,6 +3,7 @@ import numpy as np
 from ..plot.map import StructuredMapView
 from ..plot.vmap import VertexMapView
 from ..plot.crosssection import StructuredCrossSection
+from ..plot.vcrosssection import VertexCrossSection
 from ..plot import plotutil
 
 try:
@@ -586,8 +587,14 @@ class PlotCrossSection(object):
             raise ImportError(s)
 
         # todo: make a descision about the model grid type here!
-        tmp = True
-        if tmp:
+        try:
+            tmp = modelgrid.grid_type
+            if not isinstance(tmp, str):
+                tmp = "structured"
+        except:
+            tmp = "structured"
+
+        if tmp == "structured":
             self.__cls = StructuredCrossSection(ax=ax, model=model, dis=dis,
                                                 modelgrid=modelgrid,
                                                 line=line, xul=xul, yul=yul,
@@ -595,8 +602,11 @@ class PlotCrossSection(object):
                                                 rotation=rotation, extent=extent,
                                                 length_multiplier=length_multiplier)
         else:
-            # todo: link up vertex cross sections here
-            raise NotImplementedError()
+            self.__cls = VertexCrossSection(ax=ax, model=model, dis=dis,
+                                            modelgrid=modelgrid,
+                                            line=line, xul=xul, yul=yul,
+                                            xll=xll, yll=yll, rotation=rotation,
+                                            extent=extent, length_multiplier=length_multiplier)
 
         self.model = self.__cls.model
         self.dis = self.__cls.dis

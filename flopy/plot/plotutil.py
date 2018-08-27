@@ -9,6 +9,7 @@ import os
 import sys
 import math
 import numpy as np
+import pickle
 from flopy.utils import MfList, Util2d, Util3d, Transient2d
 from flopy.mf6.data.mfdataarray import MFArray, MFTransientArray
 from flopy.mf6.data.mfdatalist import MFList as FP6MFList
@@ -2054,6 +2055,156 @@ class UnstructuredPlotUtilities(object):
             qz = -qz
 
         return (qx, qy, qz)
+
+    @staticmethod
+    def line_intersect_grid(ptsin, xgrid, ygrid):
+        """
+        Uses cross product method to find which cells intersect with the
+        line and then uses the parameterized line equation to caluculate
+        intersection x, y vertex points. Should be quite fast for large model
+        grids!
+
+        Parameters:
+            pts: (list) list of tuple line vertex pairs (ex. [(1, 0), (10, 0)]
+            xgrid: (np.array) model grid x vertices
+            ygrid: (np.array) model grid y vertices
+            returncellid: bool flag to return the cellids with vertices
+        :return:
+        """
+        # make sure xedge and yedge are numpy arrays
+        if not isinstance(xgrid, np.ndarray):
+            xgrid = np.array(xgrid)
+        if not isinstance(ygrid, np.ndarray):
+            ygrid = np.array(ygrid)
+
+        npts = len(ptsin)
+
+        # use a vector cross product to find which
+        # cells intersect the line
+        vdict = {}
+        for ix in range(1, npts):
+            xmin = np.min([ptsin[ix - 1][0], ptsin[ix][0]])
+            xmax = np.max([ptsin[ix - 1][0], ptsin[ix][0]])
+            ymin = np.min([ptsin[ix - 1][1], ptsin[ix][1]])
+            ymax = np.max([ptsin[ix - 1][1], ptsin[ix][1]])
+            x1 = np.ones(xgrid.shape) * ptsin[ix - 1][0]
+            y1 = np.ones(ygrid.shape) * ptsin[ix - 1][1]
+            x2 = np.ones(xgrid.shape) * ptsin[ix][0]
+            y2 = np.ones(ygrid.shape) * ptsin[ix][1]
+            x3 = xgrid
+            y3 = ygrid
+            x4 = np.zeros(xgrid.shape)
+            y4 = np.zeros(ygrid.shape)
+            x4[:, :-1] = xgrid[:, 1:]
+            x4[:, -1] = xgrid[:, 0]
+            y4[:, :-1] = ygrid[:, 1:]
+            y4[:, -1] = ygrid[:, 0]
+
+            # find where intersection is
+            v1 = [x2 - x1, y2 - y1]
+            v2 = [x2 - x3, y2 - y3]
+            xp = v1[0] * v2[1] - v1[1] * v2[0]
+
+            # todo: devise a way to remove this loop!
+            # loop finds which edges the line intersects
+            cells = []
+            cell_vertex_ix = []
+            for cell, cpv in enumerate(xp):
+                if np.all([t < 0 for t in cpv]):
+                    continue
+                elif np.all([t > 0 for t in cpv]):
+                    continue
+
+                else:
+                    # only cycle through the cells that intersect
+                    # the infinite line
+                    cvert_ix = []
+                    for ix in range(len(cpv)):
+                        if cpv[ix - 1] < 0 and cpv[ix] > 0:
+                            cvert_ix.append(ix - 1)
+                        elif cpv[ix -1] > 0 and cpv[ix] < 0:
+                            cvert_ix.append(ix - 1)
+                        elif cpv[ix - 1] == 0 and cpv[ix] == 0:
+                            cvert_ix += [ix - 1, ix]
+                        else:
+                            pass
+
+                    if cvert_ix:
+                        cells.append(cell)
+                        cell_vertex_ix.append(cvert_ix)
+
+            # find interesection vertices
+            numa = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
+            numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
+            denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+            ua = numa / denom
+            ub = numb / denom
+            del numa
+            del numb
+            del denom
+
+            x = x1 + ua * (x2 - x1)
+            y = y1 + ua * (y2 - y1)
+
+            for ix, cell in enumerate(cells):
+                xc = x[cell]
+                yc = y[cell]
+                verts = [(xt, yt) for xt, yt in
+                         zip(xc[cell_vertex_ix[ix]],
+                             yc[cell_vertex_ix[ix]])]
+
+                if cell in vdict:
+                    for i in verts:
+                        # finally check that verts are
+                        # within the line segment range
+                        if i[0] < xmin or i[0] > xmax:
+                            continue
+                        elif i[1] < ymin or i[1] > ymax:
+                            continue
+                        elif i in vdict[cell]:
+                            continue
+                        else:
+                            vdict[cell].append(i)
+                else:
+                    # finally check that verts are
+                    # within the line segment range
+                    t = []
+                    for i in verts:
+                        if i[0] < xmin or i[0] > xmax:
+                            continue
+                        elif i[1] < ymin or i[1] > ymax:
+                            continue
+                        elif i in t:
+                            continue
+                        else:
+                            t.append(i)
+
+                    if t:
+                        vdict[cell] = t
+
+        return vdict
+
+    @staticmethod
+    def arctan2(verts):
+        """
+        Reads 2 dimensional set of verts and orders them using the arctan 2 method
+        Parameters
+        ----------
+        verts: (np.array, float) Nx2 array of verts
+
+        Returns
+        -------
+        verts: (np.array, float) Nx2 array of verts
+        """
+        center = verts.mean(axis=0)
+        x = verts.T[0] - center[0]
+        z = verts.T[1] - center[1]
+
+        angles = np.arctan2(z, x) * 180 / np.pi
+        angleidx = angles.argsort()
+
+        verts = verts[angleidx]
+        return verts
 
 
 class SwiConcentration():
