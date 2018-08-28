@@ -704,7 +704,7 @@ class VertexCrossSection(object):
                                   head=head, cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def plot_discharge(self, frf, fff, flf=None, head=None,
+    def plot_discharge(self, fja=None, head=None,
                        kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
@@ -738,7 +738,54 @@ class VertexCrossSection(object):
             Vectors
 
         """
-        raise NotImplementedError()
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        # check that the cross section is not arbitrary
+        pts = []
+        for pt in self.pts:
+            ipt = self.mg.sr.transform(pt[0], pt[1],
+                                       inverse=True)
+            pts.append(ipt)
+
+        pts = np.array(pts)
+
+        if np.unique(pts.T[0]).size > 1:
+            if np.unique(pts.T[1]).size > 1:
+                err_msg = "plot_discharge cannot plot " \
+                          "aribtrary cross sections"
+                raise AssertionError(err_msg)
+
+        top = dis.top.array
+        botm = dis.botm.array
+
+        fja = np.array(fja)
+        nlay = self.mg.nlay
+        ncpl = self.mg.ncpl
+
+        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
+        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
+
+        # todo: get hnoflow and hdry from the proper place
+        hnoflo = 999.
+        hdry = 999.
+
+        if head is None:
+            head = np.zeros(botm.shape)
+
+        if len(head.shape) == 3:
+            head.shape = (nlay, -1)
+
+        if len(fja.shape) == 4:
+            fja = fja[0][0][0]
+
+        laytyp = np.zeros((nlay,))
+        if self.model is not None:
+            if self.model.sto is not None:
+                laytyp = self.model.sto.iconvert.array
+
 
     def get_patch_collection(self, projpts, plotarray, **kwargs):
         """
@@ -961,20 +1008,20 @@ if __name__ == "__main__":
     sr_e = t.sr.extent
 
     cr = PlotCrossSection(modelgrid=t, dis=dis,
-                          line={"line":[(0,2.5), (5, 2.5), (10, 4.5)]})
+                          line={"line":[(0,2.5), (5, 2.5), (10, 2.5)]})
 
     # ax = cr.plot_bc(package=chd)
     # plt.show()
 
-    idx = [np.random.randint(0, 399) for _ in range(100)]
-    idx2 = [np.random.randint(0, 399) for _ in range(200)]
-    idomain = np.zeros((400,), dtype=int)
+    #idx = [np.random.randint(0, 399) for _ in range(100)]
+    #idx2 = [np.random.randint(0, 399) for _ in range(200)]
+    #idomain = np.zeros((400,), dtype=int)
 
-    idomain[idx] = 1
-    idomain[idx2] = -1
+    #idomain[idx] = 1
+    #idomain[idx2] = -1
 
-    ax = cr.plot_ibound(ibound=idomain)
-    plt.show()
+    #ax = cr.plot_ibound(ibound=idomain)
+    #plt.show()
 
 
     # ax = cr.plot_grid()
@@ -1006,21 +1053,21 @@ if __name__ == "__main__":
     #chd = ml.get_package("CHD")
     #ax = map.plot_bc(package=chd)
     #plt.show()
-    """
-    cbc = os.path.join(ws, "model.cbc")
-    hds = os.path.join(ws, "model.hds")
+
+    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
     print(cbc.get_unique_record_names())
 
-    fja = cbc.get_data(text="FLOW-JA-FACE")
+    fja = cbc.get_data(text="FLOW JA FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)
 
-    ax = map.plot_discharge(fja=fja, head=head, dis=dis)
+
+    ax = cr.plot_discharge(fja=fja, head=head, dis=dis)
     plt.show()
     print('break')
-    """

@@ -610,6 +610,7 @@ class PlotCrossSection(object):
 
         self.model = self.__cls.model
         self.dis = self.__cls.dis
+        self.mg = self.__cls.mg
         self.sr = self.__cls.sr
         self.ax = self.__cls.ax
         self.driection = self.__cls.direction
@@ -824,8 +825,8 @@ class PlotCrossSection(object):
         return self.__cls.plot_bc(ftype=ftype, package=package, kper=kper,
                                   color=color, head=head, **kwargs)
 
-    def plot_discharge(self, frf, fff, flf=None, head=None,
-                       kstep=1, hstep=1, normalize=False,
+    def plot_discharge(self, frf=None, fff=None, flf=None, fja=None,
+                       head=None, kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
         Use quiver to plot vectors.
@@ -858,9 +859,15 @@ class PlotCrossSection(object):
             Vectors
 
         """
-        return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf,
-                                         head=head, kstep=kstep, hstep=hstep,
-                                         normalize=normalize, **kwargs)
+        # todo: figure out the preparation for plotting discharge.... if user should do
+        # todo: frf, fff, flf or flopy should auto-process these data!
+        if self.mg.grid_type == "vertex":
+            return self.__cls.plot_discharge(fja=fja, head=head, kstep=kstep,
+                                             hstep=hstep, normalize=normalize, **kwargs)
+        else:
+            return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf, head=head,
+                                             kstep=kstep, hstep=hstep, normalize=normalize,
+                                             **kwargs)
 
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """
