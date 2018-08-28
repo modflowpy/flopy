@@ -538,10 +538,26 @@ class VertexCrossSection(object):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        quadmesh : matplotlib.collections.PatchCollection
 
         """
-        raise NotImplementedError()
+        if ibound is None:
+            if self.mg.idomain is not None:
+                ibound = self.mg.idomain
+
+            else:
+                raise AssertionError("idomain must be provided to use plot_inactive")
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        patches = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
+        return patches
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     color_vpt='red', head=None, **kwargs):
@@ -569,8 +585,29 @@ class VertexCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
+        if ibound is None:
+            if self.mg.idomain is not None:
+                ibound = self.mg.idomain
 
-        raise NotImplementedError()
+            else:
+                raise AssertionError("idomain must be supplied to use plot_ibound")
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        idx2 = (ibound < 0)
+        plotarray[idx1] = 1
+        plotarray[idx2] = 2
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['none', color_noflow,
+                                                 color_vpt])
+        bounds = [0, 1, 2, 3]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+        # mask active cells
+        patches = self.plot_array(plotarray, masked_values=[0], head=head,
+                                  cmap=cmap, norm=norm, **kwargs)
+        return patches
+
 
     def plot_grid(self, **kwargs):
         """
@@ -926,8 +963,19 @@ if __name__ == "__main__":
     cr = PlotCrossSection(modelgrid=t, dis=dis,
                           line={"line":[(0,2.5), (5, 2.5), (10, 4.5)]})
 
-    ax = cr.plot_bc(package=chd)
+    # ax = cr.plot_bc(package=chd)
+    # plt.show()
+
+    idx = [np.random.randint(0, 399) for _ in range(100)]
+    idx2 = [np.random.randint(0, 399) for _ in range(200)]
+    idomain = np.zeros((400,), dtype=int)
+
+    idomain[idx] = 1
+    idomain[idx2] = -1
+
+    ax = cr.plot_ibound(ibound=idomain)
     plt.show()
+
 
     # ax = cr.plot_grid()
     # plt.show()
