@@ -322,7 +322,10 @@ class ModflowLak(Package):
         self.sscncr = sscncr
         self.surfdep = surfdep
         if isinstance(stages, float):
-            stages = np.array(self.nlakes, dtype=np.float) * stages
+            if self.nlakes == 1:
+                stages = np.array([self.nlakes], dtype=np.float) * stages
+            else: 
+                stages = np.ones(self.nlakes, dtype=float) * stages
         elif isinstance(stages, list):
             stages = np.array(stages)
         if stages.shape[0] != nlakes:
