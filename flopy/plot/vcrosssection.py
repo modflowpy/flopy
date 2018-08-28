@@ -481,7 +481,7 @@ class VertexCrossSection(object):
                     in sorted(self.projpts.items())]
 
         if isinstance(head, np.ndarray):
-            zcenters = self.set_zcentergrid(head)
+            zcenters = self.set_zcentergrid(np.ravel(head))
         else:
             zcenters = [np.mean(np.array(v).T[1]) for i, v
                         in sorted(self.projpts.items())]
@@ -608,7 +608,6 @@ class VertexCrossSection(object):
                                   cmap=cmap, norm=norm, **kwargs)
         return patches
 
-
     def plot_grid(self, **kwargs):
         """
         Plot the grid lines.
@@ -704,7 +703,7 @@ class VertexCrossSection(object):
                                   head=head, cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def plot_discharge(self, fja=None, head=None,
+    def plot_discharge(self, fja=None, head=None, dis=None,
                        kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
@@ -758,8 +757,8 @@ class VertexCrossSection(object):
                           "aribtrary cross sections"
                 raise AssertionError(err_msg)
 
-        top = dis.top.array
-        botm = dis.botm.array
+        top = self.mg.top
+        botm = self.mg.botm
 
         fja = np.array(fja)
         nlay = self.mg.nlay
@@ -781,11 +780,73 @@ class VertexCrossSection(object):
         if len(fja.shape) == 4:
             fja = fja[0][0][0]
 
+
+
+        if isinstance(head, np.ndarray):
+            zcenters = self.set_zcentergrid(np.ravel(head))
+        else:
+            zcenters = [np.mean(np.array(v).T[1]) for i, v
+                        in sorted(self.projpts.items())]
+
         laytyp = np.zeros((nlay,))
         if self.model is not None:
             if self.model.sto is not None:
                 laytyp = self.model.sto.iconvert.array
 
+        sat_thk = plotutil.PlotUtilities. \
+            saturated_thickness(head, top,
+                                botm, laytyp,
+                                mask_values=[hnoflo, hdry])
+
+        frf, fff, flf = plotutil.UnstructuredPlotUtilities. \
+            vectorize_flow(fja, model_grid=self.mg,
+                           idomain=self.mg.idomain)
+
+        qx, qy, qz = plotutil.UnstructuredPlotUtilities. \
+            specific_discharge(frf, fff, flf,
+                               delr, delc, sat_thk)
+
+        # determine the projection direction
+        if self.direction == "x":
+            qx = np.ravel(qx)
+            u = np.array([qx[cell] for cell
+                          in sorted(self.projpts)])
+            x = [np.mean(np.array(v).T[0]) for i, v
+                 in sorted(self.projpts.items())]
+
+        else:
+            qy = np.ravel(qy)
+            u = np.array([qy[cell] for cell
+                          in sorted(self.projpts)])
+            x = [np.mean(np.array(v).T[1]) for i, v
+                 in sorted(self.projpts.items())]
+
+        qz = np.ravel(qz)
+        v = np.array([qz[cell] for cell
+                      in sorted(self.projpts)])
+        y = np.ravel(zcenters)
+
+        # todo: implement the hstep, kstep function,
+        # todo: maybe we can do it on sorted projpts keys, before all this stuff?
+        x = x[::hstep]
+        y = y[::hstep]
+        u = u[::hstep]
+        v = v[::hstep]
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.rotation)
+        quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
+        return quiver
 
     def get_patch_collection(self, projpts, plotarray, **kwargs):
         """
@@ -935,7 +996,7 @@ class VertexCrossSection(object):
         """
         verts = self.set_zpts(vs)
         zcenters =[np.mean(np.array(v).T[1]) for i, v
-                   in sorted(verts)]
+                   in sorted(verts.items())]
         return zcenters
 
     def get_extent(self):
@@ -1054,20 +1115,25 @@ if __name__ == "__main__":
     #ax = map.plot_bc(package=chd)
     #plt.show()
 
-    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
+    # cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    # hds = os.path.join(ws, "expected_output/", "model_unch.hds")
+    # fja = cbc.get_data(text="FLOW JA FACE")
+
+    cbc = os.path.join(ws, "model.cbc")
+    hds = os.path.join(ws, "model.hds")
+
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
     print(cbc.get_unique_record_names())
 
-    fja = cbc.get_data(text="FLOW JA FACE")
+    fja = cbc.get_data(text="FLOW-JA-FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)
 
 
-    ax = cr.plot_discharge(fja=fja, head=head, dis=dis)
+    ax = cr.plot_discharge(fja=fja, head=head)
     plt.show()
     print('break')
