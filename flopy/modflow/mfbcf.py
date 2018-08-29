@@ -328,9 +328,8 @@ class ModflowBcf(Package):
         # TRPY array
         if model.verbose:
             print('   loading TRPY...')
-        trpy = Util2d.load(f, model, (1, nlay), np.float32, 'trpy',
+        trpy = Util2d.load(f, model, (nlay,), np.float32, 'trpy',
                            ext_unit_dict)
-        trpy = trpy.array.reshape((nlay))
 
         # property data for each layer based on options
         transient = not dis.steady.all()
