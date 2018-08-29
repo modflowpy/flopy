@@ -582,7 +582,7 @@ class ModelCrossSection(object):
 
         # Plot the list locations
         plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
-        idx = [mflist['k'], mflist['i'], mflist['j']]
+        idx = (mflist['k'], mflist['i'], mflist['j'])
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
@@ -664,6 +664,9 @@ class ModelCrossSection(object):
         if head is None or laytyp is None:
             head = np.zeros(botm.shape, np.float32)
             laytyp = np.zeros((nlay), dtype=np.int)
+            head[0, :, :] = top
+            if nlay > 1:
+                head[1:, :, :] = botm[:-1, :, :]
         sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
                                                [hnoflo, hdry])
 
@@ -747,9 +750,9 @@ class ModelCrossSection(object):
 
         # upts and vpts has a value for the left and right
         # sides of a cell. Sample every other value for quiver
-        upts = upts[0, ::2]
-        vpts = vpts[0, ::2]
-        ibpts = ibpts[0, ::2]
+        upts = upts[:, ::2]
+        vpts = vpts[:, ::2]
+        ibpts = ibpts[:, ::2]
 
         # mask discharge in inactive cells
         idx = (ibpts == 0)

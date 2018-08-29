@@ -110,16 +110,16 @@ class ModpathSim(Package):
         self.trace_file = '{}.{}'.format(model.name, 'trace_file.txt')
         self.trace_id = trace_id
         self.stop_zone = stop_zone
-        self.zone = Util3d(model, (nlay,nrow,ncol), np.int, \
+        self.zone = Util3d(model, (nlay,nrow,ncol), np.int32, \
                     zone, name='zone', locat=self.unit_number[0]) 
         self.retard_fac = retard_fac
         self.retard_fcCB = retard_fcCB
 
-        # self.mask_nlay = Util3d(model,(nlay,nrow,ncol),np.int,\
+        # self.mask_nlay = Util3d(model,(nlay,nrow,ncol),np.int32,\
         # mask_nlay,name='mask_nlay',locat=self.unit_number[0])
-        # self.mask_1lay = Util3d(model,(nlay,nrow,ncol),np.int,\
+        # self.mask_1lay = Util3d(model,(nlay,nrow,ncol),np.int32,\
         # mask_1lay,name='mask_1lay',locat=self.unit_number[0])
-        # self.stop_zone = Util3d(model,(nlay,nrow,ncol),np.int,\
+        # self.stop_zone = Util3d(model,(nlay,nrow,ncol),np.int32,\
         # stop_zone,name='stop_zone',locat=self.unit_number[0])
         # self.retard_fac = Util3d(model,(nlay,nrow,ncol),np.float32,\
         # retard_fac,name='retard_fac',locat=self.unit_number[0])
@@ -394,17 +394,21 @@ class StartingLocationsFile(Package):
         if len(data) == 0:
             print('No data to write!')
             return
+        data = data.copy()
+        data['k0'] += 1
+        data['i0'] += 1
+        data['j0'] += 1
         with open(self.fn_path, 'w') as output:
             output.write('{}\n'.format(self.heading))
             output.write('{:d}\n'.format(self.input_style))
-            groups = np.unique(self.data.groupname)
+            groups = np.unique(data.groupname)
             ngroups = len(groups)
             output.write('{:d}\n'.format(ngroups))
             for g in groups:
-                npt = len(self.data[self.data.groupname == g])
+                npt = len(data[data.groupname == g])
                 output.write('{}\n{:d}\n'.format(g.decode(), npt))
             txt =''
-            for p in self.data:
+            for p in data:
                 txt += '{:d} {:d} {:d} {:d} {:d} {:d}'.format(*list(p)[:6])
                 fmtstr = ' {0} {0} {0} {0} '.format(float_format)
                 txt += fmtstr.format(*list(p)[6:10])

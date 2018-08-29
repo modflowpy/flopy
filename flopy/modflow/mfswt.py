@@ -251,13 +251,15 @@ class ModflowSwt(Package):
         else:
             ipakcb = 0
 
-        item16_extensions = ["subsidence.hds", "total_comp.hds",
-                             "inter_comp.hds", "vert_disp.hds",
-                             "precon_stress.hds", "precon_stress_delta.hds",
-                             "geostatic_stress.hds",
-                             "geostatic_stress_delta.hds",
-                             "eff_stress.hds", "eff_stress_delta.hds",
-                             "void_ratio.hds", "thick.hds", "lay_center.hds"]
+        item16_extensions = ["swt_subsidence.hds", "swt_total_comp.hds",
+                             "swt_inter_comp.hds", "swt_vert_disp.hds",
+                             "swt_precon_stress.hds",
+                             "swt_precon_stress_delta.hds",
+                             "swt_geostatic_stress.hds",
+                             "swt_geostatic_stress_delta.hds",
+                             "swt_eff_stress.hds", "swt_eff_stress_delta.hds",
+                             "swt_void_ratio.hds", "swt_thick.hds",
+                             "swt_lay_center.hds"]
         item16_units = [2052 + i for i in range(len(item16_extensions))]
 
         if iswtoc > 0:
@@ -301,7 +303,7 @@ class ModflowSwt(Package):
         self.istpcs = istpcs
         self.icrcc = icrcc
 
-        self.lnwt = Util2d(model, (nsystm,), np.int, lnwt, name='lnwt')
+        self.lnwt = Util2d(model, (nsystm,), np.int32, lnwt, name='lnwt')
 
         self.izcfl = izcfl
         self.izcfm = izcfm
@@ -362,7 +364,7 @@ class ModflowSwt(Package):
         # output data
         if iswtoc > 0:
             if ids16 is None:
-                self.ids16 = np.zeros((26), dtype=np.int)
+                self.ids16 = np.zeros((26), dtype=np.int32)
                 ui = 0
                 for i in range(1, 26, 2):
                     self.ids16[i] = item16_units[ui]
@@ -374,7 +376,7 @@ class ModflowSwt(Package):
                 self.ids16 = ids16
 
             if ids17 is None:
-                ids17 = np.ones((30), dtype=np.int)
+                ids17 = np.ones((30), dtype=np.int32)
                 ids17[0] = 0
                 ids17[2] = 0
                 ids17[1] = 9999
@@ -532,7 +534,7 @@ class ModflowSwt(Package):
         if nsystm > 0:
             if model.verbose:
                 sys.stdout.write('  loading swt dataset 2\n')
-            lnwt = np.empty((nsystm), dtype=np.int)
+            lnwt = np.empty((nsystm), dtype=np.int32)
             lnwt = read1d(f, lnwt) - 1
 
         # read dataset 3
@@ -672,7 +674,7 @@ class ModflowSwt(Package):
             if model.verbose:
                 sys.stdout.write(
                     '  loading swt dataset 15 for layer {}\n'.format(kk))
-            ids16 = np.empty(26, dtype=np.int)
+            ids16 = np.empty(26, dtype=np.int32)
             ids16 = read1d(f, ids16)
             #for k in range(1, 26, 2):
             #    model.add_pop_key_list(ids16[k])
@@ -684,7 +686,7 @@ class ModflowSwt(Package):
                     sys.stdout.write(
                         '  loading swt dataset 17 for iswtoc {}\n'.format(
                             k + 1))
-                t = np.empty(30, dtype=np.int)
+                t = np.empty(30, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1
                 ids17[k] = t

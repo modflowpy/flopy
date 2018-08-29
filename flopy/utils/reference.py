@@ -146,6 +146,7 @@ class SpatialReference(object):
         if epsg is not None:
             self._proj4_str = getproj4(self._epsg)
         self.prj = prj
+        self._wkt = None
         self.crs = crs(prj=prj, epsg=epsg)
 
         self.supported_units = ["feet", "meters"]
@@ -264,8 +265,8 @@ class SpatialReference(object):
             if "units=m" in proj_str:
                 units = "meters"
             elif "units=ft" in proj_str or \
-                            "units=us-ft" in proj_str or \
-                            "to_meters:0.3048" in proj_str:
+                    "units=us-ft" in proj_str or \
+                    "to_meters:0.3048" in proj_str:
                 units = "feet"
             return units
         except:
@@ -739,9 +740,9 @@ class SpatialReference(object):
         theta = theta * np.pi / 180.
 
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-                                                         (y - yorigin)
+               (y - yorigin)
         yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-                                                         (y - yorigin)
+               (y - yorigin)
         return xrot, yrot
 
     def transform(self, x, y, inverse=False):
@@ -891,9 +892,10 @@ class SpatialReference(object):
         f = open(filename, 'w')
         f.write(
             "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0]))
-        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(self.xul * self.length_multiplier,
-                                                         self.yul * self.length_multiplier,
-                                                         self.rotation))
+        f.write("{0:15.6E} {1:15.6E} {2:15.6E}\n".format(
+            self.xul * self.length_multiplier,
+            self.yul * self.length_multiplier,
+            self.rotation))
 
         for r in self.delr:
             f.write("{0:15.6E} ".format(r))
@@ -1079,21 +1081,35 @@ class SpatialReference(object):
                     Affine.rotation(self.rotation) * \
                     Affine.scale(dxdy, -dxdy)
 
+            # third dimension is the number of bands
             a = a.copy()
+            if len(a.shape) == 2:
+                a = np.reshape(a, (1, a.shape[0], a.shape[1]))
             if a.dtype.name == 'int64':
                 a = a.astype('int32')
-            meta = {'count': 1,
-                    'width': a.shape[1],
-                    'height': a.shape[0],
+                dtype = rasterio.int32
+            elif a.dtype.name == 'int32':
+                dtype = rasterio.int32
+            elif a.dtype.name == 'float64':
+                dtype = rasterio.float64
+            elif a.dtype.name == 'float32':
+                dtype = rasterio.float32
+            else:
+                msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
+                raise TypeError(msg)
+
+            meta = {'count': a.shape[0],
+                    'width': a.shape[2],
+                    'height': a.shape[1],
                     'nodata': nodata,
-                    'dtype': a.dtype,
+                    'dtype': dtype,
                     'driver': 'GTiff',
                     'crs': self.proj4_str,
                     'transform': trans
                     }
             meta.update(kwargs)
             with rasterio.open(filename, 'w', **meta) as dst:
-                dst.write(a, 1)
+                dst.write(a)
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
@@ -1107,7 +1123,7 @@ class SpatialReference(object):
                                   epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
-                        fieldname='level',
+                        fieldname='level', epsg=None, prj=None,
                         **kwargs):
         """Convert matplotlib contour plot object to shapefile.
 
@@ -1117,6 +1133,10 @@ class SpatialReference(object):
             path of output shapefile
         contours : matplotlib.contour.QuadContourSet or list of them
             (object returned by matplotlib.pyplot.contour)
+        epsg : int
+            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+        prj : str
+            Existing projection file to be used with new shapefile.
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
         Returns
@@ -1128,6 +1148,11 @@ class SpatialReference(object):
 
         if not isinstance(contours, list):
             contours = [contours]
+
+        if epsg is None:
+            epsg = self._epsg
+        if prj is None:
+            prj = self.proj4_str
 
         geoms = []
         level = []
@@ -1142,13 +1167,15 @@ class SpatialReference(object):
         ra = np.array(level,
                       dtype=[(fieldname, float)]).view(np.recarray)
 
-        recarray2shp(ra, geoms, filename, **kwargs)
+        recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
 
     def export_array_contours(self, filename, a,
                               fieldname='level',
                               interval=None,
                               levels=None,
                               maxlevels=1000,
+                              epsg=None,
+                              prj=None,
                               **kwargs):
         """Contour an array using matplotlib; write shapefile of contours.
 
@@ -1158,10 +1185,18 @@ class SpatialReference(object):
             Path of output file with '.shp' extention.
         a : 2D numpy array
             Array to contour
-
+        epsg : int
+            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+        prj : str
+            Existing projection file to be used with new shapefile.
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
         """
         import matplotlib.pyplot as plt
+
+        if epsg is None:
+            epsg = self._epsg
+        if prj is None:
+            prj = self.proj4_str
 
         if interval is not None:
             min = np.nanmin(a)
@@ -1175,7 +1210,7 @@ class SpatialReference(object):
             levels = np.arange(min, max, interval)
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
-        self.export_contours(filename, ctr, fieldname, **kwargs)
+        self.export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
         plt.close()
 
     def contour_array(self, ax, a, **kwargs):
@@ -1195,8 +1230,38 @@ class SpatialReference(object):
         contour_set : ContourSet
 
         """
-        contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
-                                 a, **kwargs)
+        try:
+            import matplotlib.tri as tri
+        except:
+            tri = None
+        plot_triplot = False
+        if 'plot_triplot' in kwargs:
+            plot_triplot = kwargs.pop('plot_triplot')
+        if 'extent' in kwargs and tri is not None:
+            extent = kwargs.pop('extent')
+            idx = (self.xcentergrid >= extent[0]) & (
+                    self.xcentergrid <= extent[1]) & (
+                          self.ycentergrid >= extent[2]) & (
+                          self.ycentergrid <= extent[3])
+            a = a[idx].flatten()
+            xc = self.xcentergrid[idx].flatten()
+            yc = self.ycentergrid[idx].flatten()
+            triang = tri.Triangulation(xc, yc)
+            try:
+                amask = a.mask
+                mask = [False for i in range(triang.triangles.shape[0])]
+                for ipos, (n0, n1, n2) in enumerate(triang.triangles):
+                    if amask[n0] or amask[n1] or amask[n2]:
+                        mask[ipos] = True
+                triang.set_mask(mask)
+            except:
+                mask = None
+            contour_set = ax.tricontour(triang, a, **kwargs)
+            if plot_triplot:
+                ax.triplot(triang, color='black', marker='o', lw=0.75)
+        else:
+            contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
+                                     a, **kwargs)
         return contour_set
 
     @property
@@ -1816,29 +1881,31 @@ class crs(object):
     @property
     def crs(self):
         """Dict mapping crs attibutes to proj4 parameters"""
-        # projection
-        if 'mercator' in self.projcs.lower():
-            if 'transvers' in self.projcs.lower() or \
-                            'tm' in self.projcs.lower():
-                proj = 'tmerc'
-            else:
-                proj = 'merc'
-        elif 'utm' in self.projcs.lower() and \
-                        'zone' in self.projcs.lower():
-            proj = 'utm'
-        elif 'stateplane' in self.projcs.lower():
-            proj = 'lcc'
-        elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
-            proj = 'lcc'
-        elif 'albers' in self.projcs.lower():
-            proj = 'aea'
-        else:
-            proj = None
+        proj = None
+        if self.projcs is not None:
+            # projection
+            if 'mercator' in self.projcs.lower():
+                if 'transvers' in self.projcs.lower() or \
+                        'tm' in self.projcs.lower():
+                    proj = 'tmerc'
+                else:
+                    proj = 'merc'
+            elif 'utm' in self.projcs.lower() and \
+                    'zone' in self.projcs.lower():
+                proj = 'utm'
+            elif 'stateplane' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'albers' in self.projcs.lower():
+                proj = 'aea'
+        elif self.projcs is None and self.geogcs is not None:
+            proj = 'longlat'
 
         # datum
         if 'NAD' in self.datum.lower() or \
-                                'north' in self.datum.lower() and \
-                                'america' in self.datum.lower():
+                'north' in self.datum.lower() and \
+                'america' in self.datum.lower():
             datum = 'nad'
             if '83' in self.datum.lower():
                 datum += '83'
@@ -1876,8 +1943,9 @@ class crs(object):
     @property
     def grid_mapping_attribs(self):
         """Map parameters for CF Grid Mappings
-        http://cfconventions.org/cf-conventions/v1.6.0
-        /cf-conventions.html#appendix-grid-mappings"""
+        http://http://cfconventions.org/cf-conventions/cf-conventions.html,
+        Appendix F: Grid Mappings
+        """
         if self.wktstr is not None:
             sp = [p for p in [self.standard_parallel_1,
                               self.standard_parallel_2]
@@ -1887,6 +1955,7 @@ class crs(object):
             names = {'aea': 'albers_conical_equal_area',
                      'aeqd': 'azimuthal_equidistant',
                      'laea': 'lambert_azimuthal_equal_area',
+                     'longlat': 'latitude_longitude',
                      'lcc': 'lambert_conformal_conic',
                      'merc': 'mercator',
                      'tmerc': 'transverse_mercator',
@@ -1911,7 +1980,7 @@ class crs(object):
 
         self.projcs = self._gettxt('PROJCS["', '"')
         self.utm_zone = None
-        if 'utm' in self.projcs.lower():
+        if self.projcs is not None and 'utm' in self.projcs.lower():
             self.utm_zone = self.projcs[-3:].lower().strip('n').strip('s')
         self.geogcs = self._gettxt('GEOGCS["', '"')
         self.datum = self._gettxt('DATUM["', '"')
@@ -2021,13 +2090,25 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     """
     from flopy.utils.flopy_io import get_url_text
-    url = "http://spatialreference.org/ref/epsg/{0}/{1}/".format(epsg, text)
-    result = get_url_text(url,
-                          error_msg='No internet connection or epsg code {} '
-                                    'not found on spatialreference.org.'.format(
-                              epsg))
+
+    epsg_categories = ['epsg', 'esri']
+    for cat in epsg_categories:
+        url = "http://spatialreference.org/ref/{2}/{0}/{1}/".format(epsg,
+                                                                    text,
+                                                                    cat)
+        result = get_url_text(url)
+        if result is not None:
+            break
     if result is not None:
         return result.replace("\n", "")
+    elif result is None and text != 'epsg':
+        for cat in epsg_categories:
+            error_msg = 'No internet connection or epsg code {0} ' \
+                        'not found at http://spatialreference.org/ref/{2}/{0}/{1}'.format(
+                epsg,
+                text,
+                cat)
+            print(error_msg)
     elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
         return '+init=epsg:{}'.format(epsg)
 

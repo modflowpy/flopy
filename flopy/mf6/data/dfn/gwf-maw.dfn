@@ -389,7 +389,7 @@ tagged false
 in_record true
 reader urword
 longname cell identifier
-description REPLACE cellid {} One or more screened intervals can be connected to the same CELLID if CONDEQN for a well is MEAN. The program will terminate with an error if MAW wells using SPECIFIED, THEIM, SKIN, or CUMULATIVE conductance equations have more than one connection to the same CELLID.
+description is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell. One or more screened intervals can be connected to the same CELLID if CONDEQN for a well is MEAN. The program will terminate with an error if MAW wells using SPECIFIED, THEIM, SKIN, or CUMULATIVE conductance equations have more than one connection to the same CELLID.
 
 block connectiondata
 name scrn_top

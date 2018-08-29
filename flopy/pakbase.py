@@ -164,17 +164,27 @@ class Package(object):
 
     @staticmethod
     def add_to_dtype(dtype, field_names, field_types):
+        """
+        Add one or more fields to a structured array data type
+
+        Parameters
+        ----------
+        dtype : numpy.dtype
+            Input structured array datatype to add to.
+        field_names : str or list
+            One or more field names.
+        field_types : numpy.dtype or list
+            One or more data types. If one data type is supplied, it is
+            repeated for each field name.
+        """
         if not isinstance(field_names, list):
             field_names = [field_names]
         if not isinstance(field_types, list):
             field_types = [field_types] * len(field_names)
-        newdtypes = [dtype]
+        newdtypes = dtype.descr
         for field_name, field_type in zip(field_names, field_types):
-            tempdtype = np.dtype([(field_name, field_type)])
-            newdtypes.append(tempdtype)
-        newdtype = sum((dtype.descr for dtype in newdtypes), [])
-        newdtype = np.dtype(newdtype)
-        return newdtype
+            newdtypes.append((str(field_name), field_type))
+        return np.dtype(newdtypes)
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -321,8 +331,8 @@ class Package(object):
                                  chk.property_threshold_values['vkcb'],
                                  'quasi-3D confining bed Kv')
 
-            if not np.all(
-                    self.parent.dis.steady):  # only check storage if model is transient
+            # only check storage if model is transient
+            if not np.all(self.parent.dis.steady.array):
 
                 # do the same for storage if the model is transient
                 sarrays = {'ss': self.ss.array, 'sy': self.sy.array}

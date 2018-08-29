@@ -1,19 +1,19 @@
 import os
-import flopy
-import platform
-from flopy.mf6.mfsimulation import MFSimulation
-from flopy.mf6.data.mfdatautil import ArrayUtil
-import flopy.utils.binaryfile as bf
+
 import numpy as np
+
+import flopy
+import flopy.utils.binaryfile as bf
+from flopy.mf6.data.mfdatautil import ArrayUtil
+from flopy.mf6.modflow.mfsimulation import MFSimulation
+from flopy.mf6.mfbase import VerbosityLevel
+
 try:
     import pymake
 except:
     print('could not import pymake')
 
 exe_name = 'mf6'
-#exe_name = 'C:\\WrdApp\\mf6.0.1\\bin\\mf6'
-if platform.system() == 'Windows':
-    exe_name += '.exe'
 v = flopy.which(exe_name)
 
 run = True
@@ -48,7 +48,8 @@ def test001a_tharmonic():
     array_util = ArrayUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verbosity_level=VerbosityLevel.quiet)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -171,7 +172,7 @@ def test003_gwfs_disv():
     model = sim.get_model(model_name)
     chd_head_left = model.get_package('CHD_LEFT')
     chd_left_period = chd_head_left.stress_period_data.array
-    chd_left_period[4][1] = 15.0
+    chd_left_period[0][4][1] = 15.0
 
     chd_head_right = model.get_package('CHD_RIGHT')
     chd_right_period = chd_head_right.stress_period_data
@@ -205,6 +206,7 @@ def test003_gwfs_disv():
 
     return
 
+
 def test005_advgw_tidal():
     # init paths
     test_ex_name = 'test005_advgw_tidal'
@@ -223,7 +225,8 @@ def test005_advgw_tidal():
     expected_head_file_b = os.path.join(expected_output_folder, 'AdvGW_tidal_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verbosity_level=VerbosityLevel.verbose)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -271,8 +274,6 @@ def test005_advgw_tidal():
     """
 
 def test006_gwf3():
-    from flopy.mf6.utils.binaryfile_utils import _reshape_binary_data
-
     # init paths
     test_ex_name = 'test006_gwf3'
     model_name = 'gwf_1'
@@ -507,8 +508,8 @@ def test006_2models_mvr():
     parent_model = sim.get_model(model_names[0])
     maw_pkg = parent_model.get_package('maw')
     period_data = maw_pkg.perioddata.get_data()
-    period_data[0][2] = -1.0
-    maw_pkg.perioddata.set_data(period_data, 0)
+    period_data[0][0][2] = -1.0
+    maw_pkg.perioddata.set_data(period_data[0], 0)
     well_rec_data = maw_pkg.packagedata.get_data()
     assert(well_rec_data[0][0] == 0)
 
@@ -642,8 +643,8 @@ def test045_lake2tr():
     lak = model.get_package('lak')
     lak_period = lak.lakeperioddata
     lak_period_data = lak_period.get_data()
-    lak_period_data[2][2] = '0.05'
-    lak_period.set_data(lak_period_data, 0)
+    lak_period_data[0][2][2] = '0.05'
+    lak_period.set_data(lak_period_data[0], 0)
 
     # write simulation again
     sim.simulation_data.mfpath.set_sim_path(save_folder)
@@ -697,19 +698,19 @@ def test036_twrihfb():
     # change some settings
     hydchr = sim.simulation_data.mfdata[(model_name, 'hfb', 'period', 'stress_period_data')]
     hydchr_data = hydchr.get_data()
-    hydchr_data[2][2] = 0.000002
-    hydchr_data[3][2] = 0.000003
-    hydchr_data[4][2] = 0.0000004
-    hydchr.set_data(hydchr_data, 0)
+    hydchr_data[0][2][2] = 0.000002
+    hydchr_data[0][3][2] = 0.000003
+    hydchr_data[0][4][2] = 0.0000004
+    hydchr.set_data(hydchr_data[0], 0)
     cond = sim.simulation_data.mfdata[(model_name, 'drn', 'period', 'stress_period_data')]
     cond_data = cond.get_data()
-    for index in range(0, len(cond_data)):
-        cond_data[index][2] = 2.1
-    cond.set_data(cond_data, 0)
+    for index in range(0, len(cond_data[0])):
+        cond_data[0][index][2] = 2.1
+    cond.set_data(cond_data[0], 0)
 
     rch = sim.simulation_data.mfdata[(model_name, 'rcha', 'period', 'recharge')]
     rch_data = rch.get_data()
-    assert(rch_data[5][1] == 0.00000003)
+    assert(rch_data[0][5][1] == 0.00000003)
 
     # write simulation again
     sim.simulation_data.mfpath.set_sim_path(save_folder)
@@ -784,9 +785,9 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
+    test036_twrihfb()
     test027_timeseriestest()
     test006_2models_mvr()
-    test036_twrihfb()
     test045_lake2tr()
     test001e_uzf_3lay()
     test045_lake1ss_table()

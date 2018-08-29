@@ -1,14 +1,10 @@
-import numpy as np
 import os
 import shutil
-import platform
 
 import flopy
-
-from flopy.mf6.mfsimulation import MFSimulation
-from flopy.mf6.mfmodel import MFModel
-from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis
 from flopy.mf6.modflow import mfgwfriv, mfgwfsto, mfgwfoc, mfgwfwel, mfgwfdrn
+from flopy.mf6.modflow import mfims, mftdis, mfgwfic, mfgwfnpf, mfgwfdis, mfgwf
+from flopy.mf6.modflow.mfsimulation import MFSimulation
 
 out_dir = os.path.join('temp', 't502')
 if os.path.exists(out_dir):
@@ -22,23 +18,19 @@ def test_create_and_run_model():
     sim_name = 'testsim'
     model_name = 'testmodel'
     exe_name = 'mf6'
-    if platform.system() == 'Windows':
-        exe_name += '.exe'
 
     # set up simulation
     tdis_name = '{}.tdis'.format(sim_name)
     sim = MFSimulation(sim_name=sim_name,
                        version='mf6', exe_name=exe_name,
-                       sim_ws=out_dir,
-                       sim_tdis_file=tdis_name)
+                       sim_ws=out_dir)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis = mftdis.ModflowTdis(sim, time_units='DAYS', nper=2,
                               perioddata=tdis_rc)
 
     # create model instance
-    model = MFModel(sim, model_type='gwf6',
-                    modelname=model_name,
-                    model_nam_file='{}.nam'.format(model_name))
+    model = mfgwf.ModflowGwf(sim, modelname=model_name,
+                             model_nam_file='{}.nam'.format(model_name))
 
     # create solution and add the model
     ims_package = mfims.ModflowIms(sim, print_option='ALL',

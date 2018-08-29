@@ -450,13 +450,13 @@ class Mt3dRct(Package):
         if model.verbose:
             print('   loading ISOTHM, IREACT, IRCTOP, IGETSC...')
         isothm = int(line[0:10])
-        ireact = int(line[11:20])
+        ireact = int(line[10:20])
         try:
-            irctop = int(line[21:30])
+            irctop = int(line[20:30])
         except:
             irctop = 0
         try:
-            igetsc = int(line[31:40])
+            igetsc = int(line[30:40])
         except:
             igetsc = 0
         if model.verbose:
@@ -602,7 +602,7 @@ class Mt3dRct(Package):
         rct = Mt3dRct(model, isothm=isothm, ireact=ireact, igetsc=igetsc,
                       rhob=rhob, prsity2=prsity2, srconc=srconc, sp1=sp1,
                       sp2=sp2, rc1=rc1, rc2=rc2, unitnumber=unitnumber,
-                      filenames=filenames)
+                      filenames=filenames, **kwargs)
         return rct
 
     @staticmethod

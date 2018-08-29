@@ -29,10 +29,10 @@ from .formattedfile import FormattedHeadFile
 from .modpathfile import PathlineFile, EndpointFile
 from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
-from .observationfile import HydmodObs, SwrObs
+from .observationfile import HydmodObs, SwrObs, Mf6Obs
 from .reference import SpatialReference, crs, TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
-    SwrListBudget
+    SwrListBudget, Mf6ListBudget
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
@@ -41,3 +41,4 @@ from .mfgrdfile import MfGrdFile
 from .postprocessing import get_transmissivities
 from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
+from .mtlistfile import MtListBudget

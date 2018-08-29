@@ -114,7 +114,7 @@ def test_get_destination_data():
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
     starting_locs = ra_slice(well_epd, ['k0', 'i0', 'j0'])
-    pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(),
+    pathline_locs = np.array(np.array(well_pthld)[['k', 'i', 'j']].tolist(),
                              dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
 

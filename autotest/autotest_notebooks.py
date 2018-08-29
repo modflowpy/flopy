@@ -2,8 +2,10 @@
 import os
 import platform
 import shutil
+import subprocess
 
 nbdir = os.path.join('..', 'examples', 'Notebooks')
+faqdir = os.path.join('..', 'examples', 'FAQ')
 
 # -- make working directories
 ddir = os.path.join(nbdir, 'data')
@@ -22,22 +24,53 @@ if os.path.isdir(testdir):
 os.mkdir(testdir)
 
 
-def get_Notebooks():
-    return [f for f in os.listdir(nbdir) if f.endswith('.ipynb')]
+def get_Notebooks(dpth):
+    return [f for f in os.listdir(dpth) if f.endswith('.ipynb')]
 
 
-def run_notebook(fn):
+def get_jupyter_kernel():
+    try:
+        # determine available jupyter kernels
+        jklcmd = ('jupyter', 'kernelspec', 'list')
+        b = subprocess.Popen(jklcmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).communicate()[0]
+        if isinstance(b, bytes):
+            b = b.decode('utf-8')
+        print(b)
+        # determine current buildstat branch
+        for line in b.splitlines():
+            if 'python' in line:
+                kernel = line.split()[0]
+    except:
+        kernel = None
+
+    return kernel
+    
+
+def run_notebook(dpth, fn):
     # only run notebook autotests on released versions of python 3.6
     pvstr = platform.python_version()
     if '3.6.' not in pvstr and '+' not in pvstr:
         print('skipping...{} on python {}'.format(fn, pvstr))
         return
-
+    
+    # determine jupyter kernel
+    kernel = get_jupyter_kernel()
+    print('available jupyter kernel {}'.format(kernel))
+    
     # run autotest on each notebook
-    pth = os.path.join(nbdir, fn)
+    pth = os.path.join(dpth, fn)
+#    cmd = 'jupyter ' + 'nbconvert ' + \
+#          '--ExecutePreprocessor.kernel_name={} '.format(kernel) + \
+#          '--ExecutePreprocessor.timeout=600 ' + \
+#          '--to ' + 'notebook ' + \
+#          '--execute ' + '{} '.format(pth) + \
+#          '--output-dir ' + '{} '.format(testdir) + \
+#          '--output ' + '{}'.format(fn)
     cmd = 'jupyter ' + 'nbconvert ' + \
-          '--ExecutePreprocessor.kernel_name=python ' + \
-          '--ExecutePreprocessor.timeout=600 ' + '--to ' + 'notebook ' + \
+          '--ExecutePreprocessor.timeout=600 ' + \
+          '--to ' + 'notebook ' + \
           '--execute ' + '{} '.format(pth) + \
           '--output-dir ' + '{} '.format(testdir) + \
           '--output ' + '{}'.format(fn)
@@ -46,18 +79,22 @@ def run_notebook(fn):
 
 
 def test_notebooks():
-    # get list of notebooks to run
-    files = get_Notebooks()
 
-    # run each notebook
-    for fn in files:
-        yield run_notebook, fn
+    for dpth in [faqdir, nbdir]:
+        # get list of notebooks to run
+        files = get_Notebooks(dpth)
+
+        # run each notebook
+        for fn in files:
+            yield run_notebook, dpth, fn
 
 
 if __name__ == '__main__':
-    # get list of notebooks to run
-    files = get_Notebooks()
+    
+    for dpth in [faqdir]: #, nbdir]:
+        # get list of notebooks to run
+        files = get_Notebooks(dpth)
 
-    # run each notebook
-    for fn in files:
-        run_notebook(fn)
+        # run each notebook
+        for fn in files:
+            run_notebook(dpth, fn)

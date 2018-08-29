@@ -197,4 +197,4 @@ reader urword
 optional false
 longname number of cell vertices
 description is an array of integer values containing vertex numbers (in the VERTICES block) used to define the cell.  Vertices must be listed in clockwise order.  Cells that are connected must share vertices.
-
+numeric_index true

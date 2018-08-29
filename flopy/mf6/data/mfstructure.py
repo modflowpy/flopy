@@ -4,13 +4,14 @@ mfstructure module.  Contains classes related to package structure
 
 """
 import os
+import traceback
 import ast
 import keyword
 from enum import Enum
 from textwrap import TextWrapper
 from collections import OrderedDict
 import numpy as np
-from ..mfbase import PackageContainer
+from ..mfbase import PackageContainer, StructException
 
 
 class DfnType(Enum):
@@ -28,6 +29,35 @@ class DfnType(Enum):
 
 
 class Dfn(object):
+    """
+    Base class for package file definitions
+
+    Attributes
+    ----------
+    dfndir : path
+        folder containing package definition files (dfn)
+    common : path
+        file containing common information
+    multi_package : dict
+        contains the names of all packages that are allowed to have multiple
+        instances in a model/simulation
+
+    Methods
+    -------
+    get_file_list : () : list
+        returns all of the dfn files found in dfndir.  files are returned in
+        a specified order defined in the local variable file_order
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self):
         # directories
         self.dfndir = os.path.join('.', 'dfn')
@@ -82,7 +112,6 @@ class Dfn(object):
             package_abbr = os.path.splitext(f)[0]
             if package_abbr not in file_order:
                 file_order.append(package_abbr)
-                # raise Exception('File not in file_order: ', f)
         return [fname + '.dfn' for fname in file_order if
                 fname + '.dfn' in files]
 
@@ -120,6 +149,33 @@ class Dfn(object):
 
 
 class DfnPackage(Dfn):
+    """
+    Dfn child class that loads dfn information from a list structure stored
+    in the auto-built package classes
+
+    Attributes
+    ----------
+    package : MFPackage
+        MFPackage subclass that contains dfn information
+
+    Methods
+    -------
+    multi_package_support : () : bool
+        returns flag for multi-package support
+    get_block_structure_dict : (path : tuple, common : bool, model_file :
+            bool) : dict
+        returns a dictionray of block structure information for the package
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self, package):
         super(DfnPackage, self).__init__()
         self.package = package
@@ -297,6 +353,36 @@ class DfnPackage(Dfn):
 
 
 class DfnFile(Dfn):
+    """
+    Dfn child class that loads dfn information from a package definition (dfn)
+    file
+
+    Attributes
+    ----------
+    file : str
+        name of the file to be loaded
+
+    Methods
+    -------
+    multi_package_support : () : bool
+        returns flag for multi-package support
+    dict_by_name : {} : dict
+        returns a dictionary of data item descriptions from the dfn file with
+        the data item name as the dictionary key
+    get_block_structure_dict : (path : tuple, common : bool, model_file :
+            bool) : dict
+        returns a dictionray of block structure information for the package
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    ----
+    """
+
     def __init__(self, file):
         super(DfnFile, self).__init__()
 
@@ -531,6 +617,9 @@ class DataType(Enum):
 
 
 class DatumType(Enum):
+    """
+    Types of individual pieces of data
+    """
     keyword = 1
     integer = 2
     double_precision = 3
@@ -550,91 +639,6 @@ class BlockType(Enum):
     single = 1
     multiple = 2
     transient = 3
-
-
-class FlopyException(Exception):
-    """
-    General Flopy Exception
-    """
-
-    def __init__(self, error, location=''):
-        Exception.__init__(self,
-                           "FlopyException: {} ({})".format(error, location))
-
-
-class StructException(Exception):
-    """
-    Exception related to the package file structure
-    """
-
-    def __init__(self, error, location):
-        Exception.__init__(self,
-                           "StructException: {} ({})".format(error, location))
-
-
-class MFDataFileException(Exception):
-    """
-    Exception related to parsing MODFLOW data files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataFileException: {}".format(error))
-
-
-class MFFileParseException(Exception):
-    """
-    Exception related to parsing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileParseException: {}".format(error))
-
-
-class MFInvalidTransientBlockHeaderException(MFFileParseException):
-    """
-    Exception related to parsing a transient block header
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self,
-                           "MFInvalidTransientBlockHeaderException: {}".format(
-                               error))
-
-
-class MFFileWriteException(Exception):
-    """
-    Exception related to the writing MODFLOW input files
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileWriteException: {}".format(error))
-
-
-class MFDataException(Exception):
-    """
-    Exception related to MODFLOW input/output data
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFDataException: {}".format(error))
-
-
-class MFFileExistsException(Exception):
-    """
-    MODFLOW input file requested does not exist
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "MFFileExistsException: {}".format(error))
-
-
-class ReadAsArraysException(Exception):
-    """
-    Attempted to load ReadAsArrays package as non-ReadAsArraysPackage
-    """
-
-    def __init__(self, error):
-        Exception.__init__(self, "ReadAsArraysException: {}".format(error))
 
 
 class MFDataItemStructure(object):
@@ -672,6 +676,9 @@ class MFDataItemStructure(object):
         otherwise, name information appears
     shape : list
         describes the shape of the data
+    layer_dims : list
+        which dimensions in the shape function as layers, if None defaults to
+        "layer"
     reader : basestring
         reader that MF6 uses to read the data
     optional : bool
@@ -742,6 +749,7 @@ class MFDataItemStructure(object):
         self.tagged = True
         self.just_data = False
         self.shape = []
+        self.layer_dims = ['nlay']
         self.reader = None
         self.optional = False
         self.longname = None
@@ -798,7 +806,10 @@ class MFDataItemStructure(object):
                     # support_negative_index flag is set
                     return
                 type_line = arr_line[1:]
-                assert (len(type_line) > 0)
+                if len(type_line) <= 0:
+                    raise StructException('Data structure "{}" does not have '
+                                          'a type specified'
+                                          '.'.format(self.name), self.path)
                 self.type_string = type_line[0].lower()
                 self.type = self._str_to_enum_type(type_line[0])
                 if self.type == DatumType.recarray or \
@@ -833,6 +844,10 @@ class MFDataItemStructure(object):
                             dimension = dimension.replace('(', '')
                             dimension = dimension.replace(')', '')
                             dimension = dimension.replace(',', '')
+                            if dimension[0] == '*':
+                                dimension = dimension.replace('*', '')
+                                # set as a "layer" dimension
+                                self.layer_dims.insert(0, dimension)
                             self.shape.append(dimension)
                         else:
                             # only process what is after the last ; which by
@@ -912,7 +927,10 @@ class MFDataItemStructure(object):
 
 
     def get_keystring_desc(self, line_size, initial_indent, level_indent):
-        assert(self.type == DatumType.keystring)
+        if self.type != DatumType.keystring:
+            raise StructException('Can not get keystring description for "{}" '
+                                  'because it is not a keystring'
+                                  '.'.format(self.name), self.path)
 
         # get description of keystring elements
         description = ''
@@ -960,12 +978,28 @@ class MFDataItemStructure(object):
         return False
 
     @staticmethod
+    def _find_close_bracket(arr_line):
+        for index, word in enumerate(arr_line):
+            word = word.strip()
+            if len(word) > 0 and word[-1] == '}':
+                return index
+        return None
+
+    @staticmethod
     def _resolve_common(arr_line, common):
         if common is None:
             return arr_line
-        assert (arr_line[2] in common and len(arr_line) >= 4)
+        if not (arr_line[2] in common and len(arr_line) >= 4):
+            raise StructException('Could not find line "{}" in common dfn'
+                                  '.'.format(arr_line))
+        close_bracket_loc = MFDataItemStructure._find_close_bracket(
+            arr_line[2:])
         resolved_str = common[arr_line[2]]
-        find_replace_str = ' '.join(arr_line[3:])
+        if close_bracket_loc is None:
+            find_replace_str = ' '.join(arr_line[3:])
+        else:
+            close_bracket_loc += 3
+            find_replace_str = ' '.join(arr_line[3:close_bracket_loc])
         find_replace_dict = ast.literal_eval(find_replace_str)
         for find_str, replace_str in find_replace_dict.items():
             resolved_str = resolved_str.replace(find_str, replace_str)
@@ -1023,7 +1057,6 @@ class MFDataItemStructure(object):
             return DatumType.repeating_record
         else:
             exc_text = 'Data item type "{}" not supported.'.format(type_string)
-            print(exc_text)
             raise StructException(exc_text, self.path)
 
     def get_rec_type(self):
@@ -1154,7 +1187,8 @@ class MFDataStructure(object):
         self.default_value = data_item.default_value
         self.repeating = False
         self.layered = ('nlay' in data_item.shape or
-                        'nodes' in data_item.shape)
+                        'nodes' in data_item.shape or
+                        len(data_item.layer_dims) > 1)
         self.num_data_items = len(data_item.data_items)
         self.record_within_record = False
         self.file_data = False
@@ -1240,7 +1274,11 @@ class MFDataStructure(object):
                 ((item.type != DatumType.record and
                 item.type != DatumType.repeating_record) or
                 record == True):
-            assert (item.name in self.expected_data_items)
+            if item.name not in self.expected_data_items:
+                raise StructException('Could not find data item "{}" in '
+                                      'expected data items of data structure '
+                                      '{}.'.format(item.name, self.name),
+                                                   self.path)
             item.set_path(self.path)
             if len(self.data_item_structures) == 0:
                 self.keyword = item.name
@@ -1250,7 +1288,12 @@ class MFDataStructure(object):
                 # TODO: ask about this condition and remove
                 if self.data_item_structures[location] is None:
                     # verify that this is not a placeholder value
-                    assert (self.data_item_structures[location] is None)
+                    if self.data_item_structures[location] is not None:
+                        raise StructException('Data structure "{}" already '
+                                              'has the item named "{}"'
+                                              '.'.format(self.name,
+                                                         item.name),
+                                              self.path)
                     if isinstance(item, MFDataItemStructure):
                         self.file_data = self.file_data or \
                                          item.indicates_file_name()
@@ -1510,6 +1553,21 @@ class MFDataStructure(object):
             if data_item.type != DatumType.keyword:
                 return index
         return None
+
+    def get_model(self):
+        if self.model_data:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return None
+
+    def get_package(self):
+        if self.model_data:
+            if len(self.path) >= 2:
+                return self.path[1]
+        else:
+            if len(self.path) >= 1:
+                return self.path[0]
+        return ''
 
 
 class MFBlockStructure(object):

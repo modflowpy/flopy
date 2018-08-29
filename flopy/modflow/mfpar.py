@@ -309,6 +309,7 @@ class ModflowPar(object):
                         if layer == (findlayer + 1):
                             foundlayer = True
                     if foundlayer:
+                        model.parameter_load = True
                         cluster_data = np.zeros(shape, dtype=dtype)
                         if mltarr.lower() == 'none':
                             mult = np.ones(shape, dtype=dtype)

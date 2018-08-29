@@ -1,5 +1,33 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.10
+* Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
+* MODFLOW 6 model and simulation packages can not be retrieved as a `MFSimulation` attribute
+* Added support for multicomponent load in `mfsft.py`
+* Added functionality to read esri-style epsg codes from [spatialreference.org](http://spatialreference.org).
+* Added functionality to MODFLOW 6 that will automatically replace the existing package with the one being added if it has the same name as the existing package.
+* Added separate MODFLOW 6 model classes for each model type. Model classes contain name file options.
+* Added standard `run_model()` method arguments to mf6 `run_simulation()` method.
+* some performance improvements to checking
+* `SpatialReference.export_array()` now writes 3-D numpy arrays to multiband GeoTiffs
+* Add load support to for MNW1; ModflowMnw1 now uses a `stress_period_data` `Mflist` to store MNW information, similar to other BC packages.
+* Added a Triangle class that is a light wrapper for the Triangle program for generating triangular meshes.  Added a notebook called flopy3_triangle.ipynb that demonstrates how to use it and build a MODFLOW 6 model with a triangular mesh.  The current version of this Triangle class should be considered beta functionality as it is likely to change.
+
+* Bug fixes:
+    * Fixed issue in HOB when the same layer is specified in the `MLAY` data (dataset 4). If the layer exists the previous fraction value is added to the current value.
+    * Fixed bug in segment renumbering
+    * Changed default value for `ioutobs` `**kwargs` in `mtsft.py` from None to 0 to prevent failure.
+    * Fixed bug when passing extra components info from load to constructor in `mtsft.py` and `mtrct.py`.
+    * Fixed bug in `mt3ddsp` load - if `multidiffusion` is not found, should only read one 3d array.
+    * Fixed bug in `zonbud` utility that wasn't accumulating flow from constant heads.
+    * Fixed minor bug that precluded the passing of mass-balance record names (`TOTAL_IN`, `IN-OUT`, etc.).
+    * Fixed bug when writing shapefile projection (`.prj`) files using relative paths.
+    * Fixed bugs in `sfr.load()` -- `weight` and `flwtol` should be cast as floats, not integers.
+    * Fixed bug when `SpatialReference` supplied with geographic CRS.
+    * Fixed bug in `mfsfr.py` when writing kinematic data (`irtflg >0`).
+    * Fixed issue from change in MODFLOW 6 `inspect.getargspec()` method (for getting method arguments).
+    * Fixed MODFLOW 6 BINARY keyword for reading binary data from a file using  `OPEN/CLOSE` (needs parentheses around it).
+
 ### Version 3.2.9
 * Modified MODFLOW 5 OC stress_period_data=None default behaviour. If MODFLOW 5 OC stress_period_data is not provided then binary head output is saved for the last time step of each stress period.
 * added multiple component support to ``mt3dusgs SFT`` module
