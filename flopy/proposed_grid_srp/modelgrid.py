@@ -103,9 +103,9 @@ class ModelGrid(object):
     tabular_data : (name_list, data, location_type) : data
         returns a pandas object with the data defined in name_list in the
         spatial representation defined by coord_type
-    xcell_centers : (point_type) : ndarray
+    xcenters : (point_type) : ndarray
         returns x coordinate of cell centers
-    ycell_centers : (point_type) : ndarray
+    ycenters : (point_type) : ndarray
         returns y coordinate of cell centers
     get_cell_centers : (point_type) : ndarray
         returns the cell centers of all models cells in the model grid.  if
@@ -167,57 +167,72 @@ class ModelGrid(object):
     def __init__(self, grid_type, sr=None, simulation_time=None, lenuni=2,
                  origin_loc='ul', origin_x=0.0, origin_y=0.0, rotation=0.0):
         self.grid_type = grid_type
-        self.__sr = sr
-        self.__lenuni = lenuni
-        self.__origin_loc = origin_loc
-        self.__origin_x = origin_x
-        self.__origin_y = origin_y
-        self.__rotation = rotation
+        self.use_ref_coords = True
+        self._sr = sr
+        self._lenuni = lenuni
+        self._origin_loc = origin_loc
+        self._origin_x = origin_x
+        self._origin_y = origin_y
+        self._rotation = rotation
         self.sim_time = simulation_time
-        self.__cache_dict = {}
+        self._cache_dict = {}
 
     ###########################
     # basic functions
     ###########################
     @property
     def sr(self):
-        return self.__sr
+        return self._sr
 
     @sr.setter
     def sr(self, sr):
-        self.__sr = sr
+        self._sr = sr
         self._require_cache_updates()
 
     def _require_cache_updates(self):
-        for cache_data in self.__cache_dict.values():
+        for cache_data in self._cache_dict.values():
             cache_data.out_of_date = True
 
+    @property
+    def _use_ref_coordinates(self):
+        return (self._origin_x != 0.0 or self._origin_y != 0.0 or
+                self._origin_loc != 'ul' or self._rotation != 0.0) and \
+                self.use_ref_coords == True
+
     def _load_settings(self, d):
-        self.__origin_x = d.xul
+        self._origin_x = d.xul
 
     ############################
     # from spatial reference
     ############################
     @property
+    def lenuni(self):
+        return self._lenuni
+
+    @property
+    def model_length_units(self):
+        return self.lenuni_text[self._lenuni]
+
+    @property
     def length_multiplier(self):
         """Attempt to identify multiplier for converting from
         model units to sr units, defaulting to 1."""
-        if self.__sr is None:
+        if self._sr is None:
             return 1.0
-        if self.__lenuni == 'feet':
-            if self.__sr.units == 'meters':
+        if self.model_length_units == 'feet':
+            if self._sr.units == 'meters':
                 return 0.3048
-            elif self.__sr.units == 'feet':
+            elif self._sr.units == 'feet':
                 return 1.
-        elif self.__lenuni == 'meters':
-            if self.__sr.units == 'feet':
+        elif self.model_length_units == 'meters':
+            if self._sr.units == 'feet':
                 lm = 1 / .3048
-            elif self.__sr.units == 'meters':
+            elif self._sr.units == 'meters':
                 lm = 1.
-        elif self.__lenuni == 'centimeters':
-            if self.__sr.units == 'meters':
+        elif self.model_length_units == 'centimeters':
+            if self._sr.units == 'meters':
                 lm = 1 / 100.
-            elif self.__sr.units == 'feet':
+            elif self._sr.units == 'feet':
                 lm = 1 / 30.48
         else:  # model units unspecified; default to 1
             lm = 1.
@@ -225,10 +240,10 @@ class ModelGrid(object):
 
     @property
     def theta(self):
-        return -self.__rotation * np.pi / 180.
+        return self._rotation * np.pi / 180.
 
     @staticmethod
-    def rotate(x, y, theta, xorigin=0., yorigin=0.):
+    def rotate(x, y, rotation, xorigin=0., yorigin=0.):
         """
         Given x and y array-like values calculate the rotation about an
         arbitrary origin and then return the rotated coordinates.  theta is in
@@ -237,7 +252,7 @@ class ModelGrid(object):
         """
         # jwhite changed on Oct 11 2016 - rotation is now positive CCW
         # theta = -theta * np.pi / 180.
-        theta = theta * np.pi / 180.
+        theta = rotation * np.pi / 180.
 
         xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
                                                          (y - yorigin)
@@ -259,16 +274,15 @@ class ModelGrid(object):
         if not inverse:
             x *= self.length_multiplier
             y *= self.length_multiplier
-            x += self.__origin_x
-            y += self.__origin_y
-            x, y = self.__sr.rotate(x, y, theta=self.theta,
-                                    xorigin=self.__origin_x,
-                                    yorigin=self.__origin_y)
+            x += self._origin_x
+            y += self._origin_y
+            x, y = self.rotate(x, y, self._rotation, xorigin=self._origin_x,
+                               yorigin=self._origin_y)
         else:
-            x, y = self.__sr.rotate(x, y, -self.theta,
-                                           self.__origin_x, self.__origin_y)
-            x -= self.__origin_x
-            y -= self.__origin_y
+            x, y = self.rotate(x, y, -self._rotation, self._origin_x,
+                               self._origin_y)
+            x -= self._origin_x
+            y -= self._origin_y
             x /= self.length_multiplier
             y /= self.length_multiplier
         return x, y
@@ -422,35 +436,31 @@ class ModelGrid(object):
         return self.xygrid()[1]
 
     @property
-    def xcell_centers(self):
-        return self.cellcenters()[0]
+    def xcenters(self):
+        return self.cellcenters[0]
 
     @property
-    def ycell_centers(self):
-        return self.cellcenters()[1]
+    def ycenters(self):
+        return self.cellcenters[1]
 
-    @abc.abstractmethod
     @property
     def xyvertices(self):
         raise NotImplementedError(
             'must define xyvertices in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
     def cellcenters(self):
         raise NotImplementedError(
             'must define get_cellcenters in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
     def grid_lines(self):
         raise NotImplementedError(
             'must define get_grid_lines in child '
             'class to use this base class')
 
-    @abc.abstractmethod
     @property
     def xygrid(self):
         raise NotImplementedError(

@@ -1,6 +1,4 @@
 import numpy as np
-from pandas import DataFrame
-from ..utils.datautil import PyListUtil
 from .modelgrid import ModelGrid, CachedData, CachedDataType
 
 
@@ -32,9 +30,12 @@ class StructuredModelGrid(ModelGrid):
         self.__top = top
         self.__botm = botm
         self.__idomain = idomain
-        self.__nlay = len(botm)
         self.__nrow = len(delc)
         self.__ncol = len(delr)
+        if botm is not None:
+            self.__nlay = len(botm)
+        else:
+            self.__nlay = None
 
     ####################
     # Properties
@@ -42,57 +43,57 @@ class StructuredModelGrid(ModelGrid):
 
     @property
     def xll(self):
-        if self.__origin_loc == 'll':
-            xll = self.__origin_x if self.__origin_x is not None else 0.
-        elif self.__origin_loc == 'ul':
+        if self._origin_loc == 'll':
+            xll = self._origin_x if self._origin_x is not None else 0.
+        elif self._origin_loc == 'ul':
             # calculate coords for lower left corner
-            xll = self.__origin_x - (np.sin(self.__rotation) * self.yedges[0] *
-                               self.length_multiplier)
+            xll = self._origin_x - (np.sin(self._rotation) * self.yedges[0] *
+                                    self.length_multiplier)
         else:
             raise Exception('Invalid origin location "{}".'.format(
-                self.__origin_loc))
+                self._origin_loc))
         return xll
 
     @property
     def yll(self):
-        if self.__origin_loc == 'll':
-            yll = self.__origin_y if self.__origin_y is not None else 0.
-        elif self.__origin_loc == 'ul':
+        if self._origin_loc == 'll':
+            yll = self._origin_y if self._origin_y is not None else 0.
+        elif self._origin_loc == 'ul':
             # calculate coords for lower left corner
-            yll = self.__origin_y - (np.cos(self.__rotation) * self.yedges[0] *
-                               self.length_multiplier)
+            yll = self._origin_y - (np.cos(self._rotation) * self.yedges[0] *
+                                    self.length_multiplier)
         else:
             raise Exception('Invalid origin location "{}".'.format(
-                self.__origin_loc))
+                self._origin_loc))
         return yll
 
     @property
     def xul(self):
-        if self.__origin_loc == 'll':
+        if self._origin_loc == 'll':
             # calculate coords for upper left corner
-            xul = self.__origin_x + (np.sin(self.__rotation) * self.yedges[0] *
-                               self.length_multiplier)
-        elif self.__origin_loc == 'ul':
+            xul = self._origin_x + (np.sin(self._rotation) * self.yedges[0] *
+                                    self.length_multiplier)
+        elif self._origin_loc == 'ul':
             # calculate coords for lower left corner
-            xul = self.__origin_x if self.__origin_x  is not None else 0.
+            xul = self._origin_x if self._origin_x is not None else 0.
         else:
             raise Exception('Invalid origin location "{}".'.format(
-                self.__origin_loc))
+                self._origin_loc))
 
         return xul
 
     @property
     def yul(self):
-        if self.__origin_loc == 'll':
+        if self._origin_loc == 'll':
             # calculate coords for upper left corner
-            yul = self.__origin_y + (np.cos(self.__rotation) * self.yedges[0] *
-                               self.length_multiplier)
-        elif self.__origin_loc == 'ul':
+            yul = self._origin_y + (np.cos(self._rotation) * self.yedges[0] *
+                                    self.length_multiplier)
+        elif self._origin_loc == 'ul':
             # calculate coords for lower left corner
-            yul = self.__origin_y if self.__origin_y is not None else 0.
+            yul = self._origin_y if self._origin_y is not None else 0.
         else:
             raise Exception('Invalid origin location "{}".'.format(
-                self.__origin_loc))
+                self._origin_loc))
         return yul
 
     @classmethod
@@ -184,12 +185,12 @@ class StructuredModelGrid(ModelGrid):
         not offset or rotated.  Array is of size (ncol + 1). The other array
         has the cell edge y coordinates.
         """
-        if CachedDataType.yedge_array.value not in self.__cache_dict or \
-                self.__cache_dict[CachedDataType.yedge_array.value].out_of_date:
+        if CachedDataType.yedge_array.value not in self._cache_dict or \
+                self._cache_dict[CachedDataType.yedge_array.value].out_of_date:
             xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
-            self.__cache_dict[CachedDataType.xedge_array.value] = \
+            self._cache_dict[CachedDataType.xedge_array.value] = \
                 CachedData(xedge)
-        return self.__cache_dict[CachedDataType.xedge_array.value].data
+        return self._cache_dict[CachedDataType.xedge_array.value].data
 
     @property
     def yedges(self):
@@ -199,14 +200,14 @@ class StructuredModelGrid(ModelGrid):
         not offset or rotated.  Array is of size (ncol + 1). The other array
         has the cell edge y coordinates.
         """
-        if CachedDataType.edge_array.value not in self.__cache_dict or \
-                self.__cache_dict[CachedDataType.yedge_array.value].out_of_date:
+        if CachedDataType.edge_array.value not in self._cache_dict or \
+                self._cache_dict[CachedDataType.yedge_array.value].out_of_date:
             length_y = np.add.reduce(self.delc)
             yedge = np.concatenate(([length_y], length_y -
                                     np.add.accumulate(self.delc)))
-            self.__cache_dict[CachedDataType.yedge_array.value] = \
+            self._cache_dict[CachedDataType.yedge_array.value] = \
                 CachedData(yedge)
-        return self.__cache_dict[CachedDataType.yedge_array.value].data
+        return self._cache_dict[CachedDataType.yedge_array.value].data
 
     @property
     def xygrid(self):
@@ -218,14 +219,15 @@ class StructuredModelGrid(ModelGrid):
 
     @property
     def xyvertices(self):
-        cache_index = (CachedDataType.xyvertices.value, (self.__sr is None))
-        if cache_index not in self.__cache_dict or \
-                self.__cache_dict[cache_index].out_of_date:
+        cache_index = (CachedDataType.xyvertices.value,
+                       (self._use_ref_coordinates))
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
             jj, ii = np.meshgrid(range(self.__ncol), range(self.__nrow))
             jj, ii = jj.ravel(), ii.ravel()
-            self.__cache_dict[cache_index] = \
+            self._cache_dict[cache_index] = \
                 CachedData(self.cell_vertices(ii, jj))
-        return self.__cache_dict[cache_index].data
+        return self._cache_dict[cache_index].data
 
     @property
     def cellcenters(self):
@@ -235,9 +237,10 @@ class StructuredModelGrid(ModelGrid):
         coordinate for every row in the grid in model space -
         not offset of rotated, with the cell center y coordinate.
         """
-        cache_index = (CachedDataType.cell_centers.value, self.__sr is None)
-        if cache_index not in self.__cache_dict or \
-                self.__cache_dict[cache_index].out_of_date:
+        cache_index = (CachedDataType.cell_centers.value,
+                       self._use_ref_coordinates)
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
             # get x centers
             x = np.add.accumulate(self.__delr) - 0.5 * self.delr
             # get y centers
@@ -245,18 +248,21 @@ class StructuredModelGrid(ModelGrid):
             y = Ly - (np.add.accumulate(self.__delc) - 0.5 *
                       self.__delc)
             x_mesh, y_mesh = np.meshgrid(x, y)
-            # get z centers
-            z = np.empty((self.__nlay, self.__nrow, self.__ncol))
-            z[0, :, :] = (self.__top[:, :] + self.__botm[0, :, :]) / 2.
-            for l in range(1, self.__nlay):
-                z[l, :, :] = (self.__botm[l - 1, :, :] +
-                              self.__botm[l, :, :]) / 2.
-            if self.__sr is not None:
+            if self.__nlay is not None:
+                # get z centers
+                z = np.empty((self.__nlay, self.__nrow, self.__ncol))
+                z[0, :, :] = (self.__top[:, :] + self.__botm[0, :, :]) / 2.
+                for l in range(1, self.__nlay):
+                    z[l, :, :] = (self.__botm[l - 1, :, :] +
+                                  self.__botm[l, :, :]) / 2.
+            else:
+                z = None
+            if self._use_ref_coordinates:
                 # transform x and y
-                x_mesh, y_mesh = self.sr.transform(x_mesh, y_mesh)
+                x_mesh, y_mesh = self.transform(x_mesh, y_mesh)
             # store in cache
-            self.__cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
-        return self.__cache_dict[cache_index].data
+            self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
+        return self._cache_dict[cache_index].data
 
     @property
     def grid_lines(self):
@@ -264,18 +270,18 @@ class StructuredModelGrid(ModelGrid):
             Get the grid lines as a list
 
         """
-        xmin = self.xedge[0]
-        xmax = self.xedge[-1]
-        ymin = self.yedge[-1]
-        ymax = self.yedge[0]
+        xmin = self.xedgegrid[0]
+        xmax = self.xedgegrid[-1]
+        ymin = self.yedgegrid[-1]
+        ymax = self.yedgegrid[0]
         lines = []
         # Vertical lines
         for j in range(self.ncol + 1):
-            x0 = self.xedge[j]
+            x0 = self.xedgegrid[j]
             x1 = x0
             y0 = ymin
             y1 = ymax
-            if self.__sr is not None:
+            if self._use_ref_coordinates:
                 x0, y0 = self.sr.transform(x0, y0)
                 x1, y1 = self.sr.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
@@ -284,9 +290,9 @@ class StructuredModelGrid(ModelGrid):
         for i in range(self.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.yedge[i]
+            y0 = self.yedgegrid[i]
             y1 = y0
-            if self.__sr is not None:
+            if self._use_ref_coordinates:
                 x0, y0 = self.sr.transform(x0, y0)
                 x1, y1 = self.sr.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
@@ -308,33 +314,33 @@ class StructuredModelGrid(ModelGrid):
             return [v.tolist() for v in vrts]
 
     def cellcenter(self, row, col):
-        cell_centers = self.cellcenters()
+        cell_centers = self.cellcenters
         return cell_centers[0][row], cell_centers[1][col]
 
-    def get_extent(self, point_type=PointType.spatialxyz):
+    def get_extent(self):
         """
         Get the extent of the rotated and offset grid
 
         Return (xmin, xmax, ymin, ymax)
 
         """
-        x0 = self.xedge[0]
-        x1 = self.xedge[-1]
-        y0 = self.yedge[0]
-        y1 = self.yedge[-1]
+        x0 = self.xedges[0]
+        x1 = self.xedges[-1]
+        y0 = self.yedges[0]
+        y1 = self.yedges[-1]
 
-        if point_type == PointType.spatialxyz:
+        if self._use_ref_coordinates:
             # upper left point
-            x0r, y0r = self.sr.transform(x0, y0)
+            x0r, y0r = self.transform(x0, y0)
 
             # upper right point
-            x1r, y1r = self.sr.transform(x1, y0)
+            x1r, y1r = self.transform(x1, y0)
 
             # lower right point
-            x2r, y2r = self.sr.transform(x1, y1)
+            x2r, y2r = self.transform(x1, y1)
 
             # lower left point
-            x3r, y3r = self.sr.transform(x0, y1)
+            x3r, y3r = self.transform(x0, y1)
 
             xmin = min(x0r, x1r, x2r, x3r)
             xmax = max(x0r, x1r, x2r, x3r)
@@ -438,9 +444,9 @@ p
             contours = [contours]
 
         if epsg is None:
-            epsg = self.__sr._epsg
+            epsg = self._sr._epsg
         if prj is None:
-            prj = self.__sr.proj4_str
+            prj = self._sr.proj4_str
 
         geoms = []
         level = []
@@ -482,9 +488,9 @@ p
         import matplotlib.pyplot as plt
 
         if epsg is None:
-            epsg = self.__sr._epsg
+            epsg = self._sr._epsg
         if prj is None:
-            prj = self.__sr.proj4_str
+            prj = self._sr.proj4_str
 
         if interval is not None:
             min = np.nanmin(a)
@@ -755,8 +761,8 @@ p
 
         # Create a 2d array of points for the grid centers
         points = np.empty((self.ncol * self.nrow, 2))
-        points[:, 0] = self.get_cellcenters[0].flatten()
-        points[:, 1] = self.get_cellcenters[1].flatten()
+        points[:, 0] = self.cellcenters[0].flatten()
+        points[:, 1] = self.cellcenters[1].flatten()
 
         # Use the griddata function to interpolate to the xi points
         b = griddata(points, a.flatten(), xi, method=method, fill_value=np.nan)
@@ -872,11 +878,11 @@ p
         j : column or sequence of columns (zero-based)
         """
         if np.isscalar(x):
-            c = (np.abs(self.get_cellcenters[0][0] - x)).argmin()
-            r = (np.abs(self.get_cellcenters[1][:, 0] - y)).argmin()
+            c = (np.abs(self.cellcenters[0][0] - x)).argmin()
+            r = (np.abs(self.cellcenters[1][:, 0] - y)).argmin()
         else:
-            xcp = np.array([self.get_cellcenters[0][0]] * (len(x)))
-            ycp = np.array([self.get_cellcenters[1][:, 0]] * (len(x)))
+            xcp = np.array([self.cellcenters[0][0]] * (len(x)))
+            ycp = np.array([self.cellcenters[1][:, 0]] * (len(x)))
             c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
             r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
         return r, c

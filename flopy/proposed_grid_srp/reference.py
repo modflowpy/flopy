@@ -76,7 +76,6 @@ class SpatialReference(object):
 
         self.supported_units = ["feet", "meters"]
         self._units = units
-        self._reset()
 
     @property
     def proj4_str(self):
