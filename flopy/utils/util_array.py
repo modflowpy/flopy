@@ -2312,7 +2312,7 @@ class Util2d(object):
                                  'found {0}: {1}'.format(len(raw), line))
             i1, i2 = int(raw[0]) - 1, int(raw[1])
             j1, j2 = int(raw[2]) - 1, int(raw[3])
-            data[i1:i2, j1:j2] = dtype(raw[4])
+            data[i1:i2, j1:j2] = raw[4]
         if data.mask.any():
             warn('Util2d.load_block(): blocks do not cover full array')
         return data.data
@@ -2494,6 +2494,8 @@ class Util2d(object):
                 warn('Util2d: setting integer dtype from {0} to int32'
                      .format(dtype))
             dtype = np.int32
+        if not hasattr(file_in, 'read'):
+            file_in = open(file_in, 'rb')
         header_data = None
         if bintype is not None and np.issubdtype(dtype, np.floating):
             header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
