@@ -181,46 +181,67 @@ class StructuredModelGrid(ModelGrid):
     def xedges(self):
         """
         Return two numpy one-dimensional float arrays. One array has the cell
-        edge x coordinates for every column in the grid in model space -
-        not offset or rotated.  Array is of size (ncol + 1). The other array
-        has the cell edge y coordinates.
+        edge y coordinates for every column in the grid in model space -
         """
-        if CachedDataType.yedge_array.value not in self._cache_dict or \
-                self._cache_dict[CachedDataType.yedge_array.value].out_of_date:
-            xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
-            self._cache_dict[CachedDataType.xedge_array.value] = \
-                CachedData(xedge)
-        return self._cache_dict[CachedDataType.xedge_array.value].data
+        return self.xygrid[0]
 
     @property
     def yedges(self):
         """
         Return two numpy one-dimensional float arrays. One array has the cell
         edge x coordinates for every column in the grid in model space -
-        not offset or rotated.  Array is of size (ncol + 1). The other array
-        has the cell edge y coordinates.
         """
-        if CachedDataType.edge_array.value not in self._cache_dict or \
-                self._cache_dict[CachedDataType.yedge_array.value].out_of_date:
-            length_y = np.add.reduce(self.delc)
-            yedge = np.concatenate(([length_y], length_y -
-                                    np.add.accumulate(self.delc)))
-            self._cache_dict[CachedDataType.yedge_array.value] = \
-                CachedData(yedge)
-        return self._cache_dict[CachedDataType.yedge_array.value].data
+        return self.xygrid[1]
 
     @property
     def xygrid(self):
-        xgrid, ygrid = np.meshgrid(self.xedge, self.yedge)
-        if self.sr is not None:
-            return self.sr.transform(xgrid, ygrid)
-        else:
-            return xgrid, ygrid
+        """
+        """
+        cache_index = (CachedDataType.edge_grid.value,
+                       self._use_ref_coordinates)
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
+            xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
+            length_y = np.add.reduce(self.__delc)
+            yedge = np.concatenate(([length_y], length_y -
+                                    np.add.accumulate(self.delc)))
+            xedge, yedge = np.meshgrid(xedge, yedge)
+            if self._use_ref_coordinates:
+                # transform x and y
+                xedge, yedge = self.transform(xedge, yedge)
+            self._cache_dict[cache_index] = \
+                CachedData([xedge, yedge])
+        return self._cache_dict[cache_index].data
+
+    @property
+    def xyedges(self):
+        cache_index = (CachedDataType.edge_array.value,
+                       self._use_ref_coordinates)
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
+            xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
+            length_y = np.add.reduce(self.__delc)
+            yedge = np.concatenate(([length_y], length_y -
+                                    np.add.accumulate(self.delc)))
+            if self._use_ref_coordinates:
+                # transform x and y
+                xedge, yedge = self.transform(xedge, yedge)
+            self._cache_dict[cache_index] = \
+                CachedData([xedge, yedge])
+        return self._cache_dict[cache_index].data
+
+    #    @property
+#    def xygrid(self):
+#        return np.meshgrid(self.xedges, self.yedges)
+        #if self.sr is not None:
+        #    return self.sr.transform(xgrid, ygrid)
+        #else:
+        #    return xgrid, ygrid
 
     @property
     def xyvertices(self):
         cache_index = (CachedDataType.xyvertices.value,
-                       (self._use_ref_coordinates))
+                       self._use_ref_coordinates)
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             jj, ii = np.meshgrid(range(self.__ncol), range(self.__nrow))
@@ -265,37 +286,50 @@ class StructuredModelGrid(ModelGrid):
         return self._cache_dict[cache_index].data
 
     @property
-    def grid_lines(self):
+    def gridlines(self):
         """
             Get the grid lines as a list
 
         """
-        xmin = self.xedgegrid[0]
-        xmax = self.xedgegrid[-1]
-        ymin = self.yedgegrid[-1]
-        ymax = self.yedgegrid[0]
+        # get edges initially in model coordinates
+        use_ref_coords = self.use_ref_coords
+        self.use_ref_coords = False
+        xyedges = self.xyedges
+        self.use_ref_coords = use_ref_coords
+
+        xmin = xyedges[0][0]
+        xmax = xyedges[0][-1]
+        ymin = xyedges[1][-1]
+        ymax = xyedges[1][0]
         lines = []
         # Vertical lines
         for j in range(self.ncol + 1):
-            x0 = self.xedgegrid[j]
+            x0 = xyedges[0][j]
             x1 = x0
             y0 = ymin
             y1 = ymax
-            if self._use_ref_coordinates:
-                x0, y0 = self.sr.transform(x0, y0)
-                x1, y1 = self.sr.transform(x1, y1)
+            #if self._use_ref_coordinates:
+            #    x0, y0 = self.transform(x0, y0)
+            #    x1, y1 = self.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
 
         # horizontal lines
         for i in range(self.nrow + 1):
             x0 = xmin
             x1 = xmax
-            y0 = self.yedgegrid[i]
+            y0 = xyedges[1][i]
             y1 = y0
-            if self._use_ref_coordinates:
-                x0, y0 = self.sr.transform(x0, y0)
-                x1, y1 = self.sr.transform(x1, y1)
+            #if self._use_ref_coordinates:
+            #    x0, y0 = self.transform(x0, y0)
+            #    x1, y1 = self.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
+
+        if self._use_ref_coordinates:
+            lines_trans = []
+            for ln in lines:
+                lines_trans.append([self.transform(*ln[0]),
+                                    self.transform(*ln[1])])
+            return lines_trans
         return lines
 
     def cell_vertices(self, i, j):
@@ -793,7 +827,7 @@ p
             order starting with the upper left corner
 
         """
-        x, y = self.get_xygrid()
+        x, y = self.xygrid
         x = x.flatten()
         y = y.flatten()
         nrowvert = self.nrow + 1
@@ -815,7 +849,7 @@ p
     def get_3d_shared_vertex_connectivity(self):
 
         # get the x and y points for the grid
-        x, y = self.get_xygrid()
+        x, y = self.xygrid
         x = x.flatten()
         y = y.flatten()
 

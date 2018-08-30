@@ -54,8 +54,8 @@ class CachedDataType(Enum):
     Enumeration of types of cached data
     """
     xyvertices = 0
-    xedges = 1
-    yedges = 2
+    edge_array = 1
+    edge_grid = 2
     cell_centers = 3
 
 
@@ -429,11 +429,11 @@ class ModelGrid(object):
 
     @property
     def xedgegrid(self):
-        return self.xygrid()[0]
+        return self.xygrid[0]
 
     @property
     def yedgegrid(self):
-        return self.xygrid()[1]
+        return self.xygrid[1]
 
     @property
     def xcenters(self):
@@ -456,7 +456,7 @@ class ModelGrid(object):
             'class to use this base class')
 
     @property
-    def grid_lines(self):
+    def gridlines(self):
         raise NotImplementedError(
             'must define get_grid_lines in child '
             'class to use this base class')

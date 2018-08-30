@@ -11,14 +11,12 @@ class Polygon:
     def __init__(self, exterior, interiors=None):
         """Container for housing and describing polygon geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         exterior : sequence
             Sequence of coordinates describing the outer ring of the polygon.
         interiors : sequence of sequences
             Describes one or more holes within the polygon
-
         Attributes
         ----------
         exterior : (x, y, z) coordinates of exterior
@@ -31,7 +29,6 @@ class Polygon:
         pyshp_parts : list of lists
             Returns a list of all parts (each an individual polygon).
             Can be used as input for the shapefile.Writer.poly method (pyshp package)
-
         Methods
         -------
         get_patch
@@ -42,7 +39,6 @@ class Polygon:
             Plots the feature using descartes (via get_patch) and matplotlib.pyplot.
             Accepts keyword arguments to descartes.PolygonPatch. Requires the
             descartes package (pip install descartes).
-
         Notes
         -----
         Multi-polygons not yet supported.
@@ -98,11 +94,9 @@ class Polygon:
 
     def plot(self, ax=None, **kwargs):
         """Plot the feature.
-
         Parameters
         ----------
         ax : matplotlib.pyplot axes instance
-
         Accepts keyword arguments to descartes.PolygonPatch. Requires the
         descartes package (pip install descartes).
         """
@@ -132,12 +126,10 @@ class LineString:
     def __init__(self, coordinates):
         """Container for housing and describing linestring geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         coordinates : sequence
             Sequence of coordinates describing a line
-
         Attributes
         ----------
         coords : list of (x, y, z) coordinates
@@ -151,13 +143,11 @@ class LineString:
         pyshp_parts : list of lists
             Returns a list of all parts (each an individual linestring).
             Can be used as input for the shapefile.Writer.line method (pyshp package)
-
         Methods
         -------
         plot
             Plots the feature using matplotlib.pyplot.
             Accepts keyword arguments to pyplot.plot.
-
         Notes
         -----
         Multi-linestrings not yet supported.
@@ -231,12 +221,10 @@ class Point:
     def __init__(self, *coordinates):
         """Container for housing and describing point geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         coordinates : tuple
             x, y or x, y, z
-
         Attributes
         ----------
         coords : x, y, z coordinates
@@ -249,13 +237,11 @@ class Point:
             Returns a geojson representation of the feature
         pyshp_parts : list of tuples
             Can be used as input for the shapefile.Writer.line method (pyshp package)
-
         Methods
         -------
         plot
             Plots the feature using matplotlib.pyplot.
             Accepts keyword arguments to pyplot.scatter.
-
         Notes
         -----
         z information is only stored if it was entered.
@@ -323,22 +309,17 @@ class Point:
 
 def shape(pyshp_shpobj):
     """Convert a pyshp geometry object to a flopy geometry object.
-
     Parameters
     ----------
     pyshp_shpobj : shapefile._Shape instance
-
     Returns
     -------
     shape : flopy.utils.geometry Polygon, Linestring, or Point
-
     Notes
     -----
     Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
-
     Examples
     --------
-
     >>> import shapefile as sf
     >>> from flopy.utils.geometry import shape
     >>> sfobj = sf.Reader('shapefile.shp')
@@ -354,18 +335,14 @@ def shape(pyshp_shpobj):
 def get_polygon_area(verts):
     """
     Calculate the area of a closed polygon
-
     Parameters
     ----------
-
     verts : numpy.ndarray
         polygon vertices
-
     Returns
     -------
     area : float
         area of polygon centroid
-
     """
     nverts = verts.shape[0]
     a = 0.
@@ -382,18 +359,14 @@ def get_polygon_area(verts):
 def get_polygon_centroid(verts):
     """
     Calculate the centroid of a closed polygon
-
     Parameters
     ----------
-
     verts : numpy.ndarray
         polygon vertices
-
     Returns
     -------
     centroid : tuple
         (x, y) of polygon centroid
-
     """
     nverts = verts.shape[0]
     cx = 0.
