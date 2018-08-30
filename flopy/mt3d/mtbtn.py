@@ -598,7 +598,7 @@ class Mt3dBtn(Package):
             f_btn.write(self.sconc[s].get_file_entry())
 
         # A14
-        f_btn.write('{0:10.0E}{1:10.4f}\n' \
+        f_btn.write('{0:10.0E}{1:10.2E}\n' \
                     .format(self.cinact, self.thkmin))
 
         # A15
