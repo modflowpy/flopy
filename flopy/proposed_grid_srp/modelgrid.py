@@ -100,20 +100,17 @@ class ModelGrid(object):
     yedgegrid : (point_type) : ndarray
         returns numpy meshgrid of y edges in reference frame defined by
         point_type
-    tabular_data : (name_list, data, location_type) : data
-        returns a pandas object with the data defined in name_list in the
-        spatial representation defined by coord_type
     xcenters : (point_type) : ndarray
         returns x coordinate of cell centers
     ycenters : (point_type) : ndarray
         returns y coordinate of cell centers
-    get_cell_centers : (point_type) : ndarray
+    cell_centers : (point_type) : ndarray
         returns the cell centers of all models cells in the model grid.  if
         the model grid contains spatial reference information, the cell centers
         are in the coordinate system provided by the spatial reference
         information. otherwise the cell centers are based on a 0,0 location for
         the upper left corner of the model grid
-    get_grid_lines : (point_type=PointType.spatialxyz) : list
+    grid_lines : (point_type=PointType.spatialxyz) : list
         returns the model grid lines in a list.  each line is returned as a
         list containing two tuples in the format [(x1,y1), (x2,y2)] where
         x1,y1 and x2,y2 are the endpoints of the line.
@@ -121,27 +118,6 @@ class ModelGrid(object):
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
-    get_model_dim : () : list
-        returns the dimensions of the model
-    get_horizontal_cross_section_dim_names : () : list
-        returns the appropriate dimension axis for a horizontal cross section
-        based on the model discritization type
-    get_model_dim_names : () : list
-        returns the names of the model dimensions based on the model
-        discritization type
-    get_num_spatial_coordinates : () : int
-        returns the number of spatial coordinates
-    num_cells_per_layer : () : list
-        returns the number of cells per model layer.  model discritization
-        type must be DIS or DISV
-    num_layers : () : int
-        returns the number of layers in the model, if the model is layered
-    num_cells : () : int
-        returns the total number of cells in the model
-    get_all_model_cells : () : list
-        returns a list of all model cells, represented as a layer/row/column
-        tuple, a layer/cellid tuple, or a cellid for the structured, layered
-        vertex, and vertex grids respectively
 
     See Also
     --------
@@ -473,146 +449,6 @@ class ModelGrid(object):
             'must define write_gridSpec in child '
             'class to use this base class')
 
-    @abc.abstractmethod
-    def plot_array(self, a, ax=None, **kwargs):
-        """
-        Create a QuadMesh plot of the specified array using pcolormesh
-
-        Parameters
-        ----------
-        a : np.ndarray
-
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
-
-        """
-        raise NotImplementedError(
-            'must define plot_array in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_array(self, filename, a, nodata=-9999,
-                     fieldname='value',
-                     **kwargs):
-        """Write a numpy array to Arc Ascii grid
-        or shapefile with the model reference.
-
-        Parameters
-        ----------
-        filename : str
-            Path of output file. Export format is determined by
-            file extention.
-            '.asc'  Arc Ascii grid
-            '.tif'  GeoTIFF (requries rasterio package)
-            '.shp'  Shapefile
-        a : 2D numpy.ndarray
-            Array to export
-        nodata : scalar
-            Value to assign to np.nan entries (default -9999)
-        fieldname : str
-            Attribute field name for array values (shapefile export only).
-            (default 'values')
-        kwargs:
-            keyword arguments to np.savetxt (ascii)
-            rasterio.open (GeoTIFF)
-            or flopy.export.shapefile_utils.write_grid_shapefile2
-
-        Notes
-        -----
-        Rotated grids will be either be unrotated prior to export,
-        using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
-        included in their transform property (GeoTiff format). In either case
-        the pixels will be displayed in the (unrotated) projected geographic coordinate system,
-        so the pixels will no longer align exactly with the model grid
-        (as displayed from a shapefile, for example). A key difference between
-        Arc Ascii and GeoTiff (besides disk usage) is that the
-        unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
-        will have the same number of rows and pixels as the original.
-        """
-        raise NotImplementedError(
-            'must define export_array in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_contours(self, filename, contours,
-                        fieldname='level', epsg=None, prj=None,
-                        **kwargs):
-        """Convert matplotlib contour plot object to shapefile.
-
-        Parameters
-        ----------
-        filename : str
-            path of output shapefile
-        contours : matplotlib.contour.QuadContourSet or list of them
-            (object returned by matplotlib.pyplot.contour)
-        epsg : int
-            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-        prj : str
-            Existing projection file to be used with new shapefile.
-        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
-
-        Returns
-        -------
-        df : dataframe of shapefile contents
-        """
-        raise NotImplementedError(
-            'must define export_contours in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_array_contours(self, filename, a,
-                              fieldname='level',
-                              interval=None,
-                              levels=None,
-                              maxlevels=1000,
-                              epsg=None,
-                              prj=None,
-                              **kwargs):
-        """Contour an array using matplotlib; write shapefile of contours.
-
-        Parameters
-        ----------
-        filename : str
-            Path of output file with '.shp' extention.
-        a : 2D numpy array
-            Array to contour
-        epsg : int
-            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-        prj : str
-            Existing projection file to be used with new shapefile.
-        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
-        """
-        raise NotImplementedError(
-            'must define export_array_contours in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move plot-specific code
-    def contour_array(self, ax, a, **kwargs):
-        """
-        Create a QuadMesh plot of the specified array using pcolormesh
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes
-            ax to add the contours
-
-        a : np.ndarray
-            array to contour
-
-        Returns
-        -------
-        contour_set : ContourSet
-
-        """
-        raise NotImplementedError(
-            'must define contour_array in child '
-            'class to use this base class')
-
     # more specific name for this?
     @abc.abstractmethod
     def interpolate(self, a, xi, method='nearest'):
@@ -690,71 +526,3 @@ class ModelGrid(object):
     def get_3d_vertex_connectivity(self):
         raise NotImplementedError('must define get_3d_vertex_connectivity in '
                                   'child class to use this base class')
-
-    #################################
-    # from flopy for mf6 model grid
-    #################################
-    @abc.abstractmethod
-    def get_row_array(self):
-        raise NotImplementedError('must define get_row_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_column_array(self):
-        raise NotImplementedError('must define get_column_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_layer_array(self):
-        raise NotImplementedError('must define get_layer_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim(self):
-        raise NotImplementedError('must define get_model_dim in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim_names(self):
-        raise NotImplementedError('must define get_model_dim_names in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_horizontal_cross_section_dim_names(self):
-        raise NotImplementedError('must define '
-                                  'get_horizontal_cross_section_dim_names in '
-                                  'child class to use this base class')
-
-    @abc.abstractmethod
-    def get_horizontal_cross_section_dim_arrays(self):
-        raise NotImplementedError('must define '
-                                  'get_horizontal_cross_section_dim_arrays in '
-                                  'child class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim_arrays(self):
-        raise NotImplementedError('must define get_model_dim_arrays in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def num_cells_per_layer(self):
-        raise NotImplementedError('must define num_cells_per_layer in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def num_cells(self, active_only=False):
-        raise NotImplementedError('must define num_cells in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_all_model_cells(self):
-        raise NotImplementedError('must define get_all_model_cells in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    # move to export folder
-    def load_shapefile_data(self, shapefile):
-        # this will only support loading shapefiles with the same
-        # spatial reference as the model grid
-        raise NotImplementedError('must define load_shapefile_data in child '
-                                  'class to use this base class')
