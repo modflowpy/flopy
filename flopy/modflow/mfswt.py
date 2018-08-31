@@ -321,32 +321,39 @@ class ModflowSwt(Package):
         self.sgs = Util2d(model, (nrow, ncol), np.float32, sgs, name='sgs')
 
         # interbed data
+        names = ['thick system ' for n in range(nsystm)]
         self.thick = Util3d(model, (nsystm, nrow, ncol), np.float32, thick,
-                            name='thick',
+                            name=names,
                             locat=self.unit_number[0])
+        names = ['void system ' for n in range(nsystm)]
         self.void = Util3d(model, (nsystm, nrow, ncol), np.float32, void,
-                           name='void',
+                           name=names,
                            locat=self.unit_number[0])
+        names = ['sub system ' for n in range(nsystm)]
         self.sub = Util3d(model, (nsystm, nrow, ncol), np.float32, sub,
-                          name='sub',
+                          name=names,
                           locat=self.unit_number[0])
         if icrcc != 0:
+            names = ['sse system ' for n in range(nsystm)]
             self.sse = Util3d(model, (nsystm, nrow, ncol), np.float32, sse,
-                              name='sse',
+                              name=names,
                               locat=self.unit_number[0])
+            names = ['ssc system ' for n in range(nsystm)]
             self.ssv = Util3d(model, (nsystm, nrow, ncol), np.float32, ssv,
-                              name='ssv',
+                              name=names,
                               locat=self.unit_number[0])
             self.cr = None
             self.cc = None
         else:
             self.sse = None
             self.ssv = None
+            names = ['cr system ' for n in range(nsystm)]
             self.cr = Util3d(model, (nsystm, nrow, ncol), np.float32, cr,
-                             name='cr',
+                             name=names,
                              locat=self.unit_number[0])
+            names = ['cc system ' for n in range(nsystm)]
             self.cc = Util3d(model, (nsystm, nrow, ncol), np.float32, cc,
-                             name='cc',
+                             name=names,
                              locat=self.unit_number[0])
 
         # layer data
