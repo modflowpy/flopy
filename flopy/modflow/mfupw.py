@@ -195,11 +195,11 @@ class ModflowUpw(Package):
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.npupw = 0  # number of UPW parameters
         self.iphdry = iphdry
-        self.laytyp = Util2d(model, (nlay,), np.int, laytyp, name='laytyp')
-        self.layavg = Util2d(model, (nlay,), np.int, layavg, name='layavg')
-        self.chani = Util2d(model, (nlay,), np.int, chani, name='chani')
-        self.layvka = Util2d(model, (nlay,), np.int, layvka, name='vka')
-        self.laywet = Util2d(model, (nlay,), np.int, laywet, name='laywet')
+        self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name='laytyp')
+        self.layavg = Util2d(model, (nlay,), np.int32, layavg, name='layavg')
+        self.chani = Util2d(model, (nlay,), np.int32, chani, name='chani')
+        self.layvka = Util2d(model, (nlay,), np.int32, layvka, name='vka')
+        self.laywet = Util2d(model, (nlay,), np.int32, laywet, name='laywet')
 
         self.options = ' '
         if noparcheck: self.options = self.options + 'NOPARCHECK  '
@@ -361,13 +361,13 @@ class ModflowUpw(Package):
             print('   loading LAYTYP...')
         line = f.readline()
         t = line.strip().split()
-        laytyp = np.array((t[0:nlay]), dtype=np.int)
+        laytyp = np.array((t[0:nlay]), dtype=np.int32)
         # LAYAVG array
         if model.verbose:
             print('   loading LAYAVG...')
         line = f.readline()
         t = line.strip().split()
-        layavg = np.array((t[0:nlay]), dtype=np.int)
+        layavg = np.array((t[0:nlay]), dtype=np.int32)
         # CHANI array
         if model.verbose:
             print('   loading CHANI...')
@@ -379,13 +379,13 @@ class ModflowUpw(Package):
             print('   loading LAYVKA...')
         line = f.readline()
         t = line.strip().split()
-        layvka = np.array((t[0:nlay]), dtype=np.int)
+        layvka = np.array((t[0:nlay]), dtype=np.int32)
         # LAYWET array
         if model.verbose:
             print('   loading LAYWET...')
         line = f.readline()
         t = line.strip().split()
-        laywet = np.array((t[0:nlay]), dtype=np.int)
+        laywet = np.array((t[0:nlay]), dtype=np.int32)
         # Item 7: WETFCT, IWETIT, IHDWET
         wetfct, iwetit, ihdwet = None, None, None
         iwetdry = laywet.sum()

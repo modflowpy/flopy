@@ -4,8 +4,8 @@ import collections
 from ..utils.utils_def import FlopyBinaryData
 from ..utils.reference import SpatialReference
 
-class MfGrdFile(FlopyBinaryData):
 
+class MfGrdFile(FlopyBinaryData):
 
     def __init__(self, filename, precision='double', verbose=False):
         """
@@ -22,6 +22,8 @@ class MfGrdFile(FlopyBinaryData):
         self._datadict = collections.OrderedDict()
         self._recordkeys = []
 
+        if self.verbose:
+            print('\nProcessing binary grid file: {}'.format(filename))
         self.file = open(filename, 'rb')
         """
         # read header information
@@ -73,11 +75,19 @@ class MfGrdFile(FlopyBinaryData):
                 shp = (0,)
             self._recorddict[key] = (dtype, nd, shp)
             self._recordkeys.append(key)
+            if self.verbose:
+                s = ''
+                if nd > 0:
+                    s = shp
+                print('  File contains data for {} with shape {}'.format(key, s))
 
         if self.verbose:
-            print('read {} records from {}'.format(self._ntxt, filename))
+            print('Attempting to read {} records from {}'.format(self._ntxt,
+                                                                 filename))
 
         for key in self._recordkeys:
+            if self.verbose:
+                print('  Reading {}'.format(key))
             dt, nd, shp = self._recorddict[key]
             # read array data
             if nd > 0:
@@ -95,13 +105,23 @@ class MfGrdFile(FlopyBinaryData):
                     v = self.read_real()
             self._datadict[key] = v
 
+            if self.verbose:
+                if nd == 0:
+                    print('  {} = {}'.format(key, v))
+                else:
+                    print('  {}: min = {} max = {}'.format(key, v.min(),
+                                                           v.max()))
+
         # set the spatial reference
         self.sr = self._set_spatialreference()
 
     def _set_spatialreference(self):
+        sr = None
         try:
             if self._grid == 'DISV':
-                sr = None
+                pass
+            elif self._grid == 'DISU':
+                pass
             elif self._grid == 'DIS':
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
                 xorigin, yorigin, rot = self._datadict['XORIGIN'], \
@@ -110,7 +130,6 @@ class MfGrdFile(FlopyBinaryData):
                 sr = SpatialReference(delr=delr, delc=delc,
                                       xll=xorigin, yll=yorigin, rotation=rot)
         except:
-            sr = None
             print('could not set spatial reference for {}'.format(self.file.name))
 
         return sr
@@ -121,7 +140,7 @@ class MfGrdFile(FlopyBinaryData):
     def get_centroids(self):
         x, y = None, None
         try:
-            if self._grid == 'DISV':
+            if self._grid in ['DISV', 'DISU']:
                 x = self._datadict['CELLX']
                 y = self._datadict['CELLY']
             elif self._grid == 'DIS':
@@ -149,6 +168,24 @@ class MfGrdFile(FlopyBinaryData):
                 return iverts, self._datadict['VERTICES'].reshape(shpvert)
             except:
                 print('could not return vertices for {}'.format(self.file.name))
+        elif self._grid == 'DISU':
+            try:
+                iverts = []
+                iavert = self._datadict['IAVERT']
+                javert = self._datadict['JAVERT']
+                shpvert = self._recorddict['VERTICES'][2]
+                for ivert in range(self._datadict['NODES']):
+                    i0 = iavert[ivert] - 1
+                    i1 = iavert[ivert + 1] - 1
+                    iverts.append((javert[i0:i1] - 1).tolist())
+                if self.verbose:
+                    print('returning vertices for {}'.format(
+                        self.file.name))
+                return iverts, self._datadict['VERTICES'].reshape(
+                    shpvert)
+            except:
+                print('could not return vertices for {}'.format(
+                    self.file.name))
         elif self._grid == 'DIS':
             try:
                 nlay, nrow, ncol = self._datadict['NLAY'], \
@@ -171,7 +208,7 @@ class MfGrdFile(FlopyBinaryData):
                 return iverts, verts
             except:
                 print('could not return vertices for {}'.format(self.file.name))
-
+        return
 
 
 

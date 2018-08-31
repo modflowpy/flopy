@@ -349,7 +349,7 @@ class Mt3dLkt(Package):
                     print('   Using historic MT3DMS array reader utilities to ' \
                           'read COLDLAK')
 
-        coldlak = Util2d.load(f, model, (1, nlkinit), np.float32, 'coldlak1',
+        coldlak = Util2d.load(f, model, (nlkinit,), np.float32, 'coldlak1',
                               ext_unit_dict, array_format=model.array_format)
 
         kwargs = {}
@@ -358,7 +358,7 @@ class Mt3dLkt(Package):
                 name = "coldlak" + str(icomp)
                 if model.verbose:
                     print('   loading {}...'.format(name))
-                u2d = Util2d.load(f, model, (1,nlkinit), np.float32,
+                u2d = Util2d.load(f, model, (nlkinit,), np.float32,
                                   name, ext_unit_dict, array_format=model.array_format)
                 kwargs[name] = u2d
 

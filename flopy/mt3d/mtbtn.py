@@ -295,14 +295,14 @@ class Mt3dBtn(Package):
                               np.float32, prsity, name='prsity',
                               locat=self.unit_number[0],
                               array_free_format=False)
-        self.icbund = Util3d(model, (self.nlay, self.nrow, self.ncol), np.int,
+        self.icbund = Util3d(model, (self.nlay, self.nrow, self.ncol), np.int32,
                               icbund, name='icbund',
                               locat=self.unit_number[0],
                              array_free_format=False)
         self.ssflag = ssflag
         self.dt0 = Util2d(model, (self.nper,), np.float32, dt0, name='dt0',
                           array_free_format=False)
-        self.mxstrn = Util2d(model, (self.nper,), np.int, mxstrn,
+        self.mxstrn = Util2d(model, (self.nper,), np.int32, mxstrn,
                               name='mxstrn')
         self.ttsmult = Util2d(model, (self.nper,), np.float32, ttsmult,
                                name='ttmult')
@@ -449,11 +449,11 @@ class Mt3dBtn(Package):
                                   locat=self.unit_number[0])
 
         if nstp is not None:
-            self.nstp = Util2d(self.parent, (nper,), np.int, nstp,
+            self.nstp = Util2d(self.parent, (nper,), np.int32, nstp,
                                 name='nstp',
                                 locat=self.unit_number[0])
         else:
-            self.nstp = Util2d(self.parent, (nper,), np.int,
+            self.nstp = Util2d(self.parent, (nper,), np.int32,
                                 mf.dis.nstp.get_value(),
                                 name='nstp',
                                 locat=self.unit_number[0])
@@ -470,13 +470,13 @@ class Mt3dBtn(Package):
 
         self.laycon = None
         if laycon is not None:
-            self.laycon = Util2d(self.parent, (nlay,), np.int, laycon,
+            self.laycon = Util2d(self.parent, (nlay,), np.int32, laycon,
                                   name='laycon',
                                   locat=self.unit_number[0])
         else:
             flow_package = mf.get_package('BCF6')
             if flow_package is not None:
-                self.laycon = Util2d(self.parent, (nlay,), np.int,
+                self.laycon = Util2d(self.parent, (nlay,), np.int32,
                                       flow_package.laycon.get_value(),
                                       name='laycon',
                                       locat=self.unit_number[0])
@@ -484,12 +484,12 @@ class Mt3dBtn(Package):
                 flow_package = mf.get_package('LPF')
                 if flow_package is not None:
                     self.laycon = Util2d(self.parent, (nlay,),
-                                          np.int, flow_package.laytyp.get_value(),
+                                          np.int32, flow_package.laytyp.get_value(),
                                           name='laycon', locat=self.unit_number[0])
                 flow_package = mf.get_package('UPW')
                 if flow_package is not None:
                     self.laycon = Util2d(self.parent, (nlay,),
-                                         np.int, flow_package.laytyp.get_value(),
+                                         np.int32, flow_package.laytyp.get_value(),
                                          name='laycon', locat=self.unit_number[0])
 
         s = 'BTN warning. Laycon has not been set.  A modflow model with a '
@@ -497,7 +497,7 @@ class Mt3dBtn(Package):
         s += ' to the BTN constructor.  Setting laycon to 1 (convertible).'
         if self.laycon is None:
             warnings.warn(s)
-            self.laycon = Util2d(self.parent, (nlay,), np.int, 1,
+            self.laycon = Util2d(self.parent, (nlay,), np.int32, 1,
                                   name='laycon',
                                   locat=self.unit_number[0])
         return
@@ -778,24 +778,22 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading LAYCON...')
-        laycon = np.empty((nlay), np.int)
+        laycon = np.empty((nlay), np.int32)
         laycon = read1d(f, laycon)
         if model.verbose:
             print('   LAYCON {}'.format(laycon))
 
         if model.verbose:
             print('   loading DELR...')
-        delr = Util2d.load(f, model, (ncol, 1), np.float32, 'delr',
+        delr = Util2d.load(f, model, (ncol,), np.float32, 'delr',
                             ext_unit_dict, array_format="mt3d")
-        delr = delr.array.reshape((ncol))
         if model.verbose:
             print('   DELR {}'.format(delr))
 
         if model.verbose:
             print('   loading DELC...')
-        delc = Util2d.load(f, model, (nrow, 1), np.float32, 'delc',
+        delc = Util2d.load(f, model, (nrow,), np.float32, 'delc',
                             ext_unit_dict, array_format="mt3d")
-        delc = delc.array.reshape((nrow))
         if model.verbose:
             print('   DELC {}'.format(delc))
 
@@ -822,7 +820,7 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading ICBUND...')
-        icbund = Util3d.load(f, model, (nlay, nrow, ncol), np.int, 'icbund',
+        icbund = Util3d.load(f, model, (nlay, nrow, ncol), np.int32, 'icbund',
                               ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   ICBUND {}'.format(icbund))
