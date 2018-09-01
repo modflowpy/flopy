@@ -524,8 +524,10 @@ class Util3d(object):
         self.shape = shape
         self.dtype = dtype
         self.__value = value
+        isnamespecified = False
         if isinstance(name, list):
             self.name = name
+            isnamespecified = True
         else:
             t = []
             for k in range(shape[0]):
@@ -533,10 +535,13 @@ class Util3d(object):
             self.name = t
         self.name_base = []
         for k in range(shape[0]):
-            if 'Layer' not in self.name[k]:
-                self.name_base.append(self.name[k] + ' Layer ')
-            else:
+            if isnamespecified:
                 self.name_base.append(self.name[k])
+            else:
+                if 'Layer' not in self.name[k]:
+                    self.name_base.append(self.name[k] + ' Layer ')
+                else:
+                    self.name_base.append(self.name[k])
         self.fmtin = fmtin
         self.cnstnt = cnstnt
         self.iprn = iprn
