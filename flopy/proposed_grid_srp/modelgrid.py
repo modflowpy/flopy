@@ -2,6 +2,7 @@ import abc
 from enum import Enum
 import os
 import numpy as np
+import copy
 from pandas import DataFrame
 
 
@@ -59,13 +60,17 @@ class CachedDataType(Enum):
     cell_centers = 3
 
 
-class CachedData():
+class CachedData(object):
     def __init__(self, data):
-        self.data = data
+        self._data = data
         self.out_of_date = False
 
+    @property
+    def data(self):
+        return copy.deepcopy(self._data)
+
     def update_data(self, data):
-        self.data = data
+        self._data = data
         self.out_of_date = False
 
 
@@ -390,6 +395,12 @@ class ModelGrid(object):
             return d
         else:
             return None
+
+    @property
+    def extent(self):
+        raise NotImplementedError(
+            'must define extent in child '
+            'class to use this base class')
 
     @property
     def xedges(self):

@@ -4,7 +4,7 @@ from .modelgrid import ModelGrid, CachedData, CachedDataType
 
 class StructuredModelGrid(ModelGrid):
     """
-    def get_cell_vertices(i, j, point_type)
+    get_cell_vertices(i, j, point_type)
         returns vertices for a single cell or sequence of i, j locations.
     get_row_array : ()
         returns a numpy ndarray sized to a model row
@@ -40,6 +40,10 @@ class StructuredModelGrid(ModelGrid):
     ####################
     # Properties
     ####################
+    @property
+    def extent(self):
+        return (min(self.xedges), max(self.xedges),
+                min(self.yedges), max(self.yedges))
 
     @property
     def xll(self):
@@ -308,9 +312,6 @@ class StructuredModelGrid(ModelGrid):
             x1 = x0
             y0 = ymin
             y1 = ymax
-            #if self._use_ref_coordinates:
-            #    x0, y0 = self.transform(x0, y0)
-            #    x1, y1 = self.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
 
         # horizontal lines
@@ -319,9 +320,6 @@ class StructuredModelGrid(ModelGrid):
             x1 = xmax
             y0 = xyedges[1][i]
             y1 = y0
-            #if self._use_ref_coordinates:
-            #    x0, y0 = self.transform(x0, y0)
-            #    x1, y1 = self.transform(x1, y1)
             lines.append([(x0, y0), (x1, y1)])
 
         if self._use_ref_coordinates:
