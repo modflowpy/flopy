@@ -642,9 +642,9 @@ class Mt3dBtn(Package):
 
         # A21, 22, 23 PERLEN, NSTP, TSMULT
         for t in range(self.nper):
-            s = '{0:10.6G}{1:10d}{2:10.4G}'.format(self.perlen[t],
-                                                     self.nstp[t],
-                                                     self.tsmult[t])
+            s = '{0:10G}{1:10d}{2:10G}'.format(self.perlen[t],
+                                               self.nstp[t],
+                                               self.tsmult[t])
             if self.ssflag is not None:
                 s += ' ' + self.ssflag[t]
             s += '\n'
