@@ -1505,7 +1505,7 @@ class HeadUFile(BinaryLayerFile):
 
     Notes
     -----
-    The HeadFile class provides simple ways to retrieve a list of
+    The HeadUFile class provides simple ways to retrieve a list of
     head arrays from a MODFLOW-USG binary head file and time series
     arrays for one or more cells.
 
@@ -1527,9 +1527,10 @@ class HeadUFile(BinaryLayerFile):
     --------
 
     >>> import flopy.utils.binaryfile as bf
-    >>> hdobj = bf.USGHeadFile('model.hds', precision='single')
+    >>> hdobj = bf.HeadUFile('model.hds')
     >>> hdobj.list_records()
     >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
+
 
     """
 
