@@ -377,8 +377,10 @@ class ModflowStr(Package):
         dtype, dtype2 = ModflowStr.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
+        #return (create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
+        #        create_empty_recarray(nss, dtype=dtype, default_value=0))
         return (create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
-                create_empty_recarray(nss, dtype=dtype, default_value=0))
+                create_empty_recarray(nss, dtype=dtype2, default_value=0))
 
     @staticmethod
     def get_default_dtype(structured=True):
@@ -497,13 +499,15 @@ class ModflowStr(Package):
                 # dataset 9
                 if self.ntrib > 0:
                     for line in sdata:
-                        for idx in range(3):
+                        #for idx in range(3):
+                        for idx in range(self.ntrib)
                             f_str.write(fmt9.format(line[idx]))
                         f_str.write('\n')
                 # dataset 10
                 if self.ndiv > 0:
                     for line in sdata:
-                        f_str.write('{:10d}\n'.format(line[3]))
+                        #f_str.write('{:10d}\n'.format(line[3]))
+                        f_str.write('{:10d}\n'.format(line[self.ntrib]))
 
         # close the str file
         f_str.close()
