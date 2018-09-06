@@ -598,7 +598,7 @@ class Mt3dBtn(Package):
             f_btn.write(self.sconc[s].get_file_entry())
 
         # A14
-        f_btn.write('{0:10.0E}{1:10.4f}\n' \
+        f_btn.write('{0:10.0E}{1:10.2E}\n' \
                     .format(self.cinact, self.thkmin))
 
         # A15
@@ -642,9 +642,9 @@ class Mt3dBtn(Package):
 
         # A21, 22, 23 PERLEN, NSTP, TSMULT
         for t in range(self.nper):
-            s = '{0:10.4G}{1:10d}{2:10.4G}'.format(self.perlen[t],
-                                                     self.nstp[t],
-                                                     self.tsmult[t])
+            s = '{0:10G}{1:10d}{2:10G}'.format(self.perlen[t],
+                                               self.nstp[t],
+                                               self.tsmult[t])
             if self.ssflag is not None:
                 s += ' ' + self.ssflag[t]
             s += '\n'

@@ -139,6 +139,8 @@ class ModflowLmt(Package):
                 pckgs += 'LAK '
             if 'uzf' in [x.lower() for x in self.package_flows]:
                 pckgs += 'UZF '
+            if 'all' in [x.lower() for x in self.package_flows]:
+                pckgs += 'ALL'
 
             line = 'PACKAGE_FLOWS ' + pckgs
             f.write('%s\n' % (line))
