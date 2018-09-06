@@ -500,7 +500,7 @@ class ModflowStr(Package):
                 if self.ntrib > 0:
                     for line in sdata:
                         #for idx in range(3):
-                        for idx in range(self.ntrib)
+                        for idx in range(self.ntrib):
                             f_str.write(fmt9.format(line[idx]))
                         f_str.write('\n')
                 # dataset 10
