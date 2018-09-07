@@ -211,7 +211,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if a is None or not hasattr(a, 'data_type'):
+                if a is None or not hasattr(a, 'data_type') or a.name == 'thickness':
                     continue
                 #if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
                 if a.data_type == DataType.array2d and a.array.shape == (nrow, ncol):
@@ -224,6 +224,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                     except:
                         print('Failed to get data for {} array, {} package'.format(a.name,
                                                                                    pak.name[0]))
+                        continue
+                    if isinstance(a.name, list) and a.name[0] == 'thickness':
                         continue
                     for ilay in range(a.array.shape[0]):
                         if isinstance(a, Util3d):

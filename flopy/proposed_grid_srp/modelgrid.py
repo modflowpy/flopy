@@ -81,40 +81,101 @@ class ModelGrid(object):
     Parameters
     ----------
     grid_type : enumeration
-        type of model grid (DiscritizationType.DIS, DiscritizationType.DISV,
-        DiscritizationType.DISU)
+        type of model grid ('structured', 'vertex_layered',
+        'vertex_unlayered')
+    top : ndarray(np.float)
+        top elevations of cells in topmost layer
+    botm : ndarray(np.float)
+        bottom elevations of all cells
+    idomain : ndarray(np.int)
+        ibound/idomain value for each cell
     sr : SpatialReference
-        Spatial reference locates the grid in a coordinate system
-    simulation_time : SimulationTime
-        Simulation time provides time information for temporal grid data
-    model_name : str
-        Name of the model associated with this grid
+        spatial reference locates the grid in a coordinate system
+    sim_time : SimulationTime
+        simulation time provides time information for temporal grid data
+    lenuni : int
+        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
+    origin_loc : str
+        Corner of the model grid that is the model origin
+        'ul' (upper left corner) or 'll' (lower left corner)
+    origin_x : float
+        x coordinate of the origin point in the spatial reference coordinate
+        system
+    origin_y : float
+        y coordinate of the origin point in the spatial reference coordinate
+        system
+    rotation : float
+        rotation angle of model grid, as it is rotated around the origin point
 
-    Attributes
+    Properties
     ----------
-    xedge : ndarray
-        array of column edges
-    yedge : ndarray
-        array of row edges
+    grid_type : enumeration
+        type of model grid ('structured', 'vertex_layered',
+        'vertex_unlayered')
+    top : ndarray(np.float)
+        top elevations of cells in topmost layer
+    botm : ndarray(np.float)
+        bottom elevations of all cells
+    top_botm : ndarray(np.float)
+        returns array combining top and botm arrays
+    idomain : ndarray(np.int)
+        ibound/idomain value for each cell
+    sr : SpatialReference
+        spatial reference locates the grid in a coordinate system
+    sim_time : SimulationTime
+        simulation time provides time information for temporal grid data
+    lenuni : int
+        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
+    model_length_units : str
+        returns length unit as a string
+    length_multiplier : float
+        returns length multiplier between model and spatial coordinates
+    origin_loc : str
+        Corner of the model grid that is the model origin
+        'ul' (upper left corner) or 'll' (lower left corner)
+    origin_x : float
+        x coordinate of the origin point in the spatial reference coordinate
+        system
+    origin_y : float
+        y coordinate of the origin point in the spatial reference coordinate
+        system
+    rotation : float
+        rotation angle of model grid, as it is rotated around the origin point
+    xgrid : ndarray
+        returns numpy meshgrid of x edges in reference frame defined by
+        point_type
+    ygrid : ndarray
+        returns numpy meshgrid of y edges in reference frame defined by
+        point_type
+    zgrid : ndarray
+        returns numpy meshgrid of z edges in reference frame defined by
+        point_type
+    xcenters : ndarray
+        returns x coordinate of cell centers
+    ycenters : ndarray
+        returns y coordinate of cell centers
+    ycenters : ndarray
+        returns z coordinate of cell centers
+    xyzgrid : [ndarray, ndarray, ndarray]
+        returns the location of grid edges of all model cells. if the model
+        grid contains spatial reference information, the grid edges are in the
+        coordinate system provided by the spatial reference information.
+        returns a list of three ndarrays for the x, y, and z coordinates
+    cell_centers : [ndarray, ndarray, ndarray]
+        returns the cell centers of all model cells in the model grid.  if
+        the model grid contains spatial reference information, the cell centers
+        are in the coordinate system provided by the spatial reference
+        information. otherwise the cell centers are based on a 0,0 location
+        for the upper left corner of the model grid. returns a list of three
+        ndarrays for the x, y, and z coordinates
 
     Methods
     ----------
-    xedgegrid : (point_type) : ndarray
-        returns numpy meshgrid of x edges in reference frame defined by
-        point_type
-    yedgegrid : (point_type) : ndarray
-        returns numpy meshgrid of y edges in reference frame defined by
-        point_type
-    xcenters : (point_type) : ndarray
-        returns x coordinate of cell centers
-    ycenters : (point_type) : ndarray
-        returns y coordinate of cell centers
-    cell_centers : (point_type) : ndarray
-        returns the cell centers of all models cells in the model grid.  if
-        the model grid contains spatial reference information, the cell centers
-        are in the coordinate system provided by the spatial reference
-        information. otherwise the cell centers are based on a 0,0 location for
-        the upper left corner of the model grid
+    rotate(x, y, rotation, xorigin=0., yorigin=0.)
+        rotate point defined by x, y by rotation around the origin point
+    transform(x, y, inverse=False)
+        transform point or array of points x, y from model coordinates to
+        spatial coordinates
     grid_lines : (point_type=PointType.spatialxyz) : list
         returns the model grid lines in a list.  each line is returned as a
         list containing two tuples in the format [(x1,y1), (x2,y2)] where
@@ -123,6 +184,19 @@ class ModelGrid(object):
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
+    write_gridSpec(filename)
+        write PEST style grid specification file
+    plot(**kwargs) : matplotlib.collections.LineCollection
+        plot the model grid
+    plot_array(a, ax=None, **kwargs) : matplotlib.collections.QuadMesh
+        create a quadmesh plot of the grid.
+    contour_array(ax, a, **kwargs) : ContourSet
+        ax (matplotlib.axes.Axes) are axes to add to the plot
+        a (np.ndarray) is the array to contour
+        Create a QuadMesh plot of the specified array using pcolormesh
+    get_3d_shared_vertex_connectivity() : [verts, iverts]
+        returns a list of vertices of the model grid (verts) and a list of
+        vertices by model cell (iverts)
 
     See Also
     --------
@@ -145,22 +219,47 @@ class ModelGrid(object):
                 "length_multiplier": None,
                 "source": 'defaults'}
 
-    def __init__(self, grid_type, sr=None, simulation_time=None, lenuni=2,
-                 origin_loc='ul', origin_x=0.0, origin_y=0.0, rotation=0.0):
-        self.grid_type = grid_type
+    def __init__(self, grid_type, top=None, botm=None, idomain=None, sr=None,
+                 sim_time=None, lenuni=2, origin_loc='ul', origin_x=0.0,
+                 origin_y=0.0, rotation=0.0):
         self.use_ref_coords = True
+        self._grid_type = grid_type
+        self._top = top
+        self._botm = botm
+        self._idomain = idomain
         self._sr = sr
         self._lenuni = lenuni
         self._origin_loc = origin_loc
         self._origin_x = origin_x
         self._origin_y = origin_y
         self._rotation = rotation
-        self.sim_time = simulation_time
+        self._sim_time = sim_time
         self._cache_dict = {}
 
     ###########################
     # basic functions
     ###########################
+    @property
+    def grid_type(self):
+        return self._grid_type
+
+    @property
+    def top(self):
+        return self._top
+
+    @property
+    def botm(self):
+        return self._botm
+
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        return np.concatenate((new_top, self._botm), axis=0)
+
+    @property
+    def idomain(self):
+        return self._idomain
+
     @property
     def sr(self):
         return self._sr
@@ -169,6 +268,25 @@ class ModelGrid(object):
     def sr(self, sr):
         self._sr = sr
         self._require_cache_updates()
+
+    def sim_time(self):
+        return self._sim_time
+
+    @property
+    def origin_loc(self):
+        return self._origin_loc
+
+    @property
+    def origin_x(self):
+        return self._origin_x
+
+    @property
+    def origin_y(self):
+        return self._origin_y
+
+    @property
+    def rotation(self):
+        return self._rotation
 
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
@@ -403,24 +521,16 @@ class ModelGrid(object):
             'class to use this base class')
 
     @property
-    def xedges(self):
-        raise NotImplementedError(
-            'must define xyvertices in child '
-            'class to use this base class')
+    def xgrid(self):
+        return self.xyzgrid[0]
 
     @property
-    def yedges(self):
-        raise NotImplementedError(
-            'must define xyvertices in child '
-            'class to use this base class')
+    def ygrid(self):
+        return self.xyzgrid[1]
 
     @property
-    def xedgegrid(self):
-        return self.xygrid[0]
-
-    @property
-    def yedgegrid(self):
-        return self.xygrid[1]
+    def zgrid(self):
+        return self.xyzgrid[2]
 
     @property
     def xcenters(self):
@@ -431,7 +541,11 @@ class ModelGrid(object):
         return self.cellcenters[1]
 
     @property
-    def xyvertices(self):
+    def zcenters(self):
+        return self.cellcenters[2]
+
+    @property
+    def xyzgrid(self):
         raise NotImplementedError(
             'must define xyvertices in child '
             'class to use this base class')
@@ -443,16 +557,22 @@ class ModelGrid(object):
             'class to use this base class')
 
     @property
-    def gridlines(self):
+    def grid_lines(self):
         raise NotImplementedError(
-            'must define get_grid_lines in child '
+            'must define get_cellcenters in child '
             'class to use this base class')
 
-    @property
-    def xygrid(self):
-        raise NotImplementedError(
-            'must define get_xygrid in child '
-            'class to use this base class')
+    def _zcoords(self):
+        if self.top is not None and self.botm is not None:
+            zcenters = []
+            zbdryelevs = np.concatenate((self.top, self.botm), axis=0)
+
+            for ix in range(1, len(zbdryelevs)):
+                zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.)
+        else:
+            zbdryelevs = None
+            zcenters = None
+        return zbdryelevs, zcenters
 
     @abc.abstractmethod
     def write_gridSpec(self, filename):
@@ -525,6 +645,66 @@ class ModelGrid(object):
         """
         raise NotImplementedError('must define get_rc in child '
                                   'class to use this base class')
+
+    def plot_grid_lines(self, **kwargs):
+        """
+        Get a LineCollection of the model grid in
+        model coordinates
+
+        Parameters
+            **kwargs: matplotlib.pyplot keyword arguments
+
+        Returns
+            matplotlib.collections.LineCollection
+        """
+        from flopy.plot.plotbase import PlotMapView
+
+        map = PlotMapView(modelgrid=self)
+        lc = map.plot_grid(**kwargs)
+        return lc
+
+    def plot_array(self, a, ax=None, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        ax = PlotUtilities._plot_array_helper(a, sr=self.sr, axes=ax, **kwargs)
+        return ax
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        from flopy.plot import PlotMapView
+
+        kwargs['ax'] = ax
+        map = PlotMapView(sr=self.sr)
+        contour_set = map.contour_array(a=a, **kwargs)
+
+        return contour_set
 
     @abc.abstractmethod
     # what is the difference between this and the one without "shared" below?

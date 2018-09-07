@@ -4,7 +4,7 @@ from .modelgrid import ModelGrid, CachedData, CachedDataType
 
 class StructuredModelGrid(ModelGrid):
     """
-    get_cell_vertices(i, j, point_type)
+    cell_vertices(i, j, point_type)
         returns vertices for a single cell or sequence of i, j locations.
     get_row_array : ()
         returns a numpy ndarray sized to a model row
@@ -21,15 +21,12 @@ class StructuredModelGrid(ModelGrid):
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
                  simulation_time=None, lenuni=2, sr=None, origin_loc='ul',
                  origin_x=None, origin_y=None, rotation=0.0):
-        super(StructuredModelGrid, self).__init__('structured', sr,
-                                                  simulation_time, lenuni,
-                                                  origin_loc, origin_x,
+        super(StructuredModelGrid, self).__init__('structured', top, botm,
+                                                  idomain, sr, simulation_time,
+                                                  lenuni, origin_loc, origin_x,
                                                   origin_y, rotation)
         self.__delc = delc
         self.__delr = delr
-        self.__top = top
-        self.__botm = botm
-        self.__idomain = idomain
         self.__nrow = len(delc)
         self.__ncol = len(delr)
         if botm is not None:
@@ -159,27 +156,30 @@ class StructuredModelGrid(ModelGrid):
         return self.__delr
 
     @property
-    def top(self):
-        return self.__top
-
-    @property
-    def botm(self):
-        return self.__botm
-
-    @property
-    def top_botm(self):
-        new_top = np.expand_dims(self.__top, 0)
-        return np.concatenate((new_top, self.__botm), axis=0)
-
-    @property
-    def idomain(self):
-        return self.__idomain
-
-    @property
     def bounds(self):
         """Return bounding box in shapely order."""
-        xmin, xmax, ymin, ymax = self.extent()
+        xmin, xmax, ymin, ymax = self.extent
         return xmin, ymin, xmax, ymax
+
+    @property
+    def grid_lines(self):
+        """
+        Returns a the grid line vertices as a list
+        """
+        xmin, xmax, ymin, ymax = self.extent
+        xedge = self.xedges
+        yedge = self.yedges
+        lines = []
+
+        for j in range(self.ncol + 1):
+            x0 = xedge[j]
+            lines.append([(x0, ymin), (x0, ymax)])
+
+        for i in range(self.nrow + 1):
+            y0 = yedge[i]
+            lines.append([(xmin, y0), (xmax, y0)])
+
+        return lines
 
     @property
     def xedges(self):
@@ -187,7 +187,7 @@ class StructuredModelGrid(ModelGrid):
         Return two numpy one-dimensional float arrays. One array has the cell
         edge y coordinates for every column in the grid in model space -
         """
-        return self.xygrid[0]
+        return self.xyedges[0]
 
     @property
     def yedges(self):
@@ -195,10 +195,10 @@ class StructuredModelGrid(ModelGrid):
         Return two numpy one-dimensional float arrays. One array has the cell
         edge x coordinates for every column in the grid in model space -
         """
-        return self.xygrid[1]
+        return self.xyedges[1]
 
     @property
-    def xygrid(self):
+    def xyzgrid(self):
         """
         """
         cache_index = (CachedDataType.edge_grid.value,
@@ -209,12 +209,13 @@ class StructuredModelGrid(ModelGrid):
             length_y = np.add.reduce(self.__delc)
             yedge = np.concatenate(([length_y], length_y -
                                     np.add.accumulate(self.delc)))
-            xedge, yedge = np.meshgrid(xedge, yedge)
+            xgrid, ygrid = np.meshgrid(xedge, yedge)
+            zgrid, zcenter = self._zcoords()
             if self._use_ref_coordinates:
                 # transform x and y
-                xedge, yedge = self.transform(xedge, yedge)
+                xgrid, ygrid = self.transform(xgrid, ygrid)
             self._cache_dict[cache_index] = \
-                CachedData([xedge, yedge])
+                CachedData([xgrid, ygrid, zgrid])
         return self._cache_dict[cache_index].data
 
     @property
@@ -276,10 +277,10 @@ class StructuredModelGrid(ModelGrid):
             if self.__nlay is not None:
                 # get z centers
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
-                z[0, :, :] = (self.__top[:, :] + self.__botm[0, :, :]) / 2.
+                z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.
                 for l in range(1, self.__nlay):
-                    z[l, :, :] = (self.__botm[l - 1, :, :] +
-                                  self.__botm[l, :, :]) / 2.
+                    z[l, :, :] = (self._botm[l - 1, :, :] +
+                                  self._botm[l, :, :]) / 2.
             else:
                 z = None
             if self._use_ref_coordinates:
@@ -333,7 +334,7 @@ class StructuredModelGrid(ModelGrid):
     def cell_vertices(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
         pts = []
-        xgrid, ygrid = self.xedgegrid, self.yedgegrid
+        xgrid, ygrid = self.xgrid, self.ygrid
         pts.append([xgrid[i, j], ygrid[i, j]])
         pts.append([xgrid[i + 1, j], ygrid[i + 1, j]])
         pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
@@ -657,7 +658,7 @@ p
                         continue
 
                     ivert = []
-                    pts = self.get_cell_vertices(i, j)
+                    pts = self.cell_vertices(i, j)
                     pt0, pt1, pt2, pt3, pt0 = pts
 
                     z = top_botm[k + 1, i, j]
