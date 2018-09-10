@@ -1,5 +1,4 @@
 import copy
-import sys
 import numpy as np
 
 try:
@@ -11,7 +10,6 @@ except ImportError:
     plt = None
 
 from flopy.plot import plotutil
-# from flopy.plot.plotutil import bc_color_dict
 from flopy.utils import SpatialReference as DepreciatedSpatialReference
 from flopy.grid.structuredmodelgrid import StructuredModelGrid
 from flopy.grid.reference import SpatialReference

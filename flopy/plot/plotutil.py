@@ -9,10 +9,8 @@ import os
 import sys
 import math
 import numpy as np
-import pickle
 from flopy.utils import MfList, Util2d, Util3d, Transient2d
-from flopy.mf6.data.mfdataarray import MFArray, MFTransientArray
-from flopy.mf6.data.mfdatalist import MFList as FP6MFList
+from flopy.mf6.data.mfdataarray import MFArray
 from flopy.mf6.data.mfdatalist import MFTransientList
 from flopy.plot.plotbase import PlotMapView
 

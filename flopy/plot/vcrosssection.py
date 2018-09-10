@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 
 try:
@@ -8,7 +7,6 @@ except:
     plt = None
 from flopy.plot import plotutil
 import warnings
-import copy
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
