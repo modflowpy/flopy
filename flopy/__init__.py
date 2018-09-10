@@ -40,5 +40,5 @@ from . import mf6
 from . import grid
 from . import proposed_grid_srp
 
-# from . import proposed_grid
+from . import proposed_grid
 from .mbase import run_model, which

@@ -211,11 +211,11 @@ class VertexMapView(object):
         ax.add_collection(p)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
-        return ax
+        return p
 
     def contour_array(self, a, masked_values=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
+        Contour an array.  If the array is two-dimensional, then the method
         will contour the layer tied to this class (self.layer).
 
         Parameters
@@ -277,6 +277,7 @@ class VertexMapView(object):
 
         triang = tri.Triangulation(xcentergrid, ycentergrid)
 
+        mask = None
         try:
             amask = plotarray.mask
             mask = [False for i in range(triang.triangles.shape[0])]
@@ -316,12 +317,14 @@ class VertexMapView(object):
 
         """
         if idomain is None:
-            idomain = self.model.dis.idomain.array
+            idomain = self.mg.idomain
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
+        idomain = idomain[self.layer, :]
 
         plotarray = np.zeros(idomain.shape, dtype=np.int)
         idx1 = (idomain <= 0)
@@ -560,10 +563,14 @@ class VertexMapView(object):
         # todo: eventually remove dis reference!
         top = self.mg.top
         botm = self.mg.botm
+        idomain = self.mg.idomain
         if self.mg.top is None or self.mg.botm is None:
             if dis is None:
                 if self.model is not None:
                     dis = self.model.dis
+                    idomain = self.model.dis.idomain.array
+                    top = self.model.dis.top.array
+                    botm = self.model.dis.botm.array
 
                 else:
                     err_msg = "ModelMap.plot_quiver() error: DIS package not found"
@@ -571,6 +578,7 @@ class VertexMapView(object):
             else:
                 top = dis.top.array
                 botm = dis.botm.array
+                idomain = dis.idomain.array
 
         fja = np.array(fja)
         nlay = self.mg.nlay
@@ -588,6 +596,9 @@ class VertexMapView(object):
         if len(head.shape) == 3:
             head.shape = (nlay, -1)
 
+        # if isinstance(fja, list):
+        #    fja = fja[0]
+
         if len(fja.shape) == 4:
             fja = fja[0][0][0]
 
@@ -603,7 +614,7 @@ class VertexMapView(object):
 
         frf, fff, flf = plotutil.UnstructuredPlotUtilities.\
             vectorize_flow(fja, model_grid=self.mg,
-                           idomain=dis.idomain.array)
+                           idomain=idomain)
 
         qx, qy, qz = plotutil.UnstructuredPlotUtilities.\
             specific_discharge(frf, fff, flf,
@@ -631,7 +642,6 @@ class VertexMapView(object):
             ax = self.ax
 
         # mask discharge in inactive cells
-        idomain = dis.idomain.array
         idx = (idomain[self.layer, ::istep] == 0)
         idx[idomain[self.layer, ::istep] == -1] = 1
 
@@ -697,10 +707,13 @@ if __name__ == "__main__":
 
     map = PlotMapView(modelgrid=t, layer=0)
     #ax = map.plot_array(a=dis.botm.array)
+    #plt.colorbar(ax)
     #plt.show()
 
     #arr = np.random.rand(100) * 100
-    #ax = map.contour_array(a=arr)
+    #masked_values = arr[0:10]
+    #ax = map.contour_array(a=arr, masked_values=masked_values)
+
     #plt.show()
 
     #idomain = np.ones(100, dtype=np.int)
@@ -711,6 +724,9 @@ if __name__ == "__main__":
     #ax = map.plot_ibound(idomain)
     #plt.show()
 
+    #ax = map.plot_inactive()
+    #plt.show()
+
     #ax = map.plot_grid()
     #plt.show()
 
@@ -718,15 +734,17 @@ if __name__ == "__main__":
     #ax = map.plot_bc(package=chd)
     #plt.show()
 
-    cbc = os.path.join(ws, "model.cbc")
-    hds = os.path.join(ws, "model.hds")
+    #cbc = os.path.join(ws, "model.cbc")
+    #hds = os.path.join(ws, "model.hds")
+    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
     print(cbc.get_unique_record_names())
 
-    fja = cbc.get_data(text="FLOW-JA-FACE")
+    fja = cbc.get_data(text="FLOW JA FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)
