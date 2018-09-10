@@ -559,7 +559,7 @@ class VertexMapView(object):
         else:
             pivot = 'middle'
 
-        # todo: change this to reference the modelgrid instance if dis does not exist
+        # todo: remove dis reference! change this to reference the modelgrid instance if dis does not exist
         if dis is None:
             if self.model is not None:
                 dis = self.model.dis
@@ -577,7 +577,8 @@ class VertexMapView(object):
         delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
         delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
 
-        # todo: get hnoflow and hdry from the proper place
+        # todo: try to get hnoflow and hdry from the proper place (look up where these are in flopy6)
+        # todo: flopy3 support is not needed in vertex model grid (unless we pipe unstructed mg here...)
         hnoflo = 999.
         hdry = 999.
 
@@ -595,7 +596,6 @@ class VertexMapView(object):
             if self.model.sto is not None:
                 laytyp = self.model.sto.iconvert.array
 
-        # todo: update saturated thickness for the new iconvert array!
         sat_thk = plotutil.PlotUtilities.\
             saturated_thickness(head, top,
                                 botm, laytyp,

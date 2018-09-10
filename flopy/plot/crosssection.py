@@ -490,10 +490,13 @@ class StructuredCrossSection(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        # todo: change this to plot inactive and call idomain for Flopy6
+
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except AttributeError:
+                ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -507,7 +510,7 @@ class StructuredCrossSection(object):
         return patches
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    head=None, **kwargs):
+                    color_vpt="red", head=None, **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.model
@@ -520,6 +523,8 @@ class StructuredCrossSection(object):
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        color_vpt : str
+            Color for vertical pass through cells (Default is 'red')
         head : numpy.ndarray
             Three-dimensional array to set top of patches to the minimum
             of the top of a layer or the head value. Used to create
@@ -532,10 +537,15 @@ class StructuredCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        # todo: update this for idomain, change to plot inactive!
+
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except AttributeError:
+                ibound = self.mg.idomain
+                color_ch = color_vpt
+
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)
@@ -620,19 +630,31 @@ class StructuredCrossSection(object):
 
         # Get the list data
         try:
-            # todo: this may need an update for flopy6
-            mflist = p.stress_period_data[kper]
+            # todo: sanity check flopy6 update before removing old code
+            # mflist = p.stress_period_data[kper]
+            arr_dict = p.stress_period_data.to_array(kper)
         except:
             raise Exception('Not a list-style boundary package')
 
-        # Return if MfList is None
-        if mflist is None:
+        if not arr_dict:
             return None
 
+        for key in arr_dict:
+            fluxes = arr_dict[key]
+            break
+
+
+        # if mflist is None:
+        #    return None
+
         # Plot the list locations
+        # todo: sanity check flopy6 update before removing old code.
         plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
-        idx = (mflist['k'], mflist['i'], mflist['j'])
-        plotarray[idx] = 1
+        plotarray[fluxes != 0] = 1
+
+        # idx = (mflist['k'], mflist['i'], mflist['j'])
+        # plotarray[idx] = 1
+
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
             if ftype in plotutil.bc_color_dict:
@@ -690,8 +712,11 @@ class StructuredCrossSection(object):
             pivot = 'middle'
 
         # Calculate specific discharge
-        # todo: update this to handle flopy6 and flopy 3!
-        ib = self.model.bas6.ibound.array
+        try:
+            ib = self.model.bas6.ibound.array
+        except AttributeError:
+            ib = self.mg.idomain
+
         delr = self.dis.delr.array
         delc = self.dis.delc.array
         top = self.dis.top.array
@@ -701,13 +726,21 @@ class StructuredCrossSection(object):
         hnoflo = 999.
         hdry = 999.
         if self.model is not None:
-            lpf = self.model.get_package('LPF')
-            if lpf is not None:
-                laytyp = lpf.laytyp.array
-                hdry = lpf.hdry
-            bas = self.model.get_package('BAS6')
-            if bas is not None:
-                hnoflo = bas.hnoflo
+            if self.model.version == "mf6":
+                sto = self.model.get_package("STO")
+                if sto is not None:
+                    laytyp = sto.iconvert.array
+                # can't find an equivalent in mf6....???
+                hdry = 999.
+
+            else:
+                lpf = self.model.get_package('LPF')
+                if lpf is not None:
+                    laytyp = lpf.laytyp.array
+                    hdry = lpf.hdry
+                bas = self.model.get_package('BAS6')
+                if bas is not None:
+                    hnoflo = bas.hnoflo
 
         # If no access to head or laytyp, then calculate confined saturated
         # thickness by setting laytyp to zeros

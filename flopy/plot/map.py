@@ -331,8 +331,8 @@ class StructuredMapView(object):
             try:
                 bas = self.model.get_package('BAS6')
                 ibound = bas.ibound.array
-            except:
-                ibound = self.model.dis.idomain.array
+            except AttributeError:
+                ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -372,7 +372,7 @@ class StructuredMapView(object):
                 bas = self.model.get_package('BAS6')
                 ibound = bas.ibound.array
             except:
-                ibound = self.model.dis.idomain.array
+                ibound = self.mg.idomain
                 color_ch = color_vpt
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
@@ -465,17 +465,6 @@ p
         else:
             raise Exception('Cannot find package to plot')
 
-        # Get the list data
-
-        # try:
-        #    mflist = p.stress_period_data.data[kper]
-        #except AttributeError:
-            # todo: sanity check on this fp6 code!
-            # todo: kper doesn't work, doesn't seem to return all data!
-        #    mflist = p.stress_period_data.array # [kper]
-        # else:
-        #    raise Exception('Not a list-style boundary package:')
-
         # use a general expression to get stress period data
         arr_dict = p.stress_period_data.to_array(kper)
         if not arr_dict:
@@ -485,35 +474,17 @@ p
             fluxes = arr_dict[key]
             break
 
-        # Return if MfList is None
-        # if mflist is None:
-        #    return None
         nlay = self.model.modelgrid.nlay
 
         # Plot the list locations
         plotarray = np.zeros((nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
         if plotAll:
-            #try:
-            #    idx = [mflist['i'], mflist['j']]
-            #except ValueError:
-            #    idx = [[v[1] for v in mflist['cellid']],
-            #           [v[2] for v in mflist['cellid']]]
-            # plotarray[:, idx] = 1
             t = np.sum(fluxes, axis=0)
             pa = np.zeros((self.mg.nrow, self.mg.ncol), dtype=np.int)
             pa[t != 0] = 1
             for k in range(nlay):
                 plotarray[k, :, :] = pa.copy()
         else:
-            # try:
-            #     idx = [mflist['k'], mflist['i'], mflist['j']]
-            # except ValueError:
-            # todo: sanity check on this fp6 code
-            #     k = [v[0] for v in mflist['cellid']]
-            #     i = [v[1] for v in mflist['cellid']]
-            #     j = [v[2] for v in mflist['cellid']]
-            #     idx = [k, i, j]
-
             plotarray[fluxes != 0] = 1
 
         # mask the plot array
@@ -635,7 +606,6 @@ p
             Vectors of specific discharge.
 
         """
-        # remove 'pivot' keyword argument
         # by default the center of the arrow is plotted in the center of a cell
         if 'pivot' in kwargs:
             pivot = kwargs.pop('pivot')
@@ -644,6 +614,7 @@ p
 
         # Calculate specific discharge
         # make sure dis is defined
+        # todo: if modelgrid then dis is not necessary! Eventually migrate to new style!
         if dis is None:
             if self.model is not None:
                 dis = self.model.dis
@@ -651,8 +622,12 @@ p
                 print('ModelMap.plot_quiver() error: self.dis is None and dis '
                       'arg is None.')
                 return
-        # todo: this will break with flopy6 it will have to call idomain array
-        ib = self.model.bas6.ibound.array
+
+        try:
+            ib = self.model.bas6.ibound.array
+        except AttributeError:
+            ib = self.mg.idomain
+
         delr = dis.delr.array
         delc = dis.delc.array
         top = dis.top.array
@@ -662,10 +637,21 @@ p
         hnoflo = 999.
         hdry = 999.
         if self.model is not None:
-            lpf = self.model.get_package('LPF')
-            if lpf is not None:
-                laytyp = lpf.laytyp.array
-                hdry = lpf.hdry
+            if self.model.version == "mf6":
+                sto = self.model.get_package("STO")
+                if sto is not None:
+                    laytyp = sto.iconvert.array
+
+                # no equivalent data in mf6?
+                hdry = 999.
+
+            else:
+                lpf = self.model.get_package('LPF')
+
+                if lpf is not None:
+                    laytyp = lpf.laytyp.array
+                    hdry = lpf.hdry
+
             bas = self.model.get_package('BAS6')
             if bas is not None:
                 hnoflo = bas.hnoflo
@@ -880,7 +866,6 @@ p
         arr = np.vstack((x0r, y0r)).T
 
         # plot the end point data
-        # todo: try ax.scatter to preseve the current axis object
         sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
         # sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 

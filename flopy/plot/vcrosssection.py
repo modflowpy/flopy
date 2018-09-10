@@ -99,12 +99,11 @@ class VertexCrossSection(object):
         self.pts = np.array(pts)
 
         # get points along the line
-        # todo: after crafting this spartial refernce code, send the dictionary item to a plotutil method!
+
         self.xypts = plotutil.UnstructuredPlotUtilities.\
             line_intersect_grid(self.pts,
                                 self.mg.xgrid,
                                 self.mg.ygrid)
-        # todo: possibly think a little more about the line_intersect_grid method
 
         if len(self.xypts) < 2:
             s = 'cross-section cannot be created\n.'
@@ -178,53 +177,6 @@ class VertexCrossSection(object):
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
 
-        # not certain this block of code is needed with current code base!
-        # xcenters = self.mg.xcenters
-        # ycenters = self.mg.ycenters
-        # zcenters = self.mg.zcenters
-
-        """
-        # todo: redo this section, grab from the centergrid array!
-        if self.dis.nlay == 1:
-            for k in range(1, len(zpts)):
-                xp = {}
-                zp = {}
-                for i, value in zpts[k].items():
-                    try:
-                        xparr.append([self.xypts[i][0][0], self.xypts[i][-1][0]])
-                        zparr.append([value, zpts[k - 1][i]])
-                        # todo: this should be set to a dictionary correct. Currently its being overwritten each loop!
-                        # todo: then it'll be the same as the following code after else:
-                        xp = 0.5 * (self.xypts[i][0][0] + self.xypts[i][-1][0])
-                        zp = 0.5 * (value + self.zpts[k - 1][i])
-
-                    except:
-                        break
-                xcentergrid.append(xp)
-                zcentergrid.append(zp)
-
-        else:
-            for k in range(1, len(zpts)):
-                xp = {}
-                zp = {}
-                for i, value in zpts[k].items():
-                    try:
-                        xparr.append([self.xypts[i][0][0], self.xypts[i][-1][0]])
-                        zparr.append([value, zpts[k - 1][i]])
-                        xp[i] = 0.5 * (self.xypts[i][0][0] + self.xypts[i][-1][0])
-                        zp[i] = 0.5 * (value + zpts[k - 1][i])
-
-                    except:
-                        break
-                xcentergrid.append(xp)
-                zcentergrid.append(zp)
-
-        self.xparr = np.array(xparr)
-        self.zparr = np.array(zparr)
-
-        self.xcentergrid = xcentergrid
-        self.zcentergrid = zcentergrid
-        """
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
@@ -781,7 +733,6 @@ class VertexCrossSection(object):
             fja = fja[0][0][0]
 
 
-
         if isinstance(head, np.ndarray):
             zcenters = self.set_zcentergrid(np.ravel(head))
         else:
@@ -826,7 +777,7 @@ class VertexCrossSection(object):
                       in sorted(self.projpts)])
         y = np.ravel(zcenters)
 
-        # todo: implement the hstep, kstep function,
+        # todo: implement the kstep function,
         # todo: maybe we can do it on sorted projpts keys, before all this stuff?
         x = x[::hstep]
         y = y[::hstep]
