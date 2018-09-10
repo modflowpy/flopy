@@ -2052,7 +2052,7 @@ class UnstructuredPlotUtilities(object):
 
             qz = np.zeros(Qz.shape, dtype=Qz.dtype)
             qz = Qz / (delr * sat_thk)
-            qz = -qz
+            # qz = -qz
 
         return (qx, qy, qz)
 

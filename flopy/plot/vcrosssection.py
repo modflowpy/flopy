@@ -719,7 +719,7 @@ class VertexCrossSection(object):
         delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
         delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
 
-        # todo: get hnoflow and hdry from the proper place
+        # no modflow6 equivalent???
         hnoflo = 999.
         hdry = 999.
 
@@ -732,12 +732,16 @@ class VertexCrossSection(object):
         if len(fja.shape) == 4:
             fja = fja[0][0][0]
 
+        # kstep implementation, check for bugs!
+        projpts = {key: value for key, value in self.projpts.items()
+                   if (key // ncpl) % kstep == 0}
 
         if isinstance(head, np.ndarray):
-            zcenters = self.set_zcentergrid(np.ravel(head))
+            # pipe kstep to set_zcentergrid to assure consistent array size
+            zcenters = self.set_zcentergrid(np.ravel(head), kstep=kstep)
         else:
             zcenters = [np.mean(np.array(v).T[1]) for i, v
-                        in sorted(self.projpts.items())]
+                        in sorted(projpts.items())]
 
         laytyp = np.zeros((nlay,))
         if self.model is not None:
@@ -761,24 +765,22 @@ class VertexCrossSection(object):
         if self.direction == "x":
             qx = np.ravel(qx)
             u = np.array([qx[cell] for cell
-                          in sorted(self.projpts)])
+                          in sorted(projpts)])
             x = [np.mean(np.array(v).T[0]) for i, v
-                 in sorted(self.projpts.items())]
+                 in sorted(projpts.items())]
 
         else:
             qy = np.ravel(qy)
             u = np.array([qy[cell] for cell
-                          in sorted(self.projpts)])
+                          in sorted(projpts)])
             x = [np.mean(np.array(v).T[1]) for i, v
-                 in sorted(self.projpts.items())]
+                 in sorted(projpts.items())]
 
         qz = np.ravel(qz)
         v = np.array([qz[cell] for cell
-                      in sorted(self.projpts)])
+                      in sorted(projpts)])
         y = np.ravel(zcenters)
 
-        # todo: implement the kstep function,
-        # todo: maybe we can do it on sorted projpts keys, before all this stuff?
         x = x[::hstep]
         y = y[::hstep]
         u = u[::hstep]
@@ -930,7 +932,7 @@ class VertexCrossSection(object):
 
         return projpts
 
-    def set_zcentergrid(self, vs):
+    def set_zcentergrid(self, vs, kstep=1):
         """
         Get an array of z elevations at the center of a cell that is based
         on minimum of cell top elevation (self.elev) or passed vs numpy.ndarray
@@ -947,7 +949,8 @@ class VertexCrossSection(object):
         """
         verts = self.set_zpts(vs)
         zcenters =[np.mean(np.array(v).T[1]) for i, v
-                   in sorted(verts.items())]
+                   in sorted(verts.items())
+                   if (i // self.mg.ncpl) % kstep == 0]
         return zcenters
 
     def get_extent(self):
@@ -1065,13 +1068,13 @@ if __name__ == "__main__":
     #chd = ml.get_package("CHD")
     #ax = map.plot_bc(package=chd)
     #plt.show()
+    # todo: flip z-vector for flow!
 
-    # cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    # hds = os.path.join(ws, "expected_output/", "model_unch.hds")
-    # fja = cbc.get_data(text="FLOW JA FACE")
+    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
 
-    cbc = os.path.join(ws, "model.cbc")
-    hds = os.path.join(ws, "model.hds")
+    #cbc = os.path.join(ws, "model.cbc")
+    #hds = os.path.join(ws, "model.hds")
 
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
@@ -1079,12 +1082,13 @@ if __name__ == "__main__":
 
     print(cbc.get_unique_record_names())
 
-    fja = cbc.get_data(text="FLOW-JA-FACE")
+    # fja = cbc.get_data(text="FLOW-JA-FACE")
+    fja = cbc.get_data(text="FLOW JA FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)
 
 
-    ax = cr.plot_discharge(fja=fja, head=head)
+    ax = cr.plot_discharge(fja=fja, head=head, kstep=2)
     plt.show()
     print('break')

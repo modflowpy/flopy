@@ -559,26 +559,28 @@ class VertexMapView(object):
         else:
             pivot = 'middle'
 
-        # todo: remove dis reference! change this to reference the modelgrid instance if dis does not exist
-        if dis is None:
-            if self.model is not None:
-                dis = self.model.dis
-            else:
-                err_msg = "ModelMap.plot_quiver() error: DIS package not found"
-                raise AssertionError(err_msg)
+        # todo: eventually remove dis reference!
+        top = self.mg.top
+        botm = self.mg.botm
+        if self.mg.top is None or self.mg.botm is None:
+            if dis is None:
+                if self.model is not None:
+                    dis = self.model.dis
 
-        top = dis.top.array
-        botm = dis.botm.array
+                else:
+                    err_msg = "ModelMap.plot_quiver() error: DIS package not found"
+                    raise AssertionError(err_msg)
+            else:
+                top = dis.top.array
+                botm = dis.botm.array
 
         fja = np.array(fja)
         nlay = self.mg.nlay
-        ncpl = self.mg.ncpl
 
         delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
         delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
 
-        # todo: try to get hnoflow and hdry from the proper place (look up where these are in flopy6)
-        # todo: flopy3 support is not needed in vertex model grid (unless we pipe unstructed mg here...)
+        # no modflow6 equivalent?????
         hnoflo = 999.
         hdry = 999.
 
