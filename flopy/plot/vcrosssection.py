@@ -92,6 +92,7 @@ class VertexCrossSection(object):
             xp.append(v1)
             yp.append(v2)
 
+        # todo: consider giving the user a flag for modelgrid based coords.
         xp, yp = self.sr.transform(xp, yp, inverse=True)
         pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         self.pts = np.array(pts)
@@ -692,17 +693,15 @@ class VertexCrossSection(object):
         else:
             pivot = 'middle'
 
-        # check that the cross section is not arbitrary
-        pts = []
-        for pt in self.pts:
-            ipt = self.mg.sr.transform(pt[0], pt[1],
-                                       inverse=True)
-            pts.append(ipt)
+        pts = self.pts
 
-        pts = np.array(pts)
-
-        if np.unique(pts.T[0]).size > 1:
-            if np.unique(pts.T[1]).size > 1:
+        # check that the cross section in not arbitrary within a tolerance...
+        xuniform = [True if abs(pts.T[0, 0] - i) < 1
+                    else False for i in pts.T[0]]
+        yuniform = [True if abs(pts.T[1, 0] - i) < 1
+                    else False for i in pts.T[1]]
+        if not np.all(xuniform):
+            if not np.all(yuniform):
                 err_msg = "plot_discharge cannot plot " \
                           "aribtrary cross sections"
                 raise AssertionError(err_msg)
@@ -795,8 +794,8 @@ class VertexCrossSection(object):
         else:
             ax = self.ax
 
-        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.rotation)
-        quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
+        quiver = ax.quiver(x, y, u, v, scale=1, units='xy', pivot=pivot, **kwargs)
+
         return quiver
 
     def get_patch_collection(self, projpts, plotarray, **kwargs):
@@ -998,8 +997,9 @@ if __name__ == "__main__":
 
     t = VertexModelGrid(dis.vertices, dis.cell2d,
                         top=dis.top, botm=dis.botm,
-                        idomain=dis.idomain, xoffset=0,
-                        yoffset=0, rotation=0)
+                        idomain=dis.idomain, xoffset=10,
+                        yoffset=0, rotation=-25)
+
 
     # todo: build out model grid methods!
     x = t.xgrid
@@ -1020,8 +1020,12 @@ if __name__ == "__main__":
     sr_lc = t.sr.grid_lines
     sr_e = t.sr.extent
 
+    line = np.array([(0,2.5), (5, 2.5), (10, 2.5)])
+    line = t.sr.transform(line.T[0], line.T[1])
+    line = np.array(line).T
+
     cr = PlotCrossSection(modelgrid=t, dis=dis,
-                          line={"line":[(0,2.5), (5, 2.5), (10, 2.5)]})
+                          line={"line": line})
 
     # ax = cr.plot_bc(package=chd)
     # plt.show()
