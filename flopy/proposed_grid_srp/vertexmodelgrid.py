@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
-from .modelgrid import ModelGrid, MFGridException, CachedData, CachedDataType
+from flopy.proposed_grid_srp.modelgrid import ModelGrid, MFGridException, \
+    CachedData, CachedDataType
 
 
 class VertexModelGrid(ModelGrid):
@@ -188,6 +189,7 @@ class VertexModelGrid(ModelGrid):
         f.close()
         return cls(xc, yc, verts, iverts, np.array(nlay * [len(iverts)]))
 
+    @property
     def cellcenters(self):
         """
         Internal method to get cell centers and set to grid
@@ -199,6 +201,7 @@ class VertexModelGrid(ModelGrid):
             self._build_grid_geometry_info()
         return self._cache_dict[cache_index].data
 
+    @property
     def xyzgrid(self):
         """
         Internal method to get model grid verticies
@@ -234,8 +237,13 @@ class VertexModelGrid(ModelGrid):
             ycenters.append(cell2d[2])
 
             vert_number = [int(i) for i in cell2d[4:]]
-            xvertices.append(vertexdict[ix][0] for ix in vert_number)
-            yvertices.append(vertexdict[ix][1] for ix in vert_number)
+            xcellvert = []
+            ycellvert = []
+            for ix in vert_number:
+                xcellvert.append(vertexdict[ix][0])
+                ycellvert.append(vertexdict[ix][1])
+            xvertices.append(xcellvert)
+            yvertices.append(ycellvert)
 
         # build z cell centers
         zvertices, zcenters = self._zcoords()
@@ -243,9 +251,60 @@ class VertexModelGrid(ModelGrid):
         if self._use_ref_coordinates:
             # transform x and y
             xcenters, ycenters = self.transform(xcenters, ycenters)
-            xvertices, yvertices = self.transform(xvertices, yvertices)
+            xvertxform = []
+            yvertxform = []
+            # vertices are a list within a list
+            for xcellvertices, ycellvertices in zip(xvertices, yvertices):
+                xcellvertices, ycellvertices = self.transform(xcellvertices,
+                                                              ycellvertices)
+                xvertxform.append(xcellvertices)
+                yvertxform.append(ycellvertices)
+            xvertices = xvertxform
+            yvertices = yvertxform
 
         self._cache_dict[cache_index_cc] = CachedData([xcenters, ycenters,
                                                        zcenters])
         self._cache_dict[cache_index_vert] = CachedData([xvertices, yvertices,
                                                          zvertices])
+
+
+if __name__ == "__main__":
+    import os
+    import flopy as fp
+    from flopy.proposed_grid_srp.reference import SpatialReference
+
+    ws = "../../examples/data/mf6/test003_gwfs_disv"
+    name = "mfsim.nam"
+
+    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
+
+    print(sim.model_names)
+    ml = sim.get_model("gwf_1")
+
+    dis = ml.dis
+
+    sr = SpatialReference(epsg=26715)
+    t = VertexModelGrid(dis.vertices.array, dis.cell2d.array, top=dis.top.array,
+                        botm=dis.botm.array, idomain=dis.idomain.array, sr=sr,
+                        origin_x=0, origin_y=0, rotation=45, origin_loc="ul")
+
+    sr_x = t.xgrid
+    sr_y = t.ygrid
+    sr_xc = t.xcenters
+    sr_yc = t.ycenters
+    sr_lc = t.grid_lines
+    sr_e = t.extent
+
+    print('break')
+
+    t.use_ref_coords = False
+    x = t.xgrid
+    y = t.ygrid
+    z = t.zgrid
+    xc = t.xcenters
+    yc = t.ycenters
+    zc = t.zcenters
+    lc = t.grid_lines
+    e = t.extent
+
+    print('break')

@@ -71,7 +71,7 @@ description is the total number of (x, y) vertex pairs used to characterize the 
 block griddata
 name top
 type double precision
-shape (1, ncpl)
+shape (ncpl)
 reader readarray
 longname model top elevation
 description is the top elevation for each cell in the top model layer.
