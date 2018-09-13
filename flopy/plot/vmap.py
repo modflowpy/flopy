@@ -371,7 +371,9 @@ class VertexMapView(object):
 
         """
         if idomain is None:
-            idomain = self.model.dis.idomain.array
+            idomain = self.mg.idomain
+
+        idomain = idomain[self.layer, :]
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -668,7 +670,8 @@ if __name__ == "__main__":
     import flopy.utils.binaryfile as bf
     from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
 
-    ws = "../../examples/data/mf6/test003_gwfs_disv"
+    #ws = "../../examples/data/mf6/test003_gwfs_disv"
+    ws = "../../examples/data/mf6/triangles"
     name = "mfsim.nam"
 
     sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
@@ -706,8 +709,10 @@ if __name__ == "__main__":
     sr_e = t.sr.extent
 
     map = PlotMapView(modelgrid=t, layer=0)
-    #ax = map.plot_array(a=dis.botm.array)
+
+    #ax = map.plot_array(a=dis.botm.array, alpha=0.5)
     #plt.colorbar(ax)
+    #ax = map.contour_array(a=dis.botm.array)
     #plt.show()
 
     #arr = np.random.rand(100) * 100
@@ -721,7 +726,7 @@ if __name__ == "__main__":
     #r1 = np.random.randint(0, 100, size=10)
     #idomain[r] = 0
     #idomain[r1] = -1
-    #ax = map.plot_ibound(idomain)
+    #ax = map.plot_ibound()
     #plt.show()
 
     #ax = map.plot_inactive()
@@ -734,22 +739,22 @@ if __name__ == "__main__":
     #ax = map.plot_bc(package=chd)
     #plt.show()
 
-    #cbc = os.path.join(ws, "model.cbc")
-    #hds = os.path.join(ws, "model.hds")
-    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
+    cbc = os.path.join(ws, "tri_model.cbc")
+    hds = os.path.join(ws, "tri_model.hds")
+    #cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    #hds = os.path.join(ws, "expected_output/", "model_unch.hds")
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
-    print(cbc.get_unique_record_names())
+    #print(cbc.get_unique_record_names())
 
-    fja = cbc.get_data(text="FLOW JA FACE")
+    fja = cbc.get_data(text="FLOW-JA-FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
-    print(head.ndim)
+    #print(head.ndim)
 
     ax = map.plot_discharge(fja=fja, head=head, dis=dis)
     map.plot_grid()
     plt.show()
-    print('break')
+    #print('break')

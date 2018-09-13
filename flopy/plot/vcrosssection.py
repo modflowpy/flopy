@@ -770,7 +770,7 @@ class VertexCrossSection(object):
             qy = np.ravel(qy)
             u = np.array([qy[cell] for cell
                           in sorted(projpts)])
-            x = [np.mean(np.array(v).T[1]) for i, v
+            x = [np.mean(np.array(v).T[0]) for i, v
                  in sorted(projpts.items())]
 
         qz = np.ravel(qz)
@@ -983,7 +983,7 @@ if __name__ == "__main__":
     import flopy.utils.binaryfile as bf
     from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
 
-    ws = "../../examples/data/mf6/test003_gwfs_disv"
+    ws = "../../examples/data/mf6/triangles"
     name = "mfsim.nam"
 
     sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
@@ -1020,12 +1020,19 @@ if __name__ == "__main__":
     sr_lc = t.sr.grid_lines
     sr_e = t.sr.extent
 
-    line = np.array([(0,2.5), (5, 2.5), (10, 2.5)])
+    # line = np.array([(0,2.5), (5, 2.5), (10, 2.5)])
+    line = np.array([(2.5, 0), (2.5, 10.01)])
     line = t.sr.transform(line.T[0], line.T[1])
     line = np.array(line).T
 
     cr = PlotCrossSection(modelgrid=t, dis=dis,
                           line={"line": line})
+
+    #ax = cr.plot_grid()
+    #ax = cr.plot_array(a=dis.botm.array, alpha=0.5)
+    #plt.colorbar(ax)
+    #ax = cr.plot_bc(package=chd)
+    #plt.show()
 
     # ax = cr.plot_bc(package=chd)
     # plt.show()
@@ -1072,20 +1079,19 @@ if __name__ == "__main__":
     #plt.show()
     # todo: flip z-vector for flow!
 
-    cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    hds = os.path.join(ws, "expected_output/", "model_unch.hds")
+    #cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
+    #hds = os.path.join(ws, "expected_output/", "model_unch.hds")
 
-    #cbc = os.path.join(ws, "model.cbc")
-    #hds = os.path.join(ws, "model.hds")
-
+    cbc = os.path.join(ws, "tri_model.cbc")
+    hds = os.path.join(ws, "tri_model.hds")
 
     cbc = bf.CellBudgetFile(cbc, precision="double")
     hds = bf.HeadFile(hds)
 
-    print(cbc.get_unique_record_names())
+    #print(cbc.get_unique_record_names())
 
-    # fja = cbc.get_data(text="FLOW-JA-FACE")
-    fja = cbc.get_data(text="FLOW JA FACE")
+    fja = cbc.get_data(text="FLOW-JA-FACE")
+    #fja = cbc.get_data(text="FLOW JA FACE")
     head = hds.get_alldata()[0]
     head.shape = (4, -1)
     print(head.ndim)
@@ -1093,4 +1099,4 @@ if __name__ == "__main__":
 
     ax = cr.plot_discharge(fja=fja, head=head, kstep=2)
     plt.show()
-    print('break')
+    #print('break')

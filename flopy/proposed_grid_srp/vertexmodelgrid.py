@@ -4,6 +4,18 @@ from .modelgrid import ModelGrid, MFGridException, CachedData, CachedDataType
 
 
 class VertexModelGrid(ModelGrid):
+    # comment JL: layered_vertex and unlayered_vertex should be changed to
+    # vertex and unstructured in my opinion. This is because modflow
+    # defines specific grid types as Structured, Vertex, and Unstructured.
+    # By defining the grid_types differently in flopy, it creates unnecessary
+    # confusion.
+
+    # comment JL: lenuni should default to unspecified to avoid unwanted
+    # issues with model grid transforms using a spatial reference. This argument
+    # should either be explicitly set by the user or passed in from the dis file.
+
+    # comment JL: origin_x & origin_y. Consider renaming to xorigin and yorigin
+    # for consistency with modflow6 naming conventions.
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
                  simulation_time=None, lenuni=2, sr=None, origin_loc='ul',
                  origin_x=None, origin_y=None, rotation=0.0,
@@ -21,14 +33,23 @@ class VertexModelGrid(ModelGrid):
     @property
     def nlay(self):
         if self._botm is not None:
-            return len(self._botm + 1)
+            # this should be len(self._botm) since there is one botm array per layer
+            # return len(self._botm) + 1
+            return len(self._botm)
 
     @property
     def ncpl(self):
-        ncpl_list = []
-        for layer in self._botm:
-            ncpl_list.append(len(layer))
-        return ncpl_list
+        # comment JL: ncpl should be an integer, because it is a constant for all layers (pg 30 mf6 io documentation)
+        # and is defined as a single constant in the DISV package ex. in Modflow6 ncpl = 100 means
+        # that for all layers there is 100 cells. Vertex model grids have regular structure in the z-direction....
+        # this chage would also allow the user to get number of cells from an unstructured grid using the
+        # self.ncpl property!
+
+        # ncpl_list = []
+        # for layer in self._botm:
+        #     ncpl_list.append(len(layer))
+        # return ncpl_list
+        return len(self._cell2d)
 
     @property
     def extent(self):
@@ -60,13 +81,14 @@ class VertexModelGrid(ModelGrid):
     def get_model_dim_arrays(self):
         if self.grid_type() == 'layered_vertex':
             return [np.arange(1, self.nlay + 1, 1, np.int),
-                    np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
+                    np.arange(1, self.ncpl + 1, 1, np.int)]
         elif self.grid_type() == 'unlayered_vertex':
             return [np.arange(1, self.num_cells() + 1, 1, np.int)]
 
     def num_cells_per_layer(self):
+        # comment JL: This method should be removed since ncpl_i for i in n layers is a contant value
         if self.grid_type() == 'layered_vertex':
-            return max(self.ncpl)
+            return self.ncpl # max(self.ncpl)
         elif self.grid_type() == 'unlayered_vertex':
             except_str = 'ERROR: Model is unstructured and does not ' \
                          'have a consistant number of cells per ' \
@@ -76,33 +98,43 @@ class VertexModelGrid(ModelGrid):
 
     def num_cells(self, active_only=False):
         if active_only:
-            raise NotImplementedError(
-                'this feature is not yet implemented')
+            if self.idomain is not None:
+                return self.ncpl * self.nlay - np.count_nonzero(self.idomain==0)
+            else:
+                err_msg = "idomain has not been suplied to VertexModelGrid"
+                raise AttributeError(err_msg)
+
         else:
+            # comment JL: this should be simplified to self.ncpl * nlay
             if self.grid_type() == 'layered_vertex':
-                total_cells = 0
-                for layer_cells in self.ncpl:
-                    total_cells += layer_cells
-                return total_cells
+                # total_cells = 0
+                #for layer_cells in self.ncpl:
+                #    total_cells += layer_cells
+                return self.ncpl * self.nlay # total_cells
             elif self.grid_type() == 'unlayered_vertex':
                 return self.ncpl
 
     def get_model_dim(self):
         if self.grid_type() == 'layered_vertex':
-            return [self.nlay, max(self.ncpl)]
+            #comment JL: remove max(), it is a redundant operation.
+            return [self.nlay, self.ncpl]
         elif self.grid_type() == 'unlayered_vertex':
             return [self.num_cells()]
 
     def get_model_dim_names(self):
+        # this method does not need to include 'structured'
+        # method may be better suited in base class.
         if self.grid_type() == 'structured':
             return ['layer', 'row', 'column']
         elif self.grid_type() == 'layered_vertex':
+            # layer cell num should be named cellid to be consistent with modflow6 output names
             return ['layer', 'layer_cell_num']
         elif self.grid_type() == 'unlayered_vertex':
             return ['node']
 
     def get_horizontal_cross_section_dim_names(self):
         if self.grid_type() == 'layered_vertex':
+            # this should just be cellid to be consistent with modflow6 output names.
             return ['layer_cell_num']
         elif self.grid_type() == 'unlayered_vertex':
             except_str = 'ERROR: Can not get layer dimension name for DISU ' \
@@ -112,6 +144,8 @@ class VertexModelGrid(ModelGrid):
 
     def get_horizontal_cross_section_dim_arrays(self):
         if self.grid_type() == 'layered_vertex':
+            # not sure what this will be used for... if the user has ncpl they can use np.arange(1, ncpl + 1)
+            # also not sure why the numpy array is nested in a list, which adds an unused dimension to the array
             return [np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
         elif self.grid_type() == 'unlayered_vertex':
             except_str = 'ERROR: Can not get horizontal plane arrays for DISU' \
@@ -123,11 +157,13 @@ class VertexModelGrid(ModelGrid):
         model_cells = []
         if self.grid_type() == 'layered_vertex':
             for layer in range(0, self.nlay):
-                for layer_cellid in range(0, self.ncpl[layer]):
+                # comment JL: removed the layer call from self.ncpl[layer]
+                for layer_cellid in range(0, self.ncpl):
                     model_cells.append((layer + 1, layer_cellid + 1))
             return model_cells
         else:
-            for node in range(0, self.ncpl[0]):
+            # comment JL: remove the [0] call from self.ncpl[0]
+            for node in range(0, self.ncpl):
                 model_cells.append(node + 1)
             return model_cells
 
