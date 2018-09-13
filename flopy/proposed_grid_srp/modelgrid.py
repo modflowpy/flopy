@@ -565,7 +565,8 @@ class ModelGrid(object):
     def _zcoords(self):
         if self.top is not None and self.botm is not None:
             zcenters = []
-            zbdryelevs = np.concatenate((self.top, self.botm), axis=0)
+            top_3d = np.expand_dims(self.top, 0)
+            zbdryelevs = np.concatenate((top_3d, self.botm), axis=0)
 
             for ix in range(1, len(zbdryelevs)):
                 zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.)

@@ -1,5 +1,5 @@
 import numpy as np
-from .modelgrid import ModelGrid, CachedData, CachedDataType
+from flopy.proposed_grid_srp.modelgrid import ModelGrid, CachedData, CachedDataType
 
 
 class StructuredModelGrid(ModelGrid):
@@ -29,7 +29,10 @@ class StructuredModelGrid(ModelGrid):
         self.__delr = delr
         self.__nrow = len(delc)
         self.__ncol = len(delr)
+        if top is not None:
+            assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
+            assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
             self.__nlay = len(botm)
         else:
             self.__nlay = None
@@ -39,8 +42,9 @@ class StructuredModelGrid(ModelGrid):
     ####################
     @property
     def extent(self):
-        return (min(self.xedges), max(self.xedges),
-                min(self.yedges), max(self.yedges))
+        xyzgrid = self.xyzgrid
+        return (np.min(xyzgrid[0]), np.max(xyzgrid[0]),
+                np.min(xyzgrid[1]), np.max(xyzgrid[1]))
 
     @property
     def xll(self):
@@ -162,26 +166,6 @@ class StructuredModelGrid(ModelGrid):
         return xmin, ymin, xmax, ymax
 
     @property
-    def grid_lines(self):
-        """
-        Returns a the grid line vertices as a list
-        """
-        xmin, xmax, ymin, ymax = self.extent
-        xedge = self.xedges
-        yedge = self.yedges
-        lines = []
-
-        for j in range(self.ncol + 1):
-            x0 = xedge[j]
-            lines.append([(x0, ymin), (x0, ymax)])
-
-        for i in range(self.nrow + 1):
-            y0 = yedge[i]
-            lines.append([(xmin, y0), (xmax, y0)])
-
-        return lines
-
-    @property
     def xedges(self):
         """
         Return two numpy one-dimensional float arrays. One array has the cell
@@ -228,9 +212,6 @@ class StructuredModelGrid(ModelGrid):
             length_y = np.add.reduce(self.__delc)
             yedge = np.concatenate(([length_y], length_y -
                                     np.add.accumulate(self.delc)))
-            if self._use_ref_coordinates:
-                # transform x and y
-                xedge, yedge = self.transform(xedge, yedge)
             self._cache_dict[cache_index] = \
                 CachedData([xedge, yedge])
         return self._cache_dict[cache_index].data
@@ -291,7 +272,7 @@ class StructuredModelGrid(ModelGrid):
         return self._cache_dict[cache_index].data
 
     @property
-    def gridlines(self):
+    def grid_lines(self):
         """
             Get the grid lines as a list
 
@@ -708,3 +689,51 @@ p
                     iverts.append(ivert)
 
         return verts, iverts
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    from flopy.proposed_grid_srp.reference import SpatialReference
+    delc = np.ones((10,)) * 1
+    delr = np.ones((20,)) * 1
+
+    top = np.ones((10, 20)) * 2000
+    botm = np.ones((1, 10, 20)) * 1100
+
+    sr = SpatialReference(epsg=26715)
+    t = StructuredModelGrid(delc, delr, top, botm, sr=sr, origin_x=0, origin_y=0,
+                            rotation=45, origin_loc="ul")
+
+    plt.scatter(np.ravel(t.xcenters), np.ravel(t.ycenters), c="b")
+    t.plot_grid_lines()
+    plt.show()
+    plt.close()
+
+    #delc = np.ones(10,) * 2
+    #t.delc = delc
+
+    plt.scatter(np.ravel(t.xcenters), np.ravel(t.ycenters), c="b")
+    t.plot_grid_lines()
+    plt.show()
+
+    t.use_ref_coords = False
+    x = t.xgrid
+    y = t.ygrid
+    xc = t.xcenters
+    yc = t.ycenters
+    extent = t.extent
+    grid = t.grid_lines
+
+    print('break')
+
+    t.use_ref_coords = True
+    sr_x = t.xgrid
+    sr_y = t.ygrid
+    sr_xc = t.xcenters
+    sr_yc = t.ycenters
+    sr_extent = t.extent
+    sr_grid = t.grid_lines
+
+    t.plot_grid_lines()
+    plt.show()
+    print('break')
