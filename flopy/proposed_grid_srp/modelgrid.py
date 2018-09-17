@@ -294,8 +294,9 @@ class ModelGrid(object):
 
     @property
     def _use_ref_coordinates(self):
-        return (self._origin_x != 0.0 or self._origin_y != 0.0 or
-                self._origin_loc != 'ul' or self._rotation != 0.0) and \
+        return (self._origin_x is not None and self._origin_x != 0.0 and
+                self._origin_y is not None and self._origin_y != 0.0 and
+                (self._origin_loc != 'ul' or self._rotation != 0.0)) and \
                 self.use_ref_coords == True
 
     def _load_settings(self, d):

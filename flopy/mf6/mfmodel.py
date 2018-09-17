@@ -117,13 +117,12 @@ class MFModel(PackageContainer, ModelInterface):
             self.model_nam_file = model_nam_file
 
         # check for spatial reference info in kwargs
-        xul = kwargs.pop("xul", None)
-        yul = kwargs.pop("yul", None)
-        rotation = kwargs.pop("rotation", 0.)
+        self._xul = kwargs.pop("xul", None)
+        self._yul = kwargs.pop("yul", None)
+        self._rotation = kwargs.pop("rotation", 0.)
         proj4_str = kwargs.pop("proj4_str", None)
 
-        self.sr = SpatialReference(xul=xul, yul=yul, rotation=rotation,
-                                   proj4_str=proj4_str)
+        self.sr = SpatialReference(proj4_str=proj4_str)
         self.start_datetime = None
         # check for extraneous kwargs
         if len(kwargs) > 0:
@@ -225,13 +224,14 @@ class MFModel(PackageContainer, ModelInterface):
         sim_time = SimulationTime(data_frame, itmuni, tr)
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
-            return StructuredModelGrid(dis.delc.array,
-                                       dis.delr.array,
-                                       dis.top.array,
-                                       dis.botm.array,
-                                       dis.idomain.array,
-                                       self.sr, sim_time, self.name)#,
-                                     # self.get_steadystate_list())
+
+            return StructuredModelGrid(dis.delc.array, dis.delr.array,
+                                       dis.top.array, dis.botm.array,
+                                       dis.idomain.array, sim_time,
+                                       lenuni=dis.length_units.array,
+                                       sr=self.sr, origin_loc='ul',
+                                       origin_x=self._xul, origin_y=self._yul,
+                                       rotation=self._rotation)
 
     @property
     def packagelist(self):

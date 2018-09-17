@@ -6,7 +6,6 @@ try:
 except:
     plt = None
 from flopy.plot import plotutil
-from flopy.grid.modelgrid import LocationType
 import warnings
 import copy
 warnings.simplefilter('always', PendingDeprecationWarning)
@@ -78,13 +77,16 @@ class StructuredCrossSection(object):
         # Set origin and rotation,
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                rotation != 0 or length_multiplier != 1.:
-            self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(delc=self.mg.delc,
-                                         xul=xul, yul=yul,
-                                         xll=xll, yll=yll,
-                                         rotation=rotation)
-            self.mg.sr = self.sr
-
+            if xul is not None and yul is not None:
+                self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ul',
+                                       origin_x=xul, origin_y=yul,
+                                       rotation=rotation)
+            else:
+                self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ll',
+                                       origin_x=xll, origin_y=yll,
+                                       rotation=rotation)
+        if length_multiplier != 1.:
+            self.mg.length_multiplier = length_multiplier
         if line is None:
             s = 'line must be specified.'
             raise Exception(s)
@@ -107,14 +109,14 @@ class StructuredCrossSection(object):
         eps = 1.e-4
         if 'row' in linekeys:
             self.direction = 'x'
-            ycenter = self.mg.ycell_centers(LocationType.modelxyz).T[0]
+            ycenter = self.mg.ycell_centers.T[0]
             pts = [(self.mg.xedge[0] + eps,
                     ycenter[int(line[onkey])] - eps),
                    (self.mg.xedge[-1] - eps,
                     ycenter[int(line[onkey])] + eps)]
         elif 'column' in linekeys:
             self.direction = 'y'
-            xcenter = self.mg.xcell_centers(LocationType.modelxyz)[0, :]
+            xcenter = self.mg.xcell_centers[0, :]
             pts = [(xcenter[int(line[onkey])] + eps,
                     self.mg.yedge[0] - eps),
                    (xcenter[int(line[onkey])] - eps,
@@ -128,15 +130,15 @@ class StructuredCrossSection(object):
                 xp.append(v1)
                 yp.append(v2)
 
-            xp, yp = self.sr.transform(xp, yp, inverse=True)
+            xp, yp = self.mg.transform(xp, yp, inverse=True)
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
 
         # convert pts list to numpy array
         self.pts = np.array(pts)
 
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xedge,
-                                                 self.mg.yedge)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xedges,
+                                                 self.mg.yedges)
         if len(self.xpts) < 2:
             s = 'cross-section cannot be created\n.'
             s += '   less than 2 points intersect the model grid\n'
@@ -174,8 +176,8 @@ class StructuredCrossSection(object):
 
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
-                                                   self.mg.yedge,
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedges,
+                                                   self.mg.yedges,
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 

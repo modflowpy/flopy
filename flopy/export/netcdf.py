@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 from .metadata import acdd
 import flopy
-from ..grid.modelgrid import ModelGrid, GridType, PointType
+
 
 # globals
 FILLVALUE = -99999.9

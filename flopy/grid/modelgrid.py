@@ -1,45 +1,9 @@
 import abc
 from enum import Enum
+import os
 import numpy as np
+import copy
 from pandas import DataFrame
-
-
-class GridType(Enum):
-    """
-    Enumeration of grid types
-    """
-    structured = 0
-    layered_vertex = 1
-    unlayered_vertex = 2
-
-
-class LocationType(Enum):
-    """
-    Enumeration of location types
-    """
-    modelxyz = 0 # coordinates defined based on 0,0 point as upper-left most
-                 # point of the model
-    spatialxyz = 1 # coordinates defined by spatial reference
-    cellid = 2  # cell ids
-    layer_cellid = 3  # layer + cell id
-    lrc = 4  # layer row column
-
-
-class TimeType(Enum):
-    """
-    Enumeration of time types
-    """
-    calendar = 0 # year/month/day/hour/minute/second
-    sp = 1 # stress period
-    sp_ts = 2 # stress period time step
-
-
-class PointType(Enum):
-    """
-    Enumeration of vertex types
-    """
-    modelxyz = 0
-    spatialxyz = 1
 
 
 class MFGridException(Exception):
@@ -92,16 +56,21 @@ class CachedDataType(Enum):
     """
     xyvertices = 0
     edge_array = 1
-    cell_centers = 2
+    edge_grid = 2
+    cell_centers = 3
 
 
-class CachedData():
+class CachedData(object):
     def __init__(self, data):
-        self.data = data
+        self._data = data
         self.out_of_date = False
 
+    @property
+    def data(self):
+        return copy.deepcopy(self._data)
+
     def update_data(self, data):
-        self.data = data
+        self._data = data
         self.out_of_date = False
 
 
@@ -112,44 +81,102 @@ class ModelGrid(object):
     Parameters
     ----------
     grid_type : enumeration
-        type of model grid (DiscritizationType.DIS, DiscritizationType.DISV,
-        DiscritizationType.DISU)
+        type of model grid ('structured', 'vertex_layered',
+        'vertex_unlayered')
+    top : ndarray(np.float)
+        top elevations of cells in topmost layer
+    botm : ndarray(np.float)
+        bottom elevations of all cells
+    idomain : ndarray(np.int)
+        ibound/idomain value for each cell
     sr : SpatialReference
-        Spatial reference locates the grid in a coordinate system
-    simulation_time : SimulationTime
-        Simulation time provides time information for temporal grid data
-    model_name : str
-        Name of the model associated with this grid
+        spatial reference locates the grid in a coordinate system
+    sim_time : SimulationTime
+        simulation time provides time information for temporal grid data
+    lenuni : int
+        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
+    origin_loc : str
+        Corner of the model grid that is the model origin
+        'ul' (upper left corner) or 'll' (lower left corner)
+    origin_x : float
+        x coordinate of the origin point in the spatial reference coordinate
+        system
+    origin_y : float
+        y coordinate of the origin point in the spatial reference coordinate
+        system
+    rotation : float
+        rotation angle of model grid, as it is rotated around the origin point
 
-    Attributes
+    Properties
     ----------
-    xedge : ndarray
-        array of column edges
-    yedge : ndarray
-        array of row edges
+    grid_type : enumeration
+        type of model grid ('structured', 'vertex_layered',
+        'vertex_unlayered')
+    top : ndarray(np.float)
+        top elevations of cells in topmost layer
+    botm : ndarray(np.float)
+        bottom elevations of all cells
+    top_botm : ndarray(np.float)
+        returns array combining top and botm arrays
+    idomain : ndarray(np.int)
+        ibound/idomain value for each cell
+    sr : SpatialReference
+        spatial reference locates the grid in a coordinate system
+    sim_time : SimulationTime
+        simulation time provides time information for temporal grid data
+    lenuni : int
+        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
+    model_length_units : str
+        returns length unit as a string
+    length_multiplier : float
+        returns length multiplier between model and spatial coordinates
+    origin_loc : str
+        Corner of the model grid that is the model origin
+        'ul' (upper left corner) or 'll' (lower left corner)
+    origin_x : float
+        x coordinate of the origin point in the spatial reference coordinate
+        system
+    origin_y : float
+        y coordinate of the origin point in the spatial reference coordinate
+        system
+    rotation : float
+        rotation angle of model grid, as it is rotated around the origin point
+    xgrid : ndarray
+        returns numpy meshgrid of x edges in reference frame defined by
+        point_type
+    ygrid : ndarray
+        returns numpy meshgrid of y edges in reference frame defined by
+        point_type
+    zgrid : ndarray
+        returns numpy meshgrid of z edges in reference frame defined by
+        point_type
+    xcenters : ndarray
+        returns x coordinate of cell centers
+    ycenters : ndarray
+        returns y coordinate of cell centers
+    ycenters : ndarray
+        returns z coordinate of cell centers
+    xyzgrid : [ndarray, ndarray, ndarray]
+        returns the location of grid edges of all model cells. if the model
+        grid contains spatial reference information, the grid edges are in the
+        coordinate system provided by the spatial reference information.
+        returns a list of three ndarrays for the x, y, and z coordinates
+    cell_centers : [ndarray, ndarray, ndarray]
+        returns the cell centers of all model cells in the model grid.  if
+        the model grid contains spatial reference information, the cell centers
+        are in the coordinate system provided by the spatial reference
+        information. otherwise the cell centers are based on a 0,0 location
+        for the upper left corner of the model grid. returns a list of three
+        ndarrays for the x, y, and z coordinates
 
     Methods
     ----------
-    xedgegrid : (point_type) : ndarray
-        returns numpy meshgrid of x edges in reference frame defined by
-        point_type
-    yedgegrid : (point_type) : ndarray
-        returns numpy meshgrid of y edges in reference frame defined by
-        point_type
-    get_tabular_data : (name_list, data, location_type) : data
-        returns a pandas object with the data defined in name_list in the
-        spatial representation defined by coord_type
-    xcell_centers : (point_type) : ndarray
-        returns x coordinate of cell centers
-    ycell_centers : (point_type) : ndarray
-        returns y coordinate of cell centers
-    get_cell_centers : (point_type) : ndarray
-        returns the cell centers of all models cells in the model grid.  if
-        the model grid contains spatial reference information, the cell centers
-        are in the coordinate system provided by the spatial reference
-        information. otherwise the cell centers are based on a 0,0 location for
-        the upper left corner of the model grid
-    get_grid_lines : (point_type=PointType.spatialxyz) : list
+    rotate(x, y, rotation, xorigin=0., yorigin=0.)
+        rotate point defined by x, y by rotation around the origin point
+    transform(x, y, inverse=False)
+        transform point or array of points x, y from model coordinates to
+        spatial coordinates
+    grid_lines : (point_type=PointType.spatialxyz) : list
         returns the model grid lines in a list.  each line is returned as a
         list containing two tuples in the format [(x1,y1), (x2,y2)] where
         x1,y1 and x2,y2 are the endpoints of the line.
@@ -157,27 +184,19 @@ class ModelGrid(object):
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
-    get_model_dim : () : list
-        returns the dimensions of the model
-    get_horizontal_cross_section_dim_names : () : list
-        returns the appropriate dimension axis for a horizontal cross section
-        based on the model discritization type
-    get_model_dim_names : () : list
-        returns the names of the model dimensions based on the model
-        discritization type
-    get_num_spatial_coordinates : () : int
-        returns the number of spatial coordinates
-    num_cells_per_layer : () : list
-        returns the number of cells per model layer.  model discritization
-        type must be DIS or DISV
-    num_layers : () : int
-        returns the number of layers in the model, if the model is layered
-    num_cells : () : int
-        returns the total number of cells in the model
-    get_all_model_cells : () : list
-        returns a list of all model cells, represented as a layer/row/column
-        tuple, a layer/cellid tuple, or a cellid for the structured, layered
-        vertex, and vertex grids respectively
+    write_gridSpec(filename)
+        write PEST style grid specification file
+    plot(**kwargs) : matplotlib.collections.LineCollection
+        plot the model grid
+    plot_array(a, ax=None, **kwargs) : matplotlib.collections.QuadMesh
+        create a quadmesh plot of the grid.
+    contour_array(ax, a, **kwargs) : ContourSet
+        ax (matplotlib.axes.Axes) are axes to add to the plot
+        a (np.ndarray) is the array to contour
+        Create a QuadMesh plot of the specified array using pcolormesh
+    get_3d_shared_vertex_connectivity() : [verts, iverts]
+        returns a list of vertices of the model grid (verts) and a list of
+        vertices by model cell (iverts)
 
     See Also
     --------
@@ -188,19 +207,69 @@ class ModelGrid(object):
     Examples
     --------
     """
+    lenuni_values = {'undefined': 0,
+                     'feet': 1,
+                     'meters': 2,
+                     'centimeters': 3}
+    lenuni_text = {v: k for k, v in lenuni_values.items()}
 
-    def __init__(self, grid_type, sr=None, simulation_time=None,
-                 model_name='', steady=False):
-        self.grid_type = grid_type
+    defaults = {"xul": None, "yul": None, "rotation": 0.,
+                "proj4_str": None,
+                "units": None, "lenuni": 2,
+                "length_multiplier": None,
+                "source": 'defaults'}
+
+    def __init__(self, grid_type, top=None, botm=None, idomain=None, sr=None,
+                 sim_time=None, lenuni=2, origin_loc='ul', origin_x=0.0,
+                 origin_y=0.0, rotation=0.0, length_multiplier=None):
+        self.use_ref_coords = True
+        self._grid_type = grid_type
+        self._top = top
+        self._botm = botm
+        self._idomain = idomain
         self._sr = sr
-        self.sim_time = simulation_time
-        self.model_name = model_name
+        self._lenuni = lenuni
+        self._origin_loc = origin_loc
+        self._origin_x = origin_x
+        self._origin_y = origin_y
+        self._rotation = rotation
+        self._sim_time = sim_time
         self._cache_dict = {}
-        self._steady = steady
+        self._length_multiplier = length_multiplier
+
+    def set_coord_info(self, sr=None, origin_loc='ul', origin_x=0.0,
+                       origin_y=0.0, rotation=0.0):
+        self._sr = sr
+        self._origin_loc = origin_loc
+        self._origin_x = origin_x
+        self._origin_y = origin_y
+        self._rotation = rotation
+        self._require_cache_updates()
 
     ###########################
     # basic functions
     ###########################
+    @property
+    def grid_type(self):
+        return self._grid_type
+
+    @property
+    def top(self):
+        return self._top
+
+    @property
+    def botm(self):
+        return self._botm
+
+    @property
+    def top_botm(self):
+        new_top = np.expand_dims(self._top, 0)
+        return np.concatenate((new_top, self._botm), axis=0)
+
+    @property
+    def idomain(self):
+        return self._idomain
+
     @property
     def sr(self):
         return self._sr
@@ -210,218 +279,349 @@ class ModelGrid(object):
         self._sr = sr
         self._require_cache_updates()
 
-    @property
-    def steady(self):
-        return self._steady
+    def sim_time(self):
+        return self._sim_time
 
-    @abc.abstractmethod
-    def get_tabular_data(self, data, coord_type=LocationType.spatialxyz):
-        raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
-            'class to use this base class')
+    @property
+    def origin_loc(self):
+        return self._origin_loc
+
+    @property
+    def origin_x(self):
+        return self._origin_x
+
+    @property
+    def origin_y(self):
+        return self._origin_y
+
+    @property
+    def rotation(self):
+        return self._rotation
+
+    @property
+    def rotation_radians(self):
+        return self.rotation * np.pi / 180.
 
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
             cache_data.out_of_date = True
-        self._sr.set_yedge(self.yedge)
+
+    @property
+    def _use_ref_coordinates(self):
+        return (self._origin_x != 0.0 or self._origin_y != 0.0 or
+                self._origin_loc != 'ul' or self._rotation != 0.0) and \
+                self.use_ref_coords == True
+
+    def _load_settings(self, d):
+        self._origin_x = d.xul
 
     ############################
     # from spatial reference
     ############################
     @property
-    def xedge(self):
-        return self.get_edge_array()[0]
+    def lenuni(self):
+        return self._lenuni
 
     @property
-    def yedge(self):
-        return self.get_edge_array()[1]
+    def model_length_units(self):
+        return self.lenuni_text[self._lenuni]
 
-    def xedgegrid(self, point_type=PointType.spatialxyz):
-        return self.get_xygrid(point_type)[0]
+    @property
+    def length_multiplier(self):
+        if self._length_multiplier is not None:
+            # user defined length multiplier overrides everything
+            return self._length_multiplier
+        """Attempt to identify multiplier for converting from
+        model units to sr units, defaulting to 1."""
+        if self._sr is None:
+            return 1.0
+        if self.model_length_units == 'feet':
+            if self._sr.units == 'meters':
+                return 0.3048
+            elif self._sr.units == 'feet':
+                return 1.
+        elif self.model_length_units == 'meters':
+            if self._sr.units == 'feet':
+                lm = 1 / .3048
+            elif self._sr.units == 'meters':
+                lm = 1.
+        elif self.model_length_units == 'centimeters':
+            if self._sr.units == 'meters':
+                lm = 1 / 100.
+            elif self._sr.units == 'feet':
+                lm = 1 / 30.48
+        else:  # model units unspecified; default to 1
+            lm = 1.
+        return lm
 
-    def yedgegrid(self, point_type=PointType.spatialxyz):
-        return self.get_xygrid(point_type)[1]
+    @length_multiplier.setter
+    def length_multiplier(self, length_multiplier):
+        self._length_multiplier = length_multiplier
 
-    def xcell_centers(self, point_type=PointType.spatialxyz):
-        return self.get_cellcenters(point_type)[0]
+    @property
+    def theta(self):
+        return self._rotation * np.pi / 180.
 
-    def ycell_centers(self, point_type=PointType.spatialxyz):
-        return self.get_cellcenters(point_type)[1]
+    def rotate(self, x, y):
+        """
+        Given x and y array-like values calculate the rotation about an
+        arbitrary origin and then return the rotated coordinates.  theta is in
+        degrees.
 
-    @abc.abstractmethod
-    def xyvertices(self, point_type=PointType.spatialxyz):
+        """
+        if self.origin_loc == 'll':
+            xrot = self.origin_x + np.cos(self.rotation_radians) * \
+                   (x - self.origin_x) - np.sin(self.rotation_radians) * \
+                   (y - self.origin_y)
+            yrot = self.origin_y + np.sin(self.rotation_radians) * \
+                   (x - self.origin_x) + np.cos(self.rotation_radians) * \
+                   (y - self.origin_y)
+        else:
+            xrot = self.origin_x + np.cos(self.rotation_radians) * \
+                   (x - self.origin_x) - np.sin(-self.rotation_radians) * \
+                   (self.origin_y - y)
+            yrot = self.origin_y + np.sin(self.rotation_radians) * \
+                   (x - self.origin_x) - np.cos(-self.rotation_radians) * \
+                   (self.origin_y - y)
+
+        return xrot, yrot
+
+    def transform(self, x, y, inverse=False):
+        """
+        Given x and y array-like values, apply rotation, scale and offset,
+        to convert them from model coordinates to real-world coordinates.
+        """
+        if isinstance(x, list):
+            x = np.array(x)
+            y = np.array(y)
+        if not np.isscalar(x):
+            x, y = x.copy(), y.copy()
+
+        if not inverse:
+            x *= self.length_multiplier
+            y *= self.length_multiplier
+            x += self._origin_x
+            if self._origin_loc == 'ul':
+                y += (self._origin_y - self.ygridlength)
+            else:
+                y += self._origin_y
+            x, y = self.rotate(x, y)
+        else:
+            x, y = self.rotate(x, y)
+            x -= self._origin_x
+            if self._origin_loc == 'ul':
+                y -= (self._origin_y - self.ygridlength)
+            else:
+                y -= self._origin_y
+            x /= self.length_multiplier
+            y /= self.length_multiplier
+        return x, y
+
+    @staticmethod
+    def load(namefile=None, reffile='usgs.model.reference'):
+        """Attempts to load spatial reference information from
+        the following files (in order):
+        1) usgs.model.reference
+        2) NAM file (header comment)
+        3) SpatialReference.default dictionary
+        """
+        reffile = os.path.join(os.path.split(namefile)[0], reffile)
+        d = ModelGrid.read_usgs_model_reference_file(reffile)
+        if d is not None:
+            return d
+        d = ModelGrid.attribs_from_namfile_header(namefile)
+        if d is not None:
+            return d
+
+    @staticmethod
+    def attribs_from_namfile_header(namefile):
+        # check for reference info in the nam file header
+        d = ModelGrid.defaults.copy()
+        d['source'] = 'namfile'
+        if namefile is None:
+            return None
+        header = []
+        with open(namefile, 'r') as f:
+            for line in f:
+                if not line.startswith('#'):
+                    break
+                header.extend(line.strip().replace('#', '').split(';'))
+
+        for item in header:
+            if "xul" in item.lower():
+                try:
+                    d['xul'] = float(item.split(':')[1])
+                except:
+                    pass
+            elif "yul" in item.lower():
+                try:
+                    d['yul'] = float(item.split(':')[1])
+                except:
+                    pass
+            elif "rotation" in item.lower():
+                try:
+                    d['rotation'] = float(item.split(':')[1])
+                except:
+                    pass
+            elif "proj4_str" in item.lower():
+                try:
+                    proj4_str = ':'.join(item.split(':')[1:]).strip()
+                    if proj4_str.lower() == 'none':
+                        proj4_str = None
+                    d['proj4_str'] = proj4_str
+
+                except:
+                    pass
+            elif "start" in item.lower():
+                try:
+                    d['start_datetime'] = item.split(':')[1].strip()
+                except:
+                    pass
+            # spatial reference length units
+            elif "units" in item.lower():
+                d['units'] = item.split(':')[1].strip()
+            # model length units
+            elif "lenuni" in item.lower():
+                d['lenuni'] = int(item.split(':')[1].strip())
+            # multiplier for converting from model length units to sr length units
+            elif "length_multiplier" in item.lower():
+                d['length_multiplier'] = float(item.split(':')[1].strip())
+        return d
+
+    @staticmethod
+    def read_usgs_model_reference_file(reffile='usgs.model.reference'):
+        """read spatial reference info from the usgs.model.reference file
+        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+
+        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours",
+                  4: "days",
+                  5: "years"}
+        itmuni_values = {v: k for k, v in ITMUNI.items()}
+
+        d = ModelGrid.defaults.copy()
+        d['source'] = 'usgs.model.reference'
+        d.pop(
+            'proj4_str')  # discard default to avoid confusion with epsg code if entered
+        if os.path.exists(reffile):
+            with open(reffile) as input:
+                for line in input:
+                    if len(line) > 1:
+                        if line.strip()[0] != '#':
+                            info = line.strip().split('#')[0].split()
+                            if len(info) > 1:
+                                d[info[0].lower()] = ' '.join(info[1:])
+            d['xul'] = float(d['xul'])
+            d['yul'] = float(d['yul'])
+            d['rotation'] = float(d['rotation'])
+
+            # convert the model.reference text to a lenuni value
+            # (these are the model length units)
+            if 'length_units' in d.keys():
+                d['lenuni'] = ModelGrid.lenuni_values[d['length_units']]
+            if 'time_units' in d.keys():
+                d['itmuni'] = itmuni_values[d['time_units']]
+            if 'start_date' in d.keys():
+                start_datetime = d.pop('start_date')
+                if 'start_time' in d.keys():
+                    start_datetime += ' {}'.format(d.pop('start_time'))
+                d['start_datetime'] = start_datetime
+            if 'epsg' in d.keys():
+                try:
+                    d['epsg'] = int(d['epsg'])
+                except Exception as e:
+                    raise Exception(
+                        "error reading epsg code from file:\n" + str(e))
+            # this prioritizes epsg over proj4 if both are given
+            # (otherwise 'proj4' entry will be dropped below)
+            elif 'proj4' in d.keys():
+                d['proj4_str'] = d['proj4']
+
+            # drop any other items that aren't used in sr class
+            d = {k: v for k, v in d.items() if
+                 k.lower() in ModelGrid.defaults.keys()
+                 or k.lower() in {'epsg', 'start_datetime', 'itmuni',
+                                  'source'}}
+            return d
+        else:
+            return None
+
+    @property
+    def extent(self):
+        raise NotImplementedError(
+            'must define extent in child '
+            'class to use this base class')
+
+    @property
+    def xgridlength(self):
+        raise NotImplementedError(
+            'must define xgridlength in child '
+            'class to use this base class')
+
+    @property
+    def ygridlength(self):
+        raise NotImplementedError(
+            'must define ygridlength in child '
+            'class to use this base class')
+
+    @property
+    def xgrid(self):
+        return self.xyzgrid[0]
+
+    @property
+    def ygrid(self):
+        return self.xyzgrid[1]
+
+    @property
+    def zgrid(self):
+        return self.xyzgrid[2]
+
+    @property
+    def xcenters(self):
+        return self.cellcenters[0]
+
+    @property
+    def ycenters(self):
+        return self.cellcenters[1]
+
+    @property
+    def zcenters(self):
+        return self.cellcenters[2]
+
+    @property
+    def xyzgrid(self):
         raise NotImplementedError(
             'must define xyvertices in child '
             'class to use this base class')
 
-    @abc.abstractmethod
-    def get_cellcenters(self):
+    @property
+    def cellcenters(self):
         raise NotImplementedError(
             'must define get_cellcenters in child '
             'class to use this base class')
 
-    @abc.abstractmethod
-    def get_grid_lines(self, point_type=PointType.spatialxyz):
+    @property
+    def grid_lines(self):
         raise NotImplementedError(
-            'must define get_grid_lines in child '
+            'must define get_cellcenters in child '
             'class to use this base class')
 
-    @abc.abstractmethod
-    def get_xygrid(self, point_type=PointType.spatialxyz):
-        raise NotImplementedError(
-            'must define get_xygrid in child '
-            'class to use this base class')
+    def _zcoords(self):
+        if self.top is not None and self.botm is not None:
+            zcenters = []
+            top_3d = np.expand_dims(self.top, 0)
+            zbdryelevs = np.concatenate((top_3d, self.botm), axis=0)
 
-    @abc.abstractmethod
-    def get_edge_array(self):
-        raise NotImplementedError(
-            'must define get_edge_array in child '
-            'class to use this base class')
+            for ix in range(1, len(zbdryelevs)):
+                zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.)
+        else:
+            zbdryelevs = None
+            zcenters = None
+        return zbdryelevs, zcenters
 
     @abc.abstractmethod
     def write_gridSpec(self, filename):
         raise NotImplementedError(
             'must define write_gridSpec in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    def plot_array(self, a, ax=None, **kwargs):
-        """
-        Create a QuadMesh plot of the specified array using pcolormesh
-
-        Parameters
-        ----------
-        a : np.ndarray
-
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
-
-        """
-        raise NotImplementedError(
-            'must define plot_array in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_array(self, filename, a, nodata=-9999,
-                     fieldname='value',
-                     **kwargs):
-        """Write a numpy array to Arc Ascii grid
-        or shapefile with the model reference.
-
-        Parameters
-        ----------
-        filename : str
-            Path of output file. Export format is determined by
-            file extention.
-            '.asc'  Arc Ascii grid
-            '.tif'  GeoTIFF (requries rasterio package)
-            '.shp'  Shapefile
-        a : 2D numpy.ndarray
-            Array to export
-        nodata : scalar
-            Value to assign to np.nan entries (default -9999)
-        fieldname : str
-            Attribute field name for array values (shapefile export only).
-            (default 'values')
-        kwargs:
-            keyword arguments to np.savetxt (ascii)
-            rasterio.open (GeoTIFF)
-            or flopy.export.shapefile_utils.write_grid_shapefile2
-
-        Notes
-        -----
-        Rotated grids will be either be unrotated prior to export,
-        using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
-        included in their transform property (GeoTiff format). In either case
-        the pixels will be displayed in the (unrotated) projected geographic coordinate system,
-        so the pixels will no longer align exactly with the model grid
-        (as displayed from a shapefile, for example). A key difference between
-        Arc Ascii and GeoTiff (besides disk usage) is that the
-        unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
-        will have the same number of rows and pixels as the original.
-        """
-        raise NotImplementedError(
-            'must define export_array in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_contours(self, filename, contours,
-                        fieldname='level', epsg=None, prj=None,
-                        **kwargs):
-        """Convert matplotlib contour plot object to shapefile.
-
-        Parameters
-        ----------
-        filename : str
-            path of output shapefile
-        contours : matplotlib.contour.QuadContourSet or list of them
-            (object returned by matplotlib.pyplot.contour)
-        epsg : int
-            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-        prj : str
-            Existing projection file to be used with new shapefile.
-        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
-
-        Returns
-        -------
-        df : dataframe of shapefile contents
-        """
-        raise NotImplementedError(
-            'must define export_contours in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move export-specific code to export
-    def export_array_contours(self, filename, a,
-                              fieldname='level',
-                              interval=None,
-                              levels=None,
-                              maxlevels=1000,
-                              epsg=None,
-                              prj=None,
-                              **kwargs):
-        """Contour an array using matplotlib; write shapefile of contours.
-
-        Parameters
-        ----------
-        filename : str
-            Path of output file with '.shp' extention.
-        a : 2D numpy array
-            Array to contour
-        epsg : int
-            EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
-        prj : str
-            Existing projection file to be used with new shapefile.
-        **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
-        """
-        raise NotImplementedError(
-            'must define export_array_contours in child '
-            'class to use this base class')
-
-    @abc.abstractmethod
-    # refactor and move plot-specific code
-    def contour_array(self, ax, a, **kwargs):
-        """
-        Create a QuadMesh plot of the specified array using pcolormesh
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes
-            ax to add the contours
-
-        a : np.ndarray
-            array to contour
-
-        Returns
-        -------
-        contour_set : ContourSet
-
-        """
-        raise NotImplementedError(
-            'must define contour_array in child '
             'class to use this base class')
 
     # more specific name for this?
@@ -490,6 +690,66 @@ class ModelGrid(object):
         raise NotImplementedError('must define get_rc in child '
                                   'class to use this base class')
 
+    def plot_grid_lines(self, **kwargs):
+        """
+        Get a LineCollection of the model grid in
+        model coordinates
+
+        Parameters
+            **kwargs: matplotlib.pyplot keyword arguments
+
+        Returns
+            matplotlib.collections.LineCollection
+        """
+        from flopy.plot.plotbase import PlotMapView
+
+        map = PlotMapView(modelgrid=self)
+        lc = map.plot_grid(**kwargs)
+        return lc
+
+    def plot_array(self, a, ax=None, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        a : np.ndarray
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        ax = PlotUtilities._plot_array_helper(a, sr=self.sr, axes=ax, **kwargs)
+        return ax
+
+    def contour_array(self, ax, a, **kwargs):
+        """
+        Create a QuadMesh plot of the specified array using pcolormesh
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            ax to add the contours
+
+        a : np.ndarray
+            array to contour
+
+        Returns
+        -------
+        contour_set : ContourSet
+
+        """
+        from flopy.plot import PlotMapView
+
+        kwargs['ax'] = ax
+        map = PlotMapView(sr=self.sr)
+        contour_set = map.contour_array(a=a, **kwargs)
+
+        return contour_set
+
     @abc.abstractmethod
     # what is the difference between this and the one without "shared" below?
     def get_3d_shared_vertex_connectivity(self):
@@ -501,71 +761,3 @@ class ModelGrid(object):
     def get_3d_vertex_connectivity(self):
         raise NotImplementedError('must define get_3d_vertex_connectivity in '
                                   'child class to use this base class')
-
-    #################################
-    # from flopy for mf6 model grid
-    #################################
-    @abc.abstractmethod
-    def get_row_array(self):
-        raise NotImplementedError('must define get_row_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_column_array(self):
-        raise NotImplementedError('must define get_column_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_layer_array(self):
-        raise NotImplementedError('must define get_layer_array in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim(self):
-        raise NotImplementedError('must define get_model_dim in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim_names(self):
-        raise NotImplementedError('must define get_model_dim_names in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_horizontal_cross_section_dim_names(self):
-        raise NotImplementedError('must define '
-                                  'get_horizontal_cross_section_dim_names in '
-                                  'child class to use this base class')
-
-    @abc.abstractmethod
-    def get_horizontal_cross_section_dim_arrays(self):
-        raise NotImplementedError('must define '
-                                  'get_horizontal_cross_section_dim_arrays in '
-                                  'child class to use this base class')
-
-    @abc.abstractmethod
-    def get_model_dim_arrays(self):
-        raise NotImplementedError('must define get_model_dim_arrays in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def num_cells_per_layer(self):
-        raise NotImplementedError('must define num_cells_per_layer in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def num_cells(self, active_only=False):
-        raise NotImplementedError('must define num_cells in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    def get_all_model_cells(self):
-        raise NotImplementedError('must define get_all_model_cells in child '
-                                  'class to use this base class')
-
-    @abc.abstractmethod
-    # move to export folder
-    def load_shapefile_data(self, shapefile):
-        # this will only support loading shapefiles with the same
-        # spatial reference as the model grid
-        raise NotImplementedError('must define load_shapefile_data in child '
-                                  'class to use this base class')

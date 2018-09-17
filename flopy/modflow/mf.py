@@ -233,12 +233,16 @@ class Modflow(BaseModel):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
+        old_sr = self.sr
+        new_sr = SpatialReference(proj4_str=old_sr.proj4_str, epsg=old_sr.epsg,
+                                  prj=old_sr.prj, units=old_sr.units)
         return StructuredModelGrid(self.dis.delc.array,
                                    self.dis.delr.array,
                                    self.dis.top.array,
                                    self.dis.botm.array, ibound,
-                                   self.sr, sim_time, self.name,
-                                   self.dis.steady.array)
+                                   sim_time, lenuni=self.dis.lenuni,
+                                   sr=new_sr, origin_x=self._xul,
+                                   origin_y=self._yul, rotation=self._rotation)
 
     @property
     def solver_tols(self):

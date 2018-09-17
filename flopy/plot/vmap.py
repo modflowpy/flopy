@@ -10,6 +10,7 @@ except ImportError:
     plt = None
 
 from flopy.plot import plotutil
+from flopy.plot.map import MapView
 from flopy.utils import SpatialReference as DepreciatedSpatialReference
 from flopy.grid.structuredmodelgrid import StructuredModelGrid
 from flopy.grid.reference import SpatialReference
@@ -17,7 +18,7 @@ import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class VertexMapView(object):
+class VertexMapView(MapView):
     """
     Class to create a map of the model.
 
@@ -60,86 +61,14 @@ class VertexMapView(object):
     def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., length_multiplier=1.):
-        if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use ModelMap method'
-            raise Exception(s)
+        super(VertexMapView, self).__init__(sr, ax, model, dis, modelgrid,
+                                            layer, extent, xul, yul, xll,
+                                            yll, rotation, length_multiplier)
 
-        self.model = model
-        self.layer = layer
-        self.dis = dis
-        self.mg = None
-        self.sr = None
-
-        if model is not None:
-            self.mg = model.modelgrid
-            self.sr = model.modelgrid.sr
-
-        elif modelgrid is not None:
-            self.mg = modelgrid
-            # todo: remove statement once model grid/spatial reference is finalized
-            try:
-                self.sr = modelgrid.sr
-            except:
-                self.sr = None
-        elif dis is not None:
-            self.mg = dis.parent.modelgrid
-            self.sr = dis.parent.modelgrid.sr
-
-        elif sr is not None:
-            if isinstance(sr, DepreciatedSpatialReference):
-                self.mg = copy.deepcopy(sr)
-                self.sr = copy.deepcopy(sr)
-
-            else:
-                self.sr = sr
-
-                # todo: change this to VertexModelGrid,
-                # todo: when VMG is finished and incorporated
-                self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                              top=np.array([]), botm=np.array([]),
-                                              idomain=np.array([]), sr=self.sr)
-
-        else:
-            self.sr = SpatialReference(delc=np.array([]), xll=xll, xul=xul,
-                                       yul=yul, rotation=rotation,
-                                       length_multiplier=length_multiplier)
-
-            # todo: change this to VertexModelGrid
-            # todo: when VMG is finished and incorporated
-            self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                          top=np.array([]), botm=np.array([]),
-                                          idomain=np.array([]), sr=self.sr)
-
-        # model map override spatial reference settings
-        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-                rotation != 0 or length_multiplier != 1.:
-            self.sr.length_multiplier = length_multiplier
-            if isinstance(sr, DepreciatedSpatialReference):
-                self.sr.set_spatialreference(xul=xul, yul=yul,
-                                             xll=xll, yll=yll,
-                                             rotation=rotation)
-            else:
-                self.sr.set_spatialreference(delc=self.mg.delc,
-                                             xul=xul, yul=yul,
-                                             xll=xll, yll=yll,
-                                             rotation=rotation)
-                self.mg.sr = self.sr
-
-        if ax is None:
-            try:
-                self.ax = plt.gca()
-                self.ax.set_aspect('equal')
-            except:
-                self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
-        else:
-            self.ax = ax
-
-        if extent is not None:
-            self._extent = extent
-        else:
-            self._extent = None
-
+    def _init_model_grid(self):
+        self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
+                                      top=np.array([]), botm=np.array([]),
+                                      idomain=np.array([]), sr=self.sr)
     @property
     def extent(self):
         if self._extent is None:

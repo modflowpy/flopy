@@ -65,23 +65,7 @@ class SpatialReference(object):
     length_multiplier = 1.
     origin_loc = 'ul'  # or ll
 
-    defaults = {"xul": None, "yul": None, "rotation": 0.,
-                "proj4_str": None,
-                "units": None, "lenuni": 2,
-                "length_multiplier": None,
-                "source": 'defaults'}
-
-    lenuni_values = {'undefined': 0,
-                     'feet': 1,
-                     'meters': 2,
-                     'centimeters': 3}
-    lenuni_text = {v: k for k, v in lenuni_values.items()}
-
-    def __init__(self, delc=np.array([]), lenuni=2,
-                 xul=None, yul=None, xll=None, yll=None, rotation=0.0,
-                 proj4_str=None, epsg=None, prj=None, units=None,
-                 length_multiplier=None):
-        self._lenuni = lenuni
+    def __init__(self, proj4_str=None, epsg=None, prj=None, units=None):
         self._proj4_str = proj4_str
         self._epsg = epsg
         if epsg is not None:
@@ -92,52 +76,6 @@ class SpatialReference(object):
 
         self.supported_units = ["feet", "meters"]
         self._units = units
-        self._length_multiplier = length_multiplier
-        self._reset()
-        self.set_spatialreference(delc, xul, yul, xll, yll, rotation)
-
-    @property
-    def xll(self):
-        if self.origin_loc == 'll':
-            xll = self._xll if self._xll is not None else 0.
-        elif self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            xll = self._xul - (np.sin(self.theta) * self._yedge[0] *
-                               self.length_multiplier)
-        return xll
-
-    @property
-    def yll(self):
-        if self.origin_loc == 'll':
-            yll = self._yll if self._yll is not None else 0.
-        elif self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            yll = self._yul - (np.cos(self.theta) * self._yedge[0] *
-                               self.length_multiplier)
-        return yll
-
-    @property
-    def xul(self):
-        if self.origin_loc == 'll':
-            # calculate coords for upper left corner
-            xul = self._xll + (np.sin(self.theta) * self._yedge[0] *
-                               self.length_multiplier)
-        if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            xul = self._xul if self._xul is not None else 0.
-        return xul
-
-    @property
-    def yul(self):
-        if self.origin_loc == 'll':
-            # calculate coords for upper left corner
-            yul = self._yll + (np.cos(self.theta) * self._yedge[0] *
-                               self.length_multiplier)
-
-        if self.origin_loc == 'ul':
-            # calculate coords for lower left corner
-            yul = self._yul if self._yul is not None else 0.
-        return yul
 
     @property
     def proj4_str(self):
@@ -233,201 +171,8 @@ class SpatialReference(object):
         assert units in self.supported_units
         return units
 
-    @property
-    def length_multiplier(self):
-        """Attempt to identify multiplier for converting from
-        model units to sr units, defaulting to 1."""
-        lm = None
-        if self._length_multiplier is not None:
-            lm = self._length_multiplier
-        else:
-            if self.model_length_units == 'feet':
-                if self.units == 'meters':
-                    lm = 0.3048
-                elif self.units == 'feet':
-                    lm = 1.
-            elif self.model_length_units == 'meters':
-                if self.units == 'feet':
-                    lm = 1 / .3048
-                elif self.units == 'meters':
-                    lm = 1.
-            elif self.model_length_units == 'centimeters':
-                if self.units == 'meters':
-                    lm = 1 / 100.
-                elif self.units == 'feet':
-                    lm = 1 / 30.48
-            else:  # model units unspecified; default to 1
-                lm = 1.
-        return lm
-
-    @property
-    def model_length_units(self):
-        return self.lenuni_text[self.lenuni]
-
-    @staticmethod
-    def load(namefile=None, reffile='usgs.model.reference'):
-        """Attempts to load spatial reference information from
-        the following files (in order):
-        1) usgs.model.reference
-        2) NAM file (header comment)
-        3) SpatialReference.default dictionary
-        """
-        reffile = os.path.join(os.path.split(namefile)[0], reffile)
-        d = SpatialReference.read_usgs_model_reference_file(reffile)
-        if d is not None:
-            return d
-        d = SpatialReference.attribs_from_namfile_header(namefile)
-        if d is not None:
-            return d
-        else:
-            return SpatialReference.defaults
-
-    @staticmethod
-    def attribs_from_namfile_header(namefile):
-        # check for reference info in the nam file header
-        d = SpatialReference.defaults.copy()
-        d['source'] = 'namfile'
-        if namefile is None:
-            return None
-        header = []
-        with open(namefile, 'r') as f:
-            for line in f:
-                if not line.startswith('#'):
-                    break
-                header.extend(line.strip().replace('#', '').split(';'))
-
-        for item in header:
-            if "xul" in item.lower():
-                try:
-                    d['xul'] = float(item.split(':')[1])
-                except:
-                    pass
-            elif "yul" in item.lower():
-                try:
-                    d['yul'] = float(item.split(':')[1])
-                except:
-                    pass
-            elif "rotation" in item.lower():
-                try:
-                    d['rotation'] = float(item.split(':')[1])
-                except:
-                    pass
-            elif "proj4_str" in item.lower():
-                try:
-                    proj4_str = ':'.join(item.split(':')[1:]).strip()
-                    if proj4_str.lower() == 'none':
-                        proj4_str = None
-                    d['proj4_str'] = proj4_str
-
-                except:
-                    pass
-            elif "start" in item.lower():
-                try:
-                    d['start_datetime'] = item.split(':')[1].strip()
-                except:
-                    pass
-            # spatial reference length units
-            elif "units" in item.lower():
-                d['units'] = item.split(':')[1].strip()
-            # model length units
-            elif "lenuni" in item.lower():
-                d['lenuni'] = int(item.split(':')[1].strip())
-            # multiplier for converting from model length units to sr length units
-            elif "length_multiplier" in item.lower():
-                d['length_multiplier'] = float(item.split(':')[1].strip())
-        return d
-
-    @staticmethod
-    def read_usgs_model_reference_file(reffile='usgs.model.reference'):
-        """read spatial reference info from the usgs.model.reference file
-        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
-
-        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours",
-                  4: "days",
-                  5: "years"}
-        itmuni_values = {v: k for k, v in ITMUNI.items()}
-
-        d = SpatialReference.defaults.copy()
-        d['source'] = 'usgs.model.reference'
-        d.pop(
-            'proj4_str')  # discard default to avoid confusion with epsg code if entered
-        if os.path.exists(reffile):
-            with open(reffile) as input:
-                for line in input:
-                    if len(line) > 1:
-                        if line.strip()[0] != '#':
-                            info = line.strip().split('#')[0].split()
-                            if len(info) > 1:
-                                d[info[0].lower()] = ' '.join(info[1:])
-            d['xul'] = float(d['xul'])
-            d['yul'] = float(d['yul'])
-            d['rotation'] = float(d['rotation'])
-
-            # convert the model.reference text to a lenuni value
-            # (these are the model length units)
-            if 'length_units' in d.keys():
-                d['lenuni'] = SpatialReference.lenuni_values[d['length_units']]
-            if 'time_units' in d.keys():
-                d['itmuni'] = itmuni_values[d['time_units']]
-            if 'start_date' in d.keys():
-                start_datetime = d.pop('start_date')
-                if 'start_time' in d.keys():
-                    start_datetime += ' {}'.format(d.pop('start_time'))
-                d['start_datetime'] = start_datetime
-            if 'epsg' in d.keys():
-                try:
-                    d['epsg'] = int(d['epsg'])
-                except Exception as e:
-                    raise Exception(
-                        "error reading epsg code from file:\n" + str(e))
-            # this prioritizes epsg over proj4 if both are given
-            # (otherwise 'proj4' entry will be dropped below)
-            elif 'proj4' in d.keys():
-                d['proj4_str'] = d['proj4']
-
-            # drop any other items that aren't used in sr class
-            d = {k: v for k, v in d.items() if
-                 k.lower() in SpatialReference.defaults.keys()
-                 or k.lower() in {'epsg', 'start_datetime', 'itmuni',
-                                  'source'}}
-            return d
-        else:
-            return None
-
     def __setattr__(self, key, value):
-        reset = True
-        if key == "xul":
-            super(SpatialReference, self). \
-                __setattr__("_xul", float(value))
-            self.origin_loc = 'ul'
-        elif key == "yul":
-            super(SpatialReference, self). \
-                __setattr__("_yul", float(value))
-            self.origin_loc = 'ul'
-        elif key == "xll":
-            super(SpatialReference, self). \
-                __setattr__("_xll", float(value))
-            self.origin_loc = 'll'
-        elif key == "yll":
-            super(SpatialReference, self). \
-                __setattr__("_yll", float(value))
-            self.origin_loc = 'll'
-        elif key == "length_multiplier":
-            super(SpatialReference, self). \
-                __setattr__("_length_multiplier", float(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
-        elif key == "rotation":
-            super(SpatialReference, self). \
-                __setattr__("rotation", float(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
-        elif key == "lenuni":
-            super(SpatialReference, self). \
-                __setattr__("_lenuni", int(value))
-            # self.set_origin(xul=self.xul, yul=self.yul, xll=self.xll,
-            #                yll=self.yll)
-        elif key == "units":
+        if key == "units":
             value = value.lower()
             assert value in self.supported_units
             super(SpatialReference, self). \
@@ -455,21 +200,10 @@ class SpatialReference(object):
             self.crs = crs(prj=value, epsg=self.epsg)
         else:
             super(SpatialReference, self).__setattr__(key, value)
-            reset = False
-        if reset:
-            self._reset()
 
     def reset(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-        return
-
-    def _reset(self):
-        self._xgrid = None
-        self._ygrid = None
-        self._ycentergrid = None
-        self._xcentergrid = None
-        self._vertices = None
         return
 
     def __eq__(self, other):
@@ -496,148 +230,15 @@ class SpatialReference(object):
             pass
         return SpatialReference(**attribs)
 
-    @classmethod
-    def from_gridspec(cls, gridspec_file, lenuni=0):
-        f = open(gridspec_file, 'r')
-        raw = f.readline().strip().split()
-        nrow = int(raw[0])
-        ncol = int(raw[1])
-        raw = f.readline().strip().split()
-        xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-        delr = []
-        j = 0
-        while j < ncol:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if '*' in r:
-                    rraw = r.split('*')
-                    for n in range(int(rraw[0])):
-                        delr.append(float(rraw[1]))
-                        j += 1
-                else:
-                    delr.append(float(r))
-                    j += 1
-        delc = []
-        i = 0
-        while i < nrow:
-            raw = f.readline().strip().split()
-            for r in raw:
-                if '*' in r:
-                    rraw = r.split('*')
-                    for n in range(int(rraw[0])):
-                        delc.append(float(rraw[1]))
-                        i += 1
-                else:
-                    delc.append(float(r))
-                    i += 1
-        f.close()
-        return cls(np.array(delc), lenuni, xul=xul, yul=yul, rotation=rot)
-
     @property
     def attribute_dict(self):
         return {"xul": self.xul, "yul": self.yul, "rotation": self.rotation,
                 "proj4_str": self.proj4_str}
 
-    def set_spatialreference(self, delc=np.array([]), xul=None, yul=None, xll=None,
-                             yll=None, rotation=0.0):
-        """
-            set spatial reference - can be called from model instance
-
-        """
-        if xul is not None and xll is not None:
-            msg = ('Both xul and xll entered. Please enter either xul, yul or '
-                   'xll, yll.')
-            raise ValueError(msg)
-        if yul is not None and yll is not None:
-            msg = ('Both yul and yll entered. Please enter either xul, yul or '
-                   'xll, yll.')
-            raise ValueError(msg)
-        # set the origin priority based on the left corner specified
-        # (the other left corner will be calculated).  If none are specified
-        # then default to upper left
-        if xul is None and yul is None and xll is None and yll is None:
-            self.origin_loc = 'ul'
-            xul = 0.
-            yul = delc.sum()
-        elif xll is not None:
-            self.origin_loc = 'll'
-        else:
-            self.origin_loc = 'ul'
-
-        self.rotation = rotation
-        self._xll = xll if xll is not None else 0.
-        self._yll = yll if yll is not None else 0.
-        self._xul = xul if xul is not None else 0.
-        self._yul = yul if yul is not None else 0.
-        # self.set_origin(xul, yul, xll, yll)
-
-        length_y = np.add.reduce(delc)
-        self._yedge = np.concatenate(([length_y], length_y -
-                                np.add.accumulate(delc)))
-
-        return
-
-    def set_yedge(self, yedge):
-        self._yedge = yedge
-
     def __repr__(self):
-        s = "xul:{0:<.10G}; yul:{1:<.10G}; rotation:{2:<G}; ". \
-            format(self.xul, self.yul, self.rotation)
-
-        s += "proj4_str:{0}; ".format(self.proj4_str)
+        s = "proj4_str:{0}; ".format(self.proj4_str)
         s += "units:{0}; ".format(self.units)
-        s += "lenuni:{0}; ".format(self.lenuni)
-        s += "length_multiplier:{}".format(self.length_multiplier)
         return s
-
-    @property
-    def theta(self):
-        return -self.rotation * np.pi / 180.
-
-    @staticmethod
-    def rotate(x, y, theta, xorigin=0., yorigin=0.):
-        """
-        Given x and y array-like values calculate the rotation about an
-        arbitrary origin and then return the rotated coordinates.  theta is in
-        degrees.
-
-        """
-        # jwhite changed on Oct 11 2016 - rotation is now positive CCW
-        # theta = -theta * np.pi / 180.
-        theta = theta * np.pi / 180.
-
-        xrot = xorigin + np.cos(theta) * (x - xorigin) - np.sin(theta) * \
-                                                         (y - yorigin)
-        yrot = yorigin + np.sin(theta) * (x - xorigin) + np.cos(theta) * \
-                                                         (y - yorigin)
-        return xrot, yrot
-
-    def transform(self, x, y, inverse=False):
-        """
-        Given x and y array-like values, apply rotation, scale and offset,
-        to convert them from model coordinates to real-world coordinates.
-        """
-        if isinstance(x, list):
-            x = np.array(x)
-            y = np.array(y)
-        if not np.isscalar(x):
-            x, y = x.copy(), y.copy()
-
-        if not inverse:
-            x *= self.length_multiplier
-            y *= self.length_multiplier
-            x += self.xll
-            y += self.yll
-            x, y = SpatialReference.rotate(x, y, theta=self.rotation,
-                                           xorigin=self.xll, yorigin=self.yll)
-        else:
-            x, y = SpatialReference.rotate(x, y, -self.rotation,
-                                           self.xll, self.yll)
-            x -= self.xll
-            y -= self.yll
-            x /= self.length_multiplier
-            y /= self.length_multiplier
-        return x, y
 
     def get_grid_line_collection(self, **kwargs):
         """
