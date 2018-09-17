@@ -757,10 +757,11 @@ def test_sr_with_Map():
     modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
                                    rotation=rotation)
     lc = modelmap.plot_grid()
-    xll, yll = modelmap.sr.xll, modelmap.sr.yll
+    xll, yll = modelmap.mg.xll, modelmap.mg.yll
     plt.close()
 
     def check_vertices():
+        vertices = modelmap.mg.xyvertices
         xllp, yllp = lc._paths[0].vertices[0]
         xulp, yulp = lc._paths[0].vertices[1]
         assert np.abs(xllp - xll) < 1e-6
@@ -777,21 +778,21 @@ def test_sr_with_Map():
     plt.close()
 
     # transformation in m.sr
-    sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
-                                               xll=xll, yll=yll,
-                                               rotation=rotation)
-    m.sr = copy.deepcopy(sr)
-    modelmap = flopy.plot.ModelMap(model=m)
+    #sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
+    #                                           xll=xll, yll=yll,
+    #                                           rotation=rotation)
+    #m.sr = copy.deepcopy(sr)
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
 
     # transformation assign from sr instance
-    m.modelgrid.sr._reset()
-    m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
-                                        xll=xll, yll=yll,
-                                        rotation=rotation)
-    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    #m.modelgrid.sr._reset()
+    #m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
+    #                                    xll=xll, yll=yll,
+    #                                    rotation=rotation)
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul, rotation=rotation)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
