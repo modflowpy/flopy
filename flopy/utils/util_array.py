@@ -2516,14 +2516,13 @@ class Util2d(object):
         if not hasattr(file_out, 'write'):
             file_out = open(file_out, 'wb')
         dtype = data.dtype
-        if dtype.kind != 'i':
-            if bintype is not None:
-                if header_data is None:
-                    header_data = BinaryHeader.create(bintype=bintype,
-                                                      nrow=shape[0],
-                                                      ncol=shape[1])
-            if header_data is not None:
-                header_data.tofile(file_out)
+        if bintype is not None:
+            if header_data is None:
+                header_data = BinaryHeader.create(bintype=bintype,
+                                                  nrow=shape[0],
+                                                  ncol=shape[1])
+        if header_data is not None:
+            header_data.tofile(file_out)
         data.tofile(file_out)
         return
 
