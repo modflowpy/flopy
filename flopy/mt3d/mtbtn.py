@@ -10,42 +10,9 @@ User's Manual.
 import numpy as np
 # from numpy import empty,array
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, read1d
+from ..utils import Util2d, Util3d
 import warnings
 
-def read1d_fixed(f, a, nvalperline=8):
-    """
-    Read a 10 real value array (such as TIMPRS) and return it
-    as a.
-
-    Parameters
-    ----------
-    f : file handle
-    a : np.ndarray
-        array to fill
-
-    Returns
-    -------
-    a : np.ndarray
-
-    """
-    done = False
-    icount = 0
-    while True:
-        line = f.readline()
-        istart = 0
-        istop = 10
-        for i in range(nvalperline):
-            a[icount] = float(line[istart: istop])
-            istart = istop
-            istop += 10
-            if icount == a.shape[0] - 1:
-                done = True
-                break
-            icount += 1
-        if done:
-            break
-    return
 
 class Mt3dBtn(Package):
     """
@@ -778,8 +745,7 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading LAYCON...')
-        laycon = np.empty((nlay), np.int32)
-        laycon = read1d(f, laycon)
+        laycon = Util2d.load_txt((nlay,), f, np.int32, '(40I2)')
         if model.verbose:
             print('   LAYCON {}'.format(laycon))
 
@@ -881,8 +847,7 @@ class Mt3dBtn(Package):
         if nprs > 0:
             if model.verbose:
                 print('   loading TIMPRS...')
-            timprs = np.empty((nprs), dtype=np.float32)
-            read1d_fixed(f, timprs)
+            timprs = Util2d.load_txt((nprs,), f, np.float32, '(8F10.0)')
             if model.verbose:
                 print('   TIMPRS {}'.format(timprs))
 
@@ -948,9 +913,8 @@ class Mt3dBtn(Package):
                     sf = 'SState'
             ssflag.append(sf)
 
-            if tsmult[-1] < 0:
-                t = np.empty((nstp[-1]), dtype=np.float32)
-                read1d(f, t)
+            if tsmult[-1] <= 0:
+                t = Util2d.load_txt((nstp[-1],), f, np.float32, '(8F10.0)')
                 tslngh.append(t)
                 raise Exception("tsmult <= 0 not supported")
 
