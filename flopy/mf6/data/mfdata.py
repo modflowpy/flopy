@@ -1468,6 +1468,26 @@ class DataStorage(object):
             if len(val) > 0 and val[0] == 'none':
                 # handle case that cellid is 'none'
                 return val[0]
+            if is_cellid and \
+                    self.data_dimensions.get_model_dim(None).model_name is not \
+                    None:
+                model_grid = self.data_dimensions.get_model_grid()
+                cellid_size = model_grid.get_num_spatial_coordinates()
+                if len(val) != cellid_size:
+                    message = 'Cellid "{}" contains {} integer(s). Expected a' \
+                              ' cellid containing {} integer(s) for grid type' \
+                              ' {}.'.format(val, len(val), cellid_size,
+                                           str(model_grid.grid_type()))
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'converting cellid to string',
+                        self.data_dimensions.structure.name, inspect.stack()[0][3],
+                        type_, value_, traceback_, message,
+                        self._simulation_data.debug)
+
             string_val = []
             for item in val:
                 string_val.append(str(item + 1))
