@@ -94,7 +94,7 @@ To install FloPy type:
 
 or
 
-	conda install flopy
+	conda install -c conda-forge flopy
 
 To update FloPy type:
 

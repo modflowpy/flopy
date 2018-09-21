@@ -1044,6 +1044,7 @@ class DataStorage(object):
                 self.layer_storage.first_item().data_storage_type = \
                         DataStorageType.internal_array
                 if data is None or isinstance(data, np.recarray):
+                    self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
                 else:
                     if autofill and data is not None:
@@ -1083,6 +1084,7 @@ class DataStorage(object):
                             # add placeholders to data so it agrees with
                             # expected dimensions of recarray
                             self._add_placeholders(data)
+                        self._verify_list(data)
                         try:
                             new_data = np.rec.array(data,
                                                     self._recarray_type_list)
@@ -1468,6 +1470,26 @@ class DataStorage(object):
             if len(val) > 0 and val[0] == 'none':
                 # handle case that cellid is 'none'
                 return val[0]
+            if is_cellid and \
+                    self.data_dimensions.get_model_dim(None).model_name is not \
+                    None:
+                model_grid = self.data_dimensions.get_model_grid()
+                cellid_size = model_grid.get_num_spatial_coordinates()
+                if len(val) != cellid_size:
+                    message = 'Cellid "{}" contains {} integer(s). Expected a' \
+                              ' cellid containing {} integer(s) for grid type' \
+                              ' {}.'.format(val, len(val), cellid_size,
+                                           str(model_grid.grid_type()))
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        self.data_dimensions.structure.get_model(),
+                        self.data_dimensions.structure.get_package(),
+                        self.data_dimensions.structure.path,
+                        'converting cellid to string',
+                        self.data_dimensions.structure.name, inspect.stack()[0][3],
+                        type_, value_, traceback_, message,
+                        self._simulation_data.debug)
+
             string_val = []
             for item in val:
                 string_val.append(str(item + 1))
@@ -1681,6 +1703,39 @@ class DataStorage(object):
                     data[index] = tuple(data_line)
                 else:
                     data[index] = (data_line,)
+
+    def _verify_list(self, data):
+        if data is not None:
+            for data_line in data:
+                data_line_len = len(data_line)
+                for index in range(0, min(data_line_len,
+                                          len(self._recarray_type_list))):
+                    if self._recarray_type_list[index][0] == 'cellid' and \
+                            self.data_dimensions.get_model_dim(None).model_name\
+                            is not None and data_line[index] is not None:
+                        # this is a cell id.  verify that it contains the
+                        # correct number of integers
+                        model_grid = self.data_dimensions.get_model_grid()
+                        cellid_size = model_grid.get_num_spatial_coordinates()
+                        if len(data_line[index]) != cellid_size:
+                            message = 'Cellid "{}" contains {} integer(s). ' \
+                                      'Expected a cellid containing {} ' \
+                                      'integer(s) for grid type' \
+                                      ' {}.'.format(data_line[index],
+                                                    len(data_line[index]),
+                                                    cellid_size,
+                                                    str(
+                                                        model_grid.grid_type()))
+                            type_, value_, traceback_ = sys.exc_info()
+                            raise MFDataException(
+                                self.data_dimensions.structure.get_model(),
+                                self.data_dimensions.structure.get_package(),
+                                self.data_dimensions.structure.path,
+                                'verifying cellid',
+                                self.data_dimensions.structure.name,
+                                inspect.stack()[0][3],
+                                type_, value_, traceback_, message,
+                                self._simulation_data.debug)
 
     def _add_placeholders(self, data):
         idx = 0
