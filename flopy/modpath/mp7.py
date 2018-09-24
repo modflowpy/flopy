@@ -94,6 +94,9 @@ class Modpath7(BaseModel):
                 if budget_file is None:
                     budget_file = oc.budget_filerecord.array['budgetfile'][0]
 
+            hdry = None
+            hnoflo = None
+
         else:
             # set dis_file
             dis_file = self.flowmodel.dis.file_name[0]
@@ -109,21 +112,31 @@ class Modpath7(BaseModel):
                 iu = self.flowmodel.oc.iuhead
                 head_file = self.flowmodel.get_output(unit=iu)
 
+            # get discretization package
+            p = self.flowmodel.get_package('LPF')
+            if p is None:
+                p = self.flowmodel.get_package('BCF6')
+            if p is None:
+                p = self.flowmodel.get_package('UPW')
+            if p is None:
+                msg = 'LPF, BCF6, or UPW packages must be ' + \
+                      'included in the passed MODFLOW model'
+                raise Exception(msg)
+
             # set budget file name
             if budget_file is None:
-                p = self.flowmodel.get_package('LPF')
-                if p is None:
-                    p = self.flowmodel.get_package('BCF6')
-                if p is None:
-                    p = self.flowmodel.get_package('UPW')
-                if p is None:
-                    msg = 'LPF, BCF6, or UPW packages must be ' + \
-                          'included in the passed MODFLOW model'
-                    raise Exception(msg)
                 iu = p.ipakcb
                 budget_file = self.flowmodel.get_output(unit=iu)
 
-        # set dis_file adn tdis_file
+            # set hdry from flow package
+            hdry = p.hdry
+
+            # set hnoflo from BAS6 package
+            bas = self.flowmodel.get_package('BAS6')
+            hnoflo = bas.hnoflo
+
+
+        # set dis_file and tdis_file
         self.dis_file = dis_file
         self.grbdis_file = grbdis_file
         self.tdis_file = tdis_file
@@ -145,6 +158,10 @@ class Modpath7(BaseModel):
             msg = 'the dis file in the MODFLOW model or passed ' + \
                   'to __init__ cannot be None'
             raise ValueError(msg)
+
+        # set hnoflo and hdry
+        self.hnoflo = hnoflo
+        self.hdry = hdry
 
         # set file attributes
         self.array_free_format = True
