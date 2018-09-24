@@ -193,7 +193,7 @@ def test_build_mf6():
         return
     starget = 'MODFLOW6'
     exe_name = 'mf6'
-    dirname = 'mf6.0.2'
+    dirname = 'mf6.0.3'
     url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname, include_subdirs=True)
@@ -277,6 +277,20 @@ def test_build_modpath6():
 
     build_target(starget, exe_name, url, dirname,
                  replace_function=update_mp6files,
+                 keep=True)
+    return
+
+
+def test_build_modpath7():
+    if pymake is None:
+        return
+    starget = 'MODPATH 7'
+    exe_name = 'mp7'
+    dirname = 'Modpath_7_2_001'
+    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
+
+    build_target(starget, exe_name, url, dirname, srcname='source',
+                 replace_function=None,
                  keep=True)
     return
 
