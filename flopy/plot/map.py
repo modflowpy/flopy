@@ -10,7 +10,7 @@ except ImportError:
 
 from . import plotutil
 from ..utils import SpatialReference as DepreciatedSpatialReference
-from ..grid.structuredmodelgrid import StructuredModelGrid
+from ..grid.structuredgrid import StructuredGrid
 from ..grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
@@ -29,39 +29,30 @@ class MapView(object):
         self.layer = layer
         self.dis = dis
         self.mg = None
-        self.sr = None
 
         if model is not None:
             self.mg = copy.deepcopy(model.modelgrid)
-            self.sr = copy.deepcopy(model.modelgrid.sr)
 
         elif modelgrid is not None:
             self.mg = copy.deepcopy(modelgrid)
-            # todo: remove statement once model grid/spatial reference is finalized
-            try:
-                self.sr = copy.deepcopy(modelgrid.sr)
-            except:
-                self.sr = None
         elif dis is not None:
             self.mg = copy.deepcopy(dis.parent.modelgrid)
-            self.sr = copy.deepcopy(dis.parent.modelgrid.sr)
 
         elif sr is not None:
             if isinstance(sr, DepreciatedSpatialReference):
                 self.mg = copy.deepcopy(sr)
-                self.sr = copy.deepcopy(sr)
 
             else:
                 self.sr = sr
-                self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                              top=np.array([]), botm=np.array([]),
-                                              idomain=np.array([]), sr=self.sr)
+                self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
+                                         top=np.array([]), botm=np.array([]),
+                                         idomain=np.array([]))
 
         else:
             self.sr = SpatialReference()
-            self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                          top=np.array([]), botm=np.array([]),
-                                          idomain=np.array([]), sr=self.sr)
+            self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
+                                     top=np.array([]), botm=np.array([]),
+                                     idomain=np.array([]))
 
         self._set_coord_info(sr, xul, yul, xll, yll, rotation)
 
@@ -81,11 +72,11 @@ class MapView(object):
 
     def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
         if xul is not None and yul is not None:
-            self.mg.set_coord_info(sr, origin_loc='ul', origin_x=xul,
-                                   origin_y=yul, rotation=rotation)
+            self.mg.set_coord_info(xoff=xul,
+                                   yoff=yul, angrot=rotation)
         elif xll is not None and xll is not None:
-            self.mg.set_coord_info(sr, origin_loc='ll', origin_x=xll,
-                                   origin_y=yll, rotation=rotation)
+            self.mg.set_coord_info(sr, origin_loc='ll', xoff=xll,
+                                   yoff=yll, angrot=rotation)
 
 
 class StructuredMapView(MapView):
@@ -138,9 +129,9 @@ class StructuredMapView(MapView):
                                                 length_multiplier)
 
     def _init_model_grid(self):
-        self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                      top=np.array([]), botm=np.array([]),
-                                      idomain=np.array([]), sr=self.sr)
+        self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
+                                 top=np.array([]), botm=np.array([]),
+                                 idomain=np.array([]), sr=self.sr)
 
     @property
     def extent(self):

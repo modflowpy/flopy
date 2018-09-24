@@ -12,7 +12,7 @@ except ImportError:
 from flopy.plot import plotutil
 from flopy.plot.map import MapView
 from flopy.utils import SpatialReference as DepreciatedSpatialReference
-from flopy.grid.structuredmodelgrid import StructuredModelGrid
+from flopy.grid.structuredgrid import StructuredGrid
 from flopy.grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
@@ -66,9 +66,9 @@ class VertexMapView(MapView):
                                             yll, rotation, length_multiplier)
 
     def _init_model_grid(self):
-        self.mg = StructuredModelGrid(delc=np.array([]), delr=np.array([]),
-                                      top=np.array([]), botm=np.array([]),
-                                      idomain=np.array([]), sr=self.sr)
+        self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
+                                 top=np.array([]), botm=np.array([]),
+                                 idomain=np.array([]), sr=self.sr)
     @property
     def extent(self):
         if self._extent is None:
@@ -114,8 +114,8 @@ class VertexMapView(MapView):
         else:
             ax = self.ax
 
-        xgrid = self.sr.xgrid
-        ygrid = self.sr.ygrid
+        xgrid = self.sr.xvertices
+        ygrid = self.sr.yvertices
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -163,8 +163,8 @@ class VertexMapView(MapView):
         """
         import matplotlib.tri as tri
 
-        xcentergrid = self.mg.sr.xcenters
-        ycentergrid = self.mg.sr.ycenters
+        xcentergrid = self.mg.sr.xcellcenters
+        ycentergrid = self.mg.sr.ycellcenters
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -263,8 +263,8 @@ class VertexMapView(MapView):
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        xgrid = self.sr.xgrid
-        ygrid = self.sr.ygrid
+        xgrid = self.sr.xvertices
+        ygrid = self.sr.yvertices
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -319,8 +319,8 @@ class VertexMapView(MapView):
         bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        xgrid = self.sr.xgrid
-        ygrid = self.sr.ygrid
+        xgrid = self.sr.xvertices
+        ygrid = self.sr.yvertices
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -514,8 +514,8 @@ class VertexMapView(MapView):
         fja = np.array(fja)
         nlay = self.mg.nlay
 
-        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
-        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
+        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.yvertices], (nlay, 1))
+        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xvertices], (nlay, 1))
 
         # no modflow6 equivalent?????
         hnoflo = 999.
@@ -556,8 +556,8 @@ class VertexMapView(MapView):
         v = qy[self.layer, :]
 
         # apply step
-        x = self.mg.sr.xcenters[::istep]
-        y = self.mg.sr.ycenters[::istep]
+        x = self.mg.sr.xcellcenters[::istep]
+        y = self.mg.sr.ycellcenters[::istep]
         u = u[::istep]
         v = v[::istep]
         # normalize
@@ -580,7 +580,7 @@ class VertexMapView(MapView):
         v[idx] = np.nan
 
         # Rotate and plot
-        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.rotation)
+        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.angrot)
         quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
         return quiver
 
@@ -630,10 +630,10 @@ if __name__ == "__main__":
     lc = t.grid_lines
     e = t.extent
 
-    sr_x = t.sr.xgrid
-    sr_y = t.sr.ygrid
-    sr_xc = t.sr.xcenters
-    sr_yc = t.sr.ycenters
+    sr_x = t.sr.xvertices
+    sr_y = t.sr.yvertices
+    sr_xc = t.sr.xcellcenters
+    sr_yc = t.sr.ycellcenters
     sr_lc = t.sr.grid_lines
     sr_e = t.sr.extent
 

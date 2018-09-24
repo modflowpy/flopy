@@ -101,8 +101,8 @@ class VertexCrossSection(object):
 
         self.xypts = plotutil.UnstructuredPlotUtilities.\
             line_intersect_grid(self.pts,
-                                self.mg.xgrid,
-                                self.mg.ygrid)
+                                self.mg.xvertices,
+                                self.mg.yvertices)
 
         if len(self.xypts) < 2:
             s = 'cross-section cannot be created\n.'
@@ -713,8 +713,8 @@ class VertexCrossSection(object):
         nlay = self.mg.nlay
         ncpl = self.mg.ncpl
 
-        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.ygrid], (nlay, 1))
-        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xgrid], (nlay, 1))
+        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.yvertices], (nlay, 1))
+        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xvertices], (nlay, 1))
 
         # no modflow6 equivalent???
         hnoflo = 999.
@@ -1013,10 +1013,10 @@ if __name__ == "__main__":
     lc = t.grid_lines
     e = t.extent
 
-    sr_x = t.sr.xgrid
-    sr_y = t.sr.ygrid
-    sr_xc = t.sr.xcenters
-    sr_yc = t.sr.ycenters
+    sr_x = t.sr.xvertices
+    sr_y = t.sr.yvertices
+    sr_xc = t.sr.xcellcenters
+    sr_yc = t.sr.ycellcenters
     sr_lc = t.sr.grid_lines
     sr_e = t.sr.extent
 

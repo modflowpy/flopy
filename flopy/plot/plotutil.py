@@ -1658,8 +1658,8 @@ class UnstructuredPlotUtilities(object):
         Returns:
              list of connections
         """
-        xverts = model_grid.sr.xgrid
-        yverts = model_grid.sr.ygrid
+        xverts = model_grid.sr.xvertices
+        yverts = model_grid.sr.yvertices
         # use a triangulation matrix scheme to find connections!
 
         iac = []
@@ -1880,9 +1880,9 @@ class UnstructuredPlotUtilities(object):
         nlay = model_grid.nlay
 
         if model_grid.grid_type == "vertex":
-            xcenter = np.tile(model_grid.xcenters, nlay)
-            ycenter = np.tile(model_grid.ycenters, nlay)
-            zcenter = np.ravel(model_grid.zcenters)
+            xcenter = np.tile(model_grid.xcellcenters, nlay)
+            ycenter = np.tile(model_grid.ycellcenters, nlay)
+            zcenter = np.ravel(model_grid.zcellcenters)
             ncpl = model_grid.ncpl
 
         else:

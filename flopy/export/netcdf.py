@@ -847,7 +847,7 @@ class NetCdf(object):
                    }
         delc = self.create_variable('delc', attribs, dimensions=('y',))
         delc[:] = self.model_grid.delc[::-1] * self.model_grid.sr.length_multiplier
-        if self.model_grid.sr.rotation != 0:
+        if self.model_grid.sr.angrot != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
@@ -859,7 +859,7 @@ class NetCdf(object):
                    }
         delr = self.create_variable('delr', attribs, dimensions=('x',))
         delr[:] = self.model_grid.delr[::-1] * self.model_grid.sr.length_multiplier
-        if self.model_grid.sr.rotation != 0:
+        if self.model_grid.sr.angrot != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."

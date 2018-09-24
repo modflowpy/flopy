@@ -11,9 +11,8 @@ from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
-from ..grid.reference import SpatialReference, TemporalReference
-from ..grid.modelgrid import SimulationTime
-from ..grid.structuredmodelgrid import StructuredModelGrid
+from ..grid.reference import TemporalReference
+from ..grid.structuredgrid import StructuredGrid
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 
@@ -120,9 +119,8 @@ class MFModel(PackageContainer, ModelInterface):
         self._xul = kwargs.pop("xul", None)
         self._yul = kwargs.pop("yul", None)
         self._rotation = kwargs.pop("rotation", 0.)
-        proj4_str = kwargs.pop("proj4_str", None)
+        self._proj4 = kwargs.pop("proj4_str", None)
 
-        self.sr = SpatialReference(proj4_str=proj4_str)
         self.start_datetime = None
         # check for extraneous kwargs
         if len(kwargs) > 0:
@@ -221,17 +219,15 @@ class MFModel(PackageContainer, ModelInterface):
         data_frame = {'perlen': period_data['perlen'],
                       'nstp': period_data['nstp'],
                       'tsmult': period_data['tsmult']}
-        sim_time = SimulationTime(data_frame, itmuni, tr)
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
 
-            return StructuredModelGrid(dis.delc.array, dis.delr.array,
-                                       dis.top.array, dis.botm.array,
-                                       dis.idomain.array, sim_time,
-                                       lenuni=dis.length_units.array,
-                                       sr=self.sr, origin_loc='ul',
-                                       origin_x=self._xul, origin_y=self._yul,
-                                       rotation=self._rotation)
+            return StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
+                                  top=dis.top.array, botm=dis.botm.array,
+                                  idomain=dis.idomain.array,
+                                  lenuni=dis.length_units.array,
+                                  proj4=self._proj4, xoff=self._xll,
+                                  yoff=self._yll, angrot=self._rotation)
 
     @property
     def packagelist(self):

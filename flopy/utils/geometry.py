@@ -307,6 +307,23 @@ class Point:
         ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
         ax.set_ylim(ymin-1, ymax+1)
 
+
+def rotate(x, y, xoff, yoff, angrot_radians):
+    """
+    Given x and y array-like values calculate the rotation about an
+    arbitrary origin and then return the rotated coordinates.
+
+    """
+    xrot = xoff + np.cos(angrot_radians) * \
+           (x - xoff) - np.sin(angrot_radians) * \
+           (y - yoff)
+    yrot = yoff + np.sin(angrot_radians) * \
+           (x - xoff) + np.cos(angrot_radians) * \
+           (y - yoff)
+
+    return xrot, yrot
+
+
 def shape(pyshp_shpobj):
     """Convert a pyshp geometry object to a flopy geometry object.
     Parameters

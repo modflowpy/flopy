@@ -3,7 +3,7 @@ import collections
 
 from ..utils.utils_def import FlopyBinaryData
 from ..grid.reference import SpatialReference
-from ..grid.structuredmodelgrid import StructuredModelGrid
+from ..grid.structuredgrid import StructuredGrid
 
 class MfGrdFile(FlopyBinaryData):
 
@@ -111,7 +111,7 @@ class MfGrdFile(FlopyBinaryData):
                                         self._datadict['ANGROT']
                 sr = SpatialReference(delc=delc, xll=xorigin, yll=yorigin,
                                       rotation=rot)
-                mg = StructuredModelGrid(delc, delr, top, botm, None, sr)
+                mg = StructuredGrid(delc, delr, top, botm, None, sr)
         except:
             mg = None
             print('could not set spatial reference for {}'.format(self.file.name))

@@ -6,8 +6,7 @@ from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
 from ..grid.reference import TemporalReference
-from ..grid.structuredmodelgrid import StructuredModelGrid
-from ..grid.modelgrid import SimulationTime
+from ..grid.structuredgrid import StructuredGrid
 
 
 class SeawatList(Package):
@@ -150,19 +149,15 @@ class Seawat(BaseModel):
         data_frame = {'perlen': self.dis.perlen.array,
                       'nstp': self.dis.nstp.array,
                       'tsmult': self.dis.tsmult.array}
-        sim_time = SimulationTime(data_frame,
-                                  self.dis.itmuni_dict[
-                                  self.dis.itmuni], tr)
         if self.bas is not None:
             ibound = self.bas.ibound.array
         else:
             ibound = None
-        return StructuredModelGrid(self.dis.delc.array,
-                                   self.dis.delr.array,
-                                   self.dis.top.array,
-                                   self.dis.botm.array, ibound,
-                                   self.sr, sim_time, self.name,
-                                   self.dis.steady.array)
+        return StructuredGrid(delc=self.dis.delc.array,
+                              delr=self.dis.delr.array,
+                              top=self.dis.top.array,
+                              botm=self.dis.botm.array, idomain=ibound,
+                              epsg=self.sr.epsg, proj4=self.sr.proj4)
     @property
     def nlay(self):
         if (self.dis):

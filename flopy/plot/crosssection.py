@@ -79,12 +79,12 @@ class StructuredCrossSection(object):
                rotation != 0 or length_multiplier != 1.:
             if xul is not None and yul is not None:
                 self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ul',
-                                       origin_x=xul, origin_y=yul,
-                                       rotation=rotation)
+                                       xoff=xul, yoff=yul,
+                                       angrot=rotation)
             else:
                 self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ll',
-                                       origin_x=xll, origin_y=yll,
-                                       rotation=rotation)
+                                       xoff=xll, yoff=yll,
+                                       angrot=rotation)
         if length_multiplier != 1.:
             self.mg.length_multiplier = length_multiplier
         if line is None:

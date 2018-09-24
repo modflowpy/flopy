@@ -11,8 +11,7 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..grid.reference import SpatialReference, TemporalReference
-from ..grid.structuredmodelgrid import StructuredModelGrid
-from ..grid.modelgrid import SimulationTime
+from ..grid.structuredgrid import StructuredGrid
 from .mfpar import ModflowPar
 
 
@@ -226,9 +225,6 @@ class Modflow(BaseModel):
         data_frame = {'perlen': self.dis.perlen.array,
                       'nstp': self.dis.nstp.array,
                       'tsmult': self.dis.tsmult.array}
-        sim_time = SimulationTime(data_frame,
-                                  self.dis.itmuni_dict[
-                                  self.dis.itmuni], tr)
         if self.bas6 is not None:
             ibound = self.bas6.ibound.array
         else:
@@ -236,13 +232,14 @@ class Modflow(BaseModel):
         old_sr = self.sr
         new_sr = SpatialReference(proj4_str=old_sr.proj4_str, epsg=old_sr.epsg,
                                   prj=old_sr.prj, units=old_sr.units)
-        return StructuredModelGrid(self.dis.delc.array,
-                                   self.dis.delr.array,
-                                   self.dis.top.array,
-                                   self.dis.botm.array, ibound,
-                                   sim_time, lenuni=self.dis.lenuni,
-                                   sr=new_sr, origin_x=self._xul,
-                                   origin_y=self._yul, rotation=self._rotation)
+        return StructuredGrid(self.dis.delc.array,
+                              self.dis.delr.array,
+                              self.dis.top.array,
+                              self.dis.botm.array, ibound,
+                              lenuni=self.dis.lenuni,
+                              proj4=old_sr.proj4_str, epsg=old_sr.epsg,
+                              xoff=self._xul, yoff=self._yul,
+                              angrot=self._rotation)
 
     @property
     def solver_tols(self):
