@@ -1,5 +1,5 @@
 import numpy as np
-from flopy.grid.grid import Grid, CachedData
+from .grid import Grid, CachedData
 
 
 class StructuredGrid(Grid):
@@ -19,11 +19,12 @@ class StructuredGrid(Grid):
 
     """
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
-                 lenuni=2, epsg=None, proj4=None,
-                 xoff=None, yoff=None, angrot=0.0):
-        super(StructuredGrid, self).__init__('structured', top, botm,
-                                             idomain, epsg, proj4,
-                                             lenuni, xoff, yoff, angrot)
+                 lenuni=2, ref_units=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
+                 angrot=0.0, length_multiplier=None):
+        super(StructuredGrid, self).__init__('structured', top, botm, idomain,
+                                             lenuni, ref_units, epsg, proj4,
+                                             xoff, yoff, angrot,
+                                             length_multiplier)
         self.__delc = delc
         self.__delr = delr
         self.__nrow = len(delc)
@@ -444,7 +445,6 @@ p
         return mm.plot_grid(**kwargs)
 
     # Importing
-
     @classmethod
     def from_gridspec(cls, gridspec_file, lenuni=0):
         f = open(gridspec_file, 'r')
@@ -453,7 +453,6 @@ p
         ncol = int(raw[1])
         raw = f.readline().strip().split()
         xul, yul, rot = float(raw[0]), float(raw[1]), float(raw[2])
-        assert('Not implemented.  Need to convert xul, yul to xll, yll')
         delr = []
         j = 0
         while j < ncol:
@@ -481,8 +480,11 @@ p
                     delc.append(float(r))
                     i += 1
         f.close()
-        return cls(np.array(delc), np.array(delr), lenuni=lenuni, xoff=xul,
-                   yoff=yul, angrot=rot)
+        grd = cls(np.array(delc), np.array(delr))
+        xll = grd._xul_to_xll(xul)
+        yll = grd._yul_to_yll(yul)
+        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot, lenuni=lenuni)
+        return cls
 
     # Exporting
 

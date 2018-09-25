@@ -333,19 +333,18 @@ class Mt3dms(BaseModel):
 
     @property
     def modelgrid(self):
-        tr = TemporalReference(self.mf.dis.itmuni, self.mf.start_datetime)
-        data_frame = {'perlen': self.mf.dis.perlen.array,
-                      'nstp': self.mf.dis.nstp.array,
-                      'tsmult': self.mf.dis.tsmult.array}
         if self.mf.bas is not None:
             ibound = self.btn.icbund.array
         else:
             ibound = None
-        return StructuredGrid(delc=self.mf.dis.delc.array,
-                              delr=self.mf.dis.delr.array,
-                              top=self.mf.dis.top.array,
-                              botm=self.mf.dis.botm.array, idomain=ibound,
-                              epsg=self.mf.sr.epsg, proj4=self.mf.sr.proj4)
+        # build grid
+        mg = StructuredGrid(delc=self.mf.dis.delc.array,
+                            delr=self.mf.dis.delr.array,
+                            top=self.mf.dis.top.array,
+                            botm=self.mf.dis.botm.array, idomain=ibound)
+        # set coordinate info
+        self._set_coord_info(mg)
+        return mg
 
     @property
     def solver_tols(self):

@@ -12,6 +12,7 @@ import os
 import subprocess as sp
 import shutil
 import threading
+import warnings
 
 if sys.version_info > (3, 0):
     import queue as Queue
@@ -168,8 +169,18 @@ class BaseModel(ModelInterface):
 
         # check for reference info in kwargs
         # we are just carrying these until a dis package is added
+        self._xll = kwargs.pop("xll", None)
+        self._yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
+        if self._xul is not None:
+            warnings.warn(
+                'xul/yul have been deprecated. Use xll/yll instead.',
+                DeprecationWarning)
         self._yul = kwargs.pop("yul", None)
+        if self._yul is not None:
+            warnings.warn(
+                'xul/yul have been deprecated. Use xll/yll instead.',
+                DeprecationWarning)
         self._rotation = kwargs.pop("rotation", 0.0)
         self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
@@ -413,6 +424,24 @@ class BaseModel(ModelInterface):
                         self.add_pop_key_list(iu)
                     break
         return iu, fname
+
+    def _set_coord_info(self, mg):
+        xoff = 0.0
+        yoff = 0.0
+        if self._xll is not None and self._xll != 0.0:
+            xoff = self._xll
+        elif self._xul is not None and self._xul != 0.0:
+            xoff = mg._xul_to_xll(self._xul)
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
+        if self._yll is not None and self._yll != 0.0:
+            yoff = self._yll
+        elif self._yul is not None and self._yul != 0.0:
+            yoff = mg._yul_to_yll(self._yul)
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
+        mg.set_coord_info(xoff=xoff, yoff=yoff, angrot=self._rotation,
+                          proj4=self._proj4_str)
 
     def _output_msg(self, i, add=True):
         if add:
@@ -1336,7 +1365,6 @@ class BaseModel(ModelInterface):
         >>> m.to_shapefile('model.shp', SelPackList)
 
         """
-        import warnings
         warnings.warn("to_shapefile() is deprecated. use .export()")
         self.export(filename, package_names=package_names)
         return

@@ -1,6 +1,7 @@
-import copy
+import copy, warnings
 import sys
 import numpy as np
+from ..utils import geometry
 
 try:
     import matplotlib.pyplot as plt
@@ -39,17 +40,11 @@ class MapView(object):
             self.mg = copy.deepcopy(dis.parent.modelgrid)
 
         elif sr is not None:
-            if isinstance(sr, DepreciatedSpatialReference):
-                self.mg = copy.deepcopy(sr)
-
-            else:
-                self.sr = sr
-                self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
-                                         top=np.array([]), botm=np.array([]),
-                                         idomain=np.array([]))
+            self.mg = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                     top=np.array([]), botm=np.array([]),
+                                     idomain=np.array([]))
 
         else:
-            self.sr = SpatialReference()
             self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
                                      top=np.array([]), botm=np.array([]),
                                      idomain=np.array([]))
@@ -71,12 +66,19 @@ class MapView(object):
             self._extent = None
 
     def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
+        if sr is not None:
+            self.mg._set_sr_coord_info(sr)
+            warnings.warn('SpatialReference has been deprecated. Use the'
+                          'Grid class instead',
+                          DeprecationWarning)
         if xul is not None and yul is not None:
-            self.mg.set_coord_info(xoff=xul,
-                                   yoff=yul, angrot=rotation)
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
+            self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
+                                   yoff=self.mg._yul_to_yll(yul),
+                                   angrot=rotation)
         elif xll is not None and xll is not None:
-            self.mg.set_coord_info(sr, origin_loc='ll', xoff=xll,
-                                   yoff=yll, angrot=rotation)
+            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
 
 class StructuredMapView(MapView):
@@ -128,19 +130,10 @@ class StructuredMapView(MapView):
                                                 yll, rotation,
                                                 length_multiplier)
 
-    def _init_model_grid(self):
-        self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
-                                 top=np.array([]), botm=np.array([]),
-                                 idomain=np.array([]), sr=self.sr)
-
     @property
     def extent(self):
         if self._extent is None:
-            # todo: Remove try statements once model_grid is finalized!
-            try:
-                self._extent = self.mg.get_extent()
-            except:
-                self._extent = self.mg.extent
+            self._extent = self.mg.extent
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -183,12 +176,8 @@ class StructuredMapView(MapView):
         else:
             ax = self.ax
 
-        try:
-            # check if this is an old style spatial reference
-            xgrid = self.sr.xgrid
-            ygrid = self.sr.ygrid
-        except AttributeError:
-            xgrid, ygrid = self.mg.get_xygrid()
+        xgrid = self.mg.xvertices
+        ygrid = self.mg.yvertices
 
         quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
 
@@ -240,12 +229,8 @@ class StructuredMapView(MapView):
         except ImportError:
             tri = None
 
-        try:
-            xcentergrid = self.mg.xcell_centers()
-            ycentergrid = self.mg.ycell_centers()
-        except AttributeError:
-            xcentergrid = self.sr.xcentergrid
-            ycentergrid = self.sr.ycentergrid
+        xcentergrid = self.mg.xcellcenters
+        ycentergrid = self.mg.ycellcenters
 
         if a.ndim == 3:
             plotarray = a[self.layer, :, :]
@@ -408,11 +393,7 @@ p
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        # todo: Remove try statements once model_grid is finalized!
-        try:
-            lc = LineCollection(self.mg.get_grid_lines(), **kwargs)
-        except:
-            lc = LineCollection(self.mg.grid_lines, **kwargs)
+        lc = LineCollection(self.mg.grid_lines, **kwargs)
 
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
@@ -674,12 +655,8 @@ p
         v = qy[self.layer, :, :]
         # apply step
 
-        try:
-            xcentergrid = self.sr.xcentergrid
-            ycentergrid = self.sr.ycentergrid
-        except AttributeError:
-            xcentergrid = self.mg.xcell_centers()
-            ycentergrid = self.mg.ycell_centers()
+        xcentergrid = self.mg.xcellcenters
+        ycentergrid = self.mg.ycellcenters
 
         x = xcentergrid[::istep, ::jstep]
         y = ycentergrid[::istep, ::jstep]
@@ -703,7 +680,8 @@ p
         v[idx] = np.nan
 
         # Rotate and plot
-        urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
+        urot, vrot = geometry.rotate(u, v, self.mg.xoffset, self.mg.yoffset,
+                                     self.mg.angrot_radians)
         quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
 
         return quiver
@@ -855,10 +833,10 @@ p
             shrink = float(kwargs.pop('shrink'))
 
         # rotate data
-        x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation, 0.,
-                                  self.mg.yedge[0])
-        x0r += self.sr.xul
-        y0r += self.sr.yul - self.mg.yedge[0]
+        x0r, y0r = geometry.rotate(tep[xp], tep[yp], 0., self.mg.extent[2],
+                                   self.mg.angrot_radians)
+        x0r += self.mg.xoffset
+        y0r += self.mg.yoffset - self.mg.extent[2]
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 

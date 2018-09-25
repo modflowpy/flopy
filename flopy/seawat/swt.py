@@ -145,19 +145,20 @@ class Seawat(BaseModel):
 
     @property
     def modelgrid(self):
-        tr = TemporalReference(self.dis.itmuni, self._start_datetime)
-        data_frame = {'perlen': self.dis.perlen.array,
-                      'nstp': self.dis.nstp.array,
-                      'tsmult': self.dis.tsmult.array}
         if self.bas is not None:
             ibound = self.bas.ibound.array
         else:
             ibound = None
-        return StructuredGrid(delc=self.dis.delc.array,
-                              delr=self.dis.delr.array,
-                              top=self.dis.top.array,
-                              botm=self.dis.botm.array, idomain=ibound,
-                              epsg=self.sr.epsg, proj4=self.sr.proj4)
+        # build grid
+        mg = StructuredGrid(self.dis.delc.array,
+                              self.dis.delr.array,
+                              self.dis.top.array,
+                              self.dis.botm.array, ibound,
+                              lenuni=self.dis.lenuni)
+        # set coordinate info
+        self._set_coord_info(mg)
+        return mg
+
     @property
     def nlay(self):
         if (self.dis):

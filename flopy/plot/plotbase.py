@@ -5,6 +5,7 @@ from ..plot.vmap import VertexMapView
 from ..plot.crosssection import StructuredCrossSection
 from ..plot.vcrosssection import VertexCrossSection
 from ..plot import plotutil
+from ..utils import geometry
 
 try:
     import matplotlib.pyplot as plt
@@ -90,7 +91,6 @@ class PlotMapView(object):
         self.layer = self.__cls.layer
         self.dis = self.__cls.dis
         self.mg = self.__cls.mg
-        self.sr = self.__cls.sr
         self.ax = self.__cls.ax
         # self._extent = self.__cls._extent
 
@@ -478,10 +478,10 @@ class PlotMapView(object):
             # rotate data
             # todo: this is propably not applicable to vertex grid models! Add a check if needed!
             # todo: there should not be a sr.yedge array either.... however this refers to yorigin, so maybe if vertex/ unstructured; set to zero!
-            x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
-                                      self.mg.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.mg.yedge[0]
+            x0r, y0r = geometry.rotate(tp['x'], tp['y'],  0., self.mg.extent[2],
+                                       self.mg.angrot_radians)
+            x0r += self.mg.xoffset
+            y0r += self.mg.yoffset - self.mg.extent[2]
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer
@@ -611,9 +611,8 @@ class PlotCrossSection(object):
         self.model = self.__cls.model
         self.dis = self.__cls.dis
         self.mg = self.__cls.mg
-        self.sr = self.__cls.sr
         self.ax = self.__cls.ax
-        self.driection = self.__cls.direction
+        self.direction = self.__cls.direction
         self.pts = self.__cls.pts
         self.xpts = self.__cls.xpts
         self.d = self.__cls.d

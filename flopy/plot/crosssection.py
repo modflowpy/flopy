@@ -46,7 +46,7 @@ class StructuredCrossSection(object):
 
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
                  line=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., extent=None, length_multiplier=1.):
+                 rotation=0., extent=None, length_multiplier=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelCrossSection method'
@@ -56,36 +56,34 @@ class StructuredCrossSection(object):
 
         if model is not None:
             self.mg = copy.deepcopy(model.modelgrid)
-            self.sr = copy.deepcopy(model.modelgrid.sr)
             self.dis = model.get_package("DIS")
 
         elif modelgrid is not None:
             self.mg = copy.deepcopy(modelgrid)
-            self.sr = copy.deepcopy(modelgrid.sr)
             self.dis = dis
             if dis is None:
                 raise AssertionError("Cannot find model discretization package")
 
         elif dis is not None:
             self.mg = copy.deepcopy(dis.parent.modelgrid)
-            self.sr = copy.deepcopy(dis.parent.modelgrid.sr)
             self.dis = dis
 
         else:
             raise Exception("Cannot find model discretization package")
 
-        # Set origin and rotation,
+        # Set origin and rotation
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                rotation != 0 or length_multiplier != 1.:
             if xul is not None and yul is not None:
-                self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ul',
-                                       xoff=xul, yoff=yul,
+                warnings.warn(
+                    'xul/yul have been deprecated. Use xll/yll instead.',
+                    DeprecationWarning)
+                self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
+                                       yoff=self.mg._yul_to_yll(yul),
                                        angrot=rotation)
             else:
-                self.mg.set_coord_info(sr=self.mg.sr, origin_loc='ll',
-                                       xoff=xll, yoff=yll,
-                                       angrot=rotation)
-        if length_multiplier != 1.:
+                self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+        if length_multiplier is not None:
             self.mg.length_multiplier = length_multiplier
         if line is None:
             s = 'line must be specified.'
@@ -130,15 +128,15 @@ class StructuredCrossSection(object):
                 xp.append(v1)
                 yp.append(v2)
 
-            xp, yp = self.mg.transform(xp, yp, inverse=True)
+            xp, yp = self.mg.get_local_coords(xp, yp)
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
 
         # convert pts list to numpy array
         self.pts = np.array(pts)
 
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xedges,
-                                                 self.mg.yedges)
+        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xyedges[0],
+                                                 self.mg.xyedges[1])
         if len(self.xpts) < 2:
             s = 'cross-section cannot be created\n.'
             s += '   less than 2 points intersect the model grid\n'
@@ -176,8 +174,8 @@ class StructuredCrossSection(object):
 
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedges,
-                                                   self.mg.yedges,
+            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
+                                                   self.mg.xyedges[1],
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 

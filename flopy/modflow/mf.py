@@ -221,25 +221,19 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
-        tr = TemporalReference(self.dis.itmuni, self._start_datetime)
-        data_frame = {'perlen': self.dis.perlen.array,
-                      'nstp': self.dis.nstp.array,
-                      'tsmult': self.dis.tsmult.array}
         if self.bas6 is not None:
             ibound = self.bas6.ibound.array
         else:
             ibound = None
-        old_sr = self.sr
-        new_sr = SpatialReference(proj4_str=old_sr.proj4_str, epsg=old_sr.epsg,
-                                  prj=old_sr.prj, units=old_sr.units)
-        return StructuredGrid(self.dis.delc.array,
+        # build grid
+        mg = StructuredGrid(self.dis.delc.array,
                               self.dis.delr.array,
                               self.dis.top.array,
                               self.dis.botm.array, ibound,
-                              lenuni=self.dis.lenuni,
-                              proj4=old_sr.proj4_str, epsg=old_sr.epsg,
-                              xoff=self._xul, yoff=self._yul,
-                              angrot=self._rotation)
+                              lenuni=self.dis.lenuni)
+        # set coordinate info
+        self._set_coord_info(mg)
+        return mg
 
     @property
     def solver_tols(self):

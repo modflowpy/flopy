@@ -9,10 +9,9 @@ try:
 except ImportError:
     plt = None
 
-from flopy.plot import plotutil
-from flopy.plot.map import MapView
-from flopy.utils import SpatialReference as DepreciatedSpatialReference
-from flopy.grid.structuredgrid import StructuredGrid
+from . import plotutil
+from .map import MapView
+from ..grid.structuredgrid import StructuredGrid
 from flopy.grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)

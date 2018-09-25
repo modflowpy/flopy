@@ -1,6 +1,7 @@
 import numpy as np
 import copy, os
-from flopy.utils import geometry
+import warnings
+from ..utils import geometry
 
 
 class CachedData(object):
@@ -374,16 +375,34 @@ class Grid(object):
                 header.extend(line.strip().replace('#', '').split(';'))
 
         for item in header:
-            if "xul" in item.lower():
+            if "xll" in item.lower():
+                try:
+                    xll = float(item.split(':')[1])
+                    self._xoff = xll
+                except:
+                    pass
+            elif "yll" in item.lower():
+                try:
+                    yll = float(item.split(':')[1])
+                    self._yoff = yll
+                except:
+                    pass
+            elif "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
                     self._xoff = self._xul_to_xll(xul)
+                    warnings.warn(
+                        'xul/yul have been deprecated. Use xll/yll instead.',
+                        DeprecationWarning)
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
                     self._yoff = self._yul_to_yll(yul)
+                    warnings.warn(
+                        'xul/yul have been deprecated. Use xll/yll instead.',
+                        DeprecationWarning)
                 except:
                     pass
             elif "rotation" in item.lower():
@@ -431,10 +450,22 @@ class Grid(object):
                             info = line.strip().split('#')[0].split()
                             if len(info) > 1:
                                 data = ' '.join(info[1:])
-                                if info == 'xul':
-                                    self._xoff = self._xul_to_xll(float(data))
+                                if info == 'xll':
+                                    self._xoff = float(data)
                                 elif info == 'yul':
-                                    self._yoff = self._yul_to_yll(float(data))
+                                    self._yoff = float(data)
+                                elif info == 'xul':
+                                    self._xoff = self._xul_to_xll(
+                                        float(data))
+                                    warnings.warn(
+                                        'xul/yul have been deprecated. Use xll/yll instead.',
+                                        DeprecationWarning)
+                                elif info == 'yul':
+                                    self._yoff = self._yul_to_yll(
+                                        float(data))
+                                    warnings.warn(
+                                        'xul/yul have been deprecated. Use xll/yll instead.',
+                                        DeprecationWarning)
                                 elif info == 'rotation':
                                     self._angrot = float(data)
                                 elif info == 'length_units':
@@ -461,6 +492,14 @@ class Grid(object):
         yext = self.extent[-1]
         return yul - (np.cos(self.angrot_radians) * yext *
             self.length_multiplier)
+
+    def _set_sr_coord_info(self, sr):
+        self._xoff = sr.xll
+        self._yoff = sr.yll
+        self._angrot = sr.rotation
+        self._epsg = sr.epsg
+        self._proj4 = sr.proj4
+        self._require_cache_updates()
 
     def _require_cache_updates(self):
         for cache_data in self._cache_dict.values():
