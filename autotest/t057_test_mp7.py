@@ -33,6 +33,9 @@ riv_h = 320.
 riv_z = 317.
 riv_c = 1.e5
 
+defaultiface = {'RECHARGE': 6, 'ET': 6}
+defaultiface6 = {'RCH': 6, 'EVT': 6}
+
 def test_mf2005_mf6():
     # build and run MODPATH 7 with MODFLOW-2005
     build_mf2005()
@@ -80,6 +83,13 @@ def build_mf2005():
 
     # create modpath files
     mp = flopy.modpath.Modpath7(modelname=nm + '_mp', flowmodel=m, model_ws=ws)
+    mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1,
+                                      defaultiface=defaultiface)
+    mpsim = flopy.modpath.Modpath7Sim(mp, SimulationType='combined',
+                                      TrackingDirection='forward',
+                                      WeakSinkOption='pass_through',
+                                      WeakSourceOption='pass_through',
+                                      BudgetOutputOption='summary')
 
     # write modpath datasets
     mp.write_input()
@@ -161,6 +171,8 @@ def build_mf6():
 
     # create modpath files
     mp = flopy.modpath.Modpath7(modelname=nm+'_mp', flowmodel=gwf, model_ws=ws)
+    mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1,
+                                      defaultiface=defaultiface6)
 
     # write modpath datasets
     mp.write_input()

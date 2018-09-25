@@ -13,14 +13,17 @@ class Modpath7List(Package):
     List package class
     '''
 
-    def __init__(self, model, extension='list', listunit=7):
+    def __init__(self, model, extension='list', unitnumber=None):
         """
         Package constructor.
 
         """
+        if unitnumber is None:
+            unitnumber = model.next_unit()
+
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(self, model, extension, 'LIST', listunit)
+        Package.__init__(self, model, extension, 'LIST', unitnumber)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
@@ -57,21 +60,42 @@ class Modpath7(BaseModel):
 
         self.flowmodel = flowmodel
         if isinstance(self.flowmodel, Modflow):
-            self.version = self.flowmodel.version
+            self.flow_version = self.flowmodel.version
         elif isinstance(self.flowmodel, ModflowGwf):
-            self.version = self.flowmodel.version
+            self.flow_version = self.flowmodel.version
 
-        if self.version == 'mf6':
+        if self.flow_version == 'mf6':
+            shape = None
             # get discretization package
+            ibound = None
             dis = self.flowmodel.get_package('DIS')
             if dis is None:
                 dis = self.flowmodel.get_package('DISV')
+            else:
+                nlay, nrow, ncol = dis.nlay.array, dis.nrow.array, \
+                                   dis.ncol.array
+                shape = (nlay, nrow, ncol)
             if dis is None:
                 dis = self.flowmodel.get_package('DISU')
+            elif dis is not None and shape is None:
+                nlay, ncpl = dis.nlay.array, dis.ncpl.array
+                shape = (nlay, ncpl)
             if dis is None:
                 msg = 'DIS, DISV, or DISU packages must be ' + \
                       'included in the passed MODFLOW 6 model'
                 raise Exception(msg)
+            elif dis is not None and shape is None:
+                nodes = dis.nodes.array
+                shape = (nodes)
+
+            # terminate (for now) if mf6 model does not use dis
+            if len(shape) != 3:
+                msg = 'DIS currently the only supported MODFLOW 6 ' + \
+                      'discretization package that can be used with ' + \
+                      'MODPATH 7'
+                raise Exception(msg)
+
+
             # set dis and grbdis file name
             dis_file = None
             grbdis_file = dis.filename + '.grb'
@@ -94,10 +118,47 @@ class Modpath7(BaseModel):
                 if budget_file is None:
                     budget_file = oc.budget_filerecord.array['budgetfile'][0]
 
+            # set laytyp based on icelltype
+            npf = self.flowmodel.get_package('NPF')
+            if npf is None:
+                msg = 'NPF package must be ' + \
+                      'included in the passed MODFLOW 6 model'
+                raise Exception(msg)
+            icelltype = npf.icelltype.array.reshape(shape)
+            laytyp = []
+            for k in range(shape[0]):
+                laytyp.append(icelltype[k].max())
+            laytyp = np.array(laytyp, dtype=np.int32)
+
+
+            # set default hdry and hnoflo
             hdry = None
             hnoflo = None
 
         else:
+            shape = None
+            # extract data from DIS or DISU files and set shape
+            dis = self.flowmodel.get_package('DIS')
+            if dis is None:
+                dis = self.flowmodel.get_package('DISU')
+            elif dis is not None and shape is None:
+                nlay, nrow, ncol = dis.nlay, dis.nrow, dis.ncol
+                shape = (nlay, nrow, ncol)
+            if dis is None:
+                msg = 'DIS, or DISU packages must be ' + \
+                      'included in the passed MODFLOW model'
+                raise Exception(msg)
+            elif dis is not None and shape is None:
+                nlay, nodes = dis.nlay, dis.nodes
+                shape = (nodes)
+
+            # terminate (for now) if mf6 model does not use dis
+            if len(shape) != 3:
+                msg = 'DIS currently the only supported MODFLOW ' + \
+                      'discretization package that can be used with ' + \
+                      'MODPATH 7'
+                raise Exception(msg)
+
             # set dis_file
             dis_file = self.flowmodel.dis.file_name[0]
 
@@ -128,15 +189,31 @@ class Modpath7(BaseModel):
                 iu = p.ipakcb
                 budget_file = self.flowmodel.get_output(unit=iu)
 
+            # set laytyp
+            if p.name[0] == 'BCF6':
+                laytyp = p.laycon.array
+            else:
+                laytyp = p.laytyp.array
+
             # set hdry from flow package
             hdry = p.hdry
 
-            # set hnoflo from BAS6 package
+            # set hnoflo and ibound from BAS6 package
             bas = self.flowmodel.get_package('BAS6')
             hnoflo = bas.hnoflo
-
+            ib = bas.ibound.array
+            # reset to constant values if possible
+            ibound = []
+            for k in range(shape[0]):
+                i = ib[k].flatten()
+                if np.all(i == i[0]):
+                    kval = i[0]
+                else:
+                    kval = ib[k]
+                ibound.append(kval)
 
         # set dis_file and tdis_file
+        self.shape = shape
         self.dis_file = dis_file
         self.grbdis_file = grbdis_file
         self.tdis_file = tdis_file
@@ -159,9 +236,15 @@ class Modpath7(BaseModel):
                   'to __init__ cannot be None'
             raise ValueError(msg)
 
+        # set laytyp
+        self.laytyp = laytyp
+
         # set hnoflo and hdry
         self.hnoflo = hnoflo
         self.hdry = hdry
+
+        # set ibound
+        self.ibound = ibound
 
         # set file attributes
         self.array_free_format = True
