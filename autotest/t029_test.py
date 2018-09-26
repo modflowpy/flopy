@@ -34,7 +34,29 @@ def test_mfgrddisv():
     errmsg = 'ncells of flow.disv {} not equal to 218.'.format(len(iverts))
     assert len(iverts) == 218, errmsg
 
+    cellxy = disv.get_centroids()
+    errmsg = 'shape of flow.disv centroids {} not equal to (218, 2).'.format(cellxy.shape)
+    assert cellxy.shape == (218, 2), errmsg
+    return
+
+
+def test_mfgrddisu():
+    fn = os.path.join(pthtest, 'flow.disu.grb')
+    disu = flopy.utils.MfGrdFile(fn, verbose=True)
+
+    iverts, verts = disu.get_verts()
+    errmsg = 'shape of flow.disu {} not equal to (148, 2).'.format(verts.shape)
+    assert verts.shape == (148, 2), errmsg
+    errmsg = 'nodes of flow.disu {} not equal to 121.'.format(len(iverts))
+    assert len(iverts) == 121, errmsg
+
+    cellxy = disu.get_centroids()
+    errmsg = 'shape of flow.disu centroids {} not equal to (121, 2).'.format(cellxy.shape)
+    assert cellxy.shape == (121, 2), errmsg
+    return
+
 
 if __name__ == '__main__':
     test_mfgrddis()
     test_mfgrddisv()
+    test_mfgrddisu()

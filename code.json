@@ -5,6 +5,7 @@
         "repositoryURL": "https://code.usgs.gov/usgs/modflow/flopy.git", 
         "laborHours": -1, 
         "disclaimerURL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/DISCLAIMER.md", 
+        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models.", 
         "tags": [
             "MODFLOW", 
             "MODFLOW 6", 
@@ -20,7 +21,7 @@
             "transport model", 
             "python"
         ], 
-        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models.", 
+        "vcs": "git", 
         "languages": [
             "python"
         ], 
@@ -28,10 +29,10 @@
             "name": "Joseph D. Hughes", 
             "email": "jdhughes@usgs.gov"
         }, 
-        "vcs": "git", 
-        "version": "3.2.9.183", 
+        "laborHours": -1, 
+        "version": "3.2.9.199", 
         "date": {
-            "metadataLastUpdated": "2018-08-22"
+            "metadataLastUpdated": "2018-09-17"
         }, 
         "organization": "U.S. Geological Survey", 
         "permissions": {
