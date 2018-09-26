@@ -990,7 +990,6 @@ class MFArray(mfdata.MFMultiDimVar):
             return '\n'.join(layer_data_string)
 
     def _resolve_data_shape(self, data):
-        data_dim = self._data_dimensions
         try:
             dimensions = self._get_storage_obj().get_data_dimensions(
                 self._layer_shape)

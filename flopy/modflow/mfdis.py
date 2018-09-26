@@ -911,15 +911,13 @@ class ModflowDis(Package):
         # dataset 3 -- delr
         if model.verbose:
             print('   loading delr...')
-        delr = Util2d.load(f, model, (1, ncol), np.float32, 'delr',
+        delr = Util2d.load(f, model, (ncol,), np.float32, 'delr',
                            ext_unit_dict)
-        delr = delr.array.reshape((ncol))
         # dataset 4 -- delc
         if model.verbose:
             print('   loading delc...')
-        delc = Util2d.load(f, model, (1, nrow), np.float32, 'delc',
+        delc = Util2d.load(f, model, (nrow,), np.float32, 'delc',
                            ext_unit_dict)
-        delc = delc.array.reshape((nrow))
         # dataset 5 -- top
         if model.verbose:
             print('   loading top...')

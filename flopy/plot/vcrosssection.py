@@ -50,7 +50,7 @@ class VertexCrossSection(object):
 
         # Set origin and rotation,
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-               rotation != 0 or length_multiplier != 1.:
+                rotation != 0 or length_multiplier != 1.:
             self.sr.length_multiplier = length_multiplier
             self.sr.set_spatialreference(delc=self.mg.delc,
                                          xul=xul, yul=yul,
@@ -171,8 +171,8 @@ class VertexCrossSection(object):
         self.xcentergrid = None
         self.ycentergrid = None
         self.zcentergrid = None
-            # Set axis limits
 
+        # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -215,7 +215,7 @@ class VertexCrossSection(object):
                 a = np.ma.masked_equal(a, mval)
 
         if isinstance(head, np.ndarray):
-            projpts =  self.set_zpts(head)
+            projpts = self.set_zpts(np.ravel(head))
         else:
             projpts = self.projpts
 
@@ -251,7 +251,7 @@ class VertexCrossSection(object):
 
         if 'color' in kwargs:
             color = kwargs.pop('color')
-        elif 'c' in  kwargs:
+        elif 'c' in kwargs:
             color = kwargs.pop('c')
         else:
             color = 'b'
@@ -264,8 +264,6 @@ class VertexCrossSection(object):
 
         if a.size % self.mg.ncpl != 0:
             raise AssertionError("Array size must be a multiple of ncpl")
-
-        nlay = a.size / self.mg.ncpl
 
         if masked_values is not None:
             for mval in masked_values:
@@ -355,7 +353,7 @@ class VertexCrossSection(object):
                 a = np.ma.masked_equal(a, mval)
 
         if isinstance(head, np.ndarray):
-            projpts =  self.set_zpts(head)
+            projpts = self.set_zpts(head)
         else:
             projpts = self.projpts
 
@@ -456,7 +454,7 @@ class VertexCrossSection(object):
 
         try:
             amask = plotarray.mask
-            mask = [False for i in range(triang.triangles.shape[0])]
+            mask = [False for _ in range(triang.triangles.shape[0])]
             for ipos, (n0, n1, n2) in enumerate(triang.triangles):
                 if amask[n0] or amask[n1] or amask[n2]:
                     mask[ipos] = True
@@ -662,12 +660,8 @@ class VertexCrossSection(object):
 
         Parameters
         ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
+        fja : numpy.ndarray
+            MODFLOW's 'flow ja face'
         head : numpy.ndarray
             MODFLOW's head array.  If not provided, then will assume confined
             conditions in order to calculated saturated thickness.
@@ -711,7 +705,6 @@ class VertexCrossSection(object):
 
         fja = np.array(fja)
         nlay = self.mg.nlay
-        ncpl = self.mg.ncpl
 
         delr = np.tile([np.max(i) - np.min(i) for i in self.mg.yvertices], (nlay, 1))
         delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xvertices], (nlay, 1))
@@ -774,7 +767,7 @@ class VertexCrossSection(object):
                  in sorted(projpts.items())]
 
         qz = np.ravel(qz)
-        v = np.array([qz[cell] for cell
+        v = np.array([-qz[cell] for cell
                       in sorted(projpts)])
         y = np.ravel(zcenters)
 
@@ -966,7 +959,6 @@ class VertexCrossSection(object):
                 for v in verts:
                     xpts.append(v[1])
 
-
         xmin = np.min(xpts)
         xmax = np.max(xpts)
 
@@ -1098,5 +1090,6 @@ if __name__ == "__main__":
 
 
     ax = cr.plot_discharge(fja=fja, head=head, kstep=2)
+    cr.plot_grid()
     plt.show()
     #print('break')

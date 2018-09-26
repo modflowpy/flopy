@@ -614,6 +614,8 @@ p
         laytyp = None
         hnoflo = 999.
         hdry = 999.
+
+        # todo: updates to get flopy6 laytyp and hnoflow
         if self.model is not None:
             if self.model.version == "mf6":
                 sto = self.model.get_package("STO")
