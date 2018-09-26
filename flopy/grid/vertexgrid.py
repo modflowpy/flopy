@@ -5,12 +5,10 @@ from ..utils import geometry
 
 class VertexGrid(Grid):
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
-                 lenuni=2, ref_units=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0, grid_type='layered_vertex',
-                 length_multiplier=None):
-        super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
-                                         ref_units, epsg, proj4, xoff, yoff,
-                                         angrot, length_multiplier)
+                 epsg=None, proj4=None, xoff=0.0, yoff=0.0, angrot=0.0,
+                 grid_type='layered_vertex'):
+        super(VertexGrid, self).__init__(grid_type, top, botm, idomain,
+                                         epsg, proj4, xoff, yoff, angrot)
         self._vertices = vertices
         self._cell2d = cell2d
         self._top = top

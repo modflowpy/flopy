@@ -35,8 +35,6 @@ class Grid(object):
         ibound/idomain value for each cell
     sr : SpatialReference
         spatial reference locates the grid in a coordinate system
-    lenuni : int
-        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
     origin_loc : str
         Corner of the model grid that is the model origin
         'ul' (upper left corner) or 'll' (lower left corner)
@@ -64,10 +62,6 @@ class Grid(object):
         spatial reference locates the grid in a coordinate system
     epsg : epsg SpatialReference
         spatial reference locates the grid in a coordinate system
-    lenuni : int
-        length unit (0 - undefined, 1 - feet, 2 - meters, 3 - centimeters)
-    model_length_units : str
-        returns length unit as a string
     origin_x : float
         x coordinate of the origin point in the spatial reference coordinate
         system
@@ -127,15 +121,8 @@ class Grid(object):
     Examples
     --------
     """
-    lenuni_values = {'undefined': 0,
-                     'feet': 1,
-                     'meters': 2,
-                     'centimeters': 3}
-    lenuni_text = {v: k for k, v in lenuni_values.items()}
-
-    def __init__(self, grid_type, top=None, botm=None, idomain=None, lenuni=2,
-                 ref_units=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0, length_multiplier=None):
+    def __init__(self, grid_type, top=None, botm=None, idomain=None, epsg=None,
+                 proj4=None, xoff=0.0, yoff=0.0, angrot=0.0):
         self.use_ref_coords = True
         self._grid_type = grid_type
         self._top = top
@@ -143,12 +130,9 @@ class Grid(object):
         self._idomain = idomain
         self._epsg = epsg
         self._proj4 = proj4
-        self._lenuni = lenuni
-        self._ref_units = ref_units
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
-        self._length_multiplier = length_multiplier
         self._cache_dict = {}
 
     ###################################
@@ -198,10 +182,6 @@ class Grid(object):
     @property
     def idomain(self):
         return self._idomain
-
-    @property
-    def lenuni(self):
-        return self._lenuni
 
     @property
     def extent(self):
@@ -257,50 +237,11 @@ class Grid(object):
     #        'must define indices in child '
     #        'class to use this base class')
 
-    @property
-    def model_length_units(self):
-        return self.lenuni_text[self._lenuni]
-
-    @property
-    def length_multiplier(self):
-        if self._length_multiplier is not None:
-            # user defined length multiplier overrides everything
-            return self._length_multiplier
-        """Attempt to identify multiplier for converting from
-        model units to sr units, defaulting to 1."""
-        if self._ref_units is None or self._lenuni == 0:
-            return 1.0
-        if self.model_length_units == 'feet':
-            if self._ref_units == 'meters':
-                return 0.3048
-            elif self._ref_units == 'feet':
-                return 1.
-        elif self.model_length_units == 'meters':
-            if self._ref_units == 'feet':
-                lm = 1 / .3048
-            elif self._ref_units == 'meters':
-                lm = 1.
-        elif self.model_length_units == 'centimeters':
-            if self._ref_units == 'meters':
-                lm = 1 / 100.
-            elif self._ref_units == 'feet':
-                lm = 1 / 30.48
-        else:  # model units unspecified; default to 1
-            lm = 1.
-        return lm
-
-    @length_multiplier.setter
-    def length_multiplier(self, length_multiplier):
-        self._length_multiplier = length_multiplier
-
     def get_coords(self, x, y):
         """
         Given x and y array-like values, apply rotation, scale and offset,
         to convert them from model coordinates to real-world coordinates.
         """
-        x *= self.length_multiplier
-        y *= self.length_multiplier
-
         if isinstance(x, list):
             x = np.array(x)
             y = np.array(y)
@@ -327,9 +268,6 @@ class Grid(object):
                                -self.angrot_radians)
         x -= self._xoff
         y -= self._yoff
-
-        x /= self.length_multiplier
-        y /= self.length_multiplier
 
         return x, y
 
@@ -422,26 +360,11 @@ class Grid(object):
                     start_datetime = item.split(':')[1].strip()
                 except:
                     pass
-            # spatial reference length units
-            elif "units" in item.lower():
-                self._ref_units = item.split(':')[1].strip()
-            # model length units
-            elif "lenuni" in item.lower():
-                self._lenuni = int(item.split(':')[1].strip())
-            # multiplier for converting from model length units to sr length units
-            elif "length_multiplier" in item.lower():
-                self._length_multiplier = float(item.split(':')[1].strip())
         return True
 
     def read_usgs_model_reference_file(self, reffile='usgs.model.reference'):
         """read spatial reference info from the usgs.model.reference file
         https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
-
-        ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours",
-                  4: "days",
-                  5: "years"}
-        itmuni_values = {v: k for k, v in ITMUNI.items()}
-
         if os.path.exists(reffile):
             with open(reffile) as input:
                 for line in input:
@@ -468,10 +391,6 @@ class Grid(object):
                                         DeprecationWarning)
                                 elif info == 'rotation':
                                     self._angrot = float(data)
-                                elif info == 'length_units':
-                                    self._lenuni = Grid.lenuni_values[data]
-                                elif info == 'itmuni':
-                                    self._ref_units = data
                                 elif info == 'epsg':
                                     self._epsg = int(data)
                                 elif info == 'proj4':
@@ -485,13 +404,11 @@ class Grid(object):
     # Internal
     def _xul_to_xll(self, xul):
         yext = self.extent[-1]
-        return xul + (np.sin(self.angrot_radians) * yext *
-            self.length_multiplier)
+        return xul + (np.sin(self.angrot_radians) * yext)
 
     def _yul_to_yll(self, yul):
         yext = self.extent[-1]
-        return yul - (np.cos(self.angrot_radians) * yext *
-            self.length_multiplier)
+        return yul - (np.cos(self.angrot_radians) * yext)
 
     def _set_sr_coord_info(self, sr):
         self._xoff = sr.xll

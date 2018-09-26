@@ -229,8 +229,7 @@ class Modflow(BaseModel):
         mg = StructuredGrid(self.dis.delc.array,
                               self.dis.delr.array,
                               self.dis.top.array,
-                              self.dis.botm.array, ibound,
-                              lenuni=self.dis.lenuni)
+                              self.dis.botm.array, ibound)
         # set coordinate info
         self._set_coord_info(mg)
         return mg
