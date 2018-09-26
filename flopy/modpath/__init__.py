@@ -4,3 +4,4 @@ from .mpsim import ModpathSim
 from .mp7 import Modpath7
 from .mp7bas import Modpath7Bas
 from .mp7sim import Modpath7Sim
+from .mp7particle import LayerRowColumnParticles

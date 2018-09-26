@@ -107,6 +107,17 @@ class Modpath7(BaseModel):
                 raise Exception(msg)
             tdis_file = tdis.filename
 
+            # get stress period data
+            nper = tdis.nper.array
+            perlen = []
+            nstp = []
+            v = tdis.perioddata.array
+            for pl, ns, tsmult in v:
+                perlen.append(pl)
+                nstp.append(ns)
+            perlen = np.array(perlen, dtype=np.float32)
+            nstp = np.array(nstp, dtype=np.int32)
+
             # get oc file
             oc = self.flowmodel.get_package('OC')
             if oc is not None:
@@ -159,8 +170,13 @@ class Modpath7(BaseModel):
                       'MODPATH 7'
                 raise Exception(msg)
 
+            # get stress period data
+            nper = dis.nper
+            perlen = dis.perlen.array
+            nstp = dis.nstp.array
+
             # set dis_file
-            dis_file = self.flowmodel.dis.file_name[0]
+            dis_file = dis.file_name[0]
 
             # set grbdis_file
             grbdis_file = None
@@ -217,6 +233,12 @@ class Modpath7(BaseModel):
         self.dis_file = dis_file
         self.grbdis_file = grbdis_file
         self.tdis_file = tdis_file
+
+        # set temporal data
+        self.nper = nper
+        self.time_end = perlen.sum()
+        self.perlen = perlen
+        self.nstp = nstp
 
         # set output file names
         self.head_file = head_file

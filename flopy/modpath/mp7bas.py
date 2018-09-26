@@ -98,10 +98,10 @@ class Modpath7Bas(Package):
                                  locat=self.unit_number[0])
         if model.flowmodel.version != 'mf6':
             model.ibound = Util3d(model, shape3d, np.int32, model.ibound,
-                                  name='ibound', locat=self.unit_number[0])
+                                  name='IBOUND', locat=self.unit_number[0])
         
         self.porosity = Util3d(model, shape3d, np.float32, porosity,
-                               name='porosity', locat=self.unit_number[0])
+                               name='POROSITY', locat=self.unit_number[0])
 
         # validate and set defaultiface
         if defaultiface is None:
@@ -150,7 +150,8 @@ class Modpath7Bas(Package):
                 f.write('{:<20d}{}\n'.format(value, '# DEFAULT IFACE VALUE'))
 
         # laytyp
-        f.write(self.parent.laytyp.string)
+        if self.parent.flow_version != 'mf6':
+            f.write(self.parent.laytyp.string)
 
         # ibound
         if self.parent.flow_version != 'mf6':
