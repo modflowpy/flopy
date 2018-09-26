@@ -513,9 +513,8 @@ class ModflowDisU(Package):
         # dataset 3 -- nodelay
         if model.verbose:
             print('   loading NODELAY...')
-        nodelay = Util2d.load(f, model, (1, nlay), np.int32, 'nodelay',
-                               ext_unit_dict)
-        nodelay = nodelay.array.reshape((nlay))
+        nodelay = Util2d.load(f, model, (nlay,), np.int32, 'nodelay',
+                              ext_unit_dict)
         if model.verbose:
             print('   NODELAY {}'.format(nodelay))
 
@@ -562,18 +561,14 @@ class ModflowDisU(Package):
         # dataset 7 -- iac
         if model.verbose:
             print('   loading IAC...')
-        iac = Util2d.load(f, model, (1, nodes), np.int32, 'iac',
-                               ext_unit_dict)
-        iac = iac.array.reshape((nodes))
+        iac = Util2d.load(f, model, (nodes,), np.int32, 'iac', ext_unit_dict)
         if model.verbose:
             print('   IAC {}'.format(iac))
 
         # dataset 8 -- ja
         if model.verbose:
             print('   loading JA...')
-        ja = Util2d.load(f, model, (1, njag), np.int32, 'ja',
-                               ext_unit_dict)
-        ja = ja.array.reshape((njag))
+        ja = Util2d.load(f, model, (njag,), np.int32, 'ja', ext_unit_dict)
         if model.verbose:
             print('   JA {}'.format(ja))
 
@@ -582,9 +577,7 @@ class ModflowDisU(Package):
         if ivsd == 1:
             if model.verbose:
                 print('   loading IVC...')
-            ivc = Util2d.load(f, model, (1, njag), np.int32, 'ivc',
-                                   ext_unit_dict)
-            ivc = ivc.array.reshape((njag))
+            ivc = Util2d.load(f, model, (njag,), np.int32, 'ivc', ext_unit_dict)
             if model.verbose:
                 print('   IVC {}'.format(ivc))
 

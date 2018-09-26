@@ -529,6 +529,7 @@ class Util3d(DataInterface):
             self._name = name
             isnamespecified = True
             isnamespecified = True
+            isnamespecified = True
         else:
             t = []
             for k in range(shape[0]):
@@ -536,10 +537,13 @@ class Util3d(DataInterface):
             self._name = t
         self.name_base = []
         for k in range(shape[0]):
-            if 'Layer' not in self._name[k]:
+            if isnamespecified:
                 self.name_base.append(self.name[k])
             else:
-                self.name_base.append(self._name[k])
+                if 'Layer' not in self.name[k]:
+                    self.name_base.append(self.name[k] + ' Layer ')
+                else:
+                    self.name_base.append(self.name[k])
         self.fmtin = fmtin
         self.cnstnt = cnstnt
         self.iprn = iprn
@@ -800,8 +804,8 @@ class Util3d(DataInterface):
                     shape = self.shape[1:]
                     if shape[0] is None:
                         # allow for unstructured so that ncol changes by layer
-                        shp = (1, self.shape[2][i])
-                    u2d = Util2d(self._model, shp, self._dtype, item,
+                        shape = (self.shape[2][i],)
+                    u2d = Util2d(self.model, shape, self.dtype, item,
                                  fmtin=self.fmtin, name=name,
                                  ext_filename=ext_filename,
                                  locat=self.locat,
@@ -1667,19 +1671,6 @@ class Util2d(DataInterface):
         Model instance string attribute "external_path" used to determine
         external array writing
         """
-        1d or 2-d array support with minimum of mem footprint.
-        only creates arrays as needed, 
-        otherwise functions with strings or constants
-        shape = 1-d or 2-d tuple
-        value =  an instance of string, list, np.int32, np.float32, np.bool or np.ndarray
-        vtype = str, np.int32, np.float32, np.bool, or np.ndarray
-        dtype = np.int32, or np.float32
-        if ext_filename is passed, scalars are written externally as arrays
-        model instance bool attribute "array_free_format" used for generating control record
-        model instance string attribute "external_path" 
-        used to determine external array writing
-        bin controls writing of binary external arrays
-        """
         if isinstance(value, Util2d):
             for attr in value.__dict__.items():
                 setattr(self, attr[0], attr[1])
@@ -1731,7 +1722,7 @@ class Util2d(DataInterface):
         self.iprn = iprn
         self._format = ArrayFormat(self, fortran=fmtin,
                                    array_free_format=array_free_format)
-        self._format.binary = bool(bin)
+        self._format._isbinary = bool(bin)
         self.ext_filename = ext_filename
         self._ext_filename = self._name.replace(' ', '_') + ".ref"
 
@@ -2136,7 +2127,7 @@ class Util2d(DataInterface):
         if not self.format.array_free_format and self.format.free:
             print("Util2d {0}: can't be free format...resetting".format(
                 self._name))
-            self.format.free = False
+            self.format._isfree = False
 
         if not self.format.array_free_format and self.how == "internal" and self.locat is None:
             print("Util2d {0}: locat is None, but ".format(self._name) + \
@@ -2248,8 +2239,8 @@ class Util2d(DataInterface):
 
         """
         if isinstance(self.cnstnt,str):
-            print("WARNING: cnstnt is str for {0}".format(self._name))
-            return self._array.astype(self._dtype)
+            print("WARNING: cnstnt is str for {0}".format(self.name))
+            return self._array.astype(self.dtype)
         if isinstance(self.cnstnt, (int, np.int32)):
             cnstnt = self.cnstnt
         else:
@@ -2312,12 +2303,10 @@ class Util2d(DataInterface):
         -------
         2-D array
         """
-        load a (possibly wrapped format) array from a mt3d block
-        (self.__value) and casts to the proper type (self._dtype)
-        made static to support the load functionality
-        this routine now supports fixed format arrays where the numbers
-        may touch.
-        """
+        if len(shape) != 2:
+            raise ValueError(
+                'Util2d.load_block(): expected 2 dimensions, found shape {0}'
+                .format(shape))
         nrow, ncol = shape
         data = np.ma.zeros(shape, dtype=dtype)
         data.mask = True
@@ -2362,19 +2351,15 @@ class Util2d(DataInterface):
         -------
         1-D or 2-D array
         """
-        load a (possibly wrapped format) array from a file
-        (self.__value) and casts to the proper type (self._dtype)
-        made static to support the load functionality 
-        this routine now supports fixed format arrays where the numbers
-        may touch.
-        """
-        # file_in = open(self.__value,'r')
-        # file_in = open(filename,'r')
-        # nrow,ncol = self.shape
-        nrow, ncol = shape
-        npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(fmtin)
-        data = np.zeros((nrow * ncol), dtype=dtype) + np.NaN
-        d = 0
+        if len(shape) == 1:
+            num_items = shape[0]
+        elif len(shape) == 2:
+            nrow, ncol = shape
+            num_items = nrow * ncol
+        else:
+            raise ValueError(
+                'Util2d.load_txt(): expected 1 or 2 dimensions, found shape {0}'
+                .format(shape))
         if not hasattr(file_in, 'read'):
             file_in = open(file_in, 'r')
         npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(fmtin)
@@ -2510,6 +2495,7 @@ class Util2d(DataInterface):
         """
         import flopy.utils.binaryfile as bf
         nrow, ncol = shape
+        num_items = nrow * ncol
         if dtype != np.int32 and np.issubdtype(dtype, np.integer):
             # Modflow only uses 4-byte integers
             dtype = np.dtype(dtype)
@@ -2518,13 +2504,17 @@ class Util2d(DataInterface):
                 warn('Util2d: setting integer dtype from {0} to int32'
                      .format(dtype))
             dtype = np.int32
+        if not hasattr(file_in, 'read'):
+            file_in = open(file_in, 'rb')
         header_data = None
         if bintype is not None and np.issubdtype(dtype, np.floating):
             header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
-        data = np.fromfile(file_in, dtype=dtype, count=nrow * ncol)
-        data.resize(nrow, ncol)
-        return [header_data, data]
+        data = np.fromfile(file_in, dtype=dtype, count=num_items)
+        if data.size != num_items:
+            raise ValueError('Util2d.load_bin(): expected array size {0},'
+                             ' but found size {1}'.format(num_items, data.size))
+        return header_data, data.reshape(shape)
 
     @staticmethod
     def write_bin(shape, file_out, data, bintype=None, header_data=None):
