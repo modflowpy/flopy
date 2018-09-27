@@ -10,7 +10,6 @@ Additional information for this MODFLOW/MODPATH package can be found at the
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from .mp7particle import LayerRowColumnParticles
 from enum import Enum
 
 class simType(Enum):

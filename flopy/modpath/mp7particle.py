@@ -4,7 +4,6 @@ from ..utils.recarray_utils import create_empty_recarray
 
 try:
     from numpy.lib import NumpyVersion
-
     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
 except ImportError:
     numpy114 = False
@@ -66,7 +65,7 @@ class Modpath7Particle(object):
         return
 
 
-class LayerRowColumnParticles(Modpath7Particle):
+class LRCParticles(Modpath7Particle):
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=[0.0],
                  particledata=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
@@ -88,7 +87,7 @@ class LayerRowColumnParticles(Modpath7Particle):
         else:
             msg = 'particledata must be a list, tuple, ' + \
                   'numpy ndarray, or an instance of ' + \
-                  'LayerRowColumnParticles'
+                  'LRCParticles'
             raise ValueError(msg)
         if v is not None:
             if len(v) == 6:
@@ -201,8 +200,10 @@ class LayerRowColumnParticles(Modpath7Particle):
 
     @property
     def fmt_string(self):
-        """Returns a C-style fmt string for numpy savetxt that corresponds to
-        the dtype"""
+        """
+        Returns a C-style fmt string for numpy savetxt that corresponds to
+        the dtype
+        """
         fmts = []
         for field in self.particledata.dtype.descr:
             vtype = field[1][1].lower()
@@ -213,11 +214,14 @@ class LayerRowColumnParticles(Modpath7Particle):
                     # Use numpy's floating-point formatter (Dragon4)
                     fmts.append('%15s')
                 else:
-                    fmts.append('%15.7E')
+                    if field[1][2] == 8:
+                        fmts.append('%15.5E')
+                    else:
+                        fmts.append('%15.7E')
             elif vtype == 'o':
                 fmts.append('%9s')
             elif vtype == 's':
-                msg = "LayerRowColumnParticles.fmt_string error: 'str' " + \
+                msg = "LRCParticles.fmt_string error: 'str' " + \
                       "type found in dtype. This gives unpredictable " + \
                       "results when recarray to file - change to 'object' type"
                 raise TypeError(msg)
@@ -248,7 +252,7 @@ class LayerRowColumnParticles(Modpath7Particle):
     @staticmethod
     def get_empty(ncells=0, structured=True, particleid=False):
         # get an empty recarray that corresponds to dtype
-        dtype = LayerRowColumnParticles.get_default_dtype(
+        dtype = LRCParticles.get_default_dtype(
             structured=structured,
             particleid=particleid)
         return create_empty_recarray(ncells, dtype, default_value=0)

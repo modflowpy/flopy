@@ -38,8 +38,7 @@ zone3[wel_loc[1:]] = 2
 zones = [1, 1, zone3]
 
 # create particles
-part0 = flopy.modpath.LayerRowColumnParticles.get_empty(ncells=21,
-                                                        particleid=True)
+part0 = flopy.modpath.LRCParticles.get_empty(ncells=21, particleid=True)
 part0['k'] = 0
 part0['j'] = 3
 part0['localx'] = 0.5
@@ -50,9 +49,8 @@ part0['drape'] = 0
 for idx in range(part0.shape[0]):
     part0['id'][idx] = idx
     part0['i'][idx] = idx
-pg1 = flopy.modpath.LayerRowColumnParticles(particlegroupname='PG1',
-                                            particledata=part0,
-                                            filename='ex01a.sloc')
+pg1 = flopy.modpath.LRCParticles(particlegroupname='PG1', particledata=part0,
+                                 filename='ex01a.sloc')
 particlegroups = [pg1]
 
 defaultiface = {'RECHARGE': 6, 'ET': 6}
@@ -66,6 +64,10 @@ def test_mf6():
     # build and run MODPATH 7 with MODFLOW 6
     build_mf6()
 
+def test_output():
+    fpth0 = os.path.join(model_ws, 'mf2005', 'ex01_mf2005_mp.mppth')
+    fpth1 = os.path.join(model_ws, 'mf6', 'ex01_mf6_mp.mppth')
+    return
 
 def build_mf2005():
     '''
@@ -233,3 +235,4 @@ def build_mf6():
 if __name__ == '__main__':
     test_mf2005()
     test_mf6()
+    test_output()

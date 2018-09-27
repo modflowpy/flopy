@@ -8,7 +8,6 @@ MODFLOW Guide
 
 """
 import numpy as np
-from numpy import empty, array
 from ..pakbase import Package
 from ..utils import Util2d, Util3d
 
@@ -60,8 +59,8 @@ class Modpath7Bas(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modpath.Modpath()
-    >>> mpbas = flopy.modpath.ModpathBas(m)
+    >>> m = flopy.modpath.Modpath7()
+    >>> mpbas = flopy.modpath.Modpath7Bas(m)
 
     """
     def __init__(self, model, porosity=0.30,
