@@ -286,7 +286,7 @@ def test_build_modpath7():
         return
     starget = 'MODPATH 7'
     exe_name = 'mp7'
-    dirname = 'Modpath_7_2_001'
+    dirname = 'modpath_7_2_001'
     url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
 
     build_target(starget, exe_name, url, dirname, srcname='source',

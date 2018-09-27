@@ -96,19 +96,19 @@ class Modpath7Sim(Package):
 
     """
 
-    def __init__(self, model, mp_name_file=None, mp_list_file=None,
-                 endpoint_file=None, pathline_file=None,
-                 time_series_file=None, trace_file=None,
-                 SimulationType='pathline', TrackingDirection='forward',
-                 WeakSinkOption='stop_at', WeakSourceOption='stop_at',
-                 BudgetOutputOption='no',
-                 TraceParticleGroup=None, TraceParticleId=None,
-                 BudgetCellNumbers=None, ReferenceTime=None,
-                 StopTimeOption='extend', StopTime=None,
-                 TimePointData=None,
-                 ZoneDataOption='off', StopZone=None, Zones=None,
-                 RetardationFactorOption='off', Retardation=None,
-                 ParticleGroups=None,
+    def __init__(self, model, mp_name_file=None, listingfilename=None,
+                 endpointfilename=None, pathlinefilename=None,
+                 timeseriesfilename=None, tracefilename=None,
+                 simulationtype='pathline', trackingdirection='forward',
+                 weaksinkoption='stop_at', weaksourceoption='stop_at',
+                 budgetoutputoption='no',
+                 traceparticlegroup=None, traceparticleid=None,
+                 budgetcellnumbers=None, referencetime=None,
+                 stoptimeoption='extend', StopTime=None,
+                 timepointdata=None,
+                 zonedataoption='off', stopzone=None, zones=None,
+                 retardationfactoroption='off', retardation=None,
+                 particlegroups=None,
                  extension='mpsim', unitnumber=None):
 
         if unitnumber is None:
@@ -126,66 +126,66 @@ class Modpath7Sim(Package):
         if mp_name_file is None:
             mp_name_file = '{}.{}'.format(model.name, 'mpnam')
         self.mp_name_file = mp_name_file
-        if mp_list_file is None:
-            mp_list_file = '{}.{}'.format(model.name, 'mplst')
-        self.mp_list_file = mp_list_file
-        if endpoint_file is None:
-            endpoint_file = '{}.{}'.format(model.name, 'mpend')
-        self.endpoint_file = endpoint_file
-        if pathline_file is None:
-            pathline_file = '{}.{}'.format(model.name, 'mppth')
-        self.pathline_file = pathline_file
-        if time_series_file is None:
-            time_series_file = '{}.{}'.format(model.name, 'timeseries')
-        self.time_series_file = time_series_file
-        if trace_file is None:
-            trace_file = '{}.{}'.format(model.name, 'trace')
-        self.trace_file = trace_file
+        if listingfilename is None:
+            listingfilename = '{}.{}'.format(model.name, 'mplst')
+        self.listingfilename = listingfilename
+        if endpointfilename is None:
+            endpointfilename = '{}.{}'.format(model.name, 'mpend')
+        self.endpointfilename = endpointfilename
+        if pathlinefilename is None:
+            pathlinefilename = '{}.{}'.format(model.name, 'mppth')
+        self.pathlinefilename = pathlinefilename
+        if timeseriesfilename is None:
+            timeseriesfilename = '{}.{}'.format(model.name, 'timeseries')
+        self.timeseriesfilename = timeseriesfilename
+        if tracefilename is None:
+            tracefilename = '{}.{}'.format(model.name, 'trace')
+        self.tracefilename = tracefilename
 
         try:
-            self.SimulationType = simType[SimulationType.lower()].value
+            self.simulationtype = simType[simulationtype.lower()].value
         except:
-            self._enum_error('SimulationType', SimulationType, simType)
+            self._enum_error('simulationtype', simulationtype, simType)
         try:
-            self.TrackingDirection = trackDir[TrackingDirection.lower()].value
+            self.trackingdirection = trackDir[trackingdirection.lower()].value
         except:
-            self._enum_error('TrackingDirection', TrackingDirection,
+            self._enum_error('trackingdirection', trackingdirection,
                              trackDir)
         try:
-            self.WeakSinkOption = weakOpt[WeakSinkOption.lower()].value
+            self.weaksinkoption = weakOpt[weaksinkoption.lower()].value
         except:
-            self._enum_error('WeakSinkOption', WeakSinkOption,
+            self._enum_error('weaksinkoption', weaksinkoption,
                              weakOpt)
         try:
-            self.WeakSourceOption = weakOpt[WeakSourceOption.lower()].value
+            self.weaksourceoption = weakOpt[weaksourceoption.lower()].value
         except:
-            self._enum_error('WeakSourceOption', WeakSourceOption,
+            self._enum_error('weaksourceoption', weaksourceoption,
                              weakOpt)
         try:
-            self.BudgetOutputOption = \
-                budgetOpt[BudgetOutputOption.lower()].value
+            self.budgetoutputoption = \
+                budgetOpt[budgetoutputoption.lower()].value
         except:
-            self._enum_error('BudgetOutputOption', BudgetOutputOption,
+            self._enum_error('budgetoutputoption', budgetoutputoption,
                              budgetOpt)
         # TraceMode
-        if TraceParticleGroup is None or TraceParticleId is None:
+        if traceparticlegroup is None or traceparticleid is None:
             TraceMode = 0
         else:
             TraceMode = 1
         self.TraceMode = TraceMode
-        self.TraceParticleGroup = TraceParticleGroup
-        self.TraceParticleId = TraceParticleId
+        self.traceparticlegroup = traceparticlegroup
+        self.traceparticleid = traceparticleid
 
-        if BudgetCellNumbers is None:
+        if budgetcellnumbers is None:
             BudgetCellCount = 0
         else:
-            if isinstance(BudgetCellNumbers, int):
-                BudgetCellNumbers = [BudgetCellNumbers]
-            BudgetCellNumbers = np.array(BudgetCellNumbers, dtype=np.int32)
+            if isinstance(budgetcellnumbers, int):
+                budgetcellnumbers = [budgetcellnumbers]
+            budgetcellnumbers = np.array(budgetcellnumbers, dtype=np.int32)
             # validate budget cell numbers
             ncells = np.prod(np.array(self.parent.shape))
             msg = ''
-            for cell in BudgetCellNumbers:
+            for cell in budgetcellnumbers:
                 if cell < 0 or cell >= ncells:
                     if msg == '':
                         msg = 'Specified cell number(s) exceed the ' + \
@@ -198,33 +198,33 @@ class Modpath7Sim(Package):
             if msg != '':
                 raise ValueError(msg)
             # create Util2d object
-            BudgetCellCount = BudgetCellNumbers.shape[0]
-            self.BudgetCellNumbers = Util2d(self.parent, (BudgetCellCount,),
-                                            np.int32, BudgetCellNumbers,
-                                            name='BUDGETCELLNUMBERS',
+            BudgetCellCount = budgetcellnumbers.shape[0]
+            self.budgetcellnumbers = Util2d(self.parent, (BudgetCellCount,),
+                                            np.int32, budgetcellnumbers,
+                                            name='budgetcellnumbers',
                                             locat=self.unit_number[0])
         self.BudgetCellCount = BudgetCellCount
 
-        if ReferenceTime is None:
-            ReferenceTime = 0.
-        if isinstance(ReferenceTime, float):
-            ReferenceTime = [ReferenceTime]
-        elif isinstance(ReferenceTime, np.ndarray):
-            ReferenceTime = ReferenceTime.tolist()
-        if len(ReferenceTime) == 1:
-            ReferenceTimeOption = 1
-            # validate ReferenceTime data
-            t = ReferenceTime[0]
+        if referencetime is None:
+            referencetime = 0.
+        if isinstance(referencetime, float):
+            referencetime = [referencetime]
+        elif isinstance(referencetime, np.ndarray):
+            referencetime = referencetime.tolist()
+        if len(referencetime) == 1:
+            referencetimeOption = 1
+            # validate referencetime data
+            t = referencetime[0]
             if t < 0. or t > self.parent.time_end:
-                msg = 'ReferenceTime must be between 0. and ' + \
+                msg = 'referencetime must be between 0. and ' + \
                       '{} '.format(self.parent.time_end) + \
                       '(specified value = {}).'.format(t)
                 raise ValueError(msg)
-        elif len(ReferenceTime) == 3:
-            ReferenceTimeOption = 2
-            # validate ReferenceTime data
+        elif len(referencetime) == 3:
+            referencetimeOption = 2
+            # validate referencetime data
             # StressPeriod
-            iper = ReferenceTime[0]
+            iper = referencetime[0]
             if iper < 0 or iper >= self.parent.nper:
                 msg = 'StressPeriod must be between 0 and ' + \
                       '{} '.format(self.parent.nper - 1) + \
@@ -232,7 +232,7 @@ class Modpath7Sim(Package):
                 raise ValueError(msg)
 
             # TimeStep
-            istp = ReferenceTime[1]
+            istp = referencetime[1]
             maxstp = self.parent.nstp[iper] + 1
             if istp < 0 or istp >= maxstp:
                 msg = 'TimeStep for StressPeriod {} '.format(iper) + \
@@ -242,105 +242,105 @@ class Modpath7Sim(Package):
                 raise ValueError(msg)
 
             # TimeFraction
-            tf = ReferenceTime[2]
+            tf = referencetime[2]
             if tf < 0. or tf > 1.:
                 msg = 'TimeFraction value must be between 0 and 1 ' + \
                       '(specified value={}).'.format(tf)
                 raise ValueError(msg)
         else:
-            msg = 'ReferenceTime must be a float (ReferenceTime) or ' + \
-                  'a list with one item [ReferenceTime] or three items ' + \
+            msg = 'referencetime must be a float (referencetime) or ' + \
+                  'a list with one item [referencetime] or three items ' + \
                   '[StressPeriod, TimeStep, TimeFraction]. ' + \
-                  '{}'.format(len(ReferenceTime)) + \
-                  ' items were passed as ReferenceTime ['
-            for i, v in enumerate(ReferenceTime):
+                  '{}'.format(len(referencetime)) + \
+                  ' items were passed as referencetime ['
+            for i, v in enumerate(referencetime):
                 if i > 0:
                     msg += ', '
                 msg += '{}'.format(v)
             msg += '].'
             raise ValueError(msg)
-        self.ReferenceTimeOption = ReferenceTimeOption
-        self.ReferenceTime = ReferenceTime
-        # StopTimeOption
+        self.referencetimeOption = referencetimeOption
+        self.referencetime = referencetime
+        # stoptimeoption
         try:
-            self.StopTimeOption = \
-                stopOpt[StopTimeOption.lower()].value
+            self.stoptimeoption = \
+                stopOpt[stoptimeoption.lower()].value
         except:
-            self._enum_error('StopTimeOption', StopTimeOption,
+            self._enum_error('stoptimeoption', stoptimeoption,
                              stopOpt)
         # StopTime
-        if self.StopTimeOption == 3:
+        if self.stoptimeoption == 3:
             if StopTime is None:
                 StopTime = self.parent.time_end
         self.StopTime = StopTime
 
-        # TimePointData
-        if TimePointData is not None:
-            if not isinstance(TimePointData, list) \
-                and not isinstance(TimePointData, tuple):
-                msg = 'TimePointData must be a list or tuple'
+        # timepointdata
+        if timepointdata is not None:
+            if not isinstance(timepointdata, list) \
+                and not isinstance(timepointdata, tuple):
+                msg = 'timepointdata must be a list or tuple'
                 raise ValueError(msg)
             else:
-                if len(TimePointData) != 2:
-                    msg = 'TimePointData must be a list or tuple'
+                if len(timepointdata) != 2:
+                    msg = 'timepointdata must be a list or tuple'
                     raise ValueError(msg)
                 else:
-                    if isinstance(TimePointData[1], list) \
-                        or isinstance(TimePointData[1], tuple):
-                        TimePointData[1] = np.array(TimePointData[1])
-                    elif isinstance(TimePointData[1], float):
-                        TimePointData[1] = np.array([TimePointData[1]])
-                    if TimePointData[1].shape[0] == TimePointData[0]:
+                    if isinstance(timepointdata[1], list) \
+                        or isinstance(timepointdata[1], tuple):
+                        timepointdata[1] = np.array(timepointdata[1])
+                    elif isinstance(timepointdata[1], float):
+                        timepointdata[1] = np.array([timepointdata[1]])
+                    if timepointdata[1].shape[0] == timepointdata[0]:
                         TimePointOption = 2
-                    elif TimePointData[1].shape[0] > 1:
+                    elif timepointdata[1].shape[0] > 1:
                         msg = 'The number of TimePoint data ' + \
-                              '({}) '.format(TimePointData[1].shape[0]) + \
+                              '({}) '.format(timepointdata[1].shape[0]) + \
                               'is not equal to TimePointCount ' + \
-                              '({}).'.format(TimePointData[0])
+                              '({}).'.format(timepointdata[0])
                         raise ValueError(msg)
                     else:
                         TimePointOption = 1
             self.TimePointOption = TimePointOption
-            self.TimePointData = TimePointData
+            self.timepointdata = timepointdata
 
-        # ZoneDataOption
+        # zonedataoption
         try:
-            self.ZoneDataOption = onoffOpt[ZoneDataOption.lower()].value
+            self.zonedataoption = onoffOpt[zonedataoption.lower()].value
         except:
-            self._enum_error('ZoneDataOption', ZoneDataOption, onoffOpt)
-        if self.ZoneDataOption == 2:
-            if StopZone is None:
-                StopZone = 0
-            if StopZone < 0:
-                msg = 'Specified StopZone value ({}) '.format(StopZone) + \
+            self._enum_error('zonedataoption', zonedataoption, onoffOpt)
+        if self.zonedataoption == 2:
+            if stopzone is None:
+                stopzone = 0
+            if stopzone < 0:
+                msg = 'Specified stopzone value ({}) '.format(stopzone) + \
                       'must be greater than 0.'
                 raise ValueError(msg)
-            self.StopZone = StopZone
-            if Zones is None:
-                msg = "Zones must be specified if ZoneDataOption='on'."
+            self.stopzone = stopzone
+            if zones is None:
+                msg = "zones must be specified if zonedataoption='on'."
                 raise ValueError(msg)
-            self.Zones = Util3d(model, self.parent.shape, np.int32,
-                                Zones, name='ZONES', locat=self.unit_number[0])
+            self.zones = Util3d(model, self.parent.shape, np.int32,
+                                zones, name='zones', locat=self.unit_number[0])
 
-        # RetardationFactorOption
+        # retardationfactoroption
         try:
-            self.RetardationFactorOption = \
-                onoffOpt[RetardationFactorOption.lower()].value
+            self.retardationfactoroption = \
+                onoffOpt[retardationfactoroption.lower()].value
         except:
-            self._enum_error('RetardationFactorOption',
-                             RetardationFactorOption, onoffOpt)
-        if self.RetardationFactorOption == 2:
-            if Retardation is None:
-                msg = "Retardation must be specified if " + \
-                      "RetardationFactorOption='on'."
+            self._enum_error('retardationfactoroption',
+                             retardationfactoroption, onoffOpt)
+        if self.retardationfactoroption == 2:
+            if retardation is None:
+                msg = "retardation must be specified if " + \
+                      "retardationfactoroption='on'."
                 raise ValueError(msg)
-            self.Retardation = Util3d(model, self.parent.shape, np.float32,
-                                      Retardation, name='RETARDATION',
+            self.retardation = Util3d(model, self.parent.shape, np.float32,
+                                      retardation, name='retardation',
                                       locat=self.unit_number[0])
         # particle group data
-        if ParticleGroups is None:
-            ParticleGroups = [LayerRowColumnParticles()]
-        self.ParticleGroups = ParticleGroups
+        if particlegroups is None:
+            particlegroups = [LayerRowColumnParticles()]
+        self.particlegroups = particlegroups
 
 
         self.parent.add_package(self)
@@ -370,65 +370,65 @@ class Modpath7Sim(Package):
         # item 1
         f.write('{}\n'.format(self.mp_name_file))
         # item 2
-        f.write('{}\n'.format(self.mp_list_file))
+        f.write('{}\n'.format(self.listingfilename))
         # item 3
-        f.write('{} {} {} {} {} {}\n'.format(self.SimulationType,
-                                             self.TrackingDirection,
-                                             self.WeakSinkOption,
-                                             self.WeakSourceOption,
-                                             self.BudgetOutputOption,
+        f.write('{} {} {} {} {} {}\n'.format(self.simulationtype,
+                                             self.trackingdirection,
+                                             self.weaksinkoption,
+                                             self.weaksourceoption,
+                                             self.budgetoutputoption,
                                              self.TraceMode))
         # item 4
-        f.write('{}\n'.format(self.endpoint_file))
+        f.write('{}\n'.format(self.endpointfilename))
         # item 5
-        if self.SimulationType == 2 or self.SimulationType == 4:
-            f.write('{}\n'.format(self.pathline_file))
+        if self.simulationtype == 2 or self.simulationtype == 4:
+            f.write('{}\n'.format(self.pathlinefilename))
         # item 6
-        if self.SimulationType == 3 or self.SimulationType == 4:
-            f.write('{}\n'.format(self.time_series_file))
+        if self.simulationtype == 3 or self.simulationtype == 4:
+            f.write('{}\n'.format(self.timeseriesfilename))
         # item 7 and 8
         if self.TraceMode == 1:
-            f.write('{}\n'.format(self.trace_file))
-            f.write('{} {}\n'.format(self.TraceParticleGroup,
-                                     self.TraceParticleId))
+            f.write('{}\n'.format(self.tracefilename))
+            f.write('{} {}\n'.format(self.traceparticlegroup,
+                                     self.traceparticleid))
         # item 9
         f.write('{}\n'.format(self.BudgetCellCount))
         # item 10
         if self.BudgetCellCount > 0:
             v = Util2d(self.parent, (self.BudgetCellCount,),
-                       np.int32, self.BudgetCellNumbers.array+1,
+                       np.int32, self.budgetcellnumbers.array+1,
                        name='temp',
                        locat=self.unit_number[0])
             f.write(v.string)
 
         # item 11
-        f.write('{}\n'.format(self.ReferenceTimeOption))
-        if self.ReferenceTimeOption == 1:
+        f.write('{}\n'.format(self.referencetimeOption))
+        if self.referencetimeOption == 1:
             # item 12
-            f.write('{:g}\n'.format(self.ReferenceTime[0]))
-        elif self.ReferenceTimeOption == 2:
+            f.write('{:g}\n'.format(self.referencetime[0]))
+        elif self.referencetimeOption == 2:
             # item 13
-            f.write('{:d} {:d} {:g}\n'.format(self.ReferenceTime[0] + 1,
-                                              self.ReferenceTime[1] + 1,
-                                              self.ReferenceTime[2]))
+            f.write('{:d} {:d} {:g}\n'.format(self.referencetime[0] + 1,
+                                              self.referencetime[1] + 1,
+                                              self.referencetime[2]))
         # item 14
-        f.write('{}\n'.format(self.StopTimeOption))
-        if self.StopTimeOption == 3:
+        f.write('{}\n'.format(self.stoptimeoption))
+        if self.stoptimeoption == 3:
             # item 15
             f.write('{:g}\n'.format(self.StopTime))
 
         # item 16
-        if self.SimulationType == 3 or self.SimulationType == 4:
+        if self.simulationtype == 3 or self.simulationtype == 4:
             f.write('{}\n'.format(self.TimePointOption))
             if self.TimePointOption == 1:
                 # item 17
-                f.write('{} {}\n'.format(self.TimePointData[0],
-                                         self.TimePointData[1][0]))
+                f.write('{} {}\n'.format(self.timepointdata[0],
+                                         self.timepointdata[1][0]))
             elif self.TimePointOption == 2:
                 # item 18
-                f.write('{}\n'.format(self.TimePointData[0]))
+                f.write('{}\n'.format(self.timepointdata[0]))
                 # item 19
-                tp = self.TimePointData[1]
+                tp = self.timepointdata[1]
                 v = Util2d(self.parent, (tp.shape[0],),
                        np.float32, tp,
                        name='temp',
@@ -436,22 +436,22 @@ class Modpath7Sim(Package):
                 f.write(v.string)
 
         # item 20
-        f.write('{}\n'.format(self.ZoneDataOption))
-        if self.ZoneDataOption == 2:
+        f.write('{}\n'.format(self.zonedataoption))
+        if self.zonedataoption == 2:
             # item 21
-            f.write('{}\n'.format(self.StopZone))
+            f.write('{}\n'.format(self.stopzone))
             # item 22
-            f.write(self.Zones.get_file_entry())
+            f.write(self.zones.get_file_entry())
 
         # item 23
-        f.write('{}\n'.format(self.RetardationFactorOption))
-        if self.RetardationFactorOption == 2:
+        f.write('{}\n'.format(self.retardationfactoroption))
+        if self.retardationfactoroption == 2:
             # item 24
-            f.write(self.Retardation.get_file_entry())
+            f.write(self.retardation.get_file_entry())
 
         # item 25
-        f.write('{}\n'.format(len(self.ParticleGroups)))
-        for pg in self.ParticleGroups:
+        f.write('{}\n'.format(len(self.particlegroups)))
+        for pg in self.particlegroups:
             pg.write(f, ws=self.parent.model_ws)
 
         f.close()

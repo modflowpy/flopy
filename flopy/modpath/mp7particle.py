@@ -11,110 +11,110 @@ except ImportError:
 
 
 class Modpath7Particle(object):
-    def __init__(self, ParticleGroupName, filename, ReleaseData):
-        self.ParticleGroupName = ParticleGroupName
+    def __init__(self, particlegroupname, filename, releasedata):
+        self.particlegroupname = particlegroupname
         if filename == '':
             filename = None
         self.filename = filename
 
-        if ReleaseData is None:
-            msg = 'ReleaseData must be provided to instantiate ' + \
+        if releasedata is None:
+            msg = 'releasedata must be provided to instantiate ' + \
                   'a MODPATH 7 particle group'
             raise ValueError(msg)
 
-        if isinstance(ReleaseData, float) or isinstance(ReleaseData, int):
-            ReleaseData = [ReleaseData]
+        if isinstance(releasedata, float) or isinstance(releasedata, int):
+            releasedata = [releasedata]
         else:
-            # validate that ReleaseData is a list or tuple
-            if not isinstance(ReleaseData, list) \
-                    and not isinstance(ReleaseData, tuple):
-                msg = 'ReleaseData must be a list or tuple'
+            # validate that releasedata is a list or tuple
+            if not isinstance(releasedata, list) \
+                    and not isinstance(releasedata, tuple):
+                msg = 'releasedata must be a list or tuple'
                 raise ValueError(msg)
-            # process ReleaseData
-            if len(ReleaseData) == 1:
-                ReleaseOption = 1
-                ReleaseTimeCount = 0
-                ReleaseInterval = 0
-                ReleaseTimes = np.array(ReleaseData, dtype=np.float32)
-            elif len(ReleaseData) == 3:
-                ReleaseOption = 2
-                ReleaseTimeCount = int(ReleaseData[0])
-                ReleaseInterval = 0
-                ReleaseTimes = np.array(ReleaseData[1], dtype=np.float32)
-                ReleaseInterval = int(ReleaseData[2])
-            elif len(ReleaseData) == 2:
-                ReleaseOption = 3
-                ReleaseTimeCount = int(ReleaseData[0])
-                # convert ReleaseTimes list or tuple to a numpy array
-                if isinstance(ReleaseData[1], list) \
-                        or isinstance(ReleaseData[1], tuple):
-                    ReleaseData[1] = np.array(ReleaseData[1])
-                if ReleaseData[1].shape[0] != ReleaseTimeCount:
-                    msg = 'The number of ReleaseTimes data ' + \
-                          '({}) '.format(ReleaseData[1].shape[0]) + \
-                          'is not equal to ReleaseTimeCount ' + \
-                          '({}).'.format(ReleaseTimeCount)
+            # process releasedata
+            if len(releasedata) == 1:
+                releaseoption = 1
+                releasetimecount = 0
+                releaseinterval = 0
+                releasetimes = np.array(releasedata, dtype=np.float32)
+            elif len(releasedata) == 3:
+                releaseoption = 2
+                releasetimecount = int(releasedata[0])
+                releaseinterval = 0
+                releasetimes = np.array(releasedata[1], dtype=np.float32)
+                releaseinterval = int(releasedata[2])
+            elif len(releasedata) == 2:
+                releaseoption = 3
+                releasetimecount = int(releasedata[0])
+                # convert releasetimes list or tuple to a numpy array
+                if isinstance(releasedata[1], list) \
+                        or isinstance(releasedata[1], tuple):
+                    releasedata[1] = np.array(releasedata[1])
+                if releasedata[1].shape[0] != releasetimecount:
+                    msg = 'The number of releasetimes data ' + \
+                          '({}) '.format(releasedata[1].shape[0]) + \
+                          'is not equal to releasetimecount ' + \
+                          '({}).'.format(releasetimecount)
                     raise ValueError(msg)
-                ReleaseTimes = np.array(ReleaseData[1], dtype=np.float32)
+                releasetimes = np.array(releasedata[1], dtype=np.float32)
         # set release data
-        self.ReleaseOption = ReleaseOption
-        self.ReleaseTimeCount = ReleaseTimeCount
-        self.ReleaseInterval = ReleaseInterval
-        self.ReleaseTimes = ReleaseTimes
+        self.releaseoption = releaseoption
+        self.releasetimecount = releasetimecount
+        self.releaseinterval = releaseinterval
+        self.releasetimes = releasetimes
 
     def write(self, fp=None, ws='.'):
         return
 
 
 class LayerRowColumnParticles(Modpath7Particle):
-    def __init__(self, ParticleGroupName='PG1', filename=None,
-                 ReleaseData=[0.0],
-                 ParticleData=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
+    def __init__(self, particlegroupname='PG1', filename=None,
+                 releasedata=[0.0],
+                 particledata=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
 
         # instantiate base class
-        Modpath7Particle.__init__(self, ParticleGroupName, filename,
-                                  ReleaseData)
+        Modpath7Particle.__init__(self, particlegroupname, filename,
+                                  releasedata)
         self.InputStyle = 1
         # convert list, tuples, and numpy array to
         v = None
         dtypein = None
-        if isinstance(ParticleData, list) or isinstance(ParticleData, tuple):
-            ncells = len(ParticleData)
-            v = ParticleData[0]
-        elif isinstance(ParticleData, np.ndarray):
-            dtypein = ParticleData.dtype
-            ncells = ParticleData.shape[0]
-            v = ParticleData[0].tolist()
+        if isinstance(particledata, list) or isinstance(particledata, tuple):
+            ncells = len(particledata)
+            v = particledata[0]
+        elif isinstance(particledata, np.ndarray):
+            dtypein = particledata.dtype
+            ncells = particledata.shape[0]
+            v = particledata[0].tolist()
         else:
-            msg = 'ParticleData must be a list, tuple, ' + \
+            msg = 'particledata must be a list, tuple, ' + \
                   'numpy ndarray, or an instance of ' + \
                   'LayerRowColumnParticles'
             raise ValueError(msg)
         if v is not None:
             if len(v) == 6:
-                ParticleIdOption = 0
-                LocationStyle = 2
+                particleidoption = 0
+                locationstyle = 2
                 partid = False
                 structured = False
             elif len(v) == 7:
-                ParticleIdOption = 1
-                LocationStyle = 2
+                particleidoption = 1
+                locationstyle = 2
                 partid = True
                 structured = False
             elif len(v) == 8:
-                ParticleIdOption = 0
-                LocationStyle = 1
+                particleidoption = 0
+                locationstyle = 1
                 partid = False
                 structured = True
             elif len(v) == 9:
-                ParticleIdOption = 1
-                LocationStyle = 1
+                particleidoption = 1
+                locationstyle = 1
                 partid = True
                 structured = True
             else:
-                msg = 'ParticleData should have 6, 7, 8, or 9 columns.' + \
+                msg = 'particledata should have 6, 7, 8, or 9 columns.' + \
                       'Specified data for particle group ' + \
-                      '{} '.format(ParticleGroupName) + \
+                      '{} '.format(particlegroupname) + \
                       'only has {} columns.'.format(ncells)
                 raise ValueError(msg)
             dtype = self.get_default_dtype(structured=structured,
@@ -122,12 +122,12 @@ class LayerRowColumnParticles(Modpath7Particle):
             if dtypein is None:
                 dtypein = dtype
             if dtype != dtypein:
-                ParticleData = np.array(ParticleData, dtype=dtype)
+                particledata = np.array(particledata, dtype=dtype)
 
         # set attributes
-        self.ParticleIdOption = ParticleIdOption
-        self.LocationStyle = LocationStyle
-        self.ParticleData = ParticleData
+        self.particleidoption = particleidoption
+        self.locationstyle = locationstyle
+        self.particledata = particledata
 
         return
 
@@ -135,30 +135,30 @@ class LayerRowColumnParticles(Modpath7Particle):
         # validate that a valid file object was passed
         if not hasattr(fp, 'write'):
             msg = 'Cannot write data for particle group ' + \
-                  '{} '.format(self.ParticleGroupName) + \
+                  '{} '.format(self.particlegroupname) + \
                   'without passing a valid file object ({}) '.format(fp) + \
                   'open for writing'
             raise ValueError(msg)
 
         # item 26
-        fp.write('{}\n'.format(self.ParticleGroupName))
+        fp.write('{}\n'.format(self.particlegroupname))
 
         # item 27
-        fp.write('{}\n'.format(self.ReleaseOption))
+        fp.write('{}\n'.format(self.releaseoption))
 
-        if self.ReleaseOption == 1:
+        if self.releaseoption == 1:
             # item 28
-            fp.write('{}\n'.format(self.ReleaseTimes[0]))
-        elif self.ReleaseOption == 2:
+            fp.write('{}\n'.format(self.releasetimes[0]))
+        elif self.releaseoption == 2:
             # item 29
-            fp.write('{} {} {}\n'.format(self.ReleaseTimeCount,
-                                         self.ReleaseTimes[0],
-                                         self.ReleaseInterval))
-        elif self.ReleaseOption == 3:
+            fp.write('{} {} {}\n'.format(self.releasetimecount,
+                                         self.releasetimes[0],
+                                         self.releaseinterval))
+        elif self.releaseoption == 3:
             # item 30
-            fp.write('{}\n'.format(self.ReleaseTimeCount))
+            fp.write('{}\n'.format(self.releasetimecount))
             # item 31
-            tp = self.ReleaseTimes
+            tp = self.releasetimes
             v = Util2d(self.parent, (tp.shape[0],),
                        np.float32, tp,
                        name='temp',
@@ -178,14 +178,14 @@ class LayerRowColumnParticles(Modpath7Particle):
         f.write('{}\n'.format(self.InputStyle))
 
         # particle data item 2
-        f.write('{}\n'.format(self.LocationStyle))
+        f.write('{}\n'.format(self.locationstyle))
 
         # particle data item 3
-        f.write('{} {}\n'.format(self.ParticleData.shape[0],
-                                 self.ParticleIdOption))
+        f.write('{} {}\n'.format(self.particledata.shape[0],
+                                 self.particleidoption))
 
         # particle data item 4 and 5
-        d = np.recarray.copy(self.ParticleData)
+        d = np.recarray.copy(self.particledata)
         lnames = [name.lower() for name in d.dtype.names]
         # Add one to the kij and node indices
         for idx in ['k', 'i', 'j', 'node', 'id']:
@@ -204,7 +204,7 @@ class LayerRowColumnParticles(Modpath7Particle):
         """Returns a C-style fmt string for numpy savetxt that corresponds to
         the dtype"""
         fmts = []
-        for field in self.ParticleData.dtype.descr:
+        for field in self.particledata.dtype.descr:
             vtype = field[1][1].lower()
             if vtype == 'i' or vtype == 'b':
                 fmts.append('%9d')
@@ -252,3 +252,9 @@ class LayerRowColumnParticles(Modpath7Particle):
             structured=structured,
             particleid=particleid)
         return create_empty_recarray(ncells, dtype, default_value=0)
+
+    @staticmethod
+    def create_lrcparticles(v, structured=True, particleid=False,
+                            localx=None, localy=None, localz=None,
+                            timeoffset=None, drape=None):
+        return

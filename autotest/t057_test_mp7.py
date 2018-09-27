@@ -50,18 +50,19 @@ part0['drape'] = 0
 for idx in range(part0.shape[0]):
     part0['id'][idx] = idx
     part0['i'][idx] = idx
-pg1 = flopy.modpath.LayerRowColumnParticles(ParticleGroupName='PG1',
-                                            ParticleData=part0,
+pg1 = flopy.modpath.LayerRowColumnParticles(particlegroupname='PG1',
+                                            particledata=part0,
                                             filename='ex01a.sloc')
-ParticleGroups = [pg1]
+particlegroups = [pg1]
 
 defaultiface = {'RECHARGE': 6, 'ET': 6}
 defaultiface6 = {'RCH': 6, 'EVT': 6}
 
-def test_mf2005_mf6():
+def test_mf2005():
     # build and run MODPATH 7 with MODFLOW-2005
     build_mf2005()
 
+def test_mf6():
     # build and run MODPATH 7 with MODFLOW 6
     build_mf6()
 
@@ -109,17 +110,17 @@ def build_mf2005():
                                 exe_name=exe_name, model_ws=ws)
     mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1,
                                       defaultiface=defaultiface)
-    mpsim = flopy.modpath.Modpath7Sim(mp, SimulationType='combined',
-                                      TrackingDirection='forward',
-                                      WeakSinkOption='pass_through',
-                                      WeakSourceOption='pass_through',
-                                      BudgetOutputOption='summary',
-                                      BudgetCellNumbers=[1049, 1259],
-                                      ReferenceTime=[0, 0, 0.],
-                                      StopTimeOption='extend',
-                                      TimePointData=[500, 1000.],
-                                      ZoneDataOption='on', Zones=zones,
-                                      ParticleGroups=ParticleGroups)
+    mpsim = flopy.modpath.Modpath7Sim(mp, simulationtype='combined',
+                                      trackingdirection='forward',
+                                      weaksinkoption='pass_through',
+                                      weaksourceoption='pass_through',
+                                      budgetoutputoption='summary',
+                                      budgetcellnumbers=[1049, 1259],
+                                      referencetime=[0, 0, 0.],
+                                      stoptimeoption='extend',
+                                      timepointdata=[500, 1000.],
+                                      zonedataoption='on', zones=zones,
+                                      particlegroups=particlegroups)
 
     # write modpath datasets
     mp.write_input()
@@ -208,17 +209,17 @@ def build_mf6():
                                 exe_name=exe_name, model_ws=ws)
     mpbas = flopy.modpath.Modpath7Bas(mp, porosity=0.1,
                                       defaultiface=defaultiface6)
-    mpsim = flopy.modpath.Modpath7Sim(mp, SimulationType='combined',
-                                      TrackingDirection='forward',
-                                      WeakSinkOption='pass_through',
-                                      WeakSourceOption='pass_through',
-                                      BudgetOutputOption='summary',
-                                      BudgetCellNumbers=[1049, 1259],
-                                      ReferenceTime=[0, 0, 0.],
-                                      StopTimeOption='extend',
-                                      TimePointData=[500, 1000.],
-                                      ZoneDataOption='on', Zones=zones,
-                                      ParticleGroups=ParticleGroups)
+    mpsim = flopy.modpath.Modpath7Sim(mp, simulationtype='combined',
+                                      trackingdirection='forward',
+                                      weaksinkoption='pass_through',
+                                      weaksourceoption='pass_through',
+                                      budgetoutputoption='summary',
+                                      budgetcellnumbers=[1049, 1259],
+                                      referencetime=[0, 0, 0.],
+                                      stoptimeoption='extend',
+                                      timepointdata=[500, 1000.],
+                                      zonedataoption='on', zones=zones,
+                                      particlegroups=particlegroups)
 
     # write modpath datasets
     mp.write_input()
@@ -230,4 +231,5 @@ def build_mf6():
 
 
 if __name__ == '__main__':
-    test_mf2005_mf6()
+    test_mf2005()
+    test_mf6()
