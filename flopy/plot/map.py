@@ -10,14 +10,18 @@ except ImportError:
     plt = None
 
 from . import plotutil
-from ..utils import SpatialReference as DepreciatedSpatialReference
-from ..grid.structuredgrid import StructuredGrid
-from ..grid.reference import SpatialReference
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
 class MapView(object):
+    """
+    This class is a base for all three mapview types. No information
+    specific to a single type of model grid ex.(Structured, Vertex, Unstructured)
+    can be present in this class or it will break the plotting functionality!
+
+    This causes more complexitity and abstraction.....
+    """
     def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., length_multiplier=1.):
@@ -39,15 +43,9 @@ class MapView(object):
         elif dis is not None:
             self.mg = copy.deepcopy(dis.parent.modelgrid)
 
-        elif sr is not None:
-            self.mg = StructuredGrid(delc=sr.delc, delr=sr.delr,
-                                     top=np.array([]), botm=np.array([]),
-                                     idomain=np.array([]))
-
         else:
-            self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
-                                     top=np.array([]), botm=np.array([]),
-                                     idomain=np.array([]))
+            err_msg = "A model grid instance must be provided to PlotMapView"
+            raise AssertionError(err_msg)
 
         self._set_coord_info(sr, xul, yul, xll, yll, rotation)
 
@@ -381,25 +379,11 @@ class StructuredMapView(MapView):
         Returns
         -------
         lc : matplotlib.collections.LineCollection
-p
+
         """
-        from matplotlib.collections import LineCollection
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        if 'colors' not in kwargs:
-            kwargs['colors'] = '0.5'
-
-        lc = LineCollection(self.mg.grid_lines, **kwargs)
-
-        ax.add_collection(lc)
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
-
-        return lc
+        err_msg = "plot_grid() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -615,7 +599,6 @@ p
         hnoflo = 999.
         hdry = 999.
 
-        # todo: updates to get flopy6 laytyp and hnoflow
         if self.model is not None:
             if self.model.version == "mf6":
                 sto = self.model.get_package("STO")
@@ -657,8 +640,8 @@ p
         v = qy[self.layer, :, :]
         # apply step
 
-        xcentergrid = self.mg.xcellcenters
-        ycentergrid = self.mg.ycellcenters
+        xcentergrid = np.array(self.mg.xcellcenters)
+        ycentergrid = np.array(self.mg.ycellcenters)
 
         x = xcentergrid[::istep, ::jstep]
         y = ycentergrid[::istep, ::jstep]
@@ -681,8 +664,9 @@ p
         u[idx] = np.nan
         v[idx] = np.nan
 
-        # Rotate and plot
-        urot, vrot = geometry.rotate(u, v, self.mg.xoffset, self.mg.yoffset,
+        # Rotate and plot, offsets must be zero since
+        # these are vectors, not locations.
+        urot, vrot = geometry.rotate(u, v, 0., 0.,
                                      self.mg.angrot_radians)
         quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
 
@@ -906,5 +890,3 @@ class ModelMap(object):
         return PlotMapView(sr=sr, ax=ax, model=model, dis=dis, layer=layer,
                            extent=extent, xul=xul, yul=yul, xll=xll, yll=yll,
                            rotation=rotation, length_multiplier=length_multiplier)
-
-

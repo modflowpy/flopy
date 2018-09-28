@@ -573,7 +573,8 @@ class Modflow(BaseModel):
         namefile_path = os.path.join(ml.model_ws, f)
 
         # set the reference information
-        ref_attributes = SpatialReference.load(namefile_path)
+        # todo: is this depreciated? if not it needs to be repaired?
+        ref_attributes = SpatialReference.from_namfile(namefile_path)
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(

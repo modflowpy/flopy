@@ -7,6 +7,11 @@ class VertexGrid(Grid):
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
                  epsg=None, proj4=None, xoff=0.0, yoff=0.0, angrot=0.0,
                  grid_type='layered_vertex'):
+        # JL comment: I really think the naming convention
+        # layered_vertex and unlayered_vertex should be
+        # reconsidered. There is no reference to these grid types
+        # in modflow6; in my opinion we should stay consistent and use
+        # the vertex and unstructured naming convention...
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain,
                                          epsg, proj4, xoff, yoff, angrot)
         self._vertices = vertices
@@ -22,10 +27,13 @@ class VertexGrid(Grid):
 
     @property
     def ncpl(self):
-        ncpl_list = []
-        for layer in self._botm:
-            ncpl_list.append(len(layer))
-        return ncpl_list
+        # JL comment: ncpl is a constant value,
+        # it does not vary with layering
+        #ncpl_list = []
+        #for layer in self._botm:
+        #    ncpl_list.append(len(layer))
+        #return ncpl_list
+        return len(self._botm[0])
 
     @property
     def extent(self):
@@ -61,8 +69,10 @@ class VertexGrid(Grid):
             return [np.arange(1, self.num_cells() + 1, 1, np.int)]
 
     def num_cells_per_layer(self):
+        # this function call is unnecessary, since the number of
+        # cells in a layer is constant for vertex model grids!!
         if self.grid_type() == 'layered_vertex':
-            return max(self.ncpl)
+            return self.ncpl
         elif self.grid_type() == 'unlayered_vertex':
             except_str = 'ERROR: Model is unstructured and does not ' \
                          'have a consistant number of cells per ' \
@@ -72,14 +82,16 @@ class VertexGrid(Grid):
 
     def num_cells(self, active_only=False):
         if active_only:
-            raise NotImplementedError(
-                'this feature is not yet implemented')
+            active = self.idomain[self.idomain > 0]
+            return active.size
+
         else:
             if self.grid_type() == 'layered_vertex':
-                total_cells = 0
-                for layer_cells in self.ncpl:
-                    total_cells += layer_cells
-                return total_cells
+                # total_cells = 0
+                # for layer_cells in self.ncpl:
+                #     total_cells += layer_cells
+                # return total_cells
+                return self.ncpl * self.nlay
             elif self.grid_type() == 'unlayered_vertex':
                 return self.ncpl
 

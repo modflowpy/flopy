@@ -9,7 +9,7 @@ import os
 import sys
 import math
 import numpy as np
-from flopy.utils import MfList, Util2d, Util3d, Transient2d
+from flopy.utils import MfList, Util2d, Util3d, Transient2d, geometry
 from flopy.mf6.data.mfdataarray import MFArray
 from flopy.mf6.data.mfdatalist import MFTransientList
 from flopy.plot.plotbase import PlotMapView
@@ -1658,8 +1658,8 @@ class UnstructuredPlotUtilities(object):
         Returns:
              list of connections
         """
-        xverts = model_grid.sr.xvertices
-        yverts = model_grid.sr.yvertices
+        xverts = np.array(model_grid.xvertices)
+        yverts = np.array(model_grid.yvertices)
         # use a triangulation matrix scheme to find connections!
 
         iac = []
@@ -1872,16 +1872,19 @@ class UnstructuredPlotUtilities(object):
         frf_arr = array of flow right face values
         fff_arr = array of flow forward face values
         """
-        # todo: update this to include flf
         # create a jagged connection array from the model_grid
         ca = UnstructuredPlotUtilities.create_connection_array(model_grid)
         ja = UnstructuredPlotUtilities.create_ja(ca, idomain)
 
         nlay = model_grid.nlay
 
-        if model_grid.grid_type == "vertex":
-            xcenter = np.tile(model_grid.xcellcenters, nlay)
-            ycenter = np.tile(model_grid.ycellcenters, nlay)
+        # problems because we are working with rotated data. Need un-rotated data!
+        if model_grid.grid_type == "layered_vertex":
+            xcellcenters, ycellcenters = geometry.rotate(np.array(model_grid.xcellcenters),
+                                                         np.array(model_grid.ycellcenters),
+                                                         0, 0, -model_grid.angrot_radians)
+            xcenter = np.tile(xcellcenters, nlay)
+            ycenter = np.tile(ycellcenters, nlay)
             zcenter = np.ravel(model_grid.zcellcenters)
             ncpl = model_grid.ncpl
 
@@ -1901,9 +1904,6 @@ class UnstructuredPlotUtilities(object):
                 i += 1
             flux_arr.append(t)
 
-        # xcon_arr = []
-        # ycon_arr = []
-        # zcon_arr = []
         xy_angle_arr = []
         xz_angle_arr = []
         for j in ja:
@@ -1918,8 +1918,6 @@ class UnstructuredPlotUtilities(object):
             ytmp[compare == 0.] = np.nan
             ztmp[xyzcompare == 0.] = np.nan
             xytmp[xyzcompare == 0.] = np.nan
-            # xcon_arr.append(xtmp)
-            # ycon_arr.append(ytmp)
             xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
             xz_angle_arr.append(np.arctan2(ztmp, xytmp) * -180 / np.pi)
 
@@ -1936,7 +1934,7 @@ class UnstructuredPlotUtilities(object):
                 elif 90. <= angle < 180.:
                     fff += flux_arr[i][j] * ((180. - angle) / 90.)
 
-                elif 270 < angle < 360.:
+                elif 270 <= angle <= 360.:
                     frf += flux_arr[i][j] * ((angle - 270.) / 90.)
 
                 else:

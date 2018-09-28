@@ -200,7 +200,23 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        return self.__cls.plot_grid(**kwargs)
+        from matplotlib.collections import LineCollection
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.__cls.ax
+
+        if 'colors' not in kwargs:
+            kwargs['colors'] = '0.5'
+
+        lc = LineCollection(self.__cls.mg.grid_lines, **kwargs)
+
+        ax.add_collection(lc)
+        ax.set_xlim(self.__cls.extent[0], self.__cls.extent[1])
+        ax.set_ylim(self.__cls.extent[2], self.__cls.extent[3])
+
+        return lc
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -376,7 +392,7 @@ class PlotMapView(object):
         """
         # todo: figure out the preparation for plotting discharge.... if user should do
         # todo: frf, fff, flf or flopy should auto-process these data!
-        if self.mg.grid_type == "vertex":
+        if self.mg.grid_type == "layered_vertex":
             return self.__cls.plot_discharge(fja=fja, dis=dis, head=head, istep=istep,
                                              normalize=normalize, **kwargs)
         else:

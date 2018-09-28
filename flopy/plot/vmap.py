@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+from ..utils import geometry
 
 try:
     import matplotlib.pyplot as plt
@@ -11,8 +12,7 @@ except ImportError:
 
 from . import plotutil
 from .map import MapView
-from ..grid.structuredgrid import StructuredGrid
-from flopy.grid.reference import SpatialReference
+
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
@@ -64,14 +64,10 @@ class VertexMapView(MapView):
                                             layer, extent, xul, yul, xll,
                                             yll, rotation, length_multiplier)
 
-    def _init_model_grid(self):
-        self.mg = StructuredGrid(delc=np.array([]), delr=np.array([]),
-                                 top=np.array([]), botm=np.array([]),
-                                 idomain=np.array([]), sr=self.sr)
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.mg.sr.extent
+            self._extent = self.mg.extent
         return self._extent
 
 
@@ -113,8 +109,8 @@ class VertexMapView(MapView):
         else:
             ax = self.ax
 
-        xgrid = self.sr.xvertices
-        ygrid = self.sr.yvertices
+        xgrid = np.array(self.mg.xvertices)
+        ygrid = np.array(self.mg.yvertices)
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -162,8 +158,8 @@ class VertexMapView(MapView):
         """
         import matplotlib.tri as tri
 
-        xcentergrid = self.mg.sr.xcellcenters
-        ycentergrid = self.mg.sr.ycellcenters
+        xcentergrid = np.array(self.mg.xcellcenters)
+        ycentergrid = np.array(self.mg.ycellcenters)
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -262,8 +258,8 @@ class VertexMapView(MapView):
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        xgrid = self.sr.xvertices
-        ygrid = self.sr.yvertices
+        xgrid = np.array(self.mg.xvertices)
+        ygrid = np.array(self.mg.yvertices)
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -318,8 +314,8 @@ class VertexMapView(MapView):
         bounds = [0, 1, 2, 3]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        xgrid = self.sr.xvertices
-        ygrid = self.sr.yvertices
+        xgrid = np.array(self.mg.xvertices)
+        ygrid = np.array(self.mg.yvertices)
 
         patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
                    for i in range(xgrid.shape[0])]
@@ -348,22 +344,9 @@ class VertexMapView(MapView):
         lc : matplotlib.collections.LineCollection
 
         """
-        from matplotlib.collections import LineCollection
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        if 'colors' not in kwargs:
-            kwargs['colors'] = '0.5'
-
-        lc = LineCollection(self.mg.sr.grid_lines, **kwargs)
-
-        ax.add_collection(lc)
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
-        return ax
+        err_msg = "plot_grid() must be called " \
+                  "from a PlotMapView instance"
+        raise NotImplementedError(err_msg)
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -555,8 +538,8 @@ class VertexMapView(MapView):
         v = qy[self.layer, :]
 
         # apply step
-        x = self.mg.sr.xcellcenters[::istep]
-        y = self.mg.sr.ycellcenters[::istep]
+        x = self.mg.xcellcenters[::istep]
+        y = self.mg.ycellcenters[::istep]
         u = u[::istep]
         v = v[::istep]
         # normalize
@@ -578,8 +561,10 @@ class VertexMapView(MapView):
         u[idx] = np.nan
         v[idx] = np.nan
 
-        # Rotate and plot
-        urot, vrot = self.mg.sr.rotate(u, v, self.mg.sr.angrot)
+        # Rotate and plot, offsets must be zero since
+        # these are vectors not locations
+        urot, vrot = geometry.rotate(u, v, 0., 0.,
+                                     self.mg.angrot_radians)
         quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
         return quiver
 
@@ -589,100 +574,3 @@ class VertexMapView(MapView):
     def plot_endpoint(self, ep, direction="ending", selection=None,
                       selection_direction=None, **kwargs):
         return NotImplementedError("MODPATH 7 support is not yet implemented")
-
-
-if __name__ == "__main__":
-    import os
-    import flopy as fp
-    from flopy.plot.plotbase import PlotMapView
-    import flopy.utils.binaryfile as bf
-    from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
-
-    #ws = "../../examples/data/mf6/test003_gwfs_disv"
-    ws = "../../examples/data/mf6/triangles"
-    name = "mfsim.nam"
-
-    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
-
-    print(sim.model_names)
-    ml = sim.get_model("gwf_1")
-
-    dis = ml.dis
-    sto = ml.sto
-
-    print('break')
-
-    t = VertexModelGrid(dis.vertices, dis.cell2d,
-                        top=dis.top, botm=dis.botm,
-                        idomain=dis.idomain, xoffset=10.,
-                        yoffset=0, rotation=-25)
-
-    # todo: build out model grid methods!
-    x = t.xgrid
-    y = t.ygrid
-    t0 = t.top
-    t1 = t.botm
-    z = t.zgrid
-    xc = t.xcenters
-    yc = t.ycenters
-    zc = t.zcenters
-    lc = t.grid_lines
-    e = t.extent
-
-    sr_x = t.sr.xvertices
-    sr_y = t.sr.yvertices
-    sr_xc = t.sr.xcellcenters
-    sr_yc = t.sr.ycellcenters
-    sr_lc = t.sr.grid_lines
-    sr_e = t.sr.extent
-
-    map = PlotMapView(modelgrid=t, layer=0)
-
-    #ax = map.plot_array(a=dis.botm.array, alpha=0.5)
-    #plt.colorbar(ax)
-    #ax = map.contour_array(a=dis.botm.array)
-    #plt.show()
-
-    #arr = np.random.rand(100) * 100
-    #masked_values = arr[0:10]
-    #ax = map.contour_array(a=arr, masked_values=masked_values)
-
-    #plt.show()
-
-    #idomain = np.ones(100, dtype=np.int)
-    #r = np.random.randint(0, 100, size=25)
-    #r1 = np.random.randint(0, 100, size=10)
-    #idomain[r] = 0
-    #idomain[r1] = -1
-    #ax = map.plot_ibound()
-    #plt.show()
-
-    #ax = map.plot_inactive()
-    #plt.show()
-
-    #ax = map.plot_grid()
-    #plt.show()
-
-    #chd = ml.get_package("CHD")
-    #ax = map.plot_bc(package=chd)
-    #plt.show()
-
-    cbc = os.path.join(ws, "tri_model.cbc")
-    hds = os.path.join(ws, "tri_model.hds")
-    #cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    #hds = os.path.join(ws, "expected_output/", "model_unch.hds")
-
-    cbc = bf.CellBudgetFile(cbc, precision="double")
-    hds = bf.HeadFile(hds)
-
-    #print(cbc.get_unique_record_names())
-
-    fja = cbc.get_data(text="FLOW-JA-FACE")
-    head = hds.get_alldata()[0]
-    head.shape = (4, -1)
-    #print(head.ndim)
-
-    ax = map.plot_discharge(fja=fja, head=head, dis=dis)
-    map.plot_grid()
-    plt.show()
-    #print('break')

@@ -124,9 +124,6 @@ class LayerFile(object):
             self.sr = self.dis.parent.modelgrid.sr
         if "modelgrid" in kwargs.keys():
             self.mg = kwargs.pop('modelgrid')
-            self.sr = self.mg.sr
-        if 'sr' in kwargs.keys():
-            self.sr = kwargs.pop('sr')
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
             raise Exception('LayerFile error: unrecognized kwargs: ' + args)
@@ -145,7 +142,6 @@ class LayerFile(object):
                                                 self.ncol)),
                                      idomain=np.ones((self.nlay,
                                                           self.nrow, self.ncol)),
-                                     sr=self.sr, origin_loc='ul',
                                      xoff=0.0, yoff=0.0,
                                      angrot=0.0)
         return
