@@ -215,9 +215,9 @@ class LRCParticles(Modpath7Particle):
                     fmts.append('%15s')
                 else:
                     if field[1][2] == 8:
-                        fmts.append('%15.5E')
-                    else:
                         fmts.append('%15.7E')
+                    else:
+                        fmts.append('%13.5E')
             elif vtype == 'o':
                 fmts.append('%9s')
             elif vtype == 's':
@@ -258,7 +258,133 @@ class LRCParticles(Modpath7Particle):
         return create_empty_recarray(ncells, dtype, default_value=0)
 
     @staticmethod
-    def create_lrcparticles(v, structured=True, particleid=False,
+    def create_lrcparticles(v, structured=True, particleids=None,
                             localx=None, localy=None, localz=None,
                             timeoffset=None, drape=None):
-        return
+        dtype = []
+        if structured:
+            dtype.append(('k', np.int32))
+            dtype.append(('i', np.int32))
+            dtype.append(('j', np.int32))
+        else:
+            dtype.append(('node', np.int32))
+        if isinstance(v, (list, tuple)):
+            # determine if the list or tuple contains lists or tuples
+            alllsttup = all(isinstance(el, (list, tuple)) for el in v)
+            if structured:
+                if alllsttup:
+                    alllen3 = all(len(el) == 3 for el in v)
+                    if not alllen3:
+                        msg = 'all entries of v must have 3 items ' + \
+                              'for structured particle data'
+                        raise ValueError(msg)
+                else:
+                    msg = 'v list or tuple for structured particle data ' + \
+                          'should contain list or tuple entries'
+                    raise ValueError(msg)
+            # convert v to a numpy array
+            v = np.array(v, dtype = dtype)
+        elif isinstance(v, np.ndarray):
+            dtypein = v.dtype
+            if dtypein != v.dtype:
+                v = np.array(v, dtype=dtype)
+        else:
+            msg = 'create_lrcparticles v must be a list or ' + \
+                  'tuple with lists or tuples'
+            raise ValueError(msg)
+        # localx
+        if localx is None:
+            localx = 0.5
+        else:
+            if isinstance(localx, (list, tuple)):
+                localx = np.array(localx, dtype=np.float32)
+            if isinstance(localx, np.ndarray):
+                if localx.shape[0] != v.shape[0]:
+                    msg = 'shape of localx ({}) '.format(localx.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+        # localy
+        if localy is None:
+            localy = 0.5
+        else:
+            if isinstance(localy, (list, tuple)):
+                localy = np.array(localy, dtype=np.float32)
+            if isinstance(localy, np.ndarray):
+                if localy.shape[0] != v.shape[0]:
+                    msg = 'shape of localy ({}) '.format(localy.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+        # localz
+        if localz is None:
+            localz = 0.5
+        else:
+            if isinstance(localz, (list, tuple)):
+                localz = np.array(localz, dtype=np.float32)
+            if isinstance(localz, np.ndarray):
+                if localz.shape[0] != v.shape[0]:
+                    msg = 'shape of localz ({}) '.format(localz.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+        # timeoffset
+        if timeoffset is None:
+            timeoffset = 0.
+        else:
+           if isinstance(timeoffset, (list, tuple)):
+                timeoffset = np.array(timeoffset, dtype=np.float32)
+           if isinstance(timeoffset, np.ndarray):
+                if timeoffset.shape[0] != v.shape[0]:
+                    msg = 'shape of timeoffset ' + \
+                          '({}) '.format(timeoffset.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+        # drape
+        if drape is None:
+            drape = 0
+        else:
+            if isinstance(drape, (list, tuple)):
+                drape = np.array(drape, dtype=np.int32)
+            if isinstance(drape, np.ndarray):
+                if drape.shape[0] != v.shape[0]:
+                    msg = 'shape of drape ({}) '.format(drape.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+        # particleids
+        if particleids is None:
+            particleid = False
+        else:
+            particleid = True
+            if isinstance(particleids, (list, tuple)):
+                particleids = np.array(particleids, dtype=np.int32)
+            if isinstance(particleids, np.ndarray):
+                if particleids.shape[0] != v.shape[0]:
+                    msg = 'shape of particleids ' + \
+                          '({}) '.format(particleids.shape[0]) + \
+                          'is not equal to the shape ' + \
+                          'of v ({}).'.format(v.shape[0])
+                    raise ValueError(msg)
+
+        # create empty particle
+        part = LRCParticles.get_empty(ncells=v.shape[0],
+                                      structured=structured,
+                                      particleid=particleid)
+        # fill part
+        if structured:
+            part['k'] = v['k']
+            part['i'] = v['i']
+            part['j'] = v['j']
+        else:
+            part['node'] = v['node']
+        part['localx'] = localx
+        part['localy'] = localy
+        part['localz'] = localz
+        part['timeoffset'] = timeoffset
+        part['drape'] = drape
+        if particleid:
+            part['id'] = particleids
+        # return particle instance
+        return part

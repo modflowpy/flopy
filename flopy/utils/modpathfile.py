@@ -84,6 +84,8 @@ class PathlineFile():
             if self.skiprows < 1:
                 if 'MODPATH_PATHLINE_FILE 6' in line.upper():
                     self.version = 6
+                elif 'MODPATH_PATHLINE_FILE 7' in line.upper():
+                    self.version = 7
                 elif 'MODPATH 5.0' in line.upper():
                     self.version = 5
                 elif 'MODPATH Version 3.00' in line.upper():
@@ -94,7 +96,7 @@ class PathlineFile():
                     errmsg = '{} is not a valid pathline file'.format(self.fname)
                     raise Exception(errmsg)
             self.skiprows += 1
-            if self.version == 6:
+            if self.version == 6 or self.version == 7:
                 if 'end header' in line.lower():
                     break
             elif self.version == 3 or self.version == 5:
@@ -116,7 +118,7 @@ class PathlineFile():
                               ("i", np.int32),
                               ("k", np.int32),
                               ("cumulativetimestep", np.int32)])
-        elif self.version == 6:
+        elif self.version == 6 or self.version == 7:
             dtype = np.dtype([("particleid", np.int32),
                               ("particlegroup", np.int32),
                               ("timepointindex", np.int32),
