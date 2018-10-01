@@ -101,7 +101,7 @@ class Modpath7Sim(Package):
                  simulationtype='pathline', trackingdirection='forward',
                  weaksinkoption='stop_at', weaksourceoption='stop_at',
                  budgetoutputoption='no',
-                 traceparticlegroup=None, traceparticleid=None,
+                 traceparticledata=None,
                  budgetcellnumbers=None, referencetime=None,
                  stoptimeoption='extend', StopTime=None,
                  timepointdata=None,
@@ -166,12 +166,40 @@ class Modpath7Sim(Package):
         except:
             self._enum_error('budgetoutputoption', budgetoutputoption,
                              budgetOpt)
-        # TraceMode
-        if traceparticlegroup is None or traceparticleid is None:
-            TraceMode = 0
+        # tracemode
+        if traceparticledata is None:
+            tracemode = 0
+            traceparticlegroup = None
+            traceparticleid = None
         else:
-            TraceMode = 1
-        self.TraceMode = TraceMode
+            tracemode = 1
+            if isinstance(traceparticledata, (list, tuple)):
+                if len(traceparticledata) != 2:
+                    msg = 'traceparticledata must be a list or tuple ' + \
+                          'with 2 items (a integer and an integer). ' + \
+                          'Passed item {}.'.format(traceparticledata)
+                    raise ValueError(msg)
+                try:
+                    traceparticlegroup = int(traceparticledata[0])
+                except:
+                    msg = 'traceparticledata[0] ' + \
+                          '({}) '.format(traceparticledata[0]) + \
+                          'cannot be converted to a integer.'
+                    raise ValueError(msg)
+                try:
+                    traceparticleid = int(traceparticledata[1])
+                except:
+                    msg = 'traceparticledata[1] ' + \
+                          '({}) '.format(traceparticledata[0]) + \
+                          'cannot be converted to a integer.'
+                    raise ValueError(msg)
+            else:
+                msg = 'traceparticledata must be a list or ' + \
+                      'tuple with 2 items (a integer and an integer).'
+                raise ValueError(msg)
+
+        # set tracemode, traceparticlegroup, and traceparticleid
+        self.tracemode = tracemode
         self.traceparticlegroup = traceparticlegroup
         self.traceparticleid = traceparticleid
 
@@ -376,7 +404,7 @@ class Modpath7Sim(Package):
                                              self.weaksinkoption,
                                              self.weaksourceoption,
                                              self.budgetoutputoption,
-                                             self.TraceMode))
+                                             self.tracemode))
         # item 4
         f.write('{}\n'.format(self.endpointfilename))
         # item 5
@@ -386,10 +414,10 @@ class Modpath7Sim(Package):
         if self.simulationtype == 3 or self.simulationtype == 4:
             f.write('{}\n'.format(self.timeseriesfilename))
         # item 7 and 8
-        if self.TraceMode == 1:
+        if self.tracemode == 1:
             f.write('{}\n'.format(self.tracefilename))
-            f.write('{} {}\n'.format(self.traceparticlegroup,
-                                     self.traceparticleid))
+            f.write('{} {}\n'.format(self.traceparticlegroup + 1,
+                                     self.traceparticleid + 1))
         # item 9
         f.write('{}\n'.format(self.BudgetCellCount))
         # item 10

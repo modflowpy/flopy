@@ -73,7 +73,37 @@ def test_mf6():
 
 def test_output():
     fpth0 = os.path.join(model_ws, 'mf2005', 'ex01_mf2005_mp.mppth')
+    p = flopy.utils.PathlineFile(fpth0)
+    maxtime0 = p.get_maxtime()
+    maxid0 = p.get_maxid()
+    p0 = p.get_alldata()
     fpth1 = os.path.join(model_ws, 'mf6', 'ex01_mf6_mp.mppth')
+    p = flopy.utils.PathlineFile(fpth1)
+    maxtime1 = p.get_maxtime()
+    maxid1 = p.get_maxid()
+    p1 = p.get_alldata()
+
+    # check maxtimes
+    msg = 'pathline maxtime ({}) '.format(maxtime0) + \
+          'in {} '.format(os.path.basename(fpth0)) + \
+          'are not equal to the ' + \
+          'pathline maxtime ({}) '.format(maxtime1) + \
+          'in {}'.format(os.path.basename(fpth1))
+    assert p0 != p1, msg
+
+    # check maxid
+    msg = 'pathline maxid ({}) '.format(maxid0) + \
+          'in {} '.format(os.path.basename(fpth0)) + \
+          'are not equal to the ' + \
+          'pathline maxid ({}) '.format(maxid1) + \
+          'in {}'.format(os.path.basename(fpth1))
+    assert p0 != p1, msg
+
+    # check that pathline data are approximately the same
+    msg = 'pathlines in {} '.format(os.path.basename(fpth0)) + \
+          'are not equal (within 1e-5) to the ' + \
+          'pathlines  in {}'.format(os.path.basename(fpth1))
+    #assert not np.allclose(p0, p1), msg
     return
 
 def build_mf2005():
@@ -88,7 +118,8 @@ def build_mf2005():
     m = flopy.modflow.Modflow(nm, model_ws=ws,
                               exe_name=exe_name)
     flopy.modflow.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol,
-                             nper=nper, perlen=perlen, nstp=nstp,
+                             nper=nper, itmuni=4 , lenuni=1,
+                             perlen=perlen, nstp=nstp,
                              tsmult=tsmult, steady=True,
                              delr=delr, delc=delc,
                              top=top, botm=botm)
@@ -106,7 +137,8 @@ def build_mf2005():
     flopy.modflow.ModflowRiv(m, ipakcb=iu_cbc, stress_period_data={0: rd})
     # output control
     flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ['save head',
-                                                            'save budget']})
+                                                            'save budget',
+                                                            'print head']})
     flopy.modflow.ModflowPcg(m, hclose=0.01, rclose=1.0)
 
     m.write_input()
@@ -125,6 +157,7 @@ def build_mf2005():
                                       weaksourceoption='pass_through',
                                       budgetoutputoption='summary',
                                       budgetcellnumbers=[1049, 1259],
+                                      traceparticledata=[1, 1000],
                                       referencetime=[0, 0, 0.],
                                       stoptimeoption='extend',
                                       timepointdata=[500, 1000.],
@@ -171,6 +204,7 @@ def build_mf6():
     # create gwf file
     dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(gwf, pname='dis', nlay=nlay,
                                                    nrow=nrow, ncol=ncol,
+                                                   length_units='FEET',
                                                    delr=delr, delc=delc,
                                                    top=top,
                                                    botm=botm)
@@ -224,6 +258,7 @@ def build_mf6():
                                       weaksourceoption='pass_through',
                                       budgetoutputoption='summary',
                                       budgetcellnumbers=[1049, 1259],
+                                      traceparticledata=[1, 1000],
                                       referencetime=[0, 0, 0.],
                                       stoptimeoption='extend',
                                       timepointdata=[500, 1000.],

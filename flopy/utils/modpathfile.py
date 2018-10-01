@@ -7,6 +7,8 @@ important classes that can be accessed by the user.
 
 """
 
+import itertools
+import collections
 import numpy as np
 try:
     from numpy.lib.recfunctions import append_fields
@@ -47,7 +49,8 @@ class PathlineFile():
     >>> pthobj = flopy.utils.PathlineFile('model.mppth')
     >>> p1 = pthobj.get_data(partid=1)
     """
-    kijnames = ['k', 'i', 'j', 'particleid', 'particlegroup', 'linesegmentindex']
+    kijnames = ['k', 'i', 'j', 'node',
+                'particleid', 'particlegroup', 'linesegmentindex']
 
     def __init__(self, filename, verbose=False):
         """
@@ -56,8 +59,13 @@ class PathlineFile():
         """
         self.fname = filename
         self._build_index()
-        self.dtype, self.outdtype = self._get_dtypes()
-        self._data = loadtxt(self.file, dtype=self.dtype, skiprows=self.skiprows)
+        self.outdtype = self._get_outdtype()
+        if self.version == 7:
+            self.dtype, self._data = self._get_mp7data()
+        else:
+            self.dtype = self._get_dtypes()
+            self._data = loadtxt(self.file, dtype=self.dtype,
+                                 skiprows=self.skiprows)
         # set number of particle ids
         self.nid = self._data['particleid'].max()
         # convert layer, row, and column indices; particle id and group; and
@@ -84,7 +92,7 @@ class PathlineFile():
             if self.skiprows < 1:
                 if 'MODPATH_PATHLINE_FILE 6' in line.upper():
                     self.version = 6
-                elif 'MODPATH_PATHLINE_FILE 7' in line.upper():
+                elif 'MODPATH_PATHLINE_FILE         7' in line.upper():
                     self.version = 7
                 elif 'MODPATH 5.0' in line.upper():
                     self.version = 5
@@ -118,7 +126,7 @@ class PathlineFile():
                               ("i", np.int32),
                               ("k", np.int32),
                               ("cumulativetimestep", np.int32)])
-        elif self.version == 6 or self.version == 7:
+        elif self.version == 6:
             dtype = np.dtype([("particleid", np.int32),
                               ("particlegroup", np.int32),
                               ("timepointindex", np.int32),
@@ -130,11 +138,80 @@ class PathlineFile():
                               ("grid", np.int32), ("xloc", np.float32),
                               ("yloc", np.float32), ("zloc", np.float32),
                               ("linesegmentindex", np.int32)])
+        elif self.version == 7:
+            msg = '_get_dtypes() should not be called for ' + \
+                  'MODPATH 7 pathline files'
+            raise TypeError(msg)
+        return dtype
+
+
+    def _get_outdtype(self):
         outdtype = np.dtype([("x", np.float32), ("y", np.float32),
                              ("z", np.float32),
                              ("time", np.float32), ("k", np.int32),
                              ("id", np.int32)])
-        return dtype, outdtype
+        return outdtype
+
+
+    def _get_mp7data(self):
+        data = None
+        dtyper = np.dtype([("node", np.int32), ("x", np.float32),
+                          ("y", np.float32), ("z", np.float32),
+                          ("time", np.float32), ("xloc", np.float32),
+                          ("yloc", np.float32), ("zloc", np.float32),
+                          ("stressperiod", np.int32), ("timestep", np.int32)])
+        dtype = np.dtype([("particleid", np.int32),
+                          ("particlegroup", np.int32),
+                          ("sequencenumber", np.int32),
+                          ("time", np.float32), ("x", np.float32),
+                          ("y", np.float32), ("z", np.float32),
+                          ("node", np.int32),
+                          ("xloc", np.float32), ("yloc", np.float32),
+                          ("zloc", np.float32),
+                          ("stressperiod", np.int32), ("timestep", np.int32)])
+        idx = 0
+        part_dict = collections.OrderedDict()
+        ndata = 0
+        while True:
+            if idx == 0:
+                for n in range(self.skiprows):
+                    line = self.file.readline()
+            # read header line
+            try:
+                line = self.file.readline().strip()
+                if len(line) < 1:
+                    break
+            except:
+                break
+            t = [int(s) for j, s in enumerate(line.split()) if j < 4]
+            sequencenumber, group, particleid, pathlinecount = t[0:4]
+            ndata += pathlinecount
+            # read the particle data
+            d = np.loadtxt(itertools.islice(self.file, 0, pathlinecount),
+                           dtype=dtyper)
+            key = (idx, sequencenumber, group, particleid, pathlinecount)
+            part_dict[key] = d.copy()
+            idx += 1
+
+        # create data array
+        data = np.zeros(ndata, dtype=dtype)
+
+        # fill data
+        ipos0 = 0
+        for key, value in part_dict.items():
+            idx, sequencenumber, group, particleid, pathlinecount = key[0:5]
+            ipos1 = ipos0 + pathlinecount
+            # fill constant items for particle
+            data['particleid'][ipos0:ipos1] = particleid
+            data['particlegroup'][ipos0:ipos1] = group
+            data['sequencenumber'][ipos0:ipos1] = sequencenumber
+            # fill particle data
+            for name in value.dtype.names:
+                data[name][ipos0:ipos1] = value[name]
+            ipos0 = ipos1
+
+
+        return dtype, data
 
     def get_maxid(self):
         """
@@ -146,7 +223,7 @@ class PathlineFile():
             Maximum pathline number.
 
         """
-        return self.maxid
+        return self._data['particleid'].max()
 
     def get_maxtime(self):
         """
@@ -158,7 +235,7 @@ class PathlineFile():
             Maximum pathline time.
 
         """
-        return self.data['time'].max()
+        return self._data['time'].max()
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -201,15 +278,22 @@ class PathlineFile():
         idx = self._data['particleid'] == partid
         if totim is not None:
             if ge:
-                idx = (self._data['time'] >= totim) & (self._data['particleid'] == partid)
+                idx = (self._data['time'] >= totim) & \
+                      (self._data['particleid'] == partid)
             else:
-                idx = (self._data['time'] <= totim) & (self._data['particleid'] == partid)
+                idx = (self._data['time'] <= totim) & \
+                      (self._data['particleid'] == partid)
         else:
             idx = self._data['particleid'] == partid
         self._ta = self._data[idx]
-        ra = np.rec.fromarrays((self._ta['x'], self._ta['y'], self._ta['z'],
-                                self._ta['time'], self._ta['k'], self._ta['particleid']), dtype=self.outdtype)
-        return ra
+        names = ['x', 'y', 'z', 'time']
+        if 'node' in self._ta.dtype.names:
+            names.append('node')
+        else:
+            names.append('k')
+        names.append('particleid')
+        selection = (self._ta[name] for name in names)
+        return np.rec.fromarrays(selection, dtype=self.outdtype)
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -421,8 +505,10 @@ class EndpointFile():
         self._data = loadtxt(self.file, dtype=self.dtype,
                              skiprows=self.skiprows)
         self._add_particleid()
+
         # set number of particle ids
-        self.nid = self._data['particleid'].max()
+        self.nid = len(np.unique(self._data['particleid']))
+
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
