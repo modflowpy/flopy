@@ -210,15 +210,18 @@ class LRCParticles(Modpath7Particle):
             if vtype == 'i' or vtype == 'b':
                 fmts.append('%9d')
             elif vtype == 'f':
-                fmts.append('%15g')
-                # if numpy114:
-                #     # Use numpy's floating-point formatter (Dragon4)
-                #     fmts.append('%15s')
-                # else:
-                #     if field[1][2] == 8:
-                #         fmts.append('%15.7E')
-                #     else:
-                #         fmts.append('%13.5E')
+                if field[1][2] == 8:
+                    if numpy114:
+                    # Use numpy's floating-point formatter (Dragon4)
+                        fmts.append('%23s')
+                    else:
+                        fmts.append('%23.16E')
+                else:
+                    if numpy114:
+                    # Use numpy's floating-point formatter (Dragon4)
+                        fmts.append('%15s')
+                    else:
+                        fmts.append('%15.7E')
             elif vtype == 'o':
                 fmts.append('%9s')
             elif vtype == 's':

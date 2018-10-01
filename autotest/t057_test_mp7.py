@@ -40,7 +40,7 @@ zones = [1, 1, zone3]
 # create particles
 part0 = flopy.modpath.LRCParticles.get_empty(ncells=21, particleid=True)
 part0['k'] = 0
-part0['j'] = 3
+part0['j'] = 2
 part0['localx'] = 0.5
 part0['localy'] = 0.5
 part0['localz'] = 1.
@@ -52,9 +52,10 @@ for idx in range(part0.shape[0]):
 pg0 = flopy.modpath.LRCParticles(particlegroupname='PG1', particledata=part0,
                                  filename='ex01a.sloc')
 
-v = [(0, 0, 0), (2, 0, 0)]
+v = [(0, 0, 0), (0, 20, 0)]
+pids = [1, 2] #[1000, 1001]
 part1 = flopy.modpath.LRCParticles.create_lrcparticles(v=v, drape=1,
-                                                       particleids=[1000, 1001])
+                                                       particleids=pids)
 pg1 = flopy.modpath.LRCParticles(particlegroupname='PG2', particledata=part1,
                                  filename='ex01a.pg2.sloc')
 

@@ -318,7 +318,7 @@ class Modpath7Sim(Package):
                     elif isinstance(timepointdata[1], float):
                         timepointdata[1] = np.array([timepointdata[1]])
                     if timepointdata[1].shape[0] == timepointdata[0]:
-                        TimePointOption = 2
+                        timepointoption = 2
                     elif timepointdata[1].shape[0] > 1:
                         msg = 'The number of TimePoint data ' + \
                               '({}) '.format(timepointdata[1].shape[0]) + \
@@ -326,9 +326,11 @@ class Modpath7Sim(Package):
                               '({}).'.format(timepointdata[0])
                         raise ValueError(msg)
                     else:
-                        TimePointOption = 1
-            self.TimePointOption = TimePointOption
-            self.timepointdata = timepointdata
+                        timepointoption = 1
+        else:
+            timepointoption = 0
+        self.timepointoption = timepointoption
+        self.timepointdata = timepointdata
 
         # zonedataoption
         try:
@@ -446,12 +448,12 @@ class Modpath7Sim(Package):
 
         # item 16
         if self.simulationtype == 3 or self.simulationtype == 4:
-            f.write('{}\n'.format(self.TimePointOption))
-            if self.TimePointOption == 1:
+            f.write('{}\n'.format(self.timepointoption))
+            if self.timepointoption == 1:
                 # item 17
                 f.write('{} {}\n'.format(self.timepointdata[0],
                                          self.timepointdata[1][0]))
-            elif self.TimePointOption == 2:
+            elif self.timepointoption == 2:
                 # item 18
                 f.write('{}\n'.format(self.timepointdata[0]))
                 # item 19

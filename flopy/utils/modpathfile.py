@@ -10,12 +10,14 @@ important classes that can be accessed by the user.
 import itertools
 import collections
 import numpy as np
+
 try:
     from numpy.lib.recfunctions import append_fields
 except:
     pass
 from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
+
 
 class PathlineFile():
     """
@@ -50,7 +52,8 @@ class PathlineFile():
     >>> p1 = pthobj.get_data(partid=1)
     """
     kijnames = ['k', 'i', 'j', 'node',
-                'particleid', 'particlegroup', 'linesegmentindex']
+                'particleid', 'particlegroup', 'linesegmentindex',
+                'particleidloc']
 
     def __init__(self, filename, verbose=False):
         """
@@ -58,16 +61,22 @@ class PathlineFile():
 
         """
         self.fname = filename
+        self.verbose = verbose
+
+        # build index
         self._build_index()
+
+        # set output dtype
         self.outdtype = self._get_outdtype()
+
+        # set data dtype and read pathline data
         if self.version == 7:
             self.dtype, self._data = self._get_mp7data()
         else:
             self.dtype = self._get_dtypes()
             self._data = loadtxt(self.file, dtype=self.dtype,
                                  skiprows=self.skiprows)
-        # set number of particle ids
-        self.nid = self._data['particleid'].max()
+
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
@@ -75,6 +84,10 @@ class PathlineFile():
                 self._data[n] -= 1
             except:
                 pass
+
+        # set number of particle ids
+        self.nid = np.unique(self._data['particleid'])
+
         # close the input file
         self.file.close()
         return
@@ -101,7 +114,8 @@ class PathlineFile():
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = '{} is not a valid pathline file'.format(self.fname)
+                    errmsg = '{} is not a valid pathline file'.format(
+                        self.fname)
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -144,28 +158,28 @@ class PathlineFile():
             raise TypeError(msg)
         return dtype
 
-
     def _get_outdtype(self):
         outdtype = np.dtype([("x", np.float32), ("y", np.float32),
                              ("z", np.float32),
                              ("time", np.float32), ("k", np.int32),
-                             ("id", np.int32)])
+                             ("particleid", np.int32)])
         return outdtype
-
 
     def _get_mp7data(self):
         data = None
         dtyper = np.dtype([("node", np.int32), ("x", np.float32),
-                          ("y", np.float32), ("z", np.float32),
-                          ("time", np.float32), ("xloc", np.float32),
-                          ("yloc", np.float32), ("zloc", np.float32),
-                          ("stressperiod", np.int32), ("timestep", np.int32)])
+                           ("y", np.float32), ("z", np.float32),
+                           ("time", np.float32), ("xloc", np.float32),
+                           ("yloc", np.float32), ("zloc", np.float32),
+                           ("k", np.int32),
+                           ("stressperiod", np.int32), ("timestep", np.int32)])
         dtype = np.dtype([("particleid", np.int32),
                           ("particlegroup", np.int32),
                           ("sequencenumber", np.int32),
+                          ("particleidloc", np.int32),
                           ("time", np.float32), ("x", np.float32),
                           ("y", np.float32), ("z", np.float32),
-                          ("node", np.int32),
+                          ("k", np.int32), ("node", np.int32),
                           ("xloc", np.float32), ("yloc", np.float32),
                           ("zloc", np.float32),
                           ("stressperiod", np.int32), ("timestep", np.int32)])
@@ -179,6 +193,8 @@ class PathlineFile():
             # read header line
             try:
                 line = self.file.readline().strip()
+                if self.verbose:
+                    print(line)
                 if len(line) < 1:
                     break
             except:
@@ -202,14 +218,18 @@ class PathlineFile():
             idx, sequencenumber, group, particleid, pathlinecount = key[0:5]
             ipos1 = ipos0 + pathlinecount
             # fill constant items for particle
-            data['particleid'][ipos0:ipos1] = particleid
+            # particleid is not necessarly unique for all pathlines - use
+            # sequencenumber which is unique
+            data['particleid'][ipos0:ipos1] = sequencenumber
+            # set particlegroup and sequence number
             data['particlegroup'][ipos0:ipos1] = group
             data['sequencenumber'][ipos0:ipos1] = sequencenumber
+            # save particleidloc to particleid
+            data['particleidloc'][ipos0:ipos1] = particleid
             # fill particle data
             for name in value.dtype.names:
                 data[name][ipos0:ipos1] = value[name]
             ipos0 = ipos1
-
 
         return dtype, data
 
@@ -275,7 +295,7 @@ class PathlineFile():
         >>> p1 = pthobj.get_data(partid=1)
 
         """
-        idx = self._data['particleid'] == partid
+        # idx = self._data['particleid'] == partid
         if totim is not None:
             if ge:
                 idx = (self._data['time'] >= totim) & \
@@ -286,14 +306,9 @@ class PathlineFile():
         else:
             idx = self._data['particleid'] == partid
         self._ta = self._data[idx]
-        names = ['x', 'y', 'z', 'time']
-        if 'node' in self._ta.dtype.names:
-            names.append('node')
-        else:
-            names.append('k')
-        names.append('particleid')
-        selection = (self._ta[name] for name in names)
-        return np.rec.fromarrays(selection, dtype=self.outdtype)
+        names = ['x', 'y', 'z', 'time', 'k', 'particleid']
+        return np.rec.fromarrays((self._ta[name] for name in names),
+                                 dtype=self.outdtype)
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -332,7 +347,7 @@ class PathlineFile():
 
         """
         plist = []
-        for partid in range(self.nid):
+        for partid in self.nid:
             plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
         return plist
 
@@ -439,16 +454,16 @@ class PathlineFile():
         # geometry for each row in PathLine file
         else:
             dtype = pth.dtype
-            #pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
+            # pthdata = np.empty((0, len(dtype)), dtype=dtype).view(np.recarray)
             pthdata = []
             for pid in particles:
                 ra = pth[pth.particleid == pid]
                 x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
-                geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
-                                          (x[i], y[i], z[i])])
-                             for i in np.arange(1, (len(ra)))]
-                #pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
+                geoms += [LineString([(x[i - 1], y[i - 1], z[i - 1]),
+                                      (x[i], y[i], z[i])])
+                          for i in np.arange(1, (len(ra)))]
+                # pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
                 pthdata += ra[1:].tolist()
             pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
         # convert back to one-based
@@ -542,7 +557,8 @@ class EndpointFile():
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = '{} is not a valid endpoint file'.format(self.fname)
+                    errmsg = '{} is not a valid endpoint file'.format(
+                        self.fname)
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6:
@@ -566,19 +582,6 @@ class EndpointFile():
         """
         if self.version == 3 or self.version == 5:
             dtype = self._get_mp35_dtype()
-            # dtype = np.dtype([('finalzone', np.int32), ('j', np.int32),
-            #                   ('i', np.int32), ('k', np.int32),
-            #                   ('x', np.float32), ('y', np.float32),
-            #                   ('z', np.float32), ('zloc', np.float32),
-            #                   ('finaltime', np.float32),
-            #                   ('x0', np.float32), ('y0', np.float32),
-            #                   ('zloc0', np.float32),
-            #                   ('j0', np.int32), ('i0', np.int32),
-            #                   ('k0', np.int32),
-            #                   ('initialzone', np.int32),
-            #                   ("cumulativetimestep", np.int32),
-            #                   ("ipcode", np.int32),
-            #                   ('initialtime', np.float32)])
         elif self.version == 6:
             dtype = np.dtype([("particleid", np.int32),
                               ("particlegroup", np.int32),
@@ -619,7 +622,6 @@ class EndpointFile():
             dtype.insert(0, ("particleid", np.int32))
         return np.dtype(dtype)
 
-
     def _add_particleid(self):
 
         # add particle ids for earlier version of MODPATH
@@ -627,11 +629,13 @@ class EndpointFile():
             # create particle ids
             shaped = self._data.shape[0]
             pids = np.arange(1, shaped + 1, 1, dtype=np.int32)
+
             # determine numpy version
             npv = np.__version__
             v = [int(s) for s in npv.split('.')]
             if self.verbose:
                 print('numpy version {}'.format(npv))
+
             # for numpy version 1.14 and higher
             if v[0] > 1 or (v[0] == 1 and v[1] > 13):
                 self._data = append_fields(self._data, 'particleid', pids)
@@ -639,38 +643,29 @@ class EndpointFile():
             else:
                 if self.verbose:
                     print(self._data.dtype)
+
                 # convert pids to structured array
                 pids = np.array(pids,
                                 dtype=np.dtype([('particleid', np.int32)]))
+
                 # create new dtype
                 dtype = self._get_mp35_dtype(add_id=True)
-                # dtype = np.dtype([("particleid", np.int32),
-                #                   ('finalzone', np.int32), ('j', np.int32),
-                #                   ('i', np.int32), ('k', np.int32),
-                #                   ('x', np.float32), ('y', np.float32),
-                #                   ('z', np.float32), ('zloc', np.float32),
-                #                   ('finaltime', np.float32),
-                #                   ('x0', np.float32), ('y0', np.float32),
-                #                   ('zloc0', np.float32),
-                #                   ('j0', np.int32), ('i0', np.int32),
-                #                   ('k0', np.int32),
-                #                   ('initialzone', np.int32),
-                #                   ("cumulativetimestep", np.int32),
-                #                   ("ipcode", np.int32),
-                #                   ('initialtime', np.float32)])
                 if self.verbose:
                     print(dtype)
+
                 # create new array with new dtype and fill with available data
                 data = np.zeros(shaped, dtype=dtype)
                 if self.verbose:
                     print('new data shape {}'.format(data.shape))
                     print('\nFilling new structured data array')
+
                 # add particle id to new array
                 if self.verbose:
                     msg = 'writing particleid (pids) to new ' + \
                           'structured data array'
                     print(msg)
                 data['particleid'] = pids['particleid']
+
                 # add remaining data to the new array
                 if self.verbose:
                     msg = 'writing remaining data to new ' + \
@@ -706,7 +701,6 @@ class EndpointFile():
 
         """
         return self.data['finaltime'].max()
-
 
     def get_maxtraveltime(self):
         """

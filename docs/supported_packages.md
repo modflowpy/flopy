@@ -54,11 +54,22 @@ FloPy Supported Packages
 | Unstructured Discretization (DISU)           | Supported            | Supported            | Not supported        |
 | Sparse Matrix Solver (SMS)                   | Supported            | Supported            | Not supported        |
 
-### MODPATH
+### MODPATH 6
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
 | MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
+
+### MODPATH 7
+| Package                                  | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------- | -------------------- | -------------------- | -------------------- |
+| MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
+| MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
+| Starting Location Data - Input Style 1   | Supported            | Not supported        | Not supported        |
+| Starting Location Data - Input Style 2   | Not supported        | Not supported        | Not supported        |
+| Starting Location Data - Input Style 3   | Not supported        | Not supported        | Not supported        |
+| Starting Location Data - Input Style 4   | Not supported        | Not supported        | Not supported        |
+
 
 ### MT3DMS, MT3D-USGS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |

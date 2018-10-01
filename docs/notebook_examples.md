@@ -29,7 +29,9 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities for exporting two-dimensional array data as a binary file is given in the [flopy3_save_binary_data_file](../examples/Notebooks/flopy3_save_binary_data_file.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create MODPATH models and plot MODPATH results is given in the [flopy3_Modpath_example](../examples/Notebooks/flopy3_Modpath_example.ipynb) Notebook.
++ An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_Modpath_example](../examples/Notebooks/flopy3_Modpath_example.ipynb) Notebook.
+
++ An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_Modpath7_structured_example](../examples/Notebooks/flopy3_Modpath7_structured_example.ipynb) Notebook.
 
 + An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook.
 
