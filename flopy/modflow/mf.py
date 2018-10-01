@@ -564,17 +564,16 @@ class Modflow(BaseModel):
         if verbose:
             print('\nCreating new model with name: {}\n{}\n'
                   .format(modelname, 50 * '-'))
+
+        attribs = mfreadnam.attribs_from_namfile_header(os.path.join(model_ws, f))
+
         ml = Modflow(modelname, version=version, exe_name=exe_name,
-                     verbose=verbose, model_ws=model_ws)
+                     verbose=verbose, model_ws=model_ws, **attribs)
 
         files_successfully_loaded = []
         files_not_loaded = []
 
         namefile_path = os.path.join(ml.model_ws, f)
-
-        # set the reference information
-        # todo: is this depreciated? if not it needs to be repaired?
-        ref_attributes = SpatialReference.from_namfile(namefile_path)
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
@@ -645,25 +644,9 @@ class Modflow(BaseModel):
             print('   {:4s} package load...success'.format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
         ext_unit_dict.pop(dis_key)
-        start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
-        itmuni = ref_attributes.pop("itmuni", 4)
-        ref_source = ref_attributes.pop("source", "defaults")
-        if ml.structured:
-            # get model units from usgs.model.reference, if provided
-            if ref_source == 'usgs.model.reference':
-                pass
-            # otherwise get them from the DIS file
-            else:
-                itmuni = dis.itmuni
-                ref_attributes['lenuni'] = dis.lenuni
-            sr = SpatialReference(delc=ml.dis.delc.array,
-                                  **ref_attributes)
-        else:
-            sr = None
 
-        dis.sr = sr
-        dis.tr = TemporalReference(itmuni=itmuni, start_datetime=start_datetime)
-        dis.start_datetime = start_datetime
+        dis.tr = TemporalReference(itmuni=dis.itmuni, start_datetime=ml._start_datetime)
+        dis.start_datetime = ml._start_datetime
 
         # load bas after dis if it is available. Note that the free format
         # option was already determined earlier in this method.

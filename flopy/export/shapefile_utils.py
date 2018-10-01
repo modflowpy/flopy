@@ -121,7 +121,10 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                           epsg=None, prj=None):
     sf = import_shapefile()
     try:
-        verts = copy.deepcopy(mg.xyvertices())
+        verts = [mg.get_cell_vertices(i, j)
+                 for i in range(mg.nrow)
+                 for j in range(mg.ncol)]
+        # verts = copy.deepcopy(mg.xyzvertices[0:2])
     except AttributeError:
         # support old style SR for legacy!
         verts = copy.deepcopy(mg.vertices)
@@ -549,8 +552,13 @@ def write_prj(shpname, sr=None, epsg=None, prj=None,
     # projection file name
     prjname = shpname.replace('.shp', '.prj')
 
-    from flopy.grid import SpatialReference
+    from flopy.grid import SpatialReference, StructuredGrid
     from flopy.utils.reference import SpatialReference as OGsr
+
+    # temporary fix until code is properly refactored to
+    # pass a new style SpatialReference object through.
+    if isinstance(sr, StructuredGrid):
+        return
 
     if sr is not None and \
             not isinstance(sr, SpatialReference) and \

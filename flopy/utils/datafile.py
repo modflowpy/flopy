@@ -302,7 +302,6 @@ class LayerFile(object):
 
         return PlotUtilities._plot_array_helper(plotarray,
                                                 model=self.model,
-                                                sr=self.sr,
                                                 axes=axes,
                                                 filenames=filenames,
                                                 mflay=mflay,

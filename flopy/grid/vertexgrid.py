@@ -125,6 +125,16 @@ class VertexGrid(Grid):
         x, y = super(VertexGrid, self).intersect(x, y, local)
         raise Exception('Not implemented yet')
 
+    def get_cell_vertices(self, cellid):
+        """
+        Method to get a set of cell vertices for a single cell
+            used in the Shapefile export utilities
+        :param cellid: (int) cellid number
+        :return: list of x,y cell vertices
+        """
+        return list(zip(self.xvertices[cellid],
+                        self.yvertices[cellid]))
+
     def _build_grid_geometry_info(self):
         cache_index_cc = 'cellcenters'
         cache_index_vert = 'xyzgrid'

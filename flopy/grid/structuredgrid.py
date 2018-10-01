@@ -422,6 +422,19 @@ class StructuredGrid(Grid):
 
         return verts, iverts
 
+    def get_cell_vertices(self, i, j):
+        """
+        Method to get a set of cell vertices for a single cell
+            used in the Shapefile export utilities
+        :param i: (int) cell row number
+        :param j: (int) cell column number
+        :return: list of x,y cell vertices
+        """
+        return [(self.xvertices[i, j], self.yvertices[i, j]),
+                (self.xvertices[i, j+1], self.yvertices[i, j+1]),
+                (self.xvertices[i+1, j+1], self.yvertices[i+1, j+1]),
+                (self.xvertices[i+1, j], self.yvertices[i+1, j]),]
+
     def plot(self, **kwargs):
         """
         Plot the grid lines.

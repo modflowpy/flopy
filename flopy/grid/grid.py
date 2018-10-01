@@ -237,6 +237,11 @@ class Grid(object):
     #        'must define indices in child '
     #        'class to use this base class')
 
+    def get_cell_vertices(self, cellid):
+        raise NotImplementedError(
+            "must define get_cell_verices in"
+            " child class to use this base class")
+
     def get_coords(self, x, y):
         """
         Given x and y array-like values, apply rotation, scale and offset,
@@ -415,7 +420,7 @@ class Grid(object):
         self._yoff = sr.yll
         self._angrot = sr.rotation
         self._epsg = sr.epsg
-        self._proj4 = sr.proj4
+        self._proj4 = sr.proj4_str
         self._require_cache_updates()
 
     def _require_cache_updates(self):

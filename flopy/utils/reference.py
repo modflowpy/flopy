@@ -238,6 +238,8 @@ class SpatialReference(object):
                     wkt = src.read()
             elif self.epsg is not None:
                 wkt = getprj(self.epsg)
+            else:
+                return None
             return wkt
         else:
             return self._wkt
