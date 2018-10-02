@@ -53,7 +53,7 @@ class PathlineFile():
     """
     kijnames = ['k', 'i', 'j', 'node',
                 'particleid', 'particlegroup', 'linesegmentindex',
-                'particleidloc']
+                'particleidloc', 'sequencenumber']
 
     def __init__(self, filename, verbose=False):
         """
@@ -551,6 +551,8 @@ class EndpointFile():
             if self.skiprows < 1:
                 if 'MODPATH_ENDPOINT_FILE 6' in line.upper():
                     self.version = 6
+                elif 'MODPATH_ENDPOINT_FILE         7' in line.upper():
+                    self.version = 7
                 elif 'MODPATH 5.0' in line.upper():
                     self.version = 5
                 elif 'MODPATH Version 3.00' in line.upper():
@@ -562,7 +564,7 @@ class EndpointFile():
                         self.fname)
                     raise Exception(errmsg)
             self.skiprows += 1
-            if self.version == 6:
+            if self.version == 6 or self.version == 7:
                 if idx == 1:
                     t = line.strip()
                     self.direction = 1
@@ -574,6 +576,7 @@ class EndpointFile():
             else:
                 break
         self.file.seek(0)
+
         if self.verbose:
             print('MODPATH version {} endpoint file'.format(self.version))
 
