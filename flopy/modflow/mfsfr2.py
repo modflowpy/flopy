@@ -560,7 +560,7 @@ class ModflowSfr2(Package):
                              ('reachID', np.int),
                              ('outreach', np.int)])
         else:
-            return np.dtype([('node', np.int)
+            return np.dtype([('node', np.int),
                              ('iseg', np.int),
                              ('ireach', np.int),
                              ('rchlen', np.float32),
@@ -2036,8 +2036,8 @@ class check:
                 xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
                 del zc
             except AttributeError:
-                xcentergrid = self.mg.xcell_centers
-                ycentergrid = self.mg.ycell_centers
+                xcentergrid = self.mg.xcellcenters
+                ycentergrid = self.mg.ycellcenters
 
             x0 = xcentergrid[rd.i, rd.j]
             y0 = ycentergrid[rd.i, rd.j]
@@ -2063,8 +2063,8 @@ class check:
             delr = self.mg.delr
             delc = self.mg.delc
 
-            dx = (delr * self.sr.length_multiplier)[rd.j]
-            dy = (delc * self.sr.length_multiplier)[rd.i]
+            dx = delr[rd.j]  # (delr * self.sr.length_multiplier)[rd.j]
+            dy = delc[rd.i]  # (delc * self.sr.length_multiplier)[rd.i]
             hyp = np.sqrt(dx ** 2 + dy ** 2)
 
             # breaks are when the connection distance is greater than

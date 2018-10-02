@@ -71,11 +71,15 @@ class MapView(object):
                           DeprecationWarning)
         if xul is not None and yul is not None:
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          DeprecationWarning)
+                          PendingDeprecationWarning)
+            self.mg._angrot = rotation
             self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
                                    yoff=self.mg._yul_to_yll(yul),
                                    angrot=rotation)
         elif xll is not None and xll is not None:
+            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+
+        elif rotation is not None:
             self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
 
@@ -818,11 +822,11 @@ class StructuredMapView(MapView):
         if 'shrink' in kwargs:
             shrink = float(kwargs.pop('shrink'))
 
-        # rotate data
-        x0r, y0r = geometry.rotate(tep[xp], tep[yp], 0., self.mg.extent[2],
-                                   self.mg.angrot_radians)
-        x0r += self.mg.xoffset
-        y0r += self.mg.yoffset - self.mg.extent[2]
+        # transform data!
+        x0r, y0r = geometry.transform(tep[xp], tep[yp],
+                                      self.mg.xoffset,
+                                      self.mg.yoffset,
+                                      self.mg.angrot_radians)
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 

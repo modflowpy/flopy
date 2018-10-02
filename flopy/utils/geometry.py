@@ -314,12 +314,49 @@ def rotate(x, y, xoff, yoff, angrot_radians):
     arbitrary origin and then return the rotated coordinates.
 
     """
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
+
     xrot = xoff + np.cos(angrot_radians) * \
            (x - xoff) - np.sin(angrot_radians) * \
            (y - yoff)
     yrot = yoff + np.sin(angrot_radians) * \
            (x - xoff) + np.cos(angrot_radians) * \
            (y - yoff)
+
+    return xrot, yrot
+
+
+def transform(x, y, xoff, yoff, angrot_radians,
+              length_multiplier=1., inverse=False):
+    """
+    Given x and y array-like values calculate the translation about an
+    arbitrary origin and then return the rotated coordinates.
+
+    """
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
+
+    if not np.isscalar(x):
+        x, y = x.copy(), y.copy()
+
+    if not inverse:
+        x *= length_multiplier
+        y *= length_multiplier
+        x += xoff
+        y += yoff
+        xrot, yrot = rotate(x, y, xoff, yoff, angrot_radians)
+
+    else:
+        xrot, yrot = rotate(x, y, xoff, yoff, -angrot_radians)
+        xrot -= xoff
+        yrot -= yoff
+        xrot /= length_multiplier
+        yrot /= length_multiplier
 
     return xrot, yrot
 

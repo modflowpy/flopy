@@ -491,13 +491,11 @@ class PlotMapView(object):
                     idx = (p['time'] <= time)
                 tp = p[idx]
 
-            # rotate data
-            # todo: this is propably not applicable to vertex grid models! Add a check if needed!
-            # todo: there should not be a sr.yedge array either.... however this refers to yorigin, so maybe if vertex/ unstructured; set to zero!
-            x0r, y0r = geometry.rotate(tp['x'], tp['y'],  0., self.mg.extent[2],
-                                       self.mg.angrot_radians)
-            x0r += self.mg.xoffset
-            y0r += self.mg.yoffset - self.mg.extent[2]
+            # transform data!
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.__cls.mg.xoffset,
+                                          self.__cls.mg.yoffset,
+                                          self.__cls.mg.angrot_radians)
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer

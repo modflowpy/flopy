@@ -284,6 +284,10 @@ class Grid(object):
 
     def set_coord_info(self, xoff=0.0, yoff=0.0, angrot=0.0, epsg=None,
                        proj4=None):
+        if xoff is None:
+            xoff = self._xoff
+        if yoff is None:
+            yoff = self._yoff
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
@@ -408,11 +412,11 @@ class Grid(object):
 
     # Internal
     def _xul_to_xll(self, xul):
-        yext = self.extent[-1]
+        yext = self.xyedges[1][0]
         return xul + (np.sin(self.angrot_radians) * yext)
 
     def _yul_to_yll(self, yul):
-        yext = self.extent[-1]
+        yext = self.xyedges[1][0]
         return yul - (np.cos(self.angrot_radians) * yext)
 
     def _set_sr_coord_info(self, sr):

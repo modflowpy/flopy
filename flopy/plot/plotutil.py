@@ -1880,9 +1880,12 @@ class UnstructuredPlotUtilities(object):
 
         # problems because we are working with rotated data. Need un-rotated data!
         if model_grid.grid_type == "layered_vertex":
-            xcellcenters, ycellcenters = geometry.rotate(np.array(model_grid.xcellcenters),
-                                                         np.array(model_grid.ycellcenters),
-                                                         0, 0, -model_grid.angrot_radians)
+            xcellcenters, ycellcenters = geometry.transform(model_grid.xcellcenters,
+                                                            model_grid.ycellcenters,
+                                                            model_grid.xoffset,
+                                                            model_grid.yoffset,
+                                                            model_grid.angrot_radians,
+                                                            inverse=True)
             xcenter = np.tile(xcellcenters, nlay)
             ycenter = np.tile(ycellcenters, nlay)
             zcenter = np.ravel(model_grid.zcellcenters)
