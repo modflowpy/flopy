@@ -56,8 +56,8 @@ def run_notebook(dpth, fn):
         return
     
     # determine jupyter kernel
-    kernel = get_jupyter_kernel()
-    print('available jupyter kernel {}'.format(kernel))
+    # kernel = get_jupyter_kernel()
+    # print('available jupyter kernel {}'.format(kernel))
     
     # run autotest on each notebook
     pth = os.path.join(dpth, fn)
