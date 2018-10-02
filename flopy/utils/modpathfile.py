@@ -352,7 +352,8 @@ class PathlineFile():
         return plist
 
     def get_destination_pathline_data(self, dest_cells):
-        """Get pathline data for set of destination cells.
+        """
+        Get pathline data for set of destination cells.
 
         Parameters
         ----------
@@ -788,7 +789,8 @@ class EndpointFile():
         return ra
 
     def get_destination_endpoint_data(self, dest_cells):
-        """Get endpoint data for set of destination cells.
+        """
+        Get endpoint data for set of destination cells.
 
         Parameters
         ----------

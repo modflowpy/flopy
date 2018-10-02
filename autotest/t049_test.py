@@ -253,7 +253,7 @@ def test_mp5_load():
     epts = endobj.get_alldata()
 
     # determine the number of particles in the pathline file
-    nptl = pthobj.nid
+    nptl = pthobj.nid.shape[0]
     assert nptl == 64, 'number of MODPATH 5 particles does not equal 64'
 
     hsv = plt.get_cmap('hsv')

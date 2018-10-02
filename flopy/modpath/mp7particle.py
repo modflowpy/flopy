@@ -215,13 +215,15 @@ class LRCParticles(Modpath7Particle):
                     # Use numpy's floating-point formatter (Dragon4)
                         fmts.append('%23s')
                     else:
-                        fmts.append('%23.16E')
+                        #fmts.append('%23.16E')
+                        fmts.append('%23s')
                 else:
                     if numpy114:
                     # Use numpy's floating-point formatter (Dragon4)
                         fmts.append('%15s')
                     else:
-                        fmts.append('%15.7E')
+                        #fmts.append('%15.7E')
+                        fmts.append('%15s')
             elif vtype == 'o':
                 fmts.append('%9s')
             elif vtype == 's':
