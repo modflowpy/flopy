@@ -346,10 +346,11 @@ class PathlineFile():
         >>> p = pthobj.get_alldata()
 
         """
-        plist = []
-        for partid in self.nid:
-            plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
-        return plist
+        # plist = []
+        # for partid in self.nid:
+        #     plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
+        return [self.get_data(partid=partid, totim=totim, ge=ge)
+                for partid in self.nid]
 
     def get_destination_pathline_data(self, dest_cells):
         """
@@ -366,10 +367,26 @@ class PathlineFile():
             Slice of pathline data array (e.g. PathlineFile._data)
             containing only pathlines with final k,i,j in dest_cells.
         """
+
+        # create local copy of _data
         ra = np.array(self._data)
+
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
-        raslice = ra[['k', 'i', 'j']]
+        if self.version < 7:
+            try:
+                raslice = ra[['k', 'i', 'j']]
+            except:
+                msg = "could not extract 'k', 'i', and 'j' keys " +  \
+                      "from pathline data"
+                raise KeyError(msg)
+        else:
+            try:
+                raslice = ra[['node']]
+            except:
+                msg = "could not extract 'node' key from pathline data"
+                raise KeyError(msg)
+
         dest_cells = np.array(dest_cells, dtype=raslice.dtype)
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
@@ -507,7 +524,10 @@ class EndpointFile():
 
 
     """
-    kijnames = ['k0', 'i0', 'j0', 'k', 'i', 'j', 'particleid', 'particlegroup']
+    kijnames = ['k0', 'i0', 'j0', 'node0', 'k', 'i', 'j', 'node',
+                'particleid', 'particlegroup', 'particleidloc',
+                'zone0', 'zone']
+
 
     def __init__(self, filename, verbose=False):
         """
@@ -520,10 +540,8 @@ class EndpointFile():
         self.dtype = self._get_dtypes()
         self._data = loadtxt(self.file, dtype=self.dtype,
                              skiprows=self.skiprows)
+        # add particleid if required
         self._add_particleid()
-
-        # set number of particle ids
-        self.nid = len(np.unique(self._data['particleid']))
 
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
@@ -532,6 +550,9 @@ class EndpointFile():
                 self._data[n] -= 1
             except:
                 pass
+
+        # set number of particle ids
+        self.nid = np.unique(self._data['particleid']).shape[0]
 
         # close the input file
         self.file.close()
@@ -587,43 +608,68 @@ class EndpointFile():
         if self.version == 3 or self.version == 5:
             dtype = self._get_mp35_dtype()
         elif self.version == 6:
-            dtype = np.dtype([("particleid", np.int32),
-                              ("particlegroup", np.int32),
-                              ('status', np.int32),
-                              ('initialtime', np.float32),
-                              ('finaltime', np.float32),
-                              ('initialgrid', np.int32),
-                              ('k0', np.int32), ('i0', np.int32),
-                              ('j0', np.int32), ('initialcellface', np.int32),
-                              ('initialzone', np.int32), ('xloc0', np.float32),
-                              ('yloc0', np.float32), ('zloc0', np.float32),
-                              ('x0', np.float32), ('y0', np.float32),
-                              ('z0', np.float32),
-                              ('finalgrid', np.int32), ('k', np.int32),
-                              ('i', np.int32), ('j', np.int32),
-                              ('finalcellface', np.int32),
-                              ('finalzone', np.int32), ('xloc', np.float32),
-                              ('yloc', np.float32), ('zloc', np.float32),
-                              ('x', np.float32), ('y', np.float32),
-                              ('z', np.float32), ('label', '|S40')])
+            dtype = self._get_mp6_dtype()
+        elif self.version == 7:
+            dtype = self._get_mp7_dtype()
         return dtype
 
     def _get_mp35_dtype(self, add_id=False):
-        dtype = [('finalzone', np.int32), ('j', np.int32),
+        dtype = [('zone', np.int32), ('j', np.int32),
                  ('i', np.int32), ('k', np.int32),
                  ('x', np.float32), ('y', np.float32),
                  ('z', np.float32), ('zloc', np.float32),
-                 ('finaltime', np.float32),
+                 ('time', np.float32),
                  ('x0', np.float32), ('y0', np.float32),
                  ('zloc0', np.float32),
                  ('j0', np.int32), ('i0', np.int32),
                  ('k0', np.int32),
-                 ('initialzone', np.int32),
+                 ('zone0', np.int32),
                  ("cumulativetimestep", np.int32),
                  ("ipcode", np.int32),
-                 ('initialtime', np.float32)]
+                 ('time0', np.float32)]
         if add_id:
             dtype.insert(0, ("particleid", np.int32))
+        return np.dtype(dtype)
+
+    def _get_mp6_dtype(self):
+        dtype = [('particleid', np.int32),
+                 ('particlegroup', np.int32),
+                 ('status', np.int32),
+                 ('time0', np.float32),
+                 ('time', np.float32),
+                 ('initialgrid', np.int32),
+                 ('k0', np.int32), ('i0', np.int32),
+                 ('j0', np.int32), ('cellface0', np.int32),
+                 ('zone0', np.int32), ('xloc0', np.float32),
+                 ('yloc0', np.float32), ('zloc0', np.float32),
+                 ('x0', np.float32), ('y0', np.float32),
+                 ('z0', np.float32),
+                 ('finalgrid', np.int32), ('k', np.int32),
+                 ('i', np.int32), ('j', np.int32),
+                 ('cellface', np.int32),
+                 ('zone', np.int32), ('xloc', np.float32),
+                 ('yloc', np.float32), ('zloc', np.float32),
+                 ('x', np.float32), ('y', np.float32),
+                 ('z', np.float32), ('label', '|S40')]
+        return np.dtype(dtype)
+
+    def _get_mp7_dtype(self):
+        dtype = [('particleid', np.int32),
+                 ('particlegroup', np.int32),
+                 ('particleidloc', np.int32),
+                 ('status', np.int32),
+                 ('time0', np.float32),
+                 ('time', np.float32),
+                 ('node0', np.int32), ('k0', np.int32),
+                 ('xloc0', np.float32), ('yloc0', np.float32),
+                 ('zloc0', np.float32), ('x0', np.float32),
+                 ('y0', np.float32), ('z0', np.float32),
+                 ('zone0', np.int32), ('initialcellface', np.int32),
+                 ('node', np.int32), ('k', np.int32),
+                 ('xloc', np.float32), ('yloc', np.float32),
+                 ('zloc', np.float32), ('x', np.float32),
+                 ('y', np.float32), ('z', np.float32),
+                 ('zone', np.int32), ('cellface', np.int32)]
         return np.dtype(dtype)
 
     def _add_particleid(self):
@@ -692,7 +738,7 @@ class EndpointFile():
             Maximum endpoint particle id.
 
         """
-        return self.maxid
+        return np.unique(self._data['particleid']).max()
 
     def get_maxtime(self):
         """
@@ -704,7 +750,7 @@ class EndpointFile():
             Maximum endpoint time.
 
         """
-        return self.data['finaltime'].max()
+        return self._data['time'].max()
 
     def get_maxtraveltime(self):
         """
@@ -716,7 +762,7 @@ class EndpointFile():
             Maximum endpoint travel time.
 
         """
-        return (self.data['finaltime'] - self.data['initialtime']).max()
+        return (self._data['time'] - self._data['time0']).max()
 
     def get_data(self, partid=0):
         """
@@ -780,16 +826,7 @@ class EndpointFile():
         >>> e = endobj.get_alldata()
 
         """
-        ra = self._data.view(np.recarray).copy()
-        # if final:
-        #     ra = np.rec.fromarrays((self._data['x'], self._data['y'], self._data['z'],
-        #                             self._data['finaltime'], self._data['k'],
-        #                             self._data['particleid']), dtype=self.outdtype)
-        # else:
-        #     ra = np.rec.fromarrays((self._data['x0'], self._data['y0'], self._data['z0'],
-        #                             self._data['initialtime'], self._data['k0'],
-        #                             self._data['particleid']), dtype=self.outdtype)
-        return ra
+        return self._data.view(np.recarray).copy()
 
     def get_destination_endpoint_data(self, dest_cells):
         """
@@ -806,13 +843,29 @@ class EndpointFile():
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
             containing only data with final k,i,j in dest_cells.
         """
+
+        # create local copy of _data
         ra = self.get_alldata()
+
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
-        raslice = ra_slice(ra, ['k', 'i', 'j'])
-        dest_cells = np.array(dest_cells, dtype=[('k', np.int32),
-                                                 ('i', np.int32),
-                                                 ('j', np.int32)])
+        if self.version < 7:
+            try:
+                raslice = ra_slice(ra, ['k', 'i', 'j'])
+            except:
+                msg = "could not extract 'k', 'i', and 'j' keys " +  \
+                      "from endpoint data"
+                raise KeyError(msg)
+            dtype = [('k', np.int32), ('i', np.int32), ('j', np.int32)]
+        else:
+            try:
+                raslice = ra_slice(ra, ['node'])
+            except:
+                msg = "could not extract 'node' key from endpoint data"
+                raise KeyError(msg)
+            dtype = [('node', np.int32)]
+        dest_cells = np.array(dest_cells, dtype=dtype)
+
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
         return epdest
@@ -821,7 +874,8 @@ class EndpointFile():
                         shpname='endpoings.shp',
                         direction='ending', sr=None, epsg=None,
                         **kwargs):
-        """Write particle starting / ending locations to shapefile.
+        """
+        Write particle starting / ending locations to shapefile.
 
         endpoint_data : np.recarry
             Record array of same form as that returned by EndpointFile.get_alldata.

@@ -667,6 +667,28 @@ class ModelMap(object):
         else:
             kon = self.layer
 
+        if 'marker' in kwargs:
+            marker = kwargs.pop('marker')
+        else:
+            marker = None
+
+        if 'markersize' in kwargs:
+            markersize = kwargs.pop('markersize')
+        elif 'ms' in kwargs:
+            markersize = kwargs.pop('ms')
+        else:
+            markersize = None
+
+        if 'markercolor' in kwargs:
+            markercolor = kwargs.pop('markercolor')
+        else:
+            markercolor = None
+
+        if 'markerevery' in kwargs:
+            markerevery = kwargs.pop('markerevery')
+        else:
+            markerevery = 1
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -676,6 +698,7 @@ class ModelMap(object):
             kwargs['colors'] = '0.5'
 
         linecol = []
+        markers = []
         for p in pl:
             if travel_time is None:
                 tp = p.copy()
@@ -727,11 +750,19 @@ class ModelMap(object):
             # append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
+                if marker is not None:
+                    for xy in arr[::markerevery]:
+                        if not xy.mask:
+                            markers.append(xy)
         # create line collection
         lc = None
         if len(linecol) > 0:
             lc = LineCollection(linecol, **kwargs)
             ax.add_collection(lc)
+            if marker is not None:
+                markers = np.array(markers)
+                ax.plot(markers[:, 0], markers[:, 1], lw=0, marker=marker,
+                        color=markercolor, ms=markersize)
         return lc
 
     def plot_endpoint(self, ep, direction='ending',
@@ -824,7 +855,7 @@ class ModelMap(object):
 
         # scatter kwargs that users may redefine
         if 'c' not in kwargs:
-            c = tep['finaltime'] - tep['initialtime']
+            c = tep['time'] - tep['time0']
         else:
             c = np.empty((tep.shape[0]), dtype="S30")
             c.fill(kwargs.pop('c'))

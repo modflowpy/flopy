@@ -1,10 +1,12 @@
 [
     {
         "status": "Release Candidate", 
-        "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip", 
+        "languages": [
+            "python"
+        ], 
         "repositoryURL": "https://code.usgs.gov/usgs/modflow/flopy.git", 
         "disclaimerURL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/DISCLAIMER.md", 
-        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models.", 
+        "name": "flopy", 
         "tags": [
             "MODFLOW", 
             "MODFLOW 6", 
@@ -20,16 +22,14 @@
             "transport model", 
             "python"
         ], 
-        "vcs": "git", 
-        "languages": [
-            "python"
-        ], 
         "contact": {
             "name": "Joseph D. Hughes", 
             "email": "jdhughes@usgs.gov"
         }, 
+        "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip", 
+        "vcs": "git", 
         "laborHours": -1, 
-        "version": "3.2.9.217", 
+        "version": "3.2.9.218", 
         "date": {
             "metadataLastUpdated": "2018-10-02"
         }, 
@@ -44,6 +44,6 @@
             "usageType": "openSource"
         }, 
         "homepageURL": "https://code.usgs.gov/usgs/modflow/flopy/", 
-        "name": "flopy"
+        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models."
     }
 ]

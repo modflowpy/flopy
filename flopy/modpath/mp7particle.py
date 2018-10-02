@@ -2,11 +2,11 @@ import os
 import numpy as np
 from ..utils.recarray_utils import create_empty_recarray
 
-try:
-    from numpy.lib import NumpyVersion
-    numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
-except ImportError:
-    numpy114 = False
+# try:
+#     from numpy.lib import NumpyVersion
+#     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
+# except ImportError:
+#     numpy114 = False
 
 
 class Modpath7Particle(object):
@@ -191,7 +191,10 @@ class LRCParticles(Modpath7Particle):
             if idx in lnames:
                 d[idx] += 1
         # save the particle data
-        np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
+        #np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
+        fmt = self.fmt_string + '\n'
+        for v in d:
+            f.write(fmt.format(*v))
 
         if self.filename is not None:
             f.close()
@@ -208,22 +211,30 @@ class LRCParticles(Modpath7Particle):
         for field in self.particledata.dtype.descr:
             vtype = field[1][1].lower()
             if vtype == 'i' or vtype == 'b':
-                fmts.append('%9i')
+                #fmts.append('%9i')
+                fmts.append('{:9d}')
             elif vtype == 'f':
                 if field[1][2] == 8:
-                    if numpy114:
-                        # Use numpy's floating-point formatter (Dragon4)
-                        fmts.append('%23s')
-                    else:
-                        fmts.append('%.16E')
+                    fmts.append('{:23.16g}')
+                    # if numpy114:
+                    #     # Use numpy's floating-point formatter (Dragon4)
+                    #     #fmts.append('%23s')
+                    #     fmts.append('{:23s}')
+                    # else:
+                    #     #fmts.append('%.16E')
+                    #     fmts.append('{:23.16g}')
                 else:
-                    if numpy114:
-                        # Use numpy's floating-point formatter (Dragon4)
-                        fmts.append('%15s')
-                    else:
-                        fmts.append('%.7e')
+                    fmts.append('{:15.7g}')
+                    # if numpy114:
+                    #     # Use numpy's floating-point formatter (Dragon4)
+                    #     #fmts.append('%15s')
+                    #     fmts.append('{:15g}')
+                    # else:
+                    #     #fmts.append('%.7e')
+                    #     fmts.append('{:15.7g}')
             elif vtype == 'o':
-                fmts.append('%9s')
+                #fmts.append('%9s')
+                fmts.append('{:9s}')
             elif vtype == 's':
                 msg = "LRCParticles.fmt_string error: 'str' " + \
                       "type found in dtype. This gives unpredictable " + \

@@ -261,14 +261,18 @@ def test_mp5_load():
 
     # plot the pathlines one pathline at a time
     mm = flopy.plot.ModelMap(model=m)
-    for n in range(nptl):
+    for n in pthobj.nid:
         p = pthobj.get_data(partid=n)
         e = endobj.get_data(partid=n)
         try:
             mm.plot_pathline(p, colors=colors[n], layer='all')
-            mm.plot_endpoint(e)
         except:
             assert False, 'could not plot pathline {} '.format(n+1) + \
+                          'with layer="all"'
+        try:
+            mm.plot_endpoint(e)
+        except:
+            assert False, 'could not plot endpoint {} '.format(n+1) + \
                           'with layer="all"'
 
     # plot the grid and ibound array
