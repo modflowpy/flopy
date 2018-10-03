@@ -83,8 +83,8 @@ script:
     - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - echo pandas version; python -c "import pandas as pd; print(pd.__version__)"
-    - echo jupyter --version
-    - echo jupyter --runtime-dir
+    - echo jupyter version; jupyter --version
+    - echo jupyter runtime directory; jupyter --runtime-dir
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
     - nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
     - nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy

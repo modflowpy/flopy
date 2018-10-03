@@ -403,3 +403,12 @@ class LRCParticles(Modpath7Particle):
             part['id'] = particleids
         # return particle instance
         return part
+
+class LRCTemplate(Modpath7Particle):
+    def __init__(self, particlegroupname='PG1', filename=None,
+                 releasedata=[0.0],
+                 particledata=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
+
+        # instantiate base class
+        Modpath7Particle.__init__(self, particlegroupname, filename,
+                                  releasedata)
