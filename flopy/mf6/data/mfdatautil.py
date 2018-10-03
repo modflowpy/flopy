@@ -4,6 +4,12 @@ from copy import deepcopy
 from ..mfbase import MFDataException
 
 
+def get_first_val(arr):
+    while isinstance(arr, list) or isinstance(arr, np.ndarray):
+        arr = arr[0]
+    return arr
+
+
 def clean_name(name):
     # remove bad characters
     clean_string = name.replace(' ', '_')
