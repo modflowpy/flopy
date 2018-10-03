@@ -7,11 +7,11 @@ Additional information for this MODFLOW/MODPATH package can be found at the
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?dis.htm>`_.
 
 """
+from enum import Enum
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from enum import Enum
-
+from .mp7particle import Particles
 class simType(Enum):
     """
     Enumeration of different simulation types
@@ -368,7 +368,9 @@ class Modpath7Sim(Package):
                                       locat=self.unit_number[0])
         # particle group data
         if particlegroups is None:
-            particlegroups = [LayerRowColumnParticles()]
+            particlegroups = [Particles()]
+        elif isinstance(particlegroups, Particles):
+            particlegroups = [particlegroups]
         self.particlegroups = particlegroups
 
 

@@ -59,10 +59,11 @@ class Modpath7(BaseModel):
         self.mpbas_file = '{}.mpbas'.format(modelname)
 
         self.flowmodel = flowmodel
-        if isinstance(self.flowmodel, Modflow):
-            self.flow_version = self.flowmodel.version
-        elif isinstance(self.flowmodel, ModflowGwf):
-            self.flow_version = self.flowmodel.version
+        self.flow_version = self.flowmodel.version
+        # if isinstance(self.flowmodel, Modflow):
+        #     self.flow_version = self.flowmodel.version
+        # elif isinstance(self.flowmodel, ModflowGwf):
+        #     self.flow_version = self.flowmodel.version
 
         if self.flow_version == 'mf6':
             shape = None

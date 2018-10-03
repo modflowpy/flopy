@@ -38,7 +38,7 @@ zone3[wel_loc[1:]] = 2
 zones = [1, 1, zone3]
 
 # create particles
-part0 = flopy.modpath.LRCParticles.get_empty(ncells=21, particleid=True)
+part0 = flopy.modpath.Particles.get_empty(ncells=21, particleid=True)
 part0['k'] = 0
 part0['j'] = 2
 part0['localx'] = 0.5
@@ -49,14 +49,14 @@ part0['drape'] = 0
 for idx in range(part0.shape[0]):
     part0['id'][idx] = idx
     part0['i'][idx] = idx
-pg0 = flopy.modpath.LRCParticles(particlegroupname='PG1', particledata=part0,
-                                 filename='ex01a.sloc')
+pg0 = flopy.modpath.Particles(particlegroupname='PG1', particledata=part0,
+                              filename='ex01a.sloc')
 
 v = [(0, 0, 0), (0, 20, 0)]
 pids = [1, 2]  # [1000, 1001]
-part1 = flopy.modpath.LRCParticles.create_lrcparticles(v=v, drape=1,
-                                                       particleids=pids)
-pg1 = flopy.modpath.LRCParticles(particlegroupname='PG2', particledata=part1,
+part1 = flopy.modpath.Particles.create_particles(v=v, drape=1,
+                                                 particleids=pids)
+pg1 = flopy.modpath.Particles(particlegroupname='PG2', particledata=part1,
                                  filename='ex01a.pg2.sloc')
 
 particlegroups = [pg0, pg1]

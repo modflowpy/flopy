@@ -15,6 +15,10 @@ class Modpath7Particle(object):
         if filename == '':
             filename = None
         self.filename = filename
+        if self.filename is None:
+            self.external = False
+        else:
+            self.external = True
 
         if releasedata is None:
             msg = 'releasedata must be provided to instantiate ' + \
@@ -55,6 +59,7 @@ class Modpath7Particle(object):
                           '({}).'.format(releasetimecount)
                     raise ValueError(msg)
                 releasetimes = np.array(releasedata[1], dtype=np.float32)
+
         # set release data
         self.releaseoption = releaseoption
         self.releasetimecount = releasetimecount
@@ -62,10 +67,51 @@ class Modpath7Particle(object):
         self.releasetimes = releasetimes
 
     def write(self, fp=None, ws='.'):
+
+        # validate that a valid file object was passed
+        if not hasattr(fp, 'write'):
+            msg = 'Cannot write data for particle group ' + \
+                  '{} '.format(self.particlegroupname) + \
+                  'without passing a valid file object ({}) '.format(fp) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # item 26
+        fp.write('{}\n'.format(self.particlegroupname))
+
+        # item 27
+        fp.write('{}\n'.format(self.releaseoption))
+
+        if self.releaseoption == 1:
+            # item 28
+            fp.write('{}\n'.format(self.releasetimes[0]))
+        elif self.releaseoption == 2:
+            # item 29
+            fp.write('{} {} {}\n'.format(self.releasetimecount,
+                                         self.releasetimes[0],
+                                         self.releaseinterval))
+        elif self.releaseoption == 3:
+            # item 30
+            fp.write('{}\n'.format(self.releasetimecount))
+            # item 31
+            tp = self.releasetimes
+            v = Util2d(self.parent, (tp.shape[0],),
+                       np.float32, tp,
+                       name='temp',
+                       locat=self.unit_number[0])
+            fp.write(v.string)
+
+        # item 32
+        if self.external:
+            line = 'EXTERNAL {}\n'.format(self.filename)
+        else:
+            line = 'INTERNAL\n'
+        fp.write(line)
+
         return
 
 
-class LRCParticles(Modpath7Particle):
+class Particles(Modpath7Particle):
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=[0.0],
                  particledata=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
@@ -73,7 +119,7 @@ class LRCParticles(Modpath7Particle):
         # instantiate base class
         Modpath7Particle.__init__(self, particlegroupname, filename,
                                   releasedata)
-        self.InputStyle = 1
+        self.inputstyle = 1
         # convert list, tuples, and numpy array to
         v = None
         dtypein = None
@@ -87,7 +133,7 @@ class LRCParticles(Modpath7Particle):
         else:
             msg = 'particledata must be a list, tuple, ' + \
                   'numpy ndarray, or an instance of ' + \
-                  'LRCParticles'
+                  'Particles'
             raise ValueError(msg)
         if v is not None:
             if len(v) == 6:
@@ -131,50 +177,19 @@ class LRCParticles(Modpath7Particle):
         return
 
     def write(self, fp=None, ws='.'):
-        # validate that a valid file object was passed
-        if not hasattr(fp, 'write'):
-            msg = 'Cannot write data for particle group ' + \
-                  '{} '.format(self.particlegroupname) + \
-                  'without passing a valid file object ({}) '.format(fp) + \
-                  'open for writing'
-            raise ValueError(msg)
 
-        # item 26
-        fp.write('{}\n'.format(self.particlegroupname))
+        # call base class write method to write common data
+        Modpath7Particle.write(self, fp, ws)
 
-        # item 27
-        fp.write('{}\n'.format(self.releaseoption))
-
-        if self.releaseoption == 1:
-            # item 28
-            fp.write('{}\n'.format(self.releasetimes[0]))
-        elif self.releaseoption == 2:
-            # item 29
-            fp.write('{} {} {}\n'.format(self.releasetimecount,
-                                         self.releasetimes[0],
-                                         self.releaseinterval))
-        elif self.releaseoption == 3:
-            # item 30
-            fp.write('{}\n'.format(self.releasetimecount))
-            # item 31
-            tp = self.releasetimes
-            v = Util2d(self.parent, (tp.shape[0],),
-                       np.float32, tp,
-                       name='temp',
-                       locat=self.unit_number[0])
-            fp.write(v.string)
-
-        # item 32
-        if self.filename is not None:
-            fp.write('EXTERNAL {}\n'.format(self.filename))
+        # open external file if required
+        if self.external:
             fpth = os.path.join(ws, self.filename)
             f = open(fpth, 'w')
         else:
-            fp.write('INTERNAL\n')
             f = fp
 
         # particle data item 1
-        f.write('{}\n'.format(self.InputStyle))
+        f.write('{}\n'.format(self.inputstyle))
 
         # particle data item 2
         f.write('{}\n'.format(self.locationstyle))
@@ -190,13 +205,15 @@ class LRCParticles(Modpath7Particle):
         for idx in ['k', 'i', 'j', 'node', 'id']:
             if idx in lnames:
                 d[idx] += 1
+
         # save the particle data
         #np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
         fmt = self.fmt_string + '\n'
         for v in d:
             f.write(fmt.format(*v))
 
-        if self.filename is not None:
+        # close the external file
+        if self.external:
             f.close()
 
         return
@@ -211,32 +228,16 @@ class LRCParticles(Modpath7Particle):
         for field in self.particledata.dtype.descr:
             vtype = field[1][1].lower()
             if vtype == 'i' or vtype == 'b':
-                #fmts.append('%9i')
                 fmts.append('{:9d}')
             elif vtype == 'f':
                 if field[1][2] == 8:
                     fmts.append('{:23.16g}')
-                    # if numpy114:
-                    #     # Use numpy's floating-point formatter (Dragon4)
-                    #     #fmts.append('%23s')
-                    #     fmts.append('{:23s}')
-                    # else:
-                    #     #fmts.append('%.16E')
-                    #     fmts.append('{:23.16g}')
                 else:
                     fmts.append('{:15.7g}')
-                    # if numpy114:
-                    #     # Use numpy's floating-point formatter (Dragon4)
-                    #     #fmts.append('%15s')
-                    #     fmts.append('{:15g}')
-                    # else:
-                    #     #fmts.append('%.7e')
-                    #     fmts.append('{:15.7g}')
             elif vtype == 'o':
-                #fmts.append('%9s')
                 fmts.append('{:9s}')
             elif vtype == 's':
-                msg = "LRCParticles.fmt_string error: 'str' " + \
+                msg = "Particles.fmt_string error: 'str' " + \
                       "type found in dtype. This gives unpredictable " + \
                       "results when recarray to file - change to 'object' type"
                 raise TypeError(msg)
@@ -267,15 +268,15 @@ class LRCParticles(Modpath7Particle):
     @staticmethod
     def get_empty(ncells=0, structured=True, particleid=False):
         # get an empty recarray that corresponds to dtype
-        dtype = LRCParticles.get_default_dtype(
+        dtype = Particles.get_default_dtype(
             structured=structured,
             particleid=particleid)
         return create_empty_recarray(ncells, dtype, default_value=0)
 
     @staticmethod
-    def create_lrcparticles(v, structured=True, particleids=None,
-                            localx=None, localy=None, localz=None,
-                            timeoffset=None, drape=None):
+    def create_particles(v, structured=True, particleids=None,
+                         localx=None, localy=None, localz=None,
+                         timeoffset=None, drape=None):
         dtype = []
         if structured:
             dtype.append(('k', np.int32))
@@ -304,7 +305,7 @@ class LRCParticles(Modpath7Particle):
             if dtypein != v.dtype:
                 v = np.array(v, dtype=dtype)
         else:
-            msg = 'create_lrcparticles v must be a list or ' + \
+            msg = 'create_Particles v must be a list or ' + \
                   'tuple with lists or tuples'
             raise ValueError(msg)
         # localx
@@ -384,7 +385,7 @@ class LRCParticles(Modpath7Particle):
                     raise ValueError(msg)
 
         # create empty particle
-        part = LRCParticles.get_empty(ncells=v.shape[0],
+        part = Particles.get_empty(ncells=v.shape[0],
                                       structured=structured,
                                       particleid=particleid)
         # fill part
@@ -404,11 +405,162 @@ class LRCParticles(Modpath7Particle):
         # return particle instance
         return part
 
-class LRCTemplate(Modpath7Particle):
-    def __init__(self, particlegroupname='PG1', filename=None,
-                 releasedata=[0.0],
-                 particledata=[[0, 0, 0, 0.5, 0.5, 0.5, 0., 0]]):
+class _ParticleTemplate(Modpath7Particle):
+    def __init__(self, particlegroupname, filename,
+                 releasedata):
 
         # instantiate base class
         Modpath7Particle.__init__(self, particlegroupname, filename,
                                   releasedata)
+    def write(self, fp=None, ws='.'):
+        return
+
+class FaceNode(Modpath7Particle):
+    def __init__(self, particlegroupname='PG1', filename=None,
+                 releasedata=[0.0],
+                 particledata=None):
+
+        # instantiate base class
+        _ParticleTemplate.__init__(self, particlegroupname, filename,
+                                   releasedata)
+        # validate particledata
+        if particledata is None:
+            msg = 'FaceNode: valid ParticleNodeData item must be passed'
+            raise ValueError(msg)
+
+        if isinstance(particledata, ParticleNodeData):
+            particledata = [particledata]
+
+        totalcellcount = 0
+        for idx, td in enumerate(particledata):
+            if not isinstance(td, ParticleNodeData):
+                msg = 'FaceNode: valid ParticleNodeData item must be passed' + \
+                      'for particledata item {}'.format(idx)
+                raise ValueError(msg)
+            totalcellcount += td.templatecellcount
+
+        self.inputstyle = 3
+        self.particletemplatecount = len(particledata)
+        self.totalcellcount = totalcellcount
+        self.particledata = particledata
+
+    def write(self, fp=None, ws='.'):
+        # validate that a valid file object was passed
+        if not hasattr(fp, 'write'):
+            msg = 'FaceNode: cannot write data for template ' + \
+                  'without passing a valid file object ({}) '.format(f) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # call base class write method to write common data
+        Modpath7Particle.write(self, fp, ws)
+
+        # open external file if required
+        if self.external:
+            fpth = os.path.join(ws, self.filename)
+            f = open(fpth, 'w')
+        else:
+            f = fp
+
+        # item 1
+        f.write('{}\n'.format(self.inputstyle))
+
+        # item 2
+        f.write('{} {}\n'.format(self.particletemplatecount,
+                                 self.totalcellcount))
+        # items 3, 4, and 6
+        for td in self.particledata:
+            td.write(f)
+
+        # close the external file
+        if self.external:
+            f.close()
+
+        return
+
+
+class ParticleNodeData(object):
+    def __init__(self, drape=0,
+                 verticaldivisions1=3, horizontaldivisions1=3,
+                 verticaldivisions2=3, horizontaldivisions2=3,
+                 verticaldivisions3=3, horizontaldivisions3=3,
+                 verticaldivisions4=3, horizontaldivisions4=3,
+                 rowdivisions5=3, columndivisons5=3,
+                 rowdivisions6=3, columndivisions6=3,
+                 nodes=[0]):
+
+        # validate nodes
+        if not isinstance(nodes, np.ndarray):
+            if isinstance(nodes, int):
+                nodes = np.array([nodes], dtype=np.int32)
+            elif isinstance(nodes, (list, tuple)):
+                nodes = np.array(nodes, dtype=np.int32)
+            else:
+                msg = 'ParticleNodeData: node data must be a integer, ' + \
+                      'list of integers or tuple of integers'
+                raise TypeError(msg)
+
+        # validate shape of nodes
+        templatecellcount = nodes.shape[0]
+        if len(nodes.shape) > 1:
+            msg = 'ParticleNodeData: processed node data must be a ' + \
+                  'numpy array has a shape of {} '.format(nodes.shape) + \
+                  'but should have a shape of ({}) '.format(nodes.shape[0])
+            raise TypeError(msg)
+
+        # assign attributes
+        self.templatesubdivisiontype = 1
+        self.templatecellcount = templatecellcount
+        self.drape = drape
+        self.verticaldivisions1 = verticaldivisions1
+        self.horizontaldivisions1 = horizontaldivisions1
+        self.verticaldivisions2 = verticaldivisions2
+        self.horizontaldivisions2 = horizontaldivisions2
+        self.verticaldivisions3 = verticaldivisions3
+        self.horizontaldivisions3 = horizontaldivisions3
+        self.verticaldivisions4 = verticaldivisions4
+        self.horizontaldivisions4 = horizontaldivisions4
+        self.rowdivisions5 = rowdivisions5
+        self.columndivisons5 = columndivisons5
+        self.rowdivisions6 = rowdivisions6
+        self.columndivisions6 = columndivisions6
+        self.nodes = nodes
+        return
+
+    def write(self, f=None):
+        # validate that a valid file object was passed
+        if not hasattr(f, 'write'):
+            msg = 'ParticleNodeData: cannot write data for template ' + \
+                  'without passing a valid file object ({}) '.format(f) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # item 3
+        f.write('{} {} {}\n'.format(self.templatesubdivisiontype,
+                                    self.templatecellcount,
+                                    self.drape))
+
+        # item 4
+        fmt = 12 * ' {}' + '\n'
+        line = fmt.format(self.verticaldivisions1, self.horizontaldivisions1,
+                          self.verticaldivisions2, self.horizontaldivisions2,
+                          self.verticaldivisions3, self.horizontaldivisions3,
+                          self.verticaldivisions4, self.horizontaldivisions4,
+                          self.rowdivisions5, self.columndivisons5,
+                          self.rowdivisions6, self.columndivisions6)
+        f.write(line)
+
+        # item 6
+        line = ''
+        for idx, node in enumerate(self.nodes):
+            line += ' {}'.format(node + 1)
+            lineend = False
+            if idx > 0:
+                if idx%10 == 0 or idx == self.nodes.shape[0] - 1:
+                    lineend = True
+            if lineend:
+                line += '\n'
+        f.write(line)
+
+        return
+
