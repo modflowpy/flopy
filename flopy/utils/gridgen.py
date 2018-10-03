@@ -956,6 +956,82 @@ class Gridgen(object):
         f.close()
         return
 
+    def get_gridprops_disv(self, verbose=False):
+        gridprops = {}
+
+        # nodes, nlay
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll.pop(0))
+        f.close()
+        nlay = self.nlay
+        gridprops['nodes'] = nodes
+        gridprops['nlay'] = nlay
+
+        # ncpl
+        nodelay = np.empty((nlay), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        nodelay = read1d(f, nodelay)
+        f.close()
+
+        ncpl = nodelay.min()
+        assert ncpl == nodelay.max(), 'Cannot create DISV properties '
+        'because the number of cells is not the same for all layers'
+        gridprops['ncpl'] = ncpl
+
+        # top
+        top = np.empty(ncpl, dtype=np.float32)
+        k = 0
+        fname = os.path.join(self.model_ws,
+                             'quadtreegrid.top{}.dat'.format(k + 1))
+        f = open(fname, 'r')
+        top = read1d(f, top)
+        f.close()
+        gridprops['top'] = top
+
+        # botm
+        botm = []
+        istart = 0
+        for k in range(nlay):
+            istop = istart + nodelay[k]
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.bot{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            btk = np.empty((nodelay[k]), dtype=np.float32)
+            btk = read1d(f, btk)
+            f.close()
+            botm.append(btk)
+            istart = istop
+        gridprops['botm'] = botm
+
+        # cell xy locations
+        cellxy = np.empty((ncpl, 2), dtype=np.float)
+        for n in range(ncpl):
+            x, y = self.get_center(n)
+            cellxy[n, 0] = x
+            cellxy[n, 1] = y
+        gridprops['cellxy'] = cellxy
+
+        from .cvfdutil import to_cvfd
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncpl, verbose=verbose)
+        gridprops['verts'] = verts
+        gridprops['iverts'] = iverts
+
+        nvert = verts.shape[0]
+        vertices = [[i, verts[i, 0], verts[i, 1]] for i in range(nvert)]
+        gridprops['nvert'] = nvert
+        gridprops['vertices'] = vertices
+
+        # cell2d information
+        cell2d = [[n, cellxy[n, 0], cellxy[n, 1], len(ivs)] + ivs
+                  for n, ivs in enumerate(iverts)]
+        gridprops['cell2d'] = cell2d
+
+        return gridprops
+
     def to_disv6(self, fname, verbose=False):
         """
         Create a MODFLOW 6 DISV file
