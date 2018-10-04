@@ -4,7 +4,6 @@ from ..modflow import Modflow
 from ..mf6 import ModflowGwf
 from ..pakbase import Package
 from .mp7sim import Modpath7Sim
-from .mp7bas import Modpath7Bas
 import os
 
 
@@ -37,6 +36,18 @@ class Modpath7(BaseModel):
     """
     Modpath 7 base class
 
+        Parameters
+        ----------
+        modelname
+        simfile_ext
+        namefile_ext
+        version
+        exe_name
+        flowmodel
+        head_file
+        budget_file
+        model_ws
+        verbose
     """
 
     def __init__(self, modelname='modpath7', simfile_ext='mpsim',

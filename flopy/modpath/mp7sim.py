@@ -12,6 +12,7 @@ import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
 from .mp7particle import Particles, NodeParticleTemplate
+
 class simType(Enum):
     """
     Enumeration of different simulation types
@@ -63,6 +64,38 @@ class Modpath7Sim(Package):
     """
     MODPATH Simulation File Package Class.
 
+        Parameters
+        ----------
+        model : model object
+            The model object (of type :class:`flopy.modpath.Modpath7`) to
+            which this package will be added.
+        mp_name_file : str
+        listingfilename
+        endpointfilename
+        pathlinefilename
+        timeseriesfilename
+        tracefilename
+        simulationtype
+        trackingdirection
+        weaksinkoption
+        weaksourceoption
+        budgetoutputoption
+        traceparticledata
+        budgetcellnumbers
+        referencetime
+        stoptimeoption
+        StopTime
+        timepointdata
+        zonedataoption
+        stopzone
+        zones
+        retardationfactoroption
+        retardation
+        particlegroups
+        extension : string
+            Filename extension (default is 'mpsim')
+        unitnumber
+
     Parameters
     ----------
     model : model object
@@ -90,8 +123,8 @@ class Modpath7Sim(Package):
     --------
 
     >>> import flopy
-    >>> m = flopy.modpath.Modpath()
-    >>> dis = flopy.modpath.ModpathSim(m)
+    >>> m = flopy.modpath.Modpath7()
+    >>> dis = flopy.modpath.Modpath7Sim(m)
 
     """
 
@@ -109,6 +142,9 @@ class Modpath7Sim(Package):
                  retardationfactoroption='off', retardation=None,
                  particlegroups=None,
                  extension='mpsim', unitnumber=None):
+        """
+
+        """
 
         if unitnumber is None:
             unitnumber = model.next_unit()

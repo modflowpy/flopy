@@ -386,6 +386,14 @@ class PathlineFile():
             except:
                 msg = "could not extract 'node' key from pathline data"
                 raise KeyError(msg)
+            if isinstance(dest_cells, (list, tuple)):
+                allint = all(isinstance(el, int) for el in dest_cells)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in dest_cells:
+                        t.append((el,))
+                        dest_cells = t
 
         dest_cells = np.array(dest_cells, dtype=raslice.dtype)
         inds = np.in1d(raslice, dest_cells)
@@ -863,7 +871,16 @@ class EndpointFile():
             except:
                 msg = "could not extract 'node' key from endpoint data"
                 raise KeyError(msg)
+            if isinstance(dest_cells, (list, tuple)):
+                allint = all(isinstance(el, int) for el in dest_cells)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in dest_cells:
+                        t.append((el,))
+                        dest_cells = t
             dtype = [('node', np.int32)]
+        dtype = np.dtype(dtype)
         dest_cells = np.array(dest_cells, dtype=dtype)
 
         inds = np.in1d(raslice, dest_cells)
