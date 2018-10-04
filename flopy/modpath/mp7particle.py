@@ -1,13 +1,7 @@
 import os
 import numpy as np
+from ..utils.util_array import Util2d
 from ..utils.recarray_utils import create_empty_recarray
-
-
-# try:
-#     from numpy.lib import NumpyVersion
-#     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
-# except ImportError:
-#     numpy114 = False
 
 
 class Modpath7Particle(object):
@@ -43,12 +37,12 @@ class Modpath7Particle(object):
             elif len(releasedata) == 3:
                 releaseoption = 2
                 releasetimecount = int(releasedata[0])
-                releaseinterval = 0
-                releasetimes = np.array(releasedata[1], dtype=np.float32)
                 releaseinterval = int(releasedata[2])
+                releasetimes = np.array(releasedata[1], dtype=np.float32)
             elif len(releasedata) == 2:
                 releaseoption = 3
                 releasetimecount = int(releasedata[0])
+                releaseinterval = 0
                 # convert releasetimes list or tuple to a numpy array
                 if isinstance(releasedata[1], list) \
                         or isinstance(releasedata[1], tuple):
@@ -479,7 +473,7 @@ class FaceNode(_ParticleTemplate):
         # validate that a valid file object was passed
         if not hasattr(fp, 'write'):
             msg = 'FaceNode: cannot write data for template ' + \
-                  'without passing a valid file object ({}) '.format(f) + \
+                  'without passing a valid file object ({}) '.format(fp) + \
                   'open for writing'
             raise ValueError(msg)
 
