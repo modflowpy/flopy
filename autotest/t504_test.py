@@ -504,6 +504,23 @@ def test006_2models_mvr():
         budget_obj = bf.CellBudgetFile(budget_file, precision='double')
         budget_obj.list_records()
 
+    # test getting models
+    model_dict = sim.model_dict
+    assert len(model_dict) == 2
+    for model in model_dict.values():
+        assert model.name in model_names
+    names = sim.model_names
+    assert len(names) == 2
+    for name in names:
+        assert name in model_names
+        model = sim.get_model(name)
+        assert model.model_type == 'gwf'
+    models = sim.gwf
+    assert len(models) == 2
+    for model in models:
+        assert model.name in model_names
+        assert model.model_type == 'gwf'
+
     # change some settings
     parent_model = sim.get_model(model_names[0])
     maw_pkg = parent_model.get_package('maw')
@@ -518,6 +535,24 @@ def test006_2models_mvr():
     for index in range(0, len(exg_data)):
         exg_data[index][6] = 500.0
     exg_pkg.exchangedata.set_data(exg_data)
+
+    # test getting packages
+    pkg_dict = parent_model.package_dict
+    assert len(pkg_dict) == 6
+    pkg_names = parent_model.package_names
+    assert len(pkg_names) == 6
+    # confirm that this is a copy of the original dictionary with references
+    # to the packages
+    del pkg_dict[pkg_names[0]]
+    assert len(pkg_dict) == 5
+    pkg_dict = parent_model.package_dict
+    assert len(pkg_dict) == 6
+
+    old_val = pkg_dict['dis'].nlay.get_data()
+    pkg_dict['dis'].nlay = 22
+    pkg_dict = parent_model.package_dict
+    assert pkg_dict['dis'].nlay.get_data() == 22
+    pkg_dict['dis'].nlay = old_val
 
     # write simulation again
     sim.simulation_data.mfpath.set_sim_path(save_folder)
@@ -785,13 +820,13 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
-    test036_twrihfb()
-    test027_timeseriestest()
-    test006_2models_mvr()
-    test045_lake2tr()
-    test001e_uzf_3lay()
-    test045_lake1ss_table()
     test001a_tharmonic()
+    test001e_uzf_3lay()
     test003_gwfs_disv()
     test005_advgw_tidal()
+    test006_2models_mvr()
     test006_gwf3()
+    test027_timeseriestest()
+    test036_twrihfb()
+    test045_lake1ss_table()
+    test045_lake2tr()
