@@ -218,14 +218,14 @@ class ModflowDis(Package):
     @property
     def sr(self):
         warnings.warn(
-            'SpatialReference has been deprecated. Use modelgrid instead.',
+            'SpatialReference has been deprecated. Use Grid instead.',
             DeprecationWarning)
         return self._sr
 
     @sr.setter
     def sr(self, sr):
         warnings.warn(
-            'SpatialReference has been deprecated. Use modelgrid instead.',
+            'SpatialReference has been deprecated. Use Grid instead.',
             DeprecationWarning)
         self._sr = sr
 
