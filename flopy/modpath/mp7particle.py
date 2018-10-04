@@ -284,6 +284,7 @@ class Particles(Modpath7Particle):
             dtype.append(('j', np.int32))
         else:
             dtype.append(('node', np.int32))
+        dtype = np.dtype(dtype)
         if isinstance(v, (list, tuple)):
             # determine if the list or tuple contains lists or tuples
             alllsttup = all(isinstance(el, (list, tuple)) for el in v)
@@ -299,7 +300,7 @@ class Particles(Modpath7Particle):
                           'should contain list or tuple entries'
                     raise ValueError(msg)
             # convert v to a numpy array
-            v = np.array(v, dtype = dtype)
+            v = np.array(v, dtype=dtype)
         elif isinstance(v, np.ndarray):
             dtypein = v.dtype
             if dtypein != v.dtype:
@@ -415,7 +416,7 @@ class _ParticleTemplate(Modpath7Particle):
     def write(self, fp=None, ws='.'):
         return
 
-class FaceNode(Modpath7Particle):
+class FaceNode(_ParticleTemplate):
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=[0.0],
                  particledata=None):
