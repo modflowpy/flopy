@@ -440,7 +440,7 @@ class _ParticleTemplate(Modpath7Particle):
         return
 
 
-class FaceNode(_ParticleTemplate):
+class NodeParticleTemplate(_ParticleTemplate):
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=[0.0],
                  particledata=None):
@@ -453,13 +453,14 @@ class FaceNode(_ParticleTemplate):
             msg = 'FaceNode: valid ParticleNodeData item must be passed'
             raise ValueError(msg)
 
-        if isinstance(particledata, ParticleNodeData):
+        if isinstance(particledata, (ParticleNodeData, ParticleCellData)):
             particledata = [particledata]
 
         totalcellcount = 0
         for idx, td in enumerate(particledata):
-            if not isinstance(td, ParticleNodeData):
-                msg = 'FaceNode: valid ParticleNodeData item must be passed' + \
+            if not isinstance(td, (ParticleNodeData, ParticleCellData)):
+                msg = 'FaceNode: valid ParticleNodeData or ' + \
+                      'ParticlecCellData item must be passed' + \
                       'for particledata item {}'.format(idx)
                 raise ValueError(msg)
             totalcellcount += td.templatecellcount
@@ -493,7 +494,7 @@ class FaceNode(_ParticleTemplate):
         # item 2
         f.write('{} {}\n'.format(self.particletemplatecount,
                                  self.totalcellcount))
-        # items 3, 4, and 6
+        # items 3, 4 or 5, and 6
         for td in self.particledata:
             td.write(f)
 
@@ -573,6 +574,74 @@ class ParticleNodeData(object):
                           self.verticaldivisions4, self.horizontaldivisions4,
                           self.rowdivisions5, self.columndivisons5,
                           self.rowdivisions6, self.columndivisions6)
+        f.write(line)
+
+        # item 6
+        line = ''
+        for idx, node in enumerate(self.nodes):
+            line += ' {}'.format(node + 1)
+            lineend = False
+            if idx > 0:
+                if idx % 10 == 0 or idx == self.nodes.shape[0] - 1:
+                    lineend = True
+            if lineend:
+                line += '\n'
+        f.write(line)
+
+        return
+
+
+class ParticleCellData(object):
+    def __init__(self, drape=0,
+                 columncelldivisions=3, rowcelldivisions=3,
+                 layercelldivisions=3, nodes=[0]):
+
+        # validate nodes
+        if not isinstance(nodes, np.ndarray):
+            if isinstance(nodes, int):
+                nodes = np.array([nodes], dtype=np.int32)
+            elif isinstance(nodes, (list, tuple)):
+                nodes = np.array(nodes, dtype=np.int32)
+            else:
+                msg = 'ParticleCellData: node data must be a integer, ' + \
+                      'list of integers or tuple of integers'
+                raise TypeError(msg)
+
+        # validate shape of nodes
+        templatecellcount = nodes.shape[0]
+        if len(nodes.shape) > 1:
+            msg = 'ParticleCellData: processed node data must be a ' + \
+                  'numpy array has a shape of {} '.format(nodes.shape) + \
+                  'but should have a shape of ({}) '.format(nodes.shape[0])
+            raise TypeError(msg)
+
+        # assign attributes
+        self.templatesubdivisiontype = 2
+        self.templatecellcount = templatecellcount
+        self.drape = drape
+        self.columncelldivisions = columncelldivisions
+        self.rowcelldivisions = rowcelldivisions
+        self.layercelldivisions = layercelldivisions
+        self.nodes = nodes
+        return
+
+    def write(self, f=None):
+        # validate that a valid file object was passed
+        if not hasattr(f, 'write'):
+            msg = 'ParticleCellData: cannot write data for template ' + \
+                  'without passing a valid file object ({}) '.format(f) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # item 3
+        f.write('{} {} {}\n'.format(self.templatesubdivisiontype,
+                                    self.templatecellcount,
+                                    self.drape))
+
+        # item 5
+        fmt = ' {} {} {}\n'
+        line = fmt.format(self.columncelldivisions, self.rowcelldivisions,
+                          self.layercelldivisions)
         f.write(line)
 
         # item 6

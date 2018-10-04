@@ -59,8 +59,8 @@ def test_mf6():
     build_mf6()
 
 
-def test_particlesnode():
-    mpnam = nm + '_mp_t1node'
+def test_faceparticles_is1():
+    mpnam = nm + '_mp_face_t1node'
     locs = []
     localx = []
     localy = []
@@ -82,8 +82,8 @@ def test_particlesnode():
     return
 
 
-def test_facenode():
-    mpnam = nm + '_mp_t3node'
+def test_facenode_is3():
+    mpnam = nm + '_mp_face_t3node'
     locs = []
     for i in range(nrow):
         for j in range(ncol):
@@ -104,16 +104,98 @@ def test_facenode():
                                        columndivisions6=3,
                                        nodes=locs)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.FaceNode(particlegroupname='T3NODEPG',
-                                particledata=p,
-                                filename=fpth)
+    pg = flopy.modpath.NodeParticleTemplate(particlegroupname='T3NODEPG',
+                                            particledata=p,
+                                            filename=fpth)
     build_modpath(mpnam, pg)
     return
 
 
-def test_endpoint_output():
+def test_cellparticles_is1():
+    mpnam = nm + '_mp_cell_t1node'
+    locs = []
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+                locs.append(node)
+    p = flopy.modpath.Particles.create_particles(locs, structured=False,
+                                                 drape=0, localx=0.5,
+                                                 localy=0.5, localz=0.5)
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.Particles(particlegroupname='T1NODEPG',
+                                 particledata=p,
+                                 filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
+def test_cellparticleskij_is1():
+    mpnam = nm + '_mp_cell_t1kij'
+    locs = []
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                locs.append((k, i, j))
+    p = flopy.modpath.Particles.create_particles(locs, structured=True,
+                                                 drape=0, localx=0.5,
+                                                 localy=0.5, localz=0.5)
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.Particles(particlegroupname='T1KIJPG',
+                                 particledata=p,
+                                 filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
+def test_cellnode_is3():
+    mpnam = nm + '_mp_cell_t3node'
+    locs = []
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+                locs.append(node)
+    p = flopy.modpath.ParticleCellData(drape=0,
+                                       columncelldivisions=1,
+                                       rowcelldivisions=1,
+                                       layercelldivisions=1,
+                                       nodes=locs)
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.NodeParticleTemplate(particlegroupname='T3CELLPG',
+                                            particledata=p,
+                                            filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
+def test_face_endpoint_output():
     # set base file name
-    fpth0 = os.path.join(model_ws, 'ex01b_mf6_mp_t1node.mpend')
+    fpth0 = os.path.join(model_ws, 'ex01b_mf6_mp_face_t1node.mpend')
+
+    # get list of node endpath files
+    epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
+           if '.mpend' in name and '_face_' in name]
+    epf.remove(fpth0)
+
+    endpoint_compare(fpth0, epf)
+    return
+
+
+def test_cell_endpoint_output():
+    # set base file name
+    fpth0 = os.path.join(model_ws, 'ex01b_mf6_mp_cell_t1node.mpend')
+
+    # get list of node endpath files
+    epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
+           if '.mpend' in name and '_cell_' in name]
+    epf.remove(fpth0)
+
+    endpoint_compare(fpth0, epf)
+    return
+
+
+def endpoint_compare(fpth0, epf):
 
     # get base endpoint data
     e = flopy.utils.EndpointFile(fpth0)
@@ -128,10 +210,6 @@ def test_endpoint_output():
                       ('y0', np.float32), ('z0', np.float32)])
     t0 = np.rec.fromarrays((e0[name] for name in names), dtype=dtype)
 
-    # get list of node endpath files
-    epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
-           if '.mpend' in name and 'node' in name]
-    epf.remove(fpth0)
 
     for fpth1 in epf:
         e = flopy.utils.EndpointFile(fpth1)
@@ -277,10 +355,18 @@ def build_modpath(mpn, particlegroups):
 
 
 if __name__ == '__main__':
+    # build and run modflow 6
     test_mf6()
-    # build top face nodes
-    test_facenode()
-    # build node particles
-    test_particlesnode()
 
-    test_endpoint_output()
+    # build face particles
+    test_faceparticles_is1()
+    test_facenode_is3()
+
+    # build cell particles
+    test_cellparticles_is1()
+    test_cellparticleskij_is1()
+    test_cellnode_is3()
+
+    # compare endpoint results
+    test_face_endpoint_output()
+    test_cell_endpoint_output()

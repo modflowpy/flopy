@@ -126,6 +126,18 @@ def update_mp6files(srcdir):
     os.remove(fname1)
 
 
+def update_mp7files(srcdir):
+    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if 'pGroup%Particles(n)%InitialFace = 0' in line:
+            continue
+        f.write(line)
+    f.close()
+
+
 def test_build_modflow():
     if pymake is None:
         return
@@ -290,7 +302,7 @@ def test_build_modpath7():
     url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
 
     build_target(starget, exe_name, url, dirname, srcname='source',
-                 replace_function=None,
+                 replace_function=update_mp7files,
                  keep=True)
     return
 
@@ -498,13 +510,13 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     # change back to original path
     os.chdir(cpth)
 
+    msg = '{} does not exist.'.format(os.path.relpath(target))
+    assert os.path.isfile(target), msg
+
     # Clean up downloaded directory
     print('delete...{}'.format(dstpth))
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)
-
-    msg = '{} does not exist.'.format(os.path.relpath(target))
-    assert os.path.isfile(target), msg
 
     return
 
@@ -517,4 +529,5 @@ if __name__ == '__main__':
     # test_build_mt3dms()
     # test_build_seawat()
     # test_build_gridgen()
-    test_build_triangle()
+    # test_build_triangle()
+    test_build_modpath7()

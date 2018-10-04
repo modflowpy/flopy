@@ -11,7 +11,7 @@ from enum import Enum
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from .mp7particle import Particles, FaceNode
+from .mp7particle import Particles, NodeParticleTemplate
 class simType(Enum):
     """
     Enumeration of different simulation types
@@ -369,7 +369,7 @@ class Modpath7Sim(Package):
         # particle group data
         if particlegroups is None:
             particlegroups = [Particles()]
-        elif isinstance(particlegroups, (Particles, FaceNode)):
+        elif isinstance(particlegroups, (Particles, NodeParticleTemplate)):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups
 
