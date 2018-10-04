@@ -143,7 +143,9 @@ class MFArray(mfdata.MFMultiDimVar):
                                       self._simulation_data.debug, ex)
 
     def __setattr__(self, name, value):
-        if name == 'fname':
+        if name == '__setstate__':
+            raise AttributeError(name)
+        elif name == 'fname':
             self._get_storage_obj().layer_storage.first_item().fname = value
         elif name == 'factor':
             self._get_storage_obj().layer_storage.first_item().factor = value
