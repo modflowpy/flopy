@@ -11,7 +11,7 @@ def download_mf6_distribution():
     """
 
     # set url
-    dirname = 'mf6.0.2'
+    dirname = 'mf6.0.3'
     url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
 
     # create folder for mf6 distribution download
