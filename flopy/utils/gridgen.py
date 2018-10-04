@@ -1192,6 +1192,7 @@ class Gridgen(object):
         # to zero-based and return
         result = np.genfromtxt(fn, dtype=None, names=True, delimiter=',',
                                usecols=tuple(range(ncol)))
+        result = np.atleast_1d(result)
         result = result.view(np.recarray)
         result['nodenumber'] -= 1
         return result
