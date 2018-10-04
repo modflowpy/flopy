@@ -307,7 +307,7 @@ class PathlineFile():
             the proj4 string or epgs code associated with sr will be used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
-        from ..grid.reference import SpatialReference
+        from ..utils.reference import SpatialReference
         from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
 
@@ -751,7 +751,7 @@ class EndpointFile():
             the proj4 string or epgs code associated with sr will be used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
-        from ..grid.reference import SpatialReference
+        from ..utils.reference import SpatialReference
         from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
 

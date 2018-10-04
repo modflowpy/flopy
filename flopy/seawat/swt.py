@@ -5,7 +5,6 @@ from ..modflow import Modflow
 from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
-from ..grid.reference import TemporalReference
 from ..grid.structuredgrid import StructuredGrid
 
 

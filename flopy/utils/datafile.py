@@ -7,7 +7,6 @@ from __future__ import print_function
 import os
 import numpy as np
 import flopy.utils
-from flopy.grid.reference import SpatialReference
 from flopy.grid.structuredgrid import StructuredGrid
 
 
@@ -112,16 +111,13 @@ class LayerFile(object):
         self.model = None
         self.dis = None
         self.mg = None
-        self.sr = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
             self.mg = self.model.modelgrid
-            self.sr = self.model.modelgrid.sr
             self.dis = self.model.dis
         if 'dis' in kwargs.keys():
             self.dis = kwargs.pop('dis')
             self.mg = self.dis.parent.modelgrid
-            self.sr = self.dis.parent.modelgrid.sr
         if "modelgrid" in kwargs.keys():
             self.mg = kwargs.pop('modelgrid')
         if len(kwargs.keys()) > 0:
@@ -134,7 +130,6 @@ class LayerFile(object):
         # now that we read the data and know nrow and ncol,
         # we can make a generic sr if needed
         if self.mg is None:
-            self.sr = SpatialReference()
             self.mg = StructuredGrid(delc=np.ones((self.nrow,)),
                                      delr=np.ones(self.ncol,),
                                      top=np.ones((self.nrow, self.ncol)),

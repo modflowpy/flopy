@@ -203,7 +203,7 @@ class ModflowDis(Package):
         if start_datetime is None:
             start_datetime = model._start_datetime
 
-        self.sr = SpatialReference(self.delr, self.delc, self.lenuni,
+        self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
                                    xul=xul, yul=yul,
                                    rotation=rotation,
                                    proj4_str=proj4_str)
@@ -214,6 +214,20 @@ class ModflowDis(Package):
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
+
+    @property
+    def sr(self):
+        warnings.warn(
+            'SpatialReference has been deprecated. Use modelgrid instead.',
+            DeprecationWarning)
+        return self._sr
+
+    @sr.setter
+    def sr(self, sr):
+        warnings.warn(
+            'SpatialReference has been deprecated. Use modelgrid instead.',
+            DeprecationWarning)
+        self._sr = sr
 
     def checklayerthickness(self):
         """

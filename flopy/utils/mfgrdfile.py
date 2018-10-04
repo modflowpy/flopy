@@ -2,7 +2,6 @@ import numpy as np
 import collections
 
 from ..utils.utils_def import FlopyBinaryData
-from ..grid.reference import SpatialReference
 from ..grid.structuredgrid import StructuredGrid
 
 
@@ -110,8 +109,6 @@ class MfGrdFile(FlopyBinaryData):
         self.mg = self._set_modelgrid()
 
     def _set_modelgrid(self):
-        sr = None
-        sr = None
         try:
             if self._grid == 'DISV':
                 mg = None
@@ -121,17 +118,13 @@ class MfGrdFile(FlopyBinaryData):
                 xorigin, yorigin, rot = self._datadict['XORIGIN'], \
                                         self._datadict['YORIGIN'], \
                                         self._datadict['ANGROT']
-                sr = SpatialReference(delc=delc, xll=xorigin, yll=yorigin,
-                                      rotation=rot)
-                mg = StructuredGrid(delc, delr, top, botm, None, sr)
+                mg = StructuredGrid(delc, delr, top, botm, xoff=xorigin,
+                                    yoff=yorigin, angrot=rot)
         except:
             mg = None
             print('could not set spatial reference for {}'.format(self.file.name))
 
         return mg
-
-    def get_spatialreference(self):
-        return self.mg.sr
 
     def get_centroids(self):
         x, y = None, None

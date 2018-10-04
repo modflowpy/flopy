@@ -15,7 +15,6 @@ from .mtphc import Mt3dPhc
 from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
-from ..grid.reference import TemporalReference
 from ..grid.structuredgrid import StructuredGrid
 
 class Mt3dList(Package):

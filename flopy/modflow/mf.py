@@ -10,7 +10,6 @@ import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from ..grid.reference import TemporalReference
 from ..grid.structuredgrid import StructuredGrid
 from .mfpar import ModflowPar
 
@@ -645,7 +644,6 @@ class Modflow(BaseModel):
         assert ml.pop_key_list.pop() == dis_key
         ext_unit_dict.pop(dis_key)
 
-        dis.tr = TemporalReference(itmuni=dis.itmuni, start_datetime=ml._start_datetime)
         dis.start_datetime = ml._start_datetime
 
         # load bas after dis if it is available. Note that the free format

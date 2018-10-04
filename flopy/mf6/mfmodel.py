@@ -11,7 +11,6 @@ from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
-from ..grid.reference import TemporalReference
 from ..grid.structuredgrid import StructuredGrid
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
@@ -205,7 +204,6 @@ class MFModel(PackageContainer, ModelInterface):
             itmuni = 0
         if start_date_time is None:
             start_date_time = '01-01-1970'
-        tr = TemporalReference(itmuni, start_date_time)
         period_data = tdis.perioddata.get_data()
         data_frame = {'perlen': period_data['perlen'],
                       'nstp': period_data['nstp'],

@@ -1040,7 +1040,10 @@ class BaseModel(ModelInterface):
         elif key == "model_ws":
             self.change_model_ws(value)
         elif key == "sr":
-            assert isinstance(value, grid.reference.SpatialReference)
+            assert isinstance(value, utils.reference.SpatialReference)
+            warnings.warn(
+                "SpatialReference has been deprecated.",
+                category=DeprecationWarning)
             if self.dis is not None:
                 self.dis.sr = value
             else:
