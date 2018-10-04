@@ -80,8 +80,13 @@ class StructuredGrid(Grid):
                 # transform x and y
                 pass
             xgrid, ygrid = self.get_coords(xgrid, ygrid)
-            self._cache_dict[cache_index] = \
-                CachedData([xgrid, ygrid, zgrid])
+            if zgrid is not None:
+                self._cache_dict[cache_index] = \
+                    CachedData([xgrid, ygrid, zgrid])
+            else:
+                self._cache_dict[cache_index] = \
+                    CachedData([xgrid, ygrid])
+
         return self._cache_dict[cache_index].data
 
     @property
@@ -509,7 +514,6 @@ p
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from flopy.proposed_grid_srp.reference import SpatialReference
     delc = np.ones((10,)) * 1
     delr = np.ones((20,)) * 1
 

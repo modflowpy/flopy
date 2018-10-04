@@ -10,7 +10,7 @@ import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
-from ..grid.reference import SpatialReference, TemporalReference
+from ..grid.reference import TemporalReference
 from ..grid.structuredgrid import StructuredGrid
 from .mfpar import ModflowPar
 

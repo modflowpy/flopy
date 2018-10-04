@@ -10,7 +10,6 @@ from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
-from ..grid.reference import SpatialReference
 from ..utils.recarray_utils import create_empty_recarray
 
 try:

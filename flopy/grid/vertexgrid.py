@@ -187,7 +187,6 @@ class VertexGrid(Grid):
 if __name__ == "__main__":
     import os
     import flopy as fp
-    from flopy.proposed_grid_srp.reference import SpatialReference
 
     ws = "../../examples/data/mf6/test003_gwfs_disv"
     name = "mfsim.nam"

@@ -159,15 +159,6 @@ class MFModel(PackageContainer, ModelInterface):
         """
         return self.get_package(item)
 
-    def __setattr__(self, key, value):
-        if key == "sr":
-            if not isinstance(value, SpatialReference):
-                raise FlopyException('Unable to set attribute "sr" with '
-                                     'type {}. Attribute "sr" must be of type '
-                                     '"SpatialReference""'
-                                     '.'.format(type(value)))
-        super(MFModel, self).__setattr__(key, value)
-
     def __repr__(self):
         return self._get_data_str(True)
 
@@ -300,7 +291,6 @@ class MFModel(PackageContainer, ModelInterface):
         Examples
         --------
         """
-
         instance = cls(simulation, type, modelname,
                        model_nam_file=model_nam_file,
                        version=version, exe_name=exe_name,
