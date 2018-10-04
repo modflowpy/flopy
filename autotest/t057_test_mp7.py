@@ -54,7 +54,7 @@ pg0 = flopy.modpath.Particles(particlegroupname='PG1', particledata=part0,
 
 v = [(0, 0, 0), (0, 20, 0)]
 pids = [1, 2]  # [1000, 1001]
-part1 = flopy.modpath.Particles.create_particles(v=v, drape=1,
+part1 = flopy.modpath.Particles.create_particles(v, drape=1,
                                                  particleids=pids)
 pg1 = flopy.modpath.Particles(particlegroupname='PG2', particledata=part1,
                                  filename='ex01a.pg2.sloc')

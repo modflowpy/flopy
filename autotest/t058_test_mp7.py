@@ -71,7 +71,7 @@ def test_particlesnode():
                 locs.append(node)
                 localx.append(xloc)
                 localy.append(yloc)
-    p = flopy.modpath.Particles.create_particles(v=locs, structured=False,
+    p = flopy.modpath.Particles.create_particles(locs, structured=False,
                                                  drape=0, localx=localx,
                                                  localy=localy, localz=1)
     fpth = mpnam + '.sloc'
@@ -107,7 +107,7 @@ def test_facenode():
     pg = flopy.modpath.FaceNode(particlegroupname='T3NODEPG',
                                 particledata=p,
                                 filename=fpth)
-    build_modpath(mpnam, [pg])
+    build_modpath(mpnam, pg)
     return
 
 
@@ -128,9 +128,9 @@ def test_endpoint_output():
                       ('y0', np.float32), ('z0', np.float32)])
     t0 = np.rec.fromarrays((e0[name] for name in names), dtype=dtype)
 
-    # get list of endpath files
+    # get list of node endpath files
     epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
-           if '.mpend' in name]
+           if '.mpend' in name and 'node' in name]
     epf.remove(fpth0)
 
     for fpth1 in epf:

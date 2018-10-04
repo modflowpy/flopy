@@ -2,6 +2,7 @@ import os
 import numpy as np
 from ..utils.recarray_utils import create_empty_recarray
 
+
 # try:
 #     from numpy.lib import NumpyVersion
 #     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
@@ -207,7 +208,7 @@ class Particles(Modpath7Particle):
                 d[idx] += 1
 
         # save the particle data
-        #np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
+        # np.savetxt(f, d, fmt=self.fmt_string, delimiter='')
         fmt = self.fmt_string + '\n'
         for v in d:
             f.write(fmt.format(*v))
@@ -299,7 +300,29 @@ class Particles(Modpath7Particle):
                     msg = 'v list or tuple for structured particle data ' + \
                           'should contain list or tuple entries'
                     raise ValueError(msg)
-            # convert v to a numpy array
+            else:
+                allint = all(isinstance(el, int) for el in v)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in v:
+                        t.append((el,))
+                    v = t
+                    alllsttup = all(isinstance(el, (list, tuple)) for el in v)
+                if alllsttup:
+                    alllen1 = all(len(el) == 1 for el in v)
+                    if not alllen1:
+                        msg = 'all entries of v must have 1 items ' + \
+                              'for unstructured particle data'
+                        raise ValueError(msg)
+                else:
+                    msg = 'v list or tuple for unstructured particle data ' + \
+                          'should contain integers or a list or tuple ' + \
+                          'with one entry'
+                    raise ValueError(msg)
+
+            # convert v composed of a lists/tuples of lists/tuples
+            # to a numpy array
             v = np.array(v, dtype=dtype)
         elif isinstance(v, np.ndarray):
             dtypein = v.dtype
@@ -309,6 +332,7 @@ class Particles(Modpath7Particle):
             msg = 'create_Particles v must be a list or ' + \
                   'tuple with lists or tuples'
             raise ValueError(msg)
+
         # localx
         if localx is None:
             localx = 0.5
@@ -321,6 +345,7 @@ class Particles(Modpath7Particle):
                           'is not equal to the shape ' + \
                           'of v ({}).'.format(v.shape[0])
                     raise ValueError(msg)
+
         # localy
         if localy is None:
             localy = 0.5
@@ -333,6 +358,7 @@ class Particles(Modpath7Particle):
                           'is not equal to the shape ' + \
                           'of v ({}).'.format(v.shape[0])
                     raise ValueError(msg)
+
         # localz
         if localz is None:
             localz = 0.5
@@ -349,15 +375,16 @@ class Particles(Modpath7Particle):
         if timeoffset is None:
             timeoffset = 0.
         else:
-           if isinstance(timeoffset, (list, tuple)):
+            if isinstance(timeoffset, (list, tuple)):
                 timeoffset = np.array(timeoffset, dtype=np.float32)
-           if isinstance(timeoffset, np.ndarray):
+            if isinstance(timeoffset, np.ndarray):
                 if timeoffset.shape[0] != v.shape[0]:
                     msg = 'shape of timeoffset ' + \
                           '({}) '.format(timeoffset.shape[0]) + \
                           'is not equal to the shape ' + \
                           'of v ({}).'.format(v.shape[0])
                     raise ValueError(msg)
+
         # drape
         if drape is None:
             drape = 0
@@ -370,6 +397,7 @@ class Particles(Modpath7Particle):
                           'is not equal to the shape ' + \
                           'of v ({}).'.format(v.shape[0])
                     raise ValueError(msg)
+
         # particleids
         if particleids is None:
             particleid = False
@@ -387,8 +415,8 @@ class Particles(Modpath7Particle):
 
         # create empty particle
         part = Particles.get_empty(ncells=v.shape[0],
-                                      structured=structured,
-                                      particleid=particleid)
+                                   structured=structured,
+                                   particleid=particleid)
         # fill part
         if structured:
             part['k'] = v['k']
@@ -406,15 +434,17 @@ class Particles(Modpath7Particle):
         # return particle instance
         return part
 
+
 class _ParticleTemplate(Modpath7Particle):
     def __init__(self, particlegroupname, filename,
                  releasedata):
-
         # instantiate base class
         Modpath7Particle.__init__(self, particlegroupname, filename,
                                   releasedata)
+
     def write(self, fp=None, ws='.'):
         return
+
 
 class FaceNode(_ParticleTemplate):
     def __init__(self, particlegroupname='PG1', filename=None,
@@ -557,11 +587,10 @@ class ParticleNodeData(object):
             line += ' {}'.format(node + 1)
             lineend = False
             if idx > 0:
-                if idx%10 == 0 or idx == self.nodes.shape[0] - 1:
+                if idx % 10 == 0 or idx == self.nodes.shape[0] - 1:
                     lineend = True
             if lineend:
                 line += '\n'
         f.write(line)
 
         return
-
