@@ -377,7 +377,7 @@ class PathlineFile():
             try:
                 raslice = ra[['k', 'i', 'j']]
             except:
-                msg = "could not extract 'k', 'i', and 'j' keys " +  \
+                msg = "could not extract 'k', 'i', and 'j' keys " + \
                       "from pathline data"
                 raise KeyError(msg)
         else:
@@ -535,7 +535,6 @@ class EndpointFile():
     kijnames = ['k0', 'i0', 'j0', 'node0', 'k', 'i', 'j', 'node',
                 'particleid', 'particlegroup', 'particleidloc',
                 'zone0', 'zone']
-
 
     def __init__(self, filename, verbose=False):
         """
@@ -861,7 +860,7 @@ class EndpointFile():
             try:
                 raslice = ra_slice(ra, ['k', 'i', 'j'])
             except:
-                msg = "could not extract 'k', 'i', and 'j' keys " +  \
+                msg = "could not extract 'k', 'i', and 'j' keys " + \
                       "from endpoint data"
                 raise KeyError(msg)
             dtype = [('k', np.int32), ('i', np.int32), ('j', np.int32)]
@@ -938,3 +937,297 @@ class EndpointFile():
             except:
                 pass
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
+
+
+class TimeseriesFile():
+    """
+    TimeseriesFile Class.
+
+    Parameters
+    ----------
+    filename : string
+        Name of the timeseries file
+    verbose : bool
+        Write information to the screen.  Default is False.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+    See Also
+    --------
+
+    Notes
+    -----
+    The TimeseriesFile class provides simple ways to retrieve MODPATH
+    timeseries data from a MODPATH ascii timeseries file.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> tsobj = flopy.utils.TimeseriesFile('model.timeseries')
+    >>> ts1 = tsobj.get_data(partid=1)
+    """
+    kijnames = ['k', 'i', 'j', 'node',
+                'particleid', 'particlegroup', 'particleidloc',
+                'timestep', 'timestepindex', 'timepointindex']
+
+    def __init__(self, filename, verbose=False):
+        """
+        Class constructor.
+
+        """
+        self.fname = filename
+        self.verbose = verbose
+
+        # build index
+        self._build_index()
+
+        # set output dtype
+        self.outdtype = self._get_outdtype()
+
+        # set dtype
+        self.dtype = self._get_dtypes()
+
+        # read data
+        self._data = loadtxt(self.file, dtype=self.dtype,
+                             skiprows=self.skiprows)
+
+        # convert layer, row, and column indices; particle id and group; and
+        #  line segment indices to zero-based
+        for n in self.kijnames:
+            try:
+                self._data[n] -= 1
+            except:
+                pass
+
+        # set number of particle ids
+        self.nid = np.unique(self._data['particleid'])
+
+        # close the input file
+        self.file.close()
+        return
+
+    def _build_index(self):
+        """
+           Set position of the start of the timeseries data.
+        """
+        compact = False
+        self.skiprows = 0
+        self.file = open(self.fname, 'r')
+        while True:
+            line = self.file.readline()
+            if isinstance(line, bytes):
+                line = line.decode()
+            if self.skiprows < 1:
+                if 'MODPATH_TIMESERIES_FILE 6' in line.upper():
+                    self.version = 6
+                elif 'MODPATH_TIMESERIES_FILE         7' in line.upper():
+                    self.version = 7
+                elif 'MODPATH 5.0' in line.upper():
+                    self.version = 5
+                    if 'COMPACT' in line.upper():
+                        compact = True
+                elif 'MODPATH Version 3.00' in line.upper():
+                    self.version = 3
+                else:
+                    self.version = None
+                if self.version is None:
+                    errmsg = '{} '.format(self.fname) + \
+                             'is not a valid timeseries file'
+                    raise Exception(errmsg)
+            self.skiprows += 1
+            if self.version == 6 or self.version == 7:
+                if 'end header' in line.lower():
+                    break
+            elif self.version == 3 or self.version == 5:
+                break
+
+        # set compact
+        self.compact = compact
+
+        # return to the top of the file
+        self.file.seek(0)
+
+    def _get_dtypes(self):
+        """
+           Build numpy dtype for the MODPATH 6 timeseries file.
+        """
+        if self.version == 3 or self.version == 5:
+            if self.compact:
+                dtype = np.dtype([('timestepindex', np.int32),
+                                  ('particleid', np.int32),
+                                  ('node', np.int32),
+                                  ('x', np.float32),
+                                  ('y', np.float32),
+                                  ('z', np.float32),
+                                  ('zloc', np.float32),
+                                  ('time', np.float32),
+                                  ('timestep', np.int32)])
+            else:
+                dtype = np.dtype([('timestepindex', np.int32),
+                                  ('particleid', np.int32),
+                                  ('j', np.int32),
+                                  ('i', np.int32),
+                                  ('k', np.int32),
+                                  ('x', np.float32),
+                                  ('y', np.float32),
+                                  ('z', np.float32),
+                                  ('zloc', np.float32),
+                                  ('time', np.float32),
+                                  ('timestep', np.int32)])
+        elif self.version == 6:
+            dtype = np.dtype([('timepointindex', np.int32),
+                              ('timestep', np.int32),
+                              ('time', np.float32),
+                              ('particleid', np.int32),
+                              ('particlegroup', np.int32),
+                              ('x', np.float32), ('y', np.float32),
+                              ('z', np.float32),
+                              ('grid', np.int32),
+                              ('k', np.int32),
+                              ('i', np.int32),
+                              ('j', np.int32),
+                              ('xloc', np.float32), ('yloc', np.float32),
+                              ('zloc', np.float32)])
+        elif self.version == 7:
+            dtype = np.dtype([('timepointindex', np.int32),
+                              ('timestep', np.int32),
+                              ('time', np.float32),
+                              ('particleid', np.int32),
+                              ('particlegroup', np.int32),
+                              ('particleidloc', np.int32),
+                              ('node', np.int32),
+                              ('xloc', np.float32), ('yloc', np.float32),
+                              ('zloc', np.float32),
+                              ('x', np.float32), ('y', np.float32),
+                              ('z', np.float32),
+                              ('k', np.int32)])
+        return dtype
+
+    def _get_outdtype(self):
+        outdtype = np.dtype([('x', np.float32), ('y', np.float32),
+                             ('z', np.float32),
+                             ('time', np.float32), ('k', np.int32),
+                             ('particleid', np.int32)])
+        return outdtype
+
+    def get_maxid(self):
+        """
+        Get the maximum timeseries number in the file timeseries file
+
+        Returns
+        ----------
+        out : int
+            Maximum pathline number.
+
+        """
+        return self._data['particleid'].max()
+
+    def get_maxtime(self):
+        """
+        Get the maximum time in timeseries file
+
+        Returns
+        ----------
+        out : float
+            Maximum pathline time.
+
+        """
+        return self._data['time'].max()
+
+    def get_data(self, partid=0, totim=None, ge=True):
+        """
+        get timeseries data from the timeseries file for a single timeseries
+        particleid.
+
+        Parameters
+        ----------
+        partid : int
+            The zero-based particle id.  The first record is record 0.
+        totim : float
+            The simulation time. All timeseries points for particle partid
+            that are greater than or equal to (ge=True) or less than or
+            equal to (ge=False) totim will be returned. Default is None
+        ge : bool
+            Boolean that determines if timeseries times greater than or equal
+            to or less than or equal to totim is used to create a subset
+            of timeseries. Default is True.
+
+        Returns
+        ----------
+        ra : numpy record array
+            A numpy recarray with the x, y, z, time, k, and particleid for
+            timeseries partid.
+
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> tsobj = flopy.utils.TimeseriesFile('model.timeseries')
+        >>> ts1 = tsobj.get_data(partid=1)
+
+        """
+        if totim is not None:
+            if ge:
+                idx = (self._data['time'] >= totim) & \
+                      (self._data['particleid'] == partid)
+            else:
+                idx = (self._data['time'] <= totim) & \
+                      (self._data['particleid'] == partid)
+        else:
+            idx = self._data['particleid'] == partid
+        self._ta = self._data[idx]
+        names = ['x', 'y', 'z', 'time', 'k', 'particleid']
+        return np.rec.fromarrays((self._ta[name] for name in names),
+                                 dtype=self.outdtype)
+
+    def get_alldata(self, totim=None, ge=True):
+        """
+        get timeseries data from the timeseries file for all timeseries
+        and all times.
+
+        Parameters
+        ----------
+        totim : float
+            The simulation time. All timeseries points for timeseries partid
+            that are greater than or equal to (ge=True) or less than or
+            equal to (ge=False) totim will be returned. Default is None
+        ge : bool
+            Boolean that determines if timeseries times greater than or equal
+            to or less than or equal to totim is used to create a subset
+            of timeseries. Default is True.
+
+        Returns
+        ----------
+        tlist : a list of numpy record array
+            A list of numpy recarrays with the x, y, z, time, k, and
+            particleid for all timeseries.
+
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> tsobj = flopy.utils.TimeseriesFile('model.timeseries')
+        >>> ts = tsobj.get_alldata()
+
+        """
+        return [self.get_data(partid=partid, totim=totim, ge=ge)
+                for partid in self.nid]

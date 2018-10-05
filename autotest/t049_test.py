@@ -4,6 +4,7 @@ import shutil
 import flopy
 import numpy as np
 import matplotlib.pyplot as plt
+
 try:
     import pymake
 except:
@@ -28,7 +29,6 @@ if v is None or v2 is None:
 
 
 def test_modpath():
-
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     mfnam = 'freyberg.nam'
 
@@ -123,6 +123,7 @@ def test_modpath():
 
     return
 
+
 def test_pathline_plot():
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     mfnam = 'freyberg.nam'
@@ -135,9 +136,11 @@ def test_pathline_plot():
         lpth = pth
 
     nampath = os.path.join(lpth, mfnam)
-    assert os.path.exists(nampath), "namefile {} doesn't exist.".format(nampath)
+    assert os.path.exists(nampath), "namefile {} doesn't exist.".format(
+        nampath)
     # load the modflow files for model map
-    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True, forgive=False,
+    m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
+                                   forgive=False,
                                    exe_name=mf2005_exe)
 
     # load modpath output files
@@ -222,8 +225,8 @@ def test_pathline_plot():
 
     return
 
-def test_mp5_load():
 
+def test_mp5_load():
     # load the base freyberg model
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     # load the modflow files for model map
@@ -267,12 +270,12 @@ def test_mp5_load():
         try:
             mm.plot_pathline(p, colors=colors[n], layer='all')
         except:
-            assert False, 'could not plot pathline {} '.format(n+1) + \
+            assert False, 'could not plot pathline {} '.format(n + 1) + \
                           'with layer="all"'
         try:
             mm.plot_endpoint(e)
         except:
-            assert False, 'could not plot endpoint {} '.format(n+1) + \
+            assert False, 'could not plot endpoint {} '.format(n + 1) + \
                           'with layer="all"'
 
     # plot the grid and ibound array
@@ -291,7 +294,106 @@ def test_mp5_load():
 
     return
 
+
+def test_mp5_timeseries_load():
+    pth = os.path.join('..', 'examples', 'data', 'mp5')
+    files = [os.path.join(pth, name) for name in sorted(os.listdir(pth))
+             if '.timeseries' in name]
+    for file in files:
+        print(file)
+        eval_timeseries(file)
+    return
+
+
+def test_mp6_timeseries_load():
+    pth = os.path.join('..', 'examples', 'data', 'mp6')
+    files = [os.path.join(pth, name) for name in sorted(os.listdir(pth))
+             if '.timeseries' in name]
+    for file in files:
+        print(file)
+        eval_timeseries(file)
+    return
+
+
+def eval_timeseries(file):
+    ts = flopy.utils.TimeseriesFile(file)
+    msg = '{} '.format(os.path.basename(file)) + \
+          'is not an instance of flopy.utils.TimeseriesFile'
+    assert isinstance(ts, flopy.utils.TimeseriesFile), msg
+
+    # get the all of the data
+    try:
+        tsd = ts.get_alldata()
+    except:
+        pass
+    msg = 'could not load data using get_alldata() from ' + \
+          '{}.'.format(os.path.basename(file))
+    assert len(tsd) > 0, msg
+
+    # get the data for the last particleid
+    partid = None
+    try:
+        partid = ts.get_maxid()
+    except:
+        pass
+    msg = 'could not get maximum particleid using get_maxid() from ' + \
+          '{}.'.format(os.path.basename(file))
+    assert partid is not None, msg
+
+    try:
+        tsd = ts.get_data(partid=partid)
+    except:
+        pass
+    msg = 'could not load data for particleid {} '.format(partid) + \
+          'using get_data() from ' + \
+          '{}. '.format(os.path.basename(file)) + 'Maximum partid = ' + \
+          '{}.'.format(ts.get_maxid())
+    assert tsd.shape[0] > 0, msg
+
+    timemax = None
+    try:
+        timemax = ts.get_maxtime() / 2.
+    except:
+        pass
+    msg = 'could not get maximum time using get_maxtime() from ' + \
+          '{}.'.format(os.path.basename(file))
+    assert timemax is not None, msg
+
+    try:
+        tsd = ts.get_alldata(totim=timemax)
+    except:
+        pass
+    msg = 'could not load data for totim>={} '.format(timemax) + \
+          'using get_alldata() from ' + \
+          '{}. '.format(os.path.basename(file)) + 'Maximum totim = ' + \
+          '{}.'.format(ts.get_maxtime())
+    assert len(tsd) > 0, msg
+
+    timemax = None
+    try:
+        timemax = ts.get_maxtime()
+    except:
+        pass
+    msg = 'could not get maximum time using get_maxtime() from ' + \
+          '{}.'.format(os.path.basename(file))
+    assert timemax is not None, msg
+
+    try:
+        tsd = ts.get_alldata(totim=timemax, ge=False)
+    except:
+        pass
+    msg = 'could not load data for totim<={} '.format(timemax) + \
+          'using get_alldata() from ' + \
+          '{}. '.format(os.path.basename(file)) + 'Maximum totim = ' + \
+          '{}.'.format(ts.get_maxtime())
+    assert len(tsd) > 0, msg
+
+    return
+
+
 if __name__ == '__main__':
-    #test_modpath()
-    #test_pathline_plot()
-    test_mp5_load()
+    # test_modpath()
+    # test_pathline_plot()
+    # test_mp5_load()
+    test_mp5_timeseries_load()
+    test_mp6_timeseries_load()

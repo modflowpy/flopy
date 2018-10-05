@@ -12,8 +12,10 @@ FloPy Changes
 * `SpatialReference.export_array()` now writes 3-D numpy arrays to multiband GeoTiffs
 * Add load support to for MNW1; ModflowMnw1 now uses a `stress_period_data` `Mflist` to store MNW information, similar to other BC packages.
 * Added a Triangle class that is a light wrapper for the Triangle program for generating triangular meshes.  Added a notebook called flopy3_triangle.ipynb that demonstrates how to use it and build a MODFLOW 6 model with a triangular mesh.  The current version of this Triangle class should be considered beta functionality as it is likely to change.
-* Added support for MODPATH 7 (beta)
-* Added support for MODPATH 3 and 5 pathline and enpoint output files.
+* Added support for MODPATH 7 (beta).
+* Added support for MODPATH 3 and 5 pathline and endpoint output files.
+* Added support for MODPATH timeseries output files (`flopy.utils.TimeseriesFile()`).
+* Added support for plotting MODPATH timeseries output data (`plot_timeseries()`) with ModelMap.
 
 * Bug fixes:
     * Fixed issue in HOB when the same layer is specified in the `MLAY` data (dataset 4). If the layer exists the previous fraction value is added to the current value.

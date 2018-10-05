@@ -82,35 +82,37 @@ class Modpath7(BaseModel):
             ibound = None
             dis = self.flowmodel.get_package('DIS')
             if dis is None:
-                dis = self.flowmodel.get_package('DISV')
-            else:
-                nlay, nrow, ncol = dis.nlay.array, dis.nrow.array, \
-                                   dis.ncol.array
-                shape = (nlay, nrow, ncol)
-            if dis is None:
-                dis = self.flowmodel.get_package('DISU')
-            elif dis is not None and shape is None:
-                nlay, ncpl = dis.nlay.array, dis.ncpl.array
-                shape = (nlay, ncpl)
-            if dis is None:
                 msg = 'DIS, DISV, or DISU packages must be ' + \
                       'included in the passed MODFLOW 6 model'
                 raise Exception(msg)
-            elif dis is not None and shape is None:
-                nodes = dis.nodes.array
-                shape = (nodes)
+            else:
+                if dis.package_name.lower() == 'dis':
+                    nlay, nrow, ncol = dis.nlay.array, dis.nrow.array, \
+                                       dis.ncol.array
+                    shape = (nlay, nrow, ncol)
+                elif dis.package_name.lower() == 'disv':
+                    nlay, ncpl = dis.nlay.array, dis.ncpl.array
+                    shape = (nlay, ncpl)
+                elif dis.package_name.lower() == 'disu':
+                    nodes = dis.nodes.array
+                    shape = tuple(nodes, )
+                else:
+                    msg = 'DIS, DISV, or DISU packages must be ' + \
+                          'included in the passed MODFLOW 6 model'
+                    raise TypeError(msg)
 
-            # terminate (for now) if mf6 model does not use dis
-            if len(shape) != 3:
-                msg = 'DIS currently the only supported MODFLOW 6 ' + \
-                      'discretization package that can be used with ' + \
-                      'MODPATH 7'
-                raise Exception(msg)
+            # terminate (for now) if mf6 model does not use dis or disv
+            if len(shape) < 2:
+                msg = 'DIS and DISV are currently the only supported ' + \
+                      'MODFLOW 6 discretization packages that can be ' + \
+                      'used with MODPATH 7'
+                raise TypeError(msg)
 
 
             # set dis and grbdis file name
             dis_file = None
             grbdis_file = dis.filename + '.grb'
+            grbtag = 'GRB{}'.format(dis.package_name.upper())
 
             tdis = self.flowmodel.simulation.get_package('TDIS')
             if tdis is None:
@@ -192,6 +194,7 @@ class Modpath7(BaseModel):
 
             # set grbdis_file
             grbdis_file = None
+            grbtag = None
 
             # set tdis_file
             tdis_file = None
@@ -244,6 +247,7 @@ class Modpath7(BaseModel):
         self.shape = shape
         self.dis_file = dis_file
         self.grbdis_file = grbdis_file
+        self.grbtag = grbtag
         self.tdis_file = tdis_file
 
         # set temporal data
@@ -321,17 +325,17 @@ class Modpath7(BaseModel):
         f = open(fpth, 'w')
         f.write('{}\n'.format(self.heading))
         if self.mpbas_file is not None:
-            f.write('{} {}\n'.format('MPBAS', self.mpbas_file))
+            f.write('{:10s} {}\n'.format('MPBAS', self.mpbas_file))
         if self.dis_file is not None:
-            f.write('{} {}\n'.format('DIS', self.dis_file))
+            f.write('{:10s} {}\n'.format('DIS', self.dis_file))
         if self.grbdis_file is not None:
-            f.write('{} {}\n'.format('GRBDIS', self.grbdis_file))
+            f.write('{:10s} {}\n'.format(self.grbtag, self.grbdis_file))
         if self.tdis_file is not None:
-            f.write('{} {}\n'.format('TDIS', self.tdis_file))
+            f.write('{:10s} {}\n'.format('TDIS', self.tdis_file))
         if self.head_file is not None:
-            f.write('{} {}\n'.format('HEAD', self.head_file))
+            f.write('{:10s} {}\n'.format('HEAD', self.head_file))
         if self.budget_file is not None:
-            f.write('{} {}\n'.format('BUDGET', self.budget_file))
+            f.write('{:10s} {}\n'.format('BUDGET', self.budget_file))
         f.close()
 
     #sim = property(getsim)  # Property has no setter, so read-only

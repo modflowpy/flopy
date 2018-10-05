@@ -67,7 +67,7 @@ FloPy Supported Packages
 | MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
 | Starting Location Data - Input Style 1   | Supported            | Not supported        | Not supported        |
 | Starting Location Data - Input Style 2   | Not supported        | Not supported        | Not supported        |
-| Starting Location Data - Input Style 3   | Not supported        | Not supported        | Not supported        |
+| Starting Location Data - Input Style 3   | Supported            | Not supported        | Not supported        |
 | Starting Location Data - Input Style 4   | Not supported        | Not supported        | Not supported        |
 
 

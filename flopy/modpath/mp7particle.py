@@ -295,7 +295,8 @@ class Particles(Modpath7Particle):
                           'should contain list or tuple entries'
                     raise ValueError(msg)
             else:
-                allint = all(isinstance(el, int) for el in v)
+                allint = all(isinstance(el, (int, np.int32, np.int64))
+                             for el in v)
                 # convert to a list of tuples
                 if allint:
                     t = []
@@ -517,7 +518,7 @@ class ParticleNodeData(object):
 
         # validate nodes
         if not isinstance(nodes, np.ndarray):
-            if isinstance(nodes, int):
+            if isinstance(nodes, (int, np.int32, np.int64)):
                 nodes = np.array([nodes], dtype=np.int32)
             elif isinstance(nodes, (list, tuple)):
                 nodes = np.array(nodes, dtype=np.int32)
@@ -598,7 +599,7 @@ class ParticleCellData(object):
 
         # validate nodes
         if not isinstance(nodes, np.ndarray):
-            if isinstance(nodes, int):
+            if isinstance(nodes, (int, np.int32, np.int64)):
                 nodes = np.array([nodes], dtype=np.int32)
             elif isinstance(nodes, (list, tuple)):
                 nodes = np.array(nodes, dtype=np.int32)
