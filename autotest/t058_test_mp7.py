@@ -321,8 +321,9 @@ def build_mf6():
     # Write the datasets
     sim.write_simulation()
     # Run the simulation
-    success, buff = sim.run_simulation()
-    assert success, 'mf6 model did not run'
+    if run:
+        success, buff = sim.run_simulation()
+        assert success, 'mf6 model did not run'
 
 
 def build_modpath(mpn, particlegroups):
@@ -349,7 +350,9 @@ def build_modpath(mpn, particlegroups):
     mp.write_input()
 
     # run modpath
-    mp.run_model()
+    if run:
+        success, buff = mp.run_model()
+        assert success, 'mp7 model ({}) did not run'.format(mp.name)
 
     return
 

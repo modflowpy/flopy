@@ -1,9 +1,11 @@
 import numpy as np
 from ..mbase import BaseModel
 from ..modflow import Modflow
-from ..mf6 import ModflowGwf
+from ..mf6 import MFModel
 from ..pakbase import Package
+from .mp7bas import Modpath7Bas
 from .mp7sim import Modpath7Sim
+from .mp7particle import ParticleCellData, NodeParticleTemplate
 import os
 
 
@@ -50,7 +52,7 @@ class Modpath7(BaseModel):
         verbose
     """
 
-    def __init__(self, modelname='modpath7', simfile_ext='mpsim',
+    def __init__(self, modelname='modpath7test', simfile_ext='mpsim',
                  namefile_ext='mpnam', version='modpath7', exe_name='mp7.exe',
                  flowmodel=None, head_file=None, budget_file=None,
                  model_ws=None, verbose=False):
@@ -69,12 +71,23 @@ class Modpath7(BaseModel):
         self.mpnamefile = '{}.{}'.format(self.name, namefile_ext)
         self.mpbas_file = '{}.mpbas'.format(modelname)
 
+        if not isinstance(flowmodel, (Modflow, MFModel)):
+            msg = 'Modpath7: flow model is not an instance of ' + \
+                  'flopy.modflow.Modflow or flopy.mf6.MFModel. ' + \
+                  'Passed object of type {}'.format(type(flowmodel))
+            raise TypeError(msg)
+
+        # if a MFModel instance ensure flowmodel is a MODFLOW 6 GWF model
+        if isinstance(flowmodel, MFModel):
+            if flowmodel.model_type != 'gwf' and \
+                    flowmodel.model_type != 'gwf6':
+                msg = 'Modpath7: flow model type must be gwf. ' + \
+                      'Passed model_type is {}.'.format(flowmodel.model_type)
+                raise TypeError(msg)
+
+        # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
         self.flow_version = self.flowmodel.version
-        # if isinstance(self.flowmodel, Modflow):
-        #     self.flow_version = self.flowmodel.version
-        # elif isinstance(self.flowmodel, ModflowGwf):
-        #     self.flow_version = self.flowmodel.version
 
         if self.flow_version == 'mf6':
             shape = None
@@ -108,6 +121,11 @@ class Modpath7(BaseModel):
                       'used with MODPATH 7'
                 raise TypeError(msg)
 
+            # set ib
+            ib = dis.idomain.array
+            # set all ib to active if ib is not defined
+            if ib is None:
+                ib = np.ones(shape, np.int32)
 
             # set dis and grbdis file name
             dis_file = None
@@ -154,7 +172,6 @@ class Modpath7(BaseModel):
             for k in range(shape[0]):
                 laytyp.append(icelltype[k].max())
             laytyp = np.array(laytyp, dtype=np.int32)
-
 
             # set default hdry and hnoflo
             hdry = None
@@ -281,7 +298,8 @@ class Modpath7(BaseModel):
         self.hnoflo = hnoflo
         self.hdry = hdry
 
-        # set ibound
+        # set ib and ibound
+        self.ib = ib
         self.ibound = ibound
 
         # set file attributes
@@ -338,54 +356,67 @@ class Modpath7(BaseModel):
             f.write('{:10s} {}\n'.format('BUDGET', self.budget_file))
         f.close()
 
-    #sim = property(getsim)  # Property has no setter, so read-only
-    #mf = property(getmf)  # Property has no setter, so read-only
-
     @staticmethod
-    def create_mp7sim(self, simtype='pathline', trackdir='forward',
-                      packages='WEL', start_time=0, default_ifaces=None,
-                      ParticleColumnCount=4, ParticleRowCount=4,
-                      MinRow=0, MinColumn=0, MaxRow=None, MaxColumn=None,
-                      ):
+    def create_mp7(modelname='modpath7test', trackdir='forward',
+                   flowmodel=None, exe_name='mp7', model_ws='.',
+                   verbose=False):
         """
-        Create a MODPATH simulation file using available MODFLOW boundary
-        package data.
+        Create a default MODPATH 7 model using a passed flowmodel with
+        8 particles in every active model cell.
 
         Parameters
         ----------
-        simtype : str
-            Keyword defining the MODPATH simulation type. Available simtype's
-             are 'endpoint', 'pathline', and 'timeseries'.
-             (default is 'PATHLINE')
+        modelname : string, optional
+            Name of model.  This string will be used to name the MODFLOW input
+            that are created with write_model. (the default is 'modpath7test')
         trackdir : str
             Keywork that defines the MODPATH particle tracking direction.
             Available trackdir's are 'backward' and 'forward'.
             (default is 'forward')
-        packages : str or list of strings
-            Keyword defining the modflow packages used to create initial
-            particle locations. Supported packages are 'WEL', 'MNW2' and 'RCH'.
-            (default is 'WEL').
-        start_time : float or tuple
-            Sets the value of MODPATH reference time relative to MODFLOW time.
-            float : value of MODFLOW simulation time at which to start the
-                    particle tracking simulation. Sets the value of MODPATH
-                    ReferenceTimeOption to 1.
-            tuple : (period, step, time fraction) MODFLOW stress period, time
-                    step and fraction between 0 and 1 at which to start the
-                    particle tracking simulation. Sets the value of MODPATH
-                    ReferenceTimeOption to 2.
-        default_ifaces : list
-            List of cell faces (1-6; see MODPATH6 manual, fig. 7) on which to
-            start particles. (default is None, meaning ifaces will vary
-            depending on packages argument above)
-        ParticleRowCount : int
-            Rows of particles to start on each cell index face (iface).
-        ParticleColumnCount : int
-            Columns of particles to start on each cell index face (iface).
+        flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
+            MODFLOW model
+        exe_name : string, optional
+            The name of the executable to use (the default is 'mp7').
+        model_ws : string, optional
+            model workspace.  Directory name to create model data sets.
+            (default is the present working directory).
+        verbose : boolean, optional
+            Print additional information to the screen (default is False).
+
 
         Returns
         -------
         mp : Modpath7 object
 
         """
-        return  # mp
+        # create MODPATH 7 model instance
+        mp = Modpath7(modelname=modelname, flowmodel=flowmodel,
+                      exe_name=exe_name, model_ws=model_ws, verbose=verbose)
+
+        # create MODPATH 7 basic file and add to the MODPATH 7
+        # model instance (mp)
+        Modpath7Bas(mp)
+
+        # create particles
+        nodes = []
+        node = 0
+        for ib in mp.ib.flatten():
+            if ib > 0:
+                nodes.append(node)
+            node += 1
+        p = ParticleCellData(columncelldivisions=2,
+                             rowcelldivisions=2,
+                             layercelldivisions=2,
+                             nodes=nodes)
+        pg = NodeParticleTemplate(particledata=p)
+
+        # creat MODPATH 7 simulation file and add to the MODPATH 7
+        # model instance (mp)
+        Modpath7Sim(mp, simulationtype='combined',
+                    trackingdirection=trackdir,
+                    weaksinkoption='pass_through',
+                    weaksourceoption='pass_through',
+                    referencetime=0.,
+                    stoptimeoption='extend',
+                    particlegroups=pg)
+        return mp
