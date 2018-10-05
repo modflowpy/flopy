@@ -6,6 +6,7 @@ try:
 except:
     plt = None
 from flopy.plot import plotutil
+from flopy.utils import geometry
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -30,19 +31,16 @@ class VertexCrossSection(object):
 
         if model is not None:
             self.mg = model.modelgrid
-            self.sr = model.modelgrid.sr
             self.dis = model.get_package("DIS")
 
         elif modelgrid is not None:
             self.mg = modelgrid
-            self.sr = modelgrid.sr
             self.dis = dis
             if dis is None:
                 raise AssertionError("Cannot find model discretization package")
 
         elif dis is not None:
             self.mg = dis.parent.modelgrid
-            self.sr = dis.parent.modelgrid.sr
             self.dis = dis
 
         else:
@@ -51,12 +49,13 @@ class VertexCrossSection(object):
         # Set origin and rotation,
         if any(elem is not None for elem in (xul, yul, xll, yll)) or \
                 rotation != 0 or length_multiplier != 1.:
-            self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(delc=self.mg.delc,
-                                         xul=xul, yul=yul,
-                                         xll=xll, yll=yll,
-                                         rotation=rotation)
-            self.mg.sr = self.sr
+            # self.sr.length_multiplier = length_multiplier
+            # self.sr.set_spatialreference(delc=self.mg.delc,
+            #                             xul=xul, yul=yul,
+            #                             xll=xll, yll=yll,
+            #                             rotation=rotation)
+            # self.mg.sr = self.sr
+            pass
 
         if line is None:
             err_msg = 'line must be specified.'

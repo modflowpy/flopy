@@ -130,6 +130,7 @@ class Grid(object):
         self._idomain = idomain
         self._epsg = epsg
         self._proj4 = proj4
+        self._wkt = None
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot

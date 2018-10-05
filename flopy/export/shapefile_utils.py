@@ -4,10 +4,11 @@ Module for exporting and importing flopy model attributes
 import copy
 import shutil
 import numpy as np
+import os
+import sys
 import numpy.lib.recfunctions as rf
 from ..datbase import DataType, DataInterface, DataListInterface
 from ..utils import Util2d, Util3d, Transient2d, MfList
-from ..utils.reference import getprj
 
 
 def import_shapefile():
@@ -35,7 +36,6 @@ def write_gridlines_shapefile(filename, mg):
     None
 
     """
-    # todo: needs update for model grid
     try:
         import shapefile
     except Exception as e:
@@ -334,7 +334,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     write_grid_shapefile2(filename, ml.modelgrid, array_dict)
     epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
-    write_prj(filename, ml.sr, epsg, prj)
+    write_prj(filename, ml.modelgrid, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -552,34 +552,36 @@ def write_prj(shpname, sr=None, epsg=None, prj=None,
     # projection file name
     prjname = shpname.replace('.shp', '.prj')
 
-    from flopy.grid import SpatialReference, StructuredGrid
+    from flopy.grid import StructuredGrid, VertexGrid
     from flopy.utils.reference import SpatialReference as OGsr
 
     # temporary fix until code is properly refactored to
     # pass a new style SpatialReference object through.
-    if isinstance(sr, StructuredGrid):
-        return
+    #if isinstance(sr, StructuredGrid):
+    #    pass
 
-    if sr is not None and \
-            not isinstance(sr, SpatialReference) and \
-            not isinstance(sr, OGsr):
-        try:
-            sr = sr.sr
-        except:
-            raise TypeError('Unrecognized input type for "sr"')
+    #if sr is not None and \
+    #        not isinstance(sr, SpatialReference) and \
+    #        not isinstance(sr, OGsr):
+    #    try:
+    #        sr = sr.sr
+    #    except:
+    #        raise TypeError('Unrecognized input type for "sr"')
     # figure which CRS option to use
     # prioritize args over SpatialReference
     # no proj4 option because it is too difficult
     # to create prjfile from proj4 string without OGR
     prjtxt = wkt_string
     if epsg is not None:
-        prjtxt = getprj(epsg)
+        prjtxt = CRS.getprj(epsg)
     # copy a supplied prj file
     elif prj is not None:
         shutil.copy(prj, prjname)
+
     elif sr is not None:
-        if sr.wkt is not None:
-            prjtxt = sr.wkt
+        if sr.epsg is not None:
+            prjtxt = CRS.getprj(epsg)
+
     else:
         print('No CRS information for writing a .prj file.\n'
               'Supply an epsg code or .prj file path to the '
@@ -589,3 +591,323 @@ def write_prj(shpname, sr=None, epsg=None, prj=None,
     if prjtxt is not None:
         with open(prjname, 'w') as output:
             output.write(prjtxt)
+
+class CRS(object):
+    """
+    Container to parse and store coordinate reference system parameters,
+    and translate between different formats.
+    """
+
+    def __init__(self, prj=None, esri_wkt=None, epsg=None):
+
+        self.wktstr = None
+        if prj is not None:
+            with open(prj) as input:
+                self.wktstr = input.read()
+        elif esri_wkt is not None:
+            self.wktstr = esri_wkt
+        elif epsg is not None:
+            wktstr = CRS.getprj(epsg)
+            if wktstr is not None:
+                self.wktstr = wktstr
+        if self.wktstr is not None:
+            self.parse_wkt()
+
+    @property
+    def crs(self):
+        """Dict mapping crs attibutes to proj4 parameters"""
+        proj = None
+        if self.projcs is not None:
+            # projection
+            if 'mercator' in self.projcs.lower():
+                if 'transvers' in self.projcs.lower() or \
+                        'tm' in self.projcs.lower():
+                    proj = 'tmerc'
+                else:
+                    proj = 'merc'
+            elif 'utm' in self.projcs.lower() and \
+                    'zone' in self.projcs.lower():
+                proj = 'utm'
+            elif 'stateplane' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'lambert' and 'conformal' and 'conic' in self.projcs.lower():
+                proj = 'lcc'
+            elif 'albers' in self.projcs.lower():
+                proj = 'aea'
+        elif self.projcs is None and self.geogcs is not None:
+            proj = 'longlat'
+
+        # datum
+        if 'NAD' in self.datum.lower() or \
+                'north' in self.datum.lower() and \
+                'america' in self.datum.lower():
+            datum = 'nad'
+            if '83' in self.datum.lower():
+                datum += '83'
+            elif '27' in self.datum.lower():
+                datum += '27'
+        elif '84' in self.datum.lower():
+            datum = 'wgs84'
+
+        # ellipse
+        if '1866' in self.spheriod_name:
+            ellps = 'clrk66'
+        elif 'grs' in self.spheriod_name.lower():
+            ellps = 'grs80'
+        elif 'wgs' in self.spheriod_name.lower():
+            ellps = 'wgs84'
+
+        # prime meridian
+        pm = self.primem[0].lower()
+
+        return {'proj': proj,
+                'datum': datum,
+                'ellps': ellps,
+                'a': self.semi_major_axis,
+                'rf': self.inverse_flattening,
+                'lat_0': self.latitude_of_origin,
+                'lat_1': self.standard_parallel_1,
+                'lat_2': self.standard_parallel_2,
+                'lon_0': self.central_meridian,
+                'k_0': self.scale_factor,
+                'x_0': self.false_easting,
+                'y_0': self.false_northing,
+                'units': self.projcs_unit,
+                'zone': self.utm_zone}
+
+    @property
+    def grid_mapping_attribs(self):
+        """Map parameters for CF Grid Mappings
+        http://http://cfconventions.org/cf-conventions/cf-conventions.html,
+        Appendix F: Grid Mappings
+        """
+        if self.wktstr is not None:
+            sp = [p for p in [self.standard_parallel_1,
+                              self.standard_parallel_2]
+                  if p is not None]
+            sp = sp if len(sp) > 0 else None
+            proj = self.crs['proj']
+            names = {'aea': 'albers_conical_equal_area',
+                     'aeqd': 'azimuthal_equidistant',
+                     'laea': 'lambert_azimuthal_equal_area',
+                     'longlat': 'latitude_longitude',
+                     'lcc': 'lambert_conformal_conic',
+                     'merc': 'mercator',
+                     'tmerc': 'transverse_mercator',
+                     'utm': 'transverse_mercator'}
+            attribs = {'grid_mapping_name': names[proj],
+                       'semi_major_axis': self.crs['a'],
+                       'inverse_flattening': self.crs['rf'],
+                       'standard_parallel': sp,
+                       'longitude_of_central_meridian': self.crs['lon_0'],
+                       'latitude_of_projection_origin': self.crs['lat_0'],
+                       'scale_factor_at_projection_origin': self.crs['k_0'],
+                       'false_easting': self.crs['x_0'],
+                       'false_northing': self.crs['y_0']}
+            return {k: v for k, v in attribs.items() if v is not None}
+
+    @property
+    def proj4(self):
+        """Not implemented yet"""
+        return None
+
+    def parse_wkt(self):
+
+        self.projcs = self._gettxt('PROJCS["', '"')
+        self.utm_zone = None
+        if self.projcs is not None and 'utm' in self.projcs.lower():
+            self.utm_zone = self.projcs[-3:].lower().strip('n').strip('s')
+        self.geogcs = self._gettxt('GEOGCS["', '"')
+        self.datum = self._gettxt('DATUM["', '"')
+        tmp = self._getgcsparam('SPHEROID')
+        self.spheriod_name = tmp.pop(0)
+        self.semi_major_axis = tmp.pop(0)
+        self.inverse_flattening = tmp.pop(0)
+        self.primem = self._getgcsparam('PRIMEM')
+        self.gcs_unit = self._getgcsparam('UNIT')
+        self.projection = self._gettxt('PROJECTION["', '"')
+        self.latitude_of_origin = self._getvalue('latitude_of_origin')
+        self.central_meridian = self._getvalue('central_meridian')
+        self.standard_parallel_1 = self._getvalue('standard_parallel_1')
+        self.standard_parallel_2 = self._getvalue('standard_parallel_2')
+        self.scale_factor = self._getvalue('scale_factor')
+        self.false_easting = self._getvalue('false_easting')
+        self.false_northing = self._getvalue('false_northing')
+        self.projcs_unit = self._getprojcs_unit()
+
+    def _gettxt(self, s1, s2):
+        s = self.wktstr.lower()
+        strt = s.find(s1.lower())
+        if strt >= 0:  # -1 indicates not found
+            strt += len(s1)
+            end = s[strt:].find(s2.lower()) + strt
+            return self.wktstr[strt:end]
+
+    def _getvalue(self, k):
+        s = self.wktstr.lower()
+        strt = s.find(k.lower())
+        if strt >= 0:
+            strt += len(k)
+            end = s[strt:].find(']') + strt
+            try:
+                return float(self.wktstr[strt:end].split(',')[1])
+            except:
+                pass
+
+    def _getgcsparam(self, txt):
+        nvalues = 3 if txt.lower() == 'spheroid' else 2
+        tmp = self._gettxt('{}["'.format(txt), ']')
+        if tmp is not None:
+            tmp = tmp.replace('"', '').split(',')
+            name = tmp[0:1]
+            values = list(map(float, tmp[1:nvalues]))
+            return name + values
+        else:
+            return [None] * nvalues
+
+    def _getprojcs_unit(self):
+        if self.projcs is not None:
+            tmp = self.wktstr.lower().split('unit["')[-1]
+            uname, ufactor = tmp.strip().strip(']').split('",')[0:2]
+            ufactor = float(ufactor.split(']')[0].split()[0].split(',')[0])
+            return uname, ufactor
+        return None, None
+
+    @staticmethod
+    def getprj(epsg, addlocalreference=True, text='esriwkt'):
+        """Gets projection file (.prj) text for given epsg code from spatialreference.org
+        See: https://www.epsg-registry.org/
+        Parameters
+        ----------
+        epsg : int
+            epsg code for coordinate system
+        addlocalreference : boolean
+            adds the projection file text associated with epsg to a local
+            database, epsgref.py, located in site-packages.
+        Returns
+        -------
+        prj : str
+            text for a projection (*.prj) file.
+        """
+        epsgfile = EpsgReference()
+        wktstr = None
+        try:
+            from epsgref import prj
+            wktstr = prj.get(epsg)
+        except:
+            epsgfile.make()
+        if wktstr is None:
+            wktstr = CRS.get_spatialreference(epsg, text=text)
+        if addlocalreference and wktstr is not None:
+            epsgfile.add(epsg, wktstr)
+        return wktstr
+
+    @staticmethod
+    def get_spatialreference(epsg, text='esriwkt'):
+        """Gets text for given epsg code and text format from spatialreference.org
+        Fetches the reference text using the url:
+            http://spatialreference.org/ref/epsg/<epsg code>/<text>/
+        See: https://www.epsg-registry.org/
+        Parameters
+        ----------
+        epsg : int
+            epsg code for coordinate system
+        text : str
+            string added to url
+        Returns
+        -------
+        url : str
+        """
+        from flopy.utils.flopy_io import get_url_text
+
+        epsg_categories = ['epsg', 'esri']
+        for cat in epsg_categories:
+            url = "http://spatialreference.org/ref/{2}/{0}/{1}/".format(epsg,
+                                                                        text,
+                                                                        cat)
+            result = get_url_text(url)
+            if result is not None:
+                break
+        if result is not None:
+            return result.replace("\n", "")
+        elif result is None and text != 'epsg':
+            for cat in epsg_categories:
+                error_msg = 'No internet connection or epsg code {0} ' \
+                            'not found at http://spatialreference.org/ref/{2}/{0}/{1}'.format(
+                    epsg,
+                    text,
+                    cat)
+                print(error_msg)
+        elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
+            return '+init=epsg:{}'.format(epsg)
+
+    @staticmethod
+    def getproj4(epsg):
+        """Gets projection file (.prj) text for given epsg code from
+        spatialreference.org. See: https://www.epsg-registry.org/
+        Parameters
+        ----------
+        epsg : int
+            epsg code for coordinate system
+        Returns
+        -------
+        prj : str
+            text for a projection (*.prj) file.
+        """
+        return CRS.get_spatialreference(epsg, text='proj4')
+
+class EpsgReference:
+    """Sets up a local database of projection file text referenced by epsg code.
+    The database is located in the site packages folder in epsgref.py, which
+    contains a dictionary, prj, of projection file text keyed by epsg value.
+    """
+
+    def __init__(self):
+        sp = [f for f in sys.path if f.endswith('site-packages')][0]
+        self.location = os.path.join(sp, 'epsgref.py')
+
+    def _remove_pyc(self):
+        try:  # get rid of pyc file
+            os.remove(self.location + 'c')
+        except:
+            pass
+
+    def make(self):
+        if not os.path.exists(self.location):
+            newfile = open(self.location, 'w')
+            newfile.write('prj = {}\n')
+            newfile.close()
+
+    def reset(self, verbose=True):
+        if os.path.exists(self.location):
+            os.remove(self.location)
+        self._remove_pyc()
+        self.make()
+        if verbose:
+            print('Resetting {}'.format(self.location))
+
+    def add(self, epsg, prj):
+        """add an epsg code to epsgref.py"""
+        with open(self.location, 'a') as epsgfile:
+            epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+
+    def remove(self, epsg):
+        """removes an epsg entry from epsgref.py"""
+        from epsgref import prj
+        self.reset(verbose=False)
+        if epsg in prj.keys():
+            del prj[epsg]
+        for epsg, prj in prj.items():
+            self.add(epsg, prj)
+
+    @staticmethod
+    def show():
+        try:
+            from importlib import reload
+        except:
+            from imp import reload
+        import epsgref
+        from epsgref import prj
+        reload(epsgref)
+        for k, v in prj.items():
+            print('{}:\n{}\n'.format(k, v))

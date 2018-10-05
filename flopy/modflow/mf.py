@@ -220,18 +220,31 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
-        if self.bas6 is not None:
-            ibound = self.bas6.ibound.array
+        # todo: update this to dynamically update the
+        # todo: model grid with changes in dis... Maybe
+        # todo: dis, disv, disu, should have a function or override to
+        # todo: update discretization?
+        if self.__modelgrid is None:
+            if self.bas6 is not None:
+                ibound = self.bas6.ibound.array
+            else:
+                ibound = None
+            # build grid
+            mg = StructuredGrid(self.dis.delc.array,
+                                self.dis.delr.array,
+                                self.dis.top.array,
+                                self.dis.botm.array, ibound)
+            # set coordinate info
+            self._set_coord_info(mg)
+            self.__modelgrid = mg
+            return mg
+
         else:
-            ibound = None
-        # build grid
-        mg = StructuredGrid(self.dis.delc.array,
-                              self.dis.delr.array,
-                              self.dis.top.array,
-                              self.dis.botm.array, ibound)
-        # set coordinate info
-        self._set_coord_info(mg)
-        return mg
+            return self.__modelgrid
+
+    @modelgrid.setter
+    def modelgrid(self, value):
+        self.__modelgrid = value
 
     @property
     def solver_tols(self):

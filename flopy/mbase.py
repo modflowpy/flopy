@@ -153,6 +153,7 @@ class BaseModel(ModelInterface):
         self.heading = ''
         self._exe_name = exe_name
         self.external_extension = 'ref'
+        self.__modelgrid = None
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
             try:

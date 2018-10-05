@@ -132,11 +132,6 @@ class LayerFile(object):
         if self.mg is None:
             self.mg = StructuredGrid(delc=np.ones((self.nrow,)),
                                      delr=np.ones(self.ncol,),
-                                     top=np.ones((self.nrow, self.ncol)),
-                                     botm=np.ones((self.nlay, self.nrow,
-                                                self.ncol)),
-                                     idomain=np.ones((self.nlay,
-                                                          self.nrow, self.ncol)),
                                      xoff=0.0, yoff=0.0,
                                      angrot=0.0)
         return

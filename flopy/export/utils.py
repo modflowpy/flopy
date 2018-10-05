@@ -504,19 +504,19 @@ def mflist_export(f, mfl, **kwargs):
             #if np.isscalar(kper):
             #    kper = [kper]
             model_grid = mfl.mg
-            sr = mfl.mg.sr
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
                 verts = np.array(model_grid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = model_grid.get_cell_vertices(df.i.values, df.j.values)
+                verts = np.array([model_grid.get_cell_vertices(i, df.j.values[ix])
+                                  for ix, i in enumerate(df.i.values)])
                 ra = df.to_records(index=False)
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(ra, geoms=polys, shpname=f,
-                         sr=sr, epsg=epsg, prj=prj)
+                         sr=model_grid, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
@@ -910,4 +910,141 @@ def array2d_export(f, u2d, **kwargs):
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
+
+
+def export_array(modelgrid, filename, a, nodata=-9999,
+                 fieldname='value',
+                 **kwargs):
+    """Write a numpy array to Arc Ascii grid
+    or shapefile with the model reference.
+    Parameters
+    ----------
+    filename : str
+        Path of output file. Export format is determined by
+        file extention.
+        '.asc'  Arc Ascii grid
+        '.tif'  GeoTIFF (requries rasterio package)
+        '.shp'  Shapefile
+    a : 2D numpy.ndarray
+        Array to export
+    nodata : scalar
+        Value to assign to np.nan entries (default -9999)
+    fieldname : str
+        Attribute field name for array values (shapefile export only).
+        (default 'values')
+    kwargs:
+        keyword arguments to np.savetxt (ascii)
+        rasterio.open (GeoTIFF)
+        or flopy.export.shapefile_utils.write_grid_shapefile2
+
+    Notes
+    -----
+    Rotated grids will be either be unrotated prior to export,
+    using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
+    included in their transform property (GeoTiff format). In either case
+    the pixels will be displayed in the (unrotated) projected geographic coordinate system,
+    so the pixels will no longer align exactly with the model grid
+    (as displayed from a shapefile, for example). A key difference between
+    Arc Ascii and GeoTiff (besides disk usage) is that the
+    unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
+    will have the same number of rows and pixels as the original.
+    """
+
+    if filename.lower().endswith(".asc"):
+        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+                or modelgrid.delr[0] != modelgrid.delc[0]:
+            raise ValueError('Arc ascii arrays require a uniform grid.')
+
+        xoffset, yoffset = modelgrid.xoffset, modelgrid.yoffset
+        cellsize = modelgrid.delr[0] # * self.length_multiplier
+        fmt = kwargs.get('fmt', '%.18e')
+        a = a.copy()
+        a[np.isnan(a)] = nodata
+        if modelgrid.angrot != 0:
+            try:
+                from scipy.ndimage import rotate
+                a = rotate(a, modelgrid.angrot, cval=nodata)
+                height_rot, width_rot = a.shape
+                xmin, ymin, xmax, ymax = modelgrid.extent
+                dx = (xmax - xmin) / width_rot
+                dy = (ymax - ymin) / height_rot
+                cellsize = np.max((dx, dy))
+                # cellsize = np.cos(np.radians(self.rotation)) * cellsize
+                xoffset, yoffset = xmin, ymin
+            except ImportError:
+                print('scipy package required to export rotated grid.')
+                pass
+
+        filename = '.'.join(
+            filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+        nrow, ncol = a.shape
+        a[np.isnan(a)] = nodata
+        txt = 'ncols  {:d}\n'.format(ncol)
+        txt += 'nrows  {:d}\n'.format(nrow)
+        txt += 'xllcorner  {:f}\n'.format(xoffset)
+        txt += 'yllcorner  {:f}\n'.format(yoffset)
+        txt += 'cellsize  {}\n'.format(cellsize)
+        # ensure that nodata fmt consistent w values
+        txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
+        with open(filename, 'w') as output:
+            output.write(txt)
+        with open(filename, 'ab') as output:
+            np.savetxt(output, a, **kwargs)
+        print('wrote {}'.format(filename))
+
+    elif filename.lower().endswith(".tif"):
+        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+                or modelgrid.delr[0] != modelgrid.delc[0]:
+            raise ValueError('GeoTIFF export require a uniform grid.')
+        try:
+            import rasterio
+            from rasterio import Affine
+        except:
+            print('GeoTIFF export requires the rasterio package.')
+            return
+        dxdy = modelgrid.delc[0] # * self.length_multiplier
+        trans = Affine.translation(modelgrid.xoffset, modelgrid.yoffset) * \
+                Affine.rotation(modelgrid.angrot) * \
+                Affine.scale(dxdy, -dxdy)
+
+        # third dimension is the number of bands
+        a = a.copy()
+        if len(a.shape) == 2:
+            a = np.reshape(a, (1, a.shape[0], a.shape[1]))
+        if a.dtype.name == 'int64':
+            a = a.astype('int32')
+            dtype = rasterio.int32
+        elif a.dtype.name == 'int32':
+            dtype = rasterio.int32
+        elif a.dtype.name == 'float64':
+            dtype = rasterio.float64
+        elif a.dtype.name == 'float32':
+            dtype = rasterio.float32
+        else:
+            msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
+            raise TypeError(msg)
+
+        meta = {'count': a.shape[0],
+                'width': a.shape[2],
+                'height': a.shape[1],
+                'nodata': nodata,
+                'dtype': dtype,
+                'driver': 'GTiff',
+                'crs': modelgrid.proj4_str,
+                'transform': trans
+                }
+        meta.update(kwargs)
+        with rasterio.open(filename, 'w', **meta) as dst:
+            dst.write(a)
+        print('wrote {}'.format(filename))
+
+    elif filename.lower().endswith(".shp"):
+        from ..export.shapefile_utils import write_grid_shapefile2
+        epsg = kwargs.get('epsg', None)
+        prj = kwargs.get('prj', None)
+        if epsg is None and prj is None:
+            epsg = modelgrid.epsg
+        write_grid_shapefile2(filename, modelgrid, array_dict={fieldname: a},
+                              nan_val=nodata,
+                              epsg=epsg, prj=prj)
 

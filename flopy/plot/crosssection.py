@@ -12,6 +12,65 @@ import copy
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
+class CrossSection(object):
+    """
+    Base class for CrossSection plotting. Handles the model grid
+    transforms and searching for modelgrid and dis file information.
+
+    This class must be general with absolutely no code specific to
+    a single model grid type as that would break the CrossSection plotting
+    ability of one or more child classes.
+    """
+    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+                 line=None, xul=None, yul=None, xll=None, yll=None,
+                 rotation=0., extent=None, length_multiplier=None):
+
+        if plt is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use ModelCrossSection method'
+            raise ImportError(s)
+
+        self.model = model
+
+        if model is not None:
+            self.mg = copy.deepcopy(model.modelgrid)
+            self.dis = model.get_package("DIS")
+
+        elif modelgrid is not None:
+            self.mg = copy.deepcopy(modelgrid)
+            self.dis = dis
+            if dis is None:
+                raise AssertionError("Cannot find model discretization package")
+
+        elif dis is not None:
+            self.mg = copy.deepcopy(dis.parent.modelgrid)
+            self.dis = dis
+
+        else:
+            raise Exception("Cannot find model discretization package")
+
+        self._set_coord_info(None, xul, yul, xll, yll, rotation)
+
+    def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
+        if sr is not None:
+            self.mg._set_sr_coord_info(sr)
+            warnings.warn('SpatialReference has been deprecated. Use the'
+                          'Grid class instead',
+                          DeprecationWarning)
+        if xul is not None and yul is not None:
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          PendingDeprecationWarning)
+            self.mg._angrot = rotation
+            self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
+                                   yoff=self.mg._yul_to_yll(yul),
+                                   angrot=rotation)
+        elif xll is not None and xll is not None:
+            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+
+        elif rotation != 0.:
+            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+
+
 class StructuredCrossSection(object):
     """
     Class to create a cross section of the model.

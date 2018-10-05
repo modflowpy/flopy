@@ -19,8 +19,6 @@ class MapView(object):
     This class is a base for all three mapview types. No information
     specific to a single type of model grid ex.(Structured, Vertex, Unstructured)
     can be present in this class or it will break the plotting functionality!
-
-    This causes more complexitity and abstraction.....
     """
     def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
@@ -79,7 +77,7 @@ class MapView(object):
         elif xll is not None and xll is not None:
             self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
-        elif rotation is not None:
+        elif rotation != 0.:
             self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
 
