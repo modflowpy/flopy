@@ -1,3 +1,9 @@
+"""
+mp7 module.  Contains the Modpath7List and Modpath7 classes.
+
+
+"""
+
 import numpy as np
 from ..mbase import BaseModel
 from ..modflow import Modflow
@@ -5,14 +11,15 @@ from ..mf6 import MFModel
 from ..pakbase import Package
 from .mp7bas import Modpath7Bas
 from .mp7sim import Modpath7Sim
-from .mp7particle import ParticleCellData, NodeParticleTemplate
+from .mp7particle import ParticleCellNodeData, NodeParticleTemplate
 import os
 
 
 class Modpath7List(Package):
-    '''
+    """
     List package class
-    '''
+
+    """
 
     def __init__(self, model, extension='list', unitnumber=None):
         """
@@ -40,26 +47,48 @@ class Modpath7(BaseModel):
 
         Parameters
         ----------
-        modelname
-        simfile_ext
-        namefile_ext
-        version
-        exe_name
-        flowmodel
-        head_file
-        budget_file
-        model_ws
-        verbose
+        modelname : str
+            Basename for MODPATH 7 input and output files (default is
+            'modpath7test').
+        simfile_ext : str
+            Filename extension of the MODPATH 7 simulation file
+            (default is 'mpsim').
+        namefile_ext : str
+            Filename extension of the MODPATH 7 namefile
+            (default is 'mpnam').
+        version : str
+            String that defines the MODPATH version. Valid versions are
+            'modpath7' (default is 'modpath7').
+        exe_name : str
+            The name of the executable to use (the default is
+            'mp7').
+        flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
+            MODFLOW model
+        headfilename : str
+            Filename of the MODFLOW output head file. If headfilename is
+            not provided then it will be set from the flowmodel (default
+            is None).
+        budgetfilename : str
+            Filename of the MODFLOW output cell-by-cell budget file.
+            If budgetfilename is not provided then it will be set
+            from the flowmodel (default is None).
+        model_ws : str
+            model workspace.  Directory name to create model data sets.
+            (default is the current working directory).
+        verbose : bool
+            Print additional information to the screen (default is False).
     """
 
     def __init__(self, modelname='modpath7test', simfile_ext='mpsim',
                  namefile_ext='mpnam', version='modpath7', exe_name='mp7.exe',
-                 flowmodel=None, head_file=None, budget_file=None,
+                 flowmodel=None, headfilename=None, budgetfilename=None,
                  model_ws=None, verbose=False):
+
         """
         Model constructor.
 
         """
+
         BaseModel.__init__(self, modelname, simfile_ext, exe_name,
                            model_ws=model_ws)
 
@@ -154,12 +183,12 @@ class Modpath7(BaseModel):
             oc = self.flowmodel.get_package('OC')
             if oc is not None:
                 # set head file name
-                if head_file is None:
-                    head_file = oc.head_filerecord.array['headfile'][0]
+                if headfilename is None:
+                    headfilename = oc.head_filerecord.array['headfile'][0]
 
                 # set budget file name
-                if budget_file is None:
-                    budget_file = oc.budget_filerecord.array['budgetfile'][0]
+                if budgetfilename is None:
+                    budgetfilename = oc.budget_filerecord.array['budgetfile'][0]
 
             # set laytyp based on icelltype
             npf = self.flowmodel.get_package('NPF')
@@ -217,9 +246,9 @@ class Modpath7(BaseModel):
             tdis_file = None
 
             # set head file name
-            if head_file is None:
+            if headfilename is None:
                 iu = self.flowmodel.oc.iuhead
-                head_file = self.flowmodel.get_output(unit=iu)
+                headfilename = self.flowmodel.get_output(unit=iu)
 
             # get discretization package
             p = self.flowmodel.get_package('LPF')
@@ -233,9 +262,9 @@ class Modpath7(BaseModel):
                 raise Exception(msg)
 
             # set budget file name
-            if budget_file is None:
+            if budgetfilename is None:
                 iu = p.ipakcb
-                budget_file = self.flowmodel.get_output(unit=iu)
+                budgetfilename = self.flowmodel.get_output(unit=iu)
 
             # set laytyp
             if p.name[0] == 'BCF6':
@@ -274,15 +303,15 @@ class Modpath7(BaseModel):
         self.nstp = nstp
 
         # set output file names
-        self.head_file = head_file
-        self.budget_file = budget_file
+        self.headfilename = headfilename
+        self.budgetfilename = budgetfilename
 
         # make sure the valid files are available
-        if self.head_file is None:
+        if self.headfilename is None:
             msg = 'the head file in the MODFLOW model or passed ' + \
                   'to __init__ cannot be None'
             raise ValueError(msg)
-        if self.budget_file is None:
+        if self.budgetfilename is None:
             msg = 'the budget file in the MODFLOW model or passed ' + \
                   'to __init__ cannot be None'
             raise ValueError(msg)
@@ -323,13 +352,6 @@ class Modpath7(BaseModel):
     def __repr__(self):
         return 'MODPATH 7 model'
 
-    def getsim(self):
-        if (self.__sim == None):
-            for p in (self.packagelist):
-                if isinstance(p, Modpath7Sim):
-                    self.__sim = p
-        return self.__sim
-
     def write_name_file(self):
         """
         Write the name file
@@ -350,43 +372,58 @@ class Modpath7(BaseModel):
             f.write('{:10s} {}\n'.format(self.grbtag, self.grbdis_file))
         if self.tdis_file is not None:
             f.write('{:10s} {}\n'.format('TDIS', self.tdis_file))
-        if self.head_file is not None:
-            f.write('{:10s} {}\n'.format('HEAD', self.head_file))
-        if self.budget_file is not None:
-            f.write('{:10s} {}\n'.format('BUDGET', self.budget_file))
+        if self.headfilename is not None:
+            f.write('{:10s} {}\n'.format('HEAD', self.headfilename))
+        if self.budgetfilename is not None:
+            f.write('{:10s} {}\n'.format('BUDGET', self.budgetfilename))
         f.close()
 
     @staticmethod
     def create_mp7(modelname='modpath7test', trackdir='forward',
                    flowmodel=None, exe_name='mp7', model_ws='.',
-                   verbose=False):
+                   verbose=False, columncelldivisions=2,
+                   rowcelldivisions=2, layercelldivisions=2):
         """
         Create a default MODPATH 7 model using a passed flowmodel with
         8 particles in every active model cell.
 
         Parameters
         ----------
-        modelname : string, optional
-            Name of model.  This string will be used to name the MODFLOW input
-            that are created with write_model. (the default is 'modpath7test')
+        modelname : str
+            Basename for MODPATH 7 input and output files (default is
+            'modpath7test').
         trackdir : str
             Keywork that defines the MODPATH particle tracking direction.
             Available trackdir's are 'backward' and 'forward'.
             (default is 'forward')
         flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
             MODFLOW model
-        exe_name : string, optional
+        exe_name : str
             The name of the executable to use (the default is 'mp7').
-        model_ws : string, optional
+        model_ws : str
             model workspace.  Directory name to create model data sets.
-            (default is the present working directory).
-        verbose : boolean, optional
+            (default is the current working directory).
+        verbose : bool
             Print additional information to the screen (default is False).
-
+        columncelldivisions : int
+            Number of particles in a cell in the column (x-coordinate)
+            direction (default is 2).
+        rowcelldivisions : int
+            Number of particles in a cell in the row (y-coordinate)
+            direction (default is 2).
+        layercelldivisions : int
+            Number of oarticles in a cell in the layer (z-coordinate)
+            direction (default is 2).
 
         Returns
         -------
         mp : Modpath7 object
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> mp = flopy.modpath.Modpath7.create_mp7(flowmodel=m)
 
         """
         # create MODPATH 7 model instance
@@ -404,13 +441,13 @@ class Modpath7(BaseModel):
             if ib > 0:
                 nodes.append(node)
             node += 1
-        p = ParticleCellData(columncelldivisions=2,
-                             rowcelldivisions=2,
-                             layercelldivisions=2,
-                             nodes=nodes)
+        p = ParticleCellNodeData(columncelldivisions=columncelldivisions,
+                                 rowcelldivisions=rowcelldivisions,
+                                 layercelldivisions=layercelldivisions,
+                                 nodes=nodes)
         pg = NodeParticleTemplate(particledata=p)
 
-        # creat MODPATH 7 simulation file and add to the MODPATH 7
+        # create MODPATH 7 simulation file and add to the MODPATH 7
         # model instance (mp)
         Modpath7Sim(mp, simulationtype='combined',
                     trackingdirection=trackdir,

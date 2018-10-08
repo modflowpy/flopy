@@ -54,7 +54,10 @@ def test_forward():
                                            trackdir='forward',
                                            flowmodel=gwf,
                                            exe_name=exe_name,
-                                           model_ws=model_ws)
+                                           model_ws=model_ws,
+                                           rowcelldivisions=1,
+                                           columncelldivisions=1,
+                                           layercelldivisions=1)
 
     # build and run the MODPATH 7 models
     build_modpath(mp)
@@ -73,7 +76,10 @@ def test_backward():
                                            trackdir='backward',
                                            flowmodel=gwf,
                                            exe_name=exe_name,
-                                           model_ws=model_ws)
+                                           model_ws=model_ws,
+                                           rowcelldivisions=1,
+                                           columncelldivisions=1,
+                                           layercelldivisions=1)
 
     # build and run the MODPATH 7 models
     build_modpath(mp)
