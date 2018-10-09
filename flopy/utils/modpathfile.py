@@ -371,7 +371,7 @@ class PathlineFile():
         # create local copy of _data
         ra = np.array(self._data)
 
-        # find the intersection of endpoints and dest_cells
+        # find the intersection of pathlines and dest_cells
         # convert dest_cells to same dtype for comparison
         if self.version < 7:
             try:

@@ -127,7 +127,6 @@ class Modpath7(BaseModel):
         self.flow_version = self.flowmodel.version
 
         if self.flow_version == 'mf6':
-            shape = None
             # get discretization package
             ibound = None
             dis = self.flowmodel.get_package('DIS')
@@ -196,7 +195,8 @@ class Modpath7(BaseModel):
 
                 # set budget file name
                 if budgetfilename is None:
-                    budgetfilename = oc.budget_filerecord.array['budgetfile'][0]
+                    budgetfilename = \
+                        oc.budget_filerecord.array['budgetfile'][0]
 
             # set laytyp based on icelltype
             npf = self.flowmodel.get_package('NPF')
@@ -229,7 +229,7 @@ class Modpath7(BaseModel):
                 raise Exception(msg)
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
-                shape = (nodes)
+                shape = (nodes,)
 
             # terminate (for now) if mf6 model does not use dis
             if len(shape) != 3:

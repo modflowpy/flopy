@@ -143,10 +143,10 @@ class Modpath7Particle(object):
             fp.write('{}\n'.format(self.releasetimecount))
             # item 31
             tp = self.releasetimes
-            v = Util2d(self.parent, (tp.shape[0],),
+            v = Util2d(self, (tp.shape[0],),
                        np.float32, tp,
                        name='temp',
-                       locat=self.unit_number[0])
+                       locat=0)
             fp.write(v.string)
 
         # item 32
@@ -187,7 +187,7 @@ class Particles(Modpath7Particle):
         by layer, row, column. particledata with 7 and 9 entries also
         include user defined particle ids. Layer, row, column locations and
         nodes are zero-based. (default is node-based
-        [[0, 0.5, 0.5, 0.5, 0., 0]]).
+        ((0, 0.5, 0.5, 0.5, 0., 0),)).
 
     Examples
     --------
@@ -201,7 +201,7 @@ class Particles(Modpath7Particle):
 
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=0.0,
-                 particledata=[[0, 0.5, 0.5, 0.5, 0., 0]]):
+                 particledata=((0, 0.5, 0.5, 0.5, 0., 0),)):
         """
         Class constructor
 
@@ -518,7 +518,8 @@ class Particles(Modpath7Particle):
                     for el in partlocs:
                         t.append((el,))
                     partlocs = t
-                    alllsttup = all(isinstance(el, (list, tuple)) for el in partlocs)
+                    alllsttup = all(isinstance(el, (list, tuple))
+                                    for el in partlocs)
                 if alllsttup:
                     alllen1 = all(len(el) == 1 for el in partlocs)
                     if not alllen1:
@@ -627,7 +628,7 @@ class Particles(Modpath7Particle):
             if isinstance(particleids, (int, float)):
                 msg = 'A particleid must be provided for each partloc ' + \
                       'as a list/tuple/np.ndarray of size ' + \
-                      '{}. '.format(particleids.shape[0]) + \
+                      '{}. '.format(partlocs.shape[0]) + \
                       'A single particleid has been provided.'
                 raise TypeError(msg)
             elif isinstance(particleids, (list, tuple)):
@@ -726,7 +727,7 @@ class NodeParticleTemplate(_ParticleTemplate):
     """
 
     def __init__(self, particlegroupname='PG1', filename=None,
-                 releasedata=[0.0],
+                 releasedata=(0.0,),
                  particledata=None):
         """
         Class constructor
@@ -741,12 +742,14 @@ class NodeParticleTemplate(_ParticleTemplate):
             msg = 'FaceNode: valid ParticleNodeData item must be passed'
             raise ValueError(msg)
 
-        if isinstance(particledata, (ParticleFaceNodeData, ParticleCellNodeData)):
+        if isinstance(particledata, (ParticleFaceNodeData,
+                                     ParticleCellNodeData)):
             particledata = [particledata]
 
         totalcellcount = 0
         for idx, td in enumerate(particledata):
-            if not isinstance(td, (ParticleFaceNodeData, ParticleCellNodeData)):
+            if not isinstance(td, (ParticleFaceNodeData,
+                                   ParticleCellNodeData)):
                 msg = 'FaceNode: valid ParticleNodeData or ' + \
                       'ParticlecCellData item must be passed' + \
                       'for particledata item {}'.format(idx)
@@ -877,7 +880,7 @@ class ParticleFaceNodeData(object):
                  verticaldivisions4=3, horizontaldivisions4=3,
                  rowdivisions5=3, columndivisons5=3,
                  rowdivisions6=3, columndivisions6=3,
-                 nodes=[0]):
+                 nodes=(0,)):
         """
         Class constructor
 
@@ -1009,7 +1012,7 @@ class ParticleCellNodeData(object):
 
     def __init__(self, drape=0,
                  columncelldivisions=3, rowcelldivisions=3,
-                 layercelldivisions=3, nodes=[0]):
+                 layercelldivisions=3, nodes=(0,)):
         """
         Class constructor
 

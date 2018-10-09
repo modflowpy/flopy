@@ -922,11 +922,11 @@ class ModelMap(object):
         arr = np.vstack((x0r, y0r)).T
 
         # plot the end point data
-        sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 
         # add a colorbar for travel times
         if createcb:
-            cb = plt.colorbar(sp, shrink=shrink)
+            cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
 
