@@ -25,39 +25,25 @@ class Modpath7Bas(Package):
         (the default is None).
     extension : str, optional
         File extension (default is 'mpbas').
-    unitnumber : int
-        File unit number (default is None).
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
 
     Examples
     --------
 
     >>> import flopy
-    >>> m = flopy.modpath.Modpath7()
-    >>> mpbas = flopy.modpath.Modpath7Bas(m)
+    >>> m = flopy.modflow.Modflow.load('mf2005.nam')
+    >>> mp = flopy.modpath.Modpath7('mf2005_mp', flowmodel=m)
+    >>> mpbas = flopy.modpath.Modpath7Bas(mp)
 
     """
 
     def __init__(self, model, porosity=0.30, defaultiface=None,
-                 extension='mpbas', unitnumber=None):
+                 extension='mpbas'):
         """
         Package constructor.
 
         """
 
-        if unitnumber is None:
-            unitnumber = model.next_unit()
+        unitnumber = model.next_unit()
 
         Package.__init__(self, model, extension, 'MPBAS', unitnumber)
 
@@ -110,9 +96,14 @@ class Modpath7Bas(Package):
 
         self.parent.add_package(self)
 
-    def write_file(self):
+    def write_file(self, check=False):
         """
         Write the package file
+
+        Parameters
+        ----------
+        check : boolean
+            Check package data for common errors. (default False)
 
         Returns
         -------

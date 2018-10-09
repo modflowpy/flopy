@@ -77,6 +77,14 @@ class Modpath7(BaseModel):
             (default is the current working directory).
         verbose : bool
             Print additional information to the screen (default is False).
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('mf2005.nam')
+        >>> mp = flopy.modpath.Modpath7('mf2005_mp', flowmodel=m)
+
     """
 
     def __init__(self, modelname='modpath7test', simfile_ext='mpsim',
@@ -338,8 +346,6 @@ class Modpath7(BaseModel):
 
         # # set the rest of the attributes
         # self.__sim = None
-        # self.array_free_format = False
-        # self.array_format = 'modflow'
         # self.external_path = external_path
         # self.external = False
         # self.external_fnames = []
@@ -423,6 +429,7 @@ class Modpath7(BaseModel):
         --------
 
         >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('mf2005.nam')
         >>> mp = flopy.modpath.Modpath7.create_mp7(flowmodel=m)
 
         """

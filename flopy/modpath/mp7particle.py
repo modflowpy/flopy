@@ -188,6 +188,15 @@ class Particles(Modpath7Particle):
         include user defined particle ids. Layer, row, column locations and
         nodes are zero-based. (default is node-based
         [[0, 0.5, 0.5, 0.5, 0., 0]]).
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> p = [(2, 0, 0), (0, 20, 0)]
+    >>> p = flopy.modpath.Particles.create_particles(p)
+    >>> pg = flopy.modpath.Particles(particledata=p)
+
     """
 
     def __init__(self, particlegroupname='PG1', filename=None,
@@ -853,9 +862,11 @@ class ParticleFaceNodeData(object):
         Nodes (zero-based) with particles created using the specified template
         parameters (default is node 0).
 
-    Returns
-    -------
+    Examples
+    --------
 
+    >>> import flopy
+    >>> pf = flopy.modpath.ParticleFaceNodeData(nodes=[100, 101])
 
     """
 
@@ -987,6 +998,12 @@ class ParticleCellNodeData(object):
     nodes : int, list of ints, tuple of ints, or np.ndarray
         Nodes (zero-based) with particles created using the specified template
         parameters (default is node 0).
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> pc = flopy.modpath.ParticleCellNodeData(nodes=[100, 101])
 
     """
 
