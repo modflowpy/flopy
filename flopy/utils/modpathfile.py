@@ -338,7 +338,7 @@ class PathlineFile():
         return [self.get_data(partid=partid, totim=totim, ge=ge)
                 for partid in self.nid]
 
-    def get_destination_pathline_data(self, dest_cells):
+    def get_destination_pathline_data(self, dest_cells, to_recarray=False):
         """
         Get pathline data for set of destination cells.
 
@@ -346,6 +346,12 @@ class PathlineFile():
         ----------
         dest_cells : list or array of tuples
             (k, i, j) of each destination cell (zero-based)
+        to_recarray : bool
+            Boolean that controls returned pthldest. If to_recarray is True,
+            a single recarray with all of the pathlines that intersect
+            dest_cells are returned. If to_recarray is False, a list of
+            recarrays (the same form as returned by get_alldata method)
+            that intersect dest_cells are returned (default is False).
 
         Returns
         -------
@@ -394,17 +400,21 @@ class PathlineFile():
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
 
-        # # use particle ids to get the rest of the paths
-        # inds = np.in1d(ra['particleid'], epdest.particleid)
-        # pthldes = ra[inds].copy()
-        # pthldes.sort(order=['particleid', 'time'])
-        # return pthldes.view(np.recarray)
+        if to_recarray:
+            # use particle ids to get the rest of the paths
+            inds = np.in1d(ra['particleid'], epdest.particleid)
+            pthldes = ra[inds].copy()
+            pthldes.sort(order=['particleid', 'time'])
+            pthldes = pthldes.view(np.recarray)
+        else:
 
-        # get list of unique particleids in selection
-        partids = np.unique(epdest['particleid'])
+            # get list of unique particleids in selection
+            partids = np.unique(epdest['particleid'])
 
-        # build list of unique particleids in selection
-        return [self.get_data(partid) for partid in partids]
+            # build list of unique particleids in selection
+            pthldes = [self.get_data(partid) for partid in partids]
+
+        return pthldes
 
     def write_shapefile(self, pathline_data=None,
                         one_per_particle=True,
@@ -904,7 +914,7 @@ class EndpointFile():
             try:
                 raslice = ra_slice(ra, keys)
             except:
-                msg = "could not extract" +  "'" + "', '".join(keys) + "'" + \
+                msg = "could not extract" + "'" + "', '".join(keys) + "'" + \
                       "from endpoint data."
                 raise KeyError(msg)
         else:
@@ -1267,7 +1277,6 @@ class TimeseriesFile():
         """
         return [self.get_data(partid=partid, totim=totim, ge=ge)
                 for partid in self.nid]
-
 
     def get_destination_timeseries_data(self, dest_cells):
         """
