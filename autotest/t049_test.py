@@ -2,6 +2,7 @@
 import os
 import shutil
 import flopy
+import numpy as np
 import matplotlib.pyplot as plt
 try:
     import pymake
@@ -151,6 +152,12 @@ def test_pathline_plot():
         pthobj = flopy.utils.PathlineFile(pthfile)
     except:
         assert False, 'could not load pathline file'
+
+    # determine version
+    ver = pthobj.version
+    assert ver == 6, '{} is not a MODPATH version 6 pathline file'.format(fpth)
+
+    # get all pathline data
     plines = pthobj.get_alldata()
 
     mm = flopy.plot.ModelMap(model=m)
@@ -215,6 +222,72 @@ def test_pathline_plot():
 
     return
 
+def test_mp5_load():
+
+    # load the base freyberg model
+    pth = os.path.join('..', 'examples', 'data', 'freyberg')
+    # load the modflow files for model map
+    m = flopy.modflow.Modflow.load('freyberg.nam', model_ws=pth, check=False,
+                                   verbose=True, forgive=False)
+
+    # load the pathline data
+    fpth = os.path.join('..', 'examples', 'data', 'mp5', 'm.ptl')
+    try:
+        pthobj = flopy.utils.PathlineFile(fpth)
+    except:
+        assert False, 'could not load pathline file'
+
+    # load endpoint data
+    fpth = os.path.join('..', 'examples', 'data', 'mp5', 'm.ept')
+    try:
+        endobj = flopy.utils.EndpointFile(fpth, verbose=True)
+    except:
+        assert False, 'could not load endpoint file'
+
+    # determine version
+    ver = pthobj.version
+    assert ver == 5, '{} is not a MODPATH version 5 pathline file'.format(fpth)
+
+    # read all of the pathline and endpoint data
+    plines = pthobj.get_alldata()
+    epts = endobj.get_alldata()
+
+    # determine the number of particles in the pathline file
+    nptl = pthobj.nid
+    assert nptl == 64, 'number of MODPATH 5 particles does not equal 64'
+
+    hsv = plt.get_cmap('hsv')
+    colors = hsv(np.linspace(0, 1.0, nptl))
+
+    # plot the pathlines one pathline at a time
+    mm = flopy.plot.ModelMap(model=m)
+    for n in range(nptl):
+        p = pthobj.get_data(partid=n)
+        e = endobj.get_data(partid=n)
+        try:
+            mm.plot_pathline(p, colors=colors[n], layer='all')
+            mm.plot_endpoint(e)
+        except:
+            assert False, 'could not plot pathline {} '.format(n+1) + \
+                          'with layer="all"'
+
+    # plot the grid and ibound array
+    try:
+        mm.plot_grid(lw=0.5)
+        mm.plot_ibound()
+    except:
+        assert False, 'could not plot grid and ibound'
+
+    try:
+        fpth = os.path.join(cpth, 'mp5.pathline.png')
+        plt.savefig(fpth, dpi=300)
+        plt.close()
+    except:
+        assert False, 'could not save plot as {}'.format(fpth)
+
+    return
+
 if __name__ == '__main__':
-    test_modpath()
-    test_pathline_plot()
+    #test_modpath()
+    #test_pathline_plot()
+    test_mp5_load()

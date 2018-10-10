@@ -582,7 +582,7 @@ class ModelCrossSection(object):
 
         # Plot the list locations
         plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
-        idx = [mflist['k'], mflist['i'], mflist['j']]
+        idx = (mflist['k'], mflist['i'], mflist['j'])
         plotarray[idx] = 1
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:

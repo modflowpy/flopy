@@ -493,7 +493,7 @@ def mflist_helper(f, mfl, **kwargs):
                 for name, array in arrays.items():
                     for k in range(array.shape[0]):
                         # aname = name+"{0:03d}_{1:02d}".format(kk, k)
-                        n = fio.shape_attr_name(name, length=4)
+                        n = shapefile_utils.shape_attr_name(name, length=4)
                         aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
             shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)

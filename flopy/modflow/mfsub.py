@@ -294,7 +294,7 @@ class ModflowSub(Package):
         self.sfe = None
         self.sfv = None
         if nndb > 0:
-            self.ln = Util2d(model, (nndb,), np.int, ln, name='ln')
+            self.ln = Util2d(model, (nndb,), np.int32, ln, name='ln')
             self.hc = Util3d(model, (nndb, nrow, ncol), np.float32, hc,
                              name='hc',
                              locat=self.unit_number[0])
@@ -315,7 +315,7 @@ class ModflowSub(Package):
         self.dz = None
         self.nz = None
         if ndb > 0:
-            self.ldn = Util2d(model, (ndb,), np.int, ldn, name='ldn')
+            self.ldn = Util2d(model, (ndb,), np.int32, ldn, name='ldn')
             self.rnb = Util3d(model, (ndb, nrow, ncol), np.float32, rnb,
                               name='rnb',
                               locat=self.unit_number[0])
@@ -331,7 +331,7 @@ class ModflowSub(Package):
             self.dz = Util3d(model, (ndb, nrow, ncol), np.float32, dz,
                              name='dz',
                              locat=self.unit_number[0])
-            self.nz = Util3d(model, (ndb, nrow, ncol), np.int, nz, name='nz',
+            self.nz = Util3d(model, (ndb, nrow, ncol), np.int32, nz, name='nz',
                              locat=self.unit_number[0])
         # material zone data
         if isinstance(dp, list):
@@ -341,7 +341,7 @@ class ModflowSub(Package):
         # output data
         if isuboc > 0:
             if ids15 is None:
-                ids15 = np.zeros(12, dtype=np.int)
+                ids15 = np.zeros(12, dtype=np.int32)
                 iu = 0
                 for i in range(1, 12, 2):
                     ids15[i] = item15_units[iu]
@@ -355,7 +355,7 @@ class ModflowSub(Package):
             if ids16 is None:
                 self.isuboc = 1
                 # save and print everything
-                ids16 = np.ones((1, 17), dtype=np.int)
+                ids16 = np.ones((1, 17), dtype=np.int32)
                 ids16[0, 0] = 0
                 ids16[0, 1] = nper - 1
                 ids16[0, 2] = 0
@@ -520,13 +520,13 @@ class ModflowSub(Package):
         if nndb > 0:
             if model.verbose:
                 sys.stdout.write('  loading sub dataset 2\n')
-            ln = np.empty((nndb), dtype=np.int)
+            ln = np.empty((nndb), dtype=np.int32)
             ln = read1d(f, ln) - 1
         ldn = None
         if ndb > 0:
             if model.verbose:
                 sys.stdout.write('  loading sub dataset 3\n')
-            ldn = np.empty((ndb), dtype=np.int)
+            ldn = np.empty((ndb), dtype=np.int32)
             ldn = read1d(f, ldn) - 1
         rnb = None
         if ndb > 0:
@@ -644,7 +644,7 @@ class ModflowSub(Package):
                 if model.verbose:
                     sys.stdout.write(
                         '  loading sub dataset 14 for layer {}\n'.format(kk))
-                t = Util2d.load(f, model, (nrow, ncol), np.int,
+                t = Util2d.load(f, model, (nrow, ncol), np.int32,
                                 'nz layer {}'.format(kk),
                                 ext_unit_dict)
                 nz[k] = t
@@ -656,7 +656,7 @@ class ModflowSub(Package):
             if model.verbose:
                 sys.stdout.write(
                     '  loading sub dataset 15 for layer {}\n'.format(kk))
-            ids15 = np.empty(12, dtype=np.int)
+            ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
             #iu = 1
             #for k in range(1, 12, 2):
@@ -670,7 +670,7 @@ class ModflowSub(Package):
                     sys.stdout.write(
                         '  loading sub dataset 16 for isuboc {}\n'.format(
                             k + 1))
-                t = np.empty(17, dtype=np.int)
+                t = np.empty(17, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1
                 ids16[k] = t

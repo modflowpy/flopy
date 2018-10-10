@@ -361,7 +361,17 @@ class MFSimulation(PackageContainer):
             :class:flopy6.mfpackage
 
         """
-        if item in self._models:
+
+        models = []
+        if item in self.structure.model_types:
+            # get all models of this type
+            for model in self._models.values():
+                if model.model_type == item:
+                    models.append(model)
+
+        if len(models) > 0:
+            return models
+        elif item in self._models:
             return self.get_model(item)
         else:
             return self.get_package(item)
@@ -561,7 +571,7 @@ class MFSimulation(PackageContainer):
                                                              )]
 
         try:
-            solution_groups = solution_recarray.get_data()
+            solution_group_list = solution_recarray.get_data()
         except MFDataException as mfde:
             message = 'Error occurred while loading solution groups from ' \
                       'the simulation name file.'
@@ -569,13 +579,14 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-        for solution_info in solution_groups:
-            ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
-                                        pname=solution_info[2])
-            if verbosity_level.value >= VerbosityLevel.normal.value:
-                print('  loading ims package {}..'
-                      '.'.format(ims_file._get_pname()))
-            ims_file.load(strict)
+        for solution_group in solution_group_list:
+            for solution_info in solution_group:
+                ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
+                                            pname=solution_info[2])
+                if verbosity_level.value >= VerbosityLevel.normal.value:
+                    print('  loading ims package {}..'
+                          '.'.format(ims_file._get_pname()))
+                ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
         return instance
@@ -942,8 +953,13 @@ class MFSimulation(PackageContainer):
 
             self._remove_package(package)
 
-    def get_model_itr(self):
-        return self._models.items()
+    @property
+    def model_dict(self):
+        return self._models.copy()
+
+    @property
+    def model_names(self):
+        return list(self._models.keys())
 
     def get_model(self, model_name=''):
         """

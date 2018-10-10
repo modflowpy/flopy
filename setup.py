@@ -27,7 +27,7 @@ setup(name=__name__,
       description='FloPy is a Python package to create, run, and post-process MODFLOW-based models.',
       long_description=long_description,
       author=__author__,
-      author_email='mark.bakker@tudelft.nl, vincent.post@flinders.edu.au, ' +
+      author_email='mark.bakker@tudelft.nl, Vincent.Post@bgr.de, ' +
                    'langevin@usgs.gov, jdhughes@usgs.gov, jwhite@usgs.gov, ' +
                    'aleaf@usgs.gov, spaulinski@usgs.gov, jjstarn@usgs.gov, ' +
                    'mnfienen@usgs.gov',

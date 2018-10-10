@@ -1919,6 +1919,13 @@ class MFSimulationStructure(object):
         self.common = None
         self.model_type = ''
 
+    @property
+    def model_types(self):
+        model_type_list = []
+        for model in self.model_struct_objs.values():
+            model_type_list.append(model.model_type[:-1])
+        return model_type_list
+
     def process_dfn(self, dfn_file):
         if dfn_file.dfn_type == DfnType.common:
             self.store_common(dfn_file)

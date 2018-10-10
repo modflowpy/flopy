@@ -233,11 +233,11 @@ class ModflowLpf(Package):
         self.ipakcb = ipakcb
         self.hdry = hdry  # Head in cells that are converted to dry during a simulation
         self.nplpf = 0  # number of LPF parameters
-        self.laytyp = Util2d(model, (nlay,), np.int, laytyp, name='laytyp')
-        self.layavg = Util2d(model, (nlay,), np.int, layavg, name='layavg')
+        self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name='laytyp')
+        self.layavg = Util2d(model, (nlay,), np.int32, layavg, name='layavg')
         self.chani = Util2d(model, (nlay,), np.float32, chani, name='chani')
-        self.layvka = Util2d(model, (nlay,), np.int, layvka, name='layvka')
-        self.laywet = Util2d(model, (nlay,), np.int, laywet, name='laywet')
+        self.layvka = Util2d(model, (nlay,), np.int32, layvka, name='layvka')
+        self.laywet = Util2d(model, (nlay,), np.int32, laywet, name='laywet')
         self.wetfct = wetfct  # Factor that is included in the calculation of the head when a cell is converted from dry to wet
         self.iwetit = iwetit  # Iteration interval for attempting to wet cells
         self.ihdwet = ihdwet  # Flag that determines which equation is used to define the initial head at cells that become wet
@@ -428,13 +428,13 @@ class ModflowLpf(Package):
         # LAYTYP array
         if model.verbose:
             print('   loading LAYTYP...')
-        laytyp = np.empty((nlay), dtype=np.int)
+        laytyp = np.empty((nlay), dtype=np.int32)
         laytyp = read1d(f, laytyp)
 
         # LAYAVG array
         if model.verbose:
             print('   loading LAYAVG...')
-        layavg = np.empty((nlay), dtype=np.int)
+        layavg = np.empty((nlay), dtype=np.int32)
         layavg = read1d(f, layavg)
 
         # CHANI array
@@ -452,7 +452,7 @@ class ModflowLpf(Package):
         # LAYWET array
         if model.verbose:
             print('   loading LAYWET...')
-        laywet = np.empty((nlay), dtype=np.int)
+        laywet = np.empty((nlay), dtype=np.int32)
         laywet = read1d(f, laywet)
 
         # Item 7: WETFCT, IWETIT, IHDWET
