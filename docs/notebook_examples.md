@@ -31,6 +31,8 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_Modpath6_example](../examples/Notebooks/flopy3_Modpath6_example.ipynb) Notebook.
 
++ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_Modpath7_create_simulation](../examples/Notebooks/flopy3_create_simulation.ipynb) Notebook.
+
 + An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_Modpath7_structured_example](../examples/Notebooks/flopy3_Modpath7_structured_example.ipynb) Notebook.
 
 + An overview of FloPy capabilities to create MODPATH 7 models for unstructured MODFLOW 6 models (DISV) and plot MODPATH 7 results is given in the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook. The notebook includes an example of using GRIDGEN to create a DISV discretization for MODFLOW 6.

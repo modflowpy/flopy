@@ -12,7 +12,7 @@ import collections
 import numpy as np
 
 try:
-    from numpy.lib.recfunctions import append_fields
+    from numpy.lib.recfunctions import append_fields, stack_arrays
 except:
     pass
 from ..utils.flopy_io import loadtxt
@@ -29,20 +29,6 @@ class PathlineFile():
         Name of the pathline file
     verbose : bool
         Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-    The PathlineFile class provides simple ways to retrieve MODPATH 6
-    pathline data from a MODPATH 6 ascii pathline file.
 
     Examples
     --------
@@ -366,6 +352,15 @@ class PathlineFile():
         pthldest : np.recarray
             Slice of pathline data array (e.g. PathlineFile._data)
             containing only pathlines with final k,i,j in dest_cells.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> p = flopy.utils.PathlineFile('modpath.pathline')
+        >>> p0 = p.get_destination_pathline_data([(0, 0, 0),
+        ...                                       (1, 0, 0)])
+
         """
 
         # create local copy of _data
@@ -399,40 +394,52 @@ class PathlineFile():
         inds = np.in1d(raslice, dest_cells)
         epdest = ra[inds].copy().view(np.recarray)
 
-        # use particle ids to get the rest of the paths
-        inds = np.in1d(ra['particleid'], epdest.particleid)
-        pthldes = ra[inds].copy()
-        pthldes.sort(order=['particleid', 'time'])
-        return pthldes.view(np.recarray)
+        # # use particle ids to get the rest of the paths
+        # inds = np.in1d(ra['particleid'], epdest.particleid)
+        # pthldes = ra[inds].copy()
+        # pthldes.sort(order=['particleid', 'time'])
+        # return pthldes.view(np.recarray)
+
+        # get list of unique particleids in selection
+        partids = np.unique(epdest['particleid'])
+
+        # build list of unique particleids in selection
+        return [self.get_data(partid) for partid in partids]
 
     def write_shapefile(self, pathline_data=None,
                         one_per_particle=True,
                         direction='ending',
-                        shpname='endpoings.shp',
+                        shpname='endpoints.shp',
                         sr=None, epsg=None,
                         **kwargs):
-        """Write pathlines to shapefile.
+        """
+        Write pathlines to a shapefile
 
         pathline_data : np.recarry
-            Record array of same form as that returned by EndpointFile.get_alldata.
-            (if none, EndpointFile.get_alldata() is exported).
+            Record array of same form as that returned by
+            EndpointFile.get_alldata(). (if none, EndpointFile.get_alldata()
+            is exported).
         one_per_particle : boolean (default True)
-            True writes a single LineString with a single set of attribute data for each
-            particle. False writes a record/geometry for each pathline segment
-            (each row in the PathLine file). This option can be used to visualize
-            attribute information (time, model layer, etc.) across a pathline in a GIS.
+            True writes a single LineString with a single set of attribute
+            data for each particle. False writes a record/geometry for each
+            pathline segment (each row in the PathLine file). This option can
+            be used to visualize attribute information (time, model layer,
+            etc.) across a pathline in a GIS.
         direction : str
             String defining if starting or ending particle locations should be
-            included in shapefile attribute information. Only used if one_per_particle=False.
-            (default is 'ending')
+            included in shapefile attribute information. Only used if
+            one_per_particle=False. (default is 'ending')
         shpname : str
             File path for shapefile
         sr : flopy.utils.reference.SpatialReference instance
-            Used to scale and rotate Global x,y,z values in MODPATH Endpoint file
+            Used to scale and rotate Global x,y,z values in MODPATH Endpoint
+            file.
         epsg : int
-            EPSG code for writing projection (.prj) file. If this is not supplied,
-            the proj4 string or epgs code associated with sr will be used.
+            EPSG code for writing projection (.prj) file. If this is not
+            supplied, the proj4 string or epgs code associated with sr will be
+            used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
         """
         from ..utils.reference import SpatialReference
         from ..utils.geometry import LineString
@@ -441,14 +448,41 @@ class PathlineFile():
         pth = pathline_data
         if pth is None:
             pth = self._data.view(np.recarray)
+        else:
+            # convert pathline list to a single recarray
+            if isinstance(pth, list):
+                s = pth[0]
+                print(s.dtype)
+                for n in range(1, len(pth)):
+                    s = stack_arrays((s, pth[n]))
+                pth = s.view(np.recarray)
+
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
         if sr is None:
             sr = SpatialReference()
 
+        if epsg is None:
+            epsg = sr.epsg
+
         particles = np.unique(pth.particleid)
         geoms = []
+
+        # create dtype with select attributes in pth
+        names = pth.dtype.names
+        dtype = []
+        atts = ['particleid', 'particlegroup', 'time', 'k', 'i', 'j', 'node']
+        for att in atts:
+            if att in names:
+                t = np.int32
+                if att == 'time':
+                    t = np.float32
+                dtype.append((att, t))
+        dtype = np.dtype(dtype)
+
+        # reset names to the selected names in the created dtype
+        names = dtype.names
 
         # 1 geometry for each path
         if one_per_particle:
@@ -464,19 +498,24 @@ class PathlineFile():
                 x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
-                pthdata.append((pid,
-                                ra.particlegroup[0],
-                                ra.time.max(),
-                                ra.k[loc_inds],
-                                ra.i[loc_inds],
-                                ra.j[loc_inds]))
-            pthdata = np.array(pthdata, dtype=[('particleid', np.int32),
-                                               ('particlegroup', np.int32),
-                                               ('time', np.float),
-                                               ('k', np.int32),
-                                               ('i', np.int32),
-                                               ('j', np.int32)
-                                               ]).view(np.recarray)
+
+                t = [pid]
+                if 'particlegroup' in names:
+                    t.append(ra.particlegroup[0])
+                t.append(ra.time.max())
+                if 'node' in names:
+                    t.append(ra.node[loc_inds])
+                else:
+                    if 'k' in names:
+                        t.append(ra.k[loc_inds])
+                    if 'i' in names:
+                        t.append(ra.i[loc_inds])
+                    if 'j' in names:
+                        t.append(ra.j[loc_inds])
+                pthdata.append(tuple(t))
+
+            pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
+
         # geometry for each row in PathLine file
         else:
             dtype = pth.dtype
@@ -492,10 +531,13 @@ class PathlineFile():
                 # pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
                 pthdata += ra[1:].tolist()
             pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
+
         # convert back to one-based
         for n in set(self.kijnames).intersection(set(pthdata.dtype.names)):
             pthdata[n] += 1
-        recarray2shp(pthdata, geoms, shpname=shpname, epsg=sr.epsg, **kwargs)
+
+        # write the final recarray to a shapefile
+        recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
 class EndpointFile():
@@ -508,20 +550,6 @@ class EndpointFile():
         Name of the endpoint file
     verbose : bool
         Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-    The EndpointFile class provides simple ways to retrieve MODPATH 6
-    endpoint data from a MODPATH 6 ascii endpoint file.
 
     Examples
     --------
@@ -835,20 +863,32 @@ class EndpointFile():
         """
         return self._data.view(np.recarray).copy()
 
-    def get_destination_endpoint_data(self, dest_cells):
+    def get_destination_endpoint_data(self, dest_cells, source=False):
         """
         Get endpoint data for set of destination cells.
 
         Parameters
         ----------
         dest_cells : list or array of tuples
-            (k, i, j) of each destination cell (zero-based)
+            (k, i, j) or (node,) of each destination cell (zero-based)
+        source : bool
+            Boolean to specify is dest_cells applies to source or
+            destination cells (default is False).
 
         Returns
         -------
         epdest : np.recarray
             Slice of endpoint data array (e.g. EndpointFile.get_alldata)
             containing only data with final k,i,j in dest_cells.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> e = flopy.utils.EndpointFile('modpath.endpoint')
+        >>> e0 = e.get_destination_endpoint_data([(0, 0, 0),
+        ...                                       (1, 0, 0)])
+
         """
 
         # create local copy of _data
@@ -857,18 +897,26 @@ class EndpointFile():
         # find the intersection of endpoints and dest_cells
         # convert dest_cells to same dtype for comparison
         if self.version < 7:
+            if source:
+                keys = ['k0', 'i0', 'j0']
+            else:
+                keys = ['k', 'i', 'j']
             try:
-                raslice = ra_slice(ra, ['k', 'i', 'j'])
+                raslice = ra_slice(ra, keys)
             except:
-                msg = "could not extract 'k', 'i', and 'j' keys " + \
-                      "from endpoint data"
+                msg = "could not extract" +  "'" + "', '".join(keys) + "'" + \
+                      "from endpoint data."
                 raise KeyError(msg)
-            dtype = [('k', np.int32), ('i', np.int32), ('j', np.int32)]
         else:
+            if source:
+                keys = ['node0']
+            else:
+                keys = ['node']
             try:
-                raslice = ra_slice(ra, ['node'])
+                raslice = ra_slice(ra, keys)
             except:
-                msg = "could not extract 'node' key from endpoint data"
+                msg = "could not extract '{}' ".format(keys[0]) + \
+                      "key from endpoint data"
                 raise KeyError(msg)
             if isinstance(dest_cells, (list, tuple)):
                 allint = all(isinstance(el, int) for el in dest_cells)
@@ -878,7 +926,9 @@ class EndpointFile():
                     for el in dest_cells:
                         t.append((el,))
                         dest_cells = t
-            dtype = [('node', np.int32)]
+        dtype = []
+        for key in keys:
+            dtype.append((key, np.int32))
         dtype = np.dtype(dtype)
         dest_cells = np.array(dest_cells, dtype=dtype)
 
@@ -949,20 +999,6 @@ class TimeseriesFile():
         Name of the timeseries file
     verbose : bool
         Write information to the screen.  Default is False.
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-
-    See Also
-    --------
-
-    Notes
-    -----
-    The TimeseriesFile class provides simple ways to retrieve MODPATH
-    timeseries data from a MODPATH ascii timeseries file.
 
     Examples
     --------
@@ -1231,3 +1267,66 @@ class TimeseriesFile():
         """
         return [self.get_data(partid=partid, totim=totim, ge=ge)
                 for partid in self.nid]
+
+
+    def get_destination_timeseries_data(self, dest_cells):
+        """
+        Get timeseries data for set of destination cells.
+
+        Parameters
+        ----------
+        dest_cells : list or array of tuples
+            (k, i, j) or nodes of each destination cell (zero-based)
+
+        Returns
+        -------
+        tsdest : np.recarray
+            Slice of timeseries data array (e.g. TmeseriesFile._data)
+            containing only pathlines with final k,i,j in dest_cells.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> ts = flopy.utils.TimeseriesFile('modpath.timeseries')
+        >>> tss = ts.get_destination_timeseries_data([(0, 0, 0),
+        ...                                           (1, 0, 0)])
+
+        """
+
+        # create local copy of _data
+        ra = np.array(self._data)
+
+        # find the intersection of timeseries and dest_cells
+        # convert dest_cells to same dtype for comparison
+        if self.version < 7:
+            try:
+                raslice = ra[['k', 'i', 'j']]
+            except:
+                msg = "could not extract 'k', 'i', and 'j' keys " + \
+                      "from timeseries data"
+                raise KeyError(msg)
+        else:
+            try:
+                raslice = ra[['node']]
+            except:
+                msg = "could not extract 'node' key from timeseries data"
+                raise KeyError(msg)
+            if isinstance(dest_cells, (list, tuple)):
+                allint = all(isinstance(el, int) for el in dest_cells)
+                # convert to a list of tuples
+                if allint:
+                    t = []
+                    for el in dest_cells:
+                        t.append((el,))
+                        dest_cells = t
+
+        dest_cells = np.array(dest_cells, dtype=raslice.dtype)
+        inds = np.in1d(raslice, dest_cells)
+        epdest = ra[inds].copy().view(np.recarray)
+
+        # use particle ids to get the rest of the timeseries
+        inds = np.in1d(ra['particleid'], epdest.particleid)
+        tsdes = ra[inds].copy()
+        tsdes.sort(order=['particleid', 'time'])
+        return tsdes.view(np.recarray)

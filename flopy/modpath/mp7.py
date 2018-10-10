@@ -388,10 +388,12 @@ class Modpath7(BaseModel):
     def create_mp7(modelname='modpath7test', trackdir='forward',
                    flowmodel=None, exe_name='mp7', model_ws='.',
                    verbose=False, columncelldivisions=2,
-                   rowcelldivisions=2, layercelldivisions=2):
+                   rowcelldivisions=2, layercelldivisions=2,
+                   nodes=None):
         """
         Create a default MODPATH 7 model using a passed flowmodel with
-        8 particles in every active model cell.
+        8 particles in user-specified node locations or every active model
+        cell.
 
         Parameters
         ----------
@@ -420,6 +422,8 @@ class Modpath7(BaseModel):
         layercelldivisions : int
             Number of oarticles in a cell in the layer (z-coordinate)
             direction (default is 2).
+        nodes : int, list of ints, tuple of ints, or np.ndarray
+            Nodes (zero-based) with particles. If  (default is node 0).
 
         Returns
         -------
@@ -437,17 +441,25 @@ class Modpath7(BaseModel):
         mp = Modpath7(modelname=modelname, flowmodel=flowmodel,
                       exe_name=exe_name, model_ws=model_ws, verbose=verbose)
 
+        # set default iface for recharge and et
+        if mp.flow_version == 'mf6':
+            defaultiface = {'RCH': 6, 'EVT': 6}
+        else:
+            defaultiface = {'RECHARGE': 6, 'ET': 6}
+
         # create MODPATH 7 basic file and add to the MODPATH 7
         # model instance (mp)
-        Modpath7Bas(mp)
+        Modpath7Bas(mp, defaultiface=defaultiface)
 
         # create particles
-        nodes = []
-        node = 0
-        for ib in mp.ib.flatten():
-            if ib > 0:
-                nodes.append(node)
-            node += 1
+        if nodes is None:
+            nodes = []
+            node = 0
+            for ib in mp.ib.flatten():
+                if ib > 0:
+                    nodes.append(node)
+                node += 1
+
         p = ParticleCellNodeData(columncelldivisions=columncelldivisions,
                                  rowcelldivisions=rowcelldivisions,
                                  layercelldivisions=layercelldivisions,

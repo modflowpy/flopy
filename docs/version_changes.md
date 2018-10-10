@@ -32,6 +32,7 @@ FloPy Changes
     * Fixed issue from change in MODFLOW 6 `inspect.getargspec()` method (for getting method arguments).
     * Fixed MODFLOW 6 BINARY keyword for reading binary data from a file using  `OPEN/CLOSE` (needs parentheses around it).
 
+
 ### Version 3.2.9
 * Modified MODFLOW 5 OC stress_period_data=None default behaviour. If MODFLOW 5 OC stress_period_data is not provided then binary head output is saved for the last time step of each stress period.
 * added multiple component support to ``mt3dusgs SFT`` module
@@ -58,16 +59,15 @@ FloPy Changes
 	* `SpatialReference.write_gridSpec` was not converting the model origin coordinates to model length units.
 	* shorted integer field lengths written to shapefiles to 18 characters; some readers may misinterpret longer field lengths as float dtypes.
 
+
 ### Version 3.2.8
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
+* Added SFR2 package functionality
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
 * Bug fixes:
     * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
     * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
-
-### Version 3.2.7 - develop
-* Added SFR2 package functionarlity
-	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
 
 		
 ### Version 3.2.7

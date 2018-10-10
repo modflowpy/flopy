@@ -650,6 +650,7 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
+
         # make sure pathlines is a list
         if not isinstance(pl, list):
             pl = [pl]
