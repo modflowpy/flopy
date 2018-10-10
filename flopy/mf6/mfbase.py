@@ -527,6 +527,14 @@ class PackageContainer(object):
         package_path = os.path.join(base_path, 'modflow')
         return glob.glob(os.path.join(package_path, "*.py"))
 
+    @property
+    def package_dict(self):
+        return self.package_name_dict.copy()
+
+    @property
+    def package_names(self):
+        return list(self.package_name_dict.keys())
+
     def _add_package(self, package, path):
         # put in packages list and update lookup dictionaries
         self.packagelist.append(package)

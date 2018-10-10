@@ -10,42 +10,9 @@ User's Manual.
 import numpy as np
 # from numpy import empty,array
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, read1d
+from ..utils import Util2d, Util3d
 import warnings
 
-def read1d_fixed(f, a, nvalperline=8):
-    """
-    Read a 10 real value array (such as TIMPRS) and return it
-    as a.
-
-    Parameters
-    ----------
-    f : file handle
-    a : np.ndarray
-        array to fill
-
-    Returns
-    -------
-    a : np.ndarray
-
-    """
-    done = False
-    icount = 0
-    while True:
-        line = f.readline()
-        istart = 0
-        istop = 10
-        for i in range(nvalperline):
-            a[icount] = float(line[istart: istop])
-            istart = istop
-            istop += 10
-            if icount == a.shape[0] - 1:
-                done = True
-                break
-            icount += 1
-        if done:
-            break
-    return
 
 class Mt3dBtn(Package):
     """
@@ -295,14 +262,14 @@ class Mt3dBtn(Package):
                               np.float32, prsity, name='prsity',
                               locat=self.unit_number[0],
                               array_free_format=False)
-        self.icbund = Util3d(model, (self.nlay, self.nrow, self.ncol), np.int,
+        self.icbund = Util3d(model, (self.nlay, self.nrow, self.ncol), np.int32,
                               icbund, name='icbund',
                               locat=self.unit_number[0],
                              array_free_format=False)
         self.ssflag = ssflag
         self.dt0 = Util2d(model, (self.nper,), np.float32, dt0, name='dt0',
                           array_free_format=False)
-        self.mxstrn = Util2d(model, (self.nper,), np.int, mxstrn,
+        self.mxstrn = Util2d(model, (self.nper,), np.int32, mxstrn,
                               name='mxstrn')
         self.ttsmult = Util2d(model, (self.nper,), np.float32, ttsmult,
                                name='ttmult')
@@ -449,11 +416,11 @@ class Mt3dBtn(Package):
                                   locat=self.unit_number[0])
 
         if nstp is not None:
-            self.nstp = Util2d(self.parent, (nper,), np.int, nstp,
+            self.nstp = Util2d(self.parent, (nper,), np.int32, nstp,
                                 name='nstp',
                                 locat=self.unit_number[0])
         else:
-            self.nstp = Util2d(self.parent, (nper,), np.int,
+            self.nstp = Util2d(self.parent, (nper,), np.int32,
                                 mf.dis.nstp.get_value(),
                                 name='nstp',
                                 locat=self.unit_number[0])
@@ -470,13 +437,13 @@ class Mt3dBtn(Package):
 
         self.laycon = None
         if laycon is not None:
-            self.laycon = Util2d(self.parent, (nlay,), np.int, laycon,
+            self.laycon = Util2d(self.parent, (nlay,), np.int32, laycon,
                                   name='laycon',
                                   locat=self.unit_number[0])
         else:
             flow_package = mf.get_package('BCF6')
             if flow_package is not None:
-                self.laycon = Util2d(self.parent, (nlay,), np.int,
+                self.laycon = Util2d(self.parent, (nlay,), np.int32,
                                       flow_package.laycon.get_value(),
                                       name='laycon',
                                       locat=self.unit_number[0])
@@ -484,12 +451,12 @@ class Mt3dBtn(Package):
                 flow_package = mf.get_package('LPF')
                 if flow_package is not None:
                     self.laycon = Util2d(self.parent, (nlay,),
-                                          np.int, flow_package.laytyp.get_value(),
+                                          np.int32, flow_package.laytyp.get_value(),
                                           name='laycon', locat=self.unit_number[0])
                 flow_package = mf.get_package('UPW')
                 if flow_package is not None:
                     self.laycon = Util2d(self.parent, (nlay,),
-                                         np.int, flow_package.laytyp.get_value(),
+                                         np.int32, flow_package.laytyp.get_value(),
                                          name='laycon', locat=self.unit_number[0])
 
         s = 'BTN warning. Laycon has not been set.  A modflow model with a '
@@ -497,7 +464,7 @@ class Mt3dBtn(Package):
         s += ' to the BTN constructor.  Setting laycon to 1 (convertible).'
         if self.laycon is None:
             warnings.warn(s)
-            self.laycon = Util2d(self.parent, (nlay,), np.int, 1,
+            self.laycon = Util2d(self.parent, (nlay,), np.int32, 1,
                                   name='laycon',
                                   locat=self.unit_number[0])
         return
@@ -598,7 +565,7 @@ class Mt3dBtn(Package):
             f_btn.write(self.sconc[s].get_file_entry())
 
         # A14
-        f_btn.write('{0:10.0E}{1:10.4f}\n' \
+        f_btn.write('{0:10.0E}{1:10.2E}\n' \
                     .format(self.cinact, self.thkmin))
 
         # A15
@@ -642,9 +609,9 @@ class Mt3dBtn(Package):
 
         # A21, 22, 23 PERLEN, NSTP, TSMULT
         for t in range(self.nper):
-            s = '{0:10.4G}{1:10d}{2:10.4G}'.format(self.perlen[t],
-                                                     self.nstp[t],
-                                                     self.tsmult[t])
+            s = '{0:10G}{1:10d}{2:10G}'.format(self.perlen[t],
+                                               self.nstp[t],
+                                               self.tsmult[t])
             if self.ssflag is not None:
                 s += ' ' + self.ssflag[t]
             s += '\n'
@@ -778,24 +745,21 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading LAYCON...')
-        laycon = np.empty((nlay), np.int)
-        laycon = read1d(f, laycon)
+        laycon = Util2d.load_txt((nlay,), f, np.int32, '(40I2)')
         if model.verbose:
             print('   LAYCON {}'.format(laycon))
 
         if model.verbose:
             print('   loading DELR...')
-        delr = Util2d.load(f, model, (ncol, 1), np.float32, 'delr',
+        delr = Util2d.load(f, model, (ncol,), np.float32, 'delr',
                             ext_unit_dict, array_format="mt3d")
-        delr = delr.array.reshape((ncol))
         if model.verbose:
             print('   DELR {}'.format(delr))
 
         if model.verbose:
             print('   loading DELC...')
-        delc = Util2d.load(f, model, (nrow, 1), np.float32, 'delc',
+        delc = Util2d.load(f, model, (nrow,), np.float32, 'delc',
                             ext_unit_dict, array_format="mt3d")
-        delc = delc.array.reshape((nrow))
         if model.verbose:
             print('   DELC {}'.format(delc))
 
@@ -822,7 +786,7 @@ class Mt3dBtn(Package):
 
         if model.verbose:
             print('   loading ICBUND...')
-        icbund = Util3d.load(f, model, (nlay, nrow, ncol), np.int, 'icbund',
+        icbund = Util3d.load(f, model, (nlay, nrow, ncol), np.int32, 'icbund',
                               ext_unit_dict, array_format="mt3d")
         if model.verbose:
             print('   ICBUND {}'.format(icbund))
@@ -883,8 +847,7 @@ class Mt3dBtn(Package):
         if nprs > 0:
             if model.verbose:
                 print('   loading TIMPRS...')
-            timprs = np.empty((nprs), dtype=np.float32)
-            read1d_fixed(f, timprs)
+            timprs = Util2d.load_txt((nprs,), f, np.float32, '(8F10.0)')
             if model.verbose:
                 print('   TIMPRS {}'.format(timprs))
 
@@ -950,9 +913,8 @@ class Mt3dBtn(Package):
                     sf = 'SState'
             ssflag.append(sf)
 
-            if tsmult[-1] < 0:
-                t = np.empty((nstp[-1]), dtype=np.float32)
-                read1d(f, t)
+            if tsmult[-1] <= 0:
+                t = Util2d.load_txt((nstp[-1],), f, np.float32, '(8F10.0)')
                 tslngh.append(t)
                 raise Exception("tsmult <= 0 not supported")
 

@@ -141,7 +141,7 @@ class ModflowEvt(Package):
                                 evtr, name='etvr')
         self.exdp = Transient2d(model, (nrow, ncol), np.float32,
                                 exdp, name='exdp')
-        self.ievt = Transient2d(model, (nrow, ncol), np.int,
+        self.ievt = Transient2d(model, (nrow, ncol), np.int32,
                                 ievt, name='ievt')
         self.np = 0
         self.parent.add_package(self)
@@ -325,7 +325,7 @@ class ModflowEvt(Package):
                     if model.verbose:
                         print('   loading ievt stress period {0:3d}...'.format(
                             iper + 1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.int, 'ievt',
+                    t = Util2d.load(f, model, (nrow, ncol), np.int32, 'ievt',
                                     ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt

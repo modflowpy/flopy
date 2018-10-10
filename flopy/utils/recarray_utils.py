@@ -11,7 +11,7 @@ def create_empty_recarray(length, dtype, default_value=0):
 
 def ra_slice(ra, cols):
     raslice = np.column_stack([ra[c] for c in cols])
-    dtype = [(str(d[0]), d[1]) for d in ra.dtype.descr if d[0] in cols]
+    dtype = [(str(d[0]), str(d[1])) for d in ra.dtype.descr if d[0] in cols]
     return np.array([tuple(r) for r in raslice],
                     dtype=dtype).view(np.recarray)
 

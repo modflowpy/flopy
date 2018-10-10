@@ -49,6 +49,10 @@ def load_and_write_pcgn(mfnam, pth):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=lpth, verbose=True,
                                    exe_name=exe_name)
     assert m.load_fail is False
+    if mfnam in ['twri.nam']:  # update this list for fixed models
+        assert m.free_format_input is False
+    else:
+        assert m.free_format_input is True
 
     if run:
         try:
