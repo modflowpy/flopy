@@ -1,34 +1,12 @@
 [
     {
-        "name": "flopy", 
-        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models.", 
-        "organization": "U.S. Geological Survey", 
-        "contact": {
-            "name": "Joseph D. Hughes", 
-            "email": "jdhughes@usgs.gov"
-        }, 
-        "version": "3.2.9.199", 
         "status": "Release Candidate", 
-        "date": {
-            "metadataLastUpdated": "2018-09-17"
-        }, 
-        "permissions": {
-            "licenses": [
-                {
-                    "URL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/LICENSE.md", 
-                    "name": "Public Domain, CC0-1.0"
-                }
-            ], 
-            "usageType": "openSource"
-        }, 
-        "homepageURL": "https://code.usgs.gov/usgs/modflow/flopy/", 
-        "repositoryURL": "https://code.usgs.gov/usgs/modflow/flopy.git", 
-        "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip", 
-        "disclaimerURL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/DISCLAIMER.md", 
-        "vcs": "git", 
         "languages": [
             "python"
         ], 
+        "repositoryURL": "https://code.usgs.gov/usgs/modflow/flopy.git", 
+        "disclaimerURL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/DISCLAIMER.md", 
+        "name": "flopy", 
         "tags": [
             "MODFLOW", 
             "MODFLOW 6", 
@@ -44,6 +22,28 @@
             "transport model", 
             "python"
         ], 
-        "laborHours": -1
+        "contact": {
+            "name": "Joseph D. Hughes", 
+            "email": "jdhughes@usgs.gov"
+        }, 
+        "downloadURL": "https://code.usgs.gov/usgs/modflow/flopy/archive/master.zip", 
+        "vcs": "git", 
+        "laborHours": -1, 
+        "version": "3.2.9.248", 
+        "date": {
+            "metadataLastUpdated": "2018-10-10"
+        }, 
+        "organization": "U.S. Geological Survey", 
+        "permissions": {
+            "licenses": [
+                {
+                    "URL": "https://code.usgs.gov/usgs/modflow/flopy/blob/master/LICENSE.md", 
+                    "name": "Public Domain, CC0-1.0"
+                }
+            ], 
+            "usageType": "openSource"
+        }, 
+        "homepageURL": "https://code.usgs.gov/usgs/modflow/flopy/", 
+        "description": "FloPy is a python package to create, run, and post-process MODFLOW-based models."
     }
 ]
