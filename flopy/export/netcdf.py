@@ -160,10 +160,9 @@ class NetCdf(object):
 
         self.model = model
         self.model_grid = model.modelgrid
-        self.sr = self.model_grid.sr
         if prj is not None:
-            self.sr.prj = prj
-        assert(self.model_grid.grid_type == GridType.structured)
+            self.model_grid.proj4 = prj
+        assert(self.model_grid.grid_type == 'structured')
         self.shape = (self.model_grid.nlay, self.model_grid.nrow,
                       self.model_grid.ncol)
 
@@ -172,20 +171,20 @@ class NetCdf(object):
         except:
             print('python-dateutil is not installed\n' +
                   'try pip install python-dateutil')
-            return None
+            return
 
         self.start_datetime = self._dt_str(dateutil.parser.parse(
-            self.model_grid.sim_time.tr.start_datetime))
+            self.model_grid.sim_time.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
 
-        proj4_str = self.model_grid.sr.proj4_str
+        proj4_str = self.model_grid.proj4_str
         if proj4_str is None:
             proj4_str = '+init=epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
         self.proj4_str = proj4_str
-        self.grid_units = LENUNI[self.model_grid.sr.lenuni]
+        self.grid_units = LENUNI[self.model_grid.lenuni]
         self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units

@@ -33,6 +33,8 @@ class Grid(object):
         bottom elevations of all cells
     idomain : ndarray(np.int)
         ibound/idomain value for each cell
+    lenuni : ndarray(np.int)
+        model length units
     sr : SpatialReference
         spatial reference locates the grid in a coordinate system
     origin_loc : str
@@ -121,13 +123,15 @@ class Grid(object):
     Examples
     --------
     """
-    def __init__(self, grid_type, top=None, botm=None, idomain=None, epsg=None,
-                 proj4=None, xoff=0.0, yoff=0.0, angrot=0.0):
+    def __init__(self, grid_type, top=None, botm=None, idomain=None,
+                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
+                 angrot=0.0):
         self.use_ref_coords = True
         self._grid_type = grid_type
         self._top = top
         self._botm = botm
         self._idomain = idomain
+        self._lenuni = lenuni
         self._epsg = epsg
         self._proj4 = proj4
         self._wkt = None
@@ -157,15 +161,23 @@ class Grid(object):
 
     @property
     def angrot_radians(self):
-        return self.angrot * np.pi / 180.
+        return self._angrot * np.pi / 180.
 
     @property
     def epsg(self):
         return self._epsg
 
+    @epsg.setter
+    def epsg(self, epsg):
+        self._epsg = epsg
+
     @property
     def proj4(self):
         return self._proj4
+
+    @proj4.setter
+    def proj4(self, proj4):
+        self._proj4 = proj4
 
     @property
     def top(self):
@@ -179,6 +191,10 @@ class Grid(object):
     def top_botm(self):
         new_top = np.expand_dims(self._top, 0)
         return np.concatenate((new_top, self._botm), axis=0)
+
+    @property
+    def lenuni(self):
+        return self._lenuni
 
     @property
     def idomain(self):

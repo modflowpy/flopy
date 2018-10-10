@@ -5,14 +5,14 @@ from ..utils import geometry
 
 class VertexGrid(Grid):
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
-                 epsg=None, proj4=None, xoff=0.0, yoff=0.0, angrot=0.0,
-                 grid_type='layered_vertex'):
+                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
+                 angrot=0.0, grid_type='layered_vertex'):
         # JL comment: I really think the naming convention
         # layered_vertex and unlayered_vertex should be
         # reconsidered. There is no reference to these grid types
         # in modflow6; in my opinion we should stay consistent and use
         # the vertex and unstructured naming convention...
-        super(VertexGrid, self).__init__(grid_type, top, botm, idomain,
+        super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
                                          epsg, proj4, xoff, yoff, angrot)
         self._vertices = vertices
         self._cell2d = cell2d

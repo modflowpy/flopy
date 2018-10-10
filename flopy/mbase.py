@@ -154,6 +154,7 @@ class BaseModel(ModelInterface):
         self._exe_name = exe_name
         self.external_extension = 'ref'
         self.__modelgrid = None
+        self.__modeltime = None
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
             try:
@@ -206,6 +207,12 @@ class BaseModel(ModelInterface):
         self.output_packages = []
 
         return
+
+    @property
+    def modeltime(self):
+        raise NotImplementedError(
+            'must define modeltime in child '
+            'class to use this base class')
 
     @property
     def modelgrid(self):

@@ -12,6 +12,7 @@ from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
 from ..grid.structuredgrid import StructuredGrid
+from ..utils.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 
@@ -196,21 +197,27 @@ class MFModel(PackageContainer, ModelInterface):
             return None
 
     @property
+    def modeltime(self):
+        if self.__modeltime is None:
+            # build model time
+            tdis = self.simulation.get_package('tdis')
+            itmuni = tdis.time_units.get_data()
+            start_date_time = tdis.start_date_time.get_data()
+            if itmuni is None:
+                itmuni = 0
+            if start_date_time is None:
+                start_date_time = '01-01-1970'
+            period_data = tdis.perioddata.get_data()
+            data_frame = {'perlen': period_data['perlen'],
+                          'nstp': period_data['nstp'],
+                          'tsmult': period_data['tsmult']}
+            self.__model_time = ModelTime(data_frame, itmuni, start_date_time)
+        return self.__model_time
+
+    @property
     def modelgrid(self):
-        tdis = self.simulation.get_package('tdis')
-        itmuni = tdis.time_units.get_data()
-        start_date_time = tdis.start_date_time.get_data()
-        if itmuni is None:
-            itmuni = 0
-        if start_date_time is None:
-            start_date_time = '01-01-1970'
-        period_data = tdis.perioddata.get_data()
-        data_frame = {'perlen': period_data['perlen'],
-                      'nstp': period_data['nstp'],
-                      'tsmult': period_data['tsmult']}
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
-
             return StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
                                   top=dis.top.array, botm=dis.botm.array,
                                   idomain=dis.idomain.array,

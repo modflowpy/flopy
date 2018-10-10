@@ -6,6 +6,7 @@ from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
 from ..grid.structuredgrid import StructuredGrid
+from ..utils.modeltime import ModelTime
 
 
 class SeawatList(Package):
@@ -141,6 +142,18 @@ class Seawat(BaseModel):
         self.mfnam_packages['vdf'] = SeawatVdf
         self.mfnam_packages['vsc'] = SeawatVsc
         return
+
+    @property
+    def modeltime(self):
+        if self.__modeltime is None:
+            # build model time
+            data_frame = {'perlen': self.dis.perlen.array,
+                          'nstp': self.dis.nstp.array,
+                          'tsmult': self.dis.tsmult.array}
+            self.__model_time = ModelTime(data_frame,
+                                          self.dis.itmuni_dict[self.dis.itmuni],
+                                          self._start_datetime)
+        return self.__model_time
 
     @property
     def modelgrid(self):

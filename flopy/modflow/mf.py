@@ -11,6 +11,7 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..grid.structuredgrid import StructuredGrid
+from ..utils.modeltime import ModelTime
 from .mfpar import ModflowPar
 
 
@@ -219,6 +220,18 @@ class Modflow(BaseModel):
     #     return next_unit
 
     @property
+    def modeltime(self):
+        if self.__modeltime is None:
+            # build model time
+            data_frame = {'perlen': self.dis.perlen.array,
+                          'nstp': self.dis.nstp.array,
+                          'tsmult': self.dis.tsmult.array}
+            self.__model_time = ModelTime(data_frame,
+                                          self.dis.itmuni_dict[self.dis.itmuni],
+                                          self._start_datetime)
+        return self.__model_time
+
+    @property
     def modelgrid(self):
         # todo: update this to dynamically update the
         # todo: model grid with changes in dis... Maybe
@@ -229,11 +242,13 @@ class Modflow(BaseModel):
                 ibound = self.bas6.ibound.array
             else:
                 ibound = None
+
             # build grid
             mg = StructuredGrid(self.dis.delc.array,
                                 self.dis.delr.array,
                                 self.dis.top.array,
-                                self.dis.botm.array, ibound)
+                                self.dis.botm.array, ibound,
+                                self.dis.lenuni)
             # set coordinate info
             self._set_coord_info(mg)
             self.__modelgrid = mg

@@ -16,6 +16,7 @@ from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
 from ..grid.structuredgrid import StructuredGrid
+from ..utils.modeltime import ModelTime
 
 class Mt3dList(Package):
     """
@@ -329,6 +330,19 @@ class Mt3dms(BaseModel):
 
     def __repr__(self):
         return 'MT3DMS model'
+
+    @property
+    def modeltime(self):
+        if self.__modeltime is None:
+            # build model time
+            data_frame = {'perlen': self.mf.dis.perlen.array,
+                          'nstp': self.mf.dis.nstp.array,
+                          'tsmult': self.mf.dis.tsmult.array}
+            self.__model_time = ModelTime(data_frame,
+                                          self.mf.dis.itmuni_dict[
+                                              self.dis.itmuni],
+                                          self._start_datetime)
+        return self.__model_time
 
     @property
     def modelgrid(self):

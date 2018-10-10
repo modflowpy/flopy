@@ -19,9 +19,11 @@ class StructuredGrid(Grid):
 
     """
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
-                 epsg=None, proj4=None, xoff=0.0, yoff=0.0, angrot=0.0):
+                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
+                 angrot=0.0):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
-                                             epsg, proj4, xoff, yoff, angrot)
+                                             lenuni, epsg, proj4, xoff, yoff,
+                                             angrot)
         self.__delc = delc
         self.__delr = delr
         self.__nrow = len(delc)
