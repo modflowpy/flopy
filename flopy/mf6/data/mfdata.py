@@ -11,7 +11,7 @@ from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
-from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
+from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
                               ConstIter, ArrayIndexIter, MultiList
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
