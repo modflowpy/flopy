@@ -4,6 +4,49 @@ from copy import deepcopy
 from ..mfbase import MFDataException
 
 
+def get_first_val(arr):
+    while isinstance(arr, list) or isinstance(arr, np.ndarray):
+        arr = arr[0]
+    return arr
+
+
+def clean_name(name):
+    # remove bad characters
+    clean_string = name.replace(' ', '_')
+    clean_string = clean_string.replace('-', '_')
+    # remove anything after a parenthesis
+    index = clean_string.find('(')
+    if index != -1:
+        clean_string = clean_string[0:index]
+
+    return clean_string
+
+
+def find_keyword(arr_line, keyword_dict):
+    # convert to lower case
+    arr_line_lower = []
+    for word in arr_line:
+        # integers and floats are not keywords
+        if not DatumUtil.is_int(word) and not DatumUtil.is_float(word):
+            arr_line_lower.append(word.lower())
+    # look for constants in order of most words to least words
+    key = ''
+    for num_words in range(len(arr_line_lower), -1, -1):
+        key = tuple(arr_line_lower[0:num_words])
+        if len(key) > 0 and key in keyword_dict:
+            return key
+    return None
+
+
+def max_tuple_abs_size(some_tuple):
+    max_size = 0
+    for item in some_tuple:
+        item_abs = abs(item)
+        if item_abs > max_size:
+            max_size = item_abs
+    return max_size
+
+
 class TemplateGenerator(object):
     """
     Abstract base class for building a data template for different data types.

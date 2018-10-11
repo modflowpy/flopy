@@ -1409,7 +1409,7 @@ class MFPackage(PackageContainer, PackageInterface):
                           '.'.format(self.get_file_path(), self.package_type)
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.model_name,
-                                      self._get_pname(),
+                                      self.package_name,
                                       self.path, 'loading package file',
                                       None, inspect.stack()[0][3],
                                       type_, value_, traceback_, message,

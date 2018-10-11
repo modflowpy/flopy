@@ -83,7 +83,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
 
     """
     if isinstance(v, np.ndarray):
-        v = v.aslist()
+        v = v.tolist()
     elif isinstance(v, int) or isinstance(v, float) or isinstance(v, bool):
         v = [v]
     ncol = len(v)
@@ -94,7 +94,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
             ipos.append(length)
     else:
         if isinstance(ipos, np.ndarray):
-            ipos = ipos.flatten().aslist()
+            ipos = ipos.flatten().tolist()
         elif isinstance(ipos, int):
             ipos = [ipos]
         if len(ipos) < ncol:
@@ -148,7 +148,7 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
                 ipos.append(length)
         else:
             if isinstance(ipos, np.ndarray):
-                ipos = ipos.flatten().aslist()
+                ipos = ipos.flatten().tolist()
             elif isinstance(ipos, int):
                 ipos = [ipos]
             ncol = len(ipos)

@@ -10,8 +10,9 @@ import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
-from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
-                             ConstIter, ArrayIndexIter, MultiList
+from ..data import mfdatautil
+from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
+                              ConstIter, ArrayIndexIter, MultiList
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
 
@@ -302,6 +303,8 @@ class LayerStorage(object):
     def __getattr__(self, attr):
         if attr == 'array':
             return self._data_storage_parent.get_data(self._lay_indexes, True)
+        elif attr == '__getstate__':
+            raise AttributeError(attr)
 
     def set_data(self, data):
         self._data_storage_parent.set_data(data, self._lay_indexes, [self.factor])
@@ -1123,7 +1126,8 @@ class DataStorage(object):
             if const:
                 self.layer_storage[layer].data_storage_type = \
                         DataStorageType.internal_constant
-                self.layer_storage[layer].data_const_value = data
+                self.layer_storage[layer].data_const_value = \
+                    [mfdatautil.get_first_val(data)]
             else:
                 self.layer_storage[layer].data_storage_type = \
                         DataStorageType.internal_array

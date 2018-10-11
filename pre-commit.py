@@ -6,7 +6,7 @@ import os
 import sys
 import datetime
 import json
-
+from collections import OrderedDict
 
 # update files and paths so that there are the same number of
 # path and file entries in the paths and files list. Enter '.'
@@ -193,20 +193,21 @@ def add_updated_files():
 
 def update_codejson(vmajor, vminor, vmicro, vbuild):
 
+    json_fname = files[4]
     # get branch
     branch = get_branch()
     if branch is None:
-        print('Cannot update code.json - could not determine current branch')
+        print('Cannot update {0} - could not determine current branch'
+              .format(json_fname))
         return
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
-    
+
     # load and modify json file
-    jsonFile = open('code.json', 'r') # Open the JSON file for reading
-    data = json.load(jsonFile) # Read the JSON into the buffer
-    jsonFile.close() # Close the JSON file
-    
+    with open(json_fname, 'r') as f:
+        data = json.load(f, object_pairs_hook=OrderedDict)
+
     # modify the json file data
     now = datetime.datetime.now()
     sdate = now.strftime('%Y-%m-%d')
@@ -217,13 +218,14 @@ def update_codejson(vmajor, vminor, vmicro, vbuild):
     else:
         data[0]['version'] = version + '.{}'.format(vbuild)
         data[0]['status'] = 'Release Candidate'
-    
+
     # rewrite the json file
-    with open(files[4], 'w') as f:
-        json.dump(data, f, indent=4)  
-    
+    with open(json_fname, 'w') as f:
+        json.dump(data, f, indent=4)
+        f.write('\n')
+
     return
-    
+
 
 def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
     

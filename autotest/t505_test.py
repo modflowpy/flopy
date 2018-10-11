@@ -1382,8 +1382,8 @@ def test050_circle_island():
                                 stress_period_data=stress_period_data)
 
     rch_data = ['OPEN/CLOSE', 'rech.dat', 'FACTOR', 1.0, 'IPRN', 0]
-    rch_package = ModflowGwfrcha(model, readasarrays=True, save_flows=True,
-                                 recharge=rch_data)
+    rch_package = ModflowGwfrcha(model, readasarrays=True,
+                                 save_flows=True, recharge=rch_data)
 
     # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -1578,7 +1578,6 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
-    test028_sfr()
     np001()
     np002()
     test004_bcfss()
@@ -1586,5 +1585,6 @@ if __name__ == '__main__':
     test006_2models_gnc()
     test006_gwf3_disv()
     test021_twri()
+    test028_sfr()
     test035_fhb()
     test050_circle_island()

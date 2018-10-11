@@ -361,7 +361,17 @@ class MFSimulation(PackageContainer):
             :class:flopy6.mfpackage
 
         """
-        if item in self._models:
+
+        models = []
+        if item in self.structure.model_types:
+            # get all models of this type
+            for model in self._models.values():
+                if model.model_type == item:
+                    models.append(model)
+
+        if len(models) > 0:
+            return models
+        elif item in self._models:
             return self.get_model(item)
         else:
             return self.get_package(item)
@@ -950,10 +960,15 @@ class MFSimulation(PackageContainer):
 
             self._remove_package(package)
 
-    def get_model_itr(self):
-        return self._models.items()
+    @property
+    def model_dict(self):
+        return self._models.copy()
 
-    def get_model(self, model_name):
+    @property
+    def model_names(self):
+        return list(self._models.keys())
+
+    def get_model(self, model_name=''):
         """
         Load an existing model.
 

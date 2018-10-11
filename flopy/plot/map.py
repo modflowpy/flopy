@@ -770,22 +770,42 @@ class StructuredMapView(MapView):
             elif direction.lower() == 'ending':
                 selection_direction = 'starting'
 
+        # selection of endpoints
         if selection is not None:
+            if isinstance(selection, int):
+                selection = tuple((selection,))
             try:
-                k, i, j = selection[0], selection[1], selection[2]
-                if selection_direction.lower() == 'starting':
-                    ksel, isel, jsel = 'k0', 'i0', 'j0'
-                elif selection_direction.lower() == 'ending':
-                    ksel, isel, jsel = 'k', 'i', 'j'
+                if len(selection) == 1:
+                    node = selection[0]
+                    if selection_direction.lower() == 'starting':
+                        nsel = 'node0'
+                    else:
+                        nsel = 'node'
+                    # make selection
+                    idx = (ep[nsel] == node)
+                    tep = ep[idx]
+                elif len(selection) == 3:
+                    k, i, j = selection[0], selection[1], selection[2]
+                    if selection_direction.lower() == 'starting':
+                        ksel, isel, jsel = 'k0', 'i0', 'j0'
+                    else:
+                        ksel, isel, jsel = 'k', 'i', 'j'
+                    # make selection
+                    idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
+                    tep = ep[idx]
+                else:
+                    errmsg = 'flopy.map.plot_endpoint selection must be ' + \
+                             'a zero-based layer, row, column tuple ' + \
+                             '(l, r, c) or node number (MODPATH 7) of ' + \
+                             'the location to evaluate (i.e., well location).'
+                    raise Exception(errmsg)
             except:
                 errmsg = 'flopy.map.plot_endpoint selection must be a ' + \
                          'zero-based layer, row, column tuple (l, r, c) ' + \
-                         'of the location to evaluate (i.e., well location).'
+                         'or node number (MODPATH 7) of the location ' + \
+                         'to evaluate (i.e., well location).'
                 raise Exception(errmsg)
-
-        if selection is not None:
-            idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
-            tep = ep[idx]
+        # all endpoints
         else:
             tep = ep.copy()
 
@@ -796,7 +816,7 @@ class StructuredMapView(MapView):
 
         # scatter kwargs that users may redefine
         if 'c' not in kwargs:
-            c = tep['finaltime'] - tep['initialtime']
+            c = tep['time'] - tep['time0']
         else:
             c = np.empty((tep.shape[0]), dtype="S30")
             c.fill(kwargs.pop('c'))
@@ -830,11 +850,10 @@ class StructuredMapView(MapView):
 
         # plot the end point data
         sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
-        # sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 
         # add a colorbar for travel times
         if createcb:
-            cb = plt.colorbar(sp, shrink=shrink)
+            cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
 

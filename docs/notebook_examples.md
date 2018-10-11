@@ -29,9 +29,15 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities for exporting two-dimensional array data as a binary file is given in the [flopy3_save_binary_data_file](../examples/Notebooks/flopy3_save_binary_data_file.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create MODPATH models and plot MODPATH results is given in the [flopy3_Modpath_example](../examples/Notebooks/flopy3_Modpath_example.ipynb) Notebook.
++ An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_Modpath6_example](../examples/Notebooks/flopy3_Modpath6_example.ipynb) Notebook.
 
-+ An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook.
++ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_Modpath7_create_simulation](../examples/Notebooks/flopy3_create_simulation.ipynb) Notebook.
+
++ An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_Modpath7_structured_example](../examples/Notebooks/flopy3_Modpath7_structured_example.ipynb) Notebook.
+
++ An overview of FloPy capabilities to create MODPATH 7 models for unstructured MODFLOW 6 models (DISV) and plot MODPATH 7 results is given in the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook. The notebook includes an example of using GRIDGEN to create a DISV discretization for MODFLOW 6.
+
++ An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook. See the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook for an example of using GRIDGEN to create an unstructured DISV quadtree discretization for MODFLOW 6.
 
 + The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
 
@@ -100,7 +106,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of [plotting MODFLOW-USG unstructured grid data and model results](../examples/Notebooks/flopy3_UnstructuredGridPlotting.ipynb).
 
-+ An overview of [how to plot MODFLOW 6 results for a single GWF model](../examples/Notebooks/flopy3_BasicMODFLOW6Plot.ipynb).
++ An overview of [how to plot MODFLOW 6 results for a single GWF model](../examples/Notebooks/flopy3_mf6_BasicPlotting.ipynb).
 
 #### Additional MODFLOW examples
 
