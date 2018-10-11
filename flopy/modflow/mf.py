@@ -249,13 +249,13 @@ class Modflow(BaseModel):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
-
+        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         # build grid
         self._modelgrid = StructuredGrid(self.dis.delc.array,
                                          self.dis.delr.array,
                                          self.dis.top.array,
                                          self.dis.botm.array, ibound,
-                                         self.dis.lenuni,
+                                         lenuni[self.dis.lenuni],
                                          proj4=self._modelgrid.proj4,
                                          xoff=xoff,
                                          yoff=yoff,

@@ -1277,7 +1277,7 @@ class MFPackage(PackageContainer, PackageInterface):
                       'expected in line "{}".'.format(line)
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.model_name,
-                                  self.structure.get_package(),
+                                  self._get_pname(),
                                   self.path,
                                   'parsing block header', None,
                                   inspect.stack()[0][3],
@@ -1385,7 +1385,7 @@ class MFPackage(PackageContainer, PackageInterface):
         message = 'Unable to find variable "{}" in package ' \
                   '"{}".'.format(var_name, self.package_type)
         type_, value_, traceback_ = sys.exc_info()
-        raise MFDataException(self.model_name, self.structure.get_package(),
+        raise MFDataException(self.model_name, self._get_pname(),
                               self.path, 'building data objects',
                               None, inspect.stack()[0][3],
                               type_, value_, traceback_, message,
@@ -1409,7 +1409,7 @@ class MFPackage(PackageContainer, PackageInterface):
                           '.'.format(self.get_file_path(), self.package_type)
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.model_name,
-                                      self.structure.get_package(),
+                                      self._get_pname(),
                                       self.path, 'loading package file',
                                       None, inspect.stack()[0][3],
                                       type_, value_, traceback_, message,

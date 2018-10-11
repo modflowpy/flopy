@@ -1853,9 +1853,6 @@ class crs(object):
     and translate between different formats."""
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
-        warnings.warn(
-            "crs has been deprecated.", category=DeprecationWarning)
-
         self.wktstr = None
         if prj is not None:
             with open(prj) as input:

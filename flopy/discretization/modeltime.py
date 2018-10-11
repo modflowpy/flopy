@@ -25,16 +25,16 @@ class ModelTime():
 
     @property
     def perlen(self):
-        return self._period_data['perlen'].values
+        return self._period_data['perlen']
 
     @property
     def nper(self):
-        return len(self._period_data['perlen'].values)
+        return len(self._period_data['perlen'])
 
     @property
     def nstp(self):
-        return self._period_data['nstp'].values
+        return self._period_data['nstp']
 
     @property
     def tsmult(self):
-        return self._period_data['tsmult'].values
+        return self._period_data['tsmult']

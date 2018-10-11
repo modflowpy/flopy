@@ -15,7 +15,6 @@ import flopy
 FILLVALUE = -99999.9
 ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
           5: "years"}
-LENUNI = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
 PRECISION_STRS = ["f4", "f8", "i4"]
 
 STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
@@ -178,14 +177,14 @@ class NetCdf(object):
             self.model_time.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
 
-        proj4_str = self.model_grid.proj4_str
+        proj4_str = self.model_grid.proj4
         if proj4_str is None:
             proj4_str = '+init=epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
         self.proj4_str = proj4_str
-        self.grid_units = LENUNI[self.model_grid.lenuni]
+        self.grid_units = self.model_grid.lenuni
         self.z_positive = z_positive
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
@@ -591,10 +590,14 @@ class NetCdf(object):
                              "{0}".format(str(e)))
         self.global_attributes["solver_head_tolerance"] = htol
         self.global_attributes["solver_flux_tolerance"] = rtol
-        for n, v in self.model_grid.sr.attribute_dict.items():
+        spatial_attribs = {"xll": self.model_grid.xoffset,
+                           "yll": self.model_grid.yoffset,
+                           "rotation": self.model_grid.angrot,
+                           "proj4_str": self.model_grid.proj4}
+        for n, v in spatial_attribs.items():
             self.global_attributes["flopy_sr_" + n] = v
         self.global_attributes["start_datetime"] = \
-            self.model_grid.sim_time.tr.start_datetime
+            self.model_time.start_datetime
 
         self.fillvalue = FILLVALUE
 
@@ -662,8 +665,8 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model_grid.xyedges[0][0, 0]
-        base_y = self.model_grid.xyedges[1][0, 0]
+        base_x = self.model_grid.xyedges[0][0]
+        base_y = self.model_grid.xyedges[1][0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
 
@@ -769,15 +772,15 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        sr = self.model_grid.sr
-        attribs = {"units": sr.units, "standard_name": "elevation",
+        attribs = {"units": self.model_grid.lenuni,
+                   "standard_name": "elevation",
                    "long_name": NC_LONG_NAMES.get("elevation", "elevation"),
                    "axis": "Z",
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
                                     dimensions=("layer", "y", "x"))
-        elev[:] = self.zs * sr.length_multiplier  # consistent w/ horizontal units
+        elev[:] = self.zs
 
         # Longitude
         attribs = {"units": "degrees_east", "standard_name": "longitude",
@@ -801,28 +804,30 @@ class NetCdf(object):
 
         # x
         self.log("creating x var")
-        attribs = {"units": sr.units,
+        attribs = {"units": self.model_grid.lenuni,
                    "standard_name": "projection_x_coordinate",
                    "long_name": NC_LONG_NAMES.get("x",
                                                   "x coordinate of projection"),
                    "axis": "X"}
         x = self.create_variable("x_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        x[:] = self.model_grid.get_cellcenters()[0]
+        x[:] = self.model_grid.xyzcellcenters[0]
 
         # y
         self.log("creating y var")
-        attribs = {"units": sr.units,
+        attribs = {"units": self.model_grid.lenuni,
                    "standard_name": "projection_y_coordinate",
                    "long_name": NC_LONG_NAMES.get("y",
                                                   "y coordinate of projection"),
                    "axis": "Y"}
         y = self.create_variable("y_proj", attribs, precision_str="f8",
                                  dimensions=("y", "x"))
-        y[:] = self.model_grid.get_cellcenters()[1]
+        y[:] = self.model_grid.xyzcellcenters[1]
 
         # grid mapping variable
-        attribs = self.sr.crs.grid_mapping_attribs
+        crs = flopy.utils.reference.crs(prj=self.model_grid.proj4,
+                                        epsg=self.model_grid.epsg)
+        attribs = crs.grid_mapping_attribs
         if attribs is not None:
             self.log("creating grid mapping variable")
             gmv = self.create_variable(attribs['grid_mapping_name'], attribs,
@@ -838,25 +843,25 @@ class NetCdf(object):
         self.log("creating layer var")
 
         # delc
-        attribs = {"units": self.sr.units.strip('s'),
+        attribs = {"units": self.model_grid.lenuni.strip('s'),
                    "long_name": NC_LONG_NAMES.get("delc",
                                                   "Model grid cell spacing along a column"),
                    }
         delc = self.create_variable('delc', attribs, dimensions=('y',))
-        delc[:] = self.model_grid.delc[::-1] * self.model_grid.sr.length_multiplier
-        if self.model_grid.sr.angrot != 0:
+        delc[:] = self.model_grid.delc[::-1]
+        if self.model_grid.angrot != 0:
             delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."
 
         # delr
-        attribs = {"units": self.sr.units.strip('s'),
+        attribs = {"units":self.model_grid.lenuni.strip('s'),
                    "long_name": NC_LONG_NAMES.get("delr",
                                                   "Model grid cell spacing along a row"),
                    }
         delr = self.create_variable('delr', attribs, dimensions=('x',))
-        delr[:] = self.model_grid.delr[::-1] * self.model_grid.sr.length_multiplier
-        if self.model_grid.sr.angrot != 0:
+        delr[:] = self.model_grid.delr[::-1]
+        if self.model_grid.angrot != 0:
             delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                             "This grid HAS been rotated before being saved to NetCDF. " + \
                             "To compute the unrotated grid, use the origin point and this array."

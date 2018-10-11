@@ -13,7 +13,6 @@ namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
 # skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
 skip = []
 
-
 tpth = os.path.join('temp', 't007')
 # make the directory if it does not exist
 if not os.path.isdir(tpth):
@@ -38,13 +37,20 @@ def remove_shp(shpname):
         if os.path.exists(fname):
             os.remove(fname)
 
-def export_netcdf(namfile):
+
+def export_mf6_netcdf(path):
+    sim = flopy.mf6.modflow.mfsimulation.MFSimulation.load(sim_ws=path)
+    for name, model in sim.get_model_itr():
+        export_netcdf(model)
+
+
+def export_mf2005_netcdf(namfile):
     if namfile in skip:
         return
     print(namfile)
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
-    if m.sr.lenuni == 0:
-        m.sr.lenuni = 1
+    if m.dis.lenuni == 0:
+        m.dis.lenuni = 1
         # print('skipping...lenuni==0 (undefined)')
         # return
     # if sum(m.dis.laycbd) != 0:
@@ -53,7 +59,9 @@ def export_netcdf(namfile):
         return
     assert m, 'Could not load namefile {}'.format(namfile)
     assert isinstance(m, flopy.modflow.Modflow)
+    export_netcdf(m)
 
+def export_netcdf(m):
     # Do not fail if netCDF4 not installed
     try:
         import netCDF4
@@ -932,20 +940,20 @@ def test_shapefile():
 
 def test_netcdf():
     for namfile in namfiles:
-        yield export_netcdf, namfile
+        yield export_mf2005_netcdf, namfile
 
     return
 
 
 def build_netcdf():
     for namfile in namfiles:
-        export_netcdf(namfile)
+        export_mf2005_netcdf(namfile)
     return
 
 
 def build_sfr_netcdf():
     namfile = 'testsfr2.nam'
-    export_netcdf(namfile)
+    export_mf2005_netcdf(namfile)
     return
 
 
@@ -971,7 +979,10 @@ if __name__ == '__main__':
     #test_export_output()
     #for namfile in namfiles:
     for namfile in ["fhb.nam"]:
-        export_netcdf(namfile)
+        export_mf2005_netcdf(namfile)
+    for path in [os.path.join('..', 'examples', 'data', 'mf6',
+                                                        'test001a_Tharmonic')]:
+        export_mf6_netcdf(path)
     # test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()

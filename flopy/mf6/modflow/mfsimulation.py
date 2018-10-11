@@ -953,7 +953,7 @@ class MFSimulation(PackageContainer):
     def get_model_itr(self):
         return self._models.items()
 
-    def get_model(self, model_name=''):
+    def get_model(self, model_name):
         """
         Load an existing model.
 
@@ -969,7 +969,6 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
-
         return self._models[model_name]
 
     def get_exchange_file(self, filename):

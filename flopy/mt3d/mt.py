@@ -362,7 +362,6 @@ class Mt3dms(BaseModel):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
-
         # build grid
         self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
                                          delr=self.mf.dis.delr.array,
