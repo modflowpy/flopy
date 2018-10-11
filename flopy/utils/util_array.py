@@ -2552,7 +2552,7 @@ class Util2d(object):
                 return
             elif self.dtype == np.int32:
                 try:
-                    self.__value = int(value)
+                    self.__value = np.int32(value)
                 except:
                     raise Exception("Util2d error: str not a file and " +
                                     "couldn't be cast to int: {0}".format(
@@ -2569,7 +2569,7 @@ class Util2d(object):
         elif np.isscalar(value):
             if self.dtype == np.int32:
                 try:
-                    self.__value = int(value)
+                    self.__value = np.int32(value)
                 except:
                     raise Exception('Util2d:could not cast scalar ' +
                                     'value to type "int": ' + str(value))
