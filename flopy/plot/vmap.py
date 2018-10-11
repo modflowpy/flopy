@@ -70,7 +70,6 @@ class VertexMapView(MapView):
             self._extent = self.mg.extent
         return self._extent
 
-
     def plot_array(self, a, masked_values=None, **kwargs):
         """
         Plot an array.  If the array is three-dimensional, then the method
@@ -569,6 +568,9 @@ class VertexMapView(MapView):
         return quiver
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
+        return NotImplementedError("MODPATH 7 support is not yet implemented")
+
+    def plot_timeseries(self, ts, travel_time=None, **kwargs):
         return NotImplementedError("MODPATH 7 support is not yet implemented")
 
     def plot_endpoint(self, ep, direction="ending", selection=None,

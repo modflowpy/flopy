@@ -515,6 +515,38 @@ class PlotMapView(object):
             ax.add_collection(lc)
         return lc
 
+    def plot_timeseries(self, ts, travel_time=None, **kwargs):
+        """
+        Plot the MODPATH timeseries.
+
+        Parameters
+        ----------
+        ts : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile TimeseriesFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+        travel_time: float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+            lo : list of Line2D objects
+        """
+        return self.__cls.plot_timeseries(ts=ts, travel_time=travel_time,
+                                          **kwargs)
+
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
         """

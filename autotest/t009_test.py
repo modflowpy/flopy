@@ -18,7 +18,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
-from flopy.grid import StructuredGrid
+from flopy.discretization import StructuredGrid
 from flopy.utils.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':

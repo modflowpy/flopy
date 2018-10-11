@@ -708,6 +708,128 @@ class StructuredMapView(MapView):
                   "from a PlotMapView instance"
         raise NotImplementedError(err_msg)
 
+    def plot_timeseries(self, ts, travel_time=None, **kwargs):
+        """
+        Plot the MODPATH timeseries.
+
+        Parameters
+        ----------
+        ts : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile TimeseriesFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+        travel_time: float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+            lo : list of Line2D objects
+        """
+        from matplotlib.collections import LineCollection
+
+        # make sure timeseries is a list
+        if not isinstance(ts, list):
+            ts = [ts]
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
+
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+
+        else:
+            ax = self.ax
+
+        if 'color' not in kwargs:
+            kwargs['color'] = 'red'
+
+        linecol = []
+        for t in ts:
+            if travel_time is None:
+                tp = t.copy()
+
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (t['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (t['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (t['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (t['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (t['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (t['time'] <= time)
+                tp = ts[idx]
+
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
+
+            # build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            # select based on layer
+            if kon >= 0:
+                kk = t['k'].copy().reshape(t.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+
+            else:
+                arr = np.ma.asarray(arr)
+
+            # append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+
+        # plot timeseries data
+        lo = []
+        for lc in linecol:
+            if not lc.mask.all():
+                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
+
+        return lo
+
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
         """
