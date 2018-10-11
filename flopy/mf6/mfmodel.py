@@ -2,7 +2,7 @@
 mfmodel module.  Contains the MFModel class
 
 """
-import os, sys, inspect
+import os, sys, inspect, warnings
 import numpy as np
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType, \
                     MFDataException, ReadAsArraysException, FlopyException, \
@@ -11,8 +11,9 @@ from .mfpackage import MFPackage
 from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
-from ..grid.structuredgrid import StructuredGrid
-from ..utils.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.grid import Grid
+from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 
@@ -116,10 +117,21 @@ class MFModel(PackageContainer, ModelInterface):
             self.model_nam_file = model_nam_file
 
         # check for spatial reference info in kwargs
+        xll = kwargs.pop("xll", None)
+        yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
+        if self._xul is not None:
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
         self._yul = kwargs.pop("yul", None)
-        self._rotation = kwargs.pop("rotation", 0.)
-        self._proj4 = kwargs.pop("proj4_str", None)
+        if self._yul is not None:
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
+        rotation = kwargs.pop("rotation", 0.)
+        proj4 = kwargs.pop("proj4_str", None)
+        # build model grid object
+        self._modelgrid = Grid(proj4=proj4, xoff=xll, yoff=yll,
+                               angrot=rotation)
 
         self.start_datetime = None
         # check for extraneous kwargs
@@ -198,32 +210,46 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modeltime(self):
-        if self.__modeltime is None:
-            # build model time
-            tdis = self.simulation.get_package('tdis')
-            itmuni = tdis.time_units.get_data()
-            start_date_time = tdis.start_date_time.get_data()
-            if itmuni is None:
-                itmuni = 0
-            if start_date_time is None:
-                start_date_time = '01-01-1970'
-            period_data = tdis.perioddata.get_data()
-            data_frame = {'perlen': period_data['perlen'],
-                          'nstp': period_data['nstp'],
-                          'tsmult': period_data['tsmult']}
-            self.__model_time = ModelTime(data_frame, itmuni, start_date_time)
-        return self.__model_time
+        # build model time
+        tdis = self.simulation.get_package('tdis')
+        itmuni = tdis.time_units.get_data()
+        start_date_time = tdis.start_date_time.get_data()
+        if itmuni is None:
+            itmuni = 0
+        if start_date_time is None:
+            start_date_time = '01-01-1970'
+        period_data = tdis.perioddata.get_data()
+        data_frame = {'perlen': period_data['perlen'],
+                      'nstp': period_data['nstp'],
+                      'tsmult': period_data['tsmult']}
+        self._model_time = ModelTime(data_frame, itmuni, start_date_time)
+        return self._model_time
 
     @property
     def modelgrid(self):
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
             return StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
                                   top=dis.top.array, botm=dis.botm.array,
                                   idomain=dis.idomain.array,
                                   lenuni=dis.length_units.array,
-                                  proj4=self._proj4, xoff=self._xll,
-                                  yoff=self._yll, angrot=self._rotation)
+                                  proj4=self._modelgrid.proj4,
+                                  xoff=xoff,
+                                  yoff=yoff,
+                                  angrot=self._modelgrid.angrot)
 
     @property
     def packagelist(self):

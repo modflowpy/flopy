@@ -21,8 +21,10 @@ else:
 from datetime import datetime
 import copy
 import numpy as np
-from flopy import utils, grid
+from flopy import utils, discretization
 from .version import __version__
+from .discretization.modeltime import ModelTime
+from .discretization.grid import Grid
 
 if sys.version_info >= (3, 3):
     from shutil import which
@@ -153,8 +155,6 @@ class BaseModel(ModelInterface):
         self.heading = ''
         self._exe_name = exe_name
         self.external_extension = 'ref'
-        self.__modelgrid = None
-        self.__modeltime = None
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
             try:
@@ -171,21 +171,25 @@ class BaseModel(ModelInterface):
 
         # check for reference info in kwargs
         # we are just carrying these until a dis package is added
-        self._xll = kwargs.pop("xll", None)
-        self._yll = kwargs.pop("yll", None)
+        xll = kwargs.pop("xll", None)
+        yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
         if self._xul is not None:
-            warnings.warn(
-                'xul/yul have been deprecated. Use xll/yll instead.',
-                DeprecationWarning)
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
         self._yul = kwargs.pop("yul", None)
         if self._yul is not None:
-            warnings.warn(
-                'xul/yul have been deprecated. Use xll/yll instead.',
-                DeprecationWarning)
-        self._rotation = kwargs.pop("rotation", 0.0)
-        self._proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                          DeprecationWarning)
+
+        rotation = kwargs.pop("rotation", 0.0)
+        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
+
+        # build model discretization objects
+        self._modelgrid = Grid(proj4=proj4_str, xoff=xll, yoff=yll,
+                               angrot=rotation)
+        self._modeltime = None
 
         # Model file information
         self.__onunit__ = 10
@@ -432,24 +436,6 @@ class BaseModel(ModelInterface):
                         self.add_pop_key_list(iu)
                     break
         return iu, fname
-
-    def _set_coord_info(self, mg):
-        xoff = 0.0
-        yoff = 0.0
-        if self._xll is not None and self._xll != 0.0:
-            xoff = self._xll
-        elif self._xul is not None and self._xul != 0.0:
-            xoff = mg._xul_to_xll(self._xul)
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          DeprecationWarning)
-        if self._yll is not None and self._yll != 0.0:
-            yoff = self._yll
-        elif self._yul is not None and self._yul != 0.0:
-            yoff = mg._yul_to_yll(self._yul)
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          DeprecationWarning)
-        mg.set_coord_info(xoff=xoff, yoff=yoff, angrot=self._rotation,
-                          proj4=self._proj4_str)
 
     def _output_msg(self, i, add=True):
         if add:
@@ -1058,7 +1044,7 @@ class BaseModel(ModelInterface):
                 raise Exception("cannot set SpatialReference -"
                                 "ModflowDis not found")
         elif key == "tr":
-            assert isinstance(value, grid.reference.TemporalReference)
+            assert isinstance(value, discretization.reference.TemporalReference)
             if self.dis is not None:
                 self.dis.tr = value
             else:

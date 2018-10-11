@@ -110,7 +110,7 @@ def export_shapefile(namfile):
     return
 
 def test_freyberg_export():
-    from flopy.grid import StructuredGrid
+    from flopy.discretization import StructuredGrid
     namfile = 'freyberg.nam'
 
     # steady state
@@ -398,31 +398,28 @@ def test_sr():
     bas = flopy.modflow.ModflowBas(ms, ifrefm=True)
 
     # test instantiation of an empty basic Structured Grid
-    mg = flopy.grid.StructuredGrid(dis.delc.array, dis.delr.array)
+    mg = flopy.discretization.StructuredGrid(dis.delc.array, dis.delr.array)
 
     # test instantiation of Structured grid with offsets
-    mg = flopy.grid.StructuredGrid(dis.delc.array, dis.delr.array, xoff=1, yoff=1)
+    mg = flopy.discretization.StructuredGrid(dis.delc.array, dis.delr.array,
+                                             xoff=1, yoff=1)
 
     #txt = 'yul does not approximately equal 100 - ' + \
     #      '(xul, yul) = ({}, {})'.format( ms.sr.yul, ms.sr.yul)
     assert abs(ms.modelgrid.extent[-1] - Ly) < 1e-3#, txt
     ms.modelgrid.set_coord_info(xoff=111, yoff=0)
     assert ms.modelgrid.xoffset == 111
+    ms.modelgrid.set_coord_info()
 
     xll, yll = 321., 123.
     angrot = 20
-    ms.modelgrid = flopy.grid.StructuredGrid(delc=ms.dis.delc.array,
-                                             delr=ms.dis.delr.array,
-                                             xoff=xll, yoff=xll,
-                                             angrot=angrot)
-
+    mg2 = ms.modelgrid
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
-    mg2 = flopy.grid.StructuredGrid(delc=ms.dis.delc.array,
-                                    delr=ms.dis.delr.array)
     x = mg2.xcellcenters[0]
     y = mg2.ycellcenters[0]
-    xt, yt = geometry.transform(x, y, xll, yll, angrot)
+    mg2.set_coord_info(xoff=xll, yoff=yll, angrot=angrot)
+    xt, yt = geometry.transform(x, y, xll, yll, mg2.angrot_radians)
 
     assert np.sum(xt - ms.modelgrid.xcellcenters[0]) < 1e-3
     assert np.sum(yt - ms.modelgrid.ycellcenters[0]) < 1e-3
@@ -434,9 +431,6 @@ def test_sr():
     assert np.abs(x2-x0) < 1e-6
     assert np.abs(y2-y0) < 1e6
 
-    ms.modelgrid = mg2
-    assert ms.modelgrid == mg2
-
     ms.start_datetime = "1-1-2016"
     assert ms.start_datetime == "1-1-2016"
     assert ms.dis.start_datetime == "1-1-2016"
@@ -445,20 +439,17 @@ def test_sr():
     # todo: need to update the write namefile function to write modelgrid information!
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
-    assert ms1.modelgrid == ms.modelgrid
-    assert ms1.dis.sr == ms.dis.sr
-    assert ms1.start_datetime == ms.start_datetime
-    assert ms1.sr.units == ms.sr.units
-    #assert ms1.sr.lenuni != sr.lenuni
-    ms1.modelgrid = mg
-    assert ms1.modelgrid == mg
+    assert ms1.dis.start_datetime == ms.start_datetime
+    assert ms1.lenuni == ms.lenuni
+#    ms1.modelgrid = mg
+#    assert ms1.modelgrid == mg
 
 def test_epsgs():
     # test setting a geographic (lat/lon) coordinate reference
     # (also tests sr.crs parsing of geographic crs info)
     delr = np.ones(10)
     delc = np.ones(10)
-    sr = flopy.grid.reference.SpatialReference()
+    sr = flopy.discretization.reference.SpatialReference()
     sr.epsg = 102733
     assert sr.epsg == 102733
 
@@ -479,20 +470,20 @@ def test_sr_scaling():
     dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
                                    delr=delr,
                                    delc=delc)
-    ms2.sr = flopy.grid.StructuredGrid(delc=ms2.dis.delc.array,
-                                       delr=ms2.dis.delr.array,
-                                       xoff=xll,
-                                       yoff=yll, angrot=0)
+    ms2.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
+                                                 delr=ms2.dis.delr.array,
+                                                 xoff=xll,
+                                                 yoff=yll, angrot=0)
     ms2.modelgrid.epsg = 26715
     ms2.dis.export(os.path.join(spth, 'dis2.shp'))
     ms3 = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
                                    delr=delr,
                                    delc=delc, top=top, botm=botm)
-    ms3.sr = flopy.grid.StructuredGrid(delc=ms2.dis.delc.array,
-                                       delr=ms2.dis.delr.array,
-                                       xoff=xll, yoff=yll,
-                                       angrot=0)
+    ms3.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
+                                                 delr=ms2.dis.delr.array,
+                                                 xoff=xll, yoff=yll,
+                                                 angrot=0)
     ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
 
     # check that the origin(s) are maintained
@@ -520,13 +511,13 @@ def test_sr_scaling():
                                    lenuni=1 # feet; should have no effect on SR
                                    # (model not supplied to SR)
                                    )
-    ms2.sr = flopy.grid.reference.SpatialReference(delc=ms2.dis.delc.array,
-                                                   lenuni=2, # meters
-                                                   epsg=26715,  # meters,
-                                                   # listed
-                                               # on spatialreference.org
-                                                   xll=xll, yll=yll,
-                                                   rotation=0)
+    ms2.sr = flopy.discretization.reference.SpatialReference(delc=ms2.dis.delc.array,
+                                                             lenuni=2,  # meters
+                                                             epsg=26715,  # meters,
+                                                             # listed
+                                                             # on spatialreference.org
+                                                             xll=xll, yll=yll,
+                                                             rotation=0)
     assert ms2.sr.model_length_units == 'meters'
     assert ms2.sr.length_multiplier == 1.
     ms2.sr.lenuni = 1 # feet; test dynamic setting
@@ -629,14 +620,14 @@ def test_namfile_readwrite():
     m = fm.Modflow(modelname='junk', model_ws=os.path.join('temp', 't007'))
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol, delr=delr,
                         delc=delc)
-    m.modelgrid = flopy.grid.StructuredGrid(delc=m.dis.delc.array,
-                                             delr=m.dis.delr.array,
-                                             top=m.dis.top.array,
-                                             botm=m.dis.botm.array,
-                                             # lenuni=3,
-                                             # length_multiplier=.3048,
-                                             xoff=xll, yoff=yll,
-                                             angrot=30)
+    m.modelgrid = flopy.discretization.StructuredGrid(delc=m.dis.delc.array,
+                                                      delr=m.dis.delr.array,
+                                                      top=m.dis.top.array,
+                                                      botm=m.dis.botm.array,
+                                                      # lenuni=3,
+                                                      # length_multiplier=.3048,
+                                                      xoff=xll, yoff=yll,
+                                                      angrot=30)
 
     # test reading and writing of SR information to namfile
     m.write_input()
@@ -705,7 +696,7 @@ def test_rotation():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    mg = flopy.grid.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array)
+    mg = flopy.discretization.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array)
     mg._angrot = 45.
     mg.set_coord_info(mg._xul_to_xll(xul), mg._yul_to_yll(yul),
                       angrot=45.)
@@ -714,7 +705,7 @@ def test_rotation():
     assert np.abs(mg.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg.yvertices[0, 0] - yul) < 1e-4
 
-    mg2 = flopy.grid.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array)
+    mg2 = flopy.discretization.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array)
     mg2._angrot = -45.
     mg2.set_coord_info(mg2._xul_to_xll(xul), mg2._yul_to_yll(yul),
                        angrot=-45.)
@@ -723,14 +714,14 @@ def test_rotation():
     assert np.abs(mg2.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg2.yvertices[0, 0] - yul) < 1e-4
 
-    mg3 = flopy.grid.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array,
-                                    xoff=xll2, yoff=yll2, angrot=-45.)
+    mg3 = flopy.discretization.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array,
+                                              xoff=xll2, yoff=yll2, angrot=-45.)
 
     assert np.abs(mg3.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg3.yvertices[0, 0] - yul) < 1e-4
 
-    mg4 = flopy.grid.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array,
-                                    xoff=xll, yoff=yll, angrot=45.)
+    mg4 = flopy.discretization.StructuredGrid(delc=m.dis.delc.array, delr=m.dis.delr.array,
+                                              xoff=xll, yoff=yll, angrot=45.)
 
     assert np.abs(mg4.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg4.yvertices[0, 0] - yul) < 1e-4
@@ -805,8 +796,8 @@ def test_get_vertices():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.grid.SpatialReference(delc=m.dis.delc.array,
-                                       xul=xul, yul=yul, rotation=45.)
+    m.sr = flopy.discretization.SpatialReference(delc=m.dis.delc.array,
+                                                 xul=xul, yul=yul, rotation=45.)
     mg = m.modelgrid
     a1 = np.array(mg.xyvertices())
     j = np.array(list(range(ncol)) * nrow)
@@ -979,8 +970,8 @@ if __name__ == '__main__':
     #test_get_vertices()
     #test_export_output()
     #for namfile in namfiles:
-    # for namfile in ["fhb.nam"]:
-    #export_netcdf(namefile)
+    for namfile in ["fhb.nam"]:
+        export_netcdf(namfile)
     # test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()

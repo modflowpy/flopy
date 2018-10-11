@@ -5,8 +5,8 @@ from ..modflow import Modflow
 from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
-from ..grid.structuredgrid import StructuredGrid
-from ..utils.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
+from flopy.discretization.modeltime import ModelTime
 
 
 class SeawatList(Package):
@@ -145,15 +145,14 @@ class Seawat(BaseModel):
 
     @property
     def modeltime(self):
-        if self.__modeltime is None:
-            # build model time
-            data_frame = {'perlen': self.dis.perlen.array,
-                          'nstp': self.dis.nstp.array,
-                          'tsmult': self.dis.tsmult.array}
-            self.__model_time = ModelTime(data_frame,
-                                          self.dis.itmuni_dict[self.dis.itmuni],
-                                          self._start_datetime)
-        return self.__model_time
+        # build model time
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
+        self._model_time = ModelTime(data_frame,
+                                     self.dis.itmuni_dict[self.dis.itmuni],
+                                     self.dis.start_datetime)
+        return self._model_time
 
     @property
     def modelgrid(self):
@@ -161,15 +160,32 @@ class Seawat(BaseModel):
             ibound = self.bas.ibound.array
         else:
             ibound = None
+
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+
         # build grid
         mg = StructuredGrid(self.dis.delc.array,
-                              self.dis.delr.array,
-                              self.dis.top.array,
-                              self.dis.botm.array, ibound,
-                              lenuni=self.dis.lenuni)
-        # set coordinate info
-        self._set_coord_info(mg)
-        return mg
+                            self.dis.delr.array,
+                            self.dis.top.array,
+                            self.dis.botm.array, ibound,
+                            lenuni=self.dis.lenuni,
+                            proj4=self._modelgrid.proj4,
+                            xoff=xoff,
+                            yoff=yoff,
+                            angrot=self._modelgrid.angrot)
+        self._modelgrid = mg
+        return self._modelgrid
 
     @property
     def nlay(self):

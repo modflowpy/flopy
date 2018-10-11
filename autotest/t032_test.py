@@ -13,10 +13,10 @@ import shutil
 import numpy as np
 import flopy
 from flopy.utils.geometry import Polygon
-from flopy.grid.reference import SpatialReference
+from flopy.discretization.reference import SpatialReference
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
 from flopy.export.netcdf import NetCdf
-from flopy.grid.reference import getprj, epsgRef
+from flopy.discretization.reference import getprj, epsgRef
 
 mpth = os.path.join('temp', 't032')
 # make the directory if it does not exist

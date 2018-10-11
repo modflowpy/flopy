@@ -9,7 +9,7 @@ import shutil
 import os
 import flopy
 import numpy as np
-from flopy.grid.reference import SpatialReference
+from flopy.discretization.reference import SpatialReference
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mpsim import StartingLocationsFile
@@ -195,9 +195,9 @@ def test_get_destination_data():
 
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
-    m.sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc, lenuni=1,
-                                                 xul=xul, yul=yul,
-                                                 rotation=0.0)
+    m.sr = flopy.discretization.reference.SpatialReference(delc=m.dis.delc, lenuni=1,
+                                                           xul=xul, yul=yul,
+                                                           rotation=0.0)
     fpth = os.path.join(path, 'dis2.shp')
     m.dis.export(fpth)
     pthobj = flopy.utils.PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))

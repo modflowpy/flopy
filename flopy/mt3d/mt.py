@@ -15,8 +15,8 @@ from .mtphc import Mt3dPhc
 from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
-from ..grid.structuredgrid import StructuredGrid
-from ..utils.modeltime import ModelTime
+from ..discretization.structuredgrid import StructuredGrid
+from flopy.discretization.modeltime import ModelTime
 
 class Mt3dList(Package):
     """
@@ -333,16 +333,15 @@ class Mt3dms(BaseModel):
 
     @property
     def modeltime(self):
-        if self.__modeltime is None:
-            # build model time
-            data_frame = {'perlen': self.mf.dis.perlen.array,
-                          'nstp': self.mf.dis.nstp.array,
-                          'tsmult': self.mf.dis.tsmult.array}
-            self.__model_time = ModelTime(data_frame,
-                                          self.mf.dis.itmuni_dict[
-                                              self.dis.itmuni],
-                                          self._start_datetime)
-        return self.__model_time
+        # build model time
+        data_frame = {'perlen': self.mf.dis.perlen.array,
+                      'nstp': self.mf.dis.nstp.array,
+                      'tsmult': self.mf.dis.tsmult.array}
+        self._model_time = ModelTime(data_frame,
+                                     self.mf.dis.itmuni_dict[
+                                         self.mf.dis.itmuni],
+                                     self.dis.start_datetime)
+        return self._model_time
 
     @property
     def modelgrid(self):
@@ -350,14 +349,31 @@ class Mt3dms(BaseModel):
             ibound = self.btn.icbund.array
         else:
             ibound = None
+
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+
         # build grid
-        mg = StructuredGrid(delc=self.mf.dis.delc.array,
-                            delr=self.mf.dis.delr.array,
-                            top=self.mf.dis.top.array,
-                            botm=self.mf.dis.botm.array, idomain=ibound)
-        # set coordinate info
-        self._set_coord_info(mg)
-        return mg
+        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
+                                         delr=self.mf.dis.delr.array,
+                                         top=self.mf.dis.top.array,
+                                         botm=self.mf.dis.botm.array,
+                                         idomain=ibound,
+                                         proj4 = self._modelgrid.proj4,
+                                         xoff = xoff,
+                                         yoff = yoff,
+                                         angrot = self._modelgrid.angrot)
+        return self._modelgrid
 
     @property
     def solver_tols(self):

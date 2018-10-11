@@ -18,7 +18,7 @@ except:
 import flopy
 fm = flopy.modflow
 from flopy.utils.sfroutputfile import SfrFile
-from flopy.grid.reference import SpatialReference
+from flopy.discretization.reference import SpatialReference
 
 if os.path.split(os.getcwd())[-1] == 'flopy3':
     path = os.path.join('examples', 'data', 'mf2005_test')

@@ -2,7 +2,7 @@ import numpy as np
 import collections
 
 from ..utils.utils_def import FlopyBinaryData
-from ..grid.structuredgrid import StructuredGrid
+from ..discretization.structuredgrid import StructuredGrid
 
 
 class MfGrdFile(FlopyBinaryData):

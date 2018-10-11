@@ -3,8 +3,8 @@ import numpy as np
 import flopy
 fm = flopy.modflow
 fp6 = flopy.mf6
-from flopy.grid import StructuredModelGrid
-from flopy.grid import SpatialReference
+from flopy.discretization import StructuredModelGrid
+from flopy.discretization import SpatialReference
 from flopy.utils import SpatialReference as OGsr
 from flopy.export.shapefile_utils import shp2recarray
 

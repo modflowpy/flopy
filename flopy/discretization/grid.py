@@ -123,7 +123,7 @@ class Grid(object):
     Examples
     --------
     """
-    def __init__(self, grid_type, top=None, botm=None, idomain=None,
+    def __init__(self, grid_type=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
                  angrot=0.0):
         self.use_ref_coords = True

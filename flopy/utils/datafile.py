@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import flopy.utils
-from flopy.grid.structuredgrid import StructuredGrid
+from flopy.discretization.structuredgrid import StructuredGrid
 
 
 class Header(object):

@@ -160,6 +160,7 @@ class NetCdf(object):
 
         self.model = model
         self.model_grid = model.modelgrid
+        self.model_time = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
         assert(self.model_grid.grid_type == 'structured')
@@ -174,7 +175,7 @@ class NetCdf(object):
             return
 
         self.start_datetime = self._dt_str(dateutil.parser.parse(
-            self.model_grid.sim_time.start_datetime))
+            self.model_time.start_datetime))
         self.logger.warn("start datetime:{0}".format(str(self.start_datetime)))
 
         proj4_str = self.model_grid.proj4_str
@@ -189,7 +190,7 @@ class NetCdf(object):
         assert self.grid_units in ["feet", "meters"], \
             "unsupported length units: " + self.grid_units
 
-        self.time_units = ITMUNI[self.model_grid.sim_time.tr.itmuni]
+        self.time_units = self.model_time.time_units
 
         # this gives us confidence that every NetCdf instance
         # has the same attributes
@@ -641,13 +642,10 @@ class NetCdf(object):
         if self.z_positive == 'down':
             vmin, vmax = vmax, vmin
         else:
-            self.zs = self.model_grid.get_cellcenters(PointType.modelxyz)[2].\
-                copy()
+            self.zs = self.model_grid.xyzcellcenters[2].copy()
 
-        ys = self.model_grid.get_cellcenters(PointType.modelxyz)[1].\
-            copy()
-        xs = self.model_grid.get_cellcenters(PointType.modelxyz)[0].\
-            copy()
+        ys = self.model_grid.xyzcellcenters[1].copy()
+        xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
         nc_crs = Proj(init=self.nc_epsg_str)
@@ -664,13 +662,13 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model_grid.xedgegrid()[0, 0]
-        base_y = self.model_grid.yedgegrid()[0, 0]
+        base_x = self.model_grid.xyedges[0][0, 0]
+        base_y = self.model_grid.xyedges[1][0, 0]
         self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
                                                  base_y)
 
         # get transformed bounds and record to check against ScienceBase later
-        xmin, ymin, xmax, ymax = self.model_grid.bounds
+        xmin, ymin, xmax, ymax = self.model_grid.extent
         bbox = np.array([[xmin, ymin],
                          [xmin, ymax],
                          [xmax, ymax],
@@ -742,7 +740,7 @@ class NetCdf(object):
         self.log("creating dimensions")
         # time
         if time_values is None:
-            time_values = np.cumsum(self.model_grid.sim_time.perlen)
+            time_values = np.cumsum(self.model_time.perlen)
         self.chunks["time"] = min(len(time_values), 100)
         self.nc.createDimension("time", len(time_values))
         self.nc.createDimension('layer', self.shape[0])
