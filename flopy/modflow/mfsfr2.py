@@ -1686,8 +1686,8 @@ class ModflowSfr2(Package):
 
         # get the cell centers for each reach
         mg = m.modelgrid
-        x0 = mg.xcell_centers()[rd.i, rd.j]
-        y0 = mg.ycell_centers()[rd.i, rd.j]
+        x0 = mg.xcellcenters[rd.i, rd.j]
+        y0 = mg.ycellcenters[rd.i, rd.j]
         loc = dict(zip(rd.reachID, zip(x0, y0)))
 
         # make lines of the reach connections between cell centers
@@ -1728,8 +1728,8 @@ class ModflowSfr2(Package):
 
         # get the cell centers for each reach
         mg = m.modelgrid
-        x0 = mg.xcell_centers()[rd.i, rd.j]
-        y0 = mg.ycell_centers()[rd.i, rd.j]
+        x0 = mg.xcellcenters[rd.i, rd.j]
+        y0 = mg.ycellcenters[rd.i, rd.j]
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
@@ -1760,8 +1760,8 @@ class ModflowSfr2(Package):
         # get the cell centers for each reach
         m = self.parent
         mg = m.modelgrid
-        x0 = mg.xcell_centers()[ra.i, ra.j]
-        y0 = mg.ycell_centers()[ra.i, ra.j]
+        x0 = mg.xcellcenters[ra.i, ra.j]
+        y0 = mg.ycellcenters[ra.i, ra.j]
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(ra, geoms, f, **kwargs)
 

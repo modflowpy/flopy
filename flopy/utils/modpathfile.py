@@ -308,6 +308,8 @@ class PathlineFile():
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
         from ..utils.reference import SpatialReference
+        from ..utils import geometry
+        from ..grid import StructuredGrid
         from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
 
@@ -334,7 +336,12 @@ class PathlineFile():
             for pid in particles:
                 ra = pth[pth.particleid == pid]
 
-                x, y = sr.transform(ra.x, ra.y)
+                if isinstance(sr, StructuredGrid):
+                    x, y = geometry.transform(ra.x, ra.y, sr.xoffset,
+                                              sr.yoffset, sr.angrot_radians)
+                else:
+                    x, y = sr.transform(ra.x, ra.y)
+
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
                 pthdata.append((pid,
@@ -357,7 +364,11 @@ class PathlineFile():
             pthdata = []
             for pid in particles:
                 ra = pth[pth.particleid == pid]
-                x, y = sr.transform(ra.x, ra.y)
+                if isinstance(sr, StructuredGrid):
+                    x, y = geometry.transform(ra.x, ra.y, sr.xoffset,
+                                              sr.yoffset, sr.angrot_radians)
+                else:
+                    x, y = sr.transform(ra.x, ra.y)
                 z = ra.z
                 geoms += [LineString([(x[i-1], y[i-1], z[i-1]),
                                           (x[i], y[i], z[i])])
@@ -752,6 +763,8 @@ class EndpointFile():
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
         """
         from ..utils.reference import SpatialReference
+        from ..utils import geometry
+        from ..grid import StructuredGrid
         from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
 
@@ -769,7 +782,13 @@ class EndpointFile():
             raise Exception(errmsg)
         if sr is None:
             sr = SpatialReference()
-        x, y = sr.transform(epd[xcol], epd[ycol])
+
+        if isinstance(sr, StructuredGrid):
+            x, y = geometry.transform(epd[xcol], epd[ycol],
+                                      xoff=sr.xoffset, yoff=sr.yoffset,
+                                      angrot_radians=sr.angrot_radians)
+        else:
+            x, y = sr.transform(epd[xcol], epd[ycol])
         z = epd[zcol]
 
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]

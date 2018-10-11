@@ -329,7 +329,7 @@ def test_mbase_modelgrid():
     import numpy as np
     import flopy
 
-    ml = flopy.modflow.Modflow(modelname="test", xul=1000.0,
+    ml = flopy.modflow.Modflow(modelname="test", xll=500.0,
                                rotation=12.5, start_datetime="1/1/2016")
     try:
         print(ml.modelgrid.xcentergrid)
@@ -338,16 +338,15 @@ def test_mbase_modelgrid():
     else:
         raise Exception("should have failed")
 
-    dis = flopy.modflow.ModflowDis(ml, nrow=10, ncol=5, delr=np.arange(5),
-                                   xul=500)
-    print(ml.mg)
+    dis = flopy.modflow.ModflowDis(ml, nrow=10, ncol=5, delr=np.arange(5))
+
     assert ml.modelgrid.xoffset == 500
-    assert ml.modelgrid.yoffset == -10
+    assert ml.modelgrid.yoffset == 0.0
     ml.model_ws = tpth
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
-    assert ml1.modelgrid == ml.modelgrid
+    assert str(ml1.modelgrid) == str(ml.modelgrid)
     assert ml1.start_datetime == ml.start_datetime
 
 def test_free_format_flag():
@@ -388,7 +387,7 @@ def test_free_format_flag():
     assert ms1.free_format_input == ms1.bas6.ifrefm
 
 
-def test_sr():
+def test_mg():
     import flopy
     from flopy.utils import geometry
     Lx = 100.
@@ -421,9 +420,17 @@ def test_sr():
 
     xll, yll = 321., 123.
     angrot = 20
-    mg2 = ms.modelgrid
+    ms.modelgrid = flopy.discretization.StructuredGrid(delc=ms.dis.delc.array,
+                                                       delr=ms.dis.delr.array,
+                                                       xoff=xll, yoff=xll,
+                                                       angrot=angrot,
+                                                       lenuni=2)
+
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
+    mg2 = flopy.discretization.StructuredGrid(delc=ms.dis.delc.array,
+                                              delr=ms.dis.delr.array,
+                                              lenuni=2)
     x = mg2.xcellcenters[0]
     y = mg2.ycellcenters[0]
     mg2.set_coord_info(xoff=xll, yoff=yll, angrot=angrot)
@@ -444,27 +451,33 @@ def test_sr():
     assert ms.dis.start_datetime == "1-1-2016"
 
     ms.model_ws = tpth
-    # todo: need to update the write namefile function to write modelgrid information!
+
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
-    assert ms1.dis.start_datetime == ms.start_datetime
-    assert ms1.lenuni == ms.lenuni
-#    ms1.modelgrid = mg
-#    assert ms1.modelgrid == mg
+    print(ms.modelgrid.lenuni)
+    print(ms1.modelgrid.lenuni)
+    assert str(ms1.modelgrid) == str(ms.modelgrid)
+    assert ms1.start_datetime == ms.start_datetime
+    assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
+    #assert ms1.sr.lenuni != sr.lenuni
 
 def test_epsgs():
+    import flopy.export.shapefile_utils as shp
     # test setting a geographic (lat/lon) coordinate reference
     # (also tests sr.crs parsing of geographic crs info)
     delr = np.ones(10)
     delc = np.ones(10)
-    sr = flopy.discretization.reference.SpatialReference()
+    sr = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
     sr.epsg = 102733
     assert sr.epsg == 102733
 
     sr.epsg = 4326  # WGS 84
-    assert sr.crs.crs['proj'] == 'longlat'
-    assert sr.crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
+    crs = shp.CRS(epsg=4326)
+    assert crs.crs['proj'] == 'longlat'
+    assert crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
 
+# scaling has not been implemented on the modelgrid class
+"""
 def test_sr_scaling():
     nlay, nrow, ncol = 1, 10, 5
     delr, delc = 250, 500
@@ -548,6 +561,7 @@ def test_sr_scaling():
     assert ms2.sr.units == 'meters'
     assert ms2.sr.proj4_str is not None
     check_size(mg2)
+"""
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -640,16 +654,16 @@ def test_namfile_readwrite():
     # test reading and writing of SR information to namfile
     m.write_input()
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
-    assert abs(m2.modelgrid.xll - xll) < 1e-2
-    assert abs(m2.modelgrid.yll - yll) < 1e-2
-    assert m2.sr.angrot == 30
+    assert abs(m2.modelgrid.xoffset - xll) < 1e-2
+    assert abs(m2.modelgrid.yoffset - yll) < 1e-2
+    assert m2.modelgrid.angrot == 30
     # assert abs(m2.sr.length_multiplier - .3048) < 1e-10
 
     model_ws = os.path.join("..", "examples", "data", "freyberg_multilayer_transient")
     ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws, verbose=False,
                                     check=False, exe_name="mfnwt")
-    assert ml.modelgrid.xul == 619653
-    assert ml.modelgrid.yul == 3353277
+    assert ml.modelgrid.xoffset == 619653
+    assert ml.modelgrid.yoffset == 3343277
     assert ml.modelgrid.angrot == 15.
 
 def test_read_usgs_model_reference():
@@ -668,27 +682,30 @@ def test_read_usgs_model_reference():
 
     # test reading of SR information from usgs.model.reference
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
-    from flopy.utils.reference import SpatialReference
-    d = SpatialReference.read_usgs_model_reference_file(mrf)
-    assert m2.sr.xul == d['xul']
-    assert m2.sr.yul == d['yul']
-    assert m2.sr.angrot == d['rotation']
-    assert m2.sr.lenuni == d['lenuni']
-    assert m2.sr.epsg == d['epsg']
+    from flopy.discretization import StructuredGrid
+    mg = StructuredGrid(delr=dis.delr.array, delc=dis.delc.array)
+    mg.read_usgs_model_reference_file(mrf)
+    m2.modelgrid = mg
+
+    assert m2.modelgrid.xoffset == mg.xoffset
+    assert m2.modelgrid.yoffset == mg.yoffset
+    assert m2.modelgrid.angrot == mg.angrot
+    assert m2.modelgrid.lenuni == mg.lenuni
+    assert m2.modelgrid.epsg == mg.epsg
 
     # test reading non-default units from usgs.model.reference
     shutil.copy(mrf, mrf+'_copy')
     with open(mrf+'_copy') as src:
         with open(mrf, 'w') as dst:
             for line in src:
-                if 'time_unit' in line:
-                    line = line.replace('days', 'seconds')
-                elif 'length_units' in line:
-                    line = line.replace('feet', 'meters')
+                if 'epsg' in line:
+                    line = line.replace("102733", '4326')
                 dst.write(line)
+
     m2 = fm.Modflow.load('junk.nam', model_ws=os.path.join('temp', 't007'))
-    assert m2.tr.itmuni == 1
-    assert m2.sr.lenuni == 2
+    m2.modelgrid.read_usgs_model_reference_file(mrf)
+
+    assert m2.modelgrid.epsg == 4326
     # have to delete this, otherwise it will mess up other tests
     to_del = glob.glob(mrf + '*')
     for f in to_del:
@@ -798,19 +815,30 @@ def test_sr_with_Map():
     plt.close()
 
 def test_get_vertices():
+    from flopy.utils.reference import SpatialReference
+    from flopy.discretization import StructuredGrid
     m = flopy.modflow.Modflow(rotation=20.)
     nrow, ncol = 40, 20
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=nrow, ncol=ncol,
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     xul, yul = 500000, 2934000
-    m.sr = flopy.discretization.SpatialReference(delc=m.dis.delc.array,
-                                                 xul=xul, yul=yul, rotation=45.)
-    mg = m.modelgrid
-    a1 = np.array(mg.xyvertices())
-    j = np.array(list(range(ncol)) * nrow)
-    i = np.array(sorted(list(range(nrow)) * ncol))
-    a2 = np.array(mg.get_cell_vertices(i, j))
+    sr = SpatialReference(delc=m.dis.delc.array,
+                          xul=xul, yul=yul, rotation=45.)
+    mg = StructuredGrid(delc=m.dis.delc.array,
+                        delr=m.dis.delr.array,
+                        xoff=sr.xll, yoff=sr.yll,
+                        angrot=sr.rotation)
+
+    xgrid = mg.xvertices
+    ygrid = mg.yvertices
+    # a1 = np.array(mg.xyvertices)
+    a1 = np.array([[xgrid[0, 0], ygrid[0,0]],
+                   [xgrid[0, 1], ygrid[0,1]],
+                   [xgrid[1, 1], ygrid[1, 1]],
+                   [xgrid[1, 0], ygrid[1, 0]]])
+
+    a2 = np.array(mg.get_cell_vertices(0, 0))
     assert np.array_equal(a1, a2)
 
 def test_get_rc_from_node_coordinates():
@@ -965,24 +993,19 @@ if __name__ == '__main__':
     #test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
-    test_sr()
-    #test_mbase_sr()
+    # test_mg()
+    # test_mbase_modelgrid()
     #test_rotation()
     # test_sr_with_Map()
-    #test_epsgs()
-    #test_sr_scaling()
-    #test_read_usgs_model_reference()
+    # test_epsgs()
+    # test_sr_scaling()
+    # test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    #test_namfile_readwrite()
+    # test_namfile_readwrite()
     # test_free_format_flag()
-    #test_get_vertices()
+    # test_get_vertices()
     #test_export_output()
     #for namfile in namfiles:
-    for namfile in ["fhb.nam"]:
-        export_mf2005_netcdf(namfile)
-    for path in [os.path.join('..', 'examples', 'data', 'mf6',
-                                                        'test001a_Tharmonic')]:
-        export_mf6_netcdf(path)
     # test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()

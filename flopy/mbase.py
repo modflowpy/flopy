@@ -413,7 +413,7 @@ class BaseModel(ModelInterface):
                 return None
         if item == "start_datetime":
             if self.dis is not None:
-                return self.dis.tr.start_datetime
+                return self.dis.start_datetime
             else:
                 return None
 

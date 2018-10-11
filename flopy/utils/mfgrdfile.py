@@ -113,13 +113,18 @@ class MfGrdFile(FlopyBinaryData):
             if self._grid == 'DISV':
                 mg = None
             elif self._grid == 'DIS':
+                nlay, nrow, ncol = self._datadict["NLAY"], self._datadict["NROW"], self._datadict["NCOL"]
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
                 top, botm = self._datadict['TOP'], self._datadict['BOTM']
+                top.shape = (nrow, ncol)
+                botm.shape = (nlay, nrow, ncol)
                 xorigin, yorigin, rot = self._datadict['XORIGIN'], \
                                         self._datadict['YORIGIN'], \
                                         self._datadict['ANGROT']
                 mg = StructuredGrid(delc, delr, top, botm, xoff=xorigin,
                                     yoff=yorigin, angrot=rot)
+            else:
+                mg = None
         except:
             mg = None
             print('could not set spatial reference for {}'.format(self.file.name))

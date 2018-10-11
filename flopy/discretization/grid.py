@@ -143,6 +143,15 @@ class Grid(object):
     ###################################
     # access to basic grid properties
     ###################################
+    def __repr__(self):
+        s = "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; ". \
+            format(self.xoffset, self.yoffset, self.angrot)
+        s += "proj4_str:{0}; ".format(self.proj4)
+        s += "units:{0}; ".format("")
+        s += "lenuni:{0}; ".format(self.lenuni)
+        s += "length_multiplier:{}".format(1)
+        return s
+
     @property
     def grid_type(self):
         return self._grid_type
@@ -399,29 +408,29 @@ class Grid(object):
                             info = line.strip().split('#')[0].split()
                             if len(info) > 1:
                                 data = ' '.join(info[1:])
-                                if info == 'xll':
+                                if info[0] == 'xll':
                                     self._xoff = float(data)
-                                elif info == 'yul':
+                                elif info[0] == 'yul':
                                     self._yoff = float(data)
-                                elif info == 'xul':
+                                elif info[0] == 'xul':
                                     self._xoff = self._xul_to_xll(
                                         float(data))
                                     warnings.warn(
                                         'xul/yul have been deprecated. Use xll/yll instead.',
                                         DeprecationWarning)
-                                elif info == 'yul':
+                                elif info[0] == 'yul':
                                     self._yoff = self._yul_to_yll(
                                         float(data))
                                     warnings.warn(
                                         'xul/yul have been deprecated. Use xll/yll instead.',
                                         DeprecationWarning)
-                                elif info == 'rotation':
+                                elif info[0] == 'rotation':
                                     self._angrot = float(data)
-                                elif info == 'epsg':
+                                elif info[0] == 'epsg':
                                     self._epsg = int(data)
-                                elif info == 'proj4':
+                                elif info[0] == 'proj4':
                                     self._proj4 = data
-                                elif info == 'start_datetime':
+                                elif info[0] == 'start_datetime':
                                     start_datetime = data
             return True
         else:

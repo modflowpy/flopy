@@ -1862,7 +1862,7 @@ class UnstructuredPlotUtilities(object):
 
         Parameters
         ----------
-        ja: ndarray:
+        fja: ndarray:
             1d flow ja face array from the cell by cell flow file
         dis: (object)
             Dis object <StructuredDisFile> or <VertexDisFile>
