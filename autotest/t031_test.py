@@ -9,7 +9,7 @@ import shutil
 import os
 import flopy
 import numpy as np
-from flopy.grid import StructuredGrid
+from flopy.discretization import StructuredGrid
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
 from flopy.modpath.mpsim import StartingLocationsFile

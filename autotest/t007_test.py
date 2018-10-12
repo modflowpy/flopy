@@ -157,7 +157,12 @@ def test_freyberg_export():
                                  delr=m.dis.delr.array,
                                  epsg=3070)
     # verify that attributes have same sr as parent
-    assert m.drn.stress_period_data.mg == m.modelgrid
+    assert m.drn.stress_period_data.mg.epsg == m.modelgrid.epsg
+    assert m.drn.stress_period_data.mg.proj4 == m.modelgrid.proj4
+    assert m.drn.stress_period_data.mg.xoffset == m.modelgrid.xoffset
+    assert m.drn.stress_period_data.mg.yoffset == m.modelgrid.yoffset
+    assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
+
     # if wkt text was fetched from spatialreference.org
     if m.sr.wkt is not None:
         # test default package export
@@ -662,8 +667,8 @@ def test_namfile_readwrite():
     model_ws = os.path.join("..", "examples", "data", "freyberg_multilayer_transient")
     ml = flopy.modflow.Modflow.load("freyberg.nam", model_ws=model_ws, verbose=False,
                                     check=False, exe_name="mfnwt")
-    assert ml.modelgrid.xoffset == 619653
-    assert ml.modelgrid.yoffset == 3343277
+    assert ml.modelgrid.xoffset == ml.modelgrid._xul_to_xll(619653)
+    assert ml.modelgrid.yoffset == ml.modelgrid._yul_to_yll(3353277)
     assert ml.modelgrid.angrot == 15.
 
 def test_read_usgs_model_reference():
@@ -690,7 +695,6 @@ def test_read_usgs_model_reference():
     assert m2.modelgrid.xoffset == mg.xoffset
     assert m2.modelgrid.yoffset == mg.yoffset
     assert m2.modelgrid.angrot == mg.angrot
-    assert m2.modelgrid.lenuni == mg.lenuni
     assert m2.modelgrid.epsg == mg.epsg
 
     # test reading non-default units from usgs.model.reference
@@ -990,7 +994,7 @@ if __name__ == '__main__':
     # test_shapefile_ibound()
     #test_netcdf()
     # test_netcdf_overloads()
-    #test_netcdf_classmethods()
+    test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
     # test_mg()
@@ -1001,12 +1005,12 @@ if __name__ == '__main__':
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    # test_namfile_readwrite()
+    #test_namfile_readwrite()
     # test_free_format_flag()
     # test_get_vertices()
     #test_export_output()
     #for namfile in namfiles:
-    # test_freyberg_export()
+    #test_freyberg_export()
     # test_export_array()
     # test_write_shapefile()
     #test_wkt_parse()

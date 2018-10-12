@@ -1879,7 +1879,7 @@ class UnstructuredPlotUtilities(object):
         nlay = model_grid.nlay
 
         # problems because we are working with rotated data. Need un-rotated data!
-        if model_grid.grid_type == "layered_vertex":
+        if model_grid.grid_type == "vertex":
             xcellcenters, ycellcenters = geometry.transform(model_grid.xcellcenters,
                                                             model_grid.ycellcenters,
                                                             model_grid.xoffset,

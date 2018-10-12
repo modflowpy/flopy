@@ -35,8 +35,6 @@ class Grid(object):
         ibound/idomain value for each cell
     lenuni : ndarray(np.int)
         model length units
-    sr : SpatialReference
-        spatial reference locates the grid in a coordinate system
     origin_loc : str
         Corner of the model grid that is the model origin
         'ul' (upper left corner) or 'll' (lower left corner)
@@ -124,7 +122,7 @@ class Grid(object):
     --------
     """
     def __init__(self, grid_type=None, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
+                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0, yoff=0.0,
                  angrot=0.0):
         self.use_ref_coords = True
         self._grid_type = grid_type
@@ -134,7 +132,7 @@ class Grid(object):
         self._lenuni = lenuni
         self._epsg = epsg
         self._proj4 = proj4
-        self._wkt = None
+        self._prj = prj
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
@@ -187,6 +185,14 @@ class Grid(object):
     @proj4.setter
     def proj4(self, proj4):
         self._proj4 = proj4
+
+    @property
+    def prj(self):
+        return self._prj
+
+    @prj.setter
+    def prj(self, prj):
+        self._proj4 = prj
 
     @property
     def top(self):

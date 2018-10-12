@@ -453,7 +453,7 @@ class PathlineFile():
         """
         from ..utils.reference import SpatialReference
         from ..utils import geometry
-        from ..grid import StructuredGrid
+        from ..discretization import StructuredGrid
         from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
 
@@ -981,7 +981,7 @@ class EndpointFile():
         """
         from ..utils.reference import SpatialReference
         from ..utils import geometry
-        from ..grid import StructuredGrid
+        from ..discretization import StructuredGrid
         from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
 

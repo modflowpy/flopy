@@ -288,6 +288,10 @@ class LayerStorage(object):
         self.iprn = None
         self.binary = False
 
+    @property
+    def name(self):
+        return self._data_storage_parent.data_dimensions.structure.name
+
     def __repr__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
             return 'constant {}'.format(self.get_data_const_val())

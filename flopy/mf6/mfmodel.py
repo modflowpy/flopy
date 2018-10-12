@@ -12,6 +12,7 @@ from .coordinates import modeldimensions
 from .data import mfstructure
 from ..utils import datautil
 from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.vertexgrid import VertexGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
@@ -227,6 +228,33 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modelgrid(self):
+        if self.get_grid_type() == DiscretizationType.DIS:
+            dis = self.get_package('dis')
+            self._modelgrid = StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
+                                  top=dis.top.array, botm=dis.botm.array,
+                                  idomain=dis.idomain.array,
+                                  lenuni=dis.length_units.array,
+                                  proj4=self._modelgrid.proj4,
+                                  epsg=self._modelgrid.epsg,
+                                  xoff=self._modelgrid.xoffset,
+                                  yoff=self._modelgrid.yoffset,
+                                  angrot=self._modelgrid.angrot)
+        elif self.get_grid_type() == DiscretizationType.DISV:
+            disv = self.get_package('disv')
+            self._modelgrid = VertexGrid(vertices=disv.vertices.array,
+                                         cell2d=disv.cell2d.array,
+                                  top=disv.top.array, botm=disv.botm.array,
+                                  idomain=disv.idomain.array,
+                                  lenuni=disv.length_units.array,
+                                  proj4=self._modelgrid.proj4,
+                                  epsg=self._modelgrid.epsg,
+                                  xoff=self._modelgrid.xoffset,
+                                  yoff=self._modelgrid.yoffset,
+                                  angrot=self._modelgrid.angrot)
+        else:
+            return self._modelgrid
+
+        # resolve offsets
         xoff = self._modelgrid.xoffset
         if xoff is None:
             if self._xul is not None:
@@ -239,17 +267,11 @@ class MFModel(PackageContainer, ModelInterface):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
 
-        if self.get_grid_type() == DiscretizationType.DIS:
-            dis = self.get_package('dis')
-            return StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
-                                  top=dis.top.array, botm=dis.botm.array,
-                                  idomain=dis.idomain.array,
-                                  lenuni=dis.length_units.array,
-                                  proj4=self._modelgrid.proj4,
-                                  xoff=xoff,
-                                  yoff=yoff,
-                                  angrot=self._modelgrid.angrot)
+        return self._modelgrid
 
     @property
     def packagelist(self):

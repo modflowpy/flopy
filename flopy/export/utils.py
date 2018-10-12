@@ -477,7 +477,7 @@ def mflist_export(f, mfl, **kwargs):
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
 
-        model_grid = mfl.mg
+        model_grid = mfl.model.modelgrid
 
         if model_grid is None:
             raise Exception("MfList.to_shapefile: ModelGrid is not set")

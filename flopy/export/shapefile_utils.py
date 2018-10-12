@@ -231,18 +231,19 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                     if isinstance(a.name, list) and a.name[0] == 'thickness':
                         continue
                     for ilay in range(a.array.shape[0]):
-                        if isinstance(a, Util3d):
-                            try:
-                                a[ilay].array
-                            except:
-                                j=2
+                        try:
                             arr = a[ilay].array
-                            aname = shape_attr_name(a[ilay].name)
-                        elif a.array is not None:
+                        except:
                             arr = a[ilay]
-                            aname = shape_attr_name(a.name)
+
+                        if isinstance(a, Util3d):
+                            aname = shape_attr_name(a[ilay].name)
                         else:
-                            continue
+                            aname = a.name
+
+                        if arr.shape == (1, nrow, ncol):
+                            # fix for mf6 case.  TODO: fix this in the mf6 code
+                            arr = arr[0]
                         assert arr.shape == (nrow, ncol)
                         name = '{}_{:03d}'.format(aname, ilay + 1)
                         array_dict[name] = arr
@@ -403,7 +404,7 @@ def enforce_10ch_limit(names):
     names = [n[:9] + '1' if len(n) > 10 else n
              for n in names]
     dups = {x: names.count(x) for x in names}
-    suffix = {n: list(range(len(cnt))) for n, cnt in dups.items() if cnt > 1}
+    suffix = {n: list(range(cnt)) for n, cnt in dups.items() if cnt > 1}
     for i, n in enumerate(names):
         if dups[n] > 1:
             names[i] = n[:9] + str(suffix[n].pop(0))

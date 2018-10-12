@@ -1,10 +1,9 @@
-import os
+import os, math
 import numpy as np
 import flopy
 fm = flopy.modflow
 fp6 = flopy.mf6
-from flopy.discretization import StructuredModelGrid
-from flopy.discretization import SpatialReference
+from flopy.discretization import StructuredGrid
 from flopy.utils import SpatialReference as OGsr
 from flopy.export.shapefile_utils import shp2recarray
 
@@ -24,25 +23,19 @@ def test_mf6_grid_shp_export():
     perioddata = [[perlen, nstp, tsmult]]*2
     botm=np.zeros((2, 10, 10))
 
-    sr = SpatialReference(delc=np.ones(nrow),
-                          xll=10, yll=10
-                              )
     ogsr = OGsr(delc=np.ones(nrow), delr=np.ones(ncol),
                           xll=10, yll=10
                               )
-
-    smg = StructuredModelGrid(delc=np.ones(nrow),
-                           delr=np.ones(ncol),
-                              top=top, botm=botm, idomain=1,
-                              sr=sr
-                              )
-
     m = fm.Modflow('junk', version='mfnwt', model_ws=tmpdir)
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol,
                         nper=nper, perlen=perlen, nstp=nstp,
                         tsmult=tsmult,
                         top=top, botm=botm)
-    m.sr = sr
+
+    smg = StructuredGrid(delc=np.ones(nrow), delr=np.ones(ncol),
+                         top=dis.top.array, botm=botm, idomain=1,
+                         xoff=10, yoff=10)
+
 
     # River package (MFlist)
     spd = fm.ModflowRiv.get_empty(10)
@@ -69,7 +62,6 @@ def test_mf6_grid_shp_export():
     dis6 = fp6.ModflowGwfdis(gwf, pname='dis', nlay=nlay, nrow=nrow, ncol=ncol,
                                   top=top,
                                   botm=botm)
-    gwf.sr = sr
 
     def cellid(k, i, j, nrow, ncol):
         return k*nrow*ncol + i*ncol + j
@@ -116,8 +108,13 @@ def test_mf6_grid_shp_export():
     common_fields.remove('geometry')
     # array values
     for c in common_fields:
-        assert np.sum(np.abs(ra[c] - ra6[c])) < 1e-6
+        for it, it6 in zip(ra[c], ra6[c]):
+            if math.isnan(it):
+                assert math.isnan(it6)
+            else:
+                assert np.abs(it - it6) < 1e-6
         pass
+
 
 def test_huge_shapefile():
     nlay = 2
@@ -131,17 +128,13 @@ def test_huge_shapefile():
     perioddata = [[perlen, nstp, tsmult]] * 2
     botm = np.zeros((nlay, nrow, ncol))
 
-    sr = SpatialReference(delc=np.ones(nrow),
-                          xll=10, yll=10
-                          )
-
-
     m = fm.Modflow('junk', version='mfnwt', model_ws=tmpdir)
     dis = fm.ModflowDis(m, nlay=nlay, nrow=nrow, ncol=ncol,
                         nper=nper, perlen=perlen, nstp=nstp,
                         tsmult=tsmult,
                         top=top, botm=botm)
     m.export('{}/huge.shp'.format(tmpdir))
+
 
 if __name__ == '__main__':
     test_mf6_grid_shp_export()

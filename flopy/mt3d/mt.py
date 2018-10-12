@@ -349,7 +349,19 @@ class Mt3dms(BaseModel):
             ibound = self.btn.icbund.array
         else:
             ibound = None
+        # build grid
+        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
+                                         delr=self.mf.dis.delr.array,
+                                         top=self.mf.dis.top.array,
+                                         botm=self.mf.dis.botm.array,
+                                         idomain=ibound,
+                                         proj4 = self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff = self._modelgrid.xoffset,
+                                         yoff = self._modelgrid.yoffset,
+                                         angrot = self._modelgrid.angrot)
 
+        # resolve offsets
         xoff = self._modelgrid.xoffset
         if xoff is None:
             if self._xul is not None:
@@ -362,16 +374,10 @@ class Mt3dms(BaseModel):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
-        # build grid
-        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
-                                         delr=self.mf.dis.delr.array,
-                                         top=self.mf.dis.top.array,
-                                         botm=self.mf.dis.botm.array,
-                                         idomain=ibound,
-                                         proj4 = self._modelgrid.proj4,
-                                         xoff = xoff,
-                                         yoff = yoff,
-                                         angrot = self._modelgrid.angrot)
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
+
         return self._modelgrid
 
     @property

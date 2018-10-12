@@ -237,6 +237,20 @@ class Modflow(BaseModel):
         else:
             ibound = None
 
+        # build grid
+        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+        self._modelgrid = StructuredGrid(self.dis.delc.array,
+                                         self.dis.delr.array,
+                                         self.dis.top.array,
+                                         self.dis.botm.array, ibound,
+                                         lenuni[self.dis.lenuni],
+                                         proj4=self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff=self._modelgrid.xoffset,
+                                         yoff=self._modelgrid.yoffset,
+                                         angrot=self._modelgrid.angrot)
+
+        # resolve offsets
         xoff = self._modelgrid.xoffset
         if xoff is None:
             if self._xul is not None:
@@ -249,17 +263,9 @@ class Modflow(BaseModel):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
-        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
-        # build grid
-        self._modelgrid = StructuredGrid(self.dis.delc.array,
-                                         self.dis.delr.array,
-                                         self.dis.top.array,
-                                         self.dis.botm.array, ibound,
-                                         lenuni[self.dis.lenuni],
-                                         proj4=self._modelgrid.proj4,
-                                         xoff=xoff,
-                                         yoff=yoff,
-                                         angrot=self._modelgrid.angrot)
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
         return self._modelgrid
 
     @modelgrid.setter

@@ -4,26 +4,46 @@ from .grid import Grid, CachedData
 
 class StructuredGrid(Grid):
     """
+    class for a structured model grid
+
+    Parameters
+    ----------
+    delc
+        returns the delc array
+    delr
+        returns the delr array
+
+
+    Properties
+    ----------
+    nlay
+        returns the number of model layers
+    nrow
+        returns the number of model rows
+    ncol
+        returns the number of model columns
+    delc
+        returns the delc array
+    delr
+        returns the delr array
+    xyedges
+        returns x-location points for the edges of the model grid and
+        y-location points for the edges of the model grid
+
+
+    Methods
+    ----------
     cell_vertices(i, j, point_type)
         returns vertices for a single cell or sequence of i, j locations.
-    get_row_array : ()
-        returns a numpy ndarray sized to a model row
-    get_column_array : ()
-        returns a numpy ndarray sized to a model column
-    get_layer_array : ()
-        returns a numpy ndarray sized to a model layer
-    num_rows
-        returns the number of model rows
-    num_columns
-        returns the number of model columns
-
+    intersect(x, y, local)
+        returns the row and column of the grid that the x, y point is in
     """
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0):
+                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
+                 yoff=0.0, angrot=0.0):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
-                                             lenuni, epsg, proj4, xoff, yoff,
-                                             angrot)
+                                             lenuni, epsg, proj4, prj, xoff,
+                                             yoff, angrot)
         self.__delc = delc
         self.__delr = delr
         self.__nrow = len(delc)
@@ -206,7 +226,7 @@ class StructuredGrid(Grid):
             raise Exception('x, y point given is outside of the model area')
         return row, col
 
-    def cell_vertices(self, i, j):
+    def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
         pts = []
         xgrid, ygrid = self.xvertices, self.yvertices
@@ -220,14 +240,6 @@ class StructuredGrid(Grid):
         else:
             vrts = np.array(pts).transpose([2, 0, 1])
             return [v.tolist() for v in vrts]
-
-    def get_all_model_cells(self):
-        model_cells = []
-        for layer in range(0, self.__nlay):
-            for row in range(0, self.__nrow):
-                for column in range(0, self.__ncol):
-                    model_cells.append((layer + 1, row + 1, column + 1))
-        return model_cells
 
     def interpolate(self, a, xi, method='nearest'):
         """
@@ -378,7 +390,7 @@ class StructuredGrid(Grid):
                         continue
 
                     ivert = []
-                    pts = self.cell_vertices(i, j)
+                    pts = self._cell_vert_list(i, j)
                     pt0, pt1, pt2, pt3, pt0 = pts
 
                     z = top_botm[k + 1, i, j]
@@ -497,14 +509,13 @@ p
                     delc.append(float(r))
                     i += 1
         f.close()
-        grd = cls(np.array(delc), np.array(delr))
+        grd = cls(np.array(delc), np.array(delr), lenuni=lenuni)
         xll = grd._xul_to_xll(xul)
         yll = grd._yul_to_yll(yul)
-        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot, lenuni=lenuni)
+        cls.set_coord_info(xoff=xll, yoff=yll, angrot=rot)
         return cls
 
     # Exporting
-
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
         from ..export.shapefile_utils import write_grid_shapefile2

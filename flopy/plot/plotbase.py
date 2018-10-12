@@ -392,7 +392,7 @@ class PlotMapView(object):
         """
         # todo: figure out the preparation for plotting discharge.... if user should do
         # todo: frf, fff, flf or flopy should auto-process these data!
-        if self.mg.grid_type == "layered_vertex":
+        if self.mg.grid_type == "vertex":
             return self.__cls.plot_discharge(fja=fja, dis=dis, head=head, istep=istep,
                                              normalize=normalize, **kwargs)
         else:
@@ -906,7 +906,7 @@ class PlotCrossSection(object):
         """
         # todo: figure out the preparation for plotting discharge.... if user should do
         # todo: frf, fff, flf or flopy should auto-process these data!
-        if self.mg.grid_type == "layered_vertex":
+        if self.mg.grid_type == "vertex":
             return self.__cls.plot_discharge(fja=fja, head=head, kstep=kstep,
                                              hstep=hstep, normalize=normalize, **kwargs)
         else:

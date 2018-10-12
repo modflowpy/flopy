@@ -1,19 +1,13 @@
 import numpy as np
 from .grid import Grid, CachedData
-from ..utils import geometry
 
 
 class VertexGrid(Grid):
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0, grid_type='layered_vertex'):
-        # JL comment: I really think the naming convention
-        # layered_vertex and unlayered_vertex should be
-        # reconsidered. There is no reference to these grid types
-        # in modflow6; in my opinion we should stay consistent and use
-        # the vertex and unstructured naming convention...
+                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
+                 yoff=0.0, angrot=0.0, grid_type='vertex'):
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
-                                         epsg, proj4, xoff, yoff, angrot)
+                                         epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
         self._cell2d = cell2d
         self._top = top
@@ -27,12 +21,6 @@ class VertexGrid(Grid):
 
     @property
     def ncpl(self):
-        # JL comment: ncpl is a constant value,
-        # it does not vary with layering
-        #ncpl_list = []
-        #for layer in self._botm:
-        #    ncpl_list.append(len(layer))
-        #return ncpl_list
         return len(self._botm[0])
 
     @property
@@ -62,18 +50,18 @@ class VertexGrid(Grid):
         return lines
 
     def get_model_dim_arrays(self):
-        if self.grid_type() == 'layered_vertex':
+        if self.grid_type() == 'vertex':
             return [np.arange(1, self.nlay + 1, 1, np.int),
                     np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
-        elif self.grid_type() == 'unlayered_vertex':
+        elif self.grid_type() == 'unstructured':
             return [np.arange(1, self.num_cells() + 1, 1, np.int)]
 
     def num_cells_per_layer(self):
         # this function call is unnecessary, since the number of
         # cells in a layer is constant for vertex model grids!!
-        if self.grid_type() == 'layered_vertex':
+        if self.grid_type() == 'vertex':
             return self.ncpl
-        elif self.grid_type() == 'unlayered_vertex':
+        elif self.grid_type() == 'unstructured':
             except_str = 'ERROR: Model is unstructured and does not ' \
                          'have a consistant number of cells per ' \
                          'layer.'
@@ -86,13 +74,9 @@ class VertexGrid(Grid):
             return active.size
 
         else:
-            if self.grid_type() == 'layered_vertex':
-                # total_cells = 0
-                # for layer_cells in self.ncpl:
-                #     total_cells += layer_cells
-                # return total_cells
+            if self.grid_type() == 'vertex':
                 return self.ncpl * self.nlay
-            elif self.grid_type() == 'unlayered_vertex':
+            elif self.grid_type() == 'unstructured':
                 return self.ncpl
 
     @property
