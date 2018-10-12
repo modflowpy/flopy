@@ -69,11 +69,11 @@ class ModflowUpw(Package):
         value of CHANI for each layer. The horizontal anisotropy is the ratio
         of the hydraulic conductivity along columns (the Y direction) to the
         hydraulic conductivity along rows (the X direction).
-    layvka : float or array of floats (nlay)
+    layvka : int or array of ints (nlay)
         a flag for each layer that indicates whether variable VKA is vertical
         hydraulic conductivity or the ratio of horizontal to vertical
         hydraulic conductivity.
-    laywet : float or array of floats (nlay)
+    laywet : int or array of ints (nlay)
         contains a flag for each layer that indicates if wetting is active.
         laywet should always be zero for the UPW Package because all cells
         initially active are wettable.
@@ -197,7 +197,7 @@ class ModflowUpw(Package):
         self.iphdry = iphdry
         self.laytyp = Util2d(model, (nlay,), np.int32, laytyp, name='laytyp')
         self.layavg = Util2d(model, (nlay,), np.int32, layavg, name='layavg')
-        self.chani = Util2d(model, (nlay,), np.int32, chani, name='chani')
+        self.chani = Util2d(model, (nlay,), np.float32, chani, name='chani')
         self.layvka = Util2d(model, (nlay,), np.int32, layvka, name='vka')
         self.laywet = Util2d(model, (nlay,), np.int32, laywet, name='laywet')
 
@@ -378,7 +378,7 @@ class ModflowUpw(Package):
         # LAYVKA array
         if model.verbose:
             print('   loading LAYVKA...')
-        layvka = np.empty((nlay,), dtype=np.float32)
+        layvka = np.empty((nlay,), dtype=np.int32)
         layvka = read1d(f, layvka)
 
         # LAYWET array
