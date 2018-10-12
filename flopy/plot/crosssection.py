@@ -33,17 +33,17 @@ class CrossSection(object):
         self.model = model
 
         if model is not None:
-            self.mg = copy.deepcopy(model.modelgrid)
+            self.mg = model.modelgrid
             self.dis = model.get_package("DIS")
 
         elif modelgrid is not None:
-            self.mg = copy.deepcopy(modelgrid)
+            self.mg = modelgrid
             self.dis = dis
             if dis is None:
                 raise AssertionError("Cannot find model discretization package")
 
         elif dis is not None:
-            self.mg = copy.deepcopy(dis.parent.modelgrid)
+            self.mg = dis.parent.modelgrid
             self.dis = dis
 
         else:
@@ -71,7 +71,7 @@ class CrossSection(object):
             self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
 
-class StructuredCrossSection(object):
+class StructuredCrossSection(CrossSection):
     """
     Class to create a cross section of the model.
 
@@ -107,46 +107,15 @@ class StructuredCrossSection(object):
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
                  line=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., extent=None, length_multiplier=None):
-        if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use ModelCrossSection method'
-            raise ImportError(s)
+        super(StructuredCrossSection, self).__init__(ax=ax, model=model, dis=dis,
+                                                     modelgrid=modelgrid, line=line,
+                                                     xul=xul, yul=yul, xll=xll,
+                                                     rotation=rotation, extent=extent,
+                                                     length_multiplier=length_multiplier)
 
-        self.model = model
+        # if length_multiplier is not None:
+        #     self.mg.length_multiplier = length_multiplier
 
-        if model is not None:
-            self.mg = copy.deepcopy(model.modelgrid)
-            self.dis = model.get_package("DIS")
-
-        elif modelgrid is not None:
-            self.mg = copy.deepcopy(modelgrid)
-            self.dis = dis
-            if dis is None:
-                raise AssertionError("Cannot find model discretization package")
-
-        elif dis is not None:
-            self.mg = copy.deepcopy(dis.parent.modelgrid)
-            self.dis = dis
-
-        else:
-            raise Exception("Cannot find model discretization package")
-
-        # Set origin and rotation
-        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-               rotation != 0 or length_multiplier != 1.:
-            if xul is not None and yul is not None:
-                warnings.warn(
-                    'xul/yul have been deprecated. Use xll/yll instead.',
-                    PendingDeprecationWarning)
-                self.mg._angrot = rotation
-                self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
-                                       yoff=self.mg._yul_to_yll(yul),
-                                       angrot=rotation)
-            else:
-                self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
-
-        if length_multiplier is not None:
-            self.mg.length_multiplier = length_multiplier
         if line is None:
             s = 'line must be specified.'
             raise Exception(s)

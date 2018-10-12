@@ -7,11 +7,12 @@ except:
     plt = None
 from flopy.plot import plotutil
 from flopy.utils import geometry
+from flopy.plot.crosssection import CrossSection
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
-class VertexCrossSection(object):
+class VertexCrossSection(CrossSection):
     """
     Class to create a cross section of the model from a VertexGrid
 
@@ -22,40 +23,11 @@ class VertexCrossSection(object):
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
                  line=None, xul=None, yul=None, xll=None, yll=None,
                  rotation=0., extent=None, length_multiplier=1.):
-        if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use ModelCrossSection method'
-            raise ImportError(s)
-
-        self.model = model
-
-        if model is not None:
-            self.mg = model.modelgrid
-            self.dis = model.get_package("DIS")
-
-        elif modelgrid is not None:
-            self.mg = modelgrid
-            self.dis = dis
-            if dis is None:
-                raise AssertionError("Cannot find model discretization package")
-
-        elif dis is not None:
-            self.mg = dis.parent.modelgrid
-            self.dis = dis
-
-        else:
-            raise Exception("Cannot find model discretization package")
-
-        # Set origin and rotation,
-        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-                rotation != 0 or length_multiplier != 1.:
-            # self.sr.length_multiplier = length_multiplier
-            # self.sr.set_spatialreference(delc=self.mg.delc,
-            #                             xul=xul, yul=yul,
-            #                             xll=xll, yll=yll,
-            #                             rotation=rotation)
-            # self.mg.sr = self.sr
-            pass
+        super(VertexCrossSection, self).__init__(ax=ax, model=model, dis=dis,
+                                                 modelgrid=modelgrid, line=line,
+                                                 xul=xul, yul=yul, xll=xll, yll=yll,
+                                                 rotation=rotation, extent=extent,
+                                                 length_multiplier=length_multiplier)
 
         if line is None:
             err_msg = 'line must be specified.'
@@ -91,8 +63,26 @@ class VertexCrossSection(object):
             xp.append(v1)
             yp.append(v2)
 
-        # todo: consider giving the user a flag for modelgrid based coords.
-        xp, yp = self.sr.transform(xp, yp, inverse=True)
+        # unrotate and untransform modelgrid into modflow coordinates!
+        xp, yp = geometry.transform(xp, yp,
+                                    self.mg.xoffset,
+                                    self.mg.yoffset,
+                                    self.mg.angrot_radians,
+                                    inverse=True)
+
+        self.xcellcenters, self.ycellcenters = \
+            geometry.transform(self.mg.xcellcenters,
+                               self.mg.ycellcenters,
+                               self.mg.xoffset, self.mg.yoffset,
+                               self.mg.angrot_radians, inverse=True)
+
+        self.xvertices, self.yvertices = \
+            geometry.transform(self.mg.xvertices,
+                               self.mg.yvertices,
+                               self.mg.xoffset, self.mg.yoffset,
+                               self.mg.angrot_radians, inverse=True)
+
+
         pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         self.pts = np.array(pts)
 
@@ -100,8 +90,8 @@ class VertexCrossSection(object):
 
         self.xypts = plotutil.UnstructuredPlotUtilities.\
             line_intersect_grid(self.pts,
-                                self.mg.xvertices,
-                                self.mg.yvertices)
+                                self.xvertices,
+                                self.yvertices)
 
         if len(self.xypts) < 2:
             s = 'cross-section cannot be created\n.'
@@ -704,9 +694,10 @@ class VertexCrossSection(object):
 
         fja = np.array(fja)
         nlay = self.mg.nlay
+        ncpl = self.mg.ncpl
 
-        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.yvertices], (nlay, 1))
-        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xvertices], (nlay, 1))
+        delr = np.tile([np.max(i) - np.min(i) for i in self.yvertices], (nlay, 1))
+        delc = np.tile([np.max(i) - np.min(i) for i in self.xvertices], (nlay, 1))
 
         # no modflow6 equivalent???
         hnoflo = 999.

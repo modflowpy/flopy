@@ -34,12 +34,12 @@ class MapView(object):
         self.mg = None
 
         if model is not None:
-            self.mg = copy.deepcopy(model.modelgrid)
+            self.mg = model.modelgrid
 
         elif modelgrid is not None:
-            self.mg = copy.deepcopy(modelgrid)
+            self.mg = modelgrid
         elif dis is not None:
-            self.mg = copy.deepcopy(dis.parent.modelgrid)
+            self.mg = dis.parent.modelgrid
 
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
