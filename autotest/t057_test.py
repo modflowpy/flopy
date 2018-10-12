@@ -470,7 +470,7 @@ def test_lkt_with_multispecies(tpth):
     nlakes  = int(np.max(lkarr))
     ipakcb  = 3           # From above
     theta   = -1.         # Implicit
-    nssitr  = 99          # Maximum number of iterations for Newton’s method
+    nssitr  = 99          # Maximum number of iterations for Newtons method
     sscncr  = 1.000e-02   # Convergence criterion for equilibrium lake stage solution
     surfdep = 2.000e-01   # Height of small topological variations in lake-bottom
     stages  = [200.0, 200.0, 200.0]
