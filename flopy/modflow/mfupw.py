@@ -12,7 +12,7 @@ import sys
 import numpy as np
 from .mfpar import ModflowPar as mfpar
 from ..pakbase import Package
-from ..utils import Util2d, Util3d
+from ..utils import Util2d, Util3d, read1d
 from ..utils.flopy_io import line_parse
 
 
@@ -356,36 +356,37 @@ class ModflowUpw(Package):
             for k in range(3, len(t)):
                 if 'NOPARCHECK' in t[k].upper():
                     noparcheck = True
+
         # LAYTYP array
         if model.verbose:
             print('   loading LAYTYP...')
-        line = f.readline()
-        t = line.strip().split()
-        laytyp = np.array((t[0:nlay]), dtype=np.int32)
+        laytyp = np.empty((nlay,), dtype=np.int32)
+        laytyp = read1d(f, laytyp)
+
         # LAYAVG array
         if model.verbose:
             print('   loading LAYAVG...')
-        line = f.readline()
-        t = line.strip().split()
-        layavg = np.array((t[0:nlay]), dtype=np.int32)
+        layavg = np.empty((nlay,), dtype=np.int32)
+        layavg = read1d(f, layavg)
+
         # CHANI array
         if model.verbose:
             print('   loading CHANI...')
-        line = f.readline()
-        t = line.strip().split()
-        chani = np.array((t[0:nlay]), dtype=np.float32)
+        chani = np.empty((nlay,), dtype=np.float32)
+        chani = read1d(f, chani)
+
         # LAYVKA array
         if model.verbose:
             print('   loading LAYVKA...')
-        line = f.readline()
-        t = line.strip().split()
-        layvka = np.array((t[0:nlay]), dtype=np.int32)
+        layvka = np.empty((nlay,), dtype=np.float32)
+        layvka = read1d(f, layvka)
+
         # LAYWET array
         if model.verbose:
             print('   loading LAYWET...')
-        line = f.readline()
-        t = line.strip().split()
-        laywet = np.array((t[0:nlay]), dtype=np.int32)
+        laywet = np.empty((nlay,), dtype=np.int32)
+        laywet = read1d(f, laywet)
+
         # Item 7: WETFCT, IWETIT, IHDWET
         wetfct, iwetit, ihdwet = None, None, None
         iwetdry = laywet.sum()
