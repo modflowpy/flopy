@@ -18,7 +18,7 @@ mt3d_usgs_exe = 'mt3dusgs'
 ismfnwt = flopy.which(mfnwt_exe)
 ismt3dusgs = flopy.which(mt3d_usgs_exe)
 
-def test_lkt_with_multispecies(tpth):
+def test_lkt_with_multispecies():
     modelpth = tpth
     modelname = 'lkttest'
     mfexe = 'mfnwt'
@@ -589,5 +589,5 @@ def test_lkt_with_multispecies(tpth):
 
 
 if __name__ == '__main__':
-    test_lkt_with_multispecies(tpth)
+    test_lkt_with_multispecies()
 
