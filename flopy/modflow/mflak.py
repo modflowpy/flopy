@@ -385,7 +385,7 @@ class ModflowLak(Package):
                 if isinstance(value, np.ndarray):
                     td = {}
                     for k in range(value.shape[0]):
-                        td[k] = value[k, :].aslist()
+                        td[k] = value[k, :].tolist()
                     flux_data[key] = td
                     if len(list(flux_data.keys())) != nlakes:
                         err = 'flux_data dictionary must ' + \
@@ -395,7 +395,7 @@ class ModflowLak(Package):
                         isinstance(value, int):
                     td = {}
                     for k in range(self.nlakes):
-                        td[k] = (np.ones(6, dtype=np.float) * value).aslist()
+                        td[k] = (np.ones(6, dtype=np.float) * value).tolist()
                     flux_data[key] = td
                 elif isinstance(value, dict):
                     try:

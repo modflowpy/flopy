@@ -69,7 +69,7 @@ def run():
         for d in dirs:
             if os.path.exists(d):
                 os.rmdir(d)
-        sys.exit(1)
+        return 1
 
     # make working directories
     for d in dirs:
@@ -371,3 +371,4 @@ def run():
 
 if __name__ == '__main__':
     success = run()
+    sys.exit(success)

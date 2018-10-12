@@ -244,6 +244,12 @@ class MFScalar(mfdata.MFData):
                         if len(data) > index and (data[index] is not None and
                                                   data[index] != False):
                             text_line.append(data_item.name.upper())
+                            if isinstance(data[index], str) and \
+                                    data_item.name.upper() != \
+                                    data[index].upper() and data[index] != '':
+                                # since the data does not match the keyword
+                                # assume the keyword was excluded
+                                index -= 1
                     else:
                         if data is not None and data != False:
                             text_line.append(data_item.name.upper())
