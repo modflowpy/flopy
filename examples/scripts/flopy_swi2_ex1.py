@@ -48,7 +48,7 @@ def run():
             if '.py' != os.path.splitext(f)[1].lower():
                 print('  removing...{}'.format(os.path.basename(f)))
                 os.remove(os.path.join(workspace, f))
-        sys.exit(1)
+        return 1
 
     modelname = 'swiex1'
     exe_name = 'mf2005'
@@ -204,3 +204,4 @@ def run():
 
 if __name__ == "__main__":
     success = run()
+    sys.exit(success)

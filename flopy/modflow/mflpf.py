@@ -63,14 +63,14 @@ class ModflowLpf(Package):
         of the hydraulic conductivity along columns (the Y direction) to the
         hydraulic conductivity along rows (the X direction).
         (default is 1).
-    layvka : float or array of floats (nlay)
+    layvka : int or array of ints (nlay)
         a flag for each layer that indicates whether variable VKA is vertical
         hydraulic conductivity or the ratio of horizontal to vertical
         hydraulic conductivity.
         0: VKA is vertical hydraulic conductivity
         not 0: VKA is the ratio of horizontal to vertical hydraulic conductivity
         (default is 0).
-    laywet : float or array of floats (nlay)
+    laywet : int or array of ints (nlay)
         contains a flag for each layer that indicates if wetting is active.
         0 wetting is inactive
         not 0 wetting is active
@@ -446,7 +446,7 @@ class ModflowLpf(Package):
         # LAYVKA array
         if model.verbose:
             print('   loading LAYVKA...')
-        layvka = np.empty((nlay), dtype=np.float32)
+        layvka = np.empty((nlay,), dtype=np.int32)
         layvka = read1d(f, layvka)
 
         # LAYWET array

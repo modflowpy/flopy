@@ -1,10 +1,10 @@
-__author__ = 'emorway'
-
 import sys
 import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, MfList
+
+__author__ = 'emorway'
 
 
 class Mt3dSft(Package):
@@ -485,10 +485,7 @@ class Mt3dSft(Package):
         # Item 1 (NSFINIT, MXSFBC, ICBCSF, IOUTOBS, IETSFR)
         line = f.readline()
         if line[0] == '#':
-            if model.verbose:
-                print('   SFT package currently does not support comment ' \
-                      'lines...')
-                sys.exit()
+            raise ValueError('SFT package does not support comment lines')
 
         if model.verbose:
             print('   loading nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr...')
@@ -521,10 +518,8 @@ class Mt3dSft(Package):
 
         vals = line.strip().split()
 
-        if len(vals) < 7 and model.verbose:
-            print('   not enough values specified in item 2 of SFT input \
-                      file, exiting...')
-            sys.exit()
+        if len(vals) < 7:
+            raise ValueError('expected 7 values for item 2 of SFT input file')
         else:
             isfsolv = int(vals[0])
             wimp = float(vals[1])
