@@ -31,6 +31,7 @@ FloPy Changes
     * Fixed bug in `mfsfr.py` when writing kinematic data (`irtflg >0`).
     * Fixed issue from change in MODFLOW 6 `inspect.getargspec()` method (for getting method arguments).
     * Fixed MODFLOW 6 BINARY keyword for reading binary data from a file using  `OPEN/CLOSE` (needs parentheses around it).
+    * Fixed bug in `mtlkt.py` when instatiating, loading, and/or writing lkt input file related to multi-species problems.
 
 
 ### Version 3.2.9
