@@ -11,7 +11,7 @@ from enum import Enum
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from .mp7particle import Particles, NodeParticleTemplate
+from .mp7particle import ParticleGroup, ParticleGroupNodeTemplate
 
 
 class simType(Enum):
@@ -187,9 +187,9 @@ class Modpath7Sim(Package):
         retardation : float or array of floats (nlay, nrow, ncol)
             Array of retardation factors that are only used if
             retardationfactoroption is 'on' (default is 1).
-        particlegroups : list of Particles instances
-            List of Particles and/or ParticleTemplate instances that contain
-            data for individual particle groups. If None is specified, a
+        particlegroups : ParticleGroup or list of ParticleGroups
+            ParticleGroup or list of ParticlesGroups that contain data for
+            individual particle groups. If None is specified, a
             particle in the center of node 0 will be created (default is None).
         extension : string
             Filename extension (default is 'mpsim')
@@ -443,7 +443,7 @@ class Modpath7Sim(Package):
                         timepointoption = 1
         else:
             timepointoption = 1
-            timepointdata = [100, self.parent.time_end/100.]
+            timepointdata = [100, self.parent.time_end / 100.]
             timepointdata[1] = np.array([timepointdata[1]])
         self.timepointoption = timepointoption
         self.timepointdata = timepointdata
@@ -484,8 +484,9 @@ class Modpath7Sim(Package):
                                       locat=self.unit_number[0])
         # particle group data
         if particlegroups is None:
-            particlegroups = [Particles()]
-        elif isinstance(particlegroups, (Particles, NodeParticleTemplate)):
+            particlegroups = [ParticleGroup()]
+        elif isinstance(particlegroups,
+                        (ParticleGroup, ParticleGroupNodeTemplate)):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups
 

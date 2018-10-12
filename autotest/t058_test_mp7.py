@@ -58,6 +58,13 @@ def test_mf6():
     # build and run MODPATH 7 with MODFLOW 6
     build_mf6()
 
+def test_default_modpath():
+    mpnam = nm + '_mp_default'
+    pg = flopy.modpath.ParticleGroup(particlegroupname='DEFAULT')
+    build_modpath(mpnam, pg)
+    return
+
+
 
 def test_faceparticles_is1():
     mpnam = nm + '_mp_face_t1node'
@@ -71,13 +78,13 @@ def test_faceparticles_is1():
                 locs.append(node)
                 localx.append(xloc)
                 localy.append(yloc)
-    p = flopy.modpath.Particles.create_particles(locs, structured=False,
-                                                 drape=0, localx=localx,
-                                                 localy=localy, localz=1)
+    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=False,
+                                                        drape=0, localx=localx,
+                                                        localy=localy, localz=1)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.Particles(particlegroupname='T1NODEPG',
-                                 particledata=p,
-                                 filename=fpth)
+    pg = flopy.modpath.ParticleGroup(particlegroupname='T1NODEPG',
+                                     particledata=p,
+                                     filename=fpth)
     build_modpath(mpnam, pg)
     return
 
@@ -89,7 +96,7 @@ def test_facenode_is3():
         for j in range(ncol):
             node = i * ncol + j
             locs.append(node)
-    p = flopy.modpath.ParticleFaceNodeData(drape=0,
+    p = flopy.modpath.NodeParticleDataFace(drape=0,
                                            verticaldivisions1=0,
                                            horizontaldivisions1=0,
                                            verticaldivisions2=0,
@@ -104,9 +111,9 @@ def test_facenode_is3():
                                            columndivisions6=3,
                                            nodes=locs)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.NodeParticleTemplate(particlegroupname='T3NODEPG',
-                                            particledata=p,
-                                            filename=fpth)
+    pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3NODEPG',
+                                                 particledata=p,
+                                                 filename=fpth)
     build_modpath(mpnam, pg)
     return
 
@@ -119,13 +126,13 @@ def test_cellparticles_is1():
             for j in range(ncol):
                 node = k * nrow * ncol + i * ncol + j
                 locs.append(node)
-    p = flopy.modpath.Particles.create_particles(locs, structured=False,
-                                                 drape=0, localx=0.5,
-                                                 localy=0.5, localz=0.5)
+    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=False,
+                                                        drape=0, localx=0.5,
+                                                        localy=0.5, localz=0.5)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.Particles(particlegroupname='T1NODEPG',
-                                 particledata=p,
-                                 filename=fpth)
+    pg = flopy.modpath.ParticleGroup(particlegroupname='T1NODEPG',
+                                     particledata=p,
+                                     filename=fpth)
     build_modpath(mpnam, pg)
     return
 
@@ -137,13 +144,13 @@ def test_cellparticleskij_is1():
         for i in range(nrow):
             for j in range(ncol):
                 locs.append((k, i, j))
-    p = flopy.modpath.Particles.create_particles(locs, structured=True,
-                                                 drape=0, localx=0.5,
-                                                 localy=0.5, localz=0.5)
+    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=True,
+                                                        drape=0, localx=0.5,
+                                                        localy=0.5, localz=0.5)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.Particles(particlegroupname='T1KIJPG',
-                                 particledata=p,
-                                 filename=fpth)
+    pg = flopy.modpath.ParticleGroup(particlegroupname='T1KIJPG',
+                                     particledata=p,
+                                     filename=fpth)
     build_modpath(mpnam, pg)
     return
 
@@ -156,15 +163,15 @@ def test_cellnode_is3():
             for j in range(ncol):
                 node = k * nrow * ncol + i * ncol + j
                 locs.append(node)
-    p = flopy.modpath.ParticleCellNodeData(drape=0,
+    p = flopy.modpath.NodeParticleDataCell(drape=0,
                                            columncelldivisions=1,
                                            rowcelldivisions=1,
                                            layercelldivisions=1,
                                            nodes=locs)
     fpth = mpnam + '.sloc'
-    pg = flopy.modpath.NodeParticleTemplate(particlegroupname='T3CELLPG',
-                                            particledata=p,
-                                            filename=fpth)
+    pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3CELLPG',
+                                                 particledata=p,
+                                                 filename=fpth)
     build_modpath(mpnam, pg)
     return
 
@@ -360,6 +367,9 @@ def build_modpath(mpn, particlegroups):
 if __name__ == '__main__':
     # build and run modflow 6
     test_mf6()
+
+    # test default modpath
+    test_default_modpath()
 
     # build face particles
     test_faceparticles_is1()

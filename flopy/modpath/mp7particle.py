@@ -12,11 +12,11 @@ from ..utils.util_array import Util2d
 from ..utils.recarray_utils import create_empty_recarray
 
 
-class Modpath7Particle(object):
+class _Modpath7ParticleGroup(object):
     """
     Base particle group class that defines common data to all particle
     input styles (MODPATH 7 simulation file items 26 through 32).
-    Modpath7Particle should not be caled directly.
+    _Modpath7ParticleGroup should not be called directly.
 
     Parameters
     ----------
@@ -159,10 +159,13 @@ class Modpath7Particle(object):
         return
 
 
-class Particles(Modpath7Particle):
+class ParticleGroup(_Modpath7ParticleGroup):
     """
-    Particle class to create MODPATH 7 particle location input style 1.
-    Particle locations can be specified by layer, row, column
+    ParticleGroup class to create MODPATH 7 particle group data for location
+    input style 1. Location input style 1 is the most general type of particle
+    group that requires the user to define the location of all particles and
+    associated data (relative release time, drap, and optionally particle ids).
+    Particledata locations can be specified by layer, row, column
     (locationstyle=1) or nodes (locationstyle=2).
 
     Parameters
@@ -186,31 +189,36 @@ class Particles(Modpath7Particle):
         row are used to define particles with starting positions defined
         by layer, row, column. particledata with 7 and 9 entries also
         include user defined particle ids. Layer, row, column locations and
-        nodes are zero-based. (default is node-based
-        ((0, 0.5, 0.5, 0.5, 0., 0),)).
+        nodes are zero-based. If particledata is None, a node-based particle
+        will be placed at the center of the first node in the model
+        (default is None).
 
     Examples
     --------
 
     >>> import flopy
     >>> p = [(2, 0, 0), (0, 20, 0)]
-    >>> p = flopy.modpath.Particles.create_particles(p)
-    >>> pg = flopy.modpath.Particles(particledata=p)
+    >>> p = flopy.modpath.ParticleGroup.create_particledata(p)
+    >>> pg = flopy.modpath.ParticleGroup(particledata=p)
 
     """
 
     def __init__(self, particlegroupname='PG1', filename=None,
                  releasedata=0.0,
-                 particledata=((0, 0.5, 0.5, 0.5, 0., 0),)):
+                 particledata=None):
         """
         Class constructor
 
         """
 
         # instantiate base class
-        Modpath7Particle.__init__(self, particlegroupname, filename,
-                                  releasedata)
+        _Modpath7ParticleGroup.__init__(self, particlegroupname, filename,
+                                        releasedata)
         self.inputstyle = 1
+
+        # create default node-based particle data if not passed
+        if particledata is None:
+            particledata = [(0, 0.5, 0.5, 0.5, 0., 0)]
 
         # convert list, tuples, and numpy array to
         dtypein = None
@@ -256,10 +264,8 @@ class Particles(Modpath7Particle):
                   '{} '.format(particlegroupname) + \
                   'only has {} columns.'.format(ncells)
             raise ValueError(msg)
-        dtype = self.get_default_dtype(structured=structured,
-                                       particleid=partid)
-        if dtypein is None:
-            dtypein = dtype
+        dtype = self.get_particledata_dtype(structured=structured,
+                                            particleid=partid)
         if dtype != dtypein:
             particledata = np.array(particledata, dtype=dtype)
 
@@ -287,7 +293,7 @@ class Particles(Modpath7Particle):
         """
 
         # call base class write method to write common data
-        Modpath7Particle.write(self, fp, ws)
+        _Modpath7ParticleGroup.write(self, fp, ws)
 
         # open external file if required
         if self.external:
@@ -366,8 +372,12 @@ class Particles(Modpath7Particle):
         return ' ' + ' '.join(fmts)
 
     @staticmethod
-    def get_default_dtype(structured=True, particleid=False):
+    def get_particledata_dtype(structured=True, particleid=False):
         """
+        Static method to get the dtype for a structured or unstructured
+        particledata recarray. Optionally, include a particleid column in
+        the dtype.
+
 
         Parameters
         ----------
@@ -381,6 +391,13 @@ class Particles(Modpath7Particle):
         Returns
         -------
         dtype : numpy dtype
+
+        Examples
+        --------
+
+        >>> import flopy.modpath as fmp
+        >>> dtype = fmp.ParticleGroup.get_particledata_dtype(structured=True,
+        ...                                                  particleid=True)
 
         """
         dtype = []
@@ -400,8 +417,10 @@ class Particles(Modpath7Particle):
         return np.dtype(dtype)
 
     @staticmethod
-    def get_empty(ncells=0, structured=True, particleid=False):
+    def get_particledata_empty(ncells=0, structured=True, particleid=False):
         """
+        Static method to get an empty structured or unstructured particledata
+        recarray. Optionally, include a particleid column in the recarray.
 
         Parameters
         ----------
@@ -418,18 +437,28 @@ class Particles(Modpath7Particle):
         -------
         recarray : numpy recarray
 
+        Examples
+        --------
+
+        >>> import flopy.modpath as fmp
+        >>> pd = fmp.ParticleGroup.get_particledata_empty(ncells=21,
+        ...                                               particleid=True)
+
 
         """
         # get an empty recarray that corresponds to dtype
-        dtype = Particles.get_default_dtype(structured=structured,
-                                            particleid=particleid)
+        dtype = ParticleGroup.get_particledata_dtype(structured=structured,
+                                                     particleid=particleid)
         return create_empty_recarray(ncells, dtype, default_value=0)
 
     @staticmethod
-    def create_particles(partlocs, structured=True, particleids=None,
-                         localx=None, localy=None, localz=None,
-                         timeoffset=None, drape=None):
+    def create_particledata(partlocs, structured=True, particleids=None,
+                            localx=None, localy=None, localz=None,
+                            timeoffset=None, drape=None):
         """
+        Static method to create a particledata recarray based on passed
+        particle locations and optional local cell location, timeoffset,
+        drape, and particleid data.
 
         Parameters
         ----------
@@ -484,7 +513,16 @@ class Particles(Modpath7Particle):
 
         Returns
         -------
-        part : flopy.modpath.Particles object
+        particledata : particledata recarray
+
+        Examples
+        --------
+
+        >>> import flopy.modpath as fmp
+        >>> locs = [(0, 0, 0), (1, 0, 0), (2, 0, 0)]
+        >>> pd = fmp.ParticleGroup.create_particledata(locs, structured=True,
+        ...                                            drape=0, localx=0.5,
+        ...                                            localy=0.5, localz=1)
 
         """
         dtype = []
@@ -642,33 +680,37 @@ class Particles(Modpath7Particle):
                     raise ValueError(msg)
 
         # create empty particle
-        part = Particles.get_empty(ncells=partlocs.shape[0],
-                                   structured=structured,
-                                   particleid=particleid)
+        ncells = partlocs.shape[0]
+        particledata = ParticleGroup.get_particledata_empty(ncells=ncells,
+                                                            structured=structured,
+                                                            particleid=particleid)
         # fill particle
         if structured:
-            part['k'] = partlocs['k']
-            part['i'] = partlocs['i']
-            part['j'] = partlocs['j']
+            particledata['k'] = partlocs['k']
+            particledata['i'] = partlocs['i']
+            particledata['j'] = partlocs['j']
         else:
-            part['node'] = partlocs['node']
-        part['localx'] = localx
-        part['localy'] = localy
-        part['localz'] = localz
-        part['timeoffset'] = timeoffset
-        part['drape'] = drape
+            particledata['node'] = partlocs['node']
+        particledata['localx'] = localx
+        particledata['localy'] = localy
+        particledata['localz'] = localz
+        particledata['timeoffset'] = timeoffset
+        particledata['drape'] = drape
         if particleid:
-            part['id'] = particleids
+            particledata['id'] = particleids
 
         # return particle instance
-        return part
+        return particledata
 
 
-class _ParticleTemplate(Modpath7Particle):
+class _ParticleGroupTemplate(_Modpath7ParticleGroup):
     """
-    Base particle template
+    Base particle group template that defines all data for particle
+    group items 1 through 6. _ParticleGroupTemplate should not be
+    called directly.
 
     """
+
     def __init__(self, particlegroupname, filename,
                  releasedata):
         """
@@ -676,8 +718,8 @@ class _ParticleTemplate(Modpath7Particle):
 
         """
         # instantiate base class
-        Modpath7Particle.__init__(self, particlegroupname, filename,
-                                  releasedata)
+        _Modpath7ParticleGroup.__init__(self, particlegroupname, filename,
+                                        releasedata)
 
     def write(self, fp=None, ws='.'):
         """
@@ -696,7 +738,7 @@ class _ParticleTemplate(Modpath7Particle):
         return
 
 
-class NodeParticleTemplate(_ParticleTemplate):
+class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
     """
     Node particle template class to create MODPATH 7 particle location
     input style 3. Particle locations for this template are specified
@@ -735,21 +777,21 @@ class NodeParticleTemplate(_ParticleTemplate):
         """
 
         # instantiate base class
-        _ParticleTemplate.__init__(self, particlegroupname, filename,
-                                   releasedata)
+        _ParticleGroupTemplate.__init__(self, particlegroupname, filename,
+                                        releasedata)
         # validate particledata
         if particledata is None:
             msg = 'FaceNode: valid ParticleNodeData item must be passed'
             raise ValueError(msg)
 
-        if isinstance(particledata, (ParticleFaceNodeData,
-                                     ParticleCellNodeData)):
+        if isinstance(particledata, (NodeParticleDataFace,
+                                     NodeParticleDataCell)):
             particledata = [particledata]
 
         totalcellcount = 0
         for idx, td in enumerate(particledata):
-            if not isinstance(td, (ParticleFaceNodeData,
-                                   ParticleCellNodeData)):
+            if not isinstance(td, (NodeParticleDataFace,
+                                   NodeParticleDataCell)):
                 msg = 'FaceNode: valid ParticleNodeData or ' + \
                       'ParticlecCellData item must be passed' + \
                       'for particledata item {}'.format(idx)
@@ -783,7 +825,7 @@ class NodeParticleTemplate(_ParticleTemplate):
             raise ValueError(msg)
 
         # call base class write method to write common data
-        Modpath7Particle.write(self, fp, ws)
+        _Modpath7ParticleGroup.write(self, fp, ws)
 
         # open external file if required
         if self.external:
@@ -809,9 +851,9 @@ class NodeParticleTemplate(_ParticleTemplate):
         return
 
 
-class ParticleFaceNodeData(object):
+class NodeParticleDataFace(object):
     """
-    Node particle template class to create MODPATH 7 particle location
+    Node particle data template class to create MODPATH 7 particle location
     input style 3 on cell faces (templatesubdivisiontype = 1). Particle
     locations for this template are specified by nodes.
 
@@ -973,9 +1015,9 @@ class ParticleFaceNodeData(object):
         return
 
 
-class ParticleCellNodeData(object):
+class NodeParticleDataCell(object):
     """
-    Node particle template class to create MODPATH 7 particle location
+    Node particle data template class to create MODPATH 7 particle location
     input style 3 within cells (templatesubdivisiontype = 2). Particle
     locations for this template are specified by nodes.
 
