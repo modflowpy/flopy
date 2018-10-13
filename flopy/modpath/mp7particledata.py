@@ -1,6 +1,6 @@
 """
-mp7particledata module. Contains the ParticleData, NodeParticleDataFace,
-    NodeParticleDataCell, LRCParticleDataFace, and LRCParticleDataCell classes.
+mp7particledata module. Contains the ParticleData, CellDataType,
+    FaceDataType, and NodeParticleData classes.
 
 
 """
@@ -415,8 +415,8 @@ class ParticleData(object):
 
 class FaceDataType(object):
     """
-    Face data type class to create MODPATH 7 particle location
-    input style 2, 3, and 4 on cell faces (templatesubdivisiontype = 1).
+    Face data type class to create a MODPATH 7 particle location template for
+    input style 2, 3, and 4 on cell faces (templatesubdivisiontype = 2).
 
     Parameters
     ----------
@@ -534,177 +534,11 @@ class FaceDataType(object):
 
         return
 
-class NodeParticleDataFace(object):
+
+class CellDataType(object):
     """
-    Node particle data template class to create MODPATH 7 particle location
-    input style 3 on cell faces (templatesubdivisiontype = 1). Particle
-    locations for this template are specified by nodes.
-
-    Parameters
-    ----------
-    drape : int
-        Drape indicates how particles are treated when starting locations
-        are specified for cells that are dry. If drape is 0, Particles are
-        placed in the specified cell. If the cell is dry at the time of
-        release, the status of the particle is set to unreleased and
-        removed from the simulation. If drape is 1, particles are placed
-        in the upper most active grid cell directly beneath the specified
-        layer, row, column or node location (default is 0).
-    verticaldivisions1 : int
-        The number of vertical subdivisions that define the two-dimensional
-        array of particles on cell face 1 (default is 3).
-    horizontaldivisions1 : int
-        The number of horizontal subdivisions that define the two-dimensional
-        array of particles on cell face 1 (default is 3).
-    verticaldivisions2 : int
-        The number of vertical subdivisions that define the two-dimensional
-        array of particles on cell face 2 (default is 3).
-    horizontaldivisions2 : int
-        The number of horizontal subdivisions that define the two-dimensional
-        array of particles on cell face 2 (default is 3).
-    verticaldivisions3 : int
-        The number of vertical subdivisions that define the two-dimensional
-        array of particles on cell face 3 (default is 3).
-    horizontaldivisions3 : int
-        The number of horizontal subdivisions that define the two-dimensional
-        array of particles on cell face 3 (default is 3).
-    verticaldivisions4 : int
-        The number of vertical subdivisions that define the two-dimensional
-        array of particles on cell face 4 (default is 3).
-    horizontaldivisions4 : int
-        The number of horizontal subdivisions that define the two-dimensional
-        array of particles on cell face 4 (default is 3).
-    rowdivisions5 : int
-        The number of row subdivisions that define the two-dimensional array
-        of particles on the bottom cell face (face 5) (default is 3).
-    columndivisons5 : int
-        The number of column subdivisions that define the two-dimensional array
-        of particles on the bottom cell face (face 5) (default is 3).
-    rowdivisions6 : int
-        The number of row subdivisions that define the two-dimensional array
-        of particles on the top cell face (face 6) (default is 3).
-    columndivisions6 : int
-        The number of column subdivisions that define the two-dimensional array
-        of particles on the top cell face (face 6) (default is 3).
-    nodes : int, list of ints, tuple of ints, or np.ndarray
-        Nodes (zero-based) with particles created using the specified template
-        parameters (default is node 0).
-
-    Examples
-    --------
-
-    >>> import flopy
-    >>> pf = flopy.modpath.NodeParticleDataFace(nodes=[100, 101])
-
-    """
-
-    def __init__(self, drape=0,
-                 verticaldivisions1=3, horizontaldivisions1=3,
-                 verticaldivisions2=3, horizontaldivisions2=3,
-                 verticaldivisions3=3, horizontaldivisions3=3,
-                 verticaldivisions4=3, horizontaldivisions4=3,
-                 rowdivisions5=3, columndivisons5=3,
-                 rowdivisions6=3, columndivisions6=3,
-                 nodes=(0,)):
-        """
-        Class constructor
-
-        """
-        self.name = 'NodeParticleDataFace'
-
-        # validate nodes
-        if not isinstance(nodes, np.ndarray):
-            if isinstance(nodes, (int, np.int32, np.int64)):
-                nodes = np.array([nodes], dtype=np.int32)
-            elif isinstance(nodes, (list, tuple)):
-                nodes = np.array(nodes, dtype=np.int32)
-            else:
-                msg = '{}: node data must be a '.format(self.name) + \
-                      'integer, list of integers, or tuple of integers'
-                raise TypeError(msg)
-
-        # validate shape of nodes
-        templatecellcount = nodes.shape[0]
-        if len(nodes.shape) > 1:
-            msg = '{}: processed node data must be a '.format(self.name) + \
-                  'numpy array has a shape of {} '.format(nodes.shape) + \
-                  'but should have a shape of ({}) '.format(nodes.shape[0])
-            raise TypeError(msg)
-
-        # assign attributes
-        self.templatesubdivisiontype = 1
-        self.templatecellcount = templatecellcount
-        self.drape = drape
-        self.verticaldivisions1 = verticaldivisions1
-        self.horizontaldivisions1 = horizontaldivisions1
-        self.verticaldivisions2 = verticaldivisions2
-        self.horizontaldivisions2 = horizontaldivisions2
-        self.verticaldivisions3 = verticaldivisions3
-        self.horizontaldivisions3 = horizontaldivisions3
-        self.verticaldivisions4 = verticaldivisions4
-        self.horizontaldivisions4 = horizontaldivisions4
-        self.rowdivisions5 = rowdivisions5
-        self.columndivisons5 = columndivisons5
-        self.rowdivisions6 = rowdivisions6
-        self.columndivisions6 = columndivisions6
-        self.nodes = nodes
-        return
-
-    def write(self, f=None):
-        """
-
-        Parameters
-        ----------
-        f : fileobject
-            Fileobject that is open with write access
-
-        Returns
-        -------
-
-        """
-        # validate that a valid file object was passed
-        if not hasattr(f, 'write'):
-            msg = '{}: cannot write data for template '.format(self.name) + \
-                  'without passing a valid file object ({}) '.format(f) + \
-                  'open for writing'
-            raise ValueError(msg)
-
-        # item 3
-        f.write('{} {} {}\n'.format(self.templatesubdivisiontype,
-                                    self.templatecellcount,
-                                    self.drape))
-
-        # item 4
-        fmt = 12 * ' {}' + '\n'
-        line = fmt.format(self.verticaldivisions1, self.horizontaldivisions1,
-                          self.verticaldivisions2, self.horizontaldivisions2,
-                          self.verticaldivisions3, self.horizontaldivisions3,
-                          self.verticaldivisions4, self.horizontaldivisions4,
-                          self.rowdivisions5, self.columndivisons5,
-                          self.rowdivisions6, self.columndivisions6)
-        f.write(line)
-
-        # item 6
-        line = ''
-        for idx, node in enumerate(self.nodes):
-            line += ' {}'.format(node + 1)
-            lineend = False
-            if idx > 0:
-                if idx % 10 == 0 or idx == self.nodes.shape[0] - 1:
-                    lineend = True
-            if lineend:
-                line += '\n'
-        f.write(line)
-
-        return
-
-
-
-class NodeParticleDataCell(object):
-    """
-    Node particle data template class to create MODPATH 7 particle location
-    input style 3 within cells (templatesubdivisiontype = 2). Particle
-    locations for this template are specified by nodes.
+    Cell data type class to create a MODPATH 7 particle location template for
+    input style 2, 3, and 4 in cells (templatesubdivisiontype = 2).
 
     Parameters
     ----------
@@ -725,54 +559,30 @@ class NodeParticleDataCell(object):
     layercelldivisions : int
         Number of oarticles in a cell in the layer (z-coordinate)
         direction (default is 3).
-    nodes : int, list of ints, tuple of ints, or np.ndarray
-        Nodes (zero-based) with particles created using the specified template
-        parameters (default is node 0).
 
     Examples
     --------
 
     >>> import flopy
-    >>> pc = flopy.modpath.NodeParticleDataCell(nodes=[100, 101])
+    >>> cd = flopy.modpath.CellDataType()
 
     """
 
     def __init__(self, drape=0,
                  columncelldivisions=3, rowcelldivisions=3,
-                 layercelldivisions=3, nodes=(0,)):
+                 layercelldivisions=3):
         """
         Class constructor
 
         """
-        self.name = 'NodeParticleDataCell'
-
-        # validate nodes
-        if not isinstance(nodes, np.ndarray):
-            if isinstance(nodes, (int, np.int32, np.int64)):
-                nodes = np.array([nodes], dtype=np.int32)
-            elif isinstance(nodes, (list, tuple)):
-                nodes = np.array(nodes, dtype=np.int32)
-            else:
-                msg = '{}: node data must be a integer, '.format(self.name) + \
-                      'list of integers or tuple of integers'
-                raise TypeError(msg)
-
-        # validate shape of nodes
-        templatecellcount = nodes.shape[0]
-        if len(nodes.shape) > 1:
-            msg = '{}: processed node data must be a '.format(self.name) + \
-                  'numpy array has a shape of {} '.format(nodes.shape) + \
-                  'but should have a shape of ({}) '.format(nodes.shape[0])
-            raise TypeError(msg)
+        self.name = 'CellDataType'
 
         # assign attributes
         self.templatesubdivisiontype = 2
-        self.templatecellcount = templatecellcount
         self.drape = drape
         self.columncelldivisions = columncelldivisions
         self.rowcelldivisions = rowcelldivisions
         self.layercelldivisions = layercelldivisions
-        self.nodes = nodes
         return
 
     def write(self, f=None):
@@ -794,27 +604,170 @@ class NodeParticleDataCell(object):
                   'open for writing'
             raise ValueError(msg)
 
-        # item 3
-        f.write('{} {} {}\n'.format(self.templatesubdivisiontype,
-                                    self.templatecellcount,
-                                    self.drape))
-
         # item 5
         fmt = ' {} {} {}\n'
         line = fmt.format(self.columncelldivisions, self.rowcelldivisions,
                           self.layercelldivisions)
         f.write(line)
 
-        # item 6
-        line = ''
-        for idx, node in enumerate(self.nodes):
-            line += ' {}'.format(node + 1)
-            lineend = False
-            if idx > 0:
-                if idx % 10 == 0 or idx == self.nodes.shape[0] - 1:
-                    lineend = True
-            if lineend:
-                line += '\n'
-        f.write(line)
+        return
+
+
+class NodeParticleData(object):
+    """
+    Node particle data template class to create MODPATH 7 particle location
+    input style 3 on cell faces (templatesubdivisiontype = 1) and/or in cells
+    (templatesubdivisiontype = 2). Particle locations for this template are
+    specified by nodes.
+
+    Parameters
+    ----------
+    subdivisiondata : FaceDataType, CellDataType or list of FaceDataType
+                      and/or CellDataType types
+        FaceDataType, CellDataType, or a list of FaceDataType and/or
+        CellDataTypes that are used to create one or more particle templates
+        in a particle group. If subdivisiondata is None, a default CellDataType
+        with 27 particles per cell will be created (default is None).
+    nodes : int, list of ints, tuple of ints, or np.ndarray
+        Nodes (zero-based) with particles created using the specified template
+        parameters. If subdivisiondata is a list, a list of nodes with the same
+        length as subdivision data must be provided. If nodes is None,
+        particles will be placed in the first model cell (default is None).
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> pg = flopy.modpath.NodeParticleData(nodes=[100, 101])
+
+    """
+
+    def __init__(self, subdivisiondata=None, nodes=None):
+        """
+        Class constructor
+
+        """
+        self.name = 'NodeParticleData'
+
+        if subdivisiondata is None:
+            subdivisiondata = CellDataType()
+
+        if nodes is None:
+            nodes = 0
+
+        if isinstance(subdivisiondata, (CellDataType, FaceDataType)):
+            subdivisiondata = [subdivisiondata]
+
+        if isinstance(nodes, (int, np.int, np.int32, np.int64)):
+            nodes = [(nodes,)]
+        elif isinstance(nodes, (float, np.float, np.float32, np.float64)):
+            msg = '{}: nodes is of type {} '.format(self.name, type(nodes)) + \
+                  'but must be an int if a single value is passed'
+            raise TypeError(msg)
+
+        for idx, fd in enumerate(subdivisiondata):
+            if not isinstance(fd, (CellDataType, FaceDataType)):
+                msg = '{}: facedata item {} '.format(self.name, idx) + \
+                      'is of type {} '.format(type(fd)) + \
+                      'instead of an instance of CellDataType or FaceDataType'
+                raise TypeError(msg)
+
+        # validate nodes data
+        if isinstance(nodes, np.ndarray):
+            if len(nodes.shape) == 1:
+                nodes = nodes.reshape(1, nodes.shape[0])
+            # convert to a list of numpy arrays
+            t = []
+            for idx in range(nodes.shape[0]):
+                t.append(np.array(nodes[idx, :], dtype=np.int32))
+            nodes = t
+        elif isinstance(nodes, (list, tuple)):
+            # convert a single list/tuple to a list of tuples if only one
+            # entry in subdivisiondata
+            if len(subdivisiondata) == 1:
+                if len(nodes) > 1:
+                    nodes = [tuple(nodes)]
+            # determine if the list or tuple contains lists or tuples
+            alllsttup = all(isinstance(el, (list, tuple, np.ndarray))
+                            for el in nodes)
+            if not alllsttup:
+                msg = '{}: nodes should be '.format(self.name) + \
+                      'a list or tuple with lists or tuple if a single ' + \
+                      'int or numpy array is not provided'
+                raise TypeError(msg)
+            t = []
+            for idx in range(len(nodes)):
+                t.append(np.array(nodes[idx], dtype=np.int32))
+            nodes = t
+        else:
+            msg = '{}: nodes should be '.format(self.name) + \
+                  'a single integer, a numpy array, or a ' + \
+                  'list/tuple or lists/tuples.'
+            raise TypeError(msg)
+
+        # validate size of nodes relative to subdivisiondata
+        shape = len(subdivisiondata)
+        if len(nodes) != shape:
+            msg = '{}: node data must have '.format(self.name) + \
+                  '{} rows but a total of '.format(shape) + \
+                  '{} rows were provided.'.format(nodes.shape[0])
+            raise ValueError(msg)
+
+        totalcellcount = 0
+        for t in nodes:
+            totalcellcount += t.shape[0]
+
+        # assign attributes
+        self.particletemplatecount = shape
+        self.totalcellcount = totalcellcount
+        self.subdivisiondata = subdivisiondata
+        self.nodedata = nodes
+        return
+
+    def write(self, f=None):
+        """
+
+        Parameters
+        ----------
+        f : fileobject
+            Fileobject that is open with write access
+
+        Returns
+        -------
+
+        """
+        # validate that a valid file object was passed
+        if not hasattr(f, 'write'):
+            msg = '{}: cannot write data for template '.format(self.name) + \
+                  'without passing a valid file object ({}) '.format(f) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # item 2
+        f.write('{} {}\n'.format(self.particletemplatecount,
+                                 self.totalcellcount))
+
+        for sd, nodes in zip(self.subdivisiondata, self.nodedata):
+            # item 3
+            f.write('{} {} {}\n'.format(sd.templatesubdivisiontype,
+                                        nodes.shape[0],
+                                        sd.drape))
+
+            # item 4 or 5
+            sd.write(f)
+
+            # item 6
+            line = ''
+            for idx, node in enumerate(nodes):
+                line += ' {}'.format(node + 1)
+                lineend = False
+                if idx > 0:
+                    if idx % 10 == 0 or idx == nodes.shape[0] - 1:
+                        lineend = True
+                if lineend:
+                    line += '\n'
+            f.write(line)
 
         return
+
+

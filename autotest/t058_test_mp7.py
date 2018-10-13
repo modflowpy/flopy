@@ -95,20 +95,20 @@ def test_facenode_is3():
         for j in range(ncol):
             node = i * ncol + j
             locs.append(node)
-    p = flopy.modpath.NodeParticleDataFace(drape=0,
-                                           verticaldivisions1=0,
-                                           horizontaldivisions1=0,
-                                           verticaldivisions2=0,
-                                           horizontaldivisions2=0,
-                                           verticaldivisions3=0,
-                                           horizontaldivisions3=0,
-                                           verticaldivisions4=0,
-                                           horizontaldivisions4=0,
-                                           rowdivisions5=0,
-                                           columndivisons5=0,
-                                           rowdivisions6=3,
-                                           columndivisions6=3,
-                                           nodes=locs)
+    sd = flopy.modpath.FaceDataType(drape=0,
+                                    verticaldivisions1=0,
+                                    horizontaldivisions1=0,
+                                    verticaldivisions2=0,
+                                    horizontaldivisions2=0,
+                                    verticaldivisions3=0,
+                                    horizontaldivisions3=0,
+                                    verticaldivisions4=0,
+                                    horizontaldivisions4=0,
+                                    rowdivisions5=0,
+                                    columndivisons5=0,
+                                    rowdivisions6=3,
+                                    columndivisions6=3)
+    p = flopy.modpath.NodeParticleData(subdivisiondata=sd, nodes=locs)
     fpth = mpnam + '.sloc'
     pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3NODEPG',
                                                  particledata=p,
@@ -160,11 +160,9 @@ def test_cellnode_is3():
             for j in range(ncol):
                 node = k * nrow * ncol + i * ncol + j
                 locs.append(node)
-    p = flopy.modpath.NodeParticleDataCell(drape=0,
-                                           columncelldivisions=1,
-                                           rowcelldivisions=1,
-                                           layercelldivisions=1,
-                                           nodes=locs)
+    sd = flopy.modpath.CellDataType(drape=0, columncelldivisions=1,
+                                    rowcelldivisions=1, layercelldivisions=1)
+    p = flopy.modpath.NodeParticleData(subdivisiondata=sd, nodes=locs)
     fpth = mpnam + '.sloc'
     pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3CELLPG',
                                                  particledata=p,
