@@ -38,7 +38,8 @@ zone3[wel_loc[1:]] = 2
 zones = [1, 1, zone3]
 
 # create particles
-part0 = flopy.modpath.Particles.get_empty(ncells=21, particleid=True)
+part0 = flopy.modpath.ParticleGroup.get_particledata_empty(ncells=21,
+                                                           particleid=True)
 part0['k'] = 0
 part0['j'] = 2
 part0['localx'] = 0.5
@@ -49,15 +50,15 @@ part0['drape'] = 0
 for idx in range(part0.shape[0]):
     part0['id'][idx] = idx
     part0['i'][idx] = idx
-pg0 = flopy.modpath.Particles(particlegroupname='PG1', particledata=part0,
-                              filename='ex01a.sloc')
+pg0 = flopy.modpath.ParticleGroup(particlegroupname='PG1', particledata=part0,
+                                  filename='ex01a.sloc')
 
 v = [(0, 0, 0), (0, 20, 0)]
 pids = [1, 2]  # [1000, 1001]
-part1 = flopy.modpath.Particles.create_particles(v, drape=1,
-                                                 particleids=pids)
-pg1 = flopy.modpath.Particles(particlegroupname='PG2', particledata=part1,
-                                 filename='ex01a.pg2.sloc')
+part1 = flopy.modpath.ParticleGroup.create_particledata(v, drape=1,
+                                                        particleids=pids)
+pg1 = flopy.modpath.ParticleGroup(particlegroupname='PG2', particledata=part1,
+                                  filename='ex01a.pg2.sloc')
 
 particlegroups = [pg0, pg1]
 
@@ -104,10 +105,18 @@ def test_pathline_output():
     assert maxid0 == maxid1, msg
 
     # check that pathline data are approximately the same
-    msg = 'pathlines in {} '.format(os.path.basename(fpth0)) + \
-          'are not equal (within 1e-5) to the ' + \
-          'pathlines  in {}'.format(os.path.basename(fpth1))
-    # assert not np.allclose(p0, p1), msg
+    # names = ['x', 'y', 'z']
+    # dtype = np.dtype([('x', np.float32), ('y', np.float32),
+    #                   ('z', np.float32)])
+    # for jdx, (pl0, pl1) in enumerate(zip(p0, p1)):
+    #     t0 = np.rec.fromarrays((pl0[name] for name in names), dtype=dtype)
+    #     t1 = np.rec.fromarrays((pl1[name] for name in names), dtype=dtype)
+    #     for name in names:
+    #         msg = 'pathline {} in {} '.format(jdx, os.path.basename(fpth0)) + \
+    #               'are not equal (within 1e-5) to the ' + \
+    #               'pathline {} in {} '.format(jdx, os.path.basename(fpth1)) + \
+    #               'for column {}.'.format(name)
+    #         assert np.allclose(t0[name], t1[name]), msg
 
     return
 
@@ -185,7 +194,7 @@ def build_mf2005():
     flopy.modflow.ModflowLpf(m, ipakcb=iu_cbc, laytyp=laytyp, hk=kh, vka=kv)
     flopy.modflow.ModflowBas(m, ibound=1, strt=top)
     # recharge
-    flopy.modflow.ModflowRch(m, ipakcb=iu_cbc, rech=rch)
+    flopy.modflow.ModflowRch(m, ipakcb=iu_cbc, rech=rch, nrchop=1)
     # wel
     wd = [i for i in wel_loc] + [wel_q]
     flopy.modflow.ModflowWel(m, ipakcb=iu_cbc, stress_period_data={0: wd})
@@ -198,7 +207,7 @@ def build_mf2005():
     flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ['save head',
                                                             'save budget',
                                                             'print head']})
-    flopy.modflow.ModflowPcg(m, hclose=0.01, rclose=1.0)
+    flopy.modflow.ModflowPcg(m, hclose=1e-6, rclose=1e-3, iter1=100, mxiter=50)
 
     m.write_input()
 
@@ -262,7 +271,12 @@ def build_mf6():
 
     # Create the Flopy iterative model solver (ims) Package object
     ims = flopy.mf6.modflow.mfims.ModflowIms(sim, pname='ims',
-                                             complexity='SIMPLE')
+                                             complexity='SIMPLE',
+                                             inner_hclose=1e-6,
+                                             rcloserecord=1e-3,
+                                             outer_hclose=1e-6,
+                                             outer_maximum=50,
+                                             inner_maximum=100)
 
     # create gwf file
     dis = flopy.mf6.modflow.mfgwfdis.ModflowGwfdis(gwf, pname='dis', nlay=nlay,
