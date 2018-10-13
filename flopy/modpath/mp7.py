@@ -11,7 +11,7 @@ from ..mf6 import MFModel
 from ..pakbase import Package
 from .mp7bas import Modpath7Bas
 from .mp7sim import Modpath7Sim
-from .mp7particle import NodeParticleDataCell, ParticleGroupNodeTemplate
+from .mp7particlegroup import NodeParticleDataCell, ParticleGroupNodeTemplate
 import os
 
 

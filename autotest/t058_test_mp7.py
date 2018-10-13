@@ -58,12 +58,12 @@ def test_mf6():
     # build and run MODPATH 7 with MODFLOW 6
     build_mf6()
 
+
 def test_default_modpath():
     mpnam = nm + '_mp_default'
     pg = flopy.modpath.ParticleGroup(particlegroupname='DEFAULT')
     build_modpath(mpnam, pg)
     return
-
 
 
 def test_faceparticles_is1():
@@ -78,9 +78,8 @@ def test_faceparticles_is1():
                 locs.append(node)
                 localx.append(xloc)
                 localy.append(yloc)
-    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=False,
-                                                        drape=0, localx=localx,
-                                                        localy=localy, localz=1)
+    p = flopy.modpath.ParticleData(locs, structured=False, drape=0,
+                                   localx=localx, localy=localy, localz=1)
     fpth = mpnam + '.sloc'
     pg = flopy.modpath.ParticleGroup(particlegroupname='T1NODEPG',
                                      particledata=p,
@@ -126,9 +125,8 @@ def test_cellparticles_is1():
             for j in range(ncol):
                 node = k * nrow * ncol + i * ncol + j
                 locs.append(node)
-    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=False,
-                                                        drape=0, localx=0.5,
-                                                        localy=0.5, localz=0.5)
+    p = flopy.modpath.ParticleData(locs, structured=False, drape=0,
+                                   localx=0.5, localy=0.5, localz=0.5)
     fpth = mpnam + '.sloc'
     pg = flopy.modpath.ParticleGroup(particlegroupname='T1NODEPG',
                                      particledata=p,
@@ -144,9 +142,8 @@ def test_cellparticleskij_is1():
         for i in range(nrow):
             for j in range(ncol):
                 locs.append((k, i, j))
-    p = flopy.modpath.ParticleGroup.create_particledata(locs, structured=True,
-                                                        drape=0, localx=0.5,
-                                                        localy=0.5, localz=0.5)
+    p = flopy.modpath.ParticleData(locs, structured=True, drape=0,
+                                   localx=0.5, localy=0.5, localz=0.5)
     fpth = mpnam + '.sloc'
     pg = flopy.modpath.ParticleGroup(particlegroupname='T1KIJPG',
                                      particledata=p,
@@ -203,7 +200,6 @@ def test_cell_endpoint_output():
 
 
 def endpoint_compare(fpth0, epf):
-
     # get base endpoint data
     e = flopy.utils.EndpointFile(fpth0)
     maxtime0 = e.get_maxtime()
@@ -216,7 +212,6 @@ def endpoint_compare(fpth0, epf):
                       ('z', np.float32), ('x0', np.float32),
                       ('y0', np.float32), ('z0', np.float32)])
     t0 = np.rec.fromarrays((e0[name] for name in names), dtype=dtype)
-
 
     for fpth1 in epf:
         e = flopy.utils.EndpointFile(fpth1)

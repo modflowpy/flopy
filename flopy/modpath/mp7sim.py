@@ -11,7 +11,7 @@ from enum import Enum
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from .mp7particle import ParticleGroup, ParticleGroupNodeTemplate
+from .mp7particlegroup import ParticleGroup, ParticleGroupNodeTemplate
 
 
 class simType(Enum):
