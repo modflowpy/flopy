@@ -613,6 +613,155 @@ class CellDataType(object):
         return
 
 
+class LRCParticleData(object):
+    """
+    Layer, row, column particle data template class to create MODPATH 7
+    particle location input style 2 on cell faces (templatesubdivisiontype = 1)
+    and/or in cells (templatesubdivisiontype = 2). Particle locations for this
+    template are specified by layer, row, column regions.
+
+    Parameters
+    ----------
+    subdivisiondata : FaceDataType, CellDataType or list of FaceDataType
+                      and/or CellDataType types
+        FaceDataType, CellDataType, or a list of FaceDataType and/or
+        CellDataTypes that are used to create one or more particle templates
+        in a particle group. If subdivisiondata is None, a default CellDataType
+        with 27 particles per cell will be created (default is None).
+    lrcregions : list of lists tuples or np.ndarrays
+        Layer, row, column (zero-based) regions with particles created using
+        the specified template parameters. A region is defined as a list/tuple
+        of minlayer, minrow, mincolumn, maxlayer, maxrow, maxcolumn values.
+        If subdivisiondata is a list, a list/tuple or array of layer, row,
+        column regions with the same length as subdivision data must be
+        provided. If lrcregions is None, particles will be placed in
+        the first model cell (default is None).
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> pg = flopy.modpath.LRCParticleData(lrcregions=[0, 0, 0, 3, 10, 10])
+
+    """
+
+    def __init__(self, subdivisiondata=None, lrcregions=None):
+        """
+        Class constructor
+
+        """
+        self.name = 'LRCParticleData'
+
+        if subdivisiondata is None:
+            subdivisiondata = CellDataType()
+
+        if lrcregions is None:
+            lrcregions = [[0, 0, 0, 0, 0, 0]]
+
+        if isinstance(subdivisiondata, (CellDataType, FaceDataType)):
+            subdivisiondata = [subdivisiondata]
+
+        for idx, fd in enumerate(subdivisiondata):
+            if not isinstance(fd, (CellDataType, FaceDataType)):
+                msg = '{}: facedata item {} '.format(self.name, idx) + \
+                      'is of type {} '.format(type(fd)) + \
+                      'instead of an instance of CellDataType or FaceDataType'
+                raise TypeError(msg)
+
+        # validate lrcregions data
+        if isinstance(lrcregions, (list, tuple)):
+            # determine if the list or tuple contains lists or tuples
+            alllsttup = all(isinstance(el, (list, tuple, np.ndarray))
+                            for el in lrcregions)
+            if not alllsttup:
+                msg = '{}: lrcregions should be '.format(self.name) + \
+                      'a list with lists, tuples, or arrays'
+                raise TypeError(msg)
+            t = []
+            for lrcregion in lrcregions:
+                t.append(np.array(lrcregion, dtype=np.int32))
+            lrcregions = t
+        else:
+            msg = '{}: lrcregions should be '.format(self.name) + \
+                  'a list of lists, tuples, or arrays ' + \
+                  'not a {}.'.format(type(lrcregions))
+            raise TypeError(msg)
+
+        # validate size of nodes relative to subdivisiondata
+        shape = len(subdivisiondata)
+        if len(lrcregions) != shape:
+            msg = '{}: lrcregions data must have '.format(self.name) + \
+                  '{} rows but a total of '.format(shape) + \
+                  '{} rows were provided.'.format(lrcregions.shape[0])
+            raise ValueError(msg)
+
+        # validate that there are 6 columns in each lrcregions entry
+        for idx, lrcregion in enumerate(lrcregions):
+            shapel = lrcregion.shape
+            if len(shapel) == 1:
+                lrcregions[idx] = lrcregion.reshape(1, shapel)
+                shapel = lrcregion[idx].shape
+            if shapel[1] != 6:
+                msg = '{}: Each lrcregions entry must '.format(self.name) + \
+                      'have 6 columns passed lrcregions has ' + \
+                      '{} columns'.format(shapel[1])
+                raise ValueError(msg)
+
+        #
+        totalcellregioncount = 0
+        for lrcregion in lrcregions:
+            totalcellregioncount += lrcregion.shape[0]
+
+
+        # assign attributes
+        self.particletemplatecount = shape
+        self.totalcellregioncount = totalcellregioncount
+        self.subdivisiondata = subdivisiondata
+        self.lrcregions = lrcregions
+        return
+
+    def write(self, f=None):
+        """
+
+        Parameters
+        ----------
+        f : fileobject
+            Fileobject that is open with write access
+
+        Returns
+        -------
+
+        """
+        # validate that a valid file object was passed
+        if not hasattr(f, 'write'):
+            msg = '{}: cannot write data for template '.format(self.name) + \
+                  'without passing a valid file object ({}) '.format(f) + \
+                  'open for writing'
+            raise ValueError(msg)
+
+        # item 2
+        f.write('{} {}\n'.format(self.particletemplatecount,
+                                 self.totalcellregioncount))
+
+        for sd, lrcregion in zip(self.subdivisiondata, self.lrcregions):
+            # item 3
+            f.write('{} {} {}\n'.format(sd.templatesubdivisiontype,
+                                        lrcregion.shape[0],
+                                        sd.drape))
+
+            # item 4 or 5
+            sd.write(f)
+
+            # item 6
+            for row in lrcregion:
+                line = ''
+                for lrc in row:
+                    line += '{} '.format(lrc + 1)
+                line += '\n'
+                f.write(line)
+
+        return
+
 class NodeParticleData(object):
     """
     Node particle data template class to create MODPATH 7 particle location

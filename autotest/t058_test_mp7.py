@@ -117,6 +117,67 @@ def test_facenode_is3():
     return
 
 
+def test_facenode_is3a():
+    mpnam = nm + '_mp_face_t3anode'
+    locsa = []
+    for i in range(11):
+        for j in range(ncol):
+            node = i * ncol + j
+            locsa.append(node)
+    locsb = []
+    for i in range(11, nrow):
+        for j in range(ncol):
+            node = i * ncol + j
+            locsb.append(node)
+    sd = flopy.modpath.FaceDataType(drape=0,
+                                    verticaldivisions1=0,
+                                    horizontaldivisions1=0,
+                                    verticaldivisions2=0,
+                                    horizontaldivisions2=0,
+                                    verticaldivisions3=0,
+                                    horizontaldivisions3=0,
+                                    verticaldivisions4=0,
+                                    horizontaldivisions4=0,
+                                    rowdivisions5=0,
+                                    columndivisons5=0,
+                                    rowdivisions6=3,
+                                    columndivisions6=3)
+    p = flopy.modpath.NodeParticleData(subdivisiondata=[sd, sd],
+                                       nodes=[locsa, locsb])
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3ANODEPG',
+                                                 particledata=p,
+                                                 filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
+def test_facenode_is2a():
+    mpnam = nm + '_mp_face_t2anode'
+    locsa = [[0, 0, 0, 0, 10, ncol - 1]]
+    locsb = [[0, 11, 0, 0, nrow-1, ncol - 1]]
+    sd = flopy.modpath.FaceDataType(drape=0,
+                                    verticaldivisions1=0,
+                                    horizontaldivisions1=0,
+                                    verticaldivisions2=0,
+                                    horizontaldivisions2=0,
+                                    verticaldivisions3=0,
+                                    horizontaldivisions3=0,
+                                    verticaldivisions4=0,
+                                    horizontaldivisions4=0,
+                                    rowdivisions5=0,
+                                    columndivisons5=0,
+                                    rowdivisions6=3,
+                                    columndivisions6=3)
+    p = flopy.modpath.LRCParticleData(subdivisiondata=[sd, sd],
+                                      lrcregions=[locsa, locsb])
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T2ANODEPG',
+                                                 particledata=p,
+                                                 filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
 def test_cellparticles_is1():
     mpnam = nm + '_mp_cell_t1node'
     locs = []
@@ -171,13 +232,62 @@ def test_cellnode_is3():
     return
 
 
+def test_cellnode_is3a():
+    mpnam = nm + '_mp_cell_t3anode'
+    locsa = []
+    for k in range(1):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+                locsa.append(node)
+    locsb = []
+    for k in range(1, 2):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+                locsb.append(node)
+    locsc = []
+    for k in range(2, nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+                locsc.append(node)
+    sd = flopy.modpath.CellDataType(drape=0, columncelldivisions=1,
+                                    rowcelldivisions=1, layercelldivisions=1)
+    p = flopy.modpath.NodeParticleData(subdivisiondata=[sd, sd, sd],
+                                       nodes=[locsa, locsb, locsc])
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.ParticleGroupNodeTemplate(particlegroupname='T3ACELLPG',
+                                                 particledata=p,
+                                                 filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
+def test_cellnode_is2a():
+    mpnam = nm + '_mp_cell_t2anode'
+    locsa = [[0, 0, 0, 0, nrow - 1, ncol - 1],
+             [1, 0, 0, 1, nrow - 1, ncol - 1]]
+    locsb = [[2, 0, 0, 2, nrow - 1, ncol - 1]]
+    sd = flopy.modpath.CellDataType(drape=0, columncelldivisions=1,
+                                    rowcelldivisions=1, layercelldivisions=1)
+    p = flopy.modpath.LRCParticleData(subdivisiondata=[sd, sd],
+                                      lrcregions=[locsa, locsb])
+    fpth = mpnam + '.sloc'
+    pg = flopy.modpath.ParticleGroupLRCTemplate(particlegroupname='T2ACELLPG',
+                                                particledata=p,
+                                                filename=fpth)
+    build_modpath(mpnam, pg)
+    return
+
+
 def test_face_endpoint_output():
     # set base file name
     fpth0 = os.path.join(model_ws, 'ex01b_mf6_mp_face_t1node.mpend')
 
     # get list of node endpath files
     epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
-           if '.mpend' in name and '_face_' in name]
+           if '.mpend' in name and '_face_' in name and '_t2a' not in name]
     epf.remove(fpth0)
 
     endpoint_compare(fpth0, epf)
@@ -190,7 +300,7 @@ def test_cell_endpoint_output():
 
     # get list of node endpath files
     epf = [os.path.join(model_ws, name) for name in os.listdir(model_ws)
-           if '.mpend' in name and '_cell_' in name]
+           if '.mpend' in name and '_cell_' in name and '_t2a' not in name]
     epf.remove(fpth0)
 
     endpoint_compare(fpth0, epf)
@@ -367,11 +477,14 @@ if __name__ == '__main__':
     # build face particles
     test_faceparticles_is1()
     test_facenode_is3()
+    test_facenode_is3a()
 
     # build cell particles
     test_cellparticles_is1()
     test_cellparticleskij_is1()
+    test_cellnode_is2a()
     test_cellnode_is3()
+    test_cellnode_is3a()
 
     # compare endpoint results
     test_face_endpoint_output()

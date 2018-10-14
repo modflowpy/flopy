@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.9 mp7part-refactor &mdash; build 214
+### Version 3.2.9 mp7part-refactor &mdash; build 215
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=mp7part-refactor)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=mp7part-refactor)](https://coveralls.io/github/modflowpy/flopy?branch=mp7part-refactor)

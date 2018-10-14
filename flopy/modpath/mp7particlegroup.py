@@ -310,11 +310,11 @@ class _ParticleGroupTemplate(_Modpath7ParticleGroup):
         return
 
 
-class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
+class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
     """
-    Node particle template class to create MODPATH 7 particle location
-    input style 3. Particle locations for this template are specified
-    by nodes.
+    Layer, row, column particle template class to create MODPATH 7 particle
+    location input style 2. Particle locations for this template are specified
+    by layer, row, column regions.
 
 
     Parameters
@@ -330,9 +330,10 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         If releasedata is a float or an int or a list/tuple with a single
         float or int, releaseoption is set to 1 and release data is the
         particle release time.
-    particledata : list of NodeParticleData or NodeParticleDataCell objects
-        List or tuple containing ParticleFaceNodeData or ParticleCellNodeData
-        objects with input style 3 face and/or node particles
+    particledata :
+        LRCParticleData object with input style 2 face and/or node particle
+        data. If particledata is None a default LRCParticleData object is
+        created (default is None).
 
 
     Returns
@@ -347,7 +348,7 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         Class constructor
 
         """
-        self.name = 'ParticleGroupNodeTemplate'
+        self.name = 'ParticleGroupLRCTemplate'
 
         # instantiate base class
         _ParticleGroupTemplate.__init__(self, particlegroupname, filename,
@@ -356,24 +357,7 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         if particledata is None:
             particledata = NodeParticleData()
 
-        # if isinstance(particledata, (NodeParticleData,
-        #                              NodeParticleDataCell)):
-        #     particledata = [particledata]
-        #
-        # totalcellcount = 0
-        # for idx, td in enumerate(particledata):
-        #     if not isinstance(td, (NodeParticleData,
-        #                            NodeParticleDataCell)):
-        #         msg = '{}: valid '.format(self.name) + \
-        #               'NodeParticleData or ' + \
-        #               'NodeParticleDataCell item must be passed' + \
-        #               'for particledata item {}'.format(idx)
-        #         raise ValueError(msg)
-        #     totalcellcount += td.templatecellcount
-
-        self.inputstyle = 3
-        # self.particletemplatecount = len(particledata)
-        # self.totalcellcount = totalcellcount
+        self.inputstyle = 2
         self.particledata = particledata
 
     def write(self, fp=None, ws='.'):
@@ -410,10 +394,6 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         # item 1
         f.write('{}\n'.format(self.inputstyle))
 
-        # # item 2
-        # f.write('{} {}\n'.format(self.particletemplatecount,
-        #                          self.totalcellcount))
-
         # items 2, 3, 4 or 5, and 6
         self.particledata.write(f)
 
@@ -424,4 +404,95 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         return
 
 
+class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
+    """
+    Node particle template class to create MODPATH 7 particle location
+    input style 3. Particle locations for this template are specified
+    by nodes.
 
+
+    Parameters
+    ----------
+    particlegroupname : str
+       Name of particle group
+    filename : str
+        Name of the external file that will contain the particle data.
+        If filename is '' or None the particle information for the
+        particle group will be written to the MODPATH7 simulation
+        file.
+    releasedata : float, int, list, or tuple
+        If releasedata is a float or an int or a list/tuple with a single
+        float or int, releaseoption is set to 1 and release data is the
+        particle release time.
+    particledata :
+        NodeParticleData object with input style 3 face and/or node particle
+        data. If particledata is None a default NodeParticleData object is
+        created (default is None).
+
+
+    Returns
+    -------
+
+    """
+
+    def __init__(self, particlegroupname='PG1', filename=None,
+                 releasedata=(0.0,),
+                 particledata=None):
+        """
+        Class constructor
+
+        """
+        self.name = 'ParticleGroupNodeTemplate'
+
+        # instantiate base class
+        _ParticleGroupTemplate.__init__(self, particlegroupname, filename,
+                                        releasedata)
+        # validate particledata
+        if particledata is None:
+            particledata = NodeParticleData()
+
+        self.inputstyle = 3
+        self.particledata = particledata
+
+    def write(self, fp=None, ws='.'):
+        """
+
+        Parameters
+        ----------
+        fp : fileobject
+            Fileobject that is open with write access
+        ws : str
+            Workspace for particle data
+
+        Returns
+        -------
+
+        """
+        # validate that a valid file object was passed
+        if not hasattr(fp, 'write'):
+            msg = '{}: cannot write data for '.format(self.name) + \
+                  'template without passing a valid file object ' + \
+                  '({}) '.format(fp) + 'open for writing'
+            raise ValueError(msg)
+
+        # call base class write method to write common data
+        _Modpath7ParticleGroup.write(self, fp, ws)
+
+        # open external file if required
+        if self.external:
+            fpth = os.path.join(ws, self.filename)
+            f = open(fpth, 'w')
+        else:
+            f = fp
+
+        # item 1
+        f.write('{}\n'.format(self.inputstyle))
+
+        # items 2, 3, 4 or 5, and 6
+        self.particledata.write(f)
+
+        # close the external file
+        if self.external:
+            f.close()
+
+        return
