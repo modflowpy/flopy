@@ -11,7 +11,8 @@ from enum import Enum
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Util3d, check
-from .mp7particle import ParticleGroup, ParticleGroupNodeTemplate
+from .mp7particlegroup import ParticleGroup, ParticleGroupLRCTemplate,\
+    ParticleGroupNodeTemplate
 
 
 class simType(Enum):
@@ -486,7 +487,8 @@ class Modpath7Sim(Package):
         if particlegroups is None:
             particlegroups = [ParticleGroup()]
         elif isinstance(particlegroups,
-                        (ParticleGroup, ParticleGroupNodeTemplate)):
+                        (ParticleGroup, ParticleGroupLRCTemplate,
+                         ParticleGroupNodeTemplate)):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups
 

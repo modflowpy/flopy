@@ -38,25 +38,34 @@ zone3[wel_loc[1:]] = 2
 zones = [1, 1, zone3]
 
 # create particles
-part0 = flopy.modpath.ParticleGroup.get_particledata_empty(ncells=21,
-                                                           particleid=True)
-part0['k'] = 0
-part0['j'] = 2
-part0['localx'] = 0.5
-part0['localy'] = 0.5
-part0['localz'] = 0.
-part0['timeoffset'] = 0.
-part0['drape'] = 0
-for idx in range(part0.shape[0]):
-    part0['id'][idx] = idx
-    part0['i'][idx] = idx
+partlocs = []
+partids = []
+for i in range(nrow):
+    partlocs.append((0, i, 2))
+    partids.append(i)
+part0 = flopy.modpath.ParticleData(partlocs, structured=True,
+                                   particleids=partids)
+# part0 = flopy.modpath.ParticleGroup.get_particledata_empty(ncells=21,
+#                                                            particleid=True)
+# part0['k'] = 0
+# part0['j'] = 2
+# part0['localx'] = 0.5
+# part0['localy'] = 0.5
+# part0['localz'] = 0.
+# part0['timeoffset'] = 0.
+# part0['drape'] = 0
+# for idx in range(part0.shape[0]):
+#     part0['id'][idx] = idx
+#     part0['i'][idx] = idx
 pg0 = flopy.modpath.ParticleGroup(particlegroupname='PG1', particledata=part0,
                                   filename='ex01a.sloc')
 
-v = [(0, 0, 0), (0, 20, 0)]
+v = [(0,), (400,)]
 pids = [1, 2]  # [1000, 1001]
-part1 = flopy.modpath.ParticleGroup.create_particledata(v, drape=1,
-                                                        particleids=pids)
+# part1 = flopy.modpath.ParticleGroup.create_particledata(v, drape=1,
+#                                                         particleids=pids)
+part1 = flopy.modpath.ParticleData(v, structured=False, drape=1,
+                                   particleids=pids)
 pg1 = flopy.modpath.ParticleGroup(particlegroupname='PG2', particledata=part1,
                                   filename='ex01a.pg2.sloc')
 
