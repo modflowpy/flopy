@@ -49,6 +49,8 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + The ['Crank-Nicolson' example distributed with MT3D-USGS](../examples/Notebooks/flopy3_MT3D-USGS_example.ipynb), a simple MT3D-USGS model that uses the SFT Package.
 
++ A more in-depth MT3D-USGS example that uses 3 packages available with the first release of MT3D-USGS - SFT, LKT, and UZT - available in (../examples/Notebooks/flopy3_mt3d-usgs_example_with_sft_lkt_uzt.ipynb)
+
 + The [Henry Problem](../examples/Notebooks/flopy3_SEAWAT_henry_problem.ipynb), a simple saltwater intrusion model developed with FloPy and run using SEAWAT.
 
 ##### ***Examples from [Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)***
