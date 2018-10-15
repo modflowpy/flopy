@@ -9,10 +9,9 @@ class StructuredGrid(Grid):
     Parameters
     ----------
     delc
-        returns the delc array
+        delc array
     delr
-        returns the delr array
-
+        delr array
 
     Properties
     ----------
@@ -30,13 +29,10 @@ class StructuredGrid(Grid):
         returns x-location points for the edges of the model grid and
         y-location points for the edges of the model grid
 
-
     Methods
     ----------
-    cell_vertices(i, j, point_type)
-        returns vertices for a single cell or sequence of i, j locations.
-    intersect(x, y, local)
-        returns the row and column of the grid that the x, y point is in
+    get_cell_vertices(i, j)
+        returns vertices for a single cell at row, column i, j.
     """
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
@@ -240,206 +236,6 @@ class StructuredGrid(Grid):
         else:
             vrts = np.array(pts).transpose([2, 0, 1])
             return [v.tolist() for v in vrts]
-
-    def interpolate(self, a, xi, method='nearest'):
-        """
-        Use the griddata method to interpolate values from an array onto the
-        points defined in xi.  For any values outside of the grid, use
-        'nearest' to find a value for them.
-
-        Parameters
-        ----------
-        a : numpy.ndarray
-            array to interpolate from.  It must be of size nrow, ncol
-        xi : numpy.ndarray
-            array containing x and y point coordinates of size (npts, 2). xi
-            also works with broadcasting so that if a is a 2d array, then
-            xi can be passed in as (xgrid, ygrid).
-        method : {'linear', 'nearest', 'cubic'}
-            method to use for interpolation (default is 'nearest')
-
-        Returns
-        -------
-        b : numpy.ndarray
-            array of size (npts)
-
-        """
-        try:
-            from scipy.interpolate import griddata
-        except:
-            print('scipy not installed\ntry pip install scipy')
-            return None
-
-        # Create a 2d array of points for the grid centers
-        points = np.empty((self.ncol * self.nrow, 2))
-        points[:, 0] = self.xyzcellcenters[0].flatten()
-        points[:, 1] = self.xyzcellcenters[1].flatten()
-
-        # Use the griddata function to interpolate to the xi points
-        b = griddata(points, a.flatten(), xi, method=method, fill_value=np.nan)
-
-        # if method is linear or cubic, then replace nan's with a value
-        # interpolated using nearest
-        if method != 'nearest':
-            bn = griddata(points, a.flatten(), xi, method='nearest')
-            idx = np.isnan(b)
-            b[idx] = bn[idx]
-
-        return b
-
-    def get_2d_vertex_connectivity(self):
-        """
-        Create the cell 2d vertices array and the iverts index array.  These
-        are the same form as the ones used to instantiate an unstructured
-        spatial reference.
-
-        Returns
-        -------
-
-        verts : ndarray
-            array of x and y coordinates for the grid vertices
-
-        iverts : list
-            a list with a list of vertex indices for each cell in clockwise
-            order starting with the upper left corner
-
-        """
-        x, y, z = self.xyzvertices
-        x = x.flatten()
-        y = y.flatten()
-        nrowvert = self.nrow + 1
-        ncolvert = self.ncol + 1
-        npoints = nrowvert * ncolvert
-        verts = np.empty((npoints, 2), dtype=np.float)
-        verts[:, 0] = x
-        verts[:, 1] = y
-        iverts = []
-        for i in range(self.nrow):
-            for j in range(self.ncol):
-                iv1 = i * ncolvert + j  # upper left point number
-                iv2 = iv1 + 1
-                iv4 = (i + 1) * ncolvert + j
-                iv3 = iv4 + 1
-                iverts.append([iv1, iv2, iv3, iv4])
-        return verts, iverts
-
-    def get_3d_shared_vertex_connectivity(self):
-
-        # get the x and y points for the grid
-        x, y, z = self.xyzvertices
-        x = x.flatten()
-        y = y.flatten()
-
-        # set the size of the vertex grid
-        nrowvert = self.nrow + 1
-        ncolvert = self.ncol + 1
-        nlayvert = self.__nlay + 1
-        nrvncv = nrowvert * ncolvert
-        npoints = nrvncv * nlayvert
-
-        # create and fill a 3d points array for the grid
-        verts = np.empty((npoints, 3), dtype=np.float)
-        verts[:, 0] = np.tile(x, nlayvert)
-        verts[:, 1] = np.tile(y, nlayvert)
-        istart = 0
-        istop = nrvncv
-        top_botm = self.top_botm
-        for k in range(self.__nlay + 1):
-            verts[istart:istop, 2] = self.interpolate(top_botm[k],
-                                                      verts[istart:istop, :2],
-                                                      method='linear')
-            istart = istop
-            istop = istart + nrvncv
-
-        # create the list of points comprising each cell. points must be
-        # listed a specific way according to vtk requirements.
-        iverts = []
-        for k in range(self.__nlay):
-            koffset = k * nrvncv
-            for i in range(self.nrow):
-                for j in range(self.ncol):
-                    if self._idomain is not None:
-                        if self._idomain[k, i, j] == 0:
-                            continue
-                    iv1 = i * ncolvert + j + koffset
-                    iv2 = iv1 + 1
-                    iv4 = (i + 1) * ncolvert + j + koffset
-                    iv3 = iv4 + 1
-                    iverts.append([iv4 + nrvncv, iv3 + nrvncv,
-                                   iv1 + nrvncv, iv2 + nrvncv,
-                                   iv4, iv3, iv1, iv2])
-
-        return verts, iverts
-
-    def get_3d_vertex_connectivity(self):
-        if self.idomain is None:
-            ncells = self.__nlay * self.nrow * self.ncol
-            ibound = np.ones((self.__nlay, self.nrow, self.ncol), dtype=np.int)
-        else:
-            ncells = (self.idomain != 0).sum()
-            ibound = self.idomain
-        npoints = ncells * 8
-        verts = np.empty((npoints, 3), dtype=np.float)
-        iverts = []
-        ipoint = 0
-        top_botm = self.top_botm
-        for k in range(self.__nlay):
-            for i in range(self.nrow):
-                for j in range(self.ncol):
-                    if ibound[k, i, j] == 0:
-                        continue
-
-                    ivert = []
-                    pts = self._cell_vert_list(i, j)
-                    pt0, pt1, pt2, pt3, pt0 = pts
-
-                    z = top_botm[k + 1, i, j]
-
-                    verts[ipoint, 0:2] = np.array(pt1)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt2)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt0)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt3)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    z = top_botm[k, i, j]
-
-                    verts[ipoint, 0:2] = np.array(pt1)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt2)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt0)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    verts[ipoint, 0:2] = np.array(pt3)
-                    verts[ipoint, 2] = z
-                    ivert.append(ipoint)
-                    ipoint += 1
-
-                    iverts.append(ivert)
-
-        return verts, iverts
 
     def get_cell_vertices(self, i, j):
         """

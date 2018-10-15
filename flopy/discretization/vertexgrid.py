@@ -3,6 +3,29 @@ from .grid import Grid, CachedData
 
 
 class VertexGrid(Grid):
+    """
+    class for a vertex model grid
+
+    Parameters
+    ----------
+    vertices
+        list of vertices that make up the grid
+    cell2d
+        list of cells and their vertices
+
+    Properties
+    ----------
+    vertices
+        returns list of vertices that make up the grid
+    cell2d
+        returns list of cells and their vertices
+
+    Methods
+    ----------
+    get_cell_vertices(cellid)
+        returns vertices for a single cell at cellid.
+    """
+
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
                  yoff=0.0, angrot=0.0, grid_type='vertex'):
@@ -48,36 +71,6 @@ class VertexGrid(Grid):
                 lines.append([(xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
                               (xgrid[ncell][ix], ygrid[ncell][ix])])
         return lines
-
-    def get_model_dim_arrays(self):
-        if self.grid_type() == 'vertex':
-            return [np.arange(1, self.nlay + 1, 1, np.int),
-                    np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
-        elif self.grid_type() == 'unstructured':
-            return [np.arange(1, self.num_cells() + 1, 1, np.int)]
-
-    def num_cells_per_layer(self):
-        # this function call is unnecessary, since the number of
-        # cells in a layer is constant for vertex model grids!!
-        if self.grid_type() == 'vertex':
-            return self.ncpl
-        elif self.grid_type() == 'unstructured':
-            except_str = 'ERROR: Model is unstructured and does not ' \
-                         'have a consistant number of cells per ' \
-                         'layer.'
-            print(except_str)
-            raise Exception(except_str)
-
-    def num_cells(self, active_only=False):
-        if active_only:
-            active = self.idomain[self.idomain > 0]
-            return active.size
-
-        else:
-            if self.grid_type() == 'vertex':
-                return self.ncpl * self.nlay
-            elif self.grid_type() == 'unstructured':
-                return self.ncpl
 
     @property
     def xyzcellcenters(self):

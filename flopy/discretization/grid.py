@@ -90,7 +90,7 @@ class Grid(object):
         grid contains spatial reference information, the grid edges are in the
         coordinate system provided by the spatial reference information.
         returns a list of three ndarrays for the x, y, and z coordinates
-    cell_centers : [ndarray, ndarray, ndarray]
+    xyzcellcenters : [ndarray, ndarray, ndarray]
         returns the cell centers of all model cells in the model grid.  if
         the model grid contains spatial reference information, the cell centers
         are in the coordinate system provided by the spatial reference
@@ -111,6 +111,8 @@ class Grid(object):
         1D array of x and y coordinates of cell vertices for whole grid
         (single layer) in C-style (row-major) order
         (same as np.ravel())
+    intersect(x, y, local)
+        returns the row and column of the grid that the x, y point is in
 
     See Also
     --------
@@ -268,11 +270,6 @@ class Grid(object):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
-
-    def get_cell_vertices(self, cellid):
-        raise NotImplementedError(
-            "must define get_cell_verices in"
-            " child class to use this base class")
 
     def get_coords(self, x, y):
         """
@@ -443,13 +440,19 @@ class Grid(object):
             return False
 
     # Internal
-    def _xul_to_xll(self, xul):
+    def _xul_to_xll(self, xul, angrot=None):
         yext = self.xyedges[1][0]
-        return xul + (np.sin(self.angrot_radians) * yext)
+        if angrot is not None:
+            return xul + (np.sin(angrot * np.pi / 180) * yext)
+        else:
+            return xul + (np.sin(self.angrot_radians) * yext)
 
-    def _yul_to_yll(self, yul):
+    def _yul_to_yll(self, yul, angrot=None):
         yext = self.xyedges[1][0]
-        return yul - (np.cos(self.angrot_radians) * yext)
+        if angrot is not None:
+            return yul - (np.cos(angrot * np.pi / 180) * yext)
+        else:
+            return yul - (np.cos(self.angrot_radians) * yext)
 
     def _set_sr_coord_info(self, sr):
         self._xoff = sr.xll

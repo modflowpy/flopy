@@ -553,9 +553,6 @@ def write_prj(shpname, sr=None, epsg=None, prj=None,
     # projection file name
     prjname = shpname.replace('.shp', '.prj')
 
-    from flopy.discretization import StructuredGrid, VertexGrid
-    from flopy.utils.reference import SpatialReference as OGsr
-
     # temporary fix until code is properly refactored to
     # pass a new style SpatialReference object through.
     #if isinstance(sr, StructuredGrid):

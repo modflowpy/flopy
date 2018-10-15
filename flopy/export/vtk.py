@@ -102,9 +102,9 @@ class Vtk(object):
         z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
                        dis.botm.array])
         if shared_vertex:
-            verts, iverts = mg.get_3d_shared_vertex_connectivity()
+            verts, iverts = self.get_3d_shared_vertex_connectivity(mg)
         else:
-            verts, iverts = mg.get_3d_vertex_connectivity()
+            verts, iverts = self.get_3d_vertex_connectivity(mg)
 
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)
@@ -207,6 +207,127 @@ class Vtk(object):
         s = '</DataArray>'
         indent_level = end_tag(f, s, indent_level)
         return
+
+    @staticmethod
+    def get_3d_shared_vertex_connectivity(mg):
+
+        # get the x and y points for the grid
+        x, y, z = mg.xyzvertices
+        x = x.flatten()
+        y = y.flatten()
+
+        # set the size of the vertex grid
+        nrowvert = mg.nrow + 1
+        ncolvert = mg.ncol + 1
+        nlayvert = mg.__nlay + 1
+        nrvncv = nrowvert * ncolvert
+        npoints = nrvncv * nlayvert
+
+        # create and fill a 3d points array for the grid
+        verts = np.empty((npoints, 3), dtype=np.float)
+        verts[:, 0] = np.tile(x, nlayvert)
+        verts[:, 1] = np.tile(y, nlayvert)
+        istart = 0
+        istop = nrvncv
+        top_botm = mg.top_botm
+        for k in range(mg.__nlay + 1):
+            verts[istart:istop, 2] = mg.interpolate(top_botm[k],
+                                                      verts[istart:istop, :2],
+                                                      method='linear')
+            istart = istop
+            istop = istart + nrvncv
+
+        # create the list of points comprising each cell. points must be
+        # listed a specific way according to vtk requirements.
+        iverts = []
+        for k in range(mg.__nlay):
+            koffset = k * nrvncv
+            for i in range(mg.nrow):
+                for j in range(mg.ncol):
+                    if mg._idomain is not None:
+                        if self._idomain[k, i, j] == 0:
+                            continue
+                    iv1 = i * ncolvert + j + koffset
+                    iv2 = iv1 + 1
+                    iv4 = (i + 1) * ncolvert + j + koffset
+                    iv3 = iv4 + 1
+                    iverts.append([iv4 + nrvncv, iv3 + nrvncv,
+                                   iv1 + nrvncv, iv2 + nrvncv,
+                                   iv4, iv3, iv1, iv2])
+
+        return verts, iverts
+
+    @staticmethod
+    def get_3d_vertex_connectivity(mg):
+        if mg.idomain is None:
+            ncells = mg.__nlay * mg.nrow * mg.ncol
+            ibound = np.ones((mg.__nlay, mg.nrow, mg.ncol), dtype=np.int)
+        else:
+            ncells = (mg.idomain != 0).sum()
+            ibound = mg.idomain
+        npoints = ncells * 8
+        verts = np.empty((npoints, 3), dtype=np.float)
+        iverts = []
+        ipoint = 0
+        top_botm = mg.top_botm
+        for k in range(mg.__nlay):
+            for i in range(mg.nrow):
+                for j in range(mg.ncol):
+                    if ibound[k, i, j] == 0:
+                        continue
+
+                    ivert = []
+                    pts = mg._cell_vert_list(i, j)
+                    pt0, pt1, pt2, pt3, pt0 = pts
+
+                    z = top_botm[k + 1, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    z = top_botm[k, i, j]
+
+                    verts[ipoint, 0:2] = np.array(pt1)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt2)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt0)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    verts[ipoint, 0:2] = np.array(pt3)
+                    verts[ipoint, 2] = z
+                    ivert.append(ipoint)
+                    ipoint += 1
+
+                    iverts.append(ivert)
+
+        return verts, iverts
+
 
 if __name__ == '__main__':
     import flopy
