@@ -1,9 +1,8 @@
+from ..pakbase import Package
+
 __author__ = 'emorway'
 
-import sys
-import numpy as np
-from ..pakbase import Package
-from ..utils import Util2d, Util3d, read1d, MfList
+
 class Mt3dCts(Package):
     """
     MT3D-USGS Contaminant Treatment System package class
@@ -215,13 +214,10 @@ class Mt3dCts(Package):
         # 
         # # Item 1 (MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE)
         # line = f.readline()
+        # if line[0] == '#':
+        #     raise ValueError('CTS package does not support comment lines')
         # if model.verbose:
         #     print('   loading MXCTS, ICTSOUT, MXEXT, MXINJ, MXWEL, IFORCE...')
-        #     if line[0] == '#':
-        #         print('   "#" found in the first position.  CTS package does ',
-        #               'not support comment lines\n')
-        #         print('   Stopping.')
-        #         sys.exit()
         # 
         # m_arr = line.strip().split()
         # mxcts = int(m_arr[0])

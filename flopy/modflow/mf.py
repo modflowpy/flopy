@@ -590,9 +590,13 @@ class Modflow(BaseModel):
 
         """
 
-        # try to tack on '.nam' if missing from the filename
-        if not f.lower().endswith('.nam'):
-            f += '.nam'
+        # similar to modflow command: if file does not exist , try file.nam
+        namefile_path = os.path.join(model_ws, f)
+        if (not os.path.isfile(namefile_path) and
+                os.path.isfile(namefile_path + '.nam')):
+            namefile_path += '.nam'
+        if not os.path.isfile(namefile_path):
+            raise IOError('cannot find name file: ' + str(namefile_path))
 
         # Determine model name from 'f', without any extension or path
         modelname = os.path.splitext(os.path.basename(f))[0]
@@ -610,8 +614,6 @@ class Modflow(BaseModel):
 
         files_successfully_loaded = []
         files_not_loaded = []
-
-        namefile_path = os.path.join(ml.model_ws, f)
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
