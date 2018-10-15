@@ -13,10 +13,9 @@ import shutil
 import numpy as np
 import flopy
 from flopy.utils.geometry import Polygon
-from flopy.discretization.reference import SpatialReference
 from flopy.export.shapefile_utils import recarray2shp, shp2recarray
 from flopy.export.netcdf import NetCdf
-from flopy.discretization.reference import getprj, epsgRef
+from flopy.utils.reference import getprj, epsgRef
 
 mpth = os.path.join('temp', 't032')
 # make the directory if it does not exist
@@ -41,9 +40,10 @@ def test_polygon_from_ij():
     m.export('toy_model_two.nc')
     dis.export('toy_model_dis.nc')
 
-    m.sr = SpatialReference(delc=m.dis.delc * .3048,
-                            xul=600000, yul=5170000,
-                            proj4_str='EPSG:26715', rotation=-45)
+    mg = m.modelgrid
+    mg.set_coord_info(xoff=mg._xul_to_xll(600000.0, -45.0),
+                      yoff=mg._yul_to_yll(5170000, -45.0),
+                      angrot=-45.0, proj4='EPSG:26715')
 
     recarray = np.array([(0, 5, 5, .1, True, 's0'),
                          (1, 4, 5, .2, False, 's1'),

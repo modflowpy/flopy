@@ -60,7 +60,7 @@ def test_notebooks():
 
 if __name__ == '__main__':
     
-    for dpth in [faqdir]: #, nbdir]:
+    for dpth in [nbdir]: #, nbdir]:
         # get list of notebooks to run
         files = get_Notebooks(dpth)
 

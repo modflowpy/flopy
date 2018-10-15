@@ -2,6 +2,7 @@ import copy, warnings
 import sys
 import numpy as np
 from ..utils import geometry
+from ..discretization.structuredgrid import StructuredGrid
 
 try:
     import matplotlib.pyplot as plt
@@ -40,7 +41,8 @@ class MapView(object):
             self.mg = modelgrid
         elif dis is not None:
             self.mg = dis.parent.modelgrid
-
+        elif sr is not None:
+            self.mg = StructuredGrid(sr.delc, sr.delr)
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)

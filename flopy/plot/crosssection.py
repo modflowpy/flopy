@@ -409,15 +409,15 @@ class StructuredCrossSection(CrossSection):
         vpts = []
         for k in range(self.dis.nlay):
             # print('k', k, self.laycbd[k])
-            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xedge,
-                                                   self.mg.yedge,
+            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
+                                                   self.mg.xyedges[1],
                                                    plotarray[k, :, :]))
             if self.laycbd[k] > 0:
                 ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
                 ta[:, :] = self.dis.botm.array[k, :, :]
                 vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.mg.xedge,
-                                                       self.mg.yedge, ta))
+                                                       self.mg.xyedges[0],
+                                                       self.mg.xyedges[1], ta))
 
         vpts = np.ma.array(vpts, mask=False)
 
