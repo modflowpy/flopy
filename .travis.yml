@@ -61,8 +61,6 @@ install:
     - export CXX="g++"
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
       pip install -r requirements2-34.travis.txt;
-      echo requests version0; python -c "import requests; print(requests.__version__)";
-      pip uninstall requests
       pip install requests
       echo requests version1; python -c "import requests; print(requests.__version__)";
       fi
