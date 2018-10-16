@@ -59,8 +59,12 @@ install:
     - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
     - ls -l /usr/bin/g++-6
     - export CXX="g++"
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]];
-      then pip install -r requirements2-34.travis.txt;
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
+      pip install -r requirements2-34.travis.txt;
+      echo requests version0; python -c "import requests; print(requests.__version__)";
+      pip uninstall requests
+      pip install requests
+      echo requests version1; python -c "import requests; print(requests.__version__)";
       fi
     - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]];
       then pip install -r requirements2-34.travis.txt;
@@ -86,8 +90,11 @@ script:
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
-    - nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
-    - nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
+      nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+      nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+      fi
     - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
+
 after_success:
     - coveralls
