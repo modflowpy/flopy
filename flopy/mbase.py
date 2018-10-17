@@ -649,9 +649,12 @@ class BaseModel(object):
 
     def add_existing_package(self, filename, ptype=None,
                              copy_to_model_ws=True):
-        """ add an existing package to a model instance.
+        """
+        Add an existing package to a model instance.
+
         Parameters
         ----------
+
         filename : str
             the name of the file to add as a package
         ptype : optional
@@ -659,6 +662,11 @@ class BaseModel(object):
             then the file extension of the filename arg is used
         copy_to_model_ws : bool
             flag to copy the package file into the model_ws directory.
+
+        Returns
+        -------
+        None
+
         """
         if ptype is None:
             ptype = filename.split('.')[-1]

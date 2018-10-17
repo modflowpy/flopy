@@ -446,7 +446,7 @@ class HeadObservation(object):
         is the zero-based layer index of the cell in which the head observation
         is located. If layer is less than zero, hydraulic heads from multiple
         layers are combined to calculate a simulated value. The number of
-        layers equals the absolute value of layer, or |layer|. Default is 0.
+        layers equals the absolute value of layer, or abs(layer). Default is 0.
     row : int
         zero-based row index for the observation. Default is 0.
     column : int
@@ -464,7 +464,7 @@ class HeadObservation(object):
         observations. itt = 1 specified for heads and itt = 2 specified
         if initial value is head and subsequent changes in head. Only
         specified if irefsp is < 0. Default is 1.
-    mlay : dictionary of length (|irefsp|)
+    mlay : dictionary of length (abs(irefsp))
         key represents zero-based layer numbers for multilayer observations an
         value represents the fractional value for each layer of multilayer
         observations. If mlay is None, a default mlay of {0: 1.} will be

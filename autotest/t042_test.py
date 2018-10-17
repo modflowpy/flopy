@@ -6,7 +6,8 @@ import sys
 sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import numpy as np
 import flopy
-from flopy.utils.postprocessing import get_transmissivities, get_water_table, get_gradients, get_saturated_thickness
+from flopy.utils.postprocessing import get_transmissivities, get_water_table, \
+    get_gradients, get_saturated_thickness
 
 mf = flopy.modflow
 
