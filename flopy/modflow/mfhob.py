@@ -5,198 +5,6 @@ from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 
 
-# Create HeadObservation instance from a time series array
-
-class HeadObservation(object):
-    """
-    Create HeadObservation instance from a time series array
-
-    Parameters
-    ----------
-    tomulth : float
-        time-offset multiplier for head observations. Default is 1.
-    obsnam : string
-        Observation name. Default is 'HOBS'
-    layer : int
-        is the zero-based layer index of the cell in which the head observation
-        is located. If layer is less than zero, hydraulic heads from multiple
-        layers are combined to calculate a simulated value. The number of
-        layers equals the absolute value of layer, or |layer|. Default is 0.
-    row : int
-        zero-based row index for the observation. Default is 0.
-    column : int
-        zero-based column index of the observation. Default is 0.
-    irefsp : int
-        the stress period to which the observation time is referenced.
-    roff : float
-        Fractional offset from center of cell in Y direction (between rows).
-        Default is 0.
-    coff : float
-        Fractional offset from center of cell in X direction (between columns).
-        Default is 0.
-    itt : int
-        Flag that identifies whether head or head changes are used as
-        observations. itt = 1 specified for heads and itt = 2 specified
-        if initial value is head and subsequent changes in head. Only
-        specified if irefsp is < 0. Default is 1.
-    mlay : dictionary of length (|irefsp|)
-        key represents zero-based layer numbers for multilayer observations an
-        value represents the fractional value for each layer of multilayer
-        observations. Only used if irefsp < 0. Default is {0:1.}
-    time_series_data : list or numpy array
-        two-dimensional list or numpy array containing the simulation time of
-        the observation and the observed head [[totim, hob]]. Default is
-        [[0., 0.]]
-    names : list
-        list of specified observation names. Default is None.
-
-    Returns
-    -------
-    obs : HeadObservation
-        HeadObservation object.
-
-    Examples
-    --------
-
-    >>> import flopy
-    >>> model = flopy.modflow.Modflow()
-    >>> dis = flopy.modflow.ModflowDis(model, nlay=1, nrow=11, ncol=11, nper=2,
-    ... perlen=[1,1])
-    >>> obs = flopy.modflow.HeadObservation(model, layer=0, row=5, column=5,
-    ... time_series_data=[[1.,54.4], [2., 55.2]])
-
-    """
-
-    def __init__(self, model, tomulth=1., obsname='HOBS',
-                 layer=0, row=0, column=0, irefsp=None,
-                 roff=0., coff=0., itt=1, mlay={0: 1.},
-                 time_series_data=[[0., 0.]], names=None):
-
-        self.obsname = obsname
-        self.layer = layer
-        self.row = row
-        self.column = column
-        if irefsp is not None:
-            self.irefsp = irefsp
-        else:
-            if len(time_series_data) == 1:
-                self.irefsp = 1
-            else:
-                self.irefsp = -1 * len(time_series_data)
-        self.roff = roff
-        self.coff = coff
-        self.itt = itt
-
-        # check if multilayer observation
-        self.mlay = mlay
-        self.maxm = 0
-        self.multilayer = False
-        if len(self.mlay.keys()) > 1:
-            self.maxm = len(self.mlay.keys())
-            self.multilayer = True
-            tot = 0.
-            for key, value in self.mlay.items():
-                tot += value
-            if tot != 1.:
-                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
-                      'sum of dataset 4 proportions = {}'.format(tot)
-                raise ValueError(msg)
-
-        # convert passed time_series_data to a numpy array
-        if isinstance(time_series_data, list):
-            time_series_data = np.array(time_series_data, dtype=np.float)
-
-        # if a single observation is passed as a list reshape to a
-        # two-dimensional numpy array
-        if len(time_series_data.shape) == 1:
-            time_series_data = np.reshape(time_series_data, (1, 2))
-
-        # make sure the time data are ordered
-        # for idx in range(1, time_series_data.shape[0]):
-        #     t0 = time_series_data[idx-1, 0]
-        #     t1 = time_series_data[idx, 0]
-        #     if t1 <= t0:
-        #         msg = 'time values in timeseries data ' + \
-        #               'must be in increasing order for obsname {0}'\
-        #                   .format(obsname)
-        #         raise ValueError(msg)
-        #
-        # # exclude observations that exceed the maximum simulation time
-        # iend = time_series_data.shape[0]
-        # tmax = model.dis.get_final_totim()
-        # for idx, (t, v) in enumerate(time_series_data):
-        #     dt = tmax - t
-        #     if dt < 0.:
-        #         iend = idx
-        #         break
-        # if iend < time_series_data.shape[0]:
-        #     time_series_data = time_series_data[0:iend]
-
-        # find indices of time series data that are valid
-        tmax = model.dis.get_final_totim()
-        keep_idx = time_series_data[:, 0] <= tmax
-        time_series_data = time_series_data[keep_idx, :]
-
-        # set the number of observations in this time series
-        shape = time_series_data.shape
-        self.nobs = shape[0]
-
-        # construct names if not passed
-        if names is None:
-            if self.nobs == 1:
-                names = [obsname]
-            else:
-                names = []
-                for idx in range(self.nobs):
-                    names.append('{}.{}'.format(obsname, idx + 1))
-        # make sure the length of names is greater than or equal to nobs
-        else:
-            if isinstance(names, str):
-                names = [names]
-            elif not isinstance(names, list):
-                msg = 'HeadObservation names must be a ' + \
-                      'string or a list of strings'
-                raise ValueError(msg)
-            if len(names) < self.nobs:
-                msg = 'a name must be specified for every valid ' + \
-                      'observation - {} '.format(len(names)) + \
-                      'names were passed but at least ' + \
-                      '{} names are required.'.format(self.nobs)
-                raise ValueError(msg)
-
-        # create time_series_data
-        self.time_series_data = HeadObservation.get_empty(ncells=shape[0])
-        for idx in range(self.nobs):
-            t = time_series_data[idx, 0]
-            kstp, kper, toffset = model.dis.get_kstp_kper_toffset(t)
-            self.time_series_data[idx]['totim'] = t
-            self.time_series_data[idx]['irefsp'] = kper
-            self.time_series_data[idx]['toffset'] = toffset / tomulth
-            self.time_series_data[idx]['hobs'] = time_series_data[idx, 1]
-            self.time_series_data[idx]['obsname'] = names[idx]
-
-        if self.nobs > 1:
-            self.irefsp = -self.nobs
-        else:
-            self.irefsp = self.time_series_data[0]['irefsp']
-
-    @staticmethod
-    def get_empty(ncells=0):
-        # get an empty recaray that correponds to dtype
-        dtype = HeadObservation.get_default_dtype()
-        d = create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
-        d['obsname'] = ''
-        return d
-
-    @staticmethod
-    def get_default_dtype():
-        # get the default HOB dtype
-        dtype = np.dtype([("totim", np.float32), ("irefsp", np.int),
-                          ("toffset", np.float32),
-                          ("hobs", np.float32), ("obsname", '|S12')])
-        return dtype
-
-
 class ModflowHob(Package):
     """
     Head Observation package class
@@ -204,37 +12,42 @@ class ModflowHob(Package):
     Parameters
     ----------
     iuhobsv : int
-        unit number where output is saved
+        unit number where output is saved. If iuhobsv is None, a unit number
+        will be assigned (default is None).
     hobdry : float
-        Value of the simulated equivalent written to the observation output file
-        when the observation is omitted because a cell is dry
+        Value of the simulated equivalent written to the observation output
+        file when the observation is omitted because a cell is dry
+        (default is 0).
     tomulth : float
         Time step multiplier for head observations. The product of tomulth and
         toffset must produce a time value in units consistent with other model
         input. tomulth can be dimensionless or can be used to convert the units
-        of toffset to the time unit used in the simulation.
-    obs_data : list of HeadObservation instances
-        list of HeadObservation instances containing all of the data for
-        each observation. Default is None.
+        of toffset to the time unit used in the simulation (default is 1).
+    obs_data : HeadObservation or list of HeadObservation instances
+        A single HeadObservation instance or a list of HeadObservation
+        instances containing all of the data for each observation. If obs_data
+        is None a default HeadObservation with an observation in layer, row,
+        column (0, 0, 0) and a head value of 0 at totim 0 will be created
+        (default is None).
     hobname : str
         Name of head observation output file. If iuhobsv is greater than 0,
-        and hobname is not provided the model basename with a '.hob.out'
-        extension will be used. Default is None.
+        and hobname is None, the model basename with a '.hob.out' extension
+        will be used (default is None).
     extension : string
         Filename extension (default is hob)
     unitnumber : int
         File unit number (default is None)
     filenames : str or list of str
-        Filenames to use for the package and the output files. If
-        filenames=None the package name will be created using the model name
-        and package extension and the hob output name will be created using
-        the model name and .hob.out extension (for example,
-        modflowtest.hob.out), if iuhobsv is a number greater than zero.
-        If a single string is passed the package will be set to the string
-        and hob output name will be created using the model name and .hob.out
-        extension, if iuhobsv is a number greater than zero. To define the
-        names for all package files (input and output) the length of the list
-        of strings should be 2. Default is None.
+        Filenames to use for the package and the output files. If filenames
+        is None the package name will be created using the model name and
+        package extension and the hob output name will be created using the
+        model name and .hob.out extension (for example, modflowtest.hob.out),
+        if iuhobsv is a number greater than zero. If a single string is passed
+        the package will be set to the string and hob output name will be
+        created using the model name and .hob.out extension, if iuhobsv is a
+        number greater than zero. To define the names for all package files
+        (input and output) the length of the list of strings should be 2.
+        Default is None.
 
     Attributes
     ----------
@@ -253,11 +66,12 @@ class ModflowHob(Package):
     >>> import flopy
     >>> model = flopy.modflow.Modflow()
     >>> dis = flopy.modflow.ModflowDis(model, nlay=1, nrow=11, ncol=11, nper=2,
-    ... perlen=[1,1])
-    >>> obs = flopy.modflow.HeadObservation(model, layer=0, row=5, column=5,
-    ... time_series_data=[[1.,54.4], [2., 55.2]])
+    ...                                perlen=[1,1])
+    >>> tsd = [[1.,54.4], [2., 55.2]]
+    >>> obsdata = flopy.modflow.HeadObservation(model, layer=0, row=5,
+    ...                                         column=5, time_series_data=tsd)
     >>> hob = flopy.modflow.ModflowHob(model, iuhobsv=51, hobdry=-9999.,
-    ... obs_data=[obs])
+    ...                                obs_data=obsdata)
 
 
     """
@@ -315,8 +129,12 @@ class ModflowHob(Package):
         self.hobdry = hobdry
         self.tomulth = tomulth
 
+        # create default
+        if obs_data is None:
+            obs_data = HeadObservation()
+
         # make sure obs_data is a list
-        if not isinstance(obs_data, list):
+        if isinstance(obs_data, HeadObservation):
             obs_data = [obs_data]
 
         # set self.obs_data
@@ -326,6 +144,14 @@ class ModflowHob(Package):
         self.parent.add_package(self)
 
     def _set_dimensions(self):
+        """
+        Set the length of the obs_data list
+
+        Returns
+        -------
+        None
+
+        """
         # make sure each entry of obs_data list is a HeadObservation instance
         # and calculate nh, mobs, and maxm
         msg = ''
@@ -461,8 +287,8 @@ class ModflowHob(Package):
 
         Returns
         -------
-        hob : ModflowHob object
-            ModflowHob object.
+        hob : ModflowHob package object
+            ModflowHob package object.
 
         Examples
         --------
@@ -488,11 +314,7 @@ class ModflowHob(Package):
         # read dataset 1
         t = line.strip().split()
         nh = int(t[0])
-        # mobs = int(t[1])
-        # maxm = int(t[2])
         iuhobsv = int(t[3])
-        # if iuhobsv > 0:
-        #    model.add_pop_key_list(iuhobsv)
         hobdry = float(t[4])
 
         # read dataset 2
@@ -607,3 +429,206 @@ class ModflowHob(Package):
     @staticmethod
     def defaultunit():
         return 39
+
+
+class HeadObservation(object):
+    """
+    Create single HeadObservation instance from a time series array. A list of
+    HeadObservation instances are passed to the ModflowHob package.
+
+    Parameters
+    ----------
+    tomulth : float
+        time-offset multiplier for head observations. Default is 1.
+    obsnam : string
+        Observation name. Default is 'HOBS'
+    layer : int
+        is the zero-based layer index of the cell in which the head observation
+        is located. If layer is less than zero, hydraulic heads from multiple
+        layers are combined to calculate a simulated value. The number of
+        layers equals the absolute value of layer, or |layer|. Default is 0.
+    row : int
+        zero-based row index for the observation. Default is 0.
+    column : int
+        zero-based column index of the observation. Default is 0.
+    irefsp : int
+        the stress period to which the observation time is referenced.
+    roff : float
+        Fractional offset from center of cell in Y direction (between rows).
+        Default is 0.
+    coff : float
+        Fractional offset from center of cell in X direction (between columns).
+        Default is 0.
+    itt : int
+        Flag that identifies whether head or head changes are used as
+        observations. itt = 1 specified for heads and itt = 2 specified
+        if initial value is head and subsequent changes in head. Only
+        specified if irefsp is < 0. Default is 1.
+    mlay : dictionary of length (|irefsp|)
+        key represents zero-based layer numbers for multilayer observations an
+        value represents the fractional value for each layer of multilayer
+        observations. If mlay is None, a default mlay of {0: 1.} will be
+        used (default is None).
+    time_series_data : list or numpy array
+        two-dimensional list or numpy array containing the simulation time of
+        the observation and the observed head [[totim, hob]]. If
+        time_series_dataDefault is None, a default observation of 0. at
+        totim 0. will be created (default is None).
+    names : list
+        list of specified observation names. If names is None, observation
+        names will be automatically generated from obsname and the order
+        of the timeseries data (default is None).
+
+    Returns
+    -------
+    obs : HeadObservation
+        HeadObservation object.
+
+    Examples
+    --------
+
+    >>> import flopy
+    >>> model = flopy.modflow.Modflow()
+    >>> dis = flopy.modflow.ModflowDis(model, nlay=1, nrow=11, ncol=11, nper=2,
+    ...                                perlen=[1,1])
+    >>> tsd = [[1.,54.4], [2., 55.2]]
+    >>> obsdata = flopy.modflow.HeadObservation(model, layer=0, row=5,
+    ...                                         column=5, time_series_data=tsd)
+
+    """
+
+    def __init__(self, model, tomulth=1., obsname='HOBS',
+                 layer=0, row=0, column=0, irefsp=None,
+                 roff=0., coff=0., itt=1, mlay=None,
+                 time_series_data=None, names=None):
+        """
+        Object constructor
+        """
+
+        if mlay is None:
+            mlay = {0: 1.}
+        if time_series_data is None:
+            time_series_data = [[0., 0.]]
+        if irefsp is None:
+            if len(time_series_data) == 1:
+                irefsp = 1
+            else:
+                irefsp = -1 * len(time_series_data)
+
+        # set class attributes
+        self.obsname = obsname
+        self.layer = layer
+        self.row = row
+        self.column = column
+        self.irefsp = irefsp
+        self.roff = roff
+        self.coff = coff
+        self.itt = itt
+        self.mlay = mlay
+        self.maxm = 0
+
+        # check if multilayer observation
+        self.multilayer = False
+        if len(self.mlay.keys()) > 1:
+            self.maxm = len(self.mlay.keys())
+            self.multilayer = True
+            tot = 0.
+            for key, value in self.mlay.items():
+                tot += value
+            if tot != 1.:
+                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
+                      'sum of dataset 4 proportions = {}'.format(tot)
+                raise ValueError(msg)
+
+        # convert passed time_series_data to a numpy array
+        if isinstance(time_series_data, list):
+            time_series_data = np.array(time_series_data, dtype=np.float)
+
+        # if a single observation is passed as a list reshape to a
+        # two-dimensional numpy array
+        if len(time_series_data.shape) == 1:
+            time_series_data = np.reshape(time_series_data, (1, 2))
+
+        # find indices of time series data that are valid
+        tmax = model.dis.get_final_totim()
+        keep_idx = time_series_data[:, 0] <= tmax
+        time_series_data = time_series_data[keep_idx, :]
+
+        # set the number of observations in this time series
+        shape = time_series_data.shape
+        self.nobs = shape[0]
+
+        # construct names if not passed
+        if names is None:
+            if self.nobs == 1:
+                names = [obsname]
+            else:
+                names = []
+                for idx in range(self.nobs):
+                    names.append('{}.{}'.format(obsname, idx + 1))
+        # make sure the length of names is greater than or equal to nobs
+        else:
+            if isinstance(names, str):
+                names = [names]
+            elif not isinstance(names, list):
+                msg = 'HeadObservation names must be a ' + \
+                      'string or a list of strings'
+                raise ValueError(msg)
+            if len(names) < self.nobs:
+                msg = 'a name must be specified for every valid ' + \
+                      'observation - {} '.format(len(names)) + \
+                      'names were passed but at least ' + \
+                      '{} names are required.'.format(self.nobs)
+                raise ValueError(msg)
+
+        # create time_series_data
+        self.time_series_data = self._get_empty(ncells=shape[0])
+        for idx in range(self.nobs):
+            t = time_series_data[idx, 0]
+            kstp, kper, toffset = model.dis.get_kstp_kper_toffset(t)
+            self.time_series_data[idx]['totim'] = t
+            self.time_series_data[idx]['irefsp'] = kper
+            self.time_series_data[idx]['toffset'] = toffset / tomulth
+            self.time_series_data[idx]['hobs'] = time_series_data[idx, 1]
+            self.time_series_data[idx]['obsname'] = names[idx]
+
+        if self.nobs > 1:
+            self.irefsp = -self.nobs
+        else:
+            self.irefsp = self.time_series_data[0]['irefsp']
+
+    def _get_empty(self, ncells=0):
+        """
+        Get an empty time_series_data recarray for a HeadObservation
+
+        Parameters
+        ----------
+        ncells : int
+            number of time entries in a HeadObservation
+
+        Returns
+        -------
+        d : np.recarray
+
+        """
+        # get an empty recaray that correponds to dtype
+        dtype = self._get_dtype()
+        d = create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
+        d['obsname'] = ''
+        return d
+
+    def _get_dtype(self):
+        """
+        Get the dtype for HeadObservation time_series_data
+
+
+        Returns
+        -------
+        dtype : np.dtype
+
+        """
+        # get the default HOB dtype
+        dtype = np.dtype([("totim", np.float32), ("irefsp", np.int),
+                          ("toffset", np.float32),
+                          ("hobs", np.float32), ("obsname", '|S12')])
+        return dtype
