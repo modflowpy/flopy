@@ -108,6 +108,9 @@ class MfGrdFile(FlopyBinaryData):
         # set the model grid
         self.mg = self._set_modelgrid()
 
+    def get_modelgrid(self):
+        return self.mg
+
     def _set_modelgrid(self):
         try:
             if self._grid == 'DISV':
@@ -139,8 +142,8 @@ class MfGrdFile(FlopyBinaryData):
                 y = self._datadict['CELLY']
             elif self._grid == 'DIS':
                 nlay = self._datadict['NLAY']
-                x = np.tile(self.mg.xcell_centers().flatten(), nlay)
-                y = np.tile(self.mg.xcell_centers().flatten(), nlay)
+                x = np.tile(self.mg.xcellcenters.flatten(), nlay)
+                y = np.tile(self.mg.ycellcenters.flatten(), nlay)
         except:
             print('could not return centroids' +
                   ' for {}'.format(self.file.name))

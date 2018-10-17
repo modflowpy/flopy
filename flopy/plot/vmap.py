@@ -239,39 +239,8 @@ class VertexMapView(MapView):
         quadmesh : matplotlib.pyplot.axes object
 
         """
-        if idomain is None:
-            idomain = self.mg.idomain
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        idomain = idomain[self.layer, :]
-
-        plotarray = np.zeros(idomain.shape, dtype=np.int)
-        idx1 = (idomain <= 0)
-        plotarray[idx1] = 1
-        plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
-        bounds = [0, 1, 2]
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-
-        xgrid = np.array(self.mg.xvertices)
-        ygrid = np.array(self.mg.yvertices)
-
-        patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
-                   for i in range(xgrid.shape[0])]
-
-        p = PatchCollection(patches, cmap=cmap, norm=norm)
-        p.set_array(plotarray)
-        p.set(**kwargs)
-
-        ax.add_collection(p)
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
-
-        return ax
+        raise NotImplementedError("plot_inactive must be called "
+                                  "from a PlotMapView instance")
 
     def plot_ibound(self, idomain=None, color_noflow='black', color_ch="blue",
                     color_vpt="red", **kwargs):
@@ -293,41 +262,8 @@ class VertexMapView(MapView):
         ax : matplotlib.pyplot.axes object
 
         """
-        if idomain is None:
-            idomain = self.mg.idomain
-
-        idomain = idomain[self.layer, :]
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        plotarray = np.zeros(idomain.shape, dtype=np.int)
-        idx1 = (idomain == 0)
-        idx2 = (idomain < 0)
-        plotarray[idx1] = 1
-        plotarray[idx2] = 2
-        plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_vpt])
-        bounds = [0, 1, 2, 3]
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-
-        xgrid = np.array(self.mg.xvertices)
-        ygrid = np.array(self.mg.yvertices)
-
-        patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
-                   for i in range(xgrid.shape[0])]
-
-        p = PatchCollection(patches, cmap=cmap, norm=norm)
-        p.set_array(plotarray)
-        p.set(**kwargs)
-
-        ax.add_collection(p)
-        ax.set_xlim(self.extent[0], self.extent[1])
-        ax.set_ylim(self.extent[2], self.extent[3])
-
-        return ax
+        raise NotImplementedError("plot_ibound must be called"
+                                 " from PlotMapView instance")
 
     def plot_grid(self, **kwargs):
         """

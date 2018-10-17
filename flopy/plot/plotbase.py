@@ -2,13 +2,16 @@ import sys
 import numpy as np
 from ..plot.map import StructuredMapView
 from ..plot.vmap import VertexMapView
+from ..plot.umap import UnstructuredMapView
 from ..plot.crosssection import StructuredCrossSection
 from ..plot.vcrosssection import VertexCrossSection
+from ..utils.reference import SpatialReferenceUnstructured
 from ..plot import plotutil
 from ..utils import geometry
 
 try:
     import matplotlib.pyplot as plt
+    import matplotlib.colors
 except ImportError:
     plt = None
 
@@ -66,12 +69,15 @@ class PlotMapView(object):
         # todo: make a descision about the model grid type here!
         # todo: will be much simplier when there aren't three potential
         # todo: modelgrid/spatial reference types .....
-        try:
-            tmp = modelgrid.grid_type
-            if not isinstance(tmp, str):
+        if isinstance(modelgrid, SpatialReferenceUnstructured):
+            tmp = "unstructured"
+        else:
+            try:
+                tmp = modelgrid.grid_type
+                if not isinstance(tmp, str):
+                    tmp = "structured"
+            except:
                 tmp = "structured"
-        except:
-            tmp = "structured"
 
         if tmp == "structured":
             self.__cls = StructuredMapView(sr=sr, ax=ax, model=model, dis=dis,
@@ -79,8 +85,12 @@ class PlotMapView(object):
                                            extent=extent, xul=xul,
                                            yul=yul, xll=xll, yll=yll, rotation=rotation,
                                            length_multiplier=length_multiplier)
+
+        elif tmp == "unstructured":
+            self.__cls = UnstructuredMapView(modelgrid=modelgrid, model=model,
+                                             extent=extent)
+
         else:
-            # todo: link up vertex plotting methods
             self.__cls = VertexMapView(sr=sr, ax=ax, model=model, dis=dis,
                                        modelgrid=modelgrid, layer=layer,
                                        extent=extent, xul=xul, yul=yul, xll=xll,
@@ -159,8 +169,22 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        return self.__cls.plot_inactive(ibound, color_noflow=color_noflow,
-                                        **kwargs)
+        if ibound is None:
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except AttributeError:
+                ibound = self.mg.idomain
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.__cls.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return quadmesh
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     color_vpt='red', **kwargs):
@@ -182,9 +206,27 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        return self.__cls.plot_ibound(ibound, color_noflow=color_noflow,
-                                      color_ch=color_ch, color_vpt=color_vpt,
-                                      **kwargs)
+        import matplotlib.colors
+
+        if ibound is None:
+            try:
+                bas = self.model.get_package('BAS6')
+                ibound = bas.ibound.array
+            except:
+                ibound = self.mg.idomain
+                color_ch = color_vpt
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        idx2 = (ibound < 0)
+        plotarray[idx1] = 1
+        plotarray[idx2] = 2
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow, color_ch])
+        bounds = [0, 1, 2, 3]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        quadmesh = self.__cls.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+        return quadmesh
 
     def plot_grid(self, **kwargs):
         """
@@ -210,7 +252,10 @@ class PlotMapView(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = LineCollection(self.__cls.mg.grid_lines, **kwargs)
+        if isinstance(self.mg, SpatialReferenceUnstructured):
+            lc = self.mg.get_grid_line_collection(**kwargs)
+        else:
+            lc = LineCollection(self.__cls.mg.grid_lines, **kwargs)
 
         ax.add_collection(lc)
         ax.set_xlim(self.__cls.extent[0], self.__cls.extent[1])
@@ -449,6 +494,28 @@ class PlotMapView(object):
         else:
             kon = self.layer
 
+        if 'marker' in kwargs:
+            marker = kwargs.pop('marker')
+        else:
+            marker = None
+
+        if 'markersize' in kwargs:
+            markersize = kwargs.pop('markersize')
+        elif 'ms' in kwargs:
+            markersize = kwargs.pop('ms')
+        else:
+            markersize = None
+
+        if 'markercolor' in kwargs:
+            markercolor = kwargs.pop('markercolor')
+        else:
+            markercolor = None
+
+        if 'markerevery' in kwargs:
+            markerevery = kwargs.pop('markerevery')
+        else:
+            markerevery = 1
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -458,6 +525,7 @@ class PlotMapView(object):
             kwargs['colors'] = '0.5'
 
         linecol = []
+        markers = []
         for p in pl:
             if travel_time is None:
                 tp = p.copy()
@@ -492,10 +560,16 @@ class PlotMapView(object):
                 tp = p[idx]
 
             # transform data!
-            x0r, y0r = geometry.transform(tp['x'], tp['y'],
-                                          self.__cls.mg.xoffset,
-                                          self.__cls.mg.yoffset,
-                                          self.__cls.mg.angrot_radians)
+            if isinstance(self.mg, SpatialReferenceUnstructured):
+                x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                              self.mg.xul,
+                                              self.mg.yul,
+                                              self.mg.rotation)
+            else:
+                x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                              self.mg.xoffset,
+                                              self.mg.yoffset,
+                                              self.mg.angrot_radians)
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer
@@ -508,11 +582,21 @@ class PlotMapView(object):
             # append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
+                if not arr.mask.all():
+                    linecol.append(arr)
+                    if marker is not None:
+                        for xy in arr[::markerevery]:
+                            if not xy.mask:
+                                markers.append(xy)
         # create line collection
         lc = None
         if len(linecol) > 0:
             lc = LineCollection(linecol, **kwargs)
             ax.add_collection(lc)
+            if marker is not None:
+                markers = np.array(markers)
+                ax.plot(markers[:, 0], markers[:, 1], lw=0, marker=marker,
+                        color=markercolor, ms=markersize)
         return lc
 
     def plot_timeseries(self, ts, travel_time=None, **kwargs):
@@ -544,8 +628,106 @@ class PlotMapView(object):
         -------
             lo : list of Line2D objects
         """
-        return self.__cls.plot_timeseries(ts=ts, travel_time=travel_time,
-                                          **kwargs)
+        from matplotlib.collections import LineCollection
+
+        # make sure timeseries is a list
+        if not isinstance(ts, list):
+            ts = [ts]
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
+
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+
+        else:
+            ax = self.ax
+
+        if 'color' not in kwargs:
+            kwargs['color'] = 'red'
+
+        linecol = []
+        for t in ts:
+            if travel_time is None:
+                tp = t.copy()
+
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (t['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (t['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (t['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (t['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (t['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (t['time'] <= time)
+                tp = ts[idx]
+
+            if isinstance(self.mg, SpatialReferenceUnstructured):
+                x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                              self.mg.xul,
+                                              self.mg.yul,
+                                              self.mg.rotation)
+            else:
+                x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                              self.mg.xoffset,
+                                              self.mg.yoffset,
+                                              self.mg.angrot_radians)
+
+            # build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            # select based on layer
+            if kon >= 0:
+                kk = t['k'].copy().reshape(t.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+
+            else:
+                arr = np.ma.asarray(arr)
+
+            # append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+
+        # plot timeseries data
+        lo = []
+        for lc in linecol:
+            if not lc.mask.all():
+                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
+
+        return lo
+        # return self.__cls.plot_timeseries(ts=ts, travel_time=travel_time,
+        #                                   **kwargs)
 
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
@@ -585,11 +767,122 @@ class PlotMapView(object):
         sp : matplotlib.pyplot.scatter
 
         """
-        return self.__cls.plot_endpoint(ep=ep, direction=direction,
-                                        selection=selection,
-                                        selection_direction=selection_direction,
-                                        **kwargs)
+        direction = direction.lower()
+        if direction == 'starting':
+            xp, yp = 'x0', 'y0'
 
+        elif direction == 'ending':
+            xp, yp = 'x', 'y'
+
+        else:
+            errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
+                     'or "starting".'
+            raise Exception(errmsg)
+
+        if selection_direction is not None:
+            if selection_direction.lower() != 'starting' and \
+                    selection_direction.lower() != 'ending':
+                errmsg = 'flopy.map.plot_endpoint selection_direction ' + \
+                         'must be "ending" or "starting".'
+                raise Exception(errmsg)
+        else:
+            if direction.lower() == 'starting':
+                selection_direction = 'ending'
+            elif direction.lower() == 'ending':
+                selection_direction = 'starting'
+
+        # selection of endpoints
+        if selection is not None:
+            if isinstance(selection, int):
+                selection = tuple((selection,))
+            try:
+                if len(selection) == 1:
+                    node = selection[0]
+                    if selection_direction.lower() == 'starting':
+                        nsel = 'node0'
+                    else:
+                        nsel = 'node'
+                    # make selection
+                    idx = (ep[nsel] == node)
+                    tep = ep[idx]
+                elif len(selection) == 3:
+                    k, i, j = selection[0], selection[1], selection[2]
+                    if selection_direction.lower() == 'starting':
+                        ksel, isel, jsel = 'k0', 'i0', 'j0'
+                    else:
+                        ksel, isel, jsel = 'k', 'i', 'j'
+                    # make selection
+                    idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
+                    tep = ep[idx]
+                else:
+                    errmsg = 'flopy.map.plot_endpoint selection must be ' + \
+                             'a zero-based layer, row, column tuple ' + \
+                             '(l, r, c) or node number (MODPATH 7) of ' + \
+                             'the location to evaluate (i.e., well location).'
+                    raise Exception(errmsg)
+            except:
+                errmsg = 'flopy.map.plot_endpoint selection must be a ' + \
+                         'zero-based layer, row, column tuple (l, r, c) ' + \
+                         'or node number (MODPATH 7) of the location ' + \
+                         'to evaluate (i.e., well location).'
+                raise Exception(errmsg)
+        # all endpoints
+        else:
+            tep = ep.copy()
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # scatter kwargs that users may redefine
+        if 'c' not in kwargs:
+            c = tep['time'] - tep['time0']
+        else:
+            c = np.empty((tep.shape[0]), dtype="S30")
+            c.fill(kwargs.pop('c'))
+
+        s = 50
+        if 's' in kwargs:
+            s = float(kwargs.pop('s')) ** 2.
+        elif 'size' in kwargs:
+            s = float(kwargs.pop('size')) ** 2.
+
+        # colorbar kwargs
+        createcb = False
+        if 'colorbar' in kwargs:
+            createcb = kwargs.pop('colorbar')
+
+        colorbar_label = 'Endpoint Time'
+        if 'colorbar_label' in kwargs:
+            colorbar_label = kwargs.pop('colorbar_label')
+
+        shrink = 1.
+        if 'shrink' in kwargs:
+            shrink = float(kwargs.pop('shrink'))
+
+        # transform data!
+        if isinstance(self.mg, SpatialReferenceUnstructured):
+            x0r, y0r = geometry.transform(tep[xp], tep[yp],
+                                          self.mg.xul,
+                                          self.mg.yul,
+                                          self.mg.rotation)
+        else:
+            x0r, y0r = geometry.transform(tep[xp], tep[yp],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
+        # build array to plot
+        arr = np.vstack((x0r, y0r)).T
+
+        # plot the end point data
+        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+
+        # add a colorbar for travel times
+        if createcb:
+            cb = plt.colorbar(sp, ax=ax, shrink=shrink)
+            cb.set_label(colorbar_label)
+        return sp
 
 class PlotCrossSection(object):
     """
