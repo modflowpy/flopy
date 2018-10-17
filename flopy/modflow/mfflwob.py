@@ -221,7 +221,7 @@ class ModflowFlwob(Package):
         f_fbob.write('%s\n' % (self.heading))
 
         # -write sections 1 & 2 : NOTE- what about NOPRINT?
-        f_fbob.write('%10i%10i%10i%10i\n' % (self.nqfb, self.nqcfb,
+        f_fbob.write('%10i%10i%10i%10i' % (self.nqfb, self.nqcfb,
                                              self.nqtfb, self.iufbobsv))
         if self.no_print or 'NOPRINT' in self.options:
             f_fbob.write('{: >10}'.format('NOPRINT'))
