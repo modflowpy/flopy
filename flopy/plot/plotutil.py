@@ -1197,7 +1197,7 @@ class PlotUtilities(object):
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            mm = PlotMapView(ax=axes[idx], model=model, sr=sr,
+            mm = PlotMapView(ax=axes[idx], model=model,
                              modelgrid=mg, layer=k)
             if defaults['pcolor']:
                 cm = mm.plot_array(plotarray[k],

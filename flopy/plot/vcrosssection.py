@@ -208,7 +208,7 @@ class VertexCrossSection(CrossSection):
         else:
             projpts = self.projpts
 
-        pc = self.get_patch_collection(projpts, a, **kwargs)
+        pc = self.get_grid_patch_collection(projpts, a, **kwargs)
         if pc is not None:
             ax.add_collection(pc)
             ax.set_xlim(self.extent[0], self.extent[1])
@@ -781,7 +781,7 @@ class VertexCrossSection(CrossSection):
 
         return quiver
 
-    def get_patch_collection(self, projpts, plotarray, **kwargs):
+    def get_grid_patch_collection(self, projpts, plotarray, **kwargs):
         """
         Get a PatchCollection of plotarray in unmasked cells
 

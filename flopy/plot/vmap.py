@@ -57,12 +57,13 @@ class VertexMapView(MapView):
     grid at (0, 0).
 
     """
-    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., length_multiplier=1.):
-        super(VertexMapView, self).__init__(sr, ax, model, dis, modelgrid,
-                                            layer, extent, xul, yul, xll,
-                                            yll, rotation, length_multiplier)
+                 rotation=0.):
+        super(VertexMapView, self).__init__(ax=ax, model=model, dis=dis,
+                                            modelgrid=modelgrid, layer=layer,
+                                            extent=extent, xul=xul, yul=yul,
+                                            xll=xll, yll=yll, rotation=rotation)
 
     @property
     def extent(self):

@@ -845,9 +845,9 @@ class SpatialReference(object):
         Get a LineCollection of the grid
 
         """
-        from flopy.plot.plotbase import PlotMapView
+        from flopy.plot import ModelMap
 
-        map = PlotMapView(sr=self)
+        map = ModelMap(sr=self)
         ax = map.plot_grid(**kwargs)
         return ax
 
@@ -1238,10 +1238,10 @@ class SpatialReference(object):
         contour_set : ContourSet
 
         """
-        from flopy.plot import PlotMapView
+        from flopy.plot import ModelMap
 
         kwargs['ax'] = ax
-        map = PlotMapView(sr=self)
+        map = ModelMap(sr=self)
         contour_set = map.contour_array(a=a, **kwargs)
 
         return contour_set
@@ -1562,6 +1562,10 @@ class SpatialReferenceUnstructured(SpatialReference):
             assert self.xc.shape[0] == self.ncpl.sum()
             assert self.yc.shape[0] == self.ncpl.sum()
         return
+
+    @property
+    def grid_type(self):
+        return "unstructured"
 
     def write_shapefile(self, filename='grid.shp'):
         """

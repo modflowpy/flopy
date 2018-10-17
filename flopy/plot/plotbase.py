@@ -57,45 +57,43 @@ class PlotMapView(object):
     grid at (0, 0).
 
     """
-    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, modelgrid=None, model=None, dis=None,  ax=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., length_multiplier=1.):
+                 rotation=0.):
 
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
             raise ImportError(s)
 
-        # todo: make a descision about the model grid type here!
-        # todo: will be much simplier when there aren't three potential
-        # todo: modelgrid/spatial reference types .....
-        if isinstance(modelgrid, SpatialReferenceUnstructured):
-            tmp = "unstructured"
-        else:
-            try:
-                tmp = modelgrid.grid_type
-                if not isinstance(tmp, str):
-                    tmp = "structured"
-            except:
+        # todo: remove SpatialReferenceUnstructured when an UnstructuredModelGrid
+        # todo: has been made
+        #if isinstance(modelgrid, SpatialReferenceUnstructured):
+        #    tmp = "unstructured"
+        #else:
+
+        try:
+            tmp = modelgrid.grid_type
+            if not isinstance(tmp, str):
                 tmp = "structured"
+        except:
+            tmp = "structured"
 
         if tmp == "structured":
-            self.__cls = StructuredMapView(sr=sr, ax=ax, model=model, dis=dis,
+            self.__cls = StructuredMapView(ax=ax, model=model, dis=dis,
                                            modelgrid=modelgrid, layer=layer,
                                            extent=extent, xul=xul,
-                                           yul=yul, xll=xll, yll=yll, rotation=rotation,
-                                           length_multiplier=length_multiplier)
+                                           yul=yul, xll=xll, yll=yll, rotation=rotation)
 
         elif tmp == "unstructured":
             self.__cls = UnstructuredMapView(modelgrid=modelgrid, model=model,
                                              extent=extent)
 
         else:
-            self.__cls = VertexMapView(sr=sr, ax=ax, model=model, dis=dis,
+            self.__cls = VertexMapView(ax=ax, model=model, dis=dis,
                                        modelgrid=modelgrid, layer=layer,
                                        extent=extent, xul=xul, yul=yul, xll=xll,
-                                       yll=yll, rotation=rotation,
-                                       length_multiplier=length_multiplier)
+                                       yll=yll, rotation=rotation)
 
         self.model = self.__cls.model
         self.layer = self.__cls.layer
@@ -435,11 +433,13 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
-        # todo: figure out the preparation for plotting discharge.... if user should do
-        # todo: frf, fff, flf or flopy should auto-process these data!
         if self.mg.grid_type == "vertex":
             return self.__cls.plot_discharge(fja=fja, dis=dis, head=head, istep=istep,
                                              normalize=normalize, **kwargs)
+
+        elif self.mg.grid_type == "unstructured":
+            return self.__cls.plot_discharge()
+
         else:
             return self.__cls.plot_discharge(frf=frf, fff=fff, dis=dis, flf=flf, head=head,
                                              istep=istep, jstep=jstep, normalize=normalize,
@@ -480,7 +480,6 @@ class PlotMapView(object):
         if not isinstance(pl, list):
             pl = [pl]
 
-        # todo: add a check if this is Unstructured. We then get rid of layers
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
             if sys.version_info[0] > 2:
@@ -884,6 +883,7 @@ class PlotMapView(object):
             cb.set_label(colorbar_label)
         return sp
 
+
 class PlotCrossSection(object):
     """
     Class to create a cross section of the model.
@@ -925,7 +925,7 @@ class PlotCrossSection(object):
                 ' in order to use ModelMap method'
             raise ImportError(s)
 
-        # todo: make a descision about the model grid type here!
+       # update this after unstructured grid is finished!
         try:
             tmp = modelgrid.grid_type
             if not isinstance(tmp, str):
@@ -940,6 +940,10 @@ class PlotCrossSection(object):
                                                 xll=xll, yll=yll,
                                                 rotation=rotation, extent=extent,
                                                 length_multiplier=length_multiplier)
+
+        elif tmp == "unstructured":
+            raise NotImplementedError("Unstructured xc not yet implemented")
+
         else:
             self.__cls = VertexCrossSection(ax=ax, model=model, dis=dis,
                                             modelgrid=modelgrid,
@@ -1197,11 +1201,13 @@ class PlotCrossSection(object):
             Vectors
 
         """
-        # todo: figure out the preparation for plotting discharge.... if user should do
-        # todo: frf, fff, flf or flopy should auto-process these data!
         if self.mg.grid_type == "vertex":
             return self.__cls.plot_discharge(fja=fja, head=head, kstep=kstep,
                                              hstep=hstep, normalize=normalize, **kwargs)
+
+        elif self.mg.grid_type == "unstructured":
+            raise self.__cls.plot_discharge()
+
         else:
             return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf, head=head,
                                              kstep=kstep, hstep=hstep, normalize=normalize,
@@ -1227,8 +1233,15 @@ class PlotCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        return self.__cls.get_grid_patch_collection(zpts=zpts, plotarray=plotarray,
-                                                    **kwargs)
+        if self.mg.grid_type == "structured":
+            return self.__cls.get_grid_patch_collection(zpts=zpts, plotarray=plotarray,
+                                                        **kwargs)
+        elif self.mg.grid_type == "unstructured":
+            raise NotImplementedError()
+
+        else:
+            return self.__cls.get_grid_patch_collection(projpts=zpts, plotarray=plotarray,
+                                                        **kwargs)
 
     def get_grid_line_collection(self, **kwargs):
         """

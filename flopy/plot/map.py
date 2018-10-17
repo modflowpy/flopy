@@ -23,9 +23,9 @@ class MapView(object):
     specific to a single type of model grid ex.(Structured, Vertex, Unstructured)
     can be present in this class or it will break the plotting functionality!
     """
-    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, modelgrid=None, ax=None, model=None, dis=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., length_multiplier=1.):
+                 rotation=0.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
@@ -45,16 +45,12 @@ class MapView(object):
             self.mg = modelgrid
         elif dis is not None:
             self.mg = dis.parent.modelgrid
-        elif isinstance(sr, SpatialReference):
-            self.mg = StructuredGrid(delc=sr.delc, delr=sr.delr,
-                                     xoff=sr.xll, yoff=sr.yll,
-                                     angrot=sr.rotation)
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)
 
         if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0):
-            self._set_coord_info(sr, xul, yul, xll, yll, rotation)
+            self._set_coord_info(xul, yul, xll, yll, rotation)
 
         if ax is None:
             try:
@@ -70,12 +66,7 @@ class MapView(object):
         else:
             self._extent = None
 
-    def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
-        if sr is not None:
-            self.mg._set_sr_coord_info(sr)
-            warnings.warn('SpatialReference has been deprecated. Use the'
-                          'Grid class instead',
-                          DeprecationWarning)
+    def _set_coord_info(self, xul, yul, xll, yll, rotation):
         if xul is not None and yul is not None:
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           PendingDeprecationWarning)
@@ -131,13 +122,13 @@ class StructuredMapView(MapView):
 
     """
 
-    def __init__(self, sr=None, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
                  layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., length_multiplier=1.):
-        super(StructuredMapView, self).__init__(sr, ax, model, dis, modelgrid,
-                                                layer, extent, xul, yul, xll,
-                                                yll, rotation,
-                                                length_multiplier)
+                 rotation=0.):
+        super(StructuredMapView, self).__init__(ax=ax, model=model, dis=dis,
+                                                modelgrid=modelgrid, layer=layer,
+                                                extent=extent, xul=xul, yul=yul,
+                                                xll=xll, yll=yll, rotation=rotation)
 
     @property
     def extent(self):
@@ -801,14 +792,20 @@ class ModelMap(object):
     def __new__(cls, sr=None, ax=None, model=None, dis=None, layer=0,
                 extent=None, xul=None, yul=None, xll=None, yll=None,
                 rotation=0., length_multiplier=1.):
+
         from ..utils.reference import SpatialReferenceUnstructured
         from ..plot import PlotMapView
+
         err_msg = "ModelMap will be replaced by " \
                   "PlotMapView(); Calling PlotMapView()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
         modelgrid = None
         if sr is not None:
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0.):
+                sr.set_spatialreference(xul, yul, xll, yll, rotation)
+                xul, yul, xll, yll, rotation = (None, None, None, None, 0)
+
             if isinstance(sr, SpatialReferenceUnstructured):
                 modelgrid = sr
             else:
@@ -817,7 +814,7 @@ class ModelMap(object):
                                            angrot=sr.rotation)
             sr = None
 
-        return PlotMapView(sr=sr, ax=ax, model=model, modelgrid=modelgrid,
+        return PlotMapView(modelgrid=modelgrid, ax=ax, model=model,
                            dis=dis, layer=layer,
                            extent=extent, xul=xul, yul=yul, xll=xll, yll=yll,
-                           rotation=rotation, length_multiplier=length_multiplier)
+                           rotation=rotation)
