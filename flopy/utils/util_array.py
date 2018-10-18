@@ -2675,18 +2675,20 @@ class Util2d(object):
                          array_free_format=array_free_format)
 
         elif cr_dict['type'] == 'external':
-            if str('binary') not in str(cr_dict['fmtin'].lower()):
+            ext_unit = ext_unit_dict[cr_dict['nunit']]
+            if ext_unit.filehandle is None:
+                raise IOError('cannot read unit {0}, filename: {1}'
+                              .format(cr_dict['nunit'], ext_unit.filename))
+            elif 'binary' not in str(cr_dict['fmtin'].lower()):
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
-                data = Util2d.load_txt(shape,
-                                       ext_unit_dict[
-                                           cr_dict['nunit']].filehandle,
+                data = Util2d.load_txt(shape, ext_unit.filehandle,
                                        dtype, cr_dict['fmtin'])
             else:
                 if cr_dict['nunit'] not in list(ext_unit_dict.keys()):
                     cr_dict["nunit"] *= -1
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 header_data, data = Util2d.load_bin(
-                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
+                    shape, ext_unit.filehandle, dtype,
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",

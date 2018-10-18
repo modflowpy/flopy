@@ -504,7 +504,7 @@ class Modflow(BaseModel):
             One package can also be specified, e.g. "rch". Default is None,
             which attempts to load all files. An empty list [] will not load
             any additional packages than is necessary. At a minimum, "dis" or
-            "disu" is always loaded, and "bas6" (if available) is also loaded.
+            "disu" is always loaded.
         forgive : bool, optional
             Option to raise exceptions on package load failure, which can be
             useful for debugging. Default False.
@@ -636,18 +636,6 @@ class Modflow(BaseModel):
         dis.sr = sr
         dis.tr = TemporalReference(itmuni=itmuni, start_datetime=start_datetime)
         dis.start_datetime = start_datetime
-
-        # load bas after dis if it is available. Note that the free format
-        # option was already determined earlier in this method.
-        if bas_key is not None:
-            pck = bas.package.load(bas.filename, ml,
-                                   ext_unit_dict=ext_unit_dict, check=False)
-            files_successfully_loaded.append(bas.filename)
-            if ml.verbose:
-                print('   {:4s} package load...success'
-                      .format(pck.name[0]))
-            assert bas_key == ml.pop_key_list.pop()
-            ext_unit_dict.pop(bas_key)
 
         if load_only is None:
             # load all packages/files
