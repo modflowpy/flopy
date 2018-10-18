@@ -82,8 +82,9 @@ class ModflowHob(Package):
     """
 
     def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
-                 obs_data=None, hobname=None, no_print=False, options=None,
-                 extension='hob', unitnumber=None, filenames=None):
+                 obs_data=None, hobname=None, extension='hob',
+                 no_print=False, options=None,
+                 unitnumber=None, filenames=None):
         """
         Package constructor
         """
