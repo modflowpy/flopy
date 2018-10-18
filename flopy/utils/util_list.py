@@ -382,7 +382,8 @@ class MfList(object):
         self.__vtype[kper] = np.recarray
 
     def get_dataframe(self, squeeze=True):
-        """Cast recarrays for stress periods into single
+        """
+        Cast recarrays for stress periods into single
         dataframe containing all stress periods. 
         
         Parameters
@@ -406,8 +407,8 @@ class MfList(object):
         try:
             import pandas as pd
         except Exception as e:
-            print("this feature requires pandas")
-            return None
+            msg = 'MfList.get_dataframe() requires pandas'
+            raise ImportError(msg)
 
         # make a dataframe of all data for all stress periods
         names = ['k', 'i', 'j']
@@ -431,7 +432,8 @@ class MfList(object):
                 # add an empty dataframe if a stress period is
                 # set to 0 (e.g. no pumping during a predevelopment
                 # period)
-                columns = names + list(['{}{}'.format(c, per) for c in varnames])
+                columns = names + list(['{}{}'.format(c, per)
+                                        for c in varnames])
                 dfi = pd.DataFrame(data=None, columns=columns)
                 dfi = dfi.set_index(names)
             else:

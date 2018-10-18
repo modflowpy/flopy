@@ -1,6 +1,6 @@
 """
-This is a class for reading the mass budget from a (multi-component) mt3d(usgs) run.
-Support SFT budget also
+This is a class for reading the mass budget from a (multi-component)
+mt3d(usgs) run. Also includes support for SFT budget.
 
 """
 import os
@@ -20,8 +20,6 @@ class MtListBudget(object):
     ----------
     file_name : str
         the list file name
-    timeunit : str
-        the time unit to return in the recarray. (default is 'days')
 
 
     Examples
@@ -33,6 +31,9 @@ class MtListBudget(object):
     """
 
     def __init__(self, file_name):
+        """
+        Class constructor
+        """
 
         # Set up file reading
         assert os.path.exists(file_name), "file_name {0} not found".format(
@@ -47,21 +48,25 @@ class MtListBudget(object):
 
         # Assign the budgetkey, which should have been overriden
         self.gw_budget_key = ">>>for component no."
-        self.sw_budget_key = "STREAM MASS BUDGETS AT END OF TRANSPORT STEP".lower()
-        self.time_key = "TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION".lower()
+        line = 'STREAM MASS BUDGETS AT END OF TRANSPORT STEP'
+        self.sw_budget_key = line.lower()
+        line = 'TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION'
+        self.time_key = line.lower()
 
         return
 
     def parse(self, forgive=True, diff=True, start_datetime=None,
               time_unit='d'):
-        """main entry point for parsing the list file.
+        """
+        Main entry point for parsing the list file.
 
         Parameters
         ----------
         forgive : bool
             flag to raise exceptions when fail-to-read occurs. Default is True
         diff : bool
-            flag to return dataframes with 'in minus out' columns.  Default is True
+            flag to return dataframes with 'in minus out' columns.  Default
+            is True
         start_datetime : str
             str that can be parsed by pandas.to_datetime.  Example: '1-1-1970'.
             Default is None.
@@ -77,8 +82,9 @@ class MtListBudget(object):
         try:
             import pandas as pd
         except:
-            print("must use pandas")
-            return
+            msg = 'MtListBudget.parse: pandas not available'
+            raise ImportError(msg)
+
         self.gw_data = {}
         self.sw_data = {}
         self.lcount = 0
@@ -95,7 +101,7 @@ class MtListBudget(object):
                         except Exception as e:
                             warnings.warn(
                                 "error parsing GW mass budget starting on line {0}: {1} ".
-                                format(self.lcount, str(e)))
+                                    format(self.lcount, str(e)))
                             break
                     else:
                         self._parse_gw(f, line)
@@ -106,7 +112,7 @@ class MtListBudget(object):
                         except Exception as e:
                             warnings.warn(
                                 "error parsing SW mass budget starting on line {0}: {1} ".
-                                format(self.lcount, str(e)))
+                                    format(self.lcount, str(e)))
                             break
                     else:
                         self._parse_sw(f, line)
@@ -123,7 +129,6 @@ class MtListBudget(object):
             self.gw_data[i] = lst[:min_len]
         df_gw = pd.DataFrame(self.gw_data)
         df_gw.loc[:, "totim"] = df_gw.pop("totim_1")
-
 
         # if cumulative:
         #     keep = [c for c in df_gw.columns if "_flx" not in c]
@@ -179,11 +184,12 @@ class MtListBudget(object):
         try:
             import pandas as pd
         except:
-            print("must use pandas")
-            return
+            msg = 'MtListBudget._diff: pandas not available'
+            raise ImportError(msg)
+
         out_cols = [c for c in df.columns if "_out" in c]
         in_cols = [c for c in df.columns if "_in" in c]
-        out_base =[c.replace("_out", '') for c in out_cols]
+        out_base = [c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
@@ -192,7 +198,7 @@ class MtListBudget(object):
         out_base.update(in_base)
         out_base = list(out_base)
         out_base.sort()
-        new = {"totim":df.totim}
+        new = {"totim": df.totim}
         for col in out_base:
             if col in out_dict:
                 odata = df.loc[:, out_dict[col]]
@@ -204,7 +210,7 @@ class MtListBudget(object):
                 idata = 0.0
             new[col] = idata - odata
 
-        return pd.DataFrame(new,index=df.index)
+        return pd.DataFrame(new, index=df.index)
 
     def _readline(self, f):
         line = f.readline().lower()
@@ -290,8 +296,8 @@ class MtListBudget(object):
         for _ in range(4):
             line = self._readline(f)
             if line is None:
-                raise Exception(
-                    "EOF while reading from time step to SW budget")
+                msg = "EOF while reading from time step to SW budget"
+                raise Exception(msg)
         while True:
             line = self._readline(f)
             if line is None:
@@ -301,9 +307,10 @@ class MtListBudget(object):
             try:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
+                msg = "error parsing 'in' SW items on line {}: " + '{}'.format(
+                        self.lcountm, str(e))
                 raise Exception(
-                    "error parsing 'in' SW items on line {0}: {1}".format(
-                        self.lcountm, str(e)))
+                    )
             item += '_{0}_{1}'.format(comp, 'in')
             for lab, val in zip(['_cum', '_flx'], [cval, fval]):
                 iitem = item + lab
