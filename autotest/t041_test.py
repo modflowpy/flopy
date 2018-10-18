@@ -36,7 +36,7 @@ def test_hob_simple():
     ib = np.ones(shape3d, dtype=np.int)
     ib[0, 0, 0] = -1
     m = flopy.modflow.Modflow(modelname=modelname, model_ws=pth,
-                              verbose=True, exe_name=exe_name, )
+                              verbose=False, exe_name=exe_name, )
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=11, ncol=11, nper=2,
                                    perlen=[1, 1])
 
@@ -204,7 +204,87 @@ def test_obs_create_and_write():
             raise ValueError('could not load new HOB output file')
 
 
+def test_hob_options():
+    """
+    test041 load and run a simple MODFLOW-2005 OBS example with specified filenames
+    """
+    print('test041 load and run a simple MODFLOW-2005 OBS example with specified filenames')
+    pth = os.path.join(cpth, 'simple')
+    modelname = 'hob_simple'
+    pkglst = ['dis', 'bas6', 'pcg', 'lpf']
+    m = flopy.modflow.Modflow.load(modelname + '.nam', model_ws=pth, check=False,
+                                   load_only=pkglst, verbose=False)
+
+    obs = flopy.modflow.HeadObservation(m, layer=0, row=5, column=5,
+                                        time_series_data=[[1., 54.4],
+                                                          [2., 55.2]])
+    f_in = modelname + '_custom_fname.hob'
+    f_out = modelname + '_custom_fname.hob.out'
+    filenames = [f_in, f_out]
+    hob = flopy.modflow.ModflowHob(m, iuhobsv=51, hobdry=-9999.,
+                                   obs_data=[obs], options=['NOPRINT'],
+                                   filenames=filenames)
+
+
+    # add DRN package
+    spd = {0: [[0, 5, 5, .5, 8e6],
+               [0, 8, 8, .7, 8e6]]}
+    drn = flopy.modflow.ModflowDrn(m, 53, stress_period_data=spd)
+
+    # flow observation
+
+    # Lists of length nqfb
+    nqobfb = [1, 1]
+    nqclfb = [1, 1]
+
+    # Lists of length nqtfb
+    obsnam = ['drob_1', 'drob_2']
+    irefsp = [1, 1]
+    toffset = [0, 0]
+    flwobs = [0., 0.]
+
+    # Lists of length (nqfb, nqclfb)
+    layer = [[1], [1]]
+    row = [[6], [9]]
+    column = [[6], [9]]
+    factor = [[1.], [1.]]
+
+    drob = flopy.modflow.ModflowFlwob(m,
+                                      nqfb=len(nqclfb),
+                                      nqcfb=np.sum(nqclfb),
+                                      nqtfb=np.sum(nqobfb),
+                                      nqobfb=nqobfb,
+                                      nqclfb=nqclfb,
+                                      obsnam=obsnam,
+                                      irefsp=irefsp,
+                                      toffset=toffset,
+                                      flwobs=flwobs,
+                                      layer=layer,
+                                      row=row,
+                                      column=column,
+                                      factor=factor,
+                                      flowtype='drn',
+                                      options=['NOPRINT'],
+                                      filenames=['flwobs_simple.drob',
+                                                 'flwobs_simple.obd'])
+    # Write the model input files
+    m.write_input()
+
+    assert m.get_output(unit=51) == f_out, 'output filename ({}) does \
+                                                not match specified name'.format(m.get_output(unit=51))
+
+    assert os.path.isfile(os.path.join(pth, f_in)), 'specified HOB input file not found'
+
+    # run the modflow-2005 model
+    if run:
+        success, buff = m.run_model(silent=False)
+        assert success, 'could not run simple MODFLOW-2005 model'
+
+    return
+
+
 if __name__ == '__main__':
     test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
+    test_hob_options()
