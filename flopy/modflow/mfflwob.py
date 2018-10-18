@@ -177,19 +177,10 @@ class ModflowFlwob(Package):
             if len(filenames) < 2:
                 filenames.append(None)
 
-        # fname = filenames[1]
-        # print(iufbobsv, fname, name[0])
-        # model.add_output_file(iufbobsv, fname=fname,
-        #                       extension=extension[-1], binflag=False,
-        #                       package=name[0])
-
-        # set package name
-        fname = [filenames[0]]
-
         # call base package constructor
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=unitnumber,
-                         allowDuplicates=True, filenames=fname)
+                         allowDuplicates=True, filenames=filenames)
 
         self.nqfb = nqfb
         self.nqcfb = nqcfb
