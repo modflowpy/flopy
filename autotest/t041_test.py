@@ -213,7 +213,7 @@ def test_hob_options():
     modelname = 'hob_simple'
     pkglst = ['dis', 'bas6', 'pcg', 'lpf']
     m = flopy.modflow.Modflow.load(modelname + '.nam', model_ws=pth, check=False,
-                                   load_only=pkglst, verbose=False)
+                                   load_only=pkglst, verbose=False, exe_name=exe_name)
 
     obs = flopy.modflow.HeadObservation(m, layer=0, row=5, column=5,
                                         time_series_data=[[1., 54.4],
