@@ -63,9 +63,25 @@ class ModflowFlwob(Package):
         Filename extension. If extension is None, extension is set to
         ['chob','obc','gbob','obg','drob','obd', 'rvob','obr']
         (default is None).
+    no_print : boolean
+        When True or 1, a list of flow observations will not be
+        written to the Listing File (default is False)
+    options : list of strings
+        Package options (default is None).
     unitnumber : list of int
         File unit number. If unitnumber is None, unitnumber is set to
         [40, 140, 41, 141, 42, 142, 43, 143] (default is None).
+    filenames : str or list of str
+        Filenames to use for the package and the output files. If
+        filenames=None the package name will be created using the model name
+        and package extension and the flwob output name will be created using
+        the model name and .out extension (for example,
+        modflowtest.out), if iufbobsv is a number greater than zero.
+        If a single string is passed the package will be set to the string
+        and flwob output name will be created using the model name and .out
+        extension, if iufbobsv is a number greater than zero. To define the
+        names for all package files (input and output) the length of the list
+        of strings should be 2. Default is None.
 
 
     Attributes
@@ -88,7 +104,8 @@ class ModflowFlwob(Package):
                  tomultfb=1.0, nqobfb=None, nqclfb=None, obsnam=None,
                  irefsp=None, toffset=None, flwobs=None, layer=None,
                  row=None, column=None, factor=None, flowtype=None,
-                 extension=None, unitnumber=None):
+                 extension=None, no_print=False, options=None,
+                 filenames=None, unitnumber=None):
 
         """
         Package constructor
@@ -151,9 +168,19 @@ class ModflowFlwob(Package):
             msg = 'ModflowFlwob: flowtype must be CHD, GHB, DRN, or RIV'
             raise KeyError(msg)
 
+        # set filenames
+        if filenames is None:
+            filenames = [None, None]
+        elif isinstance(filenames, str):
+            filenames = [filenames, None]
+        elif isinstance(filenames, list):
+            if len(filenames) < 2:
+                filenames.append(None)
+
         # call base package constructor
-        Package.__init__(self, model, extension, name, unitnumber,
-                         allowDuplicates=True)
+        Package.__init__(self, model, extension=extension, name=name,
+                         unit_number=unitnumber,
+                         allowDuplicates=True, filenames=filenames)
 
         self.nqfb = nqfb
         self.nqcfb = nqcfb
@@ -198,6 +225,14 @@ class ModflowFlwob(Package):
 
         # add more checks here
 
+        self.no_print = no_print
+        self.np = 0
+        if options is None:
+            options = []
+        if self.no_print:
+            options.append('NOPRINT')
+        self.options = options
+
         # add checks for input compliance (obsnam length, etc.)
         self.parent.add_package(self)
 
@@ -220,7 +255,10 @@ class ModflowFlwob(Package):
         line = '{:10d}'.format(self.nqfb)
         line += '{:10d}'.format(self.nqcfb)
         line += '{:10d}'.format(self.nqtfb)
-        line += '{:10d}\n'.format(self.iufbobsv)
+        line += '{:10d}'.format(self.iufbobsv)
+        if self.no_print or 'NOPRINT' in self.options:
+            line += '{: >10}'.format('NOPRINT')
+        line += '\n'
         f_fbob.write(line)
         f_fbob.write('{:10e}\n'.format(self.tomultfb))
 

@@ -349,7 +349,8 @@ class BaseModel(object):
             # determine if the file is in external_units
             if abs(unit) in self.external_units:
                 idx = self.external_units.index(abs(unit))
-                fname = os.path.basename(self.external_fnames[idx])
+                if fname is None:
+                    fname = os.path.basename(self.external_fnames[idx])
                 binflag = self.external_binflag[idx]
                 self.remove_external(unit=abs(unit))
             # determine if the unit exists in the output data
