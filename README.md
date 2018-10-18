@@ -1,7 +1,7 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.9 develop &mdash; build 199
+### Version 3.2.9 develop &mdash; build 216
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
@@ -10,7 +10,7 @@
 Introduction
 -----------------------------------------------
 
-FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6), MT3DMS, MT3D-USGS, and SEAWAT.
+FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and ***7 (beta)***), MT3DMS, MT3D-USGS, and SEAWAT.
 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
@@ -18,9 +18,7 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Contributing
 ------------------------------------------------
 
-Contributions are welcome from the community. Questions can be asked on the [issues page](https://github.com/modflowpy/flopy/issues). Before creating a new issue, please take a  moment to search and make sure a similar issue does not already exist. If one does exist, you can comment (most simply even with just a `:+1:`) to show your support for that issue.
-
-If you have direct contributions you would like considered for incorporation into the project you can [fork this repository](https://help.github.com/articles/fork-a-repo/) and [submit a pull request](https://help.github.com/articles/about-pull-requests/) for review.
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 Documentation
@@ -44,15 +42,15 @@ Getting Started
 If You Get Stuck
 -----------------------------------------------
 
-Flopy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use Flopy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
+FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
 
 ### Questions
 
-For a question for how to do something with Flopy, we ask our users to submit the question to stackoverflow.com and assign the flopy tag to the question.  Many of our recent questions have been related to MODFLOW or Python, and the Flopy developers cannot always respond to these inquiries.  The link for flopy questions on Stack Overflow is [here](https://stackoverflow.com/questions/tagged/flopy).
+For questions related to how to do something with FloPy, we ask our users to submit the question to [Stack Overflow](https://stackoverflow.com) and assign the [flopy](https://stackoverflow.com/questions/tagged/flopy) tag.  Many of our recent questions have been related to MODFLOW or Python, and the Flopy developers cannot always respond to these inquiries.
 
 ### Bugs
 
-If you think you have discovered a bug in Flopy in which you feel that the program does not work as intended, then we ask you to submit a Github issue by clicking on the Issues link at the top of this page.
+If you think you have discovered a bug in FloPy in which you feel that the program does not work as intended, then we ask you to submit a [Github issue](https://github.com/modflowpy/flopy/labels/bug).
 
 
 FloPy Supported Packages
@@ -174,7 +172,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 17 September 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 17 October 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

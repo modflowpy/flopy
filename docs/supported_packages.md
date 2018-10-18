@@ -54,11 +54,22 @@ FloPy Supported Packages
 | Unstructured Discretization (DISU)           | Supported            | Supported            | Not supported        |
 | Sparse Matrix Solver (SMS)                   | Supported            | Supported            | Not supported        |
 
-### MODPATH
+### MODPATH 6
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
 | ---------------------------------------- | -------------------- | -------------------- | -------------------- |
 | MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
 | MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
+
+### MODPATH 7
+| Package                                  | Creation and Write   | Load Available       | Template Creation    |
+| ---------------------------------------- | -------------------- | -------------------- | -------------------- |
+| MODPATH Basic (MPBAS)                    | Supported            | Not supported        | Not supported        |
+| MODPATH Simulation (MPSIM)               | Supported            | Not supported        | Not supported        |
+| Starting Location Data - Input Style 1   | Supported            | Not supported        | Not supported        |
+| Starting Location Data - Input Style 2   | Not supported        | Not supported        | Not supported        |
+| Starting Location Data - Input Style 3   | Supported            | Not supported        | Not supported        |
+| Starting Location Data - Input Style 4   | Not supported        | Not supported        | Not supported        |
+
 
 ### MT3DMS, MT3D-USGS
 | Package                                  | Creation and Write   | Load Available       | Template Creation    |
@@ -87,11 +98,11 @@ FloPy Supported Packages
 | Drain Observation (DROB)                       | Not supported        | Not supported        | Not supported        |
 | HYDMOD (HYD)                                   | Supported            | Supported            | Not supported        |
 | Gage (GAGE)                                    | Supported            | Supported            | Not supported        |
-| General Head Boundary Observation (GBOB)       | Not supported        | Not supported        | Not supported        |
+| General Head Boundary Observation (GBOB)       | Supported            | Not supported        | Not supported        |
 | Head Observation (HOB)                         | Supported            | Supported            | Not supported        |
-| River Observation (RVOB)                       | Not supported        | Not supported        | Not supported        |
-| Stream Observation (STOB)                      | Not supported        | Not supported        | Not supported        |
-| Specified-Head Flow Observation (CHOB)         | Not supported        | Not supported        | Not supported        |
+| River Observation (RVOB)                       | Supported            | Not supported        | Not supported        |
+| Stream Observation (STOB)                      | Supported            | Not supported        | Not supported        |
+| Specified-Head Flow Observation (CHOB)         | Supported            | Not supported        | Not supported        |
 
 ### MODFLOW 6
 | Package                                        | Creation and Write   | Load Available       | 

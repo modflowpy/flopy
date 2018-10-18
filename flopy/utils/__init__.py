@@ -26,11 +26,12 @@ from .util_list import MfList
 from .binaryfile import BinaryHeader, HeadFile, UcnFile, CellBudgetFile, \
     HeadUFile
 from .formattedfile import FormattedHeadFile
-from .modpathfile import PathlineFile, EndpointFile
+from .modpathfile import PathlineFile, EndpointFile, TimeseriesFile
 from .swroutputfile import SwrStage, SwrBudget, SwrFlow, SwrExchange, \
     SwrStructure
 from .observationfile import HydmodObs, SwrObs, Mf6Obs
-from .reference import SpatialReference, crs, TemporalReference
+from .reference import SpatialReference, SpatialReferenceUnstructured, \
+    crs, TemporalReference
 from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
     SwrListBudget, Mf6ListBudget
 from .check import check, get_neighbors
