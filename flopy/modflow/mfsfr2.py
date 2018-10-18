@@ -1179,6 +1179,10 @@ class ModflowSfr2(Package):
         """Renumber segments so that segment numbering is continuous and always increases
         in the downstream direction. This may speed convergence of the NWT solver 
         in some situations.
+
+        Returns
+        -------
+        r : dictionary mapping old segment numbers to new
         """
 
         self.segment_data[0].sort(order='nseg')
@@ -1253,6 +1257,7 @@ class ModflowSfr2(Package):
         self.channel_geometry_data = renumber_channel_data(
             self.channel_geometry_data)
         self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
+        return r
 
     def plot_path(self, start_seg=None, end_seg=0, plot_segment_lines=True):
         """Plot a profile of streambed elevation and model top 
