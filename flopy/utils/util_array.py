@@ -2623,6 +2623,10 @@ class Util2d(object):
                     curr_unit = cunit
                     break
 
+        # get relative path of the directory where the
+        # package is located
+        cf_path = os.path.dirname(os.path.relpath(cfile, os.getcwd()))
+
         # Allows for special MT3D array reader
         # array_format = None
         # if hasattr(model, 'array_format'):
@@ -2647,7 +2651,13 @@ class Util2d(object):
             fname = fname.replace('\'', '')
             fname = fname.replace('\"', '')
             fname = fname.replace('\\', os.path.sep)
-            fname = os.path.join(model.model_ws, fname)
+
+            # test to see if external file is located next to
+            # package file
+            if os.path.isfile(os.path.join(cf_path, fname)):
+                fname = os.path.join(cf_path, fname)
+            else:
+                fname = os.path.join(model.model_ws, fname)
             # load_txt(shape, file_in, dtype, fmtin):
             assert os.path.exists(fname), "Util2d.load() error: open/close " + \
                                           "file " + str(fname) + " not found"
