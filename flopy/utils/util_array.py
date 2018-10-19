@@ -2623,9 +2623,9 @@ class Util2d(object):
                     curr_unit = cunit
                     break
 
-        # get relative path of the directory where the
-        # package is located
-        cf_path = os.path.dirname(os.path.relpath(cfile, os.getcwd()))
+            # get relative path of the directory where the
+            # package is located
+            cf_path = os.path.dirname(os.path.relpath(cfile, os.getcwd()))
 
         # Allows for special MT3D array reader
         # array_format = None
