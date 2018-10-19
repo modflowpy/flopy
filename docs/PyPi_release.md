@@ -9,9 +9,7 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Contributing
 ------------------------------------------------
 
-Contributions are welcome from the community. Questions can be asked on the [issues page](https://github.com/modflowpy/flopy/issues). Before creating a new issue, please take a  moment to search and make sure a similar issue does not already exist. If one does exist, you can comment (most simply even with just a `:+1:`) to show your support for that issue.
-
-If you have direct contributions you would like considered for incorporation into the project you can [fork this repository](https://help.github.com/articles/fork-a-repo/) and [submit a pull request](https://help.github.com/articles/about-pull-requests/) for review.
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 Documentation
@@ -29,7 +27,7 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; mp7part-refactor: U.S. Geological Survey Software Release, 13 October 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 17 October 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -46,12 +44,12 @@ resulting from the authorized or unauthorized use of the software.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.9 &mdash; mp7part-refactor:
+To install FloPy version 3.2.9 &mdash; docs-docstrings:
 ```
 pip install flopy
 ```
 
-To update to FloPy version 3.2.9 &mdash; mp7part-refactor:
+To update to FloPy version 3.2.9 &mdash; docs-docstrings:
 ```
 pip install flopy --upgrade
 ```

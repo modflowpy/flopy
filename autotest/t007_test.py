@@ -956,7 +956,7 @@ def test_shapefile_ibound():
     model_ws = os.path.join('..', 'examples', 'data',
                             'freyberg_multilayer_transient')
     ml = flopy.modflow.Modflow.load(nam_file, model_ws=model_ws, check=False,
-                                    verbose=True, load_only=[])
+                                    verbose=True, load_only=['bas6'])
     ml.export(shape_name)
     shp = shapefile.Reader(shape_name)
     field_names = [item[0] for item in shp.fields][1:]
