@@ -8,8 +8,10 @@ be accessed by the user.
 import numpy as np
 import collections
 
-from ..utils.utils_def import FlopyBinaryData
-from ..discretization.structuredgrid import StructuredGrid
+from flopy.utils.utils_def import FlopyBinaryData
+from flopy.discretization.structuredgrid import StructuredGrid
+from flopy.discretization.vertexgrid import VertexGrid
+from flopy.utils.reference import SpatialReferenceUnstructured
 
 
 class MfGrdFile(FlopyBinaryData):
@@ -145,32 +147,90 @@ class MfGrdFile(FlopyBinaryData):
                     v = self.read_real()
             self._datadict[key] = v
 
+        if self.verbose:
+            if nd == 0:
+                msg = '  {} = {}'.format(key, v)
+                print(msg)
+            else:
+                msg = '  {}: '.format(key) + \
+                      'min = {} max = {}'.format(v.min(), v.max())
+                print(msg)
+
         # set the model grid
         self.mg = self._set_modelgrid()
 
+        self.file.close()
+
     def get_modelgrid(self):
+        """
+        Get the ModelGrid based on the MODFLOW 6 discretization type
+        Returns
+        -------
+        sr : SpatialReference
+        Examples
+        --------
+        >>> import flopy
+        >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
+        >>> sr = gobj.get_modelgrid()
+        """
         return self.mg
 
     def _set_modelgrid(self):
+        """
+        Define structured or unstructured modelgrid based on
+        MODFLOW 6 discretization type.
+        Returns
+        -------
+        mg : ModelGrid
+        """
+        mg = None
+        idomain = None
+        xorigin = None
+        yorigin = None
+        angrot = None
+        if "IDOMAIN" in self._datadict:
+            idomain = self._datadict["IDOMAIN"]
+
+        if "XORIGIN" in self._datadict:
+            xorigin = self._datadict["XORIGIN"]
+
+        if "YORIGIN" in self._datadict:
+            yorigin = self._datadict["YORIGIN"]
+
+        if "ANGROT" in self._datadict:
+            angrot = self._datadict["ANGROT"]
+
         try:
+            top, botm = self._datadict['TOP'], self._datadict['BOTM']
+
             if self._grid == 'DISV':
-                mg = None
+                nlay, ncpl = self._datadict["NLAY"], self._datadict["NCPL"]
+                vertices, cell2d = self._build_vertices_cell2d()
+                top = np.ravel(top)
+                botm.shape = (nlay, ncpl)
+                mg = VertexGrid(vertices, cell2d, top, botm, idomain,
+                                xoff=xorigin, yoff=yorigin, angrot=angrot)
+
             elif self._grid == 'DIS':
                 nlay, nrow, ncol = self._datadict["NLAY"], self._datadict["NROW"], self._datadict["NCOL"]
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
-                top, botm = self._datadict['TOP'], self._datadict['BOTM']
+
                 top.shape = (nrow, ncol)
                 botm.shape = (nlay, nrow, ncol)
-                xorigin, yorigin, rot = self._datadict['XORIGIN'], \
-                                        self._datadict['YORIGIN'], \
-                                        self._datadict['ANGROT']
                 mg = StructuredGrid(delc, delr, top, botm, xoff=xorigin,
-                                    yoff=yorigin, angrot=rot)
+                                    yoff=yorigin, angrot=angrot)
             else:
-                mg = None
+                # todo: updates to UnstructuredModelGrid when the class exists
+                iverts, verts = self.get_verts()
+                vertc = self.get_centroids()
+                xc = vertc[:, 0]
+                yc = vertc[:, 1]
+                mg = SpatialReferenceUnstructured(xc, yc, verts, iverts,
+                                                  [xc.shape[0]])
+
         except:
-            mg = None
-            print('could not set spatial reference for {}'.format(self.file.name))
+            print('could not set spatial reference for {}'.format(
+                  self.file.name))
 
         return mg
 
@@ -204,6 +264,24 @@ class MfGrdFile(FlopyBinaryData):
             msg = 'could not return centroids' + \
                   ' for {}'.format(self.file.name)
             raise KeyError(msg)
+
+    def _build_vertices_cell2d(self):
+        """
+        Build the mf6 vectices and cell2d array
+         to generate a VertexModelGrid
+
+        Returns:
+        -------
+            vertices: list
+            cell2d: list
+        """
+        iverts, verts = self.get_verts()
+        vertc = self.get_centroids()
+
+        vertices = [[ix] + list(i) for ix, i in enumerate(verts)]
+        cell2d = [[ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
+                  for ix, i in enumerate(iverts)]
+        return vertices, cell2d
 
 
     def get_verts(self):
@@ -284,3 +362,15 @@ class MfGrdFile(FlopyBinaryData):
                 msg = 'could not return vertices for {}'.format(self.file.name)
                 raise KeyError(msg)
         return
+
+if __name__ == "__main__":
+    import flopy
+    import os
+
+    workspace = os.path.join('..', "..", "examples", 'data', 'mfgrd_test')
+
+    fn = os.path.join(workspace, 'flow.disv.grb')
+    grd = MfGrdFile(fn, verbose=True)
+    iverts, verts = grd.get_verts()
+    vertc = grd.get_centroids()
+    mg = grd.get_modelgrid()
