@@ -21,13 +21,10 @@ class VertexCrossSection(CrossSection):
 
     """
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., extent=None, length_multiplier=1.):
+                 line=None, extent=None):
         super(VertexCrossSection, self).__init__(ax=ax, model=model, dis=dis,
                                                  modelgrid=modelgrid, line=line,
-                                                 xul=xul, yul=yul, xll=xll, yll=yll,
-                                                 rotation=rotation, extent=extent,
-                                                 length_multiplier=length_multiplier)
+                                                 extent=extent)
 
         if line is None:
             err_msg = 'line must be specified.'

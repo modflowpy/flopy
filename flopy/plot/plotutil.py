@@ -2930,6 +2930,23 @@ def cell_value_points(pts, xedge, yedge, vdata):
     return np.array(vcell)
 
 
+def _set_coord_info(mg, xul, yul, xll, yll, rotation):
+    # remove this if interface is okay
+    import warnings
+    if xul is not None and yul is not None:
+        warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
+                      PendingDeprecationWarning)
+        mg._angrot = rotation
+        mg.set_coord_info(xoff=mg._xul_to_xll(xul),
+                          yoff=mg._yul_to_yll(yul),
+                          angrot=rotation)
+    elif xll is not None and xll is not None:
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+
+    elif rotation != 0.:
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+
+    return mg
 
 
 

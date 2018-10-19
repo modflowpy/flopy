@@ -58,8 +58,7 @@ class PlotMapView(object):
 
     """
     def __init__(self, modelgrid=None, model=None, dis=None,  ax=None,
-                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0.):
+                 layer=0, extent=None):
 
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -68,9 +67,6 @@ class PlotMapView(object):
 
         # todo: remove SpatialReferenceUnstructured when an UnstructuredModelGrid
         # todo: has been made
-        #if isinstance(modelgrid, SpatialReferenceUnstructured):
-        #    tmp = "unstructured"
-        #else:
 
         try:
             tmp = modelgrid.grid_type
@@ -82,18 +78,17 @@ class PlotMapView(object):
         if tmp == "structured":
             self.__cls = StructuredMapView(ax=ax, model=model, dis=dis,
                                            modelgrid=modelgrid, layer=layer,
-                                           extent=extent, xul=xul,
-                                           yul=yul, xll=xll, yll=yll, rotation=rotation)
+                                           extent=extent)
 
         elif tmp == "unstructured":
-            self.__cls = UnstructuredMapView(modelgrid=modelgrid, model=model,
-                                             extent=extent)
+            self.__cls = UnstructuredMapView(ax=ax, modelgrid=modelgrid,
+                                             dis=dis, model=model,
+                                             layer=layer, extent=extent)
 
         else:
             self.__cls = VertexMapView(ax=ax, model=model, dis=dis,
                                        modelgrid=modelgrid, layer=layer,
-                                       extent=extent, xul=xul, yul=yul, xll=xll,
-                                       yll=yll, rotation=rotation)
+                                       extent=extent)
 
         self.model = self.__cls.model
         self.layer = self.__cls.layer
@@ -918,8 +913,7 @@ class PlotCrossSection(object):
     """
 
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., extent=None, length_multiplier=1.):
+                 line=None, extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
@@ -936,10 +930,7 @@ class PlotCrossSection(object):
         if tmp == "structured":
             self.__cls = StructuredCrossSection(ax=ax, model=model, dis=dis,
                                                 modelgrid=modelgrid,
-                                                line=line, xul=xul, yul=yul,
-                                                xll=xll, yll=yll,
-                                                rotation=rotation, extent=extent,
-                                                length_multiplier=length_multiplier)
+                                                line=line, extent=extent)
 
         elif tmp == "unstructured":
             raise NotImplementedError("Unstructured xc not yet implemented")
@@ -947,9 +938,7 @@ class PlotCrossSection(object):
         else:
             self.__cls = VertexCrossSection(ax=ax, model=model, dis=dis,
                                             modelgrid=modelgrid,
-                                            line=line, xul=xul, yul=yul,
-                                            xll=xll, yll=yll, rotation=rotation,
-                                            extent=extent, length_multiplier=length_multiplier)
+                                            line=line, extent=extent)
 
         self.model = self.__cls.model
         self.dis = self.__cls.dis

@@ -33,12 +33,12 @@ class UnstructuredMapView(object):
         :param list/np.ndarray extent:  a list of xmin, xmax, ymin, ymax
             as boundaries for plotting
     """
-    def __init__(self, modelgrid=None, model=None, ax=None,
-                 extent=None):
+    def __init__(self, modelgrid=None, model=None, dis=None, ax=None,
+                 extent=None, layer=None):
 
         self.mg = None
-        self.layer = None
-        self.dis = None
+        self.layer = layer
+        self.dis = dis
         self.model = model
 
         if model is not None:
@@ -57,7 +57,6 @@ class UnstructuredMapView(object):
                 self.ax.set_aspect('equal')
             except:
                 self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg='white')
-
 
         self._extent = extent
 

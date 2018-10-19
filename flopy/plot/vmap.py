@@ -58,12 +58,10 @@ class VertexMapView(MapView):
 
     """
     def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
-                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0.):
+                 layer=0, extent=None):
         super(VertexMapView, self).__init__(ax=ax, model=model, dis=dis,
                                             modelgrid=modelgrid, layer=layer,
-                                            extent=extent, xul=xul, yul=yul,
-                                            xll=xll, yll=yll, rotation=rotation)
+                                            extent=extent)
 
     @property
     def extent(self):

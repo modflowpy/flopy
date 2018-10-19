@@ -24,14 +24,11 @@ class MapView(object):
     can be present in this class or it will break the plotting functionality!
     """
     def __init__(self, modelgrid=None, ax=None, model=None, dis=None,
-                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0.):
+                 layer=0, extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
             raise Exception(s)
-
-
 
         self.model = model
         self.layer = layer
@@ -49,9 +46,6 @@ class MapView(object):
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)
 
-        if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0):
-            self._set_coord_info(xul, yul, xll, yll, rotation)
-
         if ax is None:
             try:
                 self.ax = plt.gca()
@@ -67,6 +61,7 @@ class MapView(object):
             self._extent = None
 
     def _set_coord_info(self, xul, yul, xll, yll, rotation):
+        # remove this if the interface is okay
         if xul is not None and yul is not None:
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           PendingDeprecationWarning)
@@ -123,12 +118,10 @@ class StructuredMapView(MapView):
     """
 
     def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
-                 layer=0, extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0.):
+                 layer=0, extent=None):
         super(StructuredMapView, self).__init__(ax=ax, model=model, dis=dis,
                                                 modelgrid=modelgrid, layer=layer,
-                                                extent=extent, xul=xul, yul=yul,
-                                                xll=xll, yll=yll, rotation=rotation)
+                                                extent=extent)
 
     @property
     def extent(self):
@@ -804,7 +797,6 @@ class ModelMap(object):
         if sr is not None:
             if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0.):
                 sr.set_spatialreference(xul, yul, xll, yll, rotation)
-                xul, yul, xll, yll, rotation = (None, None, None, None, 0)
 
             if isinstance(sr, SpatialReferenceUnstructured):
                 modelgrid = sr
@@ -814,7 +806,15 @@ class ModelMap(object):
                                            angrot=sr.rotation)
             sr = None
 
+        elif model is not None:
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0.):
+                modelgrid = plotutil._set_coord_info(model.modelgrid,
+                                                     xul, yul, xll, yll,
+                                                     rotation)
+
+        else:
+            pass
+
         return PlotMapView(modelgrid=modelgrid, ax=ax, model=model,
                            dis=dis, layer=layer,
-                           extent=extent, xul=xul, yul=yul, xll=xll, yll=yll,
-                           rotation=rotation)
+                           extent=extent)

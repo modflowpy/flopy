@@ -22,8 +22,7 @@ class CrossSection(object):
     ability of one or more child classes.
     """
     def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., extent=None, length_multiplier=None):
+                 line=None, extent=None):
 
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -49,9 +48,8 @@ class CrossSection(object):
         else:
             raise Exception("Cannot find model discretization package")
 
-        self._set_coord_info(None, xul, yul, xll, yll, rotation)
-
     def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
+        # remove this if interface is okay
         if sr is not None:
             self.mg._set_sr_coord_info(sr)
             warnings.warn('SpatialReference has been deprecated. Use the'
@@ -109,12 +107,7 @@ class StructuredCrossSection(CrossSection):
                  rotation=0., extent=None, length_multiplier=None):
         super(StructuredCrossSection, self).__init__(ax=ax, model=model, dis=dis,
                                                      modelgrid=modelgrid, line=line,
-                                                     xul=xul, yul=yul, xll=xll,
-                                                     rotation=rotation, extent=extent,
-                                                     length_multiplier=length_multiplier)
-
-        # if length_multiplier is not None:
-        #     self.mg.length_multiplier = length_multiplier
+                                                     extent=extent)
 
         if line is None:
             s = 'line must be specified.'
@@ -1124,8 +1117,8 @@ class ModelCrossSection(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __new__(cls, ax=None, model=None, dis=None, modelgrid=None,
-                line=None, xul=None, yul=None, xll=None, yll=None,
+    def __new__(cls, ax=None, model=None, dis=None, line=None,
+                xul=None, yul=None, xll=None, yll=None,
                 rotation=0., extent=None, length_multiplier=1.):
 
         from flopy.plot.plotbase import PlotCrossSection
@@ -1134,7 +1127,13 @@ class ModelCrossSection(object):
             "PlotCrossSection(), Calling PlotCrossSection()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
-        return PlotCrossSection(ax=ax, model=model, dis=dis, modelgrid=modelgrid,
-                                line=line, xul=xul, yul=yul, xll=xll, yll=yll,
-                                rotation=rotation, extent=extent,
-                                length_multiplier=length_multiplier)
+        if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0):
+            mg = plotutil._set_coord_info(model.modelgrid,
+                                          xul, yul, xll, yll,
+                                          rotation)
+
+
+        return PlotCrossSection(ax=ax, model=model, dis=dis,
+                                modelgrid=model.modelgrid,
+                                line=line, extent=extent)
+
