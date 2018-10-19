@@ -22,11 +22,13 @@ if not os.path.isdir(path):
 for f in mffiles:
     shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 
+
 def ra_slice(ra, cols):
     raslice = np.column_stack([ra[c] for c in cols])
     dtype = [(str(d[0]), d[1]) for d in ra.dtype.descr if d[0] in cols]
     return np.array([tuple(r) for r in raslice],
                     dtype=dtype).view(np.recarray)
+
 
 def test_mpsim():
     model_ws = path
@@ -105,16 +107,18 @@ def test_get_destination_data():
     epd = EndpointFile(os.path.join(path, 'EXAMPLE-3.endpoint'))
 
     well_epd = epd.get_destination_endpoint_data(dest_cells=[(4, 12, 12)])
-    well_pthld = pthld.get_destination_pathline_data(dest_cells=[(4, 12, 12)])
+    well_pthld = pthld.get_destination_pathline_data(dest_cells=[(4, 12, 12)],
+                                                     to_recarray=True)
 
-    # same particle IDs should be in both endpoing data and pathline data
-    assert len(
-        set(well_epd.particleid).difference(set(well_pthld.particleid))) == 0
+    # same particle IDs should be in both endpoint data and pathline data
+    tval = len(set(well_epd.particleid).difference(set(well_pthld.particleid)))
+    msg = 'same particle IDs should be in both endpoint data and pathline data'
+    assert tval == 0, msg
 
     # check that all starting locations are included in the pathline data
     # (pathline data slice not just endpoints)
     starting_locs = ra_slice(well_epd, ['k0', 'i0', 'j0'])
-    pathline_locs = np.array(well_pthld[['k', 'i', 'j']].tolist(),
+    pathline_locs = np.array(np.array(well_pthld)[['k', 'i', 'j']].tolist(),
                              dtype=starting_locs.dtype)
     assert np.all(np.in1d(starting_locs, pathline_locs))
 
@@ -163,7 +167,8 @@ def test_get_destination_data():
     assert ra.time[inds][0] - 20181.7 < .1
     assert ra.xloc[inds][0] - 0.933 < .01
 
-    # test that k, i, j are correct for single geometry pathlines, forwards and backwards
+    # test that k, i, j are correct for single geometry pathlines, forwards
+    # and backwards
     ra = shp2recarray(os.path.join(path, 'pathlines_1per.shp'))
     assert ra.i[0] == 4, ra.j[0] == 5
     ra = shp2recarray(os.path.join(path, 'pathlines_1per_end.shp'))

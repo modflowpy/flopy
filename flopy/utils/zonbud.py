@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import copy
 import numpy as np
@@ -27,9 +26,13 @@ class ZoneBudget(object):
     aliases : dict
         A dictionary with key, value pairs of zones and aliases. Replaces
         the corresponding record and field names with the aliases provided.
-        NOTE: When using this option in conjunction with a list of zones,
-        the zone(s) passed may either be all strings (aliases), all
-        integers, or mixed.
+        When using this option in conjunction with a list of zones, the
+        zone(s) passed may either be all strings (aliases), all integers,
+        or mixed.
+
+    Returns
+    -------
+    None
 
     Examples
     --------
@@ -42,29 +45,23 @@ class ZoneBudget(object):
     """
 
     def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None,
-                 **kwargs):
-
-        if 'verbose' in kwargs.keys():
-            verbose = kwargs.pop('verbose')
-        else:
-            verbose = False
+                 verbose=False, **kwargs):
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
         elif isinstance(cbc_file, str) and os.path.isfile(cbc_file):
-            self.cbc = CellBudgetFile(cbc_file, verbose=verbose)
+            self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(
                 'Cannot load cell budget file: {}.'.format(cbc_file))
 
-        # if isinstance(z, list):
-        #     for zi in z:
-        #         assert isinstance(zi, int), 'Zones must be provided as integers: {}'.format(zi)
-        #     z = np.array(z)
         if isinstance(z, np.ndarray):
-            assert np.issubdtype(z.dtype, np.integer), 'Zones dtype must be integer'
+            assert np.issubdtype(z.dtype,
+                                 np.integer), 'Zones dtype must be integer'
         else:
-            raise Exception('Please pass zones as a numpy ndarray of (positive) integers. {}'.format(z.dtype))
+            raise Exception(
+                'Please pass zones as a numpy ndarray of (positive) integers. {}'.format(
+                    z.dtype))
 
         # Check for negative zone values
         for zi in np.unique(z):
@@ -122,7 +119,8 @@ class ZoneBudget(object):
 
         # Check dimensions of input zone array
         s = 'Row/col dimensions of zone array {}' \
-            ' do not match model row/col dimensions {}'.format(z.shape, self.cbc_shape)
+            ' do not match model row/col dimensions {}'.format(z.shape,
+                                                               self.cbc_shape)
         assert z.shape[-2] == self.nrow and \
                z.shape[-1] == self.ncol, s
 
@@ -136,16 +134,14 @@ class ZoneBudget(object):
             izone[:] = z[0, :, :]
         else:
             raise Exception(
-                    'Shape of the zone array is not recognized: {}'.format(
-                        z.shape))
+                'Shape of the zone array is not recognized: {}'.format(
+                    z.shape))
 
-        # self.kstpkper = kstpkper
-        # self.totim = totim
         self.izone = izone
         self.allzones = [z for z in np.unique(self.izone)]
-        self._zonefieldnamedict = OrderedDict([(z, 'ZONE_{}'.format(z))
-                                               for z in self.allzones if
-                                               z != 0])
+        self._zonenamedict = OrderedDict([(z, 'ZONE_{}'.format(z))
+                                          for z in self.allzones if
+                                          z != 0])
 
         if aliases is not None:
             assert isinstance(aliases,
@@ -154,15 +150,14 @@ class ZoneBudget(object):
             # Replace the relevant field names (ignore zone 0)
             seen = []
             for z, a in iter(aliases.items()):
-                if z != 0 and z in self._zonefieldnamedict.keys():
+                if z != 0 and z in self._zonenamedict.keys():
                     if z in seen:
                         raise Exception(
                             'Zones may not have more than 1 alias.')
-                    self._zonefieldnamedict[z] = '_'.join(a.split())
+                    self._zonenamedict[z] = '_'.join(a.split())
                     seen.append(z)
 
-        self._iflow_from_recnames, self._iflow_to_recnames = self._get_internal_flow_record_names()
-        self._zonefieldnames = list(self._zonefieldnamedict.values())
+        self._iflow_recnames = self._get_internal_flow_record_names()
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip().decode("utf-8") for n in
@@ -189,20 +184,51 @@ class ZoneBudget(object):
         self.ssst_record_names = [n for n in self.record_names
                                   if n not in internal_flow_terms]
 
-        # Build budget record array
+        # Initialize budget recordarray
         array_list = []
         if self.kstpkper is not None:
             for kk in self.kstpkper:
-                recordarray = self._compute_budget(kstpkper=kk)
+                recordarray = self._initialize_budget_recordarray(kstpkper=kk,
+                                                                  totim=None)
                 array_list.append(recordarray)
         elif self.totim is not None:
             for t in self.totim:
-                recordarray = self._compute_budget(totim=t)
+                recordarray = self._initialize_budget_recordarray(
+                    kstpkper=None, totim=t)
                 array_list.append(recordarray)
         self._budget = np.concatenate(array_list, axis=0)
+
+        # Update budget record array
+        if self.kstpkper is not None:
+            for kk in self.kstpkper:
+                if verbose:
+                    s = 'Computing the budget for' \
+                        ' time step {} in stress period {}'.format(kk[0] + 1,
+                                                                   kk[1] + 1)
+                    print(s)
+                self._compute_budget(kstpkper=kk)
+        elif self.totim is not None:
+            for t in self.totim:
+                if verbose:
+                    s = 'Computing the budget for time {}'.format(t)
+                    print(s)
+                self._compute_budget(totim=t)
+
         return
 
     def get_model_shape(self):
+        """
+
+        Returns
+        -------
+        nlay : int
+            Number of layers
+        nrow : int
+            Number of rows
+        ncol : int
+            Number of columns
+
+        """
         return self.nlay, self.nrow, self.ncol
 
     def get_record_names(self, stripped=False):
@@ -259,7 +285,7 @@ class ZoneBudget(object):
         Examples
         --------
 
-        >>> names = ['CONSTANT_HEAD_IN', 'RIVER_LEAKAGE_OUT']
+        >>> names = ['FROM_CONSTANT_HEAD', 'RIVER_LEAKAGE_OUT']
         >>> zones = ['ZONE_1', 'ZONE_2']
         >>> zb = ZoneBudget('zonebudtest.cbc', zon, kstpkper=(0, 0))
         >>> bud = zb.get_budget(names=names, zones=zones)
@@ -272,13 +298,13 @@ class ZoneBudget(object):
         elif isinstance(zones, int):
             zones = [zones]
         select_fields = ['totim', 'time_step', 'stress_period',
-                         'name'] + self._zonefieldnames
+                         'name'] + list(self._zonenamedict.values())
         select_records = np.where(
             (self._budget['name'] == self._budget['name']))
         if zones is not None:
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
-                    zones[idx] = 'ZONE_{}'.format(z)
+                    zones[idx] = self._zonenamedict[z]
             select_fields = ['totim', 'time_step', 'stress_period',
                              'name'] + zones
         if names is not None:
@@ -291,7 +317,7 @@ class ZoneBudget(object):
             seen = []
             net_names = []
             for name in names:
-                iname = '_'.join(name.split('_')[:-1])
+                iname = '_'.join(name.split('_')[1:])
                 if iname not in seen:
                     seen.append(iname)
                 else:
@@ -332,6 +358,7 @@ class ZoneBudget(object):
                        index_key='totim', names=None, zones=None, net=False):
         """
         Get pandas dataframes.
+
         Parameters
         ----------
 
@@ -365,9 +392,9 @@ class ZoneBudget(object):
         try:
             import pandas as pd
         except Exception as e:
-            raise Exception(
-                "ZoneBudget.get_dataframes() error import pandas: " + \
-                str(e))
+            msg = "ZoneBudget.get_dataframes() error import pandas: " + str(e)
+            raise ImportError(msg)
+
         valid_index_keys = ['totim', 'kstpkper']
         assert index_key in valid_index_keys, 'index_key "{}" is not valid.'.format(
             index_key)
@@ -402,11 +429,11 @@ class ZoneBudget(object):
                 index_cols = ['totim', 'name']
             elif index_key == 'kstpkper':
                 index_cols = ['time_step', 'stress_period', 'name']
-        df = df.set_index(index_cols).sort_index()
+        df = df.set_index(index_cols)  # .sort_index(level=0)
         if zones is not None:
             keep_cols = zones
         else:
-            keep_cols = self._zonefieldnames
+            keep_cols = self._zonenamedict.values()
         return df.loc[:, keep_cols]
 
     def copy(self):
@@ -438,1008 +465,940 @@ class ZoneBudget(object):
         """
         Creates a budget for the specified zone array. This function only supports the
         use of a single time step/stress period or time.
+
+        Parameters
+        ----------
+        kstpkper : tuple
+            Tuple of kstp and kper to compute budget for (default is None).
+        totim : float
+            Totim to compute budget for (default is None).
+
+        Returns
+        -------
+        Noen
+
         """
-        # Initialize the budget record array
-        recordarray = self._initialize_recordarray(kstpkper=kstpkper,
-                                                   totim=totim)
-
-        # Create a throwaway list of all record names
-        reclist = list(self.record_names)
-
         # Initialize an array to track where the constant head cells
         # are located.
         ich = np.zeros(self.cbc_shape, self.int_type)
+        swiich = np.zeros(self.cbc_shape, self.int_type)
 
-        if 'CONSTANT HEAD' in reclist:
-            reclist.remove('CONSTANT HEAD')
+        if 'CONSTANT HEAD' in self.record_names:
+            """
+            C-----CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
+            C-----CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
+            C-----INS AND OUTS.  USE CONSTANT-HEAD TERM TO IDENTIFY WHERE CONSTANT-
+            C-----HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
+            C-----FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
+            """
             chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True,
                                     kstpkper=kstpkper, totim=totim)[0]
-            ich = np.zeros(self.cbc_shape, self.int_type)
-            idxch = np.ma.where(chd != 0.)
-            ich[idxch] = 1
-        if 'FLOW RIGHT FACE' in reclist:
-            reclist.remove('FLOW RIGHT FACE')
-            recordarray = self._accumulate_flow_frf(recordarray,
-                                                    'FLOW RIGHT FACE', ich,
-                                                    kstpkper, totim)
-        if 'FLOW FRONT FACE' in reclist:
-            reclist.remove('FLOW FRONT FACE')
-            recordarray = self._accumulate_flow_fff(recordarray,
-                                                    'FLOW FRONT FACE', ich,
-                                                    kstpkper, totim)
-        if 'FLOW LOWER FACE' in reclist:
-            reclist.remove('FLOW LOWER FACE')
-            recordarray = self._accumulate_flow_flf(recordarray,
-                                                    'FLOW LOWER FACE', ich,
-                                                    kstpkper, totim)
-        if 'SWIADDTOCH' in reclist:
-            reclist.remove('SWIADDTOCH')
+            ich[np.ma.where(chd != 0.)] = 1
+        if 'FLOW RIGHT FACE' in self.record_names:
+            self._accumulate_flow_frf('FLOW RIGHT FACE', ich, kstpkper, totim)
+        if 'FLOW FRONT FACE' in self.record_names:
+            self._accumulate_flow_fff('FLOW FRONT FACE', ich, kstpkper, totim)
+        if 'FLOW LOWER FACE' in self.record_names:
+            self._accumulate_flow_flf('FLOW LOWER FACE', ich, kstpkper, totim)
+        if 'SWIADDTOCH' in self.record_names:
             swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True,
                                        kstpkper=kstpkper, totim=totim)[0]
-            swiich = np.zeros(self.cbc_shape, self.int_type)
             swiich[swichd != 0] = 1
-        if 'SWIADDTOFRF' in reclist:
-            reclist.remove('SWIADDTOFRF')
-            recordarray = self._accumulate_flow_frf(recordarray, 'SWIADDTOFRF',
-                                                    swiich, kstpkper, totim)
-        if 'SWIADDTOFFF' in reclist:
-            reclist.remove('SWIADDTOFFF')
-            recordarray = self._accumulate_flow_fff(recordarray, 'SWIADDTOFFF',
-                                                    swiich, kstpkper, totim)
-        if 'SWIADDTOFLF' in reclist:
-            reclist.remove('SWIADDTOFLF')
-            recordarray = self._accumulate_flow_flf(recordarray, 'SWIADDTOFLF',
-                                                    swiich, kstpkper, totim)
+        if 'SWIADDTOFRF' in self.record_names:
+            self._accumulate_flow_frf('SWIADDTOFRF', swiich, kstpkper, totim)
+        if 'SWIADDTOFFF' in self.record_names:
+            self._accumulate_flow_fff('SWIADDTOFFF', swiich, kstpkper, totim)
+        if 'SWIADDTOFLF' in self.record_names:
+            self._accumulate_flow_flf('SWIADDTOFLF', swiich, kstpkper, totim)
 
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
         # iterate over remaining items in the list
-        for recname in reclist:
-            imeth = self.imeth[recname]
+        for recname in self.ssst_record_names:
+            self._accumulate_flow_ssst(recname, kstpkper, totim)
 
-            data = self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                     totim=totim)
-            if len(data) == 0:
-                # Empty data, can occur during the first time step of a transient model when
-                # storage terms are zero and not in the cell-budget file.
-                continue
-            else:
-                data = data[0]
+        # Compute mass balance terms
+        self._compute_mass_balance(kstpkper, totim)
 
-            if imeth == 2 or imeth == 5:
-                # LIST
-                qin = np.ma.zeros((self.nlay * self.nrow * self.ncol),
-                                  self.float_type)
-                qout = np.ma.zeros((self.nlay * self.nrow * self.ncol),
-                                   self.float_type)
-                for [node, q] in zip(data['node'], data['q']):
-                    idx = node - 1
-                    if q > 0:
-                        qin.data[idx] += q
-                    elif q < 0:
-                        qout.data[idx] += q
-                qin = np.ma.reshape(qin, (self.nlay, self.nrow, self.ncol))
-                qout = np.ma.reshape(qout, (self.nlay, self.nrow, self.ncol))
-            elif imeth == 0 or imeth == 1:
-                # FULL 3-D ARRAY
-                qin = np.ma.zeros(self.cbc_shape, self.float_type)
-                qout = np.ma.zeros(self.cbc_shape, self.float_type)
-                qin[data > 0] = data[data > 0]
-                qout[data < 0] = data[data < 0]
-            elif imeth == 3:
-                # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
-                rlay, rdata = data[0], data[1]
-                data = np.ma.zeros(self.cbc_shape, self.float_type)
-                for (r, c), l in np.ndenumerate(rlay):
-                    data[l - 1, r, c] = rdata[r, c]
-                qin = np.ma.zeros(self.cbc_shape, self.float_type)
-                qout = np.ma.zeros(self.cbc_shape, self.float_type)
-                qin[data > 0] = data[data > 0]
-                qout[data < 0] = data[data < 0]
-            elif imeth == 4:
-                # 1-LAYER ARRAY THAT DEFINES LAYER 1
-                qin = np.ma.zeros(self.cbc_shape, self.float_type)
-                qout = np.ma.zeros(self.cbc_shape, self.float_type)
-                r, c = np.where(data > 0)
-                qin[0, r, c] = data[r, c]
-                r, c = np.where(data < 0)
-                qout[0, r, c] = data[r, c]
-            else:
-                # Should not happen
-                raise Exception(
-                    'Unrecognized "imeth" for {} record: {}'.format(recname,
-                                                                    imeth))
-            recordarray = self._accumulate_flow_ssst(recordarray, recname, qin,
-                                                     qout)
-        recordarray = self._compute_mass_balance(recordarray)
-        return recordarray
+        return
 
     def _get_internal_flow_record_names(self):
-        iflow_from_recnames = OrderedDict([])
-        iflow_to_recnames = OrderedDict([])
-        if 0 in self.allzones:
-            iflow_from_recnames[0] = 'ZONE_0'
-            iflow_to_recnames[0] = 'ZONE_0'
-        for z, a in iter(self._zonefieldnamedict.items()):
-            iflow_from_recnames[z] = '{}'.format(a)
-            iflow_to_recnames[z] = '{}'.format(a)
-        return iflow_from_recnames, iflow_to_recnames
+        """
+        Get internal flow record names
 
-    def _build_empty_record(self, recordarray, recname, kstpkper=None,
-                            totim=None):
-        # Builds empty records based on the specified flow direction and
-        # record name for the given list of zones.
-        if (kstpkper is not None):
+        Returns
+        -------
+        iflow_recnames : np.recarray
+            recarray of internal flow terms
+
+        """
+        iflow_recnames = OrderedDict([(0, 'ZONE_0')])
+        for z, a in iter(self._zonenamedict.items()):
+            iflow_recnames[z] = '{}'.format(a)
+        dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
+        iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
+        return iflow_recnames
+
+    def _add_empty_record(self, recordarray, recname, kstpkper=None,
+                          totim=None):
+        """
+        Build an empty records based on the specified flow direction and
+        record name for the given list of zones.
+
+        Parameters
+        ----------
+        recordarray :
+        recname :
+        kstpkper : tuple
+            Tuple of kstp and kper to compute budget for (default is None).
+        totim : float
+            Totim to compute budget for (default is None).
+
+        Returns
+        -------
+        recordarray : np.recarray
+
+        """
+        if kstpkper is not None:
             if len(self.cbc_times) > 0:
                 totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
             else:
                 totim = 0.
-        elif (totim is not None):
+        elif totim is not None:
             if len(self.cbc_times) > 0:
                 kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
             else:
                 kstpkper = (0, 0)
 
         row = [totim, kstpkper[0], kstpkper[1], recname]
-        row += [0. for _ in self._zonefieldnames]
+        row += [0. for _ in self._zonenamedict.values()]
         recs = np.array(tuple(row), dtype=recordarray.dtype)
         recordarray = np.append(recordarray, recs)
         return recordarray
 
-    def _initialize_recordarray(self, kstpkper=None, totim=None):
-        # Initialize the budget record array which will store all of the
-        # fluxes in the cell-budget file.
+    def _initialize_budget_recordarray(self, kstpkper=None, totim=None):
+        """
+        Initialize the budget record array which will store all of the
+        fluxes in the cell-budget file.
+
+        Parameters
+        ----------
+        kstpkper : tuple
+            Tuple of kstp and kper to compute budget for (default is None).
+        totim : float
+            Totim to compute budget for (default is None).
+
+        Returns
+        -------
+
+        """
 
         # Create empty array for the budget terms.
         dtype_list = [('totim', '<f4'), ('time_step', '<i4'),
                       ('stress_period', '<i4'), ('name', (str, 50))]
-        dtype_list += [(n, self.float_type) for n in self._zonefieldnames]
+        dtype_list += [(n, self.float_type) for n in
+                       self._zonenamedict.values()]
         dtype = np.dtype(dtype_list)
         recordarray = np.array([], dtype=dtype)
 
-        # Add "in" records
+        # Add "from" records
         if 'STORAGE' in self.record_names:
-            recordarray = self._build_empty_record(recordarray, 'STORAGE_IN',
-                                                   kstpkper, totim)
+            recordarray = self._add_empty_record(recordarray, 'FROM_STORAGE',
+                                                 kstpkper, totim)
         if 'CONSTANT HEAD' in self.record_names:
-            recordarray = self._build_empty_record(recordarray,
-                                                   'CONSTANT_HEAD_IN',
-                                                   kstpkper, totim)
+            recordarray = self._add_empty_record(recordarray,
+                                                 'FROM_CONSTANT_HEAD',
+                                                 kstpkper, totim)
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                recordarray = self._build_empty_record(recordarray, '_'.join(
-                    recname.split()) + '_IN', kstpkper, totim)
-        for n in self._iflow_from_recnames.values():
-            recordarray = self._build_empty_record(recordarray,
-                                                   '_'.join(n.split()) + '_IN',
-                                                   kstpkper, totim)
-        recordarray = self._build_empty_record(recordarray, 'TOTAL_IN',
-                                               kstpkper, totim)
+                recordarray = self._add_empty_record(recordarray,
+                                                     'FROM_' + '_'.join(
+                                                         recname.split()),
+                                                     kstpkper, totim)
+
+        for z, n in self._iflow_recnames:
+            if n == 0 and 0 not in self.allzones:
+                continue
+            else:
+                recordarray = self._add_empty_record(recordarray,
+                                                     'FROM_' + '_'.join(
+                                                         n.split()),
+                                                     kstpkper, totim)
+        recordarray = self._add_empty_record(recordarray, 'TOTAL_IN',
+                                             kstpkper, totim)
 
         # Add "out" records
         if 'STORAGE' in self.record_names:
-            recordarray = self._build_empty_record(recordarray, 'STORAGE_OUT',
-                                                   kstpkper, totim)
+            recordarray = self._add_empty_record(recordarray, 'TO_STORAGE',
+                                                 kstpkper, totim)
         if 'CONSTANT HEAD' in self.record_names:
-            recordarray = self._build_empty_record(recordarray,
-                                                   'CONSTANT_HEAD_OUT',
-                                                   kstpkper, totim)
+            recordarray = self._add_empty_record(recordarray,
+                                                 'TO_CONSTANT_HEAD',
+                                                 kstpkper, totim)
         for recname in self.ssst_record_names:
             if recname != 'STORAGE':
-                recordarray = self._build_empty_record(recordarray, '_'.join(
-                    recname.split()) + '_OUT', kstpkper, totim)
-        for n in self._iflow_to_recnames.values():
-            recordarray = self._build_empty_record(recordarray, '_'.join(
-                n.split()) + '_OUT', kstpkper, totim)
-        recordarray = self._build_empty_record(recordarray, 'TOTAL_OUT',
-                                               kstpkper, totim)
+                recordarray = self._add_empty_record(recordarray,
+                                                     'TO_' + '_'.join(
+                                                         recname.split()),
+                                                     kstpkper, totim)
 
-        recordarray = self._build_empty_record(recordarray, 'IN-OUT', kstpkper,
-                                               totim)
-        recordarray = self._build_empty_record(recordarray,
-                                               'PERCENT_DISCREPANCY', kstpkper,
-                                               totim)
+        for n in self._iflow_recnames['name']:
+            if n == 0 and 0 not in self.allzones:
+                continue
+            else:
+                recordarray = self._add_empty_record(recordarray,
+                                                     'TO_' + '_'.join(
+                                                         n.split()), kstpkper,
+                                                     totim)
+        recordarray = self._add_empty_record(recordarray, 'TOTAL_OUT',
+                                             kstpkper, totim)
+
+        recordarray = self._add_empty_record(recordarray, 'IN-OUT', kstpkper,
+                                             totim)
+        recordarray = self._add_empty_record(recordarray,
+                                             'PERCENT_DISCREPANCY', kstpkper,
+                                             totim)
         return recordarray
 
-    def _update_record(self, recordarray, recname, colname, flux):
-        # Update the budget record array with the flux for the specified
-        # flow direction (in/out), record name, and column (exclusive of
-        # ZONE 0).
-
-        # Make sure the flux is between different zones
-        a = ' '.join(recname.split('_')[1:])
-        b = colname
-        if a == b:
-            errmsg = 'Circular flow detected: {}\t{}\t{}\t{}'.format(recname,
-                                                                     colname,
-                                                                     flux)
-            raise Exception(errmsg)
-        rowidx = np.where((recordarray['name'] == recname))
-        recordarray[colname][rowidx] += flux
-        return recordarray
-
-    def _accumulate_flow_frf(self, recordarray, recname, ich, kstpkper, totim):
+    @staticmethod
+    def _filter_circular_flow(fz, tz, f):
         """
-        C
-        C-----"FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
-        C-----COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
-        C-----ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-        C-----1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
-        300   IF(NCOL.LT.2) RETURN
-              DO 340 K=1,NLAY
-              DO 340 I=1,NROW
-              DO 340 J=2,NCOL
-              NZ=IZONE(J,I,K)
-              JL=J-1
-              NZL=IZONE(JL,I,K)
-              IF(NZL.LE.NZ) GO TO 340
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J-1,I,K).EQ.1) GO TO 340
-              DBUFF=BUFFD(JL,I,K)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(2,NZ,NZL)=VBZNFL(2,NZ,NZL)-DBUFF
-              ELSE
-                 VBZNFL(1,NZ,NZL)=VBZNFL(1,NZ,NZL)+DBUFF
-              END IF
-          340 CONTINUE
-        C
-        C-----FLOW BETWEEN NODE J,I,K AND J+1,I,K
-              DO 370 K=1,NLAY
-              DO 370 I=1,NROW
-              DO 370 J=1,NCOL-1
-              NZ=IZONE(J,I,K)
-              JR=J+1
-              NZR=IZONE(JR,I,K)
-              IF(NZR.LE.NZ) GO TO 370
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J+1,I,K).EQ.1) GO TO 370
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(1,NZ,NZR)=VBZNFL(1,NZ,NZR)-DBUFF
-              ELSE
-                 VBZNFL(2,NZ,NZR)=VBZNFL(2,NZ,NZR)+DBUFF
-              END IF
-          370 CONTINUE
-        C
-        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-              DO 395 K=1,NLAY
-              DO 395 I=1,NROW
-              DO 395 J=1,NCOL
-              IF(ICH(J,I,K).EQ.0) GO TO 395
-              NZ=IZONE(J,I,K)
-              IF(NZ.EQ.0) GO TO 395
-              IF(J.EQ.NCOL) GO TO 380
-              IF(ICH(J+1,I,K).EQ.1) GO TO 380
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
-              END IF
-        380   IF(J.EQ.1) GO TO 395
-              IF(ICH(J-1,I,K).EQ.1) GO TO 395
-              DBUFF=BUFFD(J-1,I,K)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
-              END IF
-        395   CONTINUE
-              RETURN
+
+        Parameters
+        ----------
+        fz
+        tz
+        f
+
+        Returns
+        -------
+
         """
-        if self.ncol >= 2:
-            data = \
-                self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                  totim=totim)[0]
+        e = np.equal(fz, tz)
+        fz = fz[np.logical_not(e)]
+        tz = tz[np.logical_not(e)]
+        f = f[np.logical_not(e)]
+        return fz, tz, f
 
-            # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
-            # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
-            # ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
-            # 1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
-
-            l, r, c = np.where(self.izone[:, :, 1:] > self.izone[:, :, :-1])
-
-            # Adjust column values to account for the starting position of "nz"
-            c = np.copy(c) + 1
-
-            # Define the zone from which flow is coming
-            cl = c - 1
-            nzl = self.izone[l, r, cl]
-
-            # Define the zone to which flow is going
-            nz = self.izone[l, r, c]
-
-            # Get the face flow
-            q = data[l, r, cl]
-
-            # Get indices where flow face values are positive (flow out of higher zone)
-            # Don't include CH to CH flow (can occur if CHTOCH option is used)
-            # Create an interable tuple of (from zone, to zone, flux)
-            # Then group tuple by (from_zone, to_zone) and sum the flux values
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
-            fluxes = sum_flux_tuples(nzl[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-
-            # Get indices where flow face values are negative (flow into higher zone)
-            # Don't include CH to CH flow (can occur if CHTOCH option is used)
-            # Create an interable tuple of (from zone, to zone, flux)
-            # Then group tuple by (from_zone, to_zone) and sum the flux values
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzl[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-
-            # FLOW BETWEEN NODE J,I,K AND J+1,I,K
-            l, r, c = np.where(self.izone[:, :, :-1] > self.izone[:, :, 1:])
-
-            # Define the zone from which flow is coming
-            nz = self.izone[l, r, c]
-
-            # Define the zone to which flow is going
-            cr = c + 1
-            nzr = self.izone[l, r, cr]
-
-            # Get the face flow
-            q = data[l, r, c]
-
-            # Get indices where flow face values are positive (flow out of higher zone)
-            # Don't include CH to CH flow (can occur if CHTOCH option is used)
-            # Create an interable tuple of (from zone, to zone, flux)
-            # Then group tuple by (from_zone, to_zone) and sum the flux values
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzr[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-
-            # Get indices where flow face values are negative (flow into higher zone)
-            # Don't include CH to CH flow (can occur if CHTOCH option is used)
-            # Create an interable tuple of (from zone, to zone, flux)
-            # Then group tuple by (from_zone, to_zone) and sum the flux values
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
-            fluxes = sum_flux_tuples(nzr[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-
-            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[c > 0], r[c > 0], c[c > 0]
-            cl = c - 1
-            nzl = self.izone[l, r, cl]
-            nz = self.izone[l, r, c]
-            q = data[l, r, cl]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
-            fluxes = sum_flux_tuples(nzl[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cl] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzl[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_IN',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[c < self.ncol - 1], r[c < self.ncol - 1], c[
-                c < self.ncol - 1]
-            nz = self.izone[l, r, c]
-            cr = c + 1
-            nzr = self.izone[l, r, cr]
-            q = data[l, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzr[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, r, cr] != 1)))
-            fluxes = sum_flux_tuples(nzr[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_IN',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-        return recordarray
-
-    def _accumulate_flow_fff(self, recordarray, recname, ich, kstpkper, totim):
+    def _update_budget_fromfaceflow(self, fz, tz, f,
+                                    kstpkper=None, totim=None):
         """
-        C
-        C-----"FLOW FRONT FACE"
-        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
-        400   IF(NROW.LT.2) RETURN
-              DO 440 K=1,NLAY
-              DO 440 I=2,NROW
-              DO 440 J=1,NCOL
-              NZ=IZONE(J,I,K)
-              IA=I-1
-              NZA=IZONE(J,IA,K)
-              IF(NZA.LE.NZ) GO TO 440
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I-1,K).EQ.1) GO TO 440
-              DBUFF=BUFFD(J,IA,K)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(2,NZ,NZA)=VBZNFL(2,NZ,NZA)-DBUFF
-              ELSE
-                 VBZNFL(1,NZ,NZA)=VBZNFL(1,NZ,NZA)+DBUFF
-              END IF
-          440 CONTINUE
-        C
-        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K
-              DO 470 K=1,NLAY
-              DO 470 I=1,NROW-1
-              DO 470 J=1,NCOL
-              NZ=IZONE(J,I,K)
-              IB=I+1
-              NZB=IZONE(J,IB,K)
-              IF(NZB.LE.NZ) GO TO 470
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I+1,K).EQ.1) GO TO 470
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(1,NZ,NZB)=VBZNFL(1,NZ,NZB)-DBUFF
-              ELSE
-                 VBZNFL(2,NZ,NZB)=VBZNFL(2,NZ,NZB)+DBUFF
-              END IF
-          470 CONTINUE
-        C
-        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-              DO 495 K=1,NLAY
-              DO 495 I=1,NROW
-              DO 495 J=1,NCOL
-              IF(ICH(J,I,K).EQ.0) GO TO 495
-              NZ=IZONE(J,I,K)
-              IF(NZ.EQ.0) GO TO 495
-              IF(I.EQ.NROW) GO TO 480
-              IF(ICH(J,I+1,K).EQ.1) GO TO 480
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
-              END IF
-        480   IF(I.EQ.1) GO TO 495
-              IF(ICH(J,I-1,K).EQ.1) GO TO 495
-              DBUFF=BUFFD(J,I-1,K)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
-              END IF
-        495   CONTINUE
-              RETURN
+
+        Parameters
+        ----------
+        fz
+        tz
+        f
+        kstpkper
+        totim
+
+        Returns
+        -------
+
         """
-        if self.nrow >= 2:
-            data = \
-                self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                  totim=totim)[0]
 
-            # "FLOW FRONT FACE"
-            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
-            l, r, c = np.where(self.izone[:, 1:, :] < self.izone[:, :-1, :])
-            r = np.copy(r) + 1
-            ra = r - 1
-            nza = self.izone[l, ra, c]
-            nz = self.izone[l, r, c]
-            q = data[l, ra, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
-            fluxes = sum_flux_tuples(nza[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nza[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
+        # No circular flow within zones
+        fz, tz, f = self._filter_circular_flow(fz, tz, f)
 
-            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
-            l, r, c = np.where(self.izone[:, :-1, :] < self.izone[:, 1:, :])
-            nz = self.izone[l, r, c]
-            rb = r + 1
-            nzb = self.izone[l, rb, c]
-            q = data[l, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzb[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
-            fluxes = sum_flux_tuples(nzb[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
+        if len(f) == 0:
+            return
 
-            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[r > 0], r[r > 0], c[r > 0]
-            ra = r - 1
-            nza = self.izone[l, ra, c]
-            nz = self.izone[l, r, c]
-            q = data[l, ra, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
-            fluxes = sum_flux_tuples(nza[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, ra, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nza[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_IN',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[r < self.nrow - 1], r[r < self.nrow - 1], c[
-                r < self.nrow - 1]
-            nz = self.izone[l, r, c]
-            rb = r + 1
-            nzb = self.izone[l, rb, c]
-            q = data[l, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzb[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[l, rb, c] != 1)))
-            fluxes = sum_flux_tuples(nzb[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray, self._update_record(recordarray,
-                                                     'CONSTANT_HEAD_IN',
-                                                     self._zonefieldnamedict[
-                                                         fz], flux)
-        return recordarray
+        # Inflows
+        idx = np.logical_not(np.array([item in tz for item in [0] * len(tz)]))
+        fzi = fz[idx]
+        tzi = tz[idx]
+        rownames = np.array(list(['FROM_' +
+                                  self._iflow_recnames[
+                                      self._iflow_recnames['zone'] == z][
+                                      'name'][0]
+                                  for z in fzi]))
+        colnames = np.array(list(
+            [self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+             for z in tzi]))
+        fluxes = f[idx]
+        self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
+                                        totim)
 
-    def _accumulate_flow_flf(self, recordarray, recname, ich, kstpkper, totim):
+        # Outflows
+        idx = np.logical_not(np.array([item in fz for item in [0] * len(fz)]))
+        fzi = fz[idx]
+        tzi = tz[idx]
+        rownames = np.array(list(['TO_' +
+                                  self._iflow_recnames[
+                                      self._iflow_recnames['zone'] == z][
+                                      'name'][0]
+                                  for z in tzi]))
+        colnames = np.array(list(
+            [self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
+             for z in fzi]))
+        fluxes = f[idx]
+        self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
+                                        totim)
+        return
+
+    def _update_budget_fromssst(self, fz, tz, f, kstpkper=None, totim=None):
         """
-        C
-        C-----"FLOW LOWER FACE"
-        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
-        500   IF(NLAY.LT.2) RETURN
-              DO 540 K=2,NLAY
-              DO 540 I=1,NROW
-              DO 540 J=1,NCOL
-              NZ=IZONE(J,I,K)
-              KA=K-1
-              NZA=IZONE(J,I,KA)
-              IF(NZA.LE.NZ) GO TO 540
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I,K-1).EQ.1) GO TO 540
-              DBUFF=BUFFD(J,I,KA)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(2,NZ,NZA)=VBZNFL(2,NZ,NZA)-DBUFF
-              ELSE
-                 VBZNFL(1,NZ,NZA)=VBZNFL(1,NZ,NZA)+DBUFF
-              END IF
-          540 CONTINUE
-        C
-        C-----CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
-              DO 570 K=1,NLAY-1
-              DO 570 I=1,NROW
-              DO 570 J=1,NCOL
-              NZ=IZONE(J,I,K)
-              KB=K+1
-              NZB=IZONE(J,I,KB)
-              IF(NZB.LE.NZ) GO TO 570
-        C  Don't include CH to CH flow (can occur if CHTOCH option is used)
-              IF(ICH(J,I,K).EQ.1 .AND. ICH(J,I,K+1).EQ.1) GO TO 570
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.LT.DZERO) THEN
-                 VBZNFL(1,NZ,NZB)=VBZNFL(1,NZ,NZB)-DBUFF
-              ELSE
-                 VBZNFL(2,NZ,NZB)=VBZNFL(2,NZ,NZB)+DBUFF
-              END IF
-          570 CONTINUE
-        C
-        C-----CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-              DO 595 K=1,NLAY
-              DO 595 I=1,NROW
-              DO 595 J=1,NCOL
-              IF(ICH(J,I,K).EQ.0) GO TO 595
-              NZ=IZONE(J,I,K)
-              IF(NZ.EQ.0) GO TO 595
-              IF(K.EQ.NLAY) GO TO 580
-              IF(ICH(J,I,K+1).EQ.1) GO TO 580
-              DBUFF=BUFFD(J,I,K)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)+DBUFF
-              END IF
-        580   IF(K.EQ.1) GO TO 595
-              IF(ICH(J,I,K-1).EQ.1) GO TO 595
-              DBUFF=BUFFD(J,I,K-1)
-              IF(DBUFF.EQ.DZERO) THEN
-              ELSE IF(DBUFF.LT.DZERO) THEN
-                 VBVL(1,MSUMCH,NZ)=VBVL(1,MSUMCH,NZ)-DBUFF
-              ELSE
-                 VBVL(2,MSUMCH,NZ)=VBVL(2,MSUMCH,NZ)+DBUFF
-              END IF
-        595   CONTINUE
-              RETURN
+
+        Parameters
+        ----------
+        fz
+        tz
+        f
+        kstpkper
+        totim
+
+        Returns
+        -------
+
         """
-        if self.nlay >= 2:
-            data = \
-                self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                  totim=totim)[0]
+        if len(f) == 0:
+            return
+        self._update_budget_recordarray(fz, tz, f, kstpkper, totim)
+        return
 
-            # "FLOW LOWER FACE"
-            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
-            l, r, c = np.where(self.izone[1:, :, :] < self.izone[:-1, :, :])
-            l = np.copy(l) + 1
-            la = l - 1
-            nza = self.izone[la, r, c]
-            nz = self.izone[l, r, c]
-            q = data[la, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
-            fluxes = sum_flux_tuples(nza[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nza[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
+    def _update_budget_recordarray(self, rownames, colnames, fluxes,
+                                   kstpkper=None, totim=None):
+        """
+        Update the budget record array with the flux for the specified
+        flow direction (in/out), record name, and column.
 
-            # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
-            l, r, c = np.where(self.izone[:-1, :, :] < self.izone[1:, :, :])
-            nz = self.izone[l, r, c]
-            lb = l + 1
-            nzb = self.izone[lb, r, c]
-            q = data[l, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzb[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
-            fluxes = sum_flux_tuples(nzb[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_from_recnames[
-                                                          fz] + '_IN',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      self._iflow_to_recnames[
-                                                          tz] + '_OUT',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
+        Parameters
+        ----------
+        rownames
+        colnames
+        fluxes
+        kstpkper
+        totim
 
-            # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[l > 0], r[l > 0], c[l > 0]
-            la = l - 1
-            nza = self.izone[la, r, c]
-            nz = self.izone[l, r, c]
-            q = data[la, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
-            fluxes = sum_flux_tuples(nza[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[la, r, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nza[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_IN',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-            l, r, c = np.where(ich == 1)
-            l, r, c = l[l < self.nlay - 1], r[l < self.nlay - 1], c[
-                l < self.nlay - 1]
-            nz = self.izone[l, r, c]
-            lb = l + 1
-            nzb = self.izone[lb, r, c]
-            q = data[l, r, c]
-            idx = np.where(
-                (q > 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
-            fluxes = sum_flux_tuples(nz[idx],
-                                     nzb[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if tz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_OUT',
-                                                      self._zonefieldnamedict[
-                                                          tz], flux)
-            idx = np.where(
-                (q < 0) & ((ich[l, r, c] != 1) | (ich[lb, r, c] != 1)))
-            fluxes = sum_flux_tuples(nzb[idx],
-                                     nz[idx],
-                                     np.abs(q[idx]))
-            for (fz, tz, flux) in fluxes:
-                if fz != 0:
-                    recordarray = self._update_record(recordarray,
-                                                      'CONSTANT_HEAD_IN',
-                                                      self._zonefieldnamedict[
-                                                          fz], flux)
-        return recordarray
+        Returns
+        -------
+        None
 
-    def _accumulate_flow_ssst(self, recordarray, recname, qin, qout):
+        """
+        try:
+
+            if kstpkper is not None:
+                for rn, cn, flux in list(zip(rownames, colnames, fluxes)):
+                    rowidx = np.where(
+                        (self._budget['time_step'] == kstpkper[0]) &
+                        (self._budget['stress_period'] == kstpkper[1]) &
+                        (self._budget['name'] == rn))
+                    self._budget[cn][rowidx] += flux
+            elif totim is not None:
+                for rn, cn, flux in list(zip(rownames, colnames, fluxes)):
+                    rowidx = np.where((self._budget['totim'] == totim) &
+                                      (self._budget['name'] == rn))
+                    self._budget[cn][rowidx] += flux
+
+        except Exception as e:
+            print(e)
+            raise
+        return
+
+    def _accumulate_flow_frf(self, recname, ich, kstpkper, totim):
+        """
+
+        Parameters
+        ----------
+        recname
+        ich
+        kstpkper
+        totim
+
+        Returns
+        -------
+
+        """
+        try:
+            if self.ncol >= 2:
+                data = \
+                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                      totim=totim)[0]
+
+                # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
+                # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
+                # ZONE 4 TO 3 IS THE NEGATIVE OF FLOW FROM 3 TO 4.
+                # 1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
+
+                k, i, j = np.where(
+                    self.izone[:, :, 1:] > self.izone[:, :, :-1])
+
+                # Adjust column values to account for the starting position of "nz"
+                j += 1
+
+                # Define the zone to which flow is going
+                nz = self.izone[k, i, j]
+
+                # Define the zone from which flow is coming
+                jl = j - 1
+                nzl = self.izone[k, i, jl]
+
+                # Get the face flow
+                q = data[k, i, jl]
+
+                # Get indices where flow face values are positive (flow out of higher zone)
+                # Don't include CH to CH flow (can occur if CHTOCH option is used)
+                # Create an iterable tuple of (from zone, to zone, flux)
+                # Then group tuple by (from_zone, to_zone) and sum the flux values
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # Get indices where flow face values are negative (flow into higher zone)
+                # Don't include CH to CH flow (can occur if CHTOCH option is used)
+                # Create an interable tuple of (from zone, to zone, flux)
+                # Then group tuple by (from_zone, to_zone) and sum the flux values
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nzl[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # FLOW BETWEEN NODE J,I,K AND J+1,I,K
+                k, i, j = np.where(
+                    self.izone[:, :, :-1] > self.izone[:, :, 1:])
+
+                # Define the zone from which flow is coming
+                nz = self.izone[k, i, j]
+
+                # Define the zone to which flow is going
+                jr = j + 1
+                nzr = self.izone[k, i, jr]
+
+                # Get the face flow
+                q = data[k, i, j]
+
+                # Get indices where flow face values are positive (flow out of higher zone)
+                # Don't include CH to CH flow (can occur if CHTOCH option is used)
+                # Create an interable tuple of (from zone, to zone, flux)
+                # Then group tuple by (from_zone, to_zone) and sum the flux values
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nzr[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # Get indices where flow face values are negative (flow into higher zone)
+                # Don't include CH to CH flow (can occur if CHTOCH option is used)
+                # Create an iterable tuple of (from zone, to zone, flux)
+                # Then group tuple by (from_zone, to_zone) and sum the flux values
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[j > 0], i[j > 0], j[j > 0]
+                jl = j - 1
+                nzl = self.izone[k, i, jl]
+                nz = self.izone[k, i, j]
+                q = data[k, i, jl]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[j < self.ncol - 1], i[j < self.ncol - 1], j[
+                    j < self.ncol - 1]
+                nz = self.izone[k, i, j]
+                jr = j + 1
+                nzr = self.izone[k, i, jr]
+                q = data[k, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+        except Exception as e:
+            print(e)
+            raise
+        return
+
+    def _accumulate_flow_fff(self, recname, ich, kstpkper, totim):
+        """
+
+        Parameters
+        ----------
+        recname
+        ich
+        kstpkper
+        totim
+
+        Returns
+        -------
+
+        """
+        try:
+            if self.nrow >= 2:
+                data = \
+                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                      totim=totim)[0]
+
+                # "FLOW FRONT FACE"
+                # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
+                k, i, j = np.where(
+                    self.izone[:, 1:, :] < self.izone[:, :-1, :])
+                i += 1
+                ia = i - 1
+                nza = self.izone[k, ia, j]
+                nz = self.izone[k, i, j]
+                q = data[k, ia, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nza[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
+                k, i, j = np.where(
+                    self.izone[:, :-1, :] < self.izone[:, 1:, :])
+                nz = self.izone[k, i, j]
+                ib = i + 1
+                nzb = self.izone[k, ib, j]
+                q = data[k, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nzb[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[i > 0], i[i > 0], j[i > 0]
+                ia = i - 1
+                nza = self.izone[k, ia, j]
+                nz = self.izone[k, i, j]
+                q = data[k, ia, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[i < self.nrow - 1], i[i < self.nrow - 1], j[
+                    i < self.nrow - 1]
+                nz = self.izone[k, i, j]
+                ib = i + 1
+                nzb = self.izone[k, ib, j]
+                q = data[k, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+        except Exception as e:
+            print(e)
+            raise
+        return
+
+    def _accumulate_flow_flf(self, recname, ich, kstpkper, totim):
+        """
+
+        Parameters
+        ----------
+        recname
+        ich
+        kstpkper
+        totim
+
+        Returns
+        -------
+
+        """
+        try:
+            if self.nlay >= 2:
+                data = \
+                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                      totim=totim)[0]
+
+                # "FLOW LOWER FACE"
+                # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
+                k, i, j = np.where(
+                    self.izone[1:, :, :] < self.izone[:-1, :, :])
+                k += 1
+                ka = k - 1
+                nza = self.izone[ka, i, j]
+                nz = self.izone[k, i, j]
+                q = data[ka, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nza[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
+                k, i, j = np.where(
+                    self.izone[:-1, :, :] < self.izone[1:, :, :])
+                nz = self.izone[k, i, j]
+                kb = k + 1
+                nzb = self.izone[kb, i, j]
+                q = data[k, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nz[idx],
+                                               nzb[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
+                                                 kstpkper, totim)
+
+                # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[k > 0], i[k > 0], j[k > 0]
+                ka = k - 1
+                nza = self.izone[ka, i, j]
+                nz = self.izone[k, i, j]
+                q = data[ka, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nza[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                k, i, j = np.where(ich == 1)
+                k, i, j = k[k < self.nlay - 1], i[k < self.nlay - 1], j[
+                    k < self.nlay - 1]
+                nz = self.izone[k, i, j]
+                kb = k + 1
+                nzb = self.izone[kb, i, j]
+                q = data[k, i, j]
+                idx = np.where(
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                tz = tzi[tzi != 0]
+                f = fi[tzi != 0]
+                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+                idx = np.where(
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
+                                               nz[idx],
+                                               q[idx])
+                fz = fzi[fzi != 0]
+                f = fi[fzi != 0]
+                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
+                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
+                                             totim)
+
+        except Exception as e:
+            print(e)
+            raise
+        return
+
+    def _accumulate_flow_ssst(self, recname, kstpkper, totim):
 
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
+
+        imeth = self.imeth[recname]
+
+        data = self.cbc.get_data(text=recname, kstpkper=kstpkper,
+                                 totim=totim)
+        if len(data) == 0:
+            # Empty data, can occur during the first time step of a transient model when
+            # storage terms are zero and not in the cell-budget file.
+            return
+        else:
+            data = data[0]
+
+        if imeth == 2 or imeth == 5:
+            # LIST
+            qin = np.ma.zeros((self.nlay * self.nrow * self.ncol),
+                              self.float_type)
+            qout = np.ma.zeros((self.nlay * self.nrow * self.ncol),
+                               self.float_type)
+            for [node, q] in zip(data['node'], data['q']):
+                idx = node - 1
+                if q > 0:
+                    qin.data[idx] += q
+                elif q < 0:
+                    qout.data[idx] += q
+            qin = np.ma.reshape(qin, (self.nlay, self.nrow, self.ncol))
+            qout = np.ma.reshape(qout, (self.nlay, self.nrow, self.ncol))
+        elif imeth == 0 or imeth == 1:
+            # FULL 3-D ARRAY
+            qin = np.ma.zeros(self.cbc_shape, self.float_type)
+            qout = np.ma.zeros(self.cbc_shape, self.float_type)
+            qin[data > 0] = data[data > 0]
+            qout[data < 0] = data[data < 0]
+        elif imeth == 3:
+            # 1-LAYER ARRAY WITH LAYER INDICATOR ARRAY
+            rlay, rdata = data[0], data[1]
+            data = np.ma.zeros(self.cbc_shape, self.float_type)
+            for (r, c), l in np.ndenumerate(rlay):
+                data[l - 1, r, c] = rdata[r, c]
+            qin = np.ma.zeros(self.cbc_shape, self.float_type)
+            qout = np.ma.zeros(self.cbc_shape, self.float_type)
+            qin[data > 0] = data[data > 0]
+            qout[data < 0] = data[data < 0]
+        elif imeth == 4:
+            # 1-LAYER ARRAY THAT DEFINES LAYER 1
+            qin = np.ma.zeros(self.cbc_shape, self.float_type)
+            qout = np.ma.zeros(self.cbc_shape, self.float_type)
+            r, c = np.where(data > 0)
+            qin[0, r, c] = data[r, c]
+            r, c = np.where(data < 0)
+            qout[0, r, c] = data[r, c]
+        else:
+            # Should not happen
+            raise Exception(
+                'Unrecognized "imeth" for {} record: {}'.format(recname,
+                                                                imeth))
+
+        # Inflows
+        fz = []
+        tz = []
+        f = []
         for z in self.allzones:
             if z != 0:
-                flux = np.abs(qin[(self.izone == z)].sum())
+                flux = qin[(self.izone == z)].sum()
                 if type(flux) == np.ma.core.MaskedConstant:
                     flux = 0.
-                recordarray = self._update_record(recordarray,
-                                                  '_'.join(
-                                                      recname.split()) + '_IN',
-                                                  self._zonefieldnamedict[z],
-                                                  flux)
+                fz.append('FROM_' + '_'.join(recname.split()))
+                tz.append(self._zonenamedict[z])
+                f.append(flux)
+        fz = np.array(fz)
+        tz = np.array(tz)
+        f = np.array(f)
+        self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
-                flux = np.abs(qout[(self.izone == z)].sum())
+        # Outflows
+        fz = []
+        tz = []
+        f = []
+        for z in self.allzones:
+            if z != 0:
+                flux = qout[(self.izone == z)].sum()
                 if type(flux) == np.ma.core.MaskedConstant:
                     flux = 0.
-                recordarray = self._update_record(recordarray,
-                                                  '_'.join(
-                                                      recname.split()) + '_OUT',
-                                                  self._zonefieldnamedict[z],
-                                                  flux)
-        return recordarray
+                fz.append('TO_' + '_'.join(recname.split()))
+                tz.append(self._zonenamedict[z])
+                f.append(flux)
+        fz = np.array(fz)
+        tz = np.array(tz)
+        f = np.array(f)
+        self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
-    def _compute_mass_balance(self, recordarray):
+        return
+
+    def _compute_mass_balance(self, kstpkper, totim):
         # Returns a record array with total inflow, total outflow,
         # and percent error summed by column.
         skipcols = ['time_step', 'stress_period', 'totim', 'name']
 
         # Compute inflows
-        names = np.array([n for n in recordarray['name'] if '_IN' in n])
-        idx = np.in1d(recordarray['name'], names)
-        a = _numpyvoid2numeric(recordarray[self._zonefieldnames][idx])
+        recnames = self.get_record_names()
+        innames = [n for n in recnames if n.startswith('FROM_')]
+        outnames = [n for n in recnames if n.startswith('TO_')]
+        if kstpkper is not None:
+            rowidx = np.where((self._budget['time_step'] == kstpkper[0]) &
+                              (self._budget['stress_period'] == kstpkper[1]) &
+                              np.in1d(self._budget['name'], innames))
+        elif totim is not None:
+            rowidx = np.where((self._budget['totim'] == totim) &
+                              np.in1d(self._budget['name'], innames))
+        a = _numpyvoid2numeric(
+            self._budget[list(self._zonenamedict.values())][rowidx])
         intot = np.array(a.sum(axis=0))
-        for idx, colname in enumerate(
-                [n for n in recordarray.dtype.names if n not in skipcols]):
-            flux = intot[idx]
-            recordarray = self._update_record(recordarray, 'TOTAL_IN', colname,
-                                              flux)
+        tz = np.array(
+            list([n for n in self._budget.dtype.names if n not in skipcols]))
+        fz = np.array(['TOTAL_IN'] * len(tz))
+        self._update_budget_fromssst(fz, tz, intot, kstpkper, totim)
 
         # Compute outflows
-        names = np.array([n for n in recordarray['name'] if '_OUT' in n])
-        idx = np.in1d(recordarray['name'], names)
-        a = _numpyvoid2numeric(recordarray[self._zonefieldnames][idx])
+        if kstpkper is not None:
+            rowidx = np.where((self._budget['time_step'] == kstpkper[0]) &
+                              (self._budget['stress_period'] == kstpkper[1]) &
+                              np.in1d(self._budget['name'], outnames))
+        elif totim is not None:
+            rowidx = np.where((self._budget['totim'] == totim) &
+                              np.in1d(self._budget['name'], outnames))
+        a = _numpyvoid2numeric(
+            self._budget[list(self._zonenamedict.values())][rowidx])
         outot = np.array(a.sum(axis=0))
-        for idx, colname in enumerate(
-                [n for n in recordarray.dtype.names if n not in skipcols]):
-            flux = outot[idx]
-            recordarray = self._update_record(recordarray, 'TOTAL_OUT',
-                                              colname, flux)
+        tz = np.array(
+            list([n for n in self._budget.dtype.names if n not in skipcols]))
+        fz = np.array(['TOTAL_OUT'] * len(tz))
+        self._update_budget_fromssst(fz, tz, outot, kstpkper, totim)
 
-        # Compute in-out
-        for idx, colname in enumerate(
-                [n for n in recordarray.dtype.names if n not in skipcols]):
-            flux = intot[idx] - outot[idx]
-            recordarray = self._update_record(recordarray, 'IN-OUT', colname,
-                                              flux)
+        # Compute IN-OUT
+        tz = np.array(
+            list([n for n in self._budget.dtype.names if n not in skipcols]))
+        f = intot - outot
+        fz = np.array(['IN-OUT'] * len(tz))
+        self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
         # Compute percent discrepancy
-        for idx, colname in enumerate(
-                [n for n in recordarray.dtype.names if n not in skipcols]):
-            in_minus_out = intot[idx] - outot[idx]
-            in_plus_out = intot[idx] + outot[idx]
-            flux = 100 * in_minus_out / (in_plus_out / 2.)
-            recordarray = self._update_record(recordarray,
-                                              'PERCENT_DISCREPANCY', colname,
-                                              flux)
+        tz = np.array(
+            list([n for n in self._budget.dtype.names if n not in skipcols]))
+        fz = np.array(['PERCENT_DISCREPANCY'] * len(tz))
+        in_minus_out = intot - outot
+        in_plus_out = intot + outot
+        f = 100 * in_minus_out / (in_plus_out / 2.)
+        self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
-        return recordarray
+        return
 
     def _clean_budget_names(self, names):
         newnames = []
+        mbnames = ['TOTAL_IN', 'TOTAL_OUT',
+                   'IN-OUT', 'PERCENT_DISCREPANCY']
         for name in names:
-            if not name.endswith('_IN') and not name.endswith('_OUT'):
-                newname_in = name.upper() + '_IN'
-                newname_out = name.upper() + '_OUT'
+            if name in mbnames:
+                newnames.append(name)
+            elif not name.startswith('FROM_') and not name.startswith('TO_'):
+                newname_in = 'FROM_' + name.upper()
+                newname_out = 'TO_' + name.upper()
                 if newname_in in self._budget['name']:
                     newnames.append(newname_in)
                 if newname_out in self._budget['name']:
@@ -1451,24 +1410,26 @@ class ZoneBudget(object):
 
     def _compute_net_budget(self):
         recnames = self.get_record_names()
-        innames = [n for n in recnames if n.endswith('_IN')]
-        outnames = [n for n in recnames if n.endswith('_OUT')]
+        innames = [n for n in recnames if n.startswith('FROM_')]
+        outnames = [n for n in recnames if n.startswith('TO_')]
         select_fields = ['totim', 'time_step', 'stress_period',
-                         'name'] + self._zonefieldnames
+                         'name'] + list(self._zonenamedict.values())
         select_records_in = np.in1d(self._budget['name'], innames)
         select_records_out = np.in1d(self._budget['name'], outnames)
         in_budget = self._budget[select_fields][select_records_in]
         out_budget = self._budget[select_fields][select_records_out]
         net_budget = in_budget.copy()
-        for f in [n for n in self._zonefieldnames if n in select_fields]:
-            net_budget[f] = np.array([r for r in in_budget[f]]) - np.array([r for r in out_budget[f]])
-        newnames = ['_'.join(n.split('_')[:-1]) for n in net_budget['name']]
+        for f in [n for n in self._zonenamedict.values() if
+                  n in select_fields]:
+            net_budget[f] = np.array([r for r in in_budget[f]]) - np.array(
+                [r for r in out_budget[f]])
+        newnames = ['_'.join(n.split('_')[1:]) for n in net_budget['name']]
         net_budget['name'] = newnames
         return net_budget
 
     def __mul__(self, other):
         newbud = self._budget.copy()
-        for f in self._zonefieldnames:
+        for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) * other
         idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
         newbud[:][idx] = self._budget[:][idx]
@@ -1478,7 +1439,7 @@ class ZoneBudget(object):
 
     def __truediv__(self, other):
         newbud = self._budget.copy()
-        for f in self._zonefieldnames:
+        for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
         idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
         newbud[:][idx] = self._budget[:][idx]
@@ -1488,7 +1449,7 @@ class ZoneBudget(object):
 
     def __div__(self, other):
         newbud = self._budget.copy()
-        for f in self._zonefieldnames:
+        for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
         idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
         newbud[:][idx] = self._budget[:][idx]
@@ -1498,7 +1459,7 @@ class ZoneBudget(object):
 
     def __add__(self, other):
         newbud = self._budget.copy()
-        for f in self._zonefieldnames:
+        for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) + other
         idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
         newbud[:][idx] = self._budget[:][idx]
@@ -1508,7 +1469,7 @@ class ZoneBudget(object):
 
     def __sub__(self, other):
         newbud = self._budget.copy()
-        for f in self._zonefieldnames:
+        for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) - other
         idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
         newbud[:][idx] = self._budget[:][idx]
@@ -1727,79 +1688,6 @@ def read_zbarray(fname):
     return zones
 
 
-def read_zbarray_old(fname):
-    with open(fname, 'r') as f:
-        lines = f.readlines()
-
-    nlay, nrow, ncol = [int(v) for v in lines[0].strip().split()]
-    zones = np.zeros((nlay, nrow, ncol), dtype=np.int64)
-
-    # Initialize layer
-    lay = 0
-
-    # The number of values to read before placing
-    # them into the zone array
-    datalen = nrow * ncol
-
-    # List of valid values for LOCAT
-    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
-
-    # ITERATE OVER THE ROWS
-    for row in lines[1:]:
-        rowitems = row.strip().split()
-
-        # HEADER
-        if rowitems[0] in locats:
-            vals = []
-            locat = rowitems[0]
-
-            if locat == 'CONSTANT':
-                iconst = int(rowitems[1])
-            else:
-                fmt = rowitems[1].strip('()')
-                fmtin, iprn = [int(v) for v in fmt.split('I')]
-
-        # ZONE DATA
-        else:
-            if locat == 'CONSTANT':
-                zones[lay, :, :] = iconst
-                lay += 1
-            elif locat == 'INTERNAL':
-                # READ ZONES
-                rowvals = [int(v) for v in rowitems]
-                vals.extend(rowvals)
-                if len(vals) == datalen:
-                    # place values for the previous layer into the zone array
-                    vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
-                    zones[lay, :, :] = vals[:, :]
-                    lay += 1
-            elif locat == 'EXTERNAL':
-                # READ EXTERNAL FILE
-                fname = rowitems[0]
-                if not os.path.isfile(fname):
-                    errmsg = 'Could not find external file "{}"'.format(fname)
-                    raise Exception(errmsg)
-                with open(fname, 'r') as ext_f:
-                    ext_flines = ext_f.readlines()
-                for ext_frow in ext_flines:
-                    ext_frowitems = ext_frow.strip().split()
-                    rowvals = [int(v) for v in ext_frowitems]
-                    vals.extend(rowvals)
-                if len(vals) != datalen:
-                    errmsg = 'The number of values read from external ' \
-                             'file "{}" does not match the expected ' \
-                             'number.'.format(len(vals))
-                    raise Exception(errmsg)
-                vals = np.array(vals, dtype=np.int32).reshape((nrow, ncol))
-                zones[lay, :, :] = vals[:, :]
-                lay += 1
-            else:
-                raise Exception('Locat not recognized: {}'.format(locat))
-
-                # IGNORE COMPOSITE ZONES
-    return zones
-
-
 def sum_flux_tuples(fromzones, tozones, fluxes):
     tup = zip(fromzones, tozones, fluxes)
     sorted_tups = sort_tuple(tup)
@@ -1807,11 +1695,15 @@ def sum_flux_tuples(fromzones, tozones, fluxes):
     # Group the sorted tuples by (from zone, to zone)
     # itertools.groupby() returns the index (from zone, to zone) and
     # a list of the tuples with that index
+    from_zones = []
+    to_zones = []
     fluxes = []
     for (fz, tz), ftup in groupby(sorted_tups, lambda tup: tup[:2]):
         f = np.sum([tup[-1] for tup in list(ftup)])
-        fluxes.append((fz, tz, f))
-    return fluxes
+        from_zones.append(fz)
+        to_zones.append(tz)
+        fluxes.append(f)
+    return np.array(from_zones), np.array(to_zones), np.array(fluxes)
 
 
 def sort_tuple(tup, n=2):

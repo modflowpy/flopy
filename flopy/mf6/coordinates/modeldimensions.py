@@ -6,7 +6,8 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..data.mfstructure import StructException, DatumType
+from ..mfbase import StructException, FlopyException
+from ..data.mfstructure import DatumType
 from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
 
@@ -88,7 +89,14 @@ class DataDimensions(object):
                         len(self.package_dim.model_dim) == 1:
             return self.package_dim.model_dim[0]
         else:
-            assert (len(self.structure.data_item_structures) > data_item_num)
+            if not (len(self.structure.data_item_structures) >
+                    data_item_num):
+                raise FlopyException('Data item index "{}" requested which '
+                                     'is greater than the maximum index of'
+                                     '{}.'.format(data_item_num,
+                                                  len(self.structure.
+                                                      data_item_structures)
+                                                  - 1))
             model_num = self.structure.data_item_structures[data_item_num][-1]
             if DatumUtil.is_int(model_num):
                 return self.package_dim.model_dim[int(model_num)]
@@ -337,7 +345,9 @@ class ModelDimensions(object):
     def get_data_shape(self, structure, data_item=None, data_set_struct=None,
                        data=None, path=None, deconstruct_axis=True,
                        repeating_key=None):
-        assert (structure is not None)
+        if structure is None:
+            raise FlopyException('get_data_shape requires a valid structure '
+                                 'object')
         if self.locked:
             if data_item is not None and data_item.path in self.stored_shapes:
                 return self.stored_shapes[data_item.path][0], \
@@ -421,7 +431,7 @@ class ModelDimensions(object):
 
             if deconstruct_axis:
                 shape = self.deconstruct_axis(shape)
-            ordered_shape = self._order_shape(shape)
+            ordered_shape = self._order_shape(shape, data_item_struct)
             ordered_shape_expression = self.build_shape_expression(
                 ordered_shape)
             for item in ordered_shape_expression:
@@ -451,8 +461,10 @@ class ModelDimensions(object):
                     if result:
                         shape_dimensions.append(result)
                     else:
-                        if item[0] == 'any1d' or item[0] == 'naux' or item[
-                            0] == 'nconrno' or item[0] == 'unknown':
+                        if item[0] == 'any1d' or item[0] == 'naux' or \
+                                        item[0] == 'nconrno' or \
+                                        item[0] == 'unknown' or \
+                                        item[0] == ':':
                             consistent_shape = False
                             shape_dimensions.append(-9999)
                         elif item[0] == 'any2d':
@@ -516,10 +528,9 @@ class ModelDimensions(object):
                 # try to resolve the 2nd term in the equation
                 expression[1] = self.dimension_size(expression[1])
                 if expression[1] is None:
-                    except_str = 'ERROR: Expression "{}" contains an invalid '\
+                    except_str = 'Expression "{}" contains an invalid '\
                                  'second term and can not be ' \
                                  'resolved.'.format(expression)
-                    print(except_str)
                     raise StructException(except_str, '')
 
             if expression[2] == '+':
@@ -531,10 +542,8 @@ class ModelDimensions(object):
             elif expression[2] == '/':
                 return value / int(expression[1])
             else:
-                except_str = 'ERROR: Expression "{}" contains an invalid ' \
-                             'operator and can not be ' \
-                             'resolved.'.format(expression)
-                print(except_str)
+                except_str = 'Expression "{}" contains an invalid operator ' \
+                             'and can not be resolved.'.format(expression)
                 raise StructException(except_str, '')
         else:
             return value
@@ -583,15 +592,22 @@ class ModelDimensions(object):
                             new_expression_array.append([entry])
         return new_expression_array
 
-    def _order_shape(self, shape_array):
+    def _order_shape(self, shape_array, data_item_struct):
         new_shape_array = []
+
+        for entry in shape_array:
+            if entry in data_item_struct.layer_dims:
+                # "layer" dimensions get ordered first
+                new_shape_array.append(entry)
+
         order = ['nlay', 'nrow', 'ncol']
         for order_item in order:
-            for entry in shape_array:
-                if entry == order_item:
-                    new_shape_array.append(entry)
+            if order_item not in data_item_struct.layer_dims:
+                for entry in shape_array:
+                    if entry == order_item:
+                        new_shape_array.append(entry)
         for entry in shape_array:
-            if entry not in order:
+            if entry not in order and entry not in data_item_struct.layer_dims:
                 new_shape_array.append(entry)
         return new_shape_array
 

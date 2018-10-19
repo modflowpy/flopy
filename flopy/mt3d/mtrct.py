@@ -107,8 +107,8 @@ class Mt3dRct(Package):
         File unit number. If file unit number is None then an unused unit
          number if used. (default is None).
 
-    **kwargs
-    --------
+    Other Parameters
+    ----------------
     srconcn : float or array of floats (nlay, nrow, ncol)
         srconcn is the user-specified initial concentration for the sorbed
         phase of species n. If srconcn is not passed as a **kwarg and
@@ -133,15 +133,6 @@ class Mt3dRct(Package):
         n. If rc2n is not passed as a **kwarg and ireact > 0 then rc2 for
         species n is set to 0. See description of rc2 for a more complete
         description of rc2n.
-    extension : string
-        Filename extension (default is 'rct')
-    unitnumber : int
-        File unit number (default is None).
-    filenames : str or list of str
-        Filenames to use for the package. If filenames=None the package name
-        will be created using the model name and package extension. If a
-        single string is passed the package will be set to the string.
-        Default is None.
 
 
     Attributes
@@ -450,13 +441,13 @@ class Mt3dRct(Package):
         if model.verbose:
             print('   loading ISOTHM, IREACT, IRCTOP, IGETSC...')
         isothm = int(line[0:10])
-        ireact = int(line[11:20])
+        ireact = int(line[10:20])
         try:
-            irctop = int(line[21:30])
+            irctop = int(line[20:30])
         except:
             irctop = 0
         try:
-            igetsc = int(line[31:40])
+            igetsc = int(line[30:40])
         except:
             igetsc = 0
         if model.verbose:
@@ -602,7 +593,7 @@ class Mt3dRct(Package):
         rct = Mt3dRct(model, isothm=isothm, ireact=ireact, igetsc=igetsc,
                       rhob=rhob, prsity2=prsity2, srconc=srconc, sp1=sp1,
                       sp2=sp2, rc1=rc1, rc2=rc2, unitnumber=unitnumber,
-                      filenames=filenames)
+                      filenames=filenames, **kwargs)
         return rct
 
     @staticmethod

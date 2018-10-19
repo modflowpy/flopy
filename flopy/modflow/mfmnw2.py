@@ -14,7 +14,8 @@ from ..pakbase import Package
 
 
 class Mnw(object):
-    """Multi-Node Well object class
+    """
+    Multi-Node Well object class
 
     Parameters
     ----------
@@ -176,8 +177,8 @@ class Mnw(object):
             zpump : float
             hlim : float
             qcut : int
-            gfrcmn : float
-            gfrcmx : float
+            qfrcmn : float
+            qfrcmx : float
             hlift : float
             liftq0 : float
             liftqmax : float
@@ -273,6 +274,11 @@ class Mnw(object):
         specified previously on this line. Sign (positive or negative) is ignored.
     mnwpackage : ModflowMnw2 instance
         package that mnw is attached to
+
+    Returns
+    -------
+    None
+
     """
     by_node_variables = ['k', 'i', 'j', 'ztop', 'zbotm', 'rw', 'rskin',
                          'kskin', 'B', 'C', 'P', 'cwc', 'pp']
@@ -287,8 +293,11 @@ class Mnw(object):
                  pumplay=0, pumprow=0, pumpcol=0, zpump=None,
                  hlim=None, qcut=None, qfrcmn=None, qfrcmx=None,
                  hlift=None, liftq0=None, liftqmax=None, hwtol=None,
-                 liftn=None, qn=None, mnwpackage=None,
-                 ):
+                 liftn=None, qn=None, mnwpackage=None):
+        """
+        Class constructor
+        """
+
         self.nper = nper
         self.mnwpackage = mnwpackage  # associated ModflowMnw2 instance
         self.aux = None if mnwpackage is None else mnwpackage.aux
@@ -368,7 +377,14 @@ class Mnw(object):
                 self.stress_period_data[n] = [self.__dict__[n][0]]
 
     def make_node_data(self):
-        """Makes the node data array from variables entered individually."""
+        """
+        Make the node data array from variables entered individually.
+
+        Returns
+        -------
+        None
+
+        """
         nnodes = self.nnodes
         node_data = ModflowMnw2.get_empty_node_data(np.abs(nnodes),
                                                     aux_names=self.aux)
@@ -381,14 +397,46 @@ class Mnw(object):
     @staticmethod
     def get_empty_stress_period_data(nper=0, aux_names=None, structured=True,
                                      default_value=0):
-        # get an empty recarray that correponds to dtype
+        """
+        Get an empty stress_period_data recarray that correponds to dtype
+
+        Parameters
+        ----------
+        nper : int
+
+        aux_names
+        structured
+        default_value
+
+        Returns
+        -------
+        ra : np.recarray
+            Recarray
+
+        """
+        #
         dtype = Mnw.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(nper, dtype)
+        return create_empty_recarray(nper, dtype, default_value=default_value)
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
+        """
+        Get the default stress period data dtype
+
+        Parameters
+        ----------
+        structured : bool
+            Boolean that defines if a structured (True) or unstructured (False)
+            dtype will be created (default is True). Not implemented for
+            unstructured.
+
+        Returns
+        -------
+        dtype : np.dtype
+
+        """
         if structured:
             return np.dtype([('k', np.int),
                              ('i', np.int),
@@ -402,54 +450,27 @@ class Mnw(object):
                              ('qfrcmn', np.float32),
                              ('qfrcmx', np.float32)])
         else:
-            pass
+            msg = 'Mnw2: get_default_spd_dtype not implemented for ' + \
+                  'unstructured grids'
+            raise NotImplementedError(msg)
 
     @staticmethod
     def get_item2_names(mnw2obj=None, node_data=None):
-        """Determine which variables are being used.
+        """
+        Get names for unknown things...
+
+        Parameters
+        ----------
+        mnw2obj : Mnw object
+            Mnw object (default is None)
+        node_data : unknown
+            Unknown what is in this parameter (default is None)
 
         Returns
         -------
-        names : list of str
-            List of names (same as variables in MNW2 Package input instructions) of columns
-            to assign (upon load) or retain (upon write) in reach_data array.
+        names : list
+        List of dtype names.
 
-        Note
-        ----
-        Lowercase is used for all variable names.
-
-            ztop : float
-                top elevation of open intervals of vertical well.
-            zbotm : float
-                bottom elevation of open intervals of vertical well.
-            wellid : str
-            losstyp : str
-            pumploc : int
-            qlimit : int
-            ppflag : int
-            pumpcap : int
-            rw : float
-            rskin : float
-            kskin : float
-            B : float
-            C : float
-            P : float
-            cwc : float
-            pp : float
-            pumplay : int
-            pumprow : int
-            pumpcol : int
-            zpump : float
-            hlim : float
-            qcut : int
-            qfrcmn : float
-            qfrcmx : float
-            hlift : float
-            liftq0 : float
-            liftqmax : float
-            hwtol : float
-            liftn : float
-            qn : float
         """
 
         if node_data is not None:
@@ -460,7 +481,8 @@ class Mnw(object):
             qlimit = node_data.qlimit[0]
             pumpcap = node_data.pumpcap[0]
             qcut = node_data.qcut[0]
-        else:  # get names based on mnw2obj attribute values
+        # get names based on mnw2obj attribute values
+        else:
             nnodes = mnw2obj.nnodes
             losstype = mnw2obj.losstype
             ppflag = mnw2obj.ppflag
@@ -502,6 +524,20 @@ class Mnw(object):
 
     @staticmethod
     def get_nnodes(node_data):
+        """
+        Get the number of MNW2 nodes.
+
+        Parameters
+        ----------
+        node_data : list
+            List of nodes???
+
+        Returns
+        -------
+        nnodes : int
+            Number of MNW2 nodes
+
+        """
         nnodes = len(node_data)
         # check if ztop and zbotm were entered,
         # flip nnodes for format 2
@@ -542,7 +578,9 @@ class Mnw(object):
         return chk
 
     def _set_attributes_from_node_data(self):
-        """Populates the Mnw object attributes with values from node_data table."""
+        """
+        Populates the Mnw object attributes with values from node_data table.
+        """
         names = Mnw.get_item2_names(node_data=self.node_data)
         for n in names:
             # assign by node variables as lists if they are being included
@@ -552,11 +590,22 @@ class Mnw(object):
                 self.__dict__[n] = self.node_data[n][0]
 
     def _write_2(self, f_mnw, float_format=' {:15.7E}', indent=12):
-        """write out dataset 2 for MNW.
+        """
+        Write out dataset 2 for MNW.
 
         Parameters
         ----------
         f_mnw : package file handle
+            file handle for MNW2 input file
+        float_format : str
+            python format statement for floats (default is ' {:15.7E}').
+        indent : int
+            number of spaces to indent line (default is 12).
+
+        Returns
+        -------
+        None
+
         """
         # update object attributes with values from node_data
         self._set_attributes_from_node_data()
@@ -808,7 +857,7 @@ class ModflowMnw2(Package):
         self.nper = 1 if self.nper == 0 else self.nper  # otherwise iterations from 0, nper won't run
         self.structured = self.parent.structured
 
-        # Dataset 0 -----------------------------------------------------------------------
+        # Dataset 0
         self.heading = '# {} package for '.format(self.name[0]) + \
                        ' {}, '.format(model.version_types[model.version]) + \
                        'generated by Flopy.'
@@ -884,20 +933,49 @@ class ModflowMnw2(Package):
     @staticmethod
     def get_empty_node_data(maxnodes=0, aux_names=None, structured=True,
                             default_value=0):
-        """get an empty recarray that correponds to dtype
+        """
+        get an empty recarray that correponds to dtype
 
         Parameters
         ----------
         maxnodes : int
-            Total number of nodes to be simulated
+            Total number of nodes to be simulated (default is 0)
+        aux_names : list
+            List of aux name strings (default is None)
+        structured : bool
+            Boolean indicating if a structured (True) or unstructured (False)
+            model (default is True).
+        default_value : float
+            Default value for float variables (default is 0).
+
+        Returns
+        -------
+        r : np.recarray
+            Recarray of default dtype of shape maxnode
         """
         dtype = ModflowMnw2.get_default_node_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(maxnodes, dtype)
+        return create_empty_recarray(maxnodes, dtype,
+                                     default_value=default_value)
 
     @staticmethod
     def get_default_node_dtype(structured=True):
+        """
+        Get default dtype for node data
+
+        Parameters
+        ----------
+        structured : bool
+            Boolean indicating if a structured (True) or unstructured (False)
+            model (default is True).
+
+        Returns
+        -------
+        dtype : np.dtype
+            node data dtype
+
+        """
         if structured:
             return np.dtype([('k', np.int),
                              ('i', np.int),
@@ -933,19 +1011,55 @@ class ModflowMnw2(Package):
                              ('liftn', np.float32),
                              ('qn', np.float32)])
         else:
-            pass
+            msg = 'get_default_node_dtype: unstructured model not supported'
+            raise NotImplementedError(msg)
 
     @staticmethod
     def get_empty_stress_period_data(itmp=0, aux_names=None, structured=True,
                                      default_value=0):
-        # get an empty recarray that correponds to dtype
+        """
+        Get an empty stress period data recarray
+
+        Parameters
+        ----------
+        itmp : int
+            Number of entries in this stress period (default is 0).
+        aux_names : list
+            List of aux names (default is None).
+        structured : bool
+            Boolean indicating if a structured (True) or unstructured (False)
+            model (default is True).
+        default_value : float
+            Default value for float variables (default is 0).
+
+        Returns
+        -------
+        r : np.recarray
+            Recarray of default dtype of shape itmp
+
+        """
         dtype = ModflowMnw2.get_default_spd_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        return create_empty_recarray(itmp, dtype)
+        return create_empty_recarray(itmp, dtype, default_value=default_value)
 
     @staticmethod
     def get_default_spd_dtype(structured=True):
+        """
+        Get default dtype for stress period data
+
+        Parameters
+        ----------
+        structured : bool
+            Boolean indicating if a structured (True) or unstructured (False)
+            model (default is True).
+
+        Returns
+        -------
+        dtype : np.dtype
+            node data dtype
+
+        """
         if structured:
             return np.dtype([('k', np.int),
                              ('i', np.int),
@@ -959,10 +1073,36 @@ class ModflowMnw2(Package):
                              ('qfrcmn', np.float32),
                              ('qfrcmx', np.float32)])
         else:
-            pass
+            msg = 'get_default_spd_dtype: unstructured model not supported'
+            raise NotImplementedError(msg)
 
     @staticmethod
     def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+        """
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.ModflowMnw2`) to
+            which this package will be added.
+        nper : int
+            Number of periods
+        gwt : bool
+        nsol : int
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+
+        Returns
+        -------
+
+        """
 
         if model.verbose:
             sys.stdout.write('loading mnw2 package file...\n')
@@ -1011,8 +1151,6 @@ class ModflowMnw2(Package):
                     wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f),
                                                                    mnw,
                                                                    gwt=gwt)
-                    if wellid == 'Mellen3':
-                        j = 2
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
                         hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
@@ -1076,7 +1214,7 @@ class ModflowMnw2(Package):
 
         Returns
         -------
-        None
+        chk : check object
 
         Examples
         --------
@@ -1101,23 +1239,26 @@ class ModflowMnw2(Package):
         return chk
 
     def get_allnode_data(self):
-        """Get a version of the node_data array that has all MNW2 nodes listed explicitly.
-        For example, MNWs with open intervals encompassing multiple layers would have a row
-        entry for each layer. Ztop and zbotm values indicate the top and bottom elevations of the node
-        (these are the same as the layer top and bottom if the node fully penetrates that layer).
+        """
+        Get a version of the node_data array that has all MNW2 nodes listed
+        explicitly. For example, MNWs with open intervals encompassing
+        multiple layers would have a row entry for each layer. Ztop and zbotm
+        values indicate the top and bottom elevations of the node (these are
+        the same as the layer top and bottom if the node fully penetrates
+        that layer).
 
         Returns
         -------
         allnode_data : np.recarray
-            Numpy record array of same form as node_data, except each row represents only one node.
+            Numpy record array of same form as node_data, except each row
+            represents only one node.
+
         """
         from numpy.lib.recfunctions import stack_arrays
 
         nd = []
         for i in range(len(self.node_data)):
             r = self.node_data[i]
-            if r['wellid'] == '76264':
-                z=2
             if r['ztop'] - r['zbotm'] > 0:
                 startK = get_layer(self.parent.dis, r['i'], r['j'], r['ztop'])
                 endK = get_layer(self.parent.dis, r['i'], r['j'], r['zbotm'])
@@ -1130,17 +1271,25 @@ class ModflowMnw2(Package):
                         rk = r.copy()
                         rk['k'] = k
                         if k > startK:
-                            rk['ztop'] = self.parent.dis.botm[
-                                k - 1, rk['i'], rk['j']]
+                            loc = (k - 1, rk['i'], rk['j'])
+                            rk['ztop'] = self.parent.dis.botm[loc]
                         if k < endK:
-                            rk['zbotm'] = self.parent.dis.botm[
-                                k, rk['i'], rk['j']]
+                            loc = (k, rk['i'], rk['j'])
+                            rk['zbotm'] = self.parent.dis.botm[loc]
                         nd.append(rk)
             else:
                 nd.append(r)
         return stack_arrays(nd, usemask=False).view(np.recarray)
 
     def make_mnw_objects(self):
+        """
+        Make a Mnw object
+
+        Returns
+        -------
+        None
+
+        """
         node_data = self.node_data
         stress_period_data = self.stress_period_data
         self.mnw = {}
@@ -1176,7 +1325,18 @@ class ModflowMnw2(Package):
                                    mnwpackage=self)
 
     def make_node_data(self, mnwobjs):
-        """Make node_data rec array from Mnw objects"""
+        """
+        Make node_data rec array from Mnw objects
+
+        Parameters
+        ----------
+        mnwobjs : Mnw object
+
+        Returns
+        -------
+        None
+
+        """
         if isinstance(mnwobjs, dict):
             mnwobjs = list(mnwobjs.values())
         elif isinstance(mnwobjs, Mnw):
@@ -1188,7 +1348,18 @@ class ModflowMnw2(Package):
         self.node_data = node_data
 
     def make_stress_period_data(self, mnwobjs):
-        """make stress_period_data rec array from Mnw objects"""
+        """
+        Make stress_period_data rec array from Mnw objects
+
+        Parameters
+        ----------
+        mnwobjs : Mnw object
+
+        Returns
+        -------
+        None
+
+        """
         if isinstance(mnwobjs, dict):
             mnwobjs = list(mnwobjs.values())
         elif isinstance(mnwobjs, Mnw):
@@ -1223,6 +1394,20 @@ class ModflowMnw2(Package):
                                          dtype=stress_period_data[0].dtype)
 
     def export(self, f, **kwargs):
+        """
+        Export MNW2 data
+
+        Parameters
+        ----------
+        f : file
+        kwargs
+
+        Returns
+        -------
+        e : export object
+
+
+        """
         # A better strategy would be to build a single 4-D MfList
         # (currently the stress period data array has everything in layer 0)
         self.node_data_MfList = MfList(self, self.get_allnode_data(),
@@ -1258,6 +1443,19 @@ class ModflowMnw2(Package):
         return super(ModflowMnw2, self).export(f, **kwargs)
 
     def _write_1(self, f_mnw):
+        """
+
+        Parameters
+        ----------
+        f_mnw : file object
+            File object for MNW2 input file
+
+
+        Returns
+        -------
+        None
+
+        """
         f_mnw.write('{:.0f} '.format(self.mnwmax))
         if self.mnwmax < 0:
             f_mnw.write('{:.0f} '.format(self.nodtot))
@@ -1271,6 +1469,12 @@ class ModflowMnw2(Package):
                    use_tables=True):
         """
         Write the package file.
+
+        Parameters
+        ----------
+        filename : str
+        float_format
+        use_tables
 
         Returns
         -------
@@ -1351,6 +1555,16 @@ class ModflowMnw2(Package):
 
 
 def _parse_1(line):
+    """
+
+    Parameters
+    ----------
+    line
+
+    Returns
+    -------
+
+    """
     line = line_parse(line)
     mnwmax = pop_item(line, int)
     nodtot = None
@@ -1366,6 +1580,16 @@ def _parse_1(line):
 
 
 def _parse_2(f):
+    """
+
+    Parameters
+    ----------
+    f
+
+    Returns
+    -------
+
+    """
     # dataset 2a
     line = line_parse(next(f))
     if len(line) > 2:
@@ -1386,14 +1610,15 @@ def _parse_2(f):
     names = ['ztop', 'zbotm', 'k', 'i', 'j', 'rw', 'rskin', 'kskin', 'B', 'C',
              'P', 'cwc', 'pp']
     d2d = {n: [] for n in names}  # dataset 2d; dict of lists for each variable
+    # set default values of 0 for all 2c items
+    d2dw = dict(
+        zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
     if losstype.lower() != 'none':
-        # set default values of 0 for all 2c items
-        d2dw = dict(
-            zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
+        # update d2dw items
         d2dw.update(_parse_2c(next(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
-                d2d[k] = v
+                d2d[k].append(v)
     # dataset 2d
     pp = 1  # partial penetration flag
     for i in range(np.abs(nnodes)):
@@ -1413,9 +1638,9 @@ def _parse_2(f):
                          cwc=d2dw['cwc'])
         # append only the returned items
         for k, v in d2di.items():
-            d2d[k] += v
+            d2d[k].append(v)
         if ppflag > 0 and nnodes > 0:
-            d2d['pp'] += pop_item(line, float)
+            d2d['pp'].append(pop_item(line, float))
 
     # dataset 2e
     pumplay = None
@@ -1488,6 +1713,24 @@ def _parse_2(f):
 
 def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1,
               cwc=-1):
+    """
+
+    Parameters
+    ----------
+    line
+    losstype
+    rw
+    rskin
+    kskin
+    B
+    C
+    P
+    cwc
+
+    Returns
+    -------
+
+    """
     if not isinstance(line, list):
         line = line_parse(line)
     nd = {}  # dict of dataset 2c/2d items
@@ -1513,6 +1756,18 @@ def _parse_2c(line, losstype, rw=-1, rskin=-1, kskin=-1, B=-1, C=-1, P=-1,
 
 
 def _parse_4a(line, mnw, gwt=False):
+    """
+
+    Parameters
+    ----------
+    line
+    mnw
+    gwt
+
+    Returns
+    -------
+
+    """
     capmult = 0
     cprime = 0
     line = line_parse(line)
@@ -1528,6 +1783,16 @@ def _parse_4a(line, mnw, gwt=False):
 
 
 def _parse_4b(line):
+    """
+
+    Parameters
+    ----------
+    line
+
+    Returns
+    -------
+
+    """
     qfrcmn = 0
     qfrcmx = 0
     line = line_parse(line)
@@ -1545,7 +1810,8 @@ class ItmpError(Exception):
         self.nactivewells = nactivewells
 
     def __str__(self):
-        return (
-        '\n\nItmp value of {} is positive but does not equal the number of active wells specified ({}). '
-        'See Mnw2 package documentation for details.'.format(self.itmp,
-                                                             self.nactivewells))
+        s = '\n\nItmp value of {} '.format(self.itmp) + \
+            'is positive but does not equal the number of active wells ' + \
+            'specified ({}). '.format(self.nactivewells) + \
+            'See MNW2 package documentation for details.'
+        return s

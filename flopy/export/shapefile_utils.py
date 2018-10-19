@@ -107,11 +107,10 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     wr.save(filename)
     print('wrote {}'.format(filename))
 
-
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
     sf = import_shapefile()
-    verts = copy.copy(sr.vertices)
+    verts = copy.deepcopy(sr.vertices)
 
     w = sf.Writer(5)  # polygon
     w.autoBalance = 1
@@ -136,7 +135,6 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
         w.record(*r)
     w.save(filename)
     print('wrote {}'.format(filename))
-    # write the projection file
     # write the projection file
     write_prj(filename, epsg, prj)
 
@@ -214,7 +212,11 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 elif isinstance(a, MfList):
                     kpers = a.data.keys()
                     for kper in kpers:
-                        arrays = a.to_array(kper)
+                        try:
+                            arrays = a.to_array(kper)
+                        except:
+                            print("error exporting MfList in pak {0} to shapefile".format(pname))
+                            continue
                         for name, array in arrays.items():
                             for k in range(array.shape[0]):
                                 # aname = name + "{0:03d}{1:02d}".format(kper, k)
@@ -450,7 +452,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
 def write_prj(shpname, epsg=None, prj=None):
     # write the projection file
-    prjname = shpname.split('.')[0] + '.prj'
+    prjname = shpname.replace('.shp', '.prj')
     # write projection file from epsg code
     if epsg is not None:
         prjtxt = getprj(epsg)
@@ -458,5 +460,9 @@ def write_prj(shpname, epsg=None, prj=None):
             with open(prjname, 'w') as output:
                 output.write(prjtxt)
     # copy a supplied prj file
-    if prj is not None:
+    elif prj is not None:
         shutil.copy(prj, prjname)
+    else:
+        print('No CRS information for writing a .prj file.\n'
+              'Supply an epsg code or .prj file path to the '
+              'model spatial reference or .export() method.')

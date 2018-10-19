@@ -108,7 +108,7 @@ class ModflowGage(Package):
                     for idx in range(numgage):
                         files.append('{}.gage{}.go'.format(model.name, idx+1))
                 if isinstance(files, np.ndarray):
-                    files = files.flatten().aslist()
+                    files = files.flatten().tolist()
                 elif isinstance(files, str):
                     files = [files]
                 elif isinstance(files, int) or isinstance(files, float):
@@ -164,7 +164,6 @@ class ModflowGage(Package):
             # add gage output files to model
             for n in range(numgage):
                 iu = abs(gage_data['unit'][n])
-                gage_data['unit'][n] = iu
                 fname = files[n]
                 model.add_output_file(iu, fname=fname, binflag=False,
                                       package=ModflowGage.ftype())

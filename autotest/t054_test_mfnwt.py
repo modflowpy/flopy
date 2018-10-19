@@ -45,6 +45,7 @@ def test_mfnwt_model():
         d, f = os.path.split(fnwt)
         yield mfnwt_model, f, d
 
+
 # function to load a MODFLOW-2005 model, convert to a MFNWT model,
 # write it back out, run the MFNWT model, load the MFNWT model,
 # and compare the results.
@@ -150,6 +151,7 @@ def mfnwt_model(namfile, model_ws):
         assert success, 'budget comparison failure'
 
     return
+
 
 if __name__ == '__main__':
     for fnwt in nwt_files:

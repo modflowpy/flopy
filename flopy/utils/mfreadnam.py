@@ -8,6 +8,12 @@ MODFLOW Guide
 
 """
 import os
+import sys
+
+if sys.version_info < (3, 6):
+    from collections import OrderedDict
+    dict = OrderedDict
+
 
 class NamData(object):
     """
@@ -86,111 +92,114 @@ def getfiletypeunit(nf, filetype):
     print('Name file does not contain file of type "{0}"'.format(filetype))
     return None
 
-# function to test if a string is an integer
-def testint(cval):
-    try:
-        int(cval)
-        return True
-    except:
-        return False
-    
-# function to parse the name file
+
 def parsenamefile(namfilename, packages, verbose=True):
     """
-    Function to parse the nam file and return a dictionary with types,
-    names, units and handles
+    Returns dict from the nam file with NamData keyed by unit number
 
     Parameters
     ----------
-    namefilename : string
+    namefilename : str
         Name of the MODFLOW namefile to parse.
-    packages : dictionary
+    packages : dict
         Dictionary of package objects as defined in the `mfnam_packages`
         attribute of :class:`flopy.modflow.mf.Modflow`.
-    verbose : logical
+    verbose : bool
         Print messages to screen.  Default is True.
 
     Returns
-    ----------
-    ext_unit_dict : dictionary
+    -------
+    dict or OrderedDict
         For each file listed in the name file, a
         :class:`flopy.utils.mfreadnam.NamData` instance
-        is stored in the ext_unit_dict dictionary keyed by unit number
+        is stored in the returned dict keyed by unit number. Prior to Python
+        version 3.6 the return object is an OrderedDict to retain the order
+        of items in the nam file.
+
+    Raises
+    ------
+    IOError:
+        If namfilename does not exist in the directory.
+    ValueError:
+        For lines that cannot be parsed.
     """
-    # add the .nam extension to namfilename if missing
-    if not os.path.isfile(namfilename):
-        if namfilename[-4:].lower() != '.nam':
-            namfilename += '.nam'
-    
-    # initiate the ext_unit_dict dictionary
+    # initiate the ext_unit_dict ordered dictionary
     ext_unit_dict = dict()
 
     if verbose:
         print('Parsing the namefile --> {0:s}'.format(namfilename))
-        print('Setting filehandles:')
 
     if not os.path.isfile(namfilename):
-        dn = os.path.dirname(namfilename)
-        s = 'Could not find {} in path {} with files \n {}'.format(namfilename, dn, os.listdir(dn))
-        raise Exception(s)
-    indata = open(namfilename, 'r').readlines()
-    for line in indata:
-        tmp = line.strip().split()
-        if len(tmp) == 0:
+        # help diagnose the namfile and directory
+        raise IOError(
+                'Could not find {} in directory {}'
+                .format(namfilename, os.path.dirname(namfilename)))
+    with open(namfilename, 'r') as fp:
+        lines = fp.readlines()
+
+    for ln, line in enumerate(lines, 1):
+        line = line.strip()
+        if len(line) == 0 or line.startswith('#'):
+            # skip blank lines or comments
             continue
-        # be sure the line is not a comment
-        if '#' not in tmp[0]:
-            # be sure the second value is an integer
-            if testint(tmp[1]):
+        items = line.split()
+        # ensure we have at least three items
+        if len(items) < 3:
+            raise ValueError('line number {} has fewer than 3 items: {}'
+                             .format(ln, line))
+        ftype, key, fpath = items[0:3]
+        ftype = ftype.upper()
 
-                # remove quotes in file path
-                tmp[2] = tmp[2].replace('"', '')
-                tmp[2] = tmp[2].replace("'", "")
+        # remove quotes in file path
+        if '"' in fpath:
+            fpath = fpath.replace('"', '')
+        if "'" in fpath:
+            fpath = fpath.replace("'", "")
 
-                # need make filenames with paths system agnostic
-                if '/' in tmp[2]:
-                    raw = tmp[2].split('/')
-                elif '\\' in tmp[2]:
-                    raw = tmp[2].split('\\')
-                else:
-                    raw = [tmp[2]]
-                tmp[2] = os.path.join(*raw)
+        # need make filenames with paths system agnostic
+        if '/' in fpath:
+            raw = fpath.split('/')
+        elif '\\' in fpath:
+            raw = fpath.split('\\')
+        else:
+            raw = [fpath]
+        fpath = os.path.join(*raw)
 
-                fname = os.path.join(os.path.dirname(namfilename), tmp[2])
-                if not os.path.isfile(fname) or not os.path.exists(fname):
-                    # change to lower and make comparison (required for linux)
-                    dn = os.path.dirname(fname)
-                    fls = os.listdir(dn)
-                    lownams = [f.lower() for f in fls]
-                    bname = os.path.basename(fname)
-                    if bname.lower() in lownams:
-                        idx = lownams.index(bname.lower())
-                        fname = os.path.join(dn, fls[idx])
-                # parse the line
-                openmode = 'r'
-                if tmp[0].upper() == 'DATA(BINARY)':
-                    openmode = 'rb'
-                try:
-                    filehandle = open(fname, openmode)
-                except:
-                    if verbose:
-                        print('could not set filehandle for {0:s}'\
-                            .format(tmp[2]))
-                    filehandle = None
-                # populate the dictionary
-                key = int(tmp[1])
-                #
-                # Trap for the case where unit numbers are specified as zero
-                # In this case, the package must have a variable called
-                # unit number attached to it.  If not, then the key is set
-                # to fname
-                if key == 0:
-                    ftype = tmp[0].lower()
-                    if ftype in packages:
-                        key = packages[ftype].reservedunit()
-                    else:
-                        key = tmp[0]
-                ext_unit_dict[key] = NamData(tmp[0].upper(), fname, filehandle,
-                                             packages)
+        fname = os.path.join(os.path.dirname(namfilename), fpath)
+        if not os.path.isfile(fname) or not os.path.exists(fname):
+            # change to lower and make comparison (required for linux)
+            dn = os.path.dirname(fname)
+            fls = os.listdir(dn)
+            lownams = [f.lower() for f in fls]
+            bname = os.path.basename(fname)
+            if bname.lower() in lownams:
+                idx = lownams.index(bname.lower())
+                fname = os.path.join(dn, fls[idx])
+        # open the file
+        openmode = 'r'
+        if ftype == 'DATA(BINARY)':
+            openmode = 'rb'
+        try:
+            filehandle = open(fname, openmode)
+        except IOError:
+            if verbose:
+                print('could not set filehandle to {0:s}'.format(fpath))
+            filehandle = None
+        # be sure the second value is an integer
+        try:
+            key = int(key)
+        except ValueError:
+            raise ValueError('line number {}: the unit number (second item) '
+                             'is not an integer: {}'.format(ln, line))
+        # Trap for the case where unit numbers are specified as zero
+        # In this case, the package must have a variable called
+        # unit number attached to it.  If not, then the key is set
+        # to fname
+        if key == 0:
+            ftype_lower = ftype.lower()
+            if ftype_lower in packages:
+                key = packages[ftype_lower].reservedunit()
+            else:
+                key = ftype
+        ext_unit_dict[key] = NamData(ftype, fname, filehandle, packages)
     return ext_unit_dict
-

@@ -246,7 +246,7 @@ class Modpath(BaseModel):
                         'Error: no well package in the passed model')
                 for kper in range(nper):
                     mflist = self.__mf.wel.stress_period_data[kper]
-                    idx = [mflist['k'], mflist['i'], mflist['j']]
+                    idx = (mflist['k'], mflist['i'], mflist['j'])
                     arr[idx] = 1
                 ngrp = arr.sum()
                 icnt = 0

@@ -1,10 +1,10 @@
-__author__ = 'emorway'
-
 import sys
 import numpy as np
 
 from ..pakbase import Package
 from ..utils import Util2d, MfList
+
+__author__ = 'emorway'
 
 
 class Mt3dSft(Package):
@@ -76,7 +76,9 @@ class Mt3dSft(Package):
         The length of the array is equal to the number of stream reaches and
         starting concentration values should be entered in the same order
         that individual reaches are entered for record set 2 in the SFR2
-        input file.
+        input file. To specify starting concentrations for other species in a
+        multi-species simulation, include additional keywords, such as
+        coldsf2, coldsf3, and so forth.
     dispsf : array of floats
         Is the dispersion coefficient [L2 T-1] for each stream reach in the
         simulation and can vary for each simulated component of the
@@ -84,8 +86,9 @@ class Mt3dSft(Package):
         of simulated stream reaches times the number of simulated components.
         Values of dispersion for each reach should be entered in the same
         order that individual reaches are entered for record set 2 in the
-        SFR2 input file.  The first NSTRM entries correspond to NCOMP = 1,
-        with subsequent entries for each NCOMP simulated species.
+        SFR2 input file.  To specify dispsf for other species in a
+        multi-species simulation, include additional keywords, such as
+        dispsf2, dispsf3, and so forth.
     nobssf : int
         Specifies the number of surface flow observation points for
         monitoring simulated concentrations in streams.
@@ -142,7 +145,7 @@ class Mt3dSft(Package):
         the model name and lake concentration observation extension
         (for example, modflowtest.cbc and modflowtest.sftcobs.out), if ioutobs
         is a number greater than zero. If a single string is passed the
-        package will be set to the string and lake concentration observation
+        package will be set to the string and sfr concentration observation
         output name will be created using the model name and .sftcobs.out
         extension, if ioutobs is a number greater than zero. To define the
         names for all package files (input and output) the length of the list
@@ -179,7 +182,7 @@ class Mt3dSft(Package):
 
     """
 
-    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=None,
+    def __init__(self, model, nsfinit=0, mxsfbc=0, icbcsf=0, ioutobs=0,
                  ietsfr=0, isfsolv=1, wimp=0.50, wups=1.00, cclosesf=1.0E-6,
                  mxitersf=10, crntsf=1.0, iprtxmd=0, coldsf=0.0, dispsf=0.0,
                  nobssf=0, obs_sf=None, sf_stress_period_data=None,
@@ -193,8 +196,8 @@ class Mt3dSft(Package):
             unitnumber = Mt3dSft.reservedunit()
 
         # set filenames
-        if filenames is None:
-            filenames = [None, None]
+        if filenames is None:  # if filename not passed
+            filenames = [None, None]  # setup filenames
             if abs(ioutobs) > 0:
                 filenames[1] = model.name
         elif isinstance(filenames, str):
@@ -206,8 +209,14 @@ class Mt3dSft(Package):
 
         if ioutobs is not None:
             ext = 'sftcobs.out'
-            fname = filenames[1]
-            model.add_output_file(abs(ioutobs), fname=fname, extension=ext,
+            if filenames[1] is not None:
+                if len(filenames[1].split('.', 1)) > 1:  # already has extension
+                    fname = '{}.{}'.format(*filenames[1].split('.', 1))
+                else:
+                    fname = '{}.{}'.format(filenames[1], ext)
+            else:
+                fname = '{}.{}'.format(model.name, ext)
+            model.add_output_file(abs(ioutobs), fname=fname, extension=None,
                                   binflag=False, package=Mt3dSft.ftype())
         else:
             ioutobs = 0
@@ -249,11 +258,11 @@ class Mt3dSft(Package):
         # Set 1D array values
         self.coldsf = [Util2d(model, (nsfinit,), np.float32, coldsf,
                              name='coldsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)]
+                             array_free_format=False)]
 
         self.dispsf = [Util2d(model, (nsfinit,), np.float32, dispsf,
                              name='dispsf', locat=self.unit_number[0],
-                             array_free_format=model.free_format)]
+                             array_free_format=False)]
         ncomp = model.ncomp
         # handle the miult
         if ncomp > 1:
@@ -287,7 +296,7 @@ class Mt3dSft(Package):
         else:
             self.sf_stress_period_data = MfList(self, model=model,
                                                 data=sf_stress_period_data)
-
+            self.sf_stress_period_data.list_free_format = True
         self.parent.add_package(self)
         return
 
@@ -437,13 +446,10 @@ class Mt3dSft(Package):
 
         >>> import os
         >>> import flopy
-
-        >>> os.chdir(r'C:\temp\flopy_test\sfr_test')
-        >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam', load_only=['dis', 'bas6'])
+        >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam',
+        ...                                 load_only=['dis', 'bas6'])
         >>> sfr = flopy.modflow.ModflowSfr2.load('CrnkNic.sfr2', mf)
-        >>> chk = sfr.check()
-
-        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe', load_only='btn')
+        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam', load_only='btn')
         >>> sft = flopy.mt3d.Mt3dSft.load('CrnkNic.sft', mt)
 
         """
@@ -476,10 +482,7 @@ class Mt3dSft(Package):
         # Item 1 (NSFINIT, MXSFBC, ICBCSF, IOUTOBS, IETSFR)
         line = f.readline()
         if line[0] == '#':
-            if model.verbose:
-                print('   SFT package currently does not support comment ' \
-                      'lines...')
-                sys.exit()
+            raise ValueError('SFT package does not support comment lines')
 
         if model.verbose:
             print('   loading nsfinit, mxsfbc, icbcsf, ioutobs, ietsfr...')
@@ -512,10 +515,8 @@ class Mt3dSft(Package):
 
         vals = line.strip().split()
 
-        if len(vals) < 7 and model.verbose:
-            print('   not enough values specified in item 2 of SFT input \
-                      file, exiting...')
-            sys.exit()
+        if len(vals) < 7:
+            raise ValueError('expected 7 values for item 2 of SFT input file')
         else:
             isfsolv = int(vals[0])
             wimp = float(vals[1])
@@ -540,17 +541,29 @@ class Mt3dSft(Package):
 
         # Item 3 (COLDSF(NRCH)) Initial concentration
         if model.verbose:
-            print('   loading NSFINIT...')
+            print('   loading COLDSF...')
 
             if model.free_format:
                 print('   Using MODFLOW style array reader utilities to ' \
-                      'read NSFINIT')
+                      'read COLDSF')
             elif model.array_format == 'mt3d':
                 print('   Using historic MT3DMS array reader utilities to ' \
-                      'read NSFINIT')
+                      'read COLDSF')
 
-        coldsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'nsfinit',
+
+        coldsf = Util2d.load(f, model, (nsfinit,), np.float32, 'coldsf1',
                              ext_unit_dict, array_format=model.array_format)
+
+        kwargs = {}
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = "coldsf" + str(icomp)
+                if model.verbose:
+                    print('   loading {}...'.format(name))
+                u2d = Util2d.load(f, model, (nsfinit,), np.float32,
+                                  name, ext_unit_dict, array_format=model.array_format)
+                kwargs[name] = u2d
+
 
         # Item 4 (DISPSF(NRCH)) Reach-by-reach dispersion
         if model.verbose:
@@ -561,8 +574,16 @@ class Mt3dSft(Package):
                 print('   Using historic MT3DMS array reader utilities to ' \
                       'read DISPSF')
 
-        dispsf = Util2d.load(f, model, (1, nsfinit), np.float32, 'dispsf',
+        dispsf = Util2d.load(f, model, (nsfinit,), np.float32, 'dispsf1',
                              ext_unit_dict, array_format=model.array_format)
+        if ncomp > 1:
+            for icomp in range(2, ncomp + 1):
+                name = "dispsf" + str(icomp)
+                if model.verbose:
+                    print('   loading {}...'.format(name))
+                u2d = Util2d.load(f, model, (nsfinit,), np.float32,
+                                  name, ext_unit_dict, array_format=model.array_format)
+                kwargs[name] = u2d
 
         # Item 5 NOBSSF
         if model.verbose:
@@ -655,7 +676,7 @@ class Mt3dSft(Package):
                       crntsf=crntsf, iprtxmd=iprtxmd, coldsf=coldsf,
                       dispsf=dispsf, nobssf=nobssf, obs_sf=obs_sf,
                       sf_stress_period_data=sf_stress_period_data,
-                      unitnumber=unitnumber, filenames=filenames)
+                      unitnumber=unitnumber, filenames=filenames,**kwargs)
         return sft
 
     @staticmethod

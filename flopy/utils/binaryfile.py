@@ -1,8 +1,9 @@
 """
-Module to read MODFLOW binary output files.  The module contains three
+Module to read MODFLOW binary output files.  The module contains four
 important classes that can be accessed by the user.
 
 *  HeadFile (Binary head file.  Can also be used for drawdown)
+*  HeadUFile (Binary MODFLOW-USG unstructured head file)
 *  UcnFile (Binary concentration file from MT3DMS)
 *  CellBudgetFile (Binary cell-by-cell flow file)
 
@@ -95,7 +96,7 @@ class BinaryHeader(Header):
         return header.get_values()
 
 
-def binaryread_struct(file, vartype, shape=(1, ), charlen=16):
+def binaryread_struct(file, vartype, shape=(1,), charlen=16):
     """
     Read text, a scalar value, or an array of values from a binary file.
         file : file object
@@ -140,7 +141,7 @@ def binaryread_struct(file, vartype, shape=(1, ), charlen=16):
     return result
 
 
-def binaryread(file, vartype, shape=(1, ), charlen=16):
+def binaryread(file, vartype, shape=(1,), charlen=16):
     """
     Uses numpy to read from binary file.  This was found to be faster than the
         struct approach and is used as the default.
@@ -675,8 +676,8 @@ class CellBudgetFile(object):
                     print(itxt + ': ' + str(s))
                 print('file position: ', ipos)
                 if int(header['imeth']) != 5 and \
-                                int(header['imeth']) != 6 and \
-                                int(header['imeth']) != 7:
+                        int(header['imeth']) != 6 and \
+                        int(header['imeth']) != 7:
                     print('')
 
             # store record and byte position mapping
@@ -741,8 +742,8 @@ class CellBudgetFile(object):
                 print('nlist: ', nlist)
                 print('')
             nbytes = nlist * (
-                np.int32(1).nbytes * 2 + self.realtype(1).nbytes +
-                naux * self.realtype(1).nbytes)
+                    np.int32(1).nbytes * 2 + self.realtype(1).nbytes +
+                    naux * self.realtype(1).nbytes)
         else:
             raise Exception('invalid method code ' + str(imeth))
         if nbytes != 0:
@@ -833,7 +834,7 @@ class CellBudgetFile(object):
         Print a list of unique record names
         """
         print('RECORD           IMETH')
-        print(22*'-')
+        print(22 * '-')
         for rec, imeth in zip(self.textlist, self.imethlist):
             if isinstance(rec, bytes):
                 rec = rec.decode()
@@ -1098,7 +1099,7 @@ class CellBudgetFile(object):
         timesint = self.get_times()
         if len(timesint) < 1:
             if times is None:
-                timesint = [x+1 for x in range(len(kk))]
+                timesint = [x + 1 for x in range(len(kk))]
             else:
                 if isinstance(times, np.ndarray):
                     times = times.tolist()
@@ -1112,11 +1113,14 @@ class CellBudgetFile(object):
                 result[idx, 0] = t
 
         for itim, k in enumerate(kk):
-            v = self.get_data(kstpkper=k, text=text, full3D=True)[0]
-            istat = 1
-            for k, i, j in kijlist:
-                result[itim, istat] = v[k, i, j].copy()
-                istat += 1
+            v = self.get_data(kstpkper=k, text=text, full3D=True)
+            # skip missing data - required for storage
+            if len(v) > 0:
+                v = v[0]
+                istat = 1
+                for k, i, j in kijlist:
+                    result[itim, istat] = v[k, i, j].copy()
+                    istat += 1
 
         return result
 
@@ -1478,7 +1482,7 @@ class CellBudgetFile(object):
 
 class HeadUFile(BinaryLayerFile):
     """
-    USG HeadUFile Class.
+    Unstructured MODFLOW-USG HeadUFile Class.
 
     Parameters
     ----------
@@ -1502,7 +1506,7 @@ class HeadUFile(BinaryLayerFile):
 
     Notes
     -----
-    The HeadFile class provides simple ways to retrieve a list of
+    The HeadUFile class provides simple ways to retrieve a list of
     head arrays from a MODFLOW-USG binary head file and time series
     arrays for one or more cells.
 
@@ -1524,14 +1528,18 @@ class HeadUFile(BinaryLayerFile):
     --------
 
     >>> import flopy.utils.binaryfile as bf
-    >>> hdobj = bf.USGHeadFile('model.hds', precision='single')
+    >>> hdobj = bf.HeadUFile('model.hds')
     >>> hdobj.list_records()
     >>> usgheads = hdobj.get_data(kstpkper=(1, 50))
+
 
     """
 
     def __init__(self, filename, text='headu', precision='auto',
                  verbose=False, **kwargs):
+        """
+        Class constructor
+        """
         self.text = text.encode()
         if precision == 'auto':
             precision = get_headfile_precision(filename)
@@ -1574,7 +1582,7 @@ class HeadUFile(BinaryLayerFile):
                 print(msg)
             self.file.seek(ipos, 0)
             data[ilay - 1] = binaryread(self.file, self.realtype,
-                                        shape=(npl, ))
+                                        shape=(npl,))
         return data
 
     def get_databytes(self, header):
@@ -1599,5 +1607,31 @@ class HeadUFile(BinaryLayerFile):
         return npl * np.int64(self.realtype(1).nbytes)
 
     def get_ts(self, idx):
-        raise NotImplementedError()
+        """
+        Get a time series from the binary HeadUFile (not implemented).
 
+        Parameters
+        ----------
+        idx : tuple of ints, or a list of a tuple of ints
+            idx can be (layer, row, column) or it can be a list in the form
+            [(layer, row, column), (layer, row, column), ...].  The layer,
+            row, and column values must be zero based.
+
+        Returns
+        ----------
+        out : numpy array
+            Array has size (ntimes, ncells + 1).  The first column in the
+            data array will contain time (totim).
+
+        See Also
+        --------
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        """
+        msg = 'HeadUFile: get_ts() is not implemented'
+        raise NotImplementedError(msg)

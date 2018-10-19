@@ -5,6 +5,7 @@ import subprocess
 
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
+from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  #read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
@@ -132,11 +133,21 @@ class Gridgen(object):
 
     def __init__(self, dis, model_ws='.', exe_name='gridgen',
                  surface_interpolation='replicate'):
+        self.dis = dis
+        if isinstance(dis, ModflowGwfdis):
+            self.nlay = self.dis.nlay.get_data()
+            self.nrow = self.dis.nrow.get_data()
+            self.ncol = self.dis.ncol.get_data()
+            self.sr = self.dis._model_or_sim.sr
+        else:
+            self.nlay = self.dis.nlay
+            self.nrow = self.dis.nrow
+            self.ncol = self.dis.ncol
+            self.sr = self.dis.parent.sr
         self.nodes = 0
         self.nja = 0
-        self.nodelay = np.zeros((dis.nlay), dtype=np.int)
+        self.nodelay = np.zeros((self.nlay), dtype=np.int)
         self._vertdict = {}
-        self.dis = dis
         self.model_ws = model_ws
         exe_name = which(exe_name)
         if exe_name is None:
@@ -150,19 +161,19 @@ class Gridgen(object):
                             '{}.  Must be INTERPOLATE or '
                             'REPLICATE'.format(surface_interpolation))
         self.surface_interpolation = [surface_interpolation
-                                      for k in range(dis.nlay + 1)]
+                                      for k in range(self.nlay + 1)]
 
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
         self._active_domain = []
-        for k in range(dis.nlay):
+        for k in range(self.nlay):
             self._active_domain.append(None)
 
         # Set up a blank _refinement_features list with empty list for
         # each layer
         self._rfdict = {}
         self._refinement_features = []
-        for k in range(dis.nlay):
+        for k in range(self.nlay):
             self._refinement_features.append([])
 
         # Set up blank _elev and _elev_extent dictionaries
@@ -191,7 +202,7 @@ class Gridgen(object):
 
         """
 
-        assert 0 <= isurf <= self.dis.nlay + 1
+        assert 0 <= isurf <= self.nlay + 1
         type = type.upper()
         if type not in ['INTERPOLATE', 'REPLICATE', 'ASCIIGRID']:
             raise Exception('Error.  Unknown surface interpolation type: '
@@ -572,7 +583,7 @@ class Gridgen(object):
         ll = line.strip().split()
         nodes = int(ll.pop(0))
         f.close()
-        nlay = self.dis.nlay
+        nlay = self.nlay
         ivsd = 0
         idsymrd = 0
         laycbd = 0
@@ -705,7 +716,7 @@ class Gridgen(object):
         ll = line.strip().split()
         nodes = int(ll.pop(0))
         f.close()
-        nlay = self.dis.nlay
+        nlay = self.nlay
         gridprops['nodes'] = nodes
         gridprops['nlay'] = nlay
 
@@ -945,6 +956,82 @@ class Gridgen(object):
         f.close()
         return
 
+    def get_gridprops_disv(self, verbose=False):
+        gridprops = {}
+
+        # nodes, nlay
+        fname = os.path.join(self.model_ws, 'qtg.nod')
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.strip().split()
+        nodes = int(ll.pop(0))
+        f.close()
+        nlay = self.nlay
+        gridprops['nodes'] = nodes
+        gridprops['nlay'] = nlay
+
+        # ncpl
+        nodelay = np.empty((nlay), dtype=np.int)
+        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
+        f = open(fname, 'r')
+        nodelay = read1d(f, nodelay)
+        f.close()
+
+        ncpl = nodelay.min()
+        assert ncpl == nodelay.max(), 'Cannot create DISV properties '
+        'because the number of cells is not the same for all layers'
+        gridprops['ncpl'] = ncpl
+
+        # top
+        top = np.empty(ncpl, dtype=np.float32)
+        k = 0
+        fname = os.path.join(self.model_ws,
+                             'quadtreegrid.top{}.dat'.format(k + 1))
+        f = open(fname, 'r')
+        top = read1d(f, top)
+        f.close()
+        gridprops['top'] = top
+
+        # botm
+        botm = []
+        istart = 0
+        for k in range(nlay):
+            istop = istart + nodelay[k]
+            fname = os.path.join(self.model_ws,
+                                 'quadtreegrid.bot{}.dat'.format(k + 1))
+            f = open(fname, 'r')
+            btk = np.empty((nodelay[k]), dtype=np.float32)
+            btk = read1d(f, btk)
+            f.close()
+            botm.append(btk)
+            istart = istop
+        gridprops['botm'] = botm
+
+        # cell xy locations
+        cellxy = np.empty((ncpl, 2), dtype=np.float)
+        for n in range(ncpl):
+            x, y = self.get_center(n)
+            cellxy[n, 0] = x
+            cellxy[n, 1] = y
+        gridprops['cellxy'] = cellxy
+
+        from .cvfdutil import to_cvfd
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncpl, verbose=verbose)
+        gridprops['verts'] = verts
+        gridprops['iverts'] = iverts
+
+        nvert = verts.shape[0]
+        vertices = [[i, verts[i, 0], verts[i, 1]] for i in range(nvert)]
+        gridprops['nvert'] = nvert
+        gridprops['vertices'] = vertices
+
+        # cell2d information
+        cell2d = [[n, cellxy[n, 0], cellxy[n, 1], len(ivs)] + ivs
+                  for n, ivs in enumerate(iverts)]
+        gridprops['cell2d'] = cell2d
+
+        return gridprops
+
     def to_disv6(self, fname, verbose=False):
         """
         Create a MODFLOW 6 DISV file
@@ -1105,6 +1192,7 @@ class Gridgen(object):
         # to zero-based and return
         result = np.genfromtxt(fn, dtype=None, names=True, delimiter=',',
                                usecols=tuple(range(ncol)))
+        result = np.atleast_1d(result)
         result = result.view(np.recarray)
         result['nodenumber'] -= 1
         return result
@@ -1125,20 +1213,20 @@ class Gridgen(object):
         # lower left corner, whereas flopy rotates around upper left.
         # gridgen rotation is counter clockwise, whereas flopy rotation is
         # clock wise.  Crazy.
-        sr = self.dis.parent.sr
-        xll = sr.xul
-        yll = sr.yul - sr.yedge[0]
-        xllrot, yllrot = sr.rotate(xll, yll, sr.rotation, xorigin=sr.xul,
-                                   yorigin=sr.yul)
+        xll = self.sr.xul
+        yll = self.sr.yul - self.sr.yedge[0]
+        xllrot, yllrot = self.sr.rotate(xll, yll, self.sr.rotation,
+                                        xorigin=self.sr.xul,
+                                        yorigin=self.sr.yul)
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(sr.rotation)
+        s += '  ROTATION_ANGLE = {}\n'.format(self.sr.rotation)
         s += '  X_OFFSET = {}\n'.format(xllrot)
         s += '  Y_OFFSET = {}\n'.format(yllrot)
-        s += '  NLAY = {}\n'.format(self.dis.nlay)
-        s += '  NROW = {}\n'.format(self.dis.nrow)
-        s += '  NCOL = {}\n'.format(self.dis.ncol)
+        s += '  NLAY = {}\n'.format(self.nlay)
+        s += '  NROW = {}\n'.format(self.nrow)
+        s += '  NCOL = {}\n'.format(self.ncol)
 
         # delr
         delr = self.dis.delr.array
@@ -1169,8 +1257,11 @@ class Gridgen(object):
 
         # bot
         botm = self.dis.botm
-        for k in range(self.dis.nlay):
-            bot = botm[k].array
+        for k in range(self.nlay):
+            if isinstance(self.dis, ModflowGwfdis):
+                bot = botm[k]
+            else:
+                bot = botm[k].array
             if bot.min() == bot.max():
                 s += '  BOTTOM LAYER {} = CONSTANT {}\n'.format(k + 1,
                                                                 bot.min())
@@ -1227,7 +1318,7 @@ class Gridgen(object):
 
         s += '  SMOOTHING = full\n'
 
-        for k in range(self.dis.nlay):
+        for k in range(self.nlay):
             if self.surface_interpolation[k] == 'ASCIIGRID':
                 grd = '_gridgen.lay{}.asc'.format(k)
             else:
@@ -1236,7 +1327,7 @@ class Gridgen(object):
                                                    self.surface_interpolation[k],
                                                    grd)
 
-        for k in range(self.dis.nlay):
+        for k in range(self.nlay):
             if self.surface_interpolation[k + 1] == 'ASCIIGRID':
                 grd = '_gridgen.lay{}.asc'.format(k + 1)
             else:

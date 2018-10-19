@@ -4,7 +4,7 @@ the ModflowLmt class as `flopy.modflow.ModflowLmt`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
-<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt.htm>`_.
+<http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/index.html?lmt6.htm>`_.
 
 """
 import os
@@ -139,6 +139,8 @@ class ModflowLmt(Package):
                 pckgs += 'LAK '
             if 'uzf' in [x.lower() for x in self.package_flows]:
                 pckgs += 'UZF '
+            if 'all' in [x.lower() for x in self.package_flows]:
+                pckgs += 'ALL'
 
             line = 'PACKAGE_FLOWS ' + pckgs
             f.write('%s\n' % (line))

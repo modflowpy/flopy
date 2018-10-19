@@ -177,9 +177,9 @@ block solutiongroup
 name slnmnames
 type string
 in_record true
-shape (nslnmod)
+shape (:)
 tagged false
 reader urword
 longname array of model names in this solution
-description is the array of model names to add to this solution.
+description is the array of model names to add to this solution.  The number of model names is determined by the number of model names the user provides on this line.
 

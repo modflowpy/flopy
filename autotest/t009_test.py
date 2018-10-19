@@ -305,7 +305,7 @@ def test_export():
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
-                                   exe_name='mf2005.exe',
+                                   exe_name='mf2005',
                                    model_ws=path,
                                    load_only=['ghb', 'evt', 'rch', 'dis',
                                               'bas6', 'oc', 'sip', 'lpf'])
@@ -449,12 +449,12 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    test_sfr()
+    #test_sfr()
     test_sfr_renumbering()
-    test_example()
-    test_export()
-    test_transient_example()
-    test_sfr_plot()
+    #test_example()
+    #test_export()
+    #test_transient_example()
+    #test_sfr_plot()
     test_assign_layers()
     test_SfrFile()
     test_const()

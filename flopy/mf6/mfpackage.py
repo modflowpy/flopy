@@ -1,12 +1,15 @@
 import os
 import sys
 import errno
+import inspect
 import numpy as np
 from collections import OrderedDict
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
-from .mfbase import MFFileMgmt
-from .data.mfstructure import MFDataFileException, DatumType
+from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
+                    MFInvalidTransientBlockHeaderException, VerbosityLevel, \
+                    FlopyException
+from .data.mfstructure import DatumType
 from .data import mfstructure, mfdatautil, mfdata
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
@@ -47,8 +50,10 @@ class MFBlockHeader(object):
                  path=None):
         self.name = name
         self.variable_strings = variable_strings
-        assert((simulation_data is None and path is None) or
-               (simulation_data is not None and path is not None))
+        if not ((simulation_data is None and path is None) or
+               (simulation_data is not None and path is not None)):
+            raise FlopyException('Block header must be initialized with both '
+                                 'simulation_data and path or with neither.')
         if simulation_data is None:
             self.comment = comment
             self.simulation_data = None
@@ -154,8 +159,16 @@ class MFBlockHeader(object):
                 if isinstance(transient_key, np.recarray):
                     item_struct = self.data_items[index].structure
                     key_index = item_struct.first_non_keyword_index()
-                    assert key_index is not None and \
-                           len(transient_key[0]) > key_index
+                    if not (key_index is not None and
+                           len(transient_key[0]) > key_index):
+                        if key_index is None:
+                            raise FlopyException('Block header index could '
+                                                 'not be determined.')
+                        else:
+                            raise FlopyException('Block header index "{}" '
+                                                 'must be less than "{}"'
+                                                 '.'.format(
+                                key_index, len(transient_key[0])))
                     transient_key = transient_key[0][key_index]
                 break
         return transient_key
@@ -219,7 +232,7 @@ class MFBlock(object):
     """
 
     def __init__(self, simulation_data, dimensions, structure, path,
-                 model_or_sim, container_package=None):
+                 model_or_sim, container_package):
         self._simulation_data = simulation_data
         self._dimensions = dimensions
         self._model_or_sim = model_or_sim
@@ -246,6 +259,29 @@ class MFBlock(object):
         self.loaded = False
         self.external_file_name = None
         self._structure_init()
+
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal):
+        data_str = ''
+        for idx, dataset in self.datasets.items():
+            if formal:
+                ds_repr = repr(dataset)
+                if len(ds_repr.strip()) > 0:
+                    data_str = '{}{}\n{}\n'.format(data_str,
+                                                   dataset.structure.name,
+                                                   repr(dataset))
+            else:
+                ds_str = str(dataset)
+                if len(ds_str.strip()) > 0:
+                    data_str = '{}{}\n{}\n'.format(data_str,
+                                                   dataset.structure.name,
+                                                   str(dataset))
+        return data_str
 
     # return an MFScalar, MFList, or MFArray
     @staticmethod
@@ -303,7 +339,18 @@ class MFBlock(object):
         # update datasets
         for key, dataset in self.datasets.items():
             if dataset.structure.file_data:
-                file_data = dataset.get_data()
+                try:
+                    file_data = dataset.get_data()
+                except MFDataException as mfde:
+                    raise MFDataException(mfdata_except=mfde,
+                                          model=
+                                          self._container_package.model_name,
+                                          package=
+                                          self._container_package._get_pname(),
+                                          message='Error occurred while '
+                                                  'getting file data from '
+                                                  '"{}"'.format(
+                                                  dataset.structure.name))
                 if file_data:
                     # update file path location for all file paths
                     for file_line in file_data:
@@ -314,7 +361,19 @@ class MFBlock(object):
         for block_header in self.block_headers:
             for dataset in block_header.data_items:
                 if dataset.structure.file_data:
-                    file_data = dataset.get_data()
+                    try:
+                        file_data = dataset.get_data()
+                    except MFDataException as mfde:
+                        raise MFDataException(mfdata_except=mfde,
+                                              model=self._container_package.
+                                              model_name,
+                                              package=self._container_package.
+                                              _get_pname(),
+                                              message='Error occurred while '
+                                                      'getting file data from '
+                                                      '"{}"'.format(
+                                                      dataset.structure.name))
+
                     if file_data:
                         # update file path location for all file paths
                         for file_line in file_data:
@@ -332,10 +391,20 @@ class MFBlock(object):
                                                         old_file_name)
 
     def add_dataset(self, dataset_struct, data, var_path):
-        self.datasets[var_path[-1]] = self.data_factory(self._simulation_data,
-                                                        dataset_struct, True,
-                                                        var_path,
-                                                        self._dimensions, data)
+        try:
+            self.datasets[var_path[-1]] = self.data_factory(self._simulation_data,
+                                                            dataset_struct, True,
+                                                            var_path,
+                                                            self._dimensions, data)
+        except MFDataException as mfde:
+            raise MFDataException(mfdata_except=mfde,
+                                  model=self._container_package.model_name,
+                                  package=self._container_package._get_pname(),
+                                  message='Error occurred while adding'
+                                  ' dataset "{}" to block '
+                                  '"{}"'.format(dataset_struct.name,
+                                                self.structure.name))
+
         self._simulation_data.mfdata[var_path] = self.datasets[var_path[-1]]
         dtype = dataset_struct.get_datatype()
         if dtype == mfstructure.DataType.list_transient or \
@@ -371,11 +440,19 @@ class MFBlock(object):
             block_header_path = self.path + (len(self.block_headers),)
         struct = self.structure
         last_header = self.block_headers[-1]
-        last_header.build_header_variables(self._simulation_data,
-                                           struct.block_header_structure,
-                                           block_header_path,
-                                           header_data,
-                                           self._dimensions)
+        try:
+            last_header.build_header_variables(self._simulation_data,
+                                               struct.block_header_structure,
+                                               block_header_path,
+                                               header_data,
+                                               self._dimensions)
+        except MFDataException as mfde:
+            raise MFDataException(mfdata_except=mfde,
+                                  model=self._container_package.model_name,
+                                  package=self._container_package._get_pname(),
+                                  message='Error occurred while building'
+                                  ' block header variables for block '
+                                  '"{}"'.format(last_header.name))
 
     def _new_dataset(self, key, dataset_struct, block_header=False,
                      initial_val=None):
@@ -389,21 +466,52 @@ class MFBlock(object):
                 initial_val = int(initial_val[0]) - 1
             if isinstance(initial_val, list):
                 initial_val = [tuple(initial_val)]
-            new_data = MFBlock.data_factory(self._simulation_data,
-                                            dataset_struct, True, dataset_path,
-                                            self._dimensions, initial_val)
+            try:
+                new_data = MFBlock.data_factory(self._simulation_data,
+                                                dataset_struct, True, dataset_path,
+                                                self._dimensions, initial_val)
+            except MFDataException as mfde:
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self._container_package.model_name,
+                                      package=self._container_package._get_pname(),
+                                      message='Error occurred while adding'
+                                              ' dataset "{}" to block '
+                                              '"{}"'.format(
+                                          dataset_struct.name,
+                                          self.structure.name))
             self.block_headers[-1].data_items.append(new_data)
         else:
-            self.datasets[key] = self.data_factory(self._simulation_data,
-                                                   dataset_struct, True,
-                                                   dataset_path, initial_val,
-                                                   self._dimensions)
+            try:
+                self.datasets[key] = self.data_factory(self._simulation_data,
+                                                       dataset_struct, True,
+                                                       dataset_path, initial_val,
+                                                       self._dimensions)
+            except MFDataException as mfde:
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self._container_package.model_name,
+                                      package=self._container_package._get_pname(),
+                                      message='Error occurred while adding'
+                                              ' dataset "{}" to block '
+                                              '"{}"'.format(
+                                          dataset_struct.name,
+                                          self.structure.name))
         for keyword in dataset_struct.get_keywords():
             self.datasets_keyword[keyword] = dataset_struct
 
     def is_empty(self):
         for key, dataset in self.datasets.items():
-            has_data = dataset.has_data()
+            try:
+                has_data = dataset.has_data()
+            except MFDataException as mfde:
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self._container_package.model_name,
+                                      package=self._container_package._get_pname(),
+                                      message='Error occurred while verifying'
+                                              ' data of dataset "{}" in block '
+                                              '"{}"'.format(
+                                          dataset.structure.name,
+                                          self.structure.name))
+
             if has_data is not None and has_data:
                 return False
         return True
@@ -412,20 +520,24 @@ class MFBlock(object):
         # verify number of header variables
         if len(block_header.variable_strings) < \
           self.structure.number_non_optional_block_header_data():
-            warning_str = 'WARNING: Block header for block "{}" does not ' \
-                          'contain the correct number of ' \
-                          'variables {}'.format(block_header.name, self.path)
-            print(warning_str)
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                warning_str = 'WARNING: Block header for block "{}" does not ' \
+                              'contain the correct number of ' \
+                              'variables {}'.format(block_header.name, self.path)
+                print(warning_str)
             return
 
         if self.loaded:
             # verify header has not already been loaded
             for bh_current in self.block_headers:
                 if bh_current.is_same_header(block_header):
-                    warning_str = 'WARNING: Block header for block "{}" is ' \
-                                  'not a unique block header ' \
-                                  '{}'.format(block_header.name, self.path)
-                    print(warning_str)
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        warning_str = 'WARNING: Block header for block "{}" is ' \
+                                      'not a unique block header ' \
+                                      '{}'.format(block_header.name, self.path)
+                        print(warning_str)
                     return
 
         # init
@@ -469,22 +581,59 @@ class MFBlock(object):
                 fd_block.readline()
                 fd_path, filename = os.path.split(
                   os.path.realpath(fd_block.name))
-                self.external_file_name = arr_line[1]
-                fd_block = open(os.path.join(fd_path, self.external_file_name),
-                                'r')
-                # read first line of external file
-                line = fd_block.readline()
-                arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                try:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        opening external file "{}"..'
+                              '.'.format(arr_line[1]))
+                    self.external_file_name = arr_line[1]
+                    fd_block = open(os.path.join(fd_path, self.external_file_name),
+                                    'r')
+                    # read first line of external file
+                    line = fd_block.readline()
+                    arr_line = mfdatautil.ArrayUtil.split_data_line(line)
+                except:
+                    type_, value_, traceback_ = sys.exc_info()
+                    message = 'Error reading external file specified in ' \
+                              'line "{}"'.format(line)
+                    raise MFDataException(self._container_package.model_name,
+                                          self._container_package._get_pname(),
+                                          self.path, 'reading external file',
+                                          self.structure.name,
+                                          inspect.stack()[0][3], type_,
+                                          value_, traceback_, message,
+                                          self._simulation_data.debug)
             if len(self.structure.data_structures) <= 1:
                 # load a single data set
                 dataset = self.datasets[next(iter(self.datasets))]
-                next_line = dataset.load(line, fd_block,
-                                         self.block_headers[-1],
-                                         initial_comment)
-
+                try:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading data {}..'
+                              '.'.format(dataset.structure.name))
+                    next_line = dataset.load(line, fd_block,
+                                             self.block_headers[-1],
+                                             initial_comment)
+                except MFDataException as mfde:
+                    raise MFDataException(mfdata_except=mfde,
+                                          model=self._container_package.
+                                          model_name,
+                                          package=self._container_package.
+                                          _get_pname(),
+                                          message='Error occurred while '
+                                                  'loading data "{}" in '
+                                                  'block "{}" from file "{}"'
+                                                  '.'.format(
+                                              dataset.structure.name,
+                                              self.structure.name,
+                                              fd_block.name))
                 package_info_list = self._get_package_info(dataset)
                 if package_info_list is not None:
                     for package_info in package_info_list:
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('        loading child package {}..'
+                                  '.'.format(package_info[0]))
                         self._model_or_sim.load_package(package_info[0],
                                                         package_info[1],
                                                         package_info[1], True,
@@ -515,7 +664,7 @@ class MFBlock(object):
                 try:
                     key, results = self._find_data_by_keyword(line, fd_block,
                                                               initial_comment)
-                except mfstructure.MFInvalidTransientBlockHeaderException as e:
+                except MFInvalidTransientBlockHeaderException as e:
                     warning_str = 'WARNING: {}'.format(e)
                     print(warning_str)
                     self.block_headers.pop()
@@ -538,18 +687,15 @@ class MFBlock(object):
                                 break
                             # look for keyword and store line as data o
                             # r comment
-                            key, \
-                            result = self._find_data_by_keyword(line,
-                                                                fd_block,
-                                                                initial_comment
-                                                                )
+                            key, result = self._find_data_by_keyword(
+                                line, fd_block, initial_comment)
                             self._save_comments(arr_line, line, key, comments)
                             if result[1] is not None and \
                                result[1][:3].upper() == 'END':
                                 break
 
         self._simulation_data.mfdata[self.blk_trailing_comment_path].text = \
-          comments
+            comments
         self.loaded = True
         self.is_valid()
 
@@ -563,15 +709,36 @@ class MFBlock(object):
             key = mfdatautil.find_keyword(arr_line, self.datasets_keyword)
             if key is not None:
                 ds_name = self.datasets_keyword[key].name
-                next_line = self.datasets[ds_name].load(next_line[1], fd,
-                                                        self.block_headers[-1],
-                                                        initial_comment)
+                try:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading data {}...'.format(ds_name))
+                    next_line = self.datasets[ds_name].load(
+                        next_line[1], fd, self.block_headers[-1],
+                        initial_comment)
+                except MFDataException as mfde:
+                    raise MFDataException(mfdata_except=mfde,
+                                          model=self._container_package.
+                                          model_name,
+                                          package=self._container_package.
+                                          _get_pname(),
+                                          message='Error occurred while '
+                                                  'loading data "{}" in '
+                                                  'block "{}" from file "{}"'
+                                                  '.'.format(
+                                              ds_name, self.structure.name,
+                                              fd.name))
+
                 # see if first item's name indicates a reference to
                 # another package
                 package_info_list = self._get_package_info(self.datasets[
                                                            ds_name])
                 if package_info_list is not None:
                     for package_info in package_info_list:
+                        if self._simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('        loading child package {}..'
+                                  '.'.format(package_info[0]))
                         self._model_or_sim.load_package(package_info[0],
                                                         package_info[1],
                                                         package_info[1], True,
@@ -588,7 +755,7 @@ class MFBlock(object):
                 error_msg = 'ERROR: Attempting to read a ReadAsArrays ' \
                             'package as a non-ReadAsArrays ' \
                             'package {}'.format(self.path)
-                raise mfstructure.ReadAsArraysException(error_msg)
+                raise ReadAsArraysException(error_msg)
             else:
                 nothing_found = True
 
@@ -606,6 +773,10 @@ class MFBlock(object):
             package_info_list = self._get_package_info(dataset)
             if package_info_list is not None:
                 for package_info in package_info_list:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        loading child package {}..'
+                              '.'.format(package_info[0]))
                     self._model_or_sim.load_package(package_info[0],
                                                     package_info[1], None,
                                                     True, package_info[2],
@@ -628,7 +799,19 @@ class MFBlock(object):
                 model_type = self._model_or_sim.structure.model_type
                 if PackageContainer.package_factory(package_type,
                                                     model_type) is not None:
-                    data = dataset.get_data()
+                    try:
+                        data = dataset.get_data()
+                    except MFDataException as mfde:
+                        raise MFDataException(mfdata_except=mfde,
+                                              model=self._container_package.
+                                              model_name,
+                                              package=self._container_package.
+                                              _get_pname(),
+                                              message='Error occurred while '
+                                                      'getting data from "{}" '
+                                                      'in block "{}".'.format(
+                                                  dataset.structure.name,
+                                                  self.structure.name))
                     file_locations = []
                     if isinstance(data, np.recarray):
                         # get the correct part of the recarray
@@ -716,21 +899,52 @@ class MFBlock(object):
                                                 self.external_file_name))
             fd_main = fd
             fd_path, filename = os.path.split(os.path.realpath(fd.name))
-            fd = open(os.path.join(fd_path, self.external_file_name), 'w')
-
+            try:
+                fd = open(os.path.join(fd_path, self.external_file_name), 'w')
+            except:
+                type_, value_, traceback_ = sys.exc_info()
+                message = 'Error reading external file ' \
+                          '"{}"'.format(self.external_file_name)
+                raise MFDataException(self._container_package.model_name,
+                                      self._container_package._get_pname(),
+                                      self.path, 'reading external file',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, message,
+                                      self._simulation_data.debug)
         # write data sets
         for key, dataset in self.datasets.items():
-            if transient_key is None:
-                fd.write(dataset.get_file_entry(
-                    ext_file_action=ext_file_action))
-            else:
-                if dataset.repeating:
-                    fd.write(dataset.get_file_entry(
-                        transient_key, ext_file_action=ext_file_action))
-                else:
+            try:
+                if transient_key is None:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        writing data {}..'
+                              '.'.format(dataset.structure.name))
                     fd.write(dataset.get_file_entry(
                         ext_file_action=ext_file_action))
-
+                else:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('        writing data {} ({})..'
+                              '.'.format(dataset.structure.name,
+                                         transient_key))
+                    if dataset.repeating:
+                        fd.write(dataset.get_file_entry(
+                            transient_key, ext_file_action=ext_file_action))
+                    else:
+                        fd.write(dataset.get_file_entry(
+                            ext_file_action=ext_file_action))
+            except MFDataException as mfde:
+                raise MFDataException(mfdata_except=mfde,
+                                      model=self._container_package.model_name,
+                                      package=self._container_package.
+                                      _get_pname(),
+                                      message='Error occurred while writing '
+                                              'data "{}" in block "{}" to file'
+                                              ' "{}".'.format(
+                                                  dataset.structure.name,
+                                                  self.structure.name,
+                                                  fd.name))
         # write trailing comments
         self._simulation_data.mfdata[self.blk_trailing_comment_path].write(fd)
 
@@ -862,6 +1076,8 @@ class MFPackage(PackageContainer):
         Writes the package to a file
     get_file_path : string
         Returns the package file's path
+    remove
+        Removes package from the simulation/model it is currently a part of
 
     See Also
     --------
@@ -882,6 +1098,17 @@ class MFPackage(PackageContainer):
             self.model_name = model_or_sim.name
         else:
             self.model_name = None
+
+        if model_or_sim.type != 'Model' and model_or_sim.type != 'Simulation':
+            message = 'Invalid model_or_sim parameter. Expecting either a ' \
+                      'model or a simulation. Instead type "{}" was ' \
+                      'given.'.format(type(model_or_sim))
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.model_name, pname, '', 'initializing '
+                                  'package', None, inspect.stack()[0][3],
+                                  type_, value_, traceback_, message,
+                                  model_or_sim.simulation_data.debug)
+
         super(MFPackage, self).__init__(model_or_sim.simulation_data,
                                         self.model_name)
         self._simulation_data = model_or_sim.simulation_data
@@ -890,6 +1117,17 @@ class MFPackage(PackageContainer):
         self.container_type = []
         self.loading_package = loading_package
         if pname is not None:
+            if not isinstance(pname, str):
+                message = 'Invalid pname parameter. Expecting type str. ' \
+                          'Instead type "{}" was ' \
+                          'given.'.format(type(pname))
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.model_name, pname, '',
+                                      'initializing package', None,
+                                      inspect.stack()[0][3], type_, value_,
+                                      traceback_, message,
+                                      model_or_sim.simulation_data.debug)
+
             self.package_name = pname.lower()
         else:
             self.package_name = None
@@ -898,6 +1136,17 @@ class MFPackage(PackageContainer):
             self.filename = MFFileMgmt.string_to_file_path('{}.{}'.format(
               self._model_or_sim.name, package_type))
         else:
+            if not isinstance(filename, str):
+                message = 'Invalid fname parameter. Expecting type str. ' \
+                          'Instead type "{}" was ' \
+                          'given.'.format(type(filename))
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.model_name, pname, '',
+                                      'initializing package', None,
+                                      inspect.stack()[0][3], type_, value_,
+                                      traceback_, message,
+                                      model_or_sim.simulation_data.debug)
+
             self.filename = MFFileMgmt.string_to_file_path(filename)
 
         self.path, \
@@ -908,8 +1157,10 @@ class MFPackage(PackageContainer):
         self.dimensions = self.create_package_dimensions()
 
         if self.path is None:
-            print('WARNING: Package type {} failed to register property.'
-                  ' {}'.format(self.package_type, self.path))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Package type {} failed to register property.'
+                      ' {}'.format(self.package_type, self.path))
         if parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
@@ -920,9 +1171,56 @@ class MFPackage(PackageContainer):
         if hasattr(self, name):
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
-                attribute.set_data(value)
+                try:
+                    attribute.set_data(value)
+                except MFDataException as mfde:
+                    raise MFDataException(mfdata_except=mfde,
+                                          model=self.model_name,
+                                          package=self._get_pname())
                 return
         super(MFPackage, self).__setattr__(name, value)
+
+    def __repr__(self):
+        return self._get_data_str(True)
+
+    def __str__(self):
+        return self._get_data_str(False)
+
+    def _get_data_str(self, formal, show_data=True):
+        data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
+                   '\nmodel_or_simulation_package = {}' \
+                   '\n{}_name = {}' \
+                   '\n'.format(self._get_pname(), self.filename,
+                               self.package_type,
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.type.lower(),
+                               self._model_or_sim.name)
+        if self.parent_file is not None and formal:
+            data_str = '{}parent_file = ' \
+                       '{}\n\n'.format(data_str, self.parent_file._get_pname())
+        else:
+            data_str = '{}\n'.format(data_str)
+        if show_data:
+            for idx, block in self.blocks.items():
+                if formal:
+                    bl_repr = repr(block)
+                    if len(bl_repr.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               repr(block))
+                else:
+                    bl_str = str(block)
+                    if len(bl_str.strip()) > 0:
+                        data_str = '{}Block {}\n--------------------\n{}' \
+                                   '\n'.format(data_str, block.structure.name,
+                                               str(block))
+        return data_str
+
+    def _get_pname(self):
+        if self.package_name is not None:
+            return '{}'.format(self.package_name)
+        else:
+            return '{}'.format(self.filename)
 
     def _get_block_header_info(self, line, path):
         # init
@@ -932,10 +1230,16 @@ class MFPackage(PackageContainer):
                                           self._simulation_data, 0)
         # break header into components
         if len(arr_clean_line) < 2:
-            except_str = 'ERROR: Block header does not contain a name ' \
-                         '{}'.format(line)
-            print(except_str)
-            raise mfstructure.MFFileParseException(except_str)
+            message = 'Block header does not contain a name. Name ' \
+                      'expected in line "{}".'.format(line)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.model_name,
+                                  self.structure.get_package(),
+                                  self.path,
+                                  'parsing block header', None,
+                                  inspect.stack()[0][3],
+                                  type_, value_, traceback_, message,
+                                  self._simulation_data.debug)
         elif len(arr_clean_line) == 2:
             return MFBlockHeader(arr_clean_line[1], header_variable_strs,
                                  header_comment)
@@ -980,7 +1284,7 @@ class MFPackage(PackageContainer):
                                     data = dataset.get_data(key=key[0])
                                 except (IOError,
                                         OSError,
-                                        MFDataFileException):
+                                        MFDataException):
                                     # TODO: Handle case where external file
                                     # path has been moved
                                     data = None
@@ -995,7 +1299,7 @@ class MFPackage(PackageContainer):
                                 data = dataset.get_data()
                             except (IOError,
                                     OSError,
-                                    MFDataFileException):
+                                    MFDataException):
                                 # TODO: Handle case where external file
                                 # path has been moved
                                 data = None
@@ -1004,13 +1308,19 @@ class MFPackage(PackageContainer):
                         if size_def.get_data() != new_size >= 0:
                             # store current size
                             size_def.set_data(new_size)
+
                             # informational message to the user
-                            print('INFORMATION: {} in {} changed to {} based '
-                                  'on size of '
-                                  '{}'.format(size_def_name,
-                                              size_def.structure.path[:-1],
-                                              new_size,
-                                              dataset.structure.name))
+                            if self._simulation_data.verbosity_level.value >= \
+                                    VerbosityLevel.normal.value:
+                                print('INFORMATION: {} in {} changed to {} '
+                                      'based on size of '
+                                      '{}'.format(size_def_name,
+                                                  size_def.structure.path[:-1],
+                                                  new_size,
+                                                  dataset.structure.name))
+
+    def remove(self):
+        self._model_or_sim.remove_package(self)
 
     def build_mfdata(self, var_name, data=None):
         if self.loading_package:
@@ -1027,16 +1337,21 @@ class MFPackage(PackageContainer):
                 return self.blocks[block.name].add_dataset(dataset_struct,
                                                            data, var_path)
 
-        except_message = 'Unable to find variable "{}" in package ' \
-                         '"{}".'.format(var_name, self.package_type)
-        raise mfstructure.MFDataException(except_message)
+        message = 'Unable to find variable "{}" in package ' \
+                  '"{}".'.format(var_name, self.package_type)
+        type_, value_, traceback_ = sys.exc_info()
+        raise MFDataException(self.model_name, self.structure.get_package(),
+                              self.path, 'building data objects',
+                              None, inspect.stack()[0][3],
+                              type_, value_, traceback_, message,
+                              self._simulation_data.debug)
 
     def set_model_relative_path(self, model_ws):
         # update blocks
         for key, block in self.blocks.items():
             block.set_model_relative_path(model_ws)
         # update sub-packages
-        for package in self.packages:
+        for package in self.packagelist:
             package.set_model_relative_path(model_ws)
 
     def load(self, strict=True):
@@ -1045,17 +1360,21 @@ class MFPackage(PackageContainer):
             fd_input_file = open(self.get_file_path(), 'r')
         except OSError as e:
             if e.errno == errno.ENOENT:
-                excpt_str = 'File {} of type {} could not be opened. ' \
-                            '{}'.format(self.get_file_path(),
-                                        self.package_type, self.path)
-                print(excpt_str)
-                raise mfstructure.MFFileParseException(excpt_str)
+                message = 'File {} of type {} could not be opened' \
+                          '.'.format(self.get_file_path(), self.package_type)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.model_name,
+                                      self.package_name,
+                                      self.path, 'loading package file',
+                                      None, inspect.stack()[0][3],
+                                      type_, value_, traceback_, message,
+                                      self._simulation_data.debug)
 
         try:
             self._load_blocks(fd_input_file, strict)
-        except mfstructure.ReadAsArraysException as err:
+        except ReadAsArraysException as err:
             fd_input_file.close()
-            raise mfstructure.ReadAsArraysException(err)
+            raise ReadAsArraysException(err)
         # close file
         fd_input_file.close()
 
@@ -1103,10 +1422,15 @@ class MFPackage(PackageContainer):
                 try:
                     block_header_info = self._get_block_header_info(line,
                                                                     self.path)
-                except mfstructure.MFFileParseException:
-                    parse_ex = mfstructure.MFFileParseException
-                    raise parse_ex('Invalid block header {} '
-                                   '({})'.format(line, self.package_type))
+                except MFDataException as mfde:
+                    message = 'An error occurred while loading block header ' \
+                              'in line "{}".'.format(line)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(self.model_name, self._get_pname(),
+                                          self.path, 'loading block header',
+                                          None, inspect.stack()[0][3],
+                                          type_, value_, traceback_, message,
+                                          self._simulation_data.debug)
 
                 # if there is more than one possible block with the same name,
                 # resolve the correct block to use
@@ -1126,10 +1450,12 @@ class MFPackage(PackageContainer):
                 if block_key not in self.blocks:
                     # block name not recognized, load block as comments and
                     # issue a warning
-                    warning_str = 'WARNING: Block "{}" is not a valid block ' \
-                                  'name for file type ' \
-                                  '{}.'.format(block_key, self.package_type)
-                    print(warning_str)
+                    if self.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        warning_str = 'WARNING: Block "{}" is not a valid block ' \
+                                      'name for file type ' \
+                                      '{}.'.format(block_key, self.package_type)
+                        print(warning_str)
                     self._store_comment(line, found_first_block)
                     while line != '':
                         line = fd_input_file.readline()
@@ -1148,17 +1474,25 @@ class MFPackage(PackageContainer):
                         # multiple entries
                         header_name = block_header_info.name
                         if not self.structure.blocks[header_name.lower()].\
-                          repeating():
+                                repeating():
                             # warn and skip block
-                            warning_str = 'WARNING: Block "{}" has multiple ' \
-                                          'entries and is not intended to ' \
-                                          'be a repeating block ({} ' \
-                                          'package)'.format(header_name,
-                                                            self.package_type)
-                            print(warning_str)
+                            if self._simulation_data.verbosity_level.value >= \
+                                    VerbosityLevel.normal.value:
+                                warning_str = 'WARNING: Block "{}" has ' \
+                                              'multiple entries and is not ' \
+                                              'intended to be a repeating ' \
+                                              'block ({} package' \
+                                              ')'.format(header_name,
+                                                         self.package_type)
+                                print(warning_str)
                             skip_block = True
 
                     if not skip_block:
+                        if self.simulation_data.verbosity_level.value >= \
+                                VerbosityLevel.verbose.value:
+                            print('      loading block {}...'.format(
+                                self.blocks[block_key].structure.name))
+
                         self.blocks[block_key].load(block_header_info,
                                                     fd_input_file, strict)
                         self._simulation_data.mfdata[self.blocks[block_key].
@@ -1237,12 +1571,16 @@ class MFPackage(PackageContainer):
     def _write_blocks(self, fd, ext_file_action):
         # verify that all blocks are valid
         if not self.is_valid():
-            excpt_str = 'Unable to write out model file "{}" due to the ' \
+            message = 'Unable to write out model file "{}" due to the ' \
                         'following error: ' \
                         '{} ({})'.format(self.filename, self.last_error,
                                          self.path)
-            print(excpt_str)
-            raise mfstructure.MFFileWriteException(excpt_str)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.model_name, self._get_pname(),
+                                  self.path, 'writing package blocks',
+                                  None, inspect.stack()[0][3],
+                                  type_, value_, traceback_, message,
+                                  self._simulation_data.debug)
 
         # write initial comments
         pkg_hdr_comments_path = self.path + ('pkg_hdr_comments',)
@@ -1254,6 +1592,9 @@ class MFPackage(PackageContainer):
         # loop through blocks
         block_num = 1
         for index, block in self.blocks.items():
+            if self.simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.verbose.value:
+                print('      writing block {}...'.format(block.structure.name))
             # write block
             block.write(fd, ext_file_action=ext_file_action)
             block_num += 1

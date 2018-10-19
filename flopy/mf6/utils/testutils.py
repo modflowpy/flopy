@@ -25,8 +25,9 @@ def read_cell2d(cell2d_file):
     for line in fd:
         fd_spl = line.strip().split()
         rec_array = [int(fd_spl[0]) - 1, float(fd_spl[1]), float(fd_spl[2])]
-        for item in fd_spl[3:]:
-            rec_array.append(int(item))
+        rec_array.append(int(fd_spl[3]))
+        for item in fd_spl[4:]:
+            rec_array.append(int(item) - 1)
         c2drecarray.append(tuple(rec_array))
     fd.close()
     return c2drecarray

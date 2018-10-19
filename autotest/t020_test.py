@@ -18,11 +18,8 @@ def analyticalWaterTableSolution(h1, h2, z, R, K, L, x):
 
 def test_mfnwt_run():
     import os
-    import platform
     import flopy
     exe_name = 'mfnwt'
-    if platform.system() == 'Windows':
-        exe_name = '{}.exe'.format(exe_name)
     exe = flopy.which(exe_name)
 
     if exe is None:

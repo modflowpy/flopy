@@ -24,25 +24,13 @@ def _fmt_string(array, float_format='{}'):
                             "in dtype:" + vtype)
     return fmt_string
 
-def _pop_item(line, dtype=str):
-    if len(line) > 0:
-        if dtype == str:
-            return line.pop(0)
-        elif dtype == float:
-            return float(line.pop(0))
-        elif dtype == int:
-            # handle strings like this:
-            # '-10.'
-            return int(float(line.pop(0)))
-    return 0
-
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
     case where a free formatted MODFLOW input file may have commas in
     it.
     """
-    for comment_flag in [';', '#']:
+    for comment_flag in [';', '#', '!!']:
         line = line.split(comment_flag)[0]
     line = line.replace(',', ' ')
     return line.strip().split()
@@ -57,7 +45,7 @@ def pop_item(line, dtype=str):
             # handle strings like this:
             # '-10.'
             return int(float(line.pop(0)))
-    return 0
+    return dtype(0)
 
 def read_nwt_options(f):
     """convert options codeblock to single line."""
@@ -95,7 +83,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
 
     """
     if isinstance(v, np.ndarray):
-        v = v.aslist()
+        v = v.tolist()
     elif isinstance(v, int) or isinstance(v, float) or isinstance(v, bool):
         v = [v]
     ncol = len(v)
@@ -106,7 +94,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
             ipos.append(length)
     else:
         if isinstance(ipos, np.ndarray):
-            ipos = ipos.flatten().aslist()
+            ipos = ipos.flatten().tolist()
         elif isinstance(ipos, int):
             ipos = [ipos]
         if len(ipos) < ncol:
@@ -160,7 +148,7 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
                 ipos.append(length)
         else:
             if isinstance(ipos, np.ndarray):
-                ipos = ipos.flatten().aslist()
+                ipos = ipos.flatten().tolist()
             elif isinstance(ipos, int):
                 ipos = [ipos]
             ncol = len(ipos)
@@ -240,10 +228,12 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     wel = ModflowWel(model,stress_period_data=sp_data)
     return wel
 
-def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True, **kwargs):
-    """Use pandas if it is available to load a text file
-    (significantly faster than n.loadtxt or genfromtxt;
-    see http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
+def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
+            **kwargs):
+    """
+    Use pandas if it is available to load a text file
+    (significantly faster than n.loadtxt or genfromtxt see
+    http://stackoverflow.com/questions/18259393/numpy-loading-csv-too-slow-compared-to-matlab)
 
     Parameters
     ----------
@@ -273,6 +263,9 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True, **kwar
             if isinstance(dtype, np.dtype) and 'names' not in kwargs:
                 kwargs['names'] = dtype.names
     except:
+        if use_pandas:
+            msg = 'loadtxt: pandas is not available'
+            raise ImportError(msg)
         pd = False
 
     if use_pandas and pd:

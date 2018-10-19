@@ -9,7 +9,7 @@ except:
     plt = None
 from . import plotutil
 from .plotutil import bc_color_dict
-from ..utils import SpatialReference
+from ..utils import SpatialReference, SpatialReferenceUnstructured
 
 
 class ModelMap(object):
@@ -376,14 +376,14 @@ class ModelMap(object):
         # Plot the list locations
         plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
         if plotAll:
-            idx = [mflist['i'], mflist['j']]
+            idx = (mflist['i'], mflist['j'])
             # plotarray[:, idx] = 1
             pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
             pa[idx] = 1
             for k in range(nlay):
                 plotarray[k, :, :] = pa.copy()
         else:
-            idx = [mflist['k'], mflist['i'], mflist['j']]
+            idx = (mflist['k'], mflist['i'], mflist['j'])
             plotarray[idx] = 1
 
         # mask the plot array
@@ -650,6 +650,7 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
+
         # make sure pathlines is a list
         if not isinstance(pl, list):
             pl = [pl]
@@ -667,6 +668,28 @@ class ModelMap(object):
         else:
             kon = self.layer
 
+        if 'marker' in kwargs:
+            marker = kwargs.pop('marker')
+        else:
+            marker = None
+
+        if 'markersize' in kwargs:
+            markersize = kwargs.pop('markersize')
+        elif 'ms' in kwargs:
+            markersize = kwargs.pop('ms')
+        else:
+            markersize = None
+
+        if 'markercolor' in kwargs:
+            markercolor = kwargs.pop('markercolor')
+        else:
+            markercolor = None
+
+        if 'markerevery' in kwargs:
+            markerevery = kwargs.pop('markerevery')
+        else:
+            markerevery = 1
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -676,6 +699,7 @@ class ModelMap(object):
             kwargs['colors'] = '0.5'
 
         linecol = []
+        markers = []
         for p in pl:
             if travel_time is None:
                 tp = p.copy()
@@ -711,10 +735,17 @@ class ModelMap(object):
 
             vlc = []
             # rotate data
-            x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation, 0.,
-                                      self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
+            if isinstance(self.sr, SpatialReferenceUnstructured):
+                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
+                                          0., 0.)
+                x0r += self.sr.xul
+                y0r += self.sr.yul
+            elif isinstance(self.sr, SpatialReference):
+                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
+                                          0., self.sr.yedge[0])
+                x0r += self.sr.xul
+                y0r += self.sr.yul - self.sr.yedge[0]
+
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer
@@ -727,11 +758,19 @@ class ModelMap(object):
             # append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
+                if marker is not None:
+                    for xy in arr[::markerevery]:
+                        if not xy.mask:
+                            markers.append(xy)
         # create line collection
         lc = None
         if len(linecol) > 0:
             lc = LineCollection(linecol, **kwargs)
             ax.add_collection(lc)
+            if marker is not None:
+                markers = np.array(markers)
+                ax.plot(markers[:, 0], markers[:, 1], lw=0, marker=marker,
+                        color=markercolor, ms=markersize)
         return lc
 
     def plot_endpoint(self, ep, direction='ending',
@@ -798,22 +837,42 @@ class ModelMap(object):
             elif direction.lower() == 'ending':
                 selection_direction = 'starting'
 
+        # selection of endpoints
         if selection is not None:
+            if isinstance(selection, int):
+                selection = tuple((selection,))
             try:
-                k, i, j = selection[0], selection[1], selection[2]
-                if selection_direction.lower() == 'starting':
-                    ksel, isel, jsel = 'k0', 'i0', 'j0'
-                elif selection_direction.lower() == 'ending':
-                    ksel, isel, jsel = 'k', 'i', 'j'
+                if len(selection) == 1:
+                    node = selection[0]
+                    if selection_direction.lower() == 'starting':
+                        nsel = 'node0'
+                    else:
+                        nsel = 'node'
+                    # make selection
+                    idx = (ep[nsel] == node)
+                    tep = ep[idx]
+                elif len(selection) == 3:
+                    k, i, j = selection[0], selection[1], selection[2]
+                    if selection_direction.lower() == 'starting':
+                        ksel, isel, jsel = 'k0', 'i0', 'j0'
+                    else:
+                        ksel, isel, jsel = 'k', 'i', 'j'
+                    # make selection
+                    idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
+                    tep = ep[idx]
+                else:
+                    errmsg = 'flopy.map.plot_endpoint selection must be ' + \
+                             'a zero-based layer, row, column tuple ' + \
+                             '(l, r, c) or node number (MODPATH 7) of ' + \
+                             'the location to evaluate (i.e., well location).'
+                    raise Exception(errmsg)
             except:
                 errmsg = 'flopy.map.plot_endpoint selection must be a ' + \
                          'zero-based layer, row, column tuple (l, r, c) ' + \
-                         'of the location to evaluate (i.e., well location).'
+                         'or node number (MODPATH 7) of the location ' + \
+                         'to evaluate (i.e., well location).'
                 raise Exception(errmsg)
-
-        if selection is not None:
-            idx = (ep[ksel] == k) & (ep[isel] == i) & (ep[jsel] == j)
-            tep = ep[idx]
+        # all endpoints
         else:
             tep = ep.copy()
 
@@ -824,7 +883,7 @@ class ModelMap(object):
 
         # scatter kwargs that users may redefine
         if 'c' not in kwargs:
-            c = tep['finaltime'] - tep['initialtime']
+            c = tep['time'] - tep['time0']
         else:
             c = np.empty((tep.shape[0]), dtype="S30")
             c.fill(kwargs.pop('c'))
@@ -849,18 +908,148 @@ class ModelMap(object):
             shrink = float(kwargs.pop('shrink'))
 
         # rotate data
-        x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation, 0.,
-                                  self.sr.yedge[0])
-        x0r += self.sr.xul
-        y0r += self.sr.yul - self.sr.yedge[0]
+        if isinstance(self.sr, SpatialReferenceUnstructured):
+            x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation,
+                                      0., 0.)
+            x0r += self.sr.xul
+            y0r += self.sr.yul
+        elif isinstance(self.sr, SpatialReference):
+            x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation,
+                                      0., self.sr.yedge[0])
+            x0r += self.sr.xul
+            y0r += self.sr.yul - self.sr.yedge[0]
+
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 
         # plot the end point data
-        sp = plt.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
+        sp = ax.scatter(arr[:, 0], arr[:, 1], c=c, s=s, **kwargs)
 
         # add a colorbar for travel times
         if createcb:
-            cb = plt.colorbar(sp, shrink=shrink)
+            cb = plt.colorbar(sp, ax=ax, shrink=shrink)
             cb.set_label(colorbar_label)
         return sp
+
+    def plot_timeseries(self, ts, travel_time=None, **kwargs):
+        """
+        Plot the MODPATH timeseries.
+
+        Parameters
+        ----------
+        ts : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile TimeseriesFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+        travel_time: float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+        lo : list of Line2D objects
+
+        """
+        from matplotlib.collections import LineCollection
+        # make sure timeseries is a list
+        if not isinstance(ts, list):
+            ts = [ts]
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if 'color' not in kwargs:
+            kwargs['color'] = 'red'
+
+        linecol = []
+        for t in ts:
+            if travel_time is None:
+                tp = t.copy()
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (ts['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (ts['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (ts['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (ts['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (ts['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (ts['time'] <= time)
+                tp = ts[idx]
+
+            # rotate data
+            if isinstance(self.sr, SpatialReferenceUnstructured):
+                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
+                                          0., 0.)
+                x0r += self.sr.xul
+                y0r += self.sr.yul
+            elif isinstance(self.sr, SpatialReference):
+                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
+                                          0., self.sr.yedge[0])
+                x0r += self.sr.xul
+                y0r += self.sr.yul - self.sr.yedge[0]
+
+            # build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            # select based on layer
+            if kon >= 0:
+                kk = t['k'].copy().reshape(t.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+            else:
+                arr = np.ma.asarray(arr)
+            # append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+
+        # plot timeseries data
+        lo = []
+        for lc in linecol:
+            if not lc.mask.all():
+                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
+
+        return lo

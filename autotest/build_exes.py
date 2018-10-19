@@ -126,6 +126,18 @@ def update_mp6files(srcdir):
     os.remove(fname1)
 
 
+def update_mp7files(srcdir):
+    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
+    with open(fpth) as f:
+        lines = f.readlines()
+    f = open(fpth, 'w')
+    for line in lines:
+        if 'pGroup%Particles(n)%InitialFace = 0' in line:
+            continue
+        f.write(line)
+    f.close()
+
+
 def test_build_modflow():
     if pymake is None:
         return
@@ -144,7 +156,7 @@ def test_build_mfnwt():
         return
     starget = 'MODFLOW-NWT'
     exe_name = 'mfnwt'
-    dirname = 'MODFLOW-NWT_1.1.3'
+    dirname = 'MODFLOW-NWT_1.1.4'
     url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
 
     build_target(starget, exe_name, url, dirname)
@@ -161,7 +173,8 @@ def run_cmdlist(cmdlist, cwd='.'):
     if proc.returncode != 0:
         if isinstance(stdout_data, bytes):
             stdout_data = stdout_data.decode('utf-8')
-            stderr_data = stderr_datab.decode('utf-8')
+        if isinstance(stderr_data, bytes):
+            stderr_data = stderr_data.decode('utf-8')
         msg = '{} failed\n'.format(cmdlist) + \
               'status code:\n{}\n'.format(proc.returncode) + \
               'stdout:\n{}\n'.format(stdout_data) + \
@@ -192,7 +205,7 @@ def test_build_mf6():
         return
     starget = 'MODFLOW6'
     exe_name = 'mf6'
-    dirname = 'mf6.0.1'
+    dirname = 'mf6.0.3'
     url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname, include_subdirs=True)
@@ -280,6 +293,20 @@ def test_build_modpath6():
     return
 
 
+def test_build_modpath7():
+    if pymake is None:
+        return
+    starget = 'MODPATH 7'
+    exe_name = 'mp7'
+    dirname = 'modpath_7_2_001'
+    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
+
+    build_target(starget, exe_name, url, dirname, srcname='source',
+                 replace_function=update_mp7files,
+                 keep=True)
+    return
+
+
 def test_build_gridgen(keep=True):
     if pymake is None:
         return
@@ -324,6 +351,67 @@ def test_build_gridgen(keep=True):
 
     # move the file
     src = os.path.join(apth, exe_name)
+    dst = os.path.join(bindir, exe_name)
+    try:
+        shutil.move(src, dst)
+    except:
+        print('could not move {}'.format(exe_name))
+
+    # change back to original path
+    os.chdir(cpth)
+
+    # Clean up downloaded directory
+    print('delete...{}'.format(dstpth))
+    if os.path.isdir(dstpth):
+        shutil.rmtree(dstpth)
+
+    # make sure the gridgen was built
+    msg = '{} does not exist.'.format(os.path.relpath(dst))
+    assert os.path.isfile(dst), msg
+
+    return
+
+
+def test_build_triangle(keep=True):
+    if pymake is None:
+        return
+    starget = 'TRIANGLE'
+    exe_name = 'triangle'
+    dirname = 'triangle'
+    url = "http://www.netlib.org/voronoi/{}.zip".format(dirname)
+
+    print('Determining if {} needs to be built'.format(starget))
+    if platform.system().lower() == 'windows':
+        exe_name += '.exe'
+
+    exe_exists = flopy.which(exe_name)
+    if exe_exists is not None and keep:
+        print('No need to build {}'.format(starget) +
+              ' since it exists in the current path')
+        return
+
+    # get current directory
+    cpth = os.getcwd()
+
+    # create temporary path
+    dstpth = os.path.join('tempbin', 'triangle')
+    print('create...{}'.format(dstpth))
+    if not os.path.exists(dstpth):
+        os.makedirs(dstpth)
+    os.chdir(dstpth)
+
+    pymake.download_and_unzip(url)
+
+    srcdir = 'src'
+    os.mkdir(srcdir)
+    shutil.move('triangle.c', 'src/triangle.c')
+    shutil.move('triangle.h', 'src/triangle.h')
+
+    fct, cct = set_compiler(starget)
+    pymake.main(srcdir, 'triangle', fct, cct)
+
+    # move the file
+    src = os.path.join('.', exe_name)
     dst = os.path.join(bindir, exe_name)
     try:
         shutil.move(src, dst)
@@ -422,22 +510,24 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
     # change back to original path
     os.chdir(cpth)
 
+    msg = '{} does not exist.'.format(os.path.relpath(target))
+    assert os.path.isfile(target), msg
+
     # Clean up downloaded directory
     print('delete...{}'.format(dstpth))
     if os.path.isdir(dstpth):
         shutil.rmtree(dstpth)
 
-    msg = '{} does not exist.'.format(os.path.relpath(target))
-    assert os.path.isfile(target), msg
-
     return
 
 
 if __name__ == '__main__':
-    test_build_mf6()
+    # test_build_mf6()
     # test_build_modflow()
     # test_build_mfnwt()
     # test_build_usg()
     # test_build_mt3dms()
     # test_build_seawat()
     # test_build_gridgen()
+    # test_build_triangle()
+    test_build_modpath7()

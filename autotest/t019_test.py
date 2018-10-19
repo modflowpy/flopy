@@ -134,7 +134,86 @@ def test_hydmodfile_read():
     return
 
 
+def test_mf6obsfile_read():
+    import os
+    import flopy
+    try:
+        import pandas as pd
+    except:
+        print('pandas not available...')
+        pd = None
+
+    txt = 'binary mf6 obs'
+
+    files = ['maw_obs.gitbin', 'maw_obs.gitcsv']
+    binfile = [True, False]
+
+    for idx in range(len(files)):
+        pth = os.path.join('..', 'examples', 'data', 'mf6_obs',
+                           files[idx])
+        h = flopy.utils.Mf6Obs(pth, isBinary=binfile[idx])
+        assert isinstance(h, flopy.utils.Mf6Obs)
+
+        ntimes = h.get_ntimes()
+        assert ntimes == 3, \
+            'Not enough times in {} file...{}'.format(txt,
+                                                      os.path.basename(pth))
+
+        times = h.get_times()
+        assert len(times) == 3, \
+            'Not enough times in {} file...{}'.format(txt,
+                                                      os.path.basename(pth))
+
+        nitems = h.get_nobs()
+        assert nitems == 1, \
+            'Not enough records in {} file...{}'.format(txt,
+                                                        os.path.basename(pth))
+
+        labels = h.get_obsnames()
+        assert len(labels) == 1, \
+            'Not enough labels in {} file...{}'.format(txt,
+                                                       os.path.basename(pth))
+        print(labels)
+
+        for idx in range(ntimes):
+            data = h.get_data(idx=idx)
+            assert data.shape == (1,), 'data shape is not (1,)'
+
+        for time in times:
+            data = h.get_data(totim=time)
+            assert data.shape == (1,), 'data shape is not (1,)'
+
+        for label in labels:
+            data = h.get_data(obsname=label)
+            assert data.shape == (len(times),), \
+                'data shape is not ({},)'.format(len(times))
+
+        data = h.get_data()
+        assert data.shape == (len(times),), \
+            'data shape is not ({},)'.format(len(times))
+        assert len(data.dtype.names) == nitems + 1, \
+            'data column length is not {}'.format(len(nitems + 1))
+
+        if pd is not None:
+            for idx in range(ntimes):
+                df = h.get_dataframe(idx=idx, timeunit='S')
+                assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+                assert df.shape == (1, 2), 'data shape is not (1, 2)'
+
+            for time in times:
+                df = h.get_dataframe(totim=time, timeunit='S')
+                assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+                assert df.shape == (1, 2), 'data shape is not (1, 2)'
+
+            df = h.get_dataframe(timeunit='S')
+            assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
+            assert df.shape == (3, 2), 'data shape is not (3, 2)'
+
+    return
+
+
 if __name__ == '__main__':
+    test_mf6obsfile_read()
     test_hydmodfile_create()
     test_hydmodfile_load()
     test_hydmodfile_read()
