@@ -1,17 +1,21 @@
 import numpy as np
 
+
 def get_transmissivities(heads, m,
                          r=None, c=None, x=None, y=None,
                          sctop=None, scbot=None, nodata=-999):
-    """Computes transmissivity in each model layer at specified locations and open intervals.
-    A saturated thickness is determined for each row, column or x, y location supplied,
-    based on the open interval (sctop, scbot), if supplied, otherwise the layer tops and bottoms
-    and the water table are used.
+    """
+    Computes transmissivity in each model layer at specified locations and
+    open intervals. A saturated thickness is determined for each row, column
+    or x, y location supplied, based on the open interval (sctop, scbot),
+    if supplied, otherwise the layer tops and bottoms and the water table
+    are used.
 
     Parameters
     ----------
     heads : 2D array OR 3D array
-        numpy array of shape nlay by n locations (2D) OR complete heads array of the model for one time (3D)
+        numpy array of shape nlay by n locations (2D) OR complete heads array
+        of the model for one time (3D)
     m : flopy.modflow.Modflow object
         Must have dis, sr, and lpf or upw packages.
     r : 1D array-like of ints, of length n locations
@@ -33,6 +37,7 @@ def get_transmissivities(heads, m,
     -------
     T : 2D array of same shape as heads (nlay x n locations)
         Transmissivities in each layer at each location
+
     """
     if r is not None and c is not None:
         pass
@@ -54,9 +59,10 @@ def get_transmissivities(heads, m,
     botm = m.dis.botm.array[:, r, c]
 
     if heads.shape == (m.nlay, m.nrow, m.ncol):
-        heads = heads[:,r,c]
+        heads = heads[:, r, c]
 
-    assert heads.shape == botm.shape, 'Shape of heads array must be nlay x nhyd'
+    msg = 'Shape of heads array must be nlay x nhyd'
+    assert heads.shape == botm.shape, msg
 
     # set open interval tops/bottoms to model top/bottom if None
     if sctop is None:
@@ -108,9 +114,11 @@ def get_transmissivities(heads, m,
     T = thick * hk
     return T
 
+
 def get_water_table(heads, nodata, per_idx=None):
-    """Get a 2D array representing the water table
-    elevation for each stress period in heads array.
+    """
+    Get a 2D array representing the water table elevation for each
+    stress period in heads array.
     
     Parameters
     ----------
@@ -120,7 +128,7 @@ def get_water_table(heads, nodata, per_idx=None):
         HDRY value indicating dry cells.
     per_idx : int or sequence of ints
         stress periods to return. If None,
-        returns all stress periods (default).
+        returns all stress periods (default is None).
     Returns
     -------
     wt : 2 or 3-D np.ndarray of water table elevations
@@ -147,8 +155,10 @@ def get_water_table(heads, nodata, per_idx=None):
         wt.append(np.reshape(wt_per, (nrow, ncol)))
     return np.squeeze(wt)
 
+
 def get_saturated_thickness(heads, m, nodata, per_idx=None):
-    """Calculates the saturated thickness for each cell from the heads
+    """
+    Calculates the saturated thickness for each cell from the heads
     array for each stress period.
 
     Parameters
@@ -187,8 +197,10 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
         sat_thickness.append(perthickness.filled(np.nan))
     return np.squeeze(sat_thickness)
 
+
 def get_gradients(heads, m, nodata, per_idx=None):
-    """Calculates the hydraulic gradients from the heads
+    """
+    Calculates the hydraulic gradients from the heads
     array for each stress period.
 
     Parameters
@@ -227,5 +239,5 @@ def get_gradients(heads, m, nodata, per_idx=None):
         dz = np.ma.array(np.diff(zcnt_per.data, axis=0), mask=diff_mask)
         dh = np.ma.array(np.diff(hds.data, axis=0), mask=diff_mask)
         # convert to nan-filled array, as is expected(!?)
-        grad.append((dh/dz).filled(np.nan))
+        grad.append((dh / dz).filled(np.nan))
     return np.squeeze(grad)

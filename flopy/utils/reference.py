@@ -2032,8 +2032,9 @@ class crs(object):
 
 
 def getprj(epsg, addlocalreference=True, text='esriwkt'):
-    """Gets projection file (.prj) text for given epsg code from spatialreference.org
-    See: https://www.epsg-registry.org/
+    """
+    Gets projection file (.prj) text for given epsg code from
+    spatialreference.org
 
     Parameters
     ----------
@@ -2042,6 +2043,10 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
     addlocalreference : boolean
         adds the projection file text associated with epsg to a local
         database, epsgref.py, located in site-packages.
+
+    References
+    ----------
+    https://www.epsg-registry.org/
 
     Returns
     -------

@@ -503,7 +503,8 @@ class ModflowSfr2(Package):
         if pd:
             return pd.DataFrame(self.reach_data)
         else:
-            return None
+            msg = 'ModflowSfr2.df: pandas not available'
+            raise ImportError(msg)
 
     def _set_paths(self):
         graph = self.graph
@@ -1254,7 +1255,8 @@ class ModflowSfr2(Package):
         self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
 
     def plot_path(self, start_seg=None, end_seg=0, plot_segment_lines=True):
-        """Plot a profile of streambed elevation and model top 
+        """
+        Plot a profile of streambed elevation and model top
         along a path of segments.
         
         Parameters
@@ -1273,8 +1275,8 @@ class ModflowSfr2(Package):
         """
         import matplotlib.pyplot as plt
         if not pd:
-            print('This method requires pandas')
-            return
+            msg = 'ModflowSfr2.plot_path: pandas not available'
+            raise ImportError(msg)
 
         df = self.df
         m = self.parent

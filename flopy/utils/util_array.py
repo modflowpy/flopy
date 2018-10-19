@@ -25,7 +25,6 @@ class ArrayFormat(object):
     Parameters
     ----------
     u2d : Util2d instance
-
     python : str (optional)
         python-style output format descriptor e.g. {0:15.6e}
     fortran : str (optional)
@@ -73,7 +72,7 @@ class ArrayFormat(object):
 
     """
 
-    def __init__(self, u2d, python=None, fortran=None,array_free_format=None):
+    def __init__(self, u2d, python=None, fortran=None, array_free_format=None):
 
         assert isinstance(u2d, Util2d), "ArrayFormat only supports Util2d," + \
                                         "not {0}".format(type(u2d))
@@ -215,7 +214,7 @@ class ArrayFormat(object):
             if self.dtype == np.float32 and width < self.decimal:
                 raise Exception("width cannot be less than decimal")
             elif self.dtype == np.float32 and \
-                            width < self.default_float_width:
+                    width < self.default_float_width:
                 print("ArrayFormat warning:setting width less " +
                       "than default of {0}".format(self.default_float_width))
                 self._width = width
@@ -504,9 +503,9 @@ class Util3d(DataInterface):
         self.array_free_format = array_free_format
         if isinstance(value, Util3d):
             for attr in value.__dict__.items():
-                setattr(self,attr[0], attr[1])
+                setattr(self, attr[0], attr[1])
             self._model = model
-            self.array_free_format=array_free_format
+            self.array_free_format = array_free_format
             for i, u2d in enumerate(self.util_2ds):
                 self.util_2ds[i] = Util2d(model, u2d.shape, u2d.dtype,
                                           u2d._array, name=u2d.name,
@@ -549,7 +548,6 @@ class Util3d(DataInterface):
         self.iprn = iprn
         self.locat = locat
 
-
         self.ext_filename_base = []
         if model.external_path is not None:
             for k in range(shape[0]):
@@ -581,7 +579,7 @@ class Util3d(DataInterface):
             for u2d in self.util_2ds:
                 u2d.format = ArrayFormat(u2d, fortran=value,
                                          array_free_format=self.array_free_format)
-            super(Util3d,self).__setattr__("fmtin",value)
+            super(Util3d, self).__setattr__("fmtin", value)
         elif hasattr(self, "util_2ds") and key == "how":
             for u2d in self.util_2ds:
                 u2d.how = value
@@ -635,8 +633,9 @@ class Util3d(DataInterface):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.lpf.hk.to_shapefile('test_hk.shp')
         """
-        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
-             DeprecationWarning)
+        warn(
+            "Deprecation warning: to_shapefile() is deprecated. use .export()",
+            DeprecationWarning)
 
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         #
@@ -973,7 +972,7 @@ class Transient3d(DataInterface):
         self.cnstst = cnstnt
         self.iprn = iprn
         self.locat = locat
-        self.array_free_format=array_free_format
+        self.array_free_format = array_free_format
         self.transient_3ds = self.build_transient_sequence()
         return
 
@@ -1113,7 +1112,7 @@ class Transient3d(DataInterface):
         name = '{}_period{}'.format(self.name_base, kper + 1)
         u3d = Util3d(self._model, self.shape, self._dtype, arg,
                      fmtin=self.fmtin, name=name,
-#                     ext_filename=ext_filename,
+                     #                     ext_filename=ext_filename,
                      locat=self.locat,
                      array_free_format=self.array_free_format)
         return u3d
@@ -1189,7 +1188,7 @@ class Transient2d(DataInterface):
 
     def __init__(self, model, shape, dtype, value, name, fmtin=None,
                  cnstnt=1.0, iprn=-1, ext_filename=None, locat=None,
-                 bin=False,array_free_format=None):
+                 bin=False, array_free_format=None):
 
         if isinstance(value, Transient2d):
             for attr in value.__dict__.items():
@@ -1344,8 +1343,9 @@ class Transient2d(DataInterface):
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.rch.rech.as_shapefile('test_rech.shp')
         """
-        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
-             DeprecationWarning)
+        warn(
+            "Deprecation warning: to_shapefile() is deprecated. use .export()",
+            DeprecationWarning)
 
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         #
@@ -1480,7 +1480,7 @@ class Transient2d(DataInterface):
 
     def get_kper_entry(self, kper):
         """
-        get the file entry info for a given kper
+        Get the file entry info for a given kper
         returns (itmp,file entry string from Util2d)
         """
         if kper in self.transient_2ds:
@@ -1758,7 +1758,7 @@ class Util2d(DataInterface):
             self._how = "constant"
         # if a filename was passed in or external path was set
         elif self._model.external_path is not None or \
-                        self.vtype == str:
+                self.vtype == str:
             if self.format.array_free_format:
                 self._how = "openclose"
             else:
@@ -1867,8 +1867,9 @@ class Util2d(DataInterface):
         >>> ml.dis.top.as_shapefile('test_top.shp')
         """
 
-        warn("Deprecation warning: to_shapefile() is deprecated. use .export()",
-             DeprecationWarning)
+        warn(
+            "Deprecation warning: to_shapefile() is deprecated. use .export()",
+            DeprecationWarning)
         # from flopy.utils.flopy_io import write_grid_shapefile, shape_attr_name
         # name = shape_attr_name(self._name, keep_layer=True)
         # write_grid_shapefile(filename, self._model.dis.sr, {name:
@@ -2057,7 +2058,7 @@ class Util2d(DataInterface):
             value = self.cnstnt
         if self.format.binary:
             if locat is None:
-                raise Exception("Util2d._get_fixed_cr(): locat is None but"+\
+                raise Exception("Util2d._get_fixed_cr(): locat is None but" + \
                                 "format is binary")
             if not self.format.array_free_format:
                 locat = -1 * np.abs(locat)
@@ -2090,7 +2091,7 @@ class Util2d(DataInterface):
 
     @property
     def cnstnt_str(self):
-        if isinstance(self.cnstnt,str):
+        if isinstance(self.cnstnt, str):
             return self.cnstnt
         else:
             return "{0:15.6G}".format(self.cnstnt)
@@ -2104,7 +2105,7 @@ class Util2d(DataInterface):
 
     def get_external_cr(self):
         locat = self._model.next_ext_unit()
-        #if self.format.binary:
+        # if self.format.binary:
         #    locat = -1 * np.abs(locat)
         self._model.add_external(self.model_file_path, locat,
                                 self.format.binary)
@@ -2153,7 +2154,7 @@ class Util2d(DataInterface):
         elif how == "external" or how == "openclose":
             if how == "openclose":
                 assert self.format.array_free_format, "Util2d error: 'how' is openclose," + \
-                                                     "but model doesn't support free fmt"
+                                                      "but model doesn't support free fmt"
 
             # write a file if needed
             if self.vtype != str:
@@ -2238,7 +2239,7 @@ class Util2d(DataInterface):
             model - with the effects of the control record multiplier applied.
 
         """
-        if isinstance(self.cnstnt,str):
+        if isinstance(self.cnstnt, str):
             print("WARNING: cnstnt is str for {0}".format(self.name))
             return self._array.astype(self.dtype)
         if isinstance(self.cnstnt, (int, np.int32)):
@@ -2306,7 +2307,7 @@ class Util2d(DataInterface):
         if len(shape) != 2:
             raise ValueError(
                 'Util2d.load_block(): expected 2 dimensions, found shape {0}'
-                .format(shape))
+                    .format(shape))
         nrow, ncol = shape
         data = np.ma.zeros(shape, dtype=dtype)
         data.mask = True
@@ -2326,7 +2327,6 @@ class Util2d(DataInterface):
         if data.mask.any():
             warn('Util2d.load_block(): blocks do not cover full array')
         return data.data
-
 
     @staticmethod
     def load_txt(shape, file_in, dtype, fmtin):
@@ -2359,7 +2359,7 @@ class Util2d(DataInterface):
         else:
             raise ValueError(
                 'Util2d.load_txt(): expected 1 or 2 dimensions, found shape {0}'
-                .format(shape))
+                    .format(shape))
         if not hasattr(file_in, 'read'):
             file_in = open(file_in, 'r')
         npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(fmtin)
@@ -2394,7 +2394,8 @@ class Util2d(DataInterface):
         data = np.fromiter(items, dtype=dtype, count=num_items)
         if data.size != num_items:
             raise ValueError('Util2d.load_txt(): expected array size {0},'
-                             ' but found size {1}'.format(num_items, data.size))
+                             ' but found size {1}'.format(num_items,
+                                                          data.size))
         return data.reshape(shape)
 
     @staticmethod
@@ -2513,7 +2514,8 @@ class Util2d(DataInterface):
         data = np.fromfile(file_in, dtype=dtype, count=num_items)
         if data.size != num_items:
             raise ValueError('Util2d.load_bin(): expected array size {0},'
-                             ' but found size {1}'.format(num_items, data.size))
+                             ' but found size {1}'.format(num_items,
+                                                          data.size))
         return header_data, data.reshape(shape)
 
     @staticmethod
@@ -2605,7 +2607,7 @@ class Util2d(DataInterface):
 
     @staticmethod
     def load(f_handle, model, shape, dtype, name, ext_unit_dict=None,
-             array_free_format=None,array_format="modflow"):
+             array_free_format=None, array_format="modflow"):
         """
         functionality to load Util2d instance from an existing
         model input file.
@@ -2626,8 +2628,8 @@ class Util2d(DataInterface):
                     break
 
         # Allows for special MT3D array reader
-        #array_format = None
-        #if hasattr(model, 'array_format'):
+        # array_format = None
+        # if hasattr(model, 'array_format'):
         #    array_format = model.array_format
 
         cr_dict = Util2d.parse_control_record(f_handle.readline(),
@@ -2677,18 +2679,20 @@ class Util2d(DataInterface):
                          array_free_format=array_free_format)
 
         elif cr_dict['type'] == 'external':
-            if str('binary') not in str(cr_dict['fmtin'].lower()):
+            ext_unit = ext_unit_dict[cr_dict['nunit']]
+            if ext_unit.filehandle is None:
+                raise IOError('cannot read unit {0}, filename: {1}'
+                              .format(cr_dict['nunit'], ext_unit.filename))
+            elif 'binary' not in str(cr_dict['fmtin'].lower()):
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
-                data = Util2d.load_txt(shape,
-                                       ext_unit_dict[
-                                           cr_dict['nunit']].filehandle,
+                data = Util2d.load_txt(shape, ext_unit.filehandle,
                                        dtype, cr_dict['fmtin'])
             else:
                 if cr_dict['nunit'] not in list(ext_unit_dict.keys()):
                     cr_dict["nunit"] *= -1
                 assert cr_dict['nunit'] in list(ext_unit_dict.keys())
                 header_data, data = Util2d.load_bin(
-                    shape, ext_unit_dict[cr_dict['nunit']].filehandle, dtype,
+                    shape, ext_unit.filehandle, dtype,
                     bintype='Head')
             u2d = Util2d(model, shape, dtype, data, name=name,
                          iprn=cr_dict['iprn'], fmtin="(FREE)",
@@ -2744,8 +2748,6 @@ class Util2d(DataInterface):
                     except:
                         pass
 
-
-
                 nunit = int(raw[1])
                 if isfloat:
                     cnstnt = np.float(raw[2].lower().replace('d', 'e'))
@@ -2775,7 +2777,7 @@ class Util2d(DataInterface):
                     cnstnt = np.int(line[10:20].strip())
                 else:
                     cnstnt = 0
-                #if cnstnt == 0:
+                # if cnstnt == 0:
                 #    cnstnt = 1
             if locat != 0:
                 if len(line) >= 40:

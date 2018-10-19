@@ -477,7 +477,8 @@ class BaseModel(ModelInterface):
             # determine if the file is in external_units
             if abs(unit) in self.external_units:
                 idx = self.external_units.index(abs(unit))
-                fname = os.path.basename(self.external_fnames[idx])
+                if fname is None:
+                    fname = os.path.basename(self.external_fnames[idx])
                 binflag = self.external_binflag[idx]
                 self.remove_external(unit=abs(unit))
             # determine if the unit exists in the output data
@@ -777,9 +778,12 @@ class BaseModel(ModelInterface):
 
     def add_existing_package(self, filename, ptype=None,
                              copy_to_model_ws=True):
-        """ add an existing package to a model instance.
+        """
+        Add an existing package to a model instance.
+
         Parameters
         ----------
+
         filename : str
             the name of the file to add as a package
         ptype : optional
@@ -787,6 +791,11 @@ class BaseModel(ModelInterface):
             then the file extension of the filename arg is used
         copy_to_model_ws : bool
             flag to copy the package file into the model_ws directory.
+
+        Returns
+        -------
+        None
+
         """
         if ptype is None:
             ptype = filename.split('.')[-1]

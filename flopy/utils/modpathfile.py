@@ -190,8 +190,9 @@ class PathlineFile():
             sequencenumber, group, particleid, pathlinecount = t[0:4]
             ndata += pathlinecount
             # read the particle data
-            d = np.loadtxt(itertools.islice(self.file, 0, pathlinecount),
-                           dtype=dtyper)
+            field_len = [10] + [16] * 7 + [10] * 3
+            d = np.genfromtxt(itertools.islice(self.file, 0, pathlinecount),
+                           dtype=dtyper, delimiter=field_len, missing_values="*"*10)
             key = (idx, sequencenumber, group, particleid, pathlinecount)
             part_dict[key] = d.copy()
             idx += 1
@@ -981,6 +982,7 @@ class EndpointFile():
             EPSG code for writing projection (.prj) file. If this is not supplied,
             the proj4 string or epgs code associated with sr will be used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
         """
         from ..utils.reference import SpatialReference
         from ..utils import geometry

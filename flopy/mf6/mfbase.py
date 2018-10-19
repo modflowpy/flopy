@@ -182,11 +182,13 @@ class MFFileMgmt(object):
 
     Parameters
     ----------
+
     path : string
         path on disk to the simulation
 
     Attributes
     ----------
+
     sim_path : string
         path to the simulation
     model_relative_path : OrderedDict
@@ -194,10 +196,12 @@ class MFFileMgmt(object):
 
     Methods
     -------
+
     get_model_path : (key : string) : string
         returns the model working path for the model key
-    set_sim_path
+    set_sim_path : string
         sets the simulation working path
+
     """
     def __init__(self, path):
         self._sim_path = ''
