@@ -779,9 +779,8 @@ def test_sr_with_Map():
         #assert np.abs(yulp - yul) < 1e-6
 
 #    check_vertices()
-
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
-                                   rotation=rotation)
+    m.modelgrid.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+    modelmap = flopy.plot.PlotMapView(model=m)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -791,7 +790,8 @@ def test_sr_with_Map():
     #                                           xll=xll, yll=yll,
     #                                           rotation=rotation)
     #m.sr = copy.deepcopy(sr)
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll, rotation=rotation)
+
+    modelmap = flopy.plot.PlotMapView(modelgrid=m.modelgrid)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -801,7 +801,7 @@ def test_sr_with_Map():
     #m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
     #                                    xll=xll, yll=yll,
     #                                    rotation=rotation)
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll, rotation=rotation)
+    modelmap = flopy.plot.PlotMapView(dis=m.dis)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
