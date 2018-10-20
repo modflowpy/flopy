@@ -200,10 +200,10 @@ class ModflowFlwob(Package):
         self.factor = factor
 
         # -create empty arrays of the correct size
-        self.layer = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.row = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.column = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.factor = np.zeros((self.nqfb, max(self.nqclfb)), dtype='float32')
+        self.layer = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype='int32')
+        self.row = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype='int32')
+        self.column = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype='int32')
+        self.factor = np.zeros((self.nqfb, max(np.abs(self.nqclfb))), dtype='float32')
         self.nqobfb = np.zeros((self.nqfb), dtype='int32')
         self.nqclfb = np.zeros((self.nqfb), dtype='int32')
         self.irefsp = np.zeros((self.nqtfb), dtype='int32')
@@ -429,19 +429,19 @@ class ModflowFlwob(Package):
                     break
 
             # read dataset 5 -- Layer Row Column Factor
-            k = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
-            i = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
-            j = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
-            fac = np.zeros((nqfb, abs(nqclfb[nobs])), np.float32)
+            k = np.zeros(abs(nqclfb[nobs]), np.int32)
+            i = np.zeros(abs(nqclfb[nobs]), np.int32)
+            j = np.zeros(abs(nqclfb[nobs]), np.int32)
+            fac = np.zeros(abs(nqclfb[nobs]), np.float32)
 
             ncells = 0
             while True:
                 line = f.readline()
                 t = line.strip().split()
-                k[(nobs, ncells)] = int(t[0])
-                i[(nobs, ncells)] = int(t[1])
-                j[(nobs, ncells)] = int(t[2])
-                fac[(nobs, ncells)] = float(t[3])
+                k[ncells] = int(t[0])
+                i[ncells] = int(t[1])
+                j[ncells] = int(t[2])
+                fac[ncells] = float(t[3])
 
                 ncells += 1
                 if ncells == abs(nqclfb[nobs]):
