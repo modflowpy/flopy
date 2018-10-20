@@ -345,7 +345,7 @@ class ModflowFlwob(Package):
 
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
-        >>> hobs = flopy.modflow.ModflowHob.load('test.hob', m)
+        >>> hobs = flopy.modflow.ModflowFlwob.load('test.drob', m)
 
         """
 
