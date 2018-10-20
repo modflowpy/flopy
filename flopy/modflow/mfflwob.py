@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from ..pakbase import Package
 
@@ -312,3 +313,171 @@ class ModflowFlwob(Package):
         # swm: END hack for writing standard file
 
         return
+
+    @staticmethod
+    def load(f, model, flowtype=None, ext_unit_dict=None, check=True):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
+
+        Returns
+        -------
+        flwob : ModflowFlwob package object
+            ModflowFlwob package object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> hobs = flopy.modflow.ModflowHob.load('test.hob', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading flwob package file...\n')
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        # infer flowtype
+        if flowtype is None:
+            ext = f.name.split('.')[-1].lower()
+            if ext.lower() == 'chob':
+                flowtype = 'CHD'
+            elif ext.lower() == 'gbob':
+                flowtype = 'GHB'
+            elif ext.lower() == 'drob':
+                flowtype = 'DRN'
+            elif ext.lower() == 'rvob':
+                flowtype = 'RIV'
+            else:
+                msg = 'ModflowFlwob: flowtype cannot be inferred ' \
+                      'from file extension .{}'.format(ext)
+                raise KeyError(msg)
+
+        # dataset 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+
+        # read dataset 1 -- NQFB NQCFB NQTFB IUFBOBSV Options
+        t = line.strip().split()
+        nqfb = int(t[0])
+        nqcfb = int(t[1])
+        nqtfb = int(t[2])
+        iufbobsv = int(t[3])
+        if len(t) > 4:
+            options = t[4:]
+
+        # read dataset 2
+        line = f.readline()
+        t = line.strip().split()
+        tomultfb = float(t[0])
+
+        nqobfb = np.zeros(nqfb, dtype=np.int32) - 1
+        nqclfb = np.zeros(nqfb, dtype=np.int32) - 1
+        obsnam = np.empty(nqfb, dtype=object)
+        irefsp = np.zeros(nqfb, dtype=np.int32) - 1
+        toffset = np.zeros(nqfb, dtype=np.float32) - 1
+        flwobs = np.zeros(nqfb, dtype=np.float32) - 1
+
+        layer = []
+        row = []
+        column = []
+        factor = []
+
+        # read datasets 3, 4, and 5 for each of nqfb groups
+        # of cells
+        nobs = 0
+        while True:
+
+            # read dataset 3
+            line = f.readline()
+            t = line.strip().split()
+            nqobfb[nobs] = int(t[0])
+            nqclfb[nobs] = int(t[1])
+
+            # read dataset 4
+            line = f.readline()
+            t = line.strip().split()
+            obsnam[nobs] = t[0]
+            irefsp[nobs] = int(t[1])
+            toffset[nobs] = float(t[2])
+            flwobs[nobs] = float(t[3])
+
+            # read dataset 5
+            k = np.zeros(nqclfb[nobs], np.int32)
+            i = np.zeros(nqclfb[nobs], np.int32)
+            j = np.zeros(nqclfb[nobs], np.int32)
+            fac = np.zeros(nqclfb[nobs], np.float32)
+
+            ncells = 0
+            while True:
+                line = f.readline()
+                t = line.strip().split()
+                k[ncells] = int(t[0])
+                i[ncells] = int(t[1])
+                j[ncells] = int(t[2])
+                fac[ncells] = float(t[3])
+
+                ncells += 1
+                if ncells == nqclfb[nobs]:
+                    layer.append(k)
+                    row.append(i)
+                    column.append(j)
+                    factor.append(fac)
+                    break
+
+            nobs += 1
+            if nobs == nqfb:
+                break
+
+        layer = np.array(layer)
+        row = np.array(row)
+        column = np.array(column)
+        factor = np.array(factor)
+
+        # close the file
+        f.close()
+
+        # set package unit number
+        unitnumber = None
+        filenames = [None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ext.upper())
+            if iufbobsv > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iufbobsv)
+                model.add_pop_key_list(iufbobsv)
+
+        # create hob object instance
+        flwob = ModflowFlwob(model, iufbobsv=iufbobsv, tomultfb=tomultfb,
+                             nqfb=nqfb, nqcfb=nqcfb,
+                             nqtfb=nqtfb, nqobfb=nqobfb, nqclfb=nqclfb,
+                             obsnam=obsnam, irefsp=irefsp, toffset=toffset,
+                             flwobs=flwobs, layer=layer, row=row,
+                             column=column, factor=factor, options=options,
+                             flowtype=flowtype,
+                             filenames=filenames)
+
+        return flwob
