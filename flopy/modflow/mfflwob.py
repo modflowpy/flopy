@@ -387,17 +387,17 @@ class ModflowFlwob(Package):
         if len(t) > 4:
             options = t[4:]
 
-        # read dataset 2
+        # read dataset 2 -- TOMULTFB
         line = f.readline()
         t = line.strip().split()
         tomultfb = float(t[0])
 
-        nqobfb = np.zeros(nqfb, dtype=np.int32) - 1
-        nqclfb = np.zeros(nqfb, dtype=np.int32) - 1
-        obsnam = np.empty(nqfb, dtype=object)
-        irefsp = np.zeros(nqfb, dtype=np.int32) - 1
-        toffset = np.zeros(nqfb, dtype=np.float32) - 1
-        flwobs = np.zeros(nqfb, dtype=np.float32) - 1
+        nqobfb = np.zeros(nqfb, dtype=np.int32)
+        nqclfb = np.zeros(nqfb, dtype=np.int32)
+        obsnam = np.empty(nqtfb, dtype=object)
+        irefsp = np.zeros(nqtfb, dtype=np.int32)
+        toffset = np.zeros(nqtfb, dtype=np.float32)
+        flwobs = np.zeros(nqtfb, dtype=np.float32)
 
         layer = []
         row = []
@@ -409,37 +409,42 @@ class ModflowFlwob(Package):
         nobs = 0
         while True:
 
-            # read dataset 3
+            # read dataset 3 -- NQOBFB NQCLFB
             line = f.readline()
             t = line.strip().split()
             nqobfb[nobs] = int(t[0])
             nqclfb[nobs] = int(t[1])
 
-            # read dataset 4
-            line = f.readline()
-            t = line.strip().split()
-            obsnam[nobs] = t[0]
-            irefsp[nobs] = int(t[1])
-            toffset[nobs] = float(t[2])
-            flwobs[nobs] = float(t[3])
+            # read dataset 4 -- OBSNAM IREFSP TOFFSET FLWOBS
+            ntimes = 0
+            while True:
+                line = f.readline()
+                t = line.strip().split()
+                obsnam[nobs + ntimes] = t[0]
+                irefsp[nobs + ntimes] = int(t[1])
+                toffset[nobs + ntimes] = float(t[2])
+                flwobs[nobs + ntimes] = float(t[3])
+                ntimes += 1
+                if ntimes == nqobfb[nobs]:
+                    break
 
-            # read dataset 5
-            k = np.zeros(nqclfb[nobs], np.int32)
-            i = np.zeros(nqclfb[nobs], np.int32)
-            j = np.zeros(nqclfb[nobs], np.int32)
-            fac = np.zeros(nqclfb[nobs], np.float32)
+            # read dataset 5 -- Layer Row Column Factor
+            k = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
+            i = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
+            j = np.zeros((nqfb, abs(nqclfb[nobs])), np.int32)
+            fac = np.zeros((nqfb, abs(nqclfb[nobs])), np.float32)
 
             ncells = 0
             while True:
                 line = f.readline()
                 t = line.strip().split()
-                k[ncells] = int(t[0])
-                i[ncells] = int(t[1])
-                j[ncells] = int(t[2])
-                fac[ncells] = float(t[3])
+                k[(nobs, ncells)] = int(t[0])
+                i[(nobs, ncells)] = int(t[1])
+                j[(nobs, ncells)] = int(t[2])
+                fac[(nobs, ncells)] = float(t[3])
 
                 ncells += 1
-                if ncells == nqclfb[nobs]:
+                if ncells == abs(nqclfb[nobs]):
                     layer.append(k)
                     row.append(i)
                     column.append(j)
