@@ -359,13 +359,13 @@ class ModflowFlwob(Package):
         # infer flowtype
         if flowtype is None:
             ext = f.name.split('.')[-1].lower()
-            if ext.lower() == 'chob':
+            if 'ch' in ext.lower():
                 flowtype = 'CHD'
-            elif ext.lower() == 'gbob':
+            elif 'gb' in ext.lower():
                 flowtype = 'GHB'
-            elif ext.lower() == 'drob':
+            elif 'dr' in ext.lower():
                 flowtype = 'DRN'
-            elif ext.lower() == 'rvob':
+            elif 'rv' in ext.lower():
                 flowtype = 'RIV'
             else:
                 msg = 'ModflowFlwob: flowtype cannot be inferred ' \
