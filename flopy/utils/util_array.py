@@ -2614,6 +2614,7 @@ class Util2d(object):
         if shape == (0, 0):
             raise IndexError('No information on model grid dimensions. '
                              'Need nrow, ncol to load a Util2d array.')
+        cf_path = None
         curr_unit = None
         if ext_unit_dict is not None:
             # determine the current file's unit number
@@ -2654,8 +2655,9 @@ class Util2d(object):
 
             # test to see if external file is located next to
             # package file
-            if os.path.isfile(os.path.join(cf_path, fname)):
-                fname = os.path.join(cf_path, fname)
+            if cf_path is not None:
+                if os.path.isfile(os.path.join(cf_path, fname)):
+                    fname = os.path.join(cf_path, fname)
             else:
                 fname = os.path.join(model.model_ws, fname)
             # load_txt(shape, file_in, dtype, fmtin):
