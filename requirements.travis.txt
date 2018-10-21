@@ -1,3 +1,4 @@
+appdirs
 matplotlib
 netcdf4
 fiona
