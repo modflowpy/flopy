@@ -8,23 +8,31 @@ except:
 
 
 class acdd:
-    """Translate ScienceBase global metadata attributes to CF and ACDD
+    """
+    Translate ScienceBase global metadata attributes to CF and ACDD
     global attributes.
-    
-    see:
-    https://www.sciencebase.gov/catalog/
-    http://cfconventions.org/cf-conventions/v1.6.0/cf-conventions.html#description-of-file-contents
-    http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
-    
+
     Parameters
     ----------
+
     sciencebase_id : str
         Unique identifier for ScienceBase record (e.g. 582da7efe4b04d580bd37be8)
     model : flopy model object
-    
+        Model object
+
+    References
+    ----------
+
+    https://www.sciencebase.gov/catalog/
+    http://cfconventions.org/cf-conventions/v1.6.0/cf-conventions.html#description-of-file-contents
+    http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
+
     """
 
     def __init__(self, sciencebase_id, model):
+        """
+        Class constructor
+        """
 
         self.id = sciencebase_id
         self.model = model
@@ -120,23 +128,34 @@ class acdd:
 
     @property
     def geospatial_bounds(self):
-        """Describes the data's 2D or 3D geospatial extent in OGC's Well-Known Text (WKT) Geometry format"""
-        return 'POLYGON (({0} {2}, {0} {3}, {1} {3}, {1} {2}, {0} {2}))'.format(
-            self.geospatial_lon_min,
-            self.geospatial_lon_max,
-            self.geospatial_lat_min,
-            self.geospatial_lat_max
-        )
+        """
+        Describes the data's 2D or 3D geospatial extent in OGC's Well-Known
+        Text (WKT) Geometry format
+        """
+        fmt = '(({0} {2}, {0} {3}, {1} {3}, {1} {2}, {0} {2}))'
+        bounds = 'POLYGON ' + fmt.format(self.geospatial_lon_min,
+                                         self.geospatial_lon_max,
+                                         self.geospatial_lat_min,
+                                         self.geospatial_lat_max)
+        return bounds
 
     @property
     def geospatial_bounds_vertical_crs(self):
-        """The vertical coordinate reference system (CRS) 
-        for the Z axis of the point coordinates in the geospatial_bounds attribute. """
+        """
+        The vertical coordinate reference system (CRS) for the Z axis of
+        the point coordinates in the geospatial_bounds attribute.
+        """
         epsg = {'NGVD29': 'EPSG:5702', 'NAVD88': 'EPSG:5703'}
         return epsg.get(self.vertical_datum)
 
     @property
     def references(self):
+        """
+
+        Returns
+        -------
+
+        """
         r = [self.citation]
         links = [d.get('uri') for d in self.sb['webLinks']
                  if 'link' in d.get('type').lower()]
@@ -144,6 +163,12 @@ class acdd:
 
     @property
     def time_coverage(self):
+        """
+
+        Returns
+        -------
+
+        """
         l = self.sb['dates']
         tc = {}
         for t in ['start', 'end']:
@@ -162,7 +187,9 @@ class acdd:
 
     @property
     def vertical_datum(self):
-        """try to parse the vertical datum from the xml info"""
+        """
+        Try to parse the vertical datum from the xml info
+        """
         altdatum = self._get_xml_attribute('altdatum')
         if altdatum is not None:
             if '88' in altdatum:
@@ -174,7 +201,9 @@ class acdd:
 
     @property
     def xmlroot(self):
-        """ElementTree root element object for xml metadata"""
+        """
+        ElementTree root element object for xml metadata
+        """
         try:
             return self.get_sciencebase_xml_metadata()
         except:
@@ -185,9 +214,10 @@ class acdd:
         return self.sb['identifiers'][0].get('key')
 
     def get_sciencebase_metadata(self, id):
-        """Gets metadata json text for given ID from sciencebase.gov; loads
+        """
+        Gets metadata json text for given ID from sciencebase.gov; loads
         into python dictionary. Fetches the reference text using the url:
-            https://www.sciencebase.gov/catalog/item/<ID>?format=json
+        https://www.sciencebase.gov/catalog/item/<ID>?format=json
 
         Parameters
         ----------
@@ -205,13 +235,14 @@ class acdd:
 
         import json
         from flopy.utils.flopy_io import get_url_text
-        text = get_url_text(url,
-                            error_msg='Need an internet connection to get metadata from ScienceBase.')
+        msg = 'Need an internet connection to get metadata from ScienceBase.'
+        text = get_url_text(url, error_msg=msg)
         if text is not None:
             return json.loads(text)
 
     def get_sciencebase_xml_metadata(self):
-        """Gets xml from sciencebase.gov, using XML url obtained
+        """
+        Gets xml from sciencebase.gov, using XML url obtained
         from json using get_sciencebase_metadata().
 
         Parameters
@@ -229,6 +260,6 @@ class acdd:
         from flopy.utils.flopy_io import get_url_text
 
         url = self.xmlfile
-        text = get_url_text(url,
-                            error_msg='Need an internet connection to get metadata from ScienceBase.')
+        msg = 'Need an internet connection to get metadata from ScienceBase.'
+        text = get_url_text(url, error_msg=msg)
         return ET.fromstring(text)

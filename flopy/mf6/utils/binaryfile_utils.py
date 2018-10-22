@@ -217,8 +217,8 @@ class MFOutputRequester:
         try:
             import pandas as pd
         except Exception as e:
-            print("this feature requires pandas")
-            return None
+            msg = 'MFOutputRequester._get_vertices(): requires pandas'
+            raise ImportError(msg)
 
         mname = key[0]
         cellid = mfdict[(mname, 'DISV8', 'CELL2D', 'cell2d_num')]

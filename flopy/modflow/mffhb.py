@@ -78,6 +78,7 @@ class ModflowFhb(Package):
                 [lay, row, col, iaux, flwrat1, flwra2, ..., flwrat(nbdtime)],
                 [lay, row, col, iaux, flwrat1, flwra2, ..., flwrat(nbdtime)]
             ]
+
         Note there should be nflw rows in ds7.
 
     cnstm7 : float
@@ -96,6 +97,7 @@ class ModflowFhb(Package):
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)],
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)]
             ]
+
         Note there should be nhed rows in ds7.
 
     extension : string

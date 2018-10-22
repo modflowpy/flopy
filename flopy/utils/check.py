@@ -36,8 +36,6 @@ class check:
         sy : tuple
             Reasonable minimum/maximum specific storage values;
             Default is (3.3e-6, 2e-2) after Anderson, Woessner and Hunt (2015, Table 5.2).
-    thin_cell_threshold : float
-        Minimum cell thickness in model units. Thicknesses below this value will be flagged (default 1.0).
 
     Notes
     -----

@@ -1,12 +1,10 @@
 Instructions for making a FloPy release
 -----------------------------------------------
 
-## Update master
+## Make a release branch from develop
 
-1.  Update MODFLOW 6 dfn files and MODFLOW 6 package classes by running the `update_flopy.py` script in the [MODFLOW 6 github repo](https://github.com/MODFLOW-USGS/modflow6). Make sure you have checked out the latest MODFLOW 6 release on `MASTER` or the soon to be released `DEVELOP` branch in SourceTree prior to running the `update_flopy.py` script. 
-2.  Commit the changes to the `develop` branch and push to the GitHub site.
-3.  Change to the `master` branch in SourceTree.
-4.  Merge the `develop` branch into the `master` branch.
+1.  Make a release branch from develop (*e.g.* `release3.2.10`)
+2.  Update MODFLOW 6 dfn files and MODFLOW 6 package classes by running the `update_flopy.py` script in the [MODFLOW 6 github repo](https://github.com/MODFLOW-USGS/modflow6). Make sure you have checked out the latest MODFLOW 6 release on `MASTER` or the soon to be released `DEVELOP` branch in SourceTree prior to running the `update_flopy.py` script. 
 
 
 ## Update the release version number
@@ -33,6 +31,20 @@ Instructions for making a FloPy release
 
 1.  Rerun all of the notebooks in the `examples\Notebooks` directory.
 2.  Rerun all of the notebooks in the `examples\Notebooks\groundwater_paper` directory.
+
+
+## Commit the release branch
+
+1.  Commit the changes to the release (*e.g.* `release3.2.10`) branch.
+2.  Push the commit to GitHub.
+3.  Wait until the commit successfully runs on [Travis](https://travis-ci.org/modflowpy/flopy/builds).
+
+
+## Update master branch
+
+1.  Change to the `master` branch in SourceTree.
+2.  Merge the release branch (*e.g.* `release3.2.10`) branch into the `master` branch.
+3.  Commit changes to `master` branch and push the commit to GitHub.
 
 
 ## Finalizing the release
@@ -99,7 +111,7 @@ Instructions for making a FloPy release
 6.  Make pull request to [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock)
 
 
-## Sync master and develop branches
+## Sync develop and master branches
 
 1.  Merge the `master` branch into the `develop` branch.
 2.  Commit and push the modified `develop` branch.
