@@ -297,13 +297,11 @@ class BaseModel(object):
         fname = None
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
+                iu = key
+                fname = os.path.relpath(value.filename, self.model_ws)
                 if key == unit:
-                    iu = key
-                    fname = os.path.basename(value.filename)
                     break
                 elif value.filetype == filetype:
-                    iu = key
-                    fname = os.path.basename(value.filename)
                     if pop_key:
                         self.add_pop_key_list(iu)
                     break
