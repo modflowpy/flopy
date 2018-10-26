@@ -35,6 +35,11 @@ class ModflowHob(Package):
         will be used (default is None).
     extension : string
         Filename extension (default is hob)
+    no_print : boolean
+        When True or 1, a list of head observations will not be
+        written to the Listing File (default is False)
+    options : list of strings
+        Package options (default is None).
     unitnumber : int
         File unit number (default is None)
     filenames : str or list of str
@@ -77,8 +82,9 @@ class ModflowHob(Package):
     """
 
     def __init__(self, model, iuhobsv=None, hobdry=0, tomulth=1.0,
-                 obs_data=None, hobname=None,
-                 extension='hob', unitnumber=None, filenames=None):
+                 obs_data=None, hobname=None, extension='hob',
+                 no_print=False, options=None,
+                 unitnumber=None, filenames=None):
         """
         Package constructor
         """
@@ -140,6 +146,14 @@ class ModflowHob(Package):
         # set self.obs_data
         self.obs_data = obs_data
 
+        self.no_print = no_print
+        self.np = 0
+        if options is None:
+            options = []
+        if self.no_print:
+            options.append('NOPRINT')
+        self.options = options
+
         # add checks for input compliance (obsnam length, etc.)
         self.parent.add_package(self)
 
@@ -194,7 +208,10 @@ class ModflowHob(Package):
         f.write('{:10d}'.format(self.mobs))
         f.write('{:10d}'.format(self.maxm))
         f.write('{:10d}'.format(self.iuhobsv))
-        f.write('{:10.4g}\n'.format(self.hobdry))
+        f.write('{:10.4g}'.format(self.hobdry))
+        if self.no_print or 'NOPRINT' in self.options:
+            f.write('{: >10}'.format('NOPRINT'))
+        f.write('\n')
 
         # write dataset 2
         f.write('{:10.4g}\n'.format(self.tomulth))
@@ -446,7 +463,7 @@ class HeadObservation(object):
         is the zero-based layer index of the cell in which the head observation
         is located. If layer is less than zero, hydraulic heads from multiple
         layers are combined to calculate a simulated value. The number of
-        layers equals the absolute value of layer, or |layer|. Default is 0.
+        layers equals the absolute value of layer, or abs(layer). Default is 0.
     row : int
         zero-based row index for the observation. Default is 0.
     column : int
@@ -464,7 +481,7 @@ class HeadObservation(object):
         observations. itt = 1 specified for heads and itt = 2 specified
         if initial value is head and subsequent changes in head. Only
         specified if irefsp is < 0. Default is 1.
-    mlay : dictionary of length (|irefsp|)
+    mlay : dictionary of length (abs(irefsp))
         key represents zero-based layer numbers for multilayer observations an
         value represents the fractional value for each layer of multilayer
         observations. If mlay is None, a default mlay of {0: 1.} will be

@@ -450,7 +450,7 @@ class ListBudget(object):
 
         Returns
         -------
-        out : panda dataframes
+        out : pandas dataframes
             Pandas dataframes with the incremental and cumulative water budget
             items in list file. A separate pandas dataframe is returned for the
             incremental and cumulative water budget entries.
@@ -465,9 +465,8 @@ class ListBudget(object):
         try:
             import pandas as pd
         except Exception as e:
-            raise Exception(
-                    "ListBudget.get_dataframe() error import pandas: " + \
-                    str(e))
+            msg = "ListBudget.get_dataframe(): requires pandas: " + str(e)
+            raise ImportError(msg)
 
         if not self._isvalid:
             return None

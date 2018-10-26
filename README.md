@@ -1,10 +1,10 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.9 develop &mdash; build 216
-[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
+### Version 3.2.10
+[![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=release3.2.10)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
-[![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
+[![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=release3.2.10)](https://coveralls.io/github/modflowpy/flopy?branch=release3.2.10)
 
 
 Introduction
@@ -100,7 +100,7 @@ To update FloPy type:
 
 or
 
-	conda update flopy
+	conda update -c conda-forge flopy
 
 To uninstall FloPy type:
 
@@ -125,11 +125,11 @@ To update your version of FloPy with the current version from the git repository
 
 ***Development version of FloPy:***
 
-To install the bleeding edge version of FloPy from the git repository type:
+To install the latest development version of FloPy from the git repository type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop
 
-To update your version of FloPy with the bleeding edge code from the git repository type:
+To update your version of FloPy with the latest development version from the git repository type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
@@ -172,7 +172,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.9 &mdash; develop: U.S. Geological Survey Software Release, 17 October 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2018, FloPy v3.2.10: U.S. Geological Survey Software Release, 19 October 2018, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources
@@ -187,12 +187,13 @@ MODFLOW Resources
 Disclaimer
 ----------
 
-This software is preliminary or provisional and is subject to revision. It is
-being provided to meet the need for timely best science. The software has not
-received final approval by the U.S. Geological Survey (USGS). No warranty,
-expressed or implied, is made by the USGS or the U.S. Government as to the
-functionality of the software and related material nor shall the fact of release
-constitute any such warranty. The software is provided on the condition that
-neither the USGS nor the U.S. Government shall be held liable for any damages
-resulting from the authorized or unauthorized use of the software.
+This software has been approved for release by the U.S. Geological Survey
+(USGS). Although the software has been subjected to rigorous review, the USGS
+reserves the right to update the software as needed pursuant to further analysis
+and review. No warranty, expressed or implied, is made by the USGS or the U.S.
+Government as to the functionality of the software and related material nor
+shall the fact of release constitute any such warranty. Furthermore, the
+software is released on condition that neither the USGS nor the U.S. Government
+shall be held liable for any damages resulting from its authorized or
+unauthorized use.
 

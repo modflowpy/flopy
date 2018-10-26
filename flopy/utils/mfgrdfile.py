@@ -37,7 +37,7 @@ class MfGrdFile(FlopyBinaryData):
     Notes
     -----
     The MfGrdFile class provides simple ways to retrieve data from binary
-    MODFLOW 6 binary grid files (*.grb). The binary grid file contains data
+    MODFLOW 6 binary grid files (.grb). The binary grid file contains data
     that can be used for post processing MODFLOW 6 model results.
 
     Examples
