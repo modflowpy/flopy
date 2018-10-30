@@ -520,7 +520,7 @@ class ModflowLak(Package):
             if kper in ds9_keys:
                 itmp2 = 1
             if isinstance(self.lwrt, list):
-                tmplwrt = sefl.lwrt[kper]
+                tmplwrt = self.lwrt[kper]
             else:
                 tmplwrt = self.lwrt
             t = [itmp, itmp2, tmplwrt]
