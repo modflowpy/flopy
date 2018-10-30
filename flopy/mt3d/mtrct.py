@@ -107,8 +107,8 @@ class Mt3dRct(Package):
         File unit number. If file unit number is None then an unused unit
          number if used. (default is None).
 
-    **kwargs
-    --------
+    Other Parameters
+    ----------------
     srconcn : float or array of floats (nlay, nrow, ncol)
         srconcn is the user-specified initial concentration for the sorbed
         phase of species n. If srconcn is not passed as a **kwarg and
@@ -133,15 +133,6 @@ class Mt3dRct(Package):
         n. If rc2n is not passed as a **kwarg and ireact > 0 then rc2 for
         species n is set to 0. See description of rc2 for a more complete
         description of rc2n.
-    extension : string
-        Filename extension (default is 'rct')
-    unitnumber : int
-        File unit number (default is None).
-    filenames : str or list of str
-        Filenames to use for the package. If filenames=None the package name
-        will be created using the model name and package extension. If a
-        single string is passed the package will be set to the string.
-        Default is None.
 
 
     Attributes

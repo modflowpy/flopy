@@ -446,13 +446,10 @@ class Mt3dSft(Package):
 
         >>> import os
         >>> import flopy
-
-        >>> os.chdir(r'C:\temp\flopy_test\sfr_test')
-        >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam', load_only=['dis', 'bas6'])
+        >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam',
+        ...                                 load_only=['dis', 'bas6'])
         >>> sfr = flopy.modflow.ModflowSfr2.load('CrnkNic.sfr2', mf)
-        >>> chk = sfr.check()
-
-        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam', exe_name = 'mt3d-usgs_1.0.00.exe', load_only='btn')
+        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam', load_only='btn')
         >>> sft = flopy.mt3d.Mt3dSft.load('CrnkNic.sft', mt)
 
         """

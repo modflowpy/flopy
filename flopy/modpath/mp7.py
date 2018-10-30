@@ -11,7 +11,8 @@ from ..mf6 import MFModel
 from ..pakbase import Package
 from .mp7bas import Modpath7Bas
 from .mp7sim import Modpath7Sim
-from .mp7particle import NodeParticleDataCell, ParticleGroupNodeTemplate
+from .mp7particledata import CellDataType, NodeParticleData
+from .mp7particlegroup import ParticleGroupNodeTemplate
 import os
 
 
@@ -459,11 +460,10 @@ class Modpath7(BaseModel):
                 if ib > 0:
                     nodes.append(node)
                 node += 1
-
-        p = NodeParticleDataCell(columncelldivisions=columncelldivisions,
-                                 rowcelldivisions=rowcelldivisions,
-                                 layercelldivisions=layercelldivisions,
-                                 nodes=nodes)
+        sd = CellDataType(columncelldivisions=columncelldivisions,
+                          rowcelldivisions=rowcelldivisions,
+                          layercelldivisions=layercelldivisions)
+        p = NodeParticleData(subdivisiondata=sd, nodes=nodes)
         pg = ParticleGroupNodeTemplate(particledata=p)
 
         # create MODPATH 7 simulation file and add to the MODPATH 7
