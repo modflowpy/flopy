@@ -294,7 +294,7 @@ class Mt3dUzt(Package):
         f_uzt.write('#{0:s}\n'.format(self.heading1))
 
         # Item 2
-        f_uzt.write('{1:10d}{2:10d}                    #ICBCUZ, IET\n'
+        f_uzt.write('{0:10d}{1:10d}                    #ICBCUZ, IET\n'
                     .format(self.icbcuz, self.iet))
 
         # Item 3
@@ -437,7 +437,7 @@ class Mt3dUzt(Package):
 
         # Item 2 (ICBCUZ, IET)
         if line[0:1] != '#':
-            # Don't yet read the next line because the current line 
+            # Don't yet read the next line because the current line
             # contains the values in item 2
             m_arr = line.strip().split()
             icbcuz = int(m_arr[0])
