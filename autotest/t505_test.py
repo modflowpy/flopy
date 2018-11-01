@@ -643,7 +643,7 @@ def test005_advgw_tidal():
                                   timeseries=ts_recarray,
                                   time_series_namerecord='tides',
                                   interpolation_methodrecord='linear')
-    obs_recarray = {'ghb_obs.csv': [('ghb-2-6-10', 'GHB', (1, 5, 9)),
+    obs_recarray = {('ghb_obs.csv', 'binary'): [('ghb-2-6-10', 'GHB', (1, 5, 9)),
                                     ('ghb-3-6-10', 'GHB', (2, 5, 9))],
                     'ghb_flows.csv': [('Estuary2', 'GHB', 'Estuary-L2'),
                                       ('Estuary3', 'GHB', 'Estuary-L3')]}
