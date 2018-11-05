@@ -47,11 +47,17 @@ class VertexGrid(Grid):
         return len(self._botm[0])
 
     @property
+    def shape(self):
+        return self.nlay, self.ncpl
+
+    @property
     def extent(self):
-        return (min(np.ravel(self.xvertices)),
-                max(np.ravel(self.xvertices)),
-                min(np.ravel(self.yvertices)),
-                max(np.ravel(self.yvertices)))
+        xvert_flat = [item for sublist in self.xvertices for item in sublist]
+        yvert_flat = [item for sublist in self.yvertices for item in sublist]
+        return (np.min(xvert_flat),
+                np.max(xvert_flat),
+                np.min(yvert_flat),
+                np.max(yvert_flat))
 
     @property
     def grid_lines(self):
@@ -129,7 +135,11 @@ class VertexGrid(Grid):
             xcenters.append(cell2d[1])
             ycenters.append(cell2d[2])
 
-            vert_number = [int(i) for i in cell2d[4:]]
+            vert_number = []
+            for i in cell2d[4:]:
+                if i is not None:
+                    vert_number.append(int(i))
+
             xcellvert = []
             ycellvert = []
             for ix in vert_number:

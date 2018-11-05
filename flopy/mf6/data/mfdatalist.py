@@ -4,6 +4,7 @@ import sys
 import inspect
 import numpy as np
 from copy import deepcopy
+from ..utils.mfenums import DiscretizationType
 from ..data import mfstructure, mfdata
 from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
@@ -1488,17 +1489,30 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         arrays = self.to_array(kper=0, mask=True)
 
         # initialize these big arrays
-        m4ds = {}
-        for name, array in arrays.items():
-            m4d = np.zeros((nper, model_grid.num_layers,
-                            model_grid.num_rows, model_grid.num_columns))
-            m4d[0, :, :, :] = array
-            m4ds[name] = m4d
-        for kper in range(1, nper):
-            arrays = self.to_array(kper=kper, mask=True)
+        if model_grid.grid_type() == DiscretizationType.DIS:
+            m4ds = {}
             for name, array in arrays.items():
-                m4ds[name][kper, :, :, :] = array
-        return m4ds
+                m4d = np.zeros((nper, model_grid.num_layers,
+                                model_grid.num_rows, model_grid.num_columns))
+                m4d[0, :, :, :] = array
+                m4ds[name] = m4d
+            for kper in range(1, nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for name, array in arrays.items():
+                    m4ds[name][kper, :, :, :] = array
+            return m4ds
+        else:
+            m3ds = {}
+            for name, array in arrays.items():
+                m3d = np.zeros((nper, model_grid.num_layers,
+                                model_grid.num_cells_per_layer()))
+                m3d[0, :, :] = array
+                m3ds[name] = m3d
+            for kper in range(1, nper):
+                arrays = self.to_array(kper=kper, mask=True)
+                for name, array in arrays.items():
+                    m3ds[name][kper, :, :] = array
+            return m3ds
 
     def masked_4D_arrays_itr(self):
         model_grid = self._data_dimensions.get_model_grid()
@@ -1509,15 +1523,27 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
 
         # initialize these big arrays
         for name, array in arrays.items():
-            m4d = np.zeros((nper, model_grid.num_layers(),
-                            model_grid.num_rows(), model_grid.num_columns()))
-            m4d[0, :, :, :] = array
-            for kper in range(1, nper):
-                arrays = self.to_array(kper=kper, mask=True)
-                for tname, array in arrays.items():
-                    if tname == name:
-                        m4d[kper, :, :, :] = array
-            yield name, m4d
+            if model_grid.grid_type() == DiscretizationType.DIS:
+                m4d = np.zeros((nper, model_grid.num_layers(),
+                                model_grid.num_rows(), model_grid.num_columns()))
+                m4d[0, :, :, :] = array
+                for kper in range(1, nper):
+                    arrays = self.to_array(kper=kper, mask=True)
+                    for tname, array in arrays.items():
+                        if tname == name:
+                            m4d[kper, :, :, :] = array
+                yield name, m4d
+            else:
+                m3d = np.zeros((nper, model_grid.num_layers(),
+                                model_grid.num_cells_per_layer()))
+                m3d[0, :, :] = array
+                for kper in range(1, nper):
+                    arrays = self.to_array(kper=kper, mask=True)
+                    for tname, array in arrays.items():
+                        if tname == name:
+                            m3d[kper, :, :] = array
+                yield name, m3d
+
 
     def to_array(self, kper=0, mask=False):
         return super(MFTransientList, self).to_array(kper, mask)

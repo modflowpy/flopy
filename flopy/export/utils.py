@@ -194,9 +194,10 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
     if units is not None:
         attribs["units"] = units
     try:
+        dim_tuple = ("time",) + f.dimension_names
         var = f.create_variable(var_name, attribs,
                                 precision_str=precision_str,
-                                dimensions=("time", "layer", "y", "x"))
+                                dimensions=dim_tuple)
     except Exception as e:
         estr = "error creating variable {0}:\n{1}".format(
             var_name, str(e))
@@ -551,9 +552,10 @@ def mflist_export(f, mfl, **kwargs):
             if units is not None:
                 attribs["units"] = units
             try:
+                dim_tuple = ("time",) + f.dimension_names
                 var = f.create_variable(var_name, attribs,
                                         precision_str=precision_str,
-                                        dimensions=("time", "layer", "y", "x"))
+                                        dimensions=dim_tuple)
             except Exception as e:
                 estr = "error creating variable {0}:\n{1}".format(var_name,
                                                                   str(e))
@@ -663,9 +665,10 @@ def transient2d_export(f, t2d, **kwargs):
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
             raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
+            dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("time", "layer", "y", "x"))
+                                    dimensions=dim_tuple)
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -698,7 +701,7 @@ def array3d_export(f, u3d, **kwargs):
     assert isinstance(u3d, DataInterface), "array3d_export only helps " \
                                            "instances that support " \
                                            "DataInterface"
-    assert len(u3d.array.shape) == 3, "array3d_export only supports 3D arrays"
+    #assert len(u3d.array.shape) == 3, "array3d_export only supports 3D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -717,7 +720,10 @@ def array3d_export(f, u3d, **kwargs):
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
-        var_name = u3d.name[0].replace(' ', '_').lower()
+        var_name = u3d.name
+        if isinstance(var_name, list) or isinstance(var_name, tuple):
+            var_name = var_name[0]
+        var_name = var_name.replace(' ', '_').lower()
         # f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
 
@@ -793,7 +799,7 @@ def array3d_export(f, u3d, **kwargs):
         try:
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("layer", "y", "x"))
+                                    dimensions=f.dimension_names)
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -894,7 +900,7 @@ def array2d_export(f, u2d, **kwargs):
         try:
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("y", "x"))
+                                    dimensions=f.dimension_names[1:])
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)

@@ -1174,6 +1174,9 @@ def test006_gwf3_disv():
     assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
                                 outfile=outfile)
 
+    # export to netcdf
+    model.export(os.path.join(run_folder, "test006_gwf3.nc"))
+
     # clean up
     sim.delete_output_files()
 
@@ -1578,12 +1581,12 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
+    test006_gwf3_disv()
     np001()
     np002()
     test004_bcfss()
     test005_advgw_tidal()
     test006_2models_gnc()
-    test006_gwf3_disv()
     test021_twri()
     test028_sfr()
     test035_fhb()

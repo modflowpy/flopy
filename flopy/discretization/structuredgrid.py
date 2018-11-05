@@ -68,6 +68,10 @@ class StructuredGrid(Grid):
         return self.__ncol
 
     @property
+    def shape(self):
+        return self.__nlay, self.__nrow, self.__ncol
+
+    @property
     def extent(self):
         xyzgrid = self.xyzvertices
         return (np.min(xyzgrid[0]), np.max(xyzgrid[0]),

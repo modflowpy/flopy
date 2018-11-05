@@ -39,11 +39,11 @@ class Grid(object):
         Corner of the model grid that is the model origin
         'ul' (upper left corner) or 'll' (lower left corner)
     origin_x : float
-        x coordinate of the origin point in the spatial reference coordinate
-        system
+        x coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
     origin_y : float
-        y coordinate of the origin point in the spatial reference coordinate
-        system
+        y coordinate of the origin point (lower left corner of model grid)
+        in the spatial reference coordinate system
     rotation : float
         rotation angle of model grid, as it is rotated around the origin point
 
@@ -216,6 +216,12 @@ class Grid(object):
     @property
     def idomain(self):
         return self._idomain
+
+    @property
+    def shape(self):
+        raise NotImplementedError(
+            'must define extent in child '
+            'class to use this base class')
 
     @property
     def extent(self):

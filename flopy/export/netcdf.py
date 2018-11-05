@@ -17,8 +17,7 @@ ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
           5: "years"}
 PRECISION_STRS = ["f4", "f8", "i4"]
 
-STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "delr", "delc",
-                 "time"]
+STANDARD_VARS = ["longitude", "latitude", "layer", "elevation", "time"]
 
 path = os.path.split(__file__)[0]
 with open(path + '/longnames.json') as f:
@@ -162,9 +161,15 @@ class NetCdf(object):
         self.model_time = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
-        assert(self.model_grid.grid_type == 'structured')
-        self.shape = (self.model_grid.nlay, self.model_grid.nrow,
-                      self.model_grid.ncol)
+        assert(self.model_grid.grid_type == 'structured' or
+               self.model_grid.grid_type == 'vertex')
+        self.shape = self.model_grid.shape
+        if self.model_grid.grid_type == 'structured':
+            self.dimension_names = ('layer', 'y', 'x')
+            STANDARD_VARS.extend(['delc', 'delr'])
+        else:
+            self.dimension_names = ('layer', 'ncpl')
+            #STANDARD_VARS.extend(['xvertices', 'yvertices'])
 
         try:
             import dateutil.parser
@@ -186,7 +191,9 @@ class NetCdf(object):
         self.proj4_str = proj4_str
         self.grid_units = self.model_grid.lenuni
         self.z_positive = z_positive
-        assert self.grid_units in ["feet", "meters"], \
+        if self.grid_units is None:
+            self.grid_units = "unspecified"
+        assert self.grid_units in ["feet", "meters", "unspecified"], \
             "unsupported length units: " + self.grid_units
 
         self.time_units = self.model_time.time_units
@@ -606,17 +613,7 @@ class NetCdf(object):
         self.zs = None
         self.ys = None
         self.xs = None
-
-        self.chunks = {"time": None}
-        self.chunks["x"] = int(self.shape[2] / 4) + 1
-        self.chunks["y"] = int(self.shape[1] / 4) + 1
-        self.chunks["z"] = self.shape[0]
-        self.chunks["layer"] = self.shape[0]
-
         self.nc = None
-
-        self.origin_x = None
-        self.origin_y = None
 
     def initialize_geometry(self):
         """ initialize the geometric information
@@ -665,17 +662,13 @@ class NetCdf(object):
                  "from {0} to {1}".format(str(self.grid_crs),
                                           str(nc_crs)))
 
-        base_x = self.model_grid.xyedges[0][0]
-        base_y = self.model_grid.xyedges[1][0]
-        self.origin_x, self.origin_y = transform(self.grid_crs, nc_crs, base_x,
-                                                 base_y)
-
         # get transformed bounds and record to check against ScienceBase later
         xmin, ymin, xmax, ymax = self.model_grid.extent
         bbox = np.array([[xmin, ymin],
                          [xmin, ymax],
                          [xmax, ymax],
                          [xmax, ymin]])
+        tp = bbox.transpose()
         x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
         self.bounds = x.min(), y.min(), x.max(), y.max()
         self.vbounds = vmin, vmax
@@ -744,11 +737,9 @@ class NetCdf(object):
         # time
         if time_values is None:
             time_values = np.cumsum(self.model_time.perlen)
-        self.chunks["time"] = min(len(time_values), 100)
         self.nc.createDimension("time", len(time_values))
-        self.nc.createDimension('layer', self.shape[0])
-        self.nc.createDimension('y', self.shape[1])
-        self.nc.createDimension('x', self.shape[2])
+        for name, length in zip(self.dimension_names, self.shape):
+           self.nc.createDimension(name, length)
         self.log("creating dimensions")
 
         self.log("setting CRS info")
@@ -779,7 +770,7 @@ class NetCdf(object):
                    "valid_min": min_vertical, "valid_max": max_vertical,
                    "positive": self.z_positive}
         elev = self.create_variable("elevation", attribs, precision_str="f8",
-                                    dimensions=("layer", "y", "x"))
+                                    dimensions=self.dimension_names)
         elev[:] = self.zs
 
         # Longitude
@@ -788,7 +779,7 @@ class NetCdf(object):
                    "axis": "X",
                    "_CoordinateAxisType": "Lon"}
         lon = self.create_variable("longitude", attribs, precision_str="f8",
-                                   dimensions=("y", "x"))
+                                   dimensions=self.dimension_names[1:])
         lon[:] = self.xs
         self.log("creating longitude var")
 
@@ -799,7 +790,7 @@ class NetCdf(object):
                    "axis": "Y",
                    "_CoordinateAxisType": "Lat"}
         lat = self.create_variable("latitude", attribs, precision_str="f8",
-                                   dimensions=("y", "x"))
+                                   dimensions=self.dimension_names[1:])
         lat[:] = self.ys
 
         # x
@@ -810,7 +801,7 @@ class NetCdf(object):
                                                   "x coordinate of projection"),
                    "axis": "X"}
         x = self.create_variable("x_proj", attribs, precision_str="f8",
-                                 dimensions=("y", "x"))
+                                 dimensions=self.dimension_names[1:])
         x[:] = self.model_grid.xyzcellcenters[0]
 
         # y
@@ -821,7 +812,7 @@ class NetCdf(object):
                                                   "y coordinate of projection"),
                    "axis": "Y"}
         y = self.create_variable("y_proj", attribs, precision_str="f8",
-                                 dimensions=("y", "x"))
+                                 dimensions=self.dimension_names[1:])
         y[:] = self.model_grid.xyzcellcenters[1]
 
         # grid mapping variable
@@ -842,29 +833,39 @@ class NetCdf(object):
         lay[:] = np.arange(0, self.shape[0])
         self.log("creating layer var")
 
-        # delc
-        attribs = {"units": self.model_grid.lenuni.strip('s'),
-                   "long_name": NC_LONG_NAMES.get("delc",
-                                                  "Model grid cell spacing along a column"),
-                   }
-        delc = self.create_variable('delc', attribs, dimensions=('y',))
-        delc[:] = self.model_grid.delc[::-1]
-        if self.model_grid.angrot != 0:
-            delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
-                            "This grid HAS been rotated before being saved to NetCDF. " + \
-                            "To compute the unrotated grid, use the origin point and this array."
+        if self.model_grid.grid_type == 'structured':
+            # delc
+            attribs = {"units": self.model_grid.lenuni.strip('s'),
+                       "long_name": NC_LONG_NAMES.get("delc",
+                                                      "Model grid cell spacing along a column"),
+                       }
+            delc = self.create_variable('delc', attribs, dimensions=('y',))
+            delc[:] = self.model_grid.delc[::-1]
+            if self.model_grid.angrot != 0:
+                delc.comments = "This is the row spacing that applied to the UNROTATED grid. " + \
+                                "This grid HAS been rotated before being saved to NetCDF. " + \
+                                "To compute the unrotated grid, use the origin point and this array."
 
-        # delr
-        attribs = {"units":self.model_grid.lenuni.strip('s'),
-                   "long_name": NC_LONG_NAMES.get("delr",
-                                                  "Model grid cell spacing along a row"),
-                   }
-        delr = self.create_variable('delr', attribs, dimensions=('x',))
-        delr[:] = self.model_grid.delr[::-1]
-        if self.model_grid.angrot != 0:
-            delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
-                            "This grid HAS been rotated before being saved to NetCDF. " + \
-                            "To compute the unrotated grid, use the origin point and this array."
+            # delr
+            attribs = {"units":self.model_grid.lenuni.strip('s'),
+                       "long_name": NC_LONG_NAMES.get("delr",
+                                                      "Model grid cell spacing along a row"),
+                       }
+            delr = self.create_variable('delr', attribs, dimensions=('x',))
+            delr[:] = self.model_grid.delr[::-1]
+            if self.model_grid.angrot != 0:
+                delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
+                                "This grid HAS been rotated before being saved to NetCDF. " + \
+                                "To compute the unrotated grid, use the origin point and this array."
+        #else:
+            # vertices
+            #attribs = {"units": self.model_grid.lenuni.strip('s'),
+            #           "long_name": NC_LONG_NAMES.get("vertices",
+            #                                          "List of vertices used in the model by cell"),
+            #           }
+            #vertices = self.create_variable('vertices', attribs, dimensions=('ncpl',))
+            #vertices[:] = self.model_grid.vertices
+
 
         # Workaround for CF/CDM.
         # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/
@@ -882,7 +883,7 @@ class NetCdf(object):
         return name.replace('.', '_').replace(' ', '_').replace('-', '_')
 
     def create_variable(self, name, attributes, precision_str='f4',
-                        dimensions=("time", "layer", "y", "x")):
+                        dimensions=("time", "layer")):
         """
         Create a new variable in the netcdf object
 
@@ -923,12 +924,6 @@ class NetCdf(object):
                 return
             else:
                 raise Exception("duplicate variable name: {0}".format(name))
-        # this is a model prop or bc var...
-        # elif name in self.var_attr_dict.keys():
-        #     if self.suffix is not None:
-        # elif self.suffix is not None:
-        #     name = name + self.suffix
-        #     long_name += " " + self.suffix
         if name in self.nc.variables.keys():
             raise Exception("duplicate variable name: {0}".format(name))
 
@@ -942,15 +937,15 @@ class NetCdf(object):
 
         # check that the requested dimension exists and
         # build up the chuck sizes
-        chunks = []
-        for dimension in dimensions:
-            assert self.nc.dimensions.get(dimension) is not None, \
-                "netcdf.create_variable() dimension not found:" + dimension
-            chunk = self.chunks[dimension]
-            assert chunk is not None, \
-                "netcdf.create_variable() chunk size of {0} is None in self.chunks". \
-                    format(dimension)
-            chunks.append(chunk)
+        #chunks = []
+        #for dimension in dimensions:
+        #    assert self.nc.dimensions.get(dimension) is not None, \
+        #        "netcdf.create_variable() dimension not found:" + dimension
+        #    chunk = self.chunks[dimension]
+        #    assert chunk is not None, \
+        #        "netcdf.create_variable() chunk size of {0} is None in self.chunks". \
+        #            format(dimension)
+        #    chunks.append(chunk)
 
         self.var_attr_dict[name] = attributes
 
