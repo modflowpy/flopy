@@ -77,8 +77,15 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
                         "importing shapefile - try pip install pyshp")
 
     wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-    wr.field("row", "N", 10, 0)
-    wr.field("column", "N", 10, 0)
+    if mg.grid_type == 'structured':
+        wr.field("row", "N", 10, 0)
+        wr.field("column", "N", 10, 0)
+    elif mg.grid_type == 'vertex':
+        wr.field("node", "N", 10, 0)
+    else:
+        raise Exception('Grid type {} not supported.'.format(mg.grid_type))
+
+
 
     arrays = []
     names = list(array_dict.keys())
@@ -101,54 +108,85 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
         wr.field(name, *get_pyshp_field_info(array.dtype.name))
         arrays.append(array)
 
-    for i in range(mg.nrow):
-        for j in range(mg.ncol):
-            try:
-                pts = mg.get_cell_vertices(i, j)
-            except AttributeError:
-                # support old style SR object
-                pts = mg.get_vertices(i, j)
+    if mg.grid_type == 'structured':
+        for i in range(mg.nrow):
+            for j in range(mg.ncol):
+                try:
+                    pts = mg.get_cell_vertices(i, j)
+                except AttributeError:
+                    # support old style SR object
+                    pts = mg.get_vertices(i, j)
+
+                wr.poly(parts=[pts])
+                rec = [i + 1, j + 1]
+                for array in arrays:
+                    rec.append(array[i, j])
+                wr.record(*rec)
+    elif mg.grid_type == 'vertex':
+        for i in range(mg.ncpl):
+            pts = mg.get_cell_vertices(i)
 
             wr.poly(parts=[pts])
-            rec = [i + 1, j + 1]
+            rec = [i + 1]
             for array in arrays:
-                rec.append(array[i, j])
+                rec.append(array[i])
             wr.record(*rec)
+
     wr.save(filename)
     print('wrote {}'.format(filename))
 
 def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                           epsg=None, prj=None):
     sf = import_shapefile()
-    try:
+    if mg.grid_type == 'structured':
         verts = [mg.get_cell_vertices(i, j)
                  for i in range(mg.nrow)
                  for j in range(mg.ncol)]
-        # verts = copy.deepcopy(mg.xyzvertices[0:2])
-    except AttributeError:
-        # support old style SR for legacy!
-        verts = copy.deepcopy(mg.vertices)
+    elif mg.grid_type == 'vertex':
+        verts = [mg.get_cell_vertices(cellid)
+                 for cellid in range(mg.ncpl)]
+    else:
+        raise Exception('Grid type {} not supported.'.format(mg.grid_type))
 
     w = sf.Writer(5)  # polygon
     w.autoBalance = 1
+
     # set up the attribute fields
-    names = ['node', 'row', 'column'] + list(array_dict.keys())
-    names = enforce_10ch_limit(names)
-    dtypes = [('node', np.dtype('int')),
-              ('row', np.dtype('int')),
-              ('column', np.dtype('int'))] + \
-             [(name, arr.dtype) for name, arr in array_dict.items()]
+    if mg.grid_type == 'structured':
+        names = ['node', 'row', 'column'] + list(array_dict.keys())
+        names = enforce_10ch_limit(names)
+        dtypes = [('node', np.dtype('int')),
+                  ('row', np.dtype('int')),
+                  ('column', np.dtype('int'))] + \
+                 [(enforce_10ch_limit([name])[0], arr.dtype)
+                  for name, arr in array_dict.items()]
+    elif mg.grid_type == 'vertex':
+        names = ['node'] + list(array_dict.keys())
+        names = enforce_10ch_limit(names)
+        dtypes = [('node', np.dtype('int'))] + \
+                 [(enforce_10ch_limit([name])[0], arr.dtype)
+                  for name, arr in array_dict.items()]
+
     fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in dtypes}
     for n in names:
         w.field(n, *fieldinfo[n])
 
-    # set-up array of attributes of shape ncells x nattributes
-    node = list(range(1, mg.ncol * mg.nrow + 1))
-    col = list(range(1, mg.ncol + 1)) * mg.nrow
-    row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
-    at = np.vstack(
-        [node, row, col] +
-        [arr.ravel() for arr in array_dict.values()]).transpose()
+    if mg.grid_type == 'structured':
+        # set-up array of attributes of shape ncells x nattributes
+        node = list(range(1, mg.ncol * mg.nrow + 1))
+        col = list(range(1, mg.ncol + 1)) * mg.nrow
+        row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
+        at = np.vstack(
+            [node, row, col] +
+            [arr.ravel() for arr in array_dict.values()]).transpose()
+        if at.dtype in [np.float, np.float32, np.float64]:
+            at[np.isnan(at)] = nan_val
+    elif mg.grid_type == 'vertex':
+        # set-up array of attributes of shape ncells x nattributes
+        node = list(range(1, mg.ncpl + 1))
+        at = np.vstack(
+            [node] +
+            [arr.ravel() for arr in array_dict.values()]).transpose()
     if at.dtype in [np.float, np.float32, np.float64]:
         at[np.isnan(at)] = nan_val
 
@@ -203,7 +241,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    nrow, ncol = ml.modelgrid.nrow, ml.modelgrid.ncol
+    grid = ml.modelgrid
+    horz_shape = grid.shape[1:]
     for pname in package_names:
         pak = ml.get_package(pname)
         attrs = dir(pak)
@@ -216,8 +255,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 a = pak.__getattribute__(attr)
                 if a is None or not hasattr(a, 'data_type') or a.name == 'thickness':
                     continue
-                #if isinstance(a, Util2d) and a.shape == (ml.modelgrid.nrow, ml.modelgrid.ncol):
-                if a.data_type == DataType.array2d and a.array.shape == (nrow, ncol):
+                if a.data_type == DataType.array2d and a.array.shape == horz_shape:
                     name = shape_attr_name(a.name, keep_layer=True)
                     #name = a.name.lower()
                     array_dict[name] = a.array
@@ -241,17 +279,12 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         else:
                             aname = a.name
 
-                        if arr.shape == (1, nrow, ncol):
+                        if arr.shape == (1,) + horz_shape:
                             # fix for mf6 case.  TODO: fix this in the mf6 code
                             arr = arr[0]
-                        assert arr.shape == (nrow, ncol)
+                        assert arr.shape == horz_shape
                         name = '{}_{:03d}'.format(aname, ilay + 1)
                         array_dict[name] = arr
-                    #for i, u2d in enumerate(a):
-                    #    # name = u2d.name.lower().replace(' ', '_')
-                    #    name = shape_attr_name(u2d.name)
-                    #    name += '_{:03d}'.format(i + 1)
-                    #    array_dict[name] = u2d.array
                 elif a.data_type == DataType.transient2d:#elif isinstance(a, Transient2d):
                     try: # Not sure how best to check if an object has array data
                         assert a.array is not None
@@ -263,22 +296,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         name = '{}{:03d}'.format(
                             shape_attr_name(a.name), kper + 1)
                         arr = a.array[kper][0]
-                        assert arr.shape == (nrow, ncol)
+                        assert arr.shape == horz_shape
                         array_dict[name] = arr
-
-                    #kpers = list(a.transient_2ds.keys())
-                    #kpers.sort()
-                    #for kper in range(a.model.modelgrid.sim_time.nper):
-                    #    u2d = a[kper]
-                    #    name = '{}_{:03d}'.format(
-                    #        shape_attr_name(u2d.name), kper + 1)
-                    #    array_dict[name] = u2d.array
-                    #for kper in kpers:
-                    #    u2d = a.transient_2ds[kper]
-                    #    # name = u2d.name.lower() + "_{0:03d}".format(kper + 1)
-                    #    name = shape_attr_name(u2d.name)
-                    #    name = "{}_{:03d}".format(name, kper + 1)
-                    #    array_dict[name] = u2d.array
                 elif a.data_type == DataType.transientlist: #elif isinstance(a, MfList):
                     try:
                         list(a.masked_4D_arrays_itr())
@@ -290,38 +309,12 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 n = shape_attr_name(name, length=4)
                                 aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
                                 arr = array[kper][k]
-                                assert arr.shape == (nrow, ncol)
+                                assert arr.shape == horz_shape
                                 if np.all(np.isnan(arr)):
                                     continue
                                 array_dict[aname] = arr
-                        #kpers = a.data.keys()
-                        #for kper in kpers:
-                        #    try:
-                        #        arrays = a.to_array(kper)
-                        #    except:
-                        #        print("error exporting MfList in pak {0} to shapefile".format(pname))
-                        #        continue
-                        #    for name, array in arrays.items():
-                        #        for k in range(array.shape[0]):
-                        #            # aname = name+"{0:03d}_{1:02d}".format(kk, k)
-                        #            n = shape_attr_name(name, length=4)
-                        #            aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
-                        #            array_dict[aname] = array[k]
-                        #for name, array in arrays.items():
-                        #    for k in range(array.shape[0]):
-                        #        # aname = name + "{0:03d}{1:02d}".format(kper, k)
-                        #        name = shape_attr_name(name, length=4)
-                        #        aname = "{}{:03d}{:03d}".format(name, k + 1,
-                        #                                        kper + 1)
-                        #        array_dict[aname] = array[k].astype(np.float32)
                 elif isinstance(a, list):
                     for v in a:
-                        #if isinstance(v, Util3d):
-                        #    for i, u2d in enumerate(v):
-                        #        # name = u2d.name.lower().replace(' ', '_')
-                        #        name = shape_attr_name(u2d.name)
-                        #        name += '_{:03d}'.format(i + 1)
-                        #        array_dict[name] = u2d.array
                         if isinstance(a, DataInterface) and \
                                 v.data_type == DataType.array3d:
                             for ilay in range(a.model.modelgrid.nlay):
@@ -329,7 +322,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 name = '{}_{:03d}'.format(
                                     shape_attr_name(u2d.name), ilay + 1)
                                 arr = u2d.array
-                                assert arr.shape == (nrow, ncol)
+                                assert arr.shape == horz_shape
                                 array_dict[name] = arr
     # write data arrays to a shapefile
     write_grid_shapefile2(filename, ml.modelgrid, array_dict)

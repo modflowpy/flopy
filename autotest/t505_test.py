@@ -1176,6 +1176,8 @@ def test006_gwf3_disv():
 
     # export to netcdf
     model.export(os.path.join(run_folder, "test006_gwf3.nc"))
+    # export to shape file
+    model.export(os.path.join(run_folder, "test006_gwf3.shp"))
 
     # clean up
     sim.delete_output_files()
