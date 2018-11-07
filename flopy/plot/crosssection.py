@@ -1119,7 +1119,7 @@ class ModelCrossSection(object):
     """
     def __new__(cls, ax=None, model=None, dis=None, line=None,
                 xul=None, yul=None, xll=None, yll=None,
-                rotation=0., extent=None, length_multiplier=1.):
+                rotation=None, extent=None, length_multiplier=1.):
 
         from flopy.plot.plotbase import PlotCrossSection
 
@@ -1127,7 +1127,7 @@ class ModelCrossSection(object):
             "PlotCrossSection(), Calling PlotCrossSection()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
-        if (xul, yul, xll, yll, rotation) != (None, None, None, None, 0):
+        if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
             mg = plotutil._set_coord_info(model.modelgrid,
                                           xul, yul, xll, yll,
                                           rotation)

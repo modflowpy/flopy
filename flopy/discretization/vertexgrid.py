@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from .grid import Grid, CachedData
 
 
@@ -52,12 +53,12 @@ class VertexGrid(Grid):
 
     @property
     def extent(self):
-        xvert_flat = [item for sublist in self.xvertices for item in sublist]
-        yvert_flat = [item for sublist in self.yvertices for item in sublist]
-        return (np.min(xvert_flat),
-                np.max(xvert_flat),
-                np.min(yvert_flat),
-                np.max(yvert_flat))
+        xvertices = np.hstack(self.xvertices)
+        yvertices = np.hstack(self.yvertices)
+        return (np.min(xvertices),
+                np.max(xvertices),
+                np.min(yvertices),
+                np.max(yvertices))
 
     @property
     def grid_lines(self):
@@ -165,9 +166,11 @@ class VertexGrid(Grid):
             xvertices = xvertxform
             yvertices = yvertxform
 
-        self._cache_dict[cache_index_cc] = CachedData([xcenters, ycenters,
+        self._cache_dict[cache_index_cc] = CachedData([xcenters,
+                                                       ycenters,
                                                        zcenters])
-        self._cache_dict[cache_index_vert] = CachedData([xvertices, yvertices,
+        self._cache_dict[cache_index_vert] = CachedData([xvertices,
+                                                         yvertices,
                                                          zvertices])
 
 

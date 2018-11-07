@@ -2943,7 +2943,7 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     elif xll is not None and xll is not None:
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
-    elif rotation != 0.:
+    elif rotation is not None:
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
     return mg

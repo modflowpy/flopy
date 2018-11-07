@@ -12,6 +12,9 @@ from flopy.utils.utils_def import FlopyBinaryData
 from flopy.discretization.structuredgrid import StructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
 from flopy.utils.reference import SpatialReferenceUnstructured
+from flopy.utils.reference import SpatialReference
+import warnings
+warnings.simplefilter('always', PendingDeprecationWarning)
 
 
 class MfGrdFile(FlopyBinaryData):
@@ -363,14 +366,57 @@ class MfGrdFile(FlopyBinaryData):
                 raise KeyError(msg)
         return
 
-if __name__ == "__main__":
-    import flopy
-    import os
+    def _set_spatialreference(self):
+        """
+        Define structured or unstructured spatial reference based on
+        MODFLOW 6 discretization type.
+        Returns
+        -------
+        sr : SpatialReference
+        """
+        sr = None
+        try:
+            if self._grid == 'DISV' or self._grid == 'DISU':
+                try:
+                    iverts, verts = self.get_verts()
+                    vertc = self.get_centroids()
+                    xc = vertc[:, 0]
+                    yc = vertc[:, 1]
+                    sr = SpatialReferenceUnstructured(xc, yc, verts, iverts,
+                                                      [xc.shape[0]])
+                except:
+                    msg = 'could not set spatial reference for ' + \
+                          '{} discretization '.format(self._grid) + \
+                          'defined in {}'.format(self.file.name)
+                    print(msg)
+            elif self._grid == 'DIS':
+                delr, delc = self._datadict['DELR'], self._datadict['DELC']
+                xorigin, yorigin, rot = self._datadict['XORIGIN'], \
+                                        self._datadict['YORIGIN'], \
+                                        self._datadict['ANGROT']
+                sr = SpatialReference(delr=delr, delc=delc,
+                                      xll=xorigin, yll=yorigin, rotation=rot)
+        except:
+            print('could not set spatial reference for {}'.format(
+                self.file.name))
 
-    workspace = os.path.join('..', "..", "examples", 'data', 'mfgrd_test')
+        return sr
 
-    fn = os.path.join(workspace, 'flow.disv.grb')
-    grd = MfGrdFile(fn, verbose=True)
-    iverts, verts = grd.get_verts()
-    vertc = grd.get_centroids()
-    mg = grd.get_modelgrid()
+    def get_spatialreference(self):
+        """
+        Get the SpatialReference based on the MODFLOW 6 discretization type
+        Returns
+        -------
+        sr : SpatialReference
+        Examples
+        --------
+        >>> import flopy
+        >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
+        >>> sr = gobj.get_spatialreference()
+        """
+
+        err_msg = "get_spatialreference will be depreciated " \
+                  "get_modelgrid() is replacing it "
+        warnings.warn(err_msg, PendingDeprecationWarning)
+
+        return self._set_spatialreference()

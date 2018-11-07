@@ -65,9 +65,12 @@ class PlotMapView(object):
                 ' in order to use ModelMap method'
             raise ImportError(s)
 
+
+        if modelgrid is None and model is not None:
+            modelgrid = model.modelgrid
+
         # todo: remove SpatialReferenceUnstructured when an UnstructuredModelGrid
         # todo: has been made
-
         try:
             tmp = modelgrid.grid_type
             if not isinstance(tmp, str):
@@ -95,7 +98,6 @@ class PlotMapView(object):
         self.dis = self.__cls.dis
         self.mg = self.__cls.mg
         self.ax = self.__cls.ax
-        # self._extent = self.__cls._extent
 
     @property
     def extent(self):
@@ -919,7 +921,10 @@ class PlotCrossSection(object):
                 ' in order to use ModelMap method'
             raise ImportError(s)
 
-       # update this after unstructured grid is finished!
+        if modelgrid is None and model is not None:
+            modelgrid = model.modelgrid
+
+        # update this after unstructured grid is finished!
         try:
             tmp = modelgrid.grid_type
             if not isinstance(tmp, str):
