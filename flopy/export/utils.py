@@ -846,7 +846,7 @@ def array2d_export(f, u2d, **kwargs):
         return
 
     elif isinstance(f, str) and f.lower().endswith(".asc"):
-        u2d.model.modelgrid.export_array(f, u2d.array, **kwargs)
+        export_array( u2d.model.modelgrid, f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -1036,7 +1036,7 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                 'nodata': nodata,
                 'dtype': dtype,
                 'driver': 'GTiff',
-                'crs': modelgrid.proj4_str,
+                'crs': modelgrid.proj4,
                 'transform': trans
                 }
         meta.update(kwargs)
@@ -1054,3 +1054,121 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                               nan_val=nodata,
                               epsg=epsg, prj=prj)
 
+
+def export_contours(modelgrid, filename, contours,
+                    fieldname='level', epsg=None, prj=None,
+                    **kwargs):
+    """Convert matplotlib contour plot object to shapefile.
+
+    Parameters
+    ----------
+    filename : str
+        path of output shapefile
+    contours : matplotlib.contour.QuadContourSet or list of them
+        (object returned by matplotlib.pyplot.contour)
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+    **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+
+    Returns
+    -------
+    df : dataframe of shapefile contents
+    """
+    from flopy.utils.geometry import LineString
+    from flopy.export.shapefile_utils import recarray2shp
+
+    if not isinstance(contours, list):
+        contours = [contours]
+
+    if epsg is None:
+        epsg = modelgrid.epsg
+    if prj is None:
+        prj = modelgrid.proj4
+
+    geoms = []
+    level = []
+    for ctr in contours:
+        levels = ctr.levels
+        for i, c in enumerate(ctr.collections):
+            paths = c.get_paths()
+            geoms += [LineString(p.vertices) for p in paths]
+            level += list(np.ones(len(paths)) * levels[i])
+
+    # convert the dictionary to a recarray
+    ra = np.array(level,
+                  dtype=[(fieldname, float)]).view(np.recarray)
+
+    recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
+
+
+def export_array_contours(modelgrid, filename, a,
+                          fieldname='level',
+                          interval=None,
+                          levels=None,
+                          maxlevels=1000,
+                          epsg=None,
+                          prj=None,
+                          **kwargs):
+    """Contour an array using matplotlib; write shapefile of contours.
+
+    Parameters
+    ----------
+    filename : str
+        Path of output file with '.shp' extention.
+    a : 2D numpy array
+        Array to contour
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+    **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+    """
+    import matplotlib.pyplot as plt
+
+    if epsg is None:
+        epsg = modelgrid.epsg
+    if prj is None:
+        prj = modelgrid.proj4
+
+    if interval is not None:
+        min = np.nanmin(a)
+        max = np.nanmax(a)
+        nlevels = np.round(np.abs(max - min) / interval, 2)
+        msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
+            nlevels,
+            interval,
+            maxlevels)
+        assert nlevels < maxlevels, msg
+        levels = np.arange(min, max, interval)
+    fig, ax = plt.subplots()
+    ctr = contour_array(modelgrid, ax, a, levels=levels)
+    export_contours(modelgrid, filename, ctr, fieldname, epsg, prj, **kwargs)
+    plt.close()
+
+
+def contour_array(modelgrid, ax, a, **kwargs):
+    """
+    Create a QuadMesh plot of the specified array using pcolormesh
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        ax to add the contours
+
+    a : np.ndarray
+        array to contour
+
+    Returns
+    -------
+    contour_set : ContourSet
+
+    """
+    from flopy.plot import PlotMapView
+
+    kwargs['ax'] = ax
+    map = PlotMapView(modelgrid)
+    contour_set = map.contour_array(a=a, **kwargs)
+
+    return contour_set

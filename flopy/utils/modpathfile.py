@@ -1010,6 +1010,8 @@ class EndpointFile():
             mg = StructuredGrid(sr.delc, sr.delr)
             mg.set_coord_info(xoff=sr.xll, yoff=sr.yll, angrot=sr.rotation,
                               epsg=sr.epsg, proj4=sr.proj4_str)
+        if epsg is None:
+            epsg = mg.epsg
 
         if isinstance(mg, StructuredGrid):
             x, y = geometry.transform(epd[xcol], epd[ycol],
