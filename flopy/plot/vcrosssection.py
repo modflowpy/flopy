@@ -79,7 +79,6 @@ class VertexCrossSection(CrossSection):
                                self.mg.xoffset, self.mg.yoffset,
                                self.mg.angrot_radians, inverse=True)
 
-
         pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         self.pts = np.array(pts)
 
@@ -161,7 +160,6 @@ class VertexCrossSection(CrossSection):
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
         self.ax.set_ylim(self.extent[2], self.extent[3])
-
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
@@ -400,20 +398,20 @@ class VertexCrossSection(CrossSection):
         if a.ndim > 1:
             a = np.ravel(a)
 
-        if masked_values is not None:
-            for mval in masked_values:
-                a = np.ma.masked_equal(a, mval)
-
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
 
+        xcenters = [np.mean(np.array(v).T[0]) for i, v
+                    in sorted(self.projpts.items())]
+
         plotarray = np.array([a[cell] for cell
                               in sorted(self.projpts)])
 
-        xcenters = [np.mean(np.array(v).T[0]) for i, v
-                    in sorted(self.projpts.items())]
+        if masked_values is not None:
+            for mval in masked_values:
+                plotarray = np.ma.masked_equal(plotarray, mval)
 
         if isinstance(head, np.ndarray):
             zcenters = self.set_zcentergrid(np.ravel(head))
@@ -954,129 +952,3 @@ class VertexCrossSection(CrossSection):
 
         return (xmin, xmax, ymin, ymax)
 
-
-if __name__ == "__main__":
-    import os
-    import flopy as fp
-    from flopy.plot.plotbase import PlotCrossSection
-    import flopy.utils.binaryfile as bf
-    from flopy.proposed_grid.proposed_vertex_mg import VertexModelGrid
-
-    ws = "../../examples/data/mf6/triangles"
-    name = "mfsim.nam"
-
-    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
-
-    print(sim.model_names)
-    ml = sim.get_model("gwf_1")
-
-    dis = ml.dis
-    sto = ml.sto
-    chd = ml.get_package("chd_left")
-
-    t = VertexModelGrid(dis.vertices, dis.cell2d,
-                        top=dis.top, botm=dis.botm,
-                        idomain=dis.idomain, xoffset=10,
-                        yoffset=0, rotation=-25)
-
-
-    # todo: build out model grid methods!
-    x = t.xgrid
-    y = t.ygrid
-    t0 = t.top
-    t1 = t.botm
-    z = t.zgrid
-    xc = t.xcenters
-    yc = t.ycenters
-    zc = t.zcenters
-    lc = t.grid_lines
-    e = t.extent
-
-    sr_x = t.sr.xvertices
-    sr_y = t.sr.yvertices
-    sr_xc = t.sr.xcellcenters
-    sr_yc = t.sr.ycellcenters
-    sr_lc = t.sr.grid_lines
-    sr_e = t.sr.extent
-
-    # line = np.array([(0,2.5), (5, 2.5), (10, 2.5)])
-    line = np.array([(2.5, 0), (2.5, 10.01)])
-    line = t.sr.transform(line.T[0], line.T[1])
-    line = np.array(line).T
-
-    cr = PlotCrossSection(modelgrid=t, dis=dis,
-                          line={"line": line})
-
-    #ax = cr.plot_grid()
-    #ax = cr.plot_array(a=dis.botm.array, alpha=0.5)
-    #plt.colorbar(ax)
-    #ax = cr.plot_bc(package=chd)
-    #plt.show()
-
-    # ax = cr.plot_bc(package=chd)
-    # plt.show()
-
-    #idx = [np.random.randint(0, 399) for _ in range(100)]
-    #idx2 = [np.random.randint(0, 399) for _ in range(200)]
-    #idomain = np.zeros((400,), dtype=int)
-
-    #idomain[idx] = 1
-    #idomain[idx2] = -1
-
-    #ax = cr.plot_ibound(ibound=idomain)
-    #plt.show()
-
-
-    # ax = cr.plot_grid()
-    # plt.show()
-    # ax = cr.plot_array(a=dis.botm.array)
-    # plt.show()
-
-    # arr = np.random.rand(400) * 100
-    # ax = cr.contour_array(a=arr)
-    # plt.show()
-
-    # arr = np.random.rand(400)
-    # plot = cr.plot_surface(arr)
-
-    # for i in plot:
-    #    plt.show()
-
-    #idomain = np.ones(100, dtype=np.int)
-    #r = np.random.randint(0, 100, size=25)
-    #r1 = np.random.randint(0, 100, size=10)
-    #idomain[r] = 0
-    #idomain[r1] = -1
-    #ax = map.plot_ibound(idomain)
-    #plt.show()
-
-    #ax = map.plot_grid()
-    #plt.show()
-
-    #chd = ml.get_package("CHD")
-    #ax = map.plot_bc(package=chd)
-    #plt.show()
-    # todo: flip z-vector for flow!
-
-    #cbc = os.path.join(ws, "expected_output/", "model_unch.cbc")
-    #hds = os.path.join(ws, "expected_output/", "model_unch.hds")
-
-    cbc = os.path.join(ws, "tri_model.cbc")
-    hds = os.path.join(ws, "tri_model.hds")
-
-    cbc = bf.CellBudgetFile(cbc, precision="double")
-    hds = bf.HeadFile(hds)
-
-    #print(cbc.get_unique_record_names())
-
-    fja = cbc.get_data(text="FLOW-JA-FACE")
-    #fja = cbc.get_data(text="FLOW JA FACE")
-    head = hds.get_alldata()[0]
-    head.shape = (4, -1)
-    print(head.ndim)
-
-
-    ax = cr.plot_discharge(fja=fja, head=head, kstep=2)
-    cr.plot_grid()
-    plt.show()
-    #print('break')
