@@ -438,11 +438,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
     flopy.reference for more details.
 
     """
-    try:
-        import shapefile as sf
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
+
+
     if len(recarray) != len(geoms):
         raise IndexError(
             'Number of geometries must equal the number of records!')
@@ -456,8 +453,15 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
             geomtype = g.shapeType
         except:
             continue
-    w = sf.Writer(geomtype)
+
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        w = shapefile.Writer(shapeType=geomtype)
+    else:
+        w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
+
     # set up the attribute fields
     names = enforce_10ch_limit(recarray.dtype.names)
     for i, npdtype in enumerate(recarray.dtype.descr):
@@ -480,9 +484,14 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
         for i, r in enumerate(ralist):
             w.point(*geoms[i].pyshp_parts)
             w.record(*r)
-    w.save(shpname)
+
+    if sfv < 2:
+        w.save(shpname)
+    else:
+        w.close()
     write_prj(shpname, epsg, prj)
     print('wrote {}'.format(shpname))
+    return
 
 
 def write_prj(shpname, epsg=None, prj=None):
@@ -501,3 +510,4 @@ def write_prj(shpname, epsg=None, prj=None):
         print('No CRS information for writing a .prj file.\n'
               'Supply an epsg code or .prj file path to the '
               'model spatial reference or .export() method.')
+    return
