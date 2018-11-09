@@ -2335,9 +2335,12 @@ class MFTransient(object):
     def _set_data_prep(self, data, transient_key=0):
         if isinstance(transient_key, int):
             self._verify_sp(transient_key)
-        self._current_key = transient_key
-        if transient_key not in self._data_storage:
-            self.add_transient_key(transient_key)
+        if isinstance(transient_key, tuple):
+            self._current_key = transient_key[0]
+        else:
+            self._current_key = transient_key
+        if self._current_key not in self._data_storage:
+            self.add_transient_key(self._current_key)
 
     def _get_file_entry_prep(self, transient_key=0):
         if isinstance(transient_key, int):

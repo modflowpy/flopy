@@ -399,7 +399,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
     Uses pyshp.
     epsg code requires an internet connection the first time to get the projection
     file text from spatialreference.org, but then stashes the text in the file
-    epsgref.py (located in the site-packages folder) for subsequent use. See
+    epsgref.json (located in the user's data directory) for subsequent use. See
     flopy.reference for more details.
 
     """

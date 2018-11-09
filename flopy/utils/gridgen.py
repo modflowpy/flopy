@@ -14,7 +14,7 @@ try:
     import shapefile
 except:
     raise Exception('Error importing shapefile: ' +
-                    'try pip install pyshp')
+                    'try pip (or conda) install pyshp')
 
 
 # todo
@@ -706,30 +706,66 @@ class Gridgen(object):
         # return dis object instance
         return disu
 
-    def get_gridprops(self):
-        gridprops = {}
+    def get_nodes(self):
+        """
+        Get the number of nodes
 
-        # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
+        Returns
+        -------
+        nodes : int
+
+        """
         fname = os.path.join(self.model_ws, 'qtg.nod')
         f = open(fname, 'r')
         line = f.readline()
         ll = line.strip().split()
         nodes = int(ll.pop(0))
         f.close()
-        nlay = self.nlay
-        gridprops['nodes'] = nodes
-        gridprops['nlay'] = nlay
+        return nodes
 
+    def get_nlay(self):
+        """
+        Get the number of layers
 
-        # nodelay
+        Returns
+        -------
+        nlay : int
+
+        """
+        return self.nlay
+
+    def get_nodelay(self):
+        """
+        Return the nodelay array, which is an array of size nlay containing
+        the number of nodes in each layer.
+
+        Returns
+        -------
+        nodelay : ndarray
+            Number of nodes in each layer
+
+        """
+        nlay = self.get_nlay()
         nodelay = np.empty((nlay), dtype=np.int)
         fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
         f = open(fname, 'r')
         nodelay = read1d(f, nodelay)
         f.close()
-        gridprops['nodelay'] = nodelay
+        return nodelay
 
-        # top
+    def get_top(self):
+        """
+        Get the top array
+
+        Returns
+        -------
+        top : ndarray
+            A 1D vector of cell top elevations of size nodes
+
+        """
+        nodes = self.get_nodes()
+        nlay = self.get_nlay()
+        nodelay = self.get_nodelay()
         top = np.empty((nodes), dtype=np.float32)
         istart = 0
         for k in range(nlay):
@@ -742,9 +778,21 @@ class Gridgen(object):
             f.close()
             top[istart:istop] = tpk
             istart = istop
-        gridprops['top'] = top
+        return top
 
-        # bot
+    def get_bot(self):
+        """
+        Get the bot array
+
+        Returns
+        -------
+        bot : ndarray
+            A 1D vector of cell bottom elevations of size nodes
+
+        """
+        nodes = self.get_nodes()
+        nlay = self.get_nlay()
+        nodelay = self.get_nodelay()
         bot = np.empty((nodes), dtype=np.float32)
         istart = 0
         for k in range(nlay):
@@ -757,77 +805,225 @@ class Gridgen(object):
             f.close()
             bot[istart:istop] = btk
             istart = istop
-        gridprops['bot'] = bot
+        return bot
 
-        # area
+    def get_area(self):
+        """
+        Get the area array
+
+        Returns
+        -------
+        area : ndarray
+            A 1D vector of cell areas of size nodes
+
+        """
+        nodes = self.get_nodes()
         fname = os.path.join(self.model_ws, 'qtg.area.dat')
         f = open(fname, 'r')
         area = np.empty((nodes), dtype=np.float32)
         area = read1d(f, area)
         f.close()
-        gridprops['area'] = area
+        return area
 
-        # iac
+    def get_iac(self):
+        """
+        Get the iac array
+
+        Returns
+        -------
+        iac : ndarray
+            A 1D vector of the number of connections (plus 1) for each cell
+
+        """
+        nodes = self.get_nodes()
         iac = np.empty((nodes), dtype=np.int)
         fname = os.path.join(self.model_ws, 'qtg.iac.dat')
         f = open(fname, 'r')
         iac = read1d(f, iac)
         f.close()
-        gridprops['iac'] = iac
+        return iac
 
-        # Calculate njag and save as nja to self
-        njag = iac.sum()
-        gridprops['nja'] = njag
+    def get_ja(self, nja=None):
+        """
+        Get the ja array
 
-        # ja
-        ja = np.empty((njag), dtype=np.int)
+        Parameters
+        ----------
+        nja : int
+            Number of connections.  If None, then it is read from gridgen
+            output.
+
+        Returns
+        -------
+        ja : ndarray
+            A 1D vector of the cell connectivity (one-based)
+
+        """
+        if nja is None:
+            iac = self.get_iac()
+            nja = iac.sum()
+        ja = np.empty((nja), dtype=np.int)
         fname = os.path.join(self.model_ws, 'qtg.ja.dat')
         f = open(fname, 'r')
         ja = read1d(f, ja)
         f.close()
-        gridprops['ja'] = ja
+        return ja
 
-        # fldr
+    def get_fldr(self):
+        """
+        Get the fldr array
+
+        Returns
+        -------
+        fldr : ndarray
+            A 1D vector indicating the direction of the connection 1, 2, and 3
+            are plus x, y, and z directions.  -1, -2, and -3 are negative
+            x, y, and z directions.
+
+        """
+        iac = self.get_iac()
+        njag = iac.sum()
         fldr = np.empty((njag), dtype=np.int)
         fname = os.path.join(self.model_ws, 'qtg.fldr.dat')
         f = open(fname, 'r')
         fldr = read1d(f, fldr)
         f.close()
-        gridprops['fldr'] = fldr
+        return fldr
 
-        # ivc
+    def get_ivc(self, fldr=None):
+        """
+        Get the MODFLOW-USG ivc array
+
+        Parameters
+        ----------
+        fldr : ndarray
+            Flow direction indicator array.  If None, then it is read from
+            gridgen output.
+
+        Returns
+        -------
+        ivc : ndarray
+            A 1D vector indicating the direction of the connection where 1 is
+            vertical and 0 is horizontal.
+
+        """
+        if fldr is None:
+            fldr = self.get_fldr()
         ivc = np.zeros(fldr.shape, dtype=np.int)
         idx = (abs(fldr) == 3)
         ivc[idx] = 1
-        gridprops['ivc'] = ivc
+        return ivc
 
-        cl1 = None
-        cl2 = None
-        # cl12
-        cl12 = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, 'qtg.c1.dat')
-        f = open(fname, 'r')
-        cl12 = read1d(f, cl12)
-        f.close()
-        gridprops['cl12'] = cl12
+    def get_ihc(self, fldr=None):
+        """
+        Get the ihc array
 
-        # fahl
-        fahl = np.empty((njag), dtype=np.float32)
-        fname = os.path.join(self.model_ws, 'qtg.fahl.dat')
-        f = open(fname, 'r')
-        fahl = read1d(f, fahl)
-        f.close()
-        gridprops['fahl'] = fahl
+        Parameters
+        ----------
+        fldr : ndarray
+            Flow direction indicator array.  If None, then it is read from
+            gridgen output.
 
-        # ihc
+        Returns
+        -------
+        ihc : ndarray
+            A 1D vector indicating the direction of the connection where
+            0 is vertical, 1 is a regular horizontal connection and 2 is a
+            vertically staggered horizontal connection.
+
+        """
+        if fldr is None:
+            fldr = self.get_fldr()
         ihc = np.empty(fldr.shape, dtype=np.int)
         ihc = np.where(abs(fldr) == 0, 0, ihc)
         ihc = np.where(abs(fldr) == 1, 1, ihc)
         ihc = np.where(abs(fldr) == 2, 1, ihc)
         ihc = np.where(abs(fldr) == 3, 0, ihc)
-        gridprops['ihc'] = ihc
+        return ihc
 
-        #hwva
+    def get_cl12(self):
+        """
+        Get the cl12 array
+
+        Returns
+        -------
+        cl12 : ndarray
+            A 1D vector of the cell connection distances, which are from the
+            center of cell n to its shared face will cell m
+
+        """
+        iac = self.get_iac()
+        njag = iac.sum()
+        cl12 = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.c1.dat')
+        f = open(fname, 'r')
+        cl12 = read1d(f, cl12)
+        f.close()
+        return cl12
+
+    def get_fahl(self):
+        """
+        Get the fahl array
+
+        Returns
+        -------
+        fahl : ndarray
+            A 1D vector of the cell connection information, which is flow area
+            for a vertical connection and horizontal length for a horizontal
+            connection
+
+        """
+        iac = self.get_iac()
+        njag = iac.sum()
+        fahl = np.empty((njag), dtype=np.float32)
+        fname = os.path.join(self.model_ws, 'qtg.fahl.dat')
+        f = open(fname, 'r')
+        fahl = read1d(f, fahl)
+        f.close()
+        return fahl
+
+    def get_hwva(self, ja=None, ihc=None, fahl=None, top=None, bot=None):
+        """
+        Get the hwva array
+
+        Parameters
+        ----------
+        ja : ndarray
+            Cell connectivity.  If None, it will be read from gridgen output.
+        ihc : ndarray
+            Connection horizontal indicator array.  If None it will be read
+            and calculated from gridgen output.
+        fahl : ndarray
+            Flow area, horizontal width array required by MODFLOW-USG.  If none
+            then it will be read from the gridgen output.  Default is None.
+        top : ndarray
+            Cell top elevation.  If None, it will be read from gridgen output.
+        bot : ndarray
+            Cell bottom elevation.  If None, it will be read from gridgen
+            output.
+
+        Returns
+        -------
+        fahl : ndarray
+            A 1D vector of the cell connection information, which is flow area
+            for a vertical connection and horizontal length for a horizontal
+            connection
+
+        """
+        iac = self.get_iac()
+        nodes = iac.shape[0]
+
+        if ja is None:
+            ja = self.get_ja()
+        if ihc is None:
+            ihc = self.get_ihc()
+        if fahl is None:
+            fahl = self.get_fahl()
+        if top is None:
+            top = self.get_top()
+        if bot is None:
+            bot = self.get_bot()
+
         hwva = fahl.copy()
         ipos = 0
         for n in range(nodes):
@@ -843,36 +1039,222 @@ class Gridgen(object):
                     dzavg = 0.5 * (dzn + dzm)
                     hwva[ipos] = hwva[ipos] / dzavg
                 ipos += 1
-        gridprops['hwva'] = hwva
+        return hwva
 
-        # angldegx
+    def get_angldegx(self, fldr=None):
+        """
+        Get the angldegx array
+
+        Parameters
+        ----------
+        fldr : ndarray
+            Flow direction indicator array.  If None, then it is read from
+            gridgen output.
+
+        Returns
+        -------
+        angldegx : ndarray
+            A 1D vector indicating the angle (in degrees) between the x
+            axis and an outward normal to the face.
+
+        """
+        if fldr is None:
+            fldr = self.get_fldr()
         angldegx = np.zeros(fldr.shape, dtype=np.float)
         angldegx = np.where(fldr == 0, 1.e30, angldegx)
         angldegx = np.where(abs(fldr) == 3, 1.e30, angldegx)
         angldegx = np.where(fldr == 2, 90, angldegx)
         angldegx = np.where(fldr == -1, 180, angldegx)
         angldegx = np.where(fldr == -2, 270, angldegx)
+        return angldegx
+
+    def get_verts_iverts(self, ncells, verbose=False):
+        """
+        Return a 2d array of x and y vertices and a list of size ncells that
+        has the list of vertices for each cell.
+
+        Parameters
+        ----------
+        ncells : int
+            The number of entries in iverts.  This should be ncpl for a layered
+            model and nodes for a disu model.
+        verbose : bool
+            Print information as its working
+
+        Returns
+        -------
+        verts, iverts : tuple
+            verts is a 2d array of x and y vertex pairs (nvert, 2) and iverts
+            is a list of vertices that comprise each cell
+
+        """
+        from .cvfdutil import to_cvfd
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncells, verbose=verbose)
+        return verts, iverts
+
+    def get_cellxy(self, ncells):
+        """
+
+        Parameters
+        ----------
+        ncells : int
+            Number of cells for which to create the list of cell centers
+
+        Returns
+        -------
+        cellxy : ndarray
+            x and y cell centers.  Shape is (ncells, 2)
+
+        """
+        cellxy = np.empty((ncells, 2), dtype=np.float)
+        for n in range(ncells):
+            x, y = self.get_center(n)
+            cellxy[n, 0] = x
+            cellxy[n, 1] = y
+        return cellxy
+
+    def get_gridprops(self):
+        """
+        Get a dictionary of information needed to create a MODFLOW-USG DISU
+        Package
+
+        Returns
+        -------
+        gridprops : dict
+
+        """
+        gridprops = {}
+
+        nlay = self.get_nlay()
+        nodes = self.get_nodes()
+        nodelay = self.get_nodelay()
+
+        gridprops['nodes'] = nodes
+        gridprops['nlay'] = nlay
+        gridprops['nodelay'] = nodelay
+
+        # top
+        top = self.get_top()
+        gridprops['top'] = top
+
+        # bot
+        bot = self.get_bot()
+        gridprops['bot'] = bot
+
+        # area
+        area = self.get_area()
+        gridprops['area'] = area
+
+        # iac
+        iac = self.get_iac()
+        gridprops['iac'] = iac
+
+        # Calculate njag and save as nja to self
+        njag = iac.sum()
+        gridprops['nja'] = njag
+
+        # ja
+        ja = self.get_ja(njag)
+        gridprops['ja'] = ja
+
+        # fldr
+        fldr = self.get_fldr()
+        gridprops['fldr'] = fldr
+
+        # ivc
+        ivc = self.get_ivc(fldr=fldr)
+        gridprops['ivc'] = ivc
+
+        cl1 = None
+        cl2 = None
+        # cl12
+        cl12 = self.get_cl12()
+        gridprops['cl12'] = cl12
+
+        # fahl
+        fahl = self.get_fahl()
+        gridprops['fahl'] = fahl
+
+        return gridprops
+
+    def get_gridprops_disu6(self):
+        """
+        Return a dictionary containing all of the information required to
+        create a MODFLOW 6 DISU Package
+
+        Returns
+        -------
+        gridprops : dict
+
+        """
+        gridprops = {}
+
+        nodes = self.get_nodes()
+        gridprops['nodes'] = nodes
+
+        # top
+        top = self.get_top()
+        gridprops['top'] = top
+
+        # bot
+        bot = self.get_bot()
+        gridprops['bot'] = bot
+
+        # area
+        area = self.get_area()
+        gridprops['area'] = area
+
+        # iac
+        iac = self.get_iac()
+        gridprops['iac'] = iac
+
+        # Calculate njag and save as nja to self
+        njag = iac.sum()
+        gridprops['nja'] = njag
+
+        # ja
+        ja = self.get_ja(njag)
+        gridprops['ja'] = ja
+
+        # cl12
+        cl12 = self.get_cl12()
+        gridprops['cl12'] = cl12
+
+        # fldr
+        fldr = self.get_fldr()
+
+        # ihc
+        ihc = self.get_ihc(fldr)
+        gridprops['ihc'] = ihc
+
+        # hwva
+        hwva = self.get_hwva(ja=ja, ihc=ihc, fahl=None, top=top, bot=bot)
+        gridprops['hwva'] = hwva
+
+        # angldegx
+        angldegx = self.get_angldegx(fldr)
         gridprops['angldegx'] = angldegx
 
         # vertices -- not optimized for redundant vertices yet
         nvert = nodes * 4
-        vertices = np.empty((nvert, 2), dtype=np.float)
-        ipos = 0
+        vertices = []
+        ivert = 0
         for n in range(nodes):
             vs = self.get_vertices(n)
             for x, y in vs[:-1]:  # do not include last vertex
-                vertices[ipos, 0] = x
-                vertices[ipos, 1] = y
-                ipos += 1
+                vertices.append([ivert, x, y])
+                ivert += 1
         gridprops['nvert'] = nvert
         gridprops['vertices'] = vertices
 
-        cellxy = np.empty((nodes, 2), dtype=np.float)
+        # cell2d information
+        cell2d = []
+        iv = 1
         for n in range(nodes):
-            x, y = self.get_center(n)
-            cellxy[n, 0] = x
-            cellxy[n, 1] = y
-        gridprops['cellxy'] = cellxy
+            xc, yc = self.get_center(n)
+            cell2d.append([n, xc, yc, 4, iv, iv + 1, iv + 2, iv + 3])
+            iv += 4
+        gridprops['cell2d'] = cell2d
 
         return gridprops
 
@@ -942,11 +1324,9 @@ class Gridgen(object):
 
             # celldata -- not optimized for redundant vertices yet
             f.write('BEGIN CELL2D\n')
-            cellxy = gridprops['cellxy']
             iv = 1
-            for n, row in enumerate(cellxy):
-                xc = row[0]
-                yc = row[1]
+            for n in range(nodes):
+                xc, yc = self.get_center(n)
                 s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
                                                          iv+1, iv+2, iv+3)
                 f.write(s)
@@ -959,27 +1339,13 @@ class Gridgen(object):
     def get_gridprops_disv(self, verbose=False):
         gridprops = {}
 
-        # nodes, nlay
-        fname = os.path.join(self.model_ws, 'qtg.nod')
-        f = open(fname, 'r')
-        line = f.readline()
-        ll = line.strip().split()
-        nodes = int(ll.pop(0))
-        f.close()
-        nlay = self.nlay
-        gridprops['nodes'] = nodes
-        gridprops['nlay'] = nlay
-
-        # ncpl
-        nodelay = np.empty((nlay), dtype=np.int)
-        fname = os.path.join(self.model_ws, 'qtg.nodesperlay.dat')
-        f = open(fname, 'r')
-        nodelay = read1d(f, nodelay)
-        f.close()
-
+        nlay = self.get_nlay()
+        nodelay = self.get_nodelay()
         ncpl = nodelay.min()
         assert ncpl == nodelay.max(), 'Cannot create DISV properties '
         'because the number of cells is not the same for all layers'
+
+        gridprops['nlay'] = nlay
         gridprops['ncpl'] = ncpl
 
         # top
@@ -1008,17 +1374,10 @@ class Gridgen(object):
         gridprops['botm'] = botm
 
         # cell xy locations
-        cellxy = np.empty((ncpl, 2), dtype=np.float)
-        for n in range(ncpl):
-            x, y = self.get_center(n)
-            cellxy[n, 0] = x
-            cellxy[n, 1] = y
-        gridprops['cellxy'] = cellxy
+        cellxy = self.get_cellxy(ncpl)
 
-        from .cvfdutil import to_cvfd
-        verts, iverts = to_cvfd(self._vertdict, nodestop=ncpl, verbose=verbose)
-        gridprops['verts'] = verts
-        gridprops['iverts'] = iverts
+        # verts and iverts
+        verts, iverts = self.get_verts_iverts(ncpl)
 
         nvert = verts.shape[0]
         vertices = [[i, verts[i, 0], verts[i, 1]] for i in range(nvert)]
@@ -1111,9 +1470,8 @@ class Gridgen(object):
         if verbose:
             print('writing cell2d.')
         f.write('BEGIN CELL2D\n')
-        cellxy = gridprops['cellxy']
         for icell, icellverts in enumerate(iverts):
-            xc, yc = cellxy[icell]
+            xc, yc = self.get_center(icell)
             s = '  {} {} {} {}'.format(icell + 1, xc, yc, len(icellverts))
             for iv in icellverts:
                 s += ' {}'.format(iv + 1)

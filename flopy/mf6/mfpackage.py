@@ -414,7 +414,11 @@ class MFBlock(object):
             if isinstance(data, dict):
                 # Add block headers for each dictionary key
                 for index in data:
-                    self._build_repeating_header([index])
+                    if isinstance(index, tuple):
+                        header_list = list(index)
+                    else:
+                        header_list = [index]
+                    self._build_repeating_header(header_list)
             elif isinstance(data, list):
                 # Add a single block header of value 0
                 self._build_repeating_header([0])
