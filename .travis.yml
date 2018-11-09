@@ -10,11 +10,14 @@ matrix:
     - python: 3.4
     - python: 3.5
     - python: 3.6
+    - python: 3.7
     - python: "3.6-dev"
+    - python: "3.7-dev"
     - python: "nightly"
 
   allow_failures:
     - python: "3.6-dev"
+    - python: "3.7-dev"
     - python: "nightly"
 
 cache:
@@ -85,6 +88,7 @@ script:
     - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - echo pandas version; python -c "import pandas as pd; print(pd.__version__)"
+    - echo shapefile (pyshp); python -c "import shapefile; print(shapefile.__version__)"
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
