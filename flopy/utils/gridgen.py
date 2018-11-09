@@ -10,12 +10,6 @@ from .util_array import Util2d  #read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 
-try:
-    import shapefile
-except:
-    raise Exception('Error importing shapefile: ' +
-                    'try pip (or conda) install pyshp')
-
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -57,31 +51,47 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
+    from ..export.shapefile_utils import import_shapefile, shapefile_version
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+
     if featuretype.lower() not in ['point', 'line', 'polygon']:
         raise Exception('Unrecognized feature type: {}'.format(featuretype))
 
     if featuretype.lower() == 'line':
-        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
             wr.line(line)
             wr.record(i)
 
     elif featuretype.lower() == 'point':
-        wr = shapefile.Writer(shapeType=shapefile.POINT)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POINT)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
             wr.point(point[0], point[1])
             wr.record(i)
 
     elif featuretype.lower() == 'polygon':
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
             wr.poly(polygon)
             wr.record(i)
 
-    wr.save(filename)
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
     return
 
 

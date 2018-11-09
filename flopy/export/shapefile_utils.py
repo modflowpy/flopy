@@ -4,7 +4,6 @@ Module for exporting and importing flopy model attributes
 import copy
 import shutil
 import numpy as np
-import numpy.lib.recfunctions as rf
 
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
@@ -17,6 +16,21 @@ def import_shapefile():
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
+
+def shapefile_version(sf):
+    """
+    Return the shapefile major version number
+
+    Parameters
+    ----------
+    sf : shapefile package
+
+    Returns
+    -------
+    None
+
+    """
+    return int(sf.__version__.split('.')[0])
 
 
 def write_gridlines_shapefile(filename, sr):
@@ -35,18 +49,21 @@ def write_gridlines_shapefile(filename, sr):
     None
 
     """
-    try:
-        import shapefile
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
-
-    wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+    else:
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     for i, line in enumerate(sr.get_grid_lines()):
         wr.poly([line])
         wr.record(i)
-    wr.save(filename)
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
+    return
 
 
 def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
@@ -69,13 +86,12 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
 
     """
 
-    try:
-        import shapefile
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
-
-    wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+    else:
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     wr.field("row", "N", 10, 0)
     wr.field("column", "N", 10, 0)
 
@@ -104,16 +120,29 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
             for array in arrays:
                 rec.append(array[i, j])
             wr.record(*rec)
-    wr.save(filename)
+
+    # close or write the file
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
     print('wrote {}'.format(filename))
+    return
+
 
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
-    sf = import_shapefile()
+
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        w = shapefile.Writer(shapeType=shapefile.POLYGON)
+    else:
+        w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w.autoBalance = 1
+
     verts = copy.deepcopy(sr.vertices)
 
-    w = sf.Writer(5)  # polygon
-    w.autoBalance = 1
     # set up the attribute fields
     names = ['row', 'column'] + list(array_dict.keys())
     names = enforce_10ch_limit(names)
@@ -133,10 +162,16 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
     for i, r in enumerate(at):
         w.poly([verts[i]])
         w.record(*r)
-    w.save(filename)
+
+    # close
+    if sfv < 2:
+        w.save(filename)
+    else:
+        w.close()
     print('wrote {}'.format(filename))
     # write the projection file
     write_prj(filename, epsg, prj)
+    return
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None,
