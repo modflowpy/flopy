@@ -9,6 +9,10 @@ from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  #read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
+from ..export.shapefile_utils import import_shapefile, shapefile_version
+
+shapefile = import_shapefile()
+sfv = shapefile_version(shapefile)
 
 
 # todo
@@ -51,9 +55,6 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
-    from ..export.shapefile_utils import import_shapefile, shapefile_version
-    shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
 
     if featuretype.lower() not in ['point', 'line', 'polygon']:
         raise Exception('Unrecognized feature type: {}'.format(featuretype))

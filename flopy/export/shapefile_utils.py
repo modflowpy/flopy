@@ -115,7 +115,7 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     for i in range(sr.nrow):
         for j in range(sr.ncol):
             pts = sr.get_vertices(i, j)
-            wr.poly(parts=[pts])
+            wr.poly([pts])
             rec = [i + 1, j + 1]
             for array in arrays:
                 rec.append(array[i, j])
