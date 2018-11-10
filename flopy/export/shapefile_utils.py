@@ -454,6 +454,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
         except:
             continue
 
+    # set up for pyshp 1 or 2
     shapefile = import_shapefile()
     sfv = shapefile_version(shapefile)
     if sfv < 2:
@@ -472,18 +473,29 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
     # write the geometry and attributes for each record
     ralist = recarray.tolist()
-    if geomtype == 5:
+    if geomtype == shapefile.POLYGON:
         for i, r in enumerate(ralist):
             w.poly(geoms[i].pyshp_parts)
             w.record(*r)
-    elif geomtype == 3:
+    elif geomtype == shapefile.POLYLINE:
         for i, r in enumerate(ralist):
             w.line(geoms[i].pyshp_parts)
             w.record(*r)
-    elif geomtype == 1:
-        for i, r in enumerate(ralist):
-            w.point(*geoms[i].pyshp_parts)
-            w.record(*r)
+    elif geomtype == shapefile.POINT:
+        # pyshp version 2.x w.point() method can only take x and y
+        # code will need to be refactored in order to write POINTZ
+        # shapes with the z attribute.  The pyshp version 1.x
+        # method w.point() took a z attribute, but only wrote it if
+        # the shapeType was shapefile.POINTZ, which it is not for
+        # flopy, even if the point is 3D.
+        if sfv < 2:
+            for i, r in enumerate(ralist):
+                w.point(*geoms[i].pyshp_parts)
+                w.record(*r)
+        else:
+            for i, r in enumerate(ralist):
+                w.point(*geoms[i].pyshp_parts[:2])
+                w.record(*r)
 
     if sfv < 2:
         w.save(shpname)

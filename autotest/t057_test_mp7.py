@@ -86,6 +86,11 @@ def test_mf6():
 
 
 def test_pathline_output():
+
+    # if models not run then there will be no output
+    if not run:
+        return
+
     fpth0 = os.path.join(model_ws, 'mf2005', 'ex01_mf2005_mp.mppth')
     p = flopy.utils.PathlineFile(fpth0)
     maxtime0 = p.get_maxtime()
@@ -131,6 +136,11 @@ def test_pathline_output():
 
 
 def test_endpoint_output():
+
+    # if models not run then there will be no output
+    if not run:
+        return
+
     fpth0 = os.path.join(model_ws, 'mf2005', 'ex01_mf2005_mp.mpend')
     e = flopy.utils.EndpointFile(fpth0)
     maxtime0 = e.get_maxtime()
