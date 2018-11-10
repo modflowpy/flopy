@@ -13,6 +13,7 @@ import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.optionblock import OptionBlock
 
 
 class ModflowWel(Package):
