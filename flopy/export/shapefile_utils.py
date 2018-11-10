@@ -387,6 +387,7 @@ def shp2recarray(shpname):
     Returns
     -------
     recarray : np.recarray
+
     """
     try:
         import shapefile as sf
@@ -396,7 +397,7 @@ def shp2recarray(shpname):
     from ..utils.geometry import shape
 
     sfobj = sf.Reader(shpname)
-    dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
+    dtype = [(str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
 
     geoms = [shape(s) for s in sfobj.iterShapes()]
     records = [tuple(r) + (geoms[i],) for i, r in
@@ -417,7 +418,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
     Parameters
     ----------
-    recarray : np.recarry
+    recarray : np.recarray
         Numpy record array with attribute information that will go in the shapefile
     geoms : list of flopy.utils.geometry objects
         The number of geometries in geoms must equal the number of records in
