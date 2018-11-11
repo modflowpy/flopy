@@ -232,7 +232,7 @@ class MfList(object):
         fmts = []
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype == 'i' or vtype == 'b':
+            if vtype in ('i', 'b'):
                 if use_free:
                     fmts.append('%9d')
                 else:
@@ -670,7 +670,7 @@ class MfList(object):
         # Add one to the kij indices
         lnames = [name.lower() for name in self.dtype.names]
         # --make copy of data for multiple calls
-        d = data.recarray.copy()
+        d = data.copy()
         for idx in ['k', 'i', 'j', 'node']:
             if idx in lnames:
                 d[idx] += 1
@@ -1039,7 +1039,7 @@ class MfList(object):
                 arr[rec['k'], rec['i'], rec['j']] += rec[name]
                 cnt[rec['k'], rec['i'], rec['j']] += 1.
             # average keys that should not be added
-            if name != 'cond' and name != 'flux':
+            if name not in ('cond', 'flux'):
                 idx = cnt > 0.
                 arr[idx] /= cnt[idx]
             if mask:
