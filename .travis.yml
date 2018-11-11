@@ -100,4 +100,6 @@ script:
 
 after_success:
     - coveralls
-    - pylint --errors-only ./flopy
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
+      pylint --errors-only ./flopy
+      fi
