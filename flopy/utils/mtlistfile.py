@@ -45,6 +45,7 @@ class MtListBudget(object):
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
 
         self.tssp_lines = 0
+        self.tkstp_overflow = 100000  # in case transport step number goes above 99999 which might be outputted as *****
 
         # Assign the budgetkey, which should have been overriden
         self.gw_budget_key = ">>>for component no."
@@ -52,6 +53,8 @@ class MtListBudget(object):
         self.sw_budget_key = line.lower()
         line = 'TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION'
         self.time_key = line.lower()
+        line = 'TRANSPORT TIME STEP'
+        self.tkstp_key = line.lower()
 
         return
 
@@ -115,6 +118,8 @@ class MtListBudget(object):
                             break
                     else:
                         self._parse_sw(f, line)
+                elif self.tkstp_key in line:
+                    self.tkstp_overflow = int(line[51:58])
 
         if len(self.gw_data) == 0:
             raise Exception("no groundwater budget info found...")
@@ -242,7 +247,11 @@ class MtListBudget(object):
         try:
             kper = int(line[-6:-1])
             kstp = int(line[-26:-21])
-            tkstp = int(line[-42:-37])
+            tkstp_str = line[-42:-37]
+            if tkstp_str == '*****':
+                tkstp = self.tkstp_overflow
+            else:
+                tkstp = int(tkstp_str)
         except Exception as e:
             raise Exception("error parsing time step info on line {0}: {1}".
                             format(self.lcount, str(e)))
@@ -326,7 +335,11 @@ class MtListBudget(object):
             comp = int(line[-5:-1])
             kper = int(line[-24:-19])
             kstp = int(line[-44:-39])
-            tkstp = int(line[-60:-55])
+            tkstp_str = line[-60:-55]
+            if tkstp_str == '*****':
+                tkstp = self.tkstp_overflow
+            else:
+                tkstp = int(tkstp_str)
         except Exception as e:
             raise Exception("error parsing time step info on line {0}: {1}".
                             format(self.lcount, str(e)))
