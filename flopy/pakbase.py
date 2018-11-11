@@ -249,8 +249,8 @@ class Package(object):
                             # also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
-                            chk.stress_period_data_values(spd, spdata[
-                                elev_name] < botms,
+                            chk.stress_period_data_values(spdata,
+                                                          spdata[elev_name] < botms,
                                                           col=elev_name,
                                                           error_name='BC elevation below cell bottom',
                                                           error_type='Error')
