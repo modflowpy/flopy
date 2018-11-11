@@ -118,7 +118,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=None, filenames=None,
-                 xul=None, yul=None, rotation=None,  # 0.0,
+                 xul=None, yul=None, rotation=0.0,
                  proj4_str=None, start_datetime=None):
 
         # set default unit number of one is not specified
@@ -910,11 +910,13 @@ class ModflowDis(Package):
             print('   loading delr...')
         delr = Util2d.load(f, model, (ncol,), np.float32, 'delr',
                            ext_unit_dict)
+        delr = delr.array.reshape(ncol)
         # dataset 4 -- delc
         if model.verbose:
             print('   loading delc...')
         delc = Util2d.load(f, model, (nrow,), np.float32, 'delc',
                            ext_unit_dict)
+        delc = delc.array.reshape(nrow)
         # dataset 5 -- top
         if model.verbose:
             print('   loading top...')
