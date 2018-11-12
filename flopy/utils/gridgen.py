@@ -1604,7 +1604,7 @@ class Gridgen(object):
         else:
             s += '  DELR = OPEN/CLOSE delr.dat\n'
             fname = os.path.join(self.model_ws, 'delr.dat')
-            np.savetxt(fname, delr)
+            np.savetxt(fname, np.atleast_2d(delr))
 
         # delc
         delc = self.dis.delc.array
@@ -1613,7 +1613,7 @@ class Gridgen(object):
         else:
             s += '  DELC = OPEN/CLOSE delc.dat\n'
             fname = os.path.join(self.model_ws, 'delc.dat')
-            np.savetxt(fname, delc)
+            np.savetxt(fname, np.atleast_2d(delc))
 
         # top
         top = self.dis.top.array
