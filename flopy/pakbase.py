@@ -792,7 +792,7 @@ class Package(object):
                                     current = np.atleast_2d(current).transpose()
                                 #current = np.atleast_2d(np.loadtxt(oc_filename,
                                 #                                   dtype=current.dtype)).transpose()
-                                current = np.core.records.fromarrays(current,dtype=cd)
+                                current = np.core.records.fromarrays(current, dtype=cd)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
