@@ -2398,7 +2398,7 @@ class Util2d(object):
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
         if fortran_format.upper() == '(FREE)' and python_format is None:
-            np.savetxt(file_out, data,
+            np.savetxt(file_out, np.atleast_2d(data),
                        ArrayFormat.get_default_numpy_fmt(data.dtype),
                        delimiter='')
             return
