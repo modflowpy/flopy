@@ -650,6 +650,27 @@ class Package(object):
             line = f.readline()
             if line[0] != '#':
                 break
+        options = []
+        if 'nwt' in model.version.lower() and \
+            'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+
+            specify = False
+            ipos = f.tell()
+            line = f.readline()
+            # test for specify keyword if a NWT well file
+            if 'specify' in line.lower():
+                specify = True
+                t = line.strip().split()
+                phiramp = np.float32(t[1])
+                try:
+                    phiramp_unit = np.int32(t[2])
+                except:
+                    phiramp_unit = 2
+                options.append('specify {} {} '.format(phiramp, phiramp_unit))
+                f.readline() # "end" of options block
+                line = f.readline()
+            else:
+                f.seek(ipos)
         # check for parameters
         nppak = 0
         if "parameter" in line.lower():
@@ -670,7 +691,7 @@ class Package(object):
             ipakcb = int(t[1])
         except:
             pass
-        options = []
+
         aux_names = []
         if len(t) > 2:
             it = 2
@@ -690,24 +711,7 @@ class Package(object):
         if 'modflowwel' in str(pack_type).lower():
             partype = ['flux']
 
-        if 'nwt' in model.version.lower() and \
-            'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
 
-            specify = False
-            ipos = f.tell()
-            line = f.readline()
-            # test for specify keyword if a NWT well file
-            if 'specify' in line.lower():
-                specify = True
-                t = line.strip().split()
-                phiramp = np.float32(t[1])
-                try:
-                    phiramp_unit = np.int32(t[2])
-                except:
-                    phiramp_unit = 2
-                options.append('specify {} {} '.format(phiramp, phiramp_unit))
-            else:
-                f.seek(ipos)
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(
                 pack_type).lower():
             partype = ['shead', 'ehead']

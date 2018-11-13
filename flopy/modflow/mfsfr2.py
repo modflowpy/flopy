@@ -9,7 +9,7 @@ import copy
 from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
-from ..utils.flopy_io import line_parse
+from ..utils.flopy_io import line_parse, read_nwt_options
 from ..utils import SpatialReference
 from ..utils.recarray_utils import create_empty_recarray
 
@@ -637,6 +637,10 @@ class ModflowSfr2(Package):
             if line[0] != '#':
                 break
         # Item 1
+        # dataset 1a
+        reachinput, transroute, tabfiles, nwt_11_fmt = False, False, False, False
+        if line.strip().lower() == 'options':
+            line = read_nwt_options(f)
         if "reachinput" in line.lower():
             """
             When REACHINPUT is specified, variable ISFROPT is read in data set 1c.

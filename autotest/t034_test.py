@@ -8,6 +8,7 @@ import os
 import shutil
 import glob
 import flopy
+fm = flopy.modflow
 from flopy.utils.util_array import Util2d
 import numpy as np
 
@@ -188,6 +189,46 @@ def test_load_and_write():
     uzf = flopy.modflow.ModflowUzf1.load(os.path.join(tpth, 'UZFtest3.uzf'), m3)
     assert np.sum(uzf.iuzfbnd.array) == 28800
     assert np.isclose(np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4)
+
+class TestNWT11options():
+    """test handling of horrible options block mistake in
+    some versions of NWT."""
+    @classmethod
+    def setup_class(cls):
+
+        try:
+            from StringIO import StringIO
+        except ImportError:
+            from io import StringIO
+
+        cls.StringIO = StringIO
+        cls.m = fm.Modflow(version='mfnwt')
+        cls.dis = fm.ModflowDis(cls.m)
+
+    def test_wel(self):
+
+        txt = '# Well Package\nOPTIONS\n'
+        txt += 'SPECIFY 2.000000e-001  0\nEND\n'
+        txt += '1 50\n1 0  Stress Period 1\n'
+        txt += '1 1 1 100'
+        f = self.StringIO(txt)
+        wel = fm.ModflowWel.load(f, self.m)
+        assert 'WEL' in self.m.get_package_list()
+
+    def test_sfr(self):
+        txt = '# SFR Package\nOPTIONS\n'
+        txt += 'REACHINPUT\nEND\n'
+        txt += '2  1  0  0  1.283904e+005  1.000000e-004 0 0 1\n'
+        txt += '1 1 1 1 1 1.0 1.0 1.0 1.0 1.0\n'
+        txt += '2 2 2 1 2 1.0 1.0 1.0 1.0 1.0\n'
+        txt += '1 0 0 0\n'
+        txt += '1 1 0 0 0 0 0 0 0.037\n'
+        txt += '1.0\n1.0\n'
+        f = self.StringIO(txt)
+        sfr = fm.ModflowSfr2.load(f, self.m)
+        assert 'SFR' in self.m.get_package_list()
+
+
 
 if __name__ == '__main__':
     test_create()
