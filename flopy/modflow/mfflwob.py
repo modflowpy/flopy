@@ -441,7 +441,7 @@ class ModflowFlwob(Package):
                 line = f.readline()
                 t = line.strip().split()
                 obsnam[nobs + ntimes] = t[0]
-                irefsp[nobs + ntimes] = int(t[1])
+                irefsp[nobs + ntimes] = int(t[1]) - 1
                 toffset[nobs + ntimes] = float(t[2])
                 flwobs[nobs + ntimes] = float(t[3])
                 ntimes += 1
@@ -449,19 +449,19 @@ class ModflowFlwob(Package):
                     break
 
             # read dataset 5 -- Layer Row Column Factor
-            k = np.zeros(abs(nqclfb[nobs]), np.int32)
-            i = np.zeros(abs(nqclfb[nobs]), np.int32)
-            j = np.zeros(abs(nqclfb[nobs]), np.int32)
-            fac = np.zeros(abs(nqclfb[nobs]), np.float32)
+            k = []
+            i = []
+            j = []
+            fac = []
 
             ncells = 0
             while True:
                 line = f.readline()
                 t = line.strip().split()
-                k[ncells] = int(t[0])
-                i[ncells] = int(t[1])
-                j[ncells] = int(t[2])
-                fac[ncells] = float(t[3])
+                k.append(int(t[0]) - 1)
+                i.append(int(t[1]) - 1)
+                j.append(int(t[2]) - 1)
+                fac.append(float(t[3]) - 1)
 
                 ncells += 1
                 if ncells == abs(nqclfb[nobs]):
@@ -475,10 +475,10 @@ class ModflowFlwob(Package):
             if nobs == nqfb:
                 break
 
-        layer = np.array(layer)
-        row = np.array(row)
-        column = np.array(column)
-        factor = np.array(factor)
+        # layer = np.array(layer)
+        # row = np.array(row)
+        # column = np.array(column)
+        # factor = np.array(factor)
 
         # close the file
         f.close()
