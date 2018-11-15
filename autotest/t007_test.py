@@ -801,10 +801,10 @@ def test_sr_with_Map():
     #m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
     #                                    xll=xll, yll=yll,
     #                                    rotation=rotation)
-    modelmap = flopy.plot.PlotMapView(dis=m.dis)
-    lc = modelmap.plot_grid()
-    check_vertices()
-    plt.close()
+    #modelmap = flopy.plot.PlotMapView(dis=m.dis)
+    #lc = modelmap.plot_grid()
+    #check_vertices()
+    #plt.close()
 
     # test plotting of line with specification of xul, yul in Dis/Model Map
     mf = flopy.modflow.Modflow()
@@ -994,13 +994,13 @@ if __name__ == '__main__':
     # test_shapefile_ibound()
     #test_netcdf()
     # test_netcdf_overloads()
-    test_netcdf_classmethods()
+    # test_netcdf_classmethods()
     # build_netcdf()
     # build_sfr_netcdf()
     # test_mg()
     # test_mbase_modelgrid()
     #test_rotation()
-    # test_sr_with_Map()
+    test_sr_with_Map()
     # test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()

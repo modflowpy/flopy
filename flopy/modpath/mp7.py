@@ -330,11 +330,11 @@ class Modpath7(BaseModel):
             raise ValueError(msg)
 
         # set laytyp
-        self.laytyp = laytyp
+        # self.laytyp = laytyp
 
         # set hnoflo and hdry
-        self.hnoflo = hnoflo
-        self.hdry = hdry
+        # self.hnoflo = hnoflo
+        # self.hdry = hdry
 
         # set ib and ibound
         self.ib = ib
@@ -358,6 +358,28 @@ class Modpath7(BaseModel):
 
     def __repr__(self):
         return 'MODPATH 7 model'
+
+    @property
+    def laytyp(self):
+        if self.flowmodel.version == "mf6":
+            laytyp = []
+            for k in range(self.flowmodel.modelgrid.nlay):
+                laytyp.append(self.flowmodel.laytyp[k].max())
+            return np.array(laytyp, dtype=np.int32)
+        else:
+            return self.flowmodel.laytyp
+
+    @property
+    def hdry(self):
+        return self.flowmodel.hdry
+
+    @property
+    def hnoflo(self):
+        return self.flowmodel.hnoflo
+
+    @property
+    def laycbd(self):
+        return self.flowmodel.laycbd
 
     def write_name_file(self):
         """

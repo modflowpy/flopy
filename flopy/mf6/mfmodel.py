@@ -304,6 +304,25 @@ class MFModel(PackageContainer, ModelInterface):
             return ims.inner_hclose.get_data(), rclose
         return None
 
+    @property
+    def laytyp(self):
+        try:
+            return self.npf.icelltype.array
+        except AttributeError:
+            return None
+
+    @property
+    def hdry(self):
+        return None
+
+    @property
+    def hnoflow(self):
+        return None
+
+    @property
+    def laycbd(self):
+        return None
+
     def export(self, f, **kwargs):
         from ..export import utils
         return utils.model_export(f, self, **kwargs)

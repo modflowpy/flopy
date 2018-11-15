@@ -21,8 +21,9 @@ class CrossSection(object):
     a single model grid type as that would break the CrossSection plotting
     ability of one or more child classes.
     """
-    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, extent=None):
+    def __init__(self, ax=None, model=None, modelgrid=None):
+
+        self.ax = ax
 
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -33,40 +34,17 @@ class CrossSection(object):
 
         if model is not None:
             self.mg = model.modelgrid
-            self.dis = model.get_package("DIS")
 
         elif modelgrid is not None:
             self.mg = modelgrid
-            self.dis = dis
-            if dis is None:
-                raise AssertionError("Cannot find model discretization package")
-
-        elif dis is not None:
-            self.mg = dis.parent.modelgrid
-            self.dis = dis
+            if self.mg is None:
+                raise AssertionError("Cannot find model grid ")
 
         else:
-            raise Exception("Cannot find model discretization package")
+            raise Exception("Cannot find model grid")
 
-    def _set_coord_info(self, sr, xul, yul, xll, yll, rotation):
-        # remove this if interface is okay
-        if sr is not None:
-            self.mg._set_sr_coord_info(sr)
-            warnings.warn('SpatialReference has been deprecated. Use the'
-                          'Grid class instead',
-                          DeprecationWarning)
-        if xul is not None and yul is not None:
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          PendingDeprecationWarning)
-            self.mg._angrot = rotation
-            self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
-                                   yoff=self.mg._yul_to_yll(yul),
-                                   angrot=rotation)
-        elif xll is not None and xll is not None:
-            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
-
-        elif rotation != 0.:
-            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
+        if type(None) in (type(self.mg.top), type(self.mg.botm)):
+            raise AssertionError("modelgrid top and botm must be defined")
 
 
 class StructuredCrossSection(CrossSection):
@@ -102,12 +80,10 @@ class StructuredCrossSection(CrossSection):
 
     """
 
-    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
-                 line=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., extent=None, length_multiplier=None):
-        super(StructuredCrossSection, self).__init__(ax=ax, model=model, dis=dis,
-                                                     modelgrid=modelgrid, line=line,
-                                                     extent=extent)
+    def __init__(self, ax=None, model=None, modelgrid=None,
+                 line=None, extent=None):
+        super(StructuredCrossSection, self).__init__(ax=ax, model=model,
+                                                     modelgrid=modelgrid)
 
         if line is None:
             s = 'line must be specified.'
@@ -182,14 +158,24 @@ class StructuredCrossSection(CrossSection):
             d.append(v[2])
         self.d = np.array(d)
 
+        self.idomain = self.mg.idomain
+        if self.mg.idomain is None:
+            self.idomain = np.ones((self.mg.nlay, self.mg.nrow,
+                                    self.mg.ncol), dtype=int)
+
         self.ncb = 0
-        self.laycbd = self.dis.laycbd.array
+        self.laycbd = []
+
+        if self.model is not None:
+            if self.model.laycbd is not None:
+                self.laycbd = self.model.laycbd
+
         for l in self.laycbd:
             if l > 0:
                 self.ncb += 1
-        self.active = np.ones((self.dis.nlay + self.ncb), dtype=np.int)
+        self.active = np.ones((self.mg.nlay + self.ncb), dtype=np.int)
         kon = 0
-        for k in range(self.dis.nlay):
+        for k in range(self.mg.nlay):
             if self.laycbd[k] > 0:
                 kon += 1
                 self.active[kon] = 0
@@ -198,12 +184,12 @@ class StructuredCrossSection(CrossSection):
         top = self.mg.top
         botm = self.mg.botm
         elev = [top.copy()]
-        for k in range(self.dis.nlay + self.ncb):
+        for k in range(self.mg.nlay + self.ncb):
             elev.append(botm[k, :, :])
 
         self.elev = np.array(elev)
         self.layer0 = 0
-        self.layer1 = self.dis.nlay + self.ncb + 1
+        self.layer1 = self.mg.nlay + self.ncb + 1
 
         zpts = []
         for k in range(self.layer0, self.layer1):
@@ -289,7 +275,7 @@ class StructuredCrossSection(CrossSection):
             vpts.append(plotutil.cell_value_points(self.xpts, xedge,
                                                    yedge, a[k, :, :]))
             if self.laycbd[k] > 0:
-                ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
+                ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
                 ta[:, :] = -1e9
                 vpts.append(plotutil.cell_value_points(self.xpts,
                                                        xedge, yedge, ta))
@@ -400,14 +386,14 @@ class StructuredCrossSection(CrossSection):
         plotarray = a
 
         vpts = []
-        for k in range(self.dis.nlay):
+        for k in range(self.mg.nlay):
             # print('k', k, self.laycbd[k])
             vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
                                                    self.mg.xyedges[1],
                                                    plotarray[k, :, :]))
             if self.laycbd[k] > 0:
-                ta = np.empty((self.dis.nrow, self.dis.ncol), dtype=np.float)
-                ta[:, :] = self.dis.botm.array[k, :, :]
+                ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
+                ta[:, :] = self.mg.botm.array[k, :, :]
                 vpts.append(plotutil.cell_value_points(self.xpts,
                                                        self.mg.xyedges[0],
                                                        self.mg.xyedges[1], ta))
@@ -428,7 +414,7 @@ class StructuredCrossSection(CrossSection):
 
         plot = []
         # print(zpts.shape)
-        for k in range(self.dis.nlay + self.ncb):
+        for k in range(self.mg.nlay + self.ncb):
             if self.active[k] == 0:
                 continue
             idxmk = idxm[k, :]
@@ -490,7 +476,7 @@ class StructuredCrossSection(CrossSection):
                                                    plotarray[k, :, :]))
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
-        if self.dis.nlay == 1:
+        if self.mg.nlay == 1:
             vpts = np.vstack((vpts, vpts))
 
         if masked_values is not None:
@@ -526,10 +512,9 @@ class StructuredCrossSection(CrossSection):
         """
 
         if ibound is None:
-            try:
-                bas = self.model.get_package('BAS6')
-                ibound = bas.ibound.array
-            except AttributeError:
+            if self.mg.idomain is None:
+                raise AssertionError("An idomain array must be provided")
+            else:
                 ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
@@ -573,11 +558,11 @@ class StructuredCrossSection(CrossSection):
         """
 
         if ibound is None:
-            try:
-                bas = self.model.get_package('BAS6')
-                ibound = bas.ibound.array
-            except AttributeError:
+            if self.mg.idomain is None:
+                raise AssertionError("An idomain array must be provided")
+            else:
                 ibound = self.mg.idomain
+                # todo: provide a check for MF6 models!
                 color_ch = color_vpt
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
@@ -677,17 +662,10 @@ class StructuredCrossSection(CrossSection):
             fluxes = arr_dict[key]
             break
 
-
-        # if mflist is None:
-        #    return None
-
         # Plot the list locations
-        # todo: sanity check flopy6 update before removing old code.
-        plotarray = np.zeros(self.dis.botm.shape, dtype=np.int)
+        # todo: make sure that this will always be a numpy array!
+        plotarray = np.zeros(self.mg.botm.shape, dtype=np.int)
         plotarray[fluxes != 0] = 1
-
-        # idx = (mflist['k'], mflist['i'], mflist['j'])
-        # plotarray[idx] = 1
 
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
@@ -746,35 +724,26 @@ class StructuredCrossSection(CrossSection):
             pivot = 'middle'
 
         # Calculate specific discharge
-        try:
-            ib = self.model.bas6.ibound.array
-        except AttributeError:
-            ib = self.mg.idomain
+        ib = self.idomain
 
-        delr = self.dis.delr.array
-        delc = self.dis.delc.array
-        top = self.dis.top.array
-        botm = self.dis.botm.array
+        delr = self.mg.delr
+        delc = self.mg.delc
+        top = self.mg.top
+        botm = self.mg.botm
         nlay, nrow, ncol = botm.shape
         laytyp = None
         hnoflo = 999.
         hdry = 999.
-        if self.model is not None:
-            if self.model.version == "mf6":
-                sto = self.model.get_package("STO")
-                if sto is not None:
-                    laytyp = sto.iconvert.array
-                # can't find an equivalent in mf6....???
-                hdry = 999.
 
-            else:
-                lpf = self.model.get_package('LPF')
-                if lpf is not None:
-                    laytyp = lpf.laytyp.array
-                    hdry = lpf.hdry
-                bas = self.model.get_package('BAS6')
-                if bas is not None:
-                    hnoflo = bas.hnoflo
+        if self.model is not None:
+            if self.model.laytyp is not None:
+                laytyp = self.model.laytyp
+
+            if self.model.hnoflo is not None:
+                hnoflo = self.model.hnoflo
+
+            if self.model.hdry is not None:
+                hdry = self.model.hdry
 
         # If no access to head or laytyp, then calculate confined saturated
         # thickness by setting laytyp to zeros
@@ -833,7 +802,7 @@ class StructuredCrossSection(CrossSection):
         vpts = []
         ibpts = []
         xedge, yedge = self.mg.xyedges
-        for k in range(self.dis.nlay):
+        for k in range(self.mg.nlay):
             upts.append(plotutil.cell_value_points(self.xpts, xedge,
                                                    yedge, u[k, :, :]))
             u2pts.append(plotutil.cell_value_points(self.xpts, xedge,
@@ -1006,7 +975,7 @@ class StructuredCrossSection(CrossSection):
         xedge, yedge = self.mg.xyedges
         for k in range(self.layer0, self.layer1):
             e = self.elev[k, :, :]
-            if k < self.dis.nlay:
+            if k < self.mg.nlay:
                 v = vs[k, :, :]
                 idx = v < e
                 e[idx] = v[idx]
@@ -1032,7 +1001,7 @@ class StructuredCrossSection(CrossSection):
         vpts = []
         xedge, yedge = self.mg.xyedges
         for k in range(self.layer0, self.layer1):
-            if k < self.dis.nlay:
+            if k < self.mg.nlay:
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
@@ -1042,7 +1011,7 @@ class StructuredCrossSection(CrossSection):
 
         zcentergrid = []
         nz = 0
-        if self.dis.nlay == 1:
+        if self.mg.nlay == 1:
             for k in range(0, self.zpts.shape[0]):
                 nz += 1
                 nx = 0
@@ -1122,18 +1091,32 @@ class ModelCrossSection(object):
                 rotation=None, extent=None, length_multiplier=1.):
 
         from flopy.plot.plotbase import PlotCrossSection
+        from flopy.discretization import StructuredGrid
 
         err_msg = "ModelCrossSection will be replaced by " +\
             "PlotCrossSection(), Calling PlotCrossSection()"
         warnings.warn(err_msg, PendingDeprecationWarning)
 
+        modelgrid = None
+        if model is not None:
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+                modelgrid = plotutil._set_coord_info(model.modelgrid,
+                                                     xul, yul, xll, yll,
+                                                     rotation)
+
+        elif dis is not None:
+            modelgrid = StructuredGrid(delr=dis.delr.array,
+                                       delc=dis.delc.array,
+                                       top=dis.top.array,
+                                       botm=dis.botm.array)
+
         if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
-            mg = plotutil._set_coord_info(model.modelgrid,
+            modelgrid = plotutil._set_coord_info(modelgrid,
                                           xul, yul, xll, yll,
                                           rotation)
 
 
-        return PlotCrossSection(ax=ax, model=model, dis=dis,
-                                modelgrid=model.modelgrid,
+        return PlotCrossSection(ax=ax, model=model,
+                                modelgrid=modelgrid,
                                 line=line, extent=extent)
 

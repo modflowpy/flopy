@@ -4,6 +4,7 @@ import numpy as np
 from ..utils import geometry
 from flopy.utils.reference import SpatialReference
 from flopy.discretization import StructuredGrid
+from flopy.discretization import UnstructuredGrid
 
 try:
     import matplotlib.pyplot as plt
@@ -23,8 +24,8 @@ class MapView(object):
     specific to a single type of model grid ex.(Structured, Vertex, Unstructured)
     can be present in this class or it will break the plotting functionality!
     """
-    def __init__(self, modelgrid=None, ax=None, model=None, dis=None,
-                 layer=0, extent=None):
+    def __init__(self, modelgrid=None, ax=None, model=None, layer=0,
+                 extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
@@ -32,7 +33,6 @@ class MapView(object):
 
         self.model = model
         self.layer = layer
-        self.dis = dis
         self.mg = None
 
         if model is not None:
@@ -40,8 +40,7 @@ class MapView(object):
 
         elif modelgrid is not None:
             self.mg = modelgrid
-        elif dis is not None:
-            self.mg = dis.parent.modelgrid
+
         else:
             err_msg = "A model grid instance must be provided to PlotMapView"
             raise AssertionError(err_msg)
@@ -59,21 +58,6 @@ class MapView(object):
             self._extent = extent
         else:
             self._extent = None
-
-    def _set_coord_info(self, xul, yul, xll, yll, rotation):
-        # remove this if the interface is okay
-        if xul is not None and yul is not None:
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          PendingDeprecationWarning)
-            self.mg._angrot = rotation
-            self.mg.set_coord_info(xoff=self.mg._xul_to_xll(xul),
-                                   yoff=self.mg._yul_to_yll(yul),
-                                   angrot=rotation)
-        elif xll is not None and xll is not None:
-            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
-
-        elif rotation != 0.:
-            self.mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
 
 class StructuredMapView(MapView):
@@ -107,19 +91,13 @@ class StructuredMapView(MapView):
 
     Notes
     -----
-    ModelMap must know the position and rotation of the grid in order to make
-    the plot.  This information is contained in the SpatialReference class
-    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
-    If dis is None, then it looks for sr in model.dis.  If all of these
-    arguments are none, then it uses xul, yul, and rotation.  If none of these
-    arguments are provided, then it puts the lower-left-hand corner of the
-    grid at (0, 0).
+
 
     """
 
-    def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
-                 layer=0, extent=None):
-        super(StructuredMapView, self).__init__(ax=ax, model=model, dis=dis,
+    def __init__(self, modelgrid=None, model=None, ax=None, layer=0,
+                 extent=None):
+        super(StructuredMapView, self).__init__(ax=ax, model=model,
                                                 modelgrid=modelgrid, layer=layer,
                                                 extent=extent)
 
@@ -496,7 +474,7 @@ class StructuredMapView(MapView):
                   "from a PlotMapView instance"
         raise NotImplementedError(err_msg)
 
-    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
+    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1,
                        jstep=1, normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
@@ -507,8 +485,6 @@ class StructuredMapView(MapView):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
-        dis: flopy.modflow.ModflowDis
-            Flopy DIS package class
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
@@ -537,50 +513,33 @@ class StructuredMapView(MapView):
         else:
             pivot = 'middle'
 
-        # Calculate specific discharge
-        # make sure dis is defined
-        # todo: if modelgrid then dis is not necessary! Eventually migrate to new style!
-        if dis is None:
-            if self.model is not None:
-                dis = self.model.dis
-            else:
-                print('ModelMap.plot_quiver() error: self.dis is None and dis '
-                      'arg is None.')
-                return
+        if self.mg.top is None:
+            err = "StructuredModelGrid must have top and " \
+                  "botm defined to use plot_discharge()"
+            raise AssertionError(err)
 
-        try:
-            ib = self.model.bas6.ibound.array
-        except AttributeError:
+        ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
+        if self.mg.idomain is not None:
             ib = self.mg.idomain
 
-        delr = dis.delr.array
-        delc = dis.delc.array
-        top = dis.top.array
-        botm = dis.botm.array
+        delr = self.mg.delr
+        delc = self.mg.delc
+        top = np.copy(self.mg.top)
+        botm = np.copy(self.mg.botm)
         nlay, nrow, ncol = botm.shape
         laytyp = None
         hnoflo = 999.
         hdry = 999.
 
         if self.model is not None:
-            if self.model.version == "mf6":
-                sto = self.model.get_package("STO")
-                if sto is not None:
-                    laytyp = sto.iconvert.array
+            if self.model.laytyp is not None:
+                laytyp = self.model.laytyp
 
-                # no equivalent data in mf6?
-                hdry = 999.
+            if self.model.hnoflo is not None:
+                hnoflo = self.model.hnoflo
 
-            else:
-                lpf = self.model.get_package('LPF')
-
-                if lpf is not None:
-                    laytyp = lpf.laytyp.array
-                    hdry = lpf.hdry
-
-            bas = self.model.get_package('BAS6')
-            if bas is not None:
-                hnoflo = bas.hnoflo
+            if self.model.hdry is not None:
+                hdry = self.model.hdry
 
         # If no access to head or laytyp, then calculate confined saturated
         # thickness by setting laytyp to zeros
@@ -794,27 +753,43 @@ class ModelMap(object):
         warnings.warn(err_msg, PendingDeprecationWarning)
 
         modelgrid = None
-        if sr is not None:
-            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
-                sr.set_spatialreference(xul, yul, xll, yll, rotation)
-
-            if isinstance(sr, SpatialReferenceUnstructured):
-                modelgrid = sr
-            else:
-                modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
-                                           xoff=sr.xll, yoff=sr.yll,
-                                           angrot=sr.rotation)
-            sr = None
-
-        elif model is not None:
+        if model is not None:
             if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
                 modelgrid = plotutil._set_coord_info(model.modelgrid,
                                                      xul, yul, xll, yll,
                                                      rotation)
+        elif sr is not None:
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+                sr.set_spatialreference(xul, yul, xll, yll, rotation)
+
+            if isinstance(sr, SpatialReferenceUnstructured):
+                if dis is not None:
+                    modelgrid = UnstructuredGrid(vertices=sr.verts,
+                                                 iverts=sr.iverts,
+                                                 xcenters=sr.xc,
+                                                 ycenters=sr.yc,
+                                                 top=dis.top.array,
+                                                 botm=dis.botm.array,
+                                                 ncpl=sr.ncpl)
+                else:
+                    modelgrid = UnstructuredGrid(vertices=sr.verts,
+                                                 iverts=sr.iverts,
+                                                 xcenters=sr.xc,
+                                                 ycenters=sr.yc,
+                                                 ncpl=sr.ncpl)
+
+            elif dis is not None:
+                modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                           top=dis.top.array, botm=dis.botm.array,
+                                           xoff=sr.xll, yoff=sr.yll,
+                                           angrot=sr.rotation)
+            else:
+                modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                           xoff=sr.xll, yoff=sr.yll,
+                                           angrot=sr.rotation)
 
         else:
             pass
 
         return PlotMapView(modelgrid=modelgrid, ax=ax, model=model,
-                           dis=dis, layer=layer,
-                           extent=extent)
+                           layer=layer, extent=extent)

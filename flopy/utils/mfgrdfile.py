@@ -11,6 +11,7 @@ import collections
 from flopy.utils.utils_def import FlopyBinaryData
 from flopy.discretization.structuredgrid import StructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
+from flopy.discretization.unstructuredgrid import UnstructuredGrid
 from flopy.utils.reference import SpatialReferenceUnstructured
 from flopy.utils.reference import SpatialReference
 import warnings
@@ -223,16 +224,15 @@ class MfGrdFile(FlopyBinaryData):
                 mg = StructuredGrid(delc, delr, top, botm, xoff=xorigin,
                                     yoff=yorigin, angrot=angrot)
             else:
-                # todo: updates to UnstructuredModelGrid when the class exists
                 iverts, verts = self.get_verts()
                 vertc = self.get_centroids()
                 xc = vertc[:, 0]
                 yc = vertc[:, 1]
-                mg = SpatialReferenceUnstructured(xc, yc, verts, iverts,
-                                                  [xc.shape[0]])
+                mg = UnstructuredGrid(verts, iverts, xc, yc, top, botm, idomain,
+                                      xoff=xorigin, yoff=yorigin, angrot=angrot)
 
         except:
-            print('could not set spatial reference for {}'.format(
+            print('could not set model grid for {}'.format(
                   self.file.name))
 
         return mg

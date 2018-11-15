@@ -989,8 +989,13 @@ class SpatialReference(object):
 
         """
         from flopy.plot.plotutil import PlotUtilities
-
-        ax = PlotUtilities._plot_array_helper(a, sr=self, axes=ax, **kwargs)
+        from flopy.discretization import StructuredGrid
+        mg = StructuredGrid(delc=self.delc,
+                            delr=self.delr,
+                            xoff=self.xll,
+                            yoff=self.yll,
+                            angrot=self.rotation)
+        ax = PlotUtilities._plot_array_helper(a, modelgrid=mg, axes=ax, **kwargs)
         return ax
 
     def export_array(self, filename, a, nodata=-9999,

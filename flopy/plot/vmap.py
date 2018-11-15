@@ -30,8 +30,6 @@ class VertexMapView(MapView):
         If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
     xul : float
@@ -48,18 +46,12 @@ class VertexMapView(MapView):
 
     Notes
     -----
-    ModelMap must know the position and rotation of the grid in order to make
-    the plot.  This information is contained in the SpatialReference class
-    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
-    If dis is None, then it looks for sr in model.dis.  If all of these
-    arguments are none, then it uses xul, yul, and rotation.  If none of these
-    arguments are provided, then it puts the lower-left-hand corner of the
-    grid at (0, 0).
+    #
 
     """
-    def __init__(self, modelgrid=None, model=None, ax=None, dis=None,
-                 layer=0, extent=None):
-        super(VertexMapView, self).__init__(ax=ax, model=model, dis=dis,
+    def __init__(self, modelgrid=None, model=None, ax=None, layer=0,
+                 extent=None):
+        super(VertexMapView, self).__init__(ax=ax, model=model,
                                             modelgrid=modelgrid, layer=layer,
                                             extent=extent)
 
@@ -375,7 +367,7 @@ class VertexMapView(MapView):
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         return NotImplementedError()
 
-    def plot_discharge(self, fja, dis=None, head=None, istep=1,
+    def plot_discharge(self, fja, head=None, istep=1,
                        normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
@@ -407,25 +399,17 @@ class VertexMapView(MapView):
         else:
             pivot = 'middle'
 
-        # todo: eventually remove dis reference!
         top = self.mg.top
         botm = self.mg.botm
         idomain = self.mg.idomain
-        if self.mg.top is None or self.mg.botm is None:
-            if dis is None:
-                if self.model is not None:
-                    dis = self.model.dis
-                    idomain = self.model.dis.idomain.array
-                    top = self.model.dis.top.array
-                    botm = self.model.dis.botm.array
 
-                else:
-                    err_msg = "ModelMap.plot_quiver() error: DIS package not found"
-                    raise AssertionError(err_msg)
-            else:
-                top = dis.top.array
-                botm = dis.botm.array
-                idomain = dis.idomain.array
+        if self.mg.top is None:
+            err = "StructuredModelGrid must have top and " \
+                  "botm defined to use plot_discharge()"
+            raise AssertionError(err)
+
+        if self.mg.idomain is None:
+            idomain = np.ones((self.mg.nlay, self.mg.ncpl), dtype=int)
 
         fja = np.array(fja)
         nlay = self.mg.nlay
@@ -451,8 +435,8 @@ class VertexMapView(MapView):
 
         laytyp = np.zeros((nlay,))
         if self.model is not None:
-            if self.model.sto is not None:
-                laytyp = self.model.sto.iconvert.array
+            if self.model.laytyp is not None:
+                laytyp = self.model.laytyp
 
         sat_thk = plotutil.PlotUtilities.\
             saturated_thickness(head, top,

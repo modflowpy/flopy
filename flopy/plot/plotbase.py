@@ -30,8 +30,6 @@ class PlotMapView(object):
         If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
     xul : float
@@ -48,16 +46,10 @@ class PlotMapView(object):
 
     Notes
     -----
-    ModelMap must know the position and rotation of the grid in order to make
-    the plot.  This information is contained in the SpatialReference class
-    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
-    If dis is None, then it looks for sr in model.dis.  If all of these
-    arguments are none, then it uses xul, yul, and rotation.  If none of these
-    arguments are provided, then it puts the lower-left-hand corner of the
-    grid at (0, 0).
+
 
     """
-    def __init__(self, modelgrid=None, model=None, dis=None,  ax=None,
+    def __init__(self, modelgrid=None, model=None, ax=None,
                  layer=0, extent=None):
 
         if plt is None:
@@ -69,8 +61,7 @@ class PlotMapView(object):
         if modelgrid is None and model is not None:
             modelgrid = model.modelgrid
 
-        # todo: remove SpatialReferenceUnstructured when an UnstructuredModelGrid
-        # todo: has been made
+        # todo: remove all SpatialReferenceUnstructured function calls
         try:
             tmp = modelgrid.grid_type
             if not isinstance(tmp, str):
@@ -79,23 +70,22 @@ class PlotMapView(object):
             tmp = "structured"
 
         if tmp == "structured":
-            self.__cls = StructuredMapView(ax=ax, model=model, dis=dis,
+            self.__cls = StructuredMapView(ax=ax, model=model,
                                            modelgrid=modelgrid, layer=layer,
                                            extent=extent)
 
         elif tmp == "unstructured":
             self.__cls = UnstructuredMapView(ax=ax, modelgrid=modelgrid,
-                                             dis=dis, model=model,
+                                             model=model,
                                              layer=layer, extent=extent)
 
         else:
-            self.__cls = VertexMapView(ax=ax, model=model, dis=dis,
+            self.__cls = VertexMapView(ax=ax, model=model,
                                        modelgrid=modelgrid, layer=layer,
                                        extent=extent)
 
         self.model = self.__cls.model
         self.layer = self.__cls.layer
-        self.dis = self.__cls.dis
         self.mg = self.__cls.mg
         self.ax = self.__cls.ax
 
@@ -165,11 +155,10 @@ class PlotMapView(object):
 
         """
         if ibound is None:
-            try:
-                bas = self.model.get_package('BAS6')
-                ibound = bas.ibound.array
-            except AttributeError:
-                ibound = self.mg.idomain
+            if self.mg.idomain is None:
+                raise AssertionError("Ibound/Idomain array must be provided")
+
+            ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -190,11 +179,13 @@ class PlotMapView(object):
         Parameters
         ----------
         ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+            ibound array to plot.  (Default is ibound in the modelgrid)
         color_noflow : string
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        color_vpt: string
+            Color for vertical pass through cells (Default is 'red')
 
         Returns
         -------
@@ -204,12 +195,14 @@ class PlotMapView(object):
         import matplotlib.colors
 
         if ibound is None:
-            try:
-                bas = self.model.get_package('BAS6')
-                ibound = bas.ibound.array
-            except:
-                ibound = self.mg.idomain
-                color_ch = color_vpt
+            if self.model is not None:
+                if self.model.version == "mf6":
+                    color_ch = color_vpt
+
+            if self.mg.idomain is None:
+                raise AssertionError("Ibound/Idomain array must be provided")
+
+            ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -408,6 +401,8 @@ class PlotMapView(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
+        fja : numpy.ndarray
+            MODFLOW's 'flow ja face' (required for vertex plotting)
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
@@ -430,15 +425,19 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
+        if dis is not None:
+            self.__cls.mg = plotutil._depreciated_dis_handler(modelgrid=self.mg,
+                                                              dis=dis)
+
         if self.mg.grid_type == "vertex":
-            return self.__cls.plot_discharge(fja=fja, dis=dis, head=head, istep=istep,
+            return self.__cls.plot_discharge(fja=fja, head=head, istep=istep,
                                              normalize=normalize, **kwargs)
 
         elif self.mg.grid_type == "unstructured":
             return self.__cls.plot_discharge()
 
         else:
-            return self.__cls.plot_discharge(frf=frf, fff=fff, dis=dis, flf=flf, head=head,
+            return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf, head=head,
                                              istep=istep, jstep=jstep, normalize=normalize,
                                              **kwargs)
 
@@ -891,8 +890,6 @@ class PlotCrossSection(object):
         The plot axis.  If not provided it, plt.gca() will be used.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
     line : dict
         Dictionary with either "row", "column", or "line" key. If key
         is "row" or "column" key value should be the zero-based row or
@@ -914,7 +911,7 @@ class PlotCrossSection(object):
 
     """
 
-    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, ax=None, model=None, modelgrid=None,
                  line=None, extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -933,7 +930,7 @@ class PlotCrossSection(object):
             tmp = "structured"
 
         if tmp == "structured":
-            self.__cls = StructuredCrossSection(ax=ax, model=model, dis=dis,
+            self.__cls = StructuredCrossSection(ax=ax, model=model,
                                                 modelgrid=modelgrid,
                                                 line=line, extent=extent)
 
@@ -941,12 +938,11 @@ class PlotCrossSection(object):
             raise NotImplementedError("Unstructured xc not yet implemented")
 
         else:
-            self.__cls = VertexCrossSection(ax=ax, model=model, dis=dis,
+            self.__cls = VertexCrossSection(ax=ax, model=model,
                                             modelgrid=modelgrid,
                                             line=line, extent=extent)
 
         self.model = self.__cls.model
-        self.dis = self.__cls.dis
         self.mg = self.__cls.mg
         self.ax = self.__cls.ax
         self.direction = self.__cls.direction

@@ -13,6 +13,7 @@ from flopy.utils import MfList, Util2d, Util3d, Transient2d, geometry
 from flopy.mf6.data.mfdataarray import MFArray
 from flopy.mf6.data.mfdatalist import MFTransientList
 from flopy.plot.plotbase import PlotMapView
+from flopy.datbase import DataType
 
 try:
     import shapefile
@@ -541,11 +542,33 @@ class PlotUtilities(object):
         if defaults['mflay'] is not None:
             inc = 1
 
-        # todo: all package.parent calls will have to be changed. Add model to package_interface
         axes = []
         for item, value in package.__dict__.items():
             caxs = []
-            if isinstance(value, MfList) or isinstance(value, MFTransientList):
+            # trap non-flopy specific data_types.
+            if isinstance(value, (str, int, float,
+                                  dict, np.ndarray,
+                                  bool)):
+                pass
+
+            elif isinstance(value, list):
+                for v in value:
+                    if isinstance(v, Util3d):
+                        if package.parent.verbose:
+                            print(
+                                  'plotting {} package Util3d instance: {}'.format(
+                                  package.name[0], item))
+                        fignum = list(range(defaults['initial_fig'],
+                                            defaults['initial_fig'] + inc))
+                        defaults['initial_fig'] = fignum[-1] + 1
+                        caxs.append(
+                            v.plot(filename_base=defaults['filename_base'],
+                                   file_extension=defaults['file_extension'],
+                                   mflay=defaults['mflay'],
+                                   fignum=fignum, model_name=model_name,
+                                   colorbar=True))
+
+            elif isinstance(value, (MfList, MFTransientList)):
                 if package.parent.verbose:
                     print('plotting {} package MfList instance: {}'.format(
                           package.name[0], item))
@@ -579,7 +602,7 @@ class PlotUtilities(object):
 
             elif isinstance(value, Util3d):
                 if package.parent.verbose:
-                    print('plotting {} package Util3d instance: {}'.format(
+                     print('plotting {} package Util3d instance: {}'.format(
                           package.name[0], item))
                 # fignum = list(range(ifig, ifig + inc))
                 fignum = list(range(defaults['initial_fig'],
@@ -608,35 +631,19 @@ class PlotUtilities(object):
                                    colorbar=True))
 
             elif isinstance(value, Transient2d):
-                if package.parent.verbose:
-                    print(
-                          'plotting {} package Transient2d instance: {}'.format(
-                           package.name[0], item))
-                fignum = list(range(defaults['initial_fig'],
-                                    defaults['initial_fig'] + inc))
-                defaults['initial_fig'] = fignum[-1] + 1
-                caxs.append(
-                    value.plot(filename_base=defaults['filename_base'],
-                               file_extension=defaults['file_extension'],
-                               kper=defaults['kper'],
-                               fignum=fignum, colorbar=True))
-
-            elif isinstance(value, list):
-                for v in value:
-                    if isinstance(v, Util3d):
-                        if package.parent.verbose:
-                            print(
-                                  'plotting {} package Util3d instance: {}'.format(
-                                  package.name[0], item))
-                        fignum = list(range(defaults['initial_fig'],
-                                            defaults['initial_fig'] + inc))
-                        defaults['initial_fig'] = fignum[-1] + 1
-                        caxs.append(
-                            v.plot(filename_base=defaults['filename_base'],
+                if value.array is not None:
+                    if package.parent.verbose:
+                        print(
+                              'plotting {} package Transient2d instance: {}'.format(
+                               package.name[0], item))
+                    fignum = list(range(defaults['initial_fig'],
+                                        defaults['initial_fig'] + inc))
+                    defaults['initial_fig'] = fignum[-1] + 1
+                    caxs.append(
+                        value.plot(filename_base=defaults['filename_base'],
                                    file_extension=defaults['file_extension'],
-                                   mflay=defaults['mflay'],
-                                   fignum=fignum, model_name=model_name,
-                                   colorbar=True))
+                                   kper=defaults['kper'],
+                                   fignum=fignum, colorbar=True))
 
             elif isinstance(value, MFArray):
                 if value.array is not None:
@@ -1126,7 +1133,7 @@ class PlotUtilities(object):
         return axes
 
     @staticmethod
-    def _plot_array_helper(plotarray, model=None, sr=None, axes=None,
+    def _plot_array_helper(plotarray, model=None, modelgrid=None, axes=None,
                            names=None, filenames=None, fignum=None,
                            mflay=None, **kwargs):
         """
@@ -1136,7 +1143,7 @@ class PlotUtilities(object):
             plotarray : np.array object
             model: fp.modflow.Modflow object
                 optional if spatial reference is provided
-            sr: fp.utils.SpatialReference object
+            modelgrid: fp.discretization.ModelGrid object
                 object that defines the spatial orientation of a modflow
                 grid within flopy. Optional if model object is provided
             axes: matplotlib.axes object
@@ -1171,14 +1178,9 @@ class PlotUtilities(object):
                       ' in order to plot LayerFile data.'
             raise PlotException(err_msg)
 
-        mg = None
-        # filter defaults from kwargs
         for key in defaults:
             if key in kwargs:
-                if key == "modelgrid":
-                    mg = kwargs.pop("modelgrid")
-                else:
-                    defaults[key] = kwargs.pop(key)
+                defaults[key] = kwargs.pop(key)
 
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2:
@@ -1197,12 +1199,12 @@ class PlotUtilities(object):
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            mm = PlotMapView(ax=axes[idx], model=model,
-                             modelgrid=mg, layer=k)
+            pmv = PlotMapView(ax=axes[idx], model=model,
+                             modelgrid=modelgrid, layer=k)
             if defaults['pcolor']:
-                cm = mm.plot_array(plotarray[k],
-                                   masked_values=defaults['masked_values'],
-                                   ax=axes[idx], **kwargs)
+                cm = pmv.plot_array(plotarray[k],
+                                    masked_values=defaults['masked_values'],
+                                    ax=axes[idx], **kwargs)
 
                 if defaults['colorbar']:
                     label = ''
@@ -1211,25 +1213,31 @@ class PlotUtilities(object):
                     plt.colorbar(cm, ax=axes[idx], shrink=0.5, label=label)
 
             if defaults['contour']:
-                cl = mm.contour_array(plotarray[k],
-                                      masked_values=defaults['masked_values'],
-                                      ax=axes[idx],
-                                      colors=defaults['colors'],
-                                      levels=defaults['levels'],
-                                      **kwargs)
+                cl = pmv.contour_array(plotarray[k],
+                                       masked_values=defaults['masked_values'],
+                                       ax=axes[idx],
+                                       colors=defaults['colors'],
+                                       levels=defaults['levels'],
+                                       **kwargs)
                 if defaults['clabel']:
                     axes[idx].clabel(cl, fmt=defaults['fmt'],**kwargs)
 
             if defaults['grid']:
-                mm.plot_grid(ax=axes[idx])
+                pmv.plot_grid(ax=axes[idx])
 
+            ib = None
             if defaults['inactive']:
-                try:
-                    ib = model.modelgrid.idomain
-                    # ib = model.bas6.ibound.array
-                    mm.plot_inactive(ibound=ib, ax=axes[idx])
-                except:
-                    pass
+                if modelgrid is not None:
+                    if modelgrid.idomain is not None:
+                        ib = modelgrid.idomain
+                        pmv.plot_inactive(ibound=ib, ax=axes[idx])
+
+                if ib is None:
+                    try:
+                        ib = model.modelgrid.idomain
+                        pmv.plot_inactive(ibound=ib, ax=axes[idx])
+                    except:
+                        pass
 
         if len(axes) == 1:
             axes = axes[0]
@@ -1305,18 +1313,18 @@ class PlotUtilities(object):
                                        defaults, names, fignum)
 
         for idx, k in enumerate(range(i0, i1)):
-            mm = PlotMapView(ax=axes[idx], model=model, layer=k)
+            pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
-            qm = mm.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
-                            color=package.bc_color)
+            qm = pmv.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
+                             color=package.bc_color)
 
             if defaults['grid']:
-                mm.plot_grid(ax=axes[idx])
+                pmv.plot_grid(ax=axes[idx])
 
             if defaults['inactive']:
                 try:
                     ib = model.modelgrid.idomain
-                    mm.plot_inactive(ibound=ib, ax=axes[idx])
+                    pmv.plot_inactive(ibound=ib, ax=axes[idx])
                 except:
                     pass
 
@@ -1502,7 +1510,6 @@ class PlotUtilities(object):
             Saturated thickness of shape (nlay, nrow, ncol).
 
         """
-        # todo: update the laytyp based on flopy6 or flopy2005!
         if head.ndim == 3:
             head = np.copy(head)
             nlay, nrow, ncol = head.shape
@@ -2104,7 +2111,6 @@ class UnstructuredPlotUtilities(object):
             v2 = [x2 - x3, y2 - y3]
             xp = v1[0] * v2[1] - v1[1] * v2[0]
 
-            # todo: devise a way to remove this loop!
             # loop finds which edges the line intersects
             cells = []
             cell_vertex_ix = []
@@ -2443,7 +2449,6 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
     return pc
 
 
-# todo: move these to PlotUtilities
 def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
                    edgecolor='scaled', facecolor='scaled',
                    a=None, masked_values=None, idx=None, **kwargs):
@@ -2530,7 +2535,6 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     return pc
 
 
-# todo: move this under the appropriate plotting Class
 def cvfd_to_patch_collection(verts, iverts):
     """
     Create a patch collection from control volume vertices and incidence list
@@ -2931,12 +2935,13 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
 
 def _set_coord_info(mg, xul, yul, xll, yll, rotation):
-    # remove this if interface is okay
     import warnings
     if xul is not None and yul is not None:
         warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                       PendingDeprecationWarning)
-        mg._angrot = rotation
+        if rotation is not None:
+            mg._angrot = rotation
+
         mg.set_coord_info(xoff=mg._xul_to_xll(xul),
                           yoff=mg._yul_to_yll(yul),
                           angrot=rotation)
@@ -2947,6 +2952,44 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
     return mg
+
+
+def _depreciated_dis_handler(modelgrid, dis):
+    # creates a new modelgrid instance with the dis information
+    from flopy.discretization import StructuredGrid, VertexGrid, UnstructuredGrid
+    import warnings
+    warnings.warn('the dis parameter has been depreciated.',
+                  PendingDeprecationWarning)
+    if modelgrid.grid_type == "vertex":
+        modelgrid = VertexGrid(modelgrid.vertices,
+                               modelgrid.cell2d,
+                               dis.top.array,
+                               dis.botm.array,
+                               idomain=modelgrid.idomain,
+                               xoff=modelgrid.xoffset,
+                               yoff=modelgrid.yoffset,
+                               angrot=modelgrid.angrot)
+    if modelgrid.grid_type == "unstructured":
+        modelgrid = UnstructuredGrid(modelgrid._vertices,
+                                     modelgrid._iverts,
+                                     modelgrid._xc,
+                                     modelgrid._yc,
+                                     dis.top.array,
+                                     dis.botm.array,
+                                     idomain=modelgrid.idomain,
+                                     xoff=modelgrid.xoffset,
+                                     yoff=modelgrid.yoffset,
+                                     angrot=modelgrid.angrot)
+    else:
+        modelgrid = StructuredGrid(delc=dis.delc.array,
+                                   delr=dis.delr.array,
+                                   top=dis.top.array,
+                                   botm=dis.botm.array,
+                                   idomain=modelgrid.idomain,
+                                   xoff=modelgrid.xoffset,
+                                   yoff=modelgrid.yoffset,
+                                   angrot=modelgrid.angrot)
+    return modelgrid
 
 
 

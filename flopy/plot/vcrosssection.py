@@ -20,11 +20,10 @@ class VertexCrossSection(CrossSection):
     ----------
 
     """
-    def __init__(self, ax=None, model=None, dis=None, modelgrid=None,
+    def __init__(self, ax=None, model=None, modelgrid=None,
                  line=None, extent=None):
-        super(VertexCrossSection, self).__init__(ax=ax, model=model, dis=dis,
-                                                 modelgrid=modelgrid, line=line,
-                                                 extent=extent)
+        super(VertexCrossSection, self).__init__(ax=ax, model=model,
+                                                 modelgrid=modelgrid)
 
         if line is None:
             err_msg = 'line must be specified.'
@@ -95,16 +94,21 @@ class VertexCrossSection(CrossSection):
             s += '   {} points intersect the grid.'.format(len(self.xypts))
             raise Exception(s)
 
-        top = self.dis.top.array
+        top = self.mg.top
         top.shape = (1, -1)
-        botm = self.dis.botm.array
+        botm = self.mg.botm
         nlay = len(botm)
         ncpl = self.mg.ncpl
+
         elev = list(top.copy())
         for k in range(nlay):
             elev.append(botm[k, :])
 
         self.elev = np.array(elev)
+
+        self.idomain = self.mg.idomain
+        if self.mg.idomain is None:
+            self.idomain = np.ones((nlay, ncpl), dtype=int)
 
         # choose a projection direction based on maximum information
         xpts = []
@@ -636,7 +640,7 @@ class VertexCrossSection(CrossSection):
                                   head=head, cmap=cmap, norm=norm, **kwargs)
         return patches
 
-    def plot_discharge(self, fja=None, head=None, dis=None,
+    def plot_discharge(self, fja=None, head=None,
                        kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
@@ -720,8 +724,8 @@ class VertexCrossSection(CrossSection):
 
         laytyp = np.zeros((nlay,))
         if self.model is not None:
-            if self.model.sto is not None:
-                laytyp = self.model.sto.iconvert.array
+            if self.model.laytyp is not None:
+                laytyp = self.model.laytyp
 
         sat_thk = plotutil.PlotUtilities. \
             saturated_thickness(head, top,
@@ -730,7 +734,7 @@ class VertexCrossSection(CrossSection):
 
         frf, fff, flf = plotutil.UnstructuredPlotUtilities. \
             vectorize_flow(fja, model_grid=self.mg,
-                           idomain=self.mg.idomain)
+                           idomain=self.idomain)
 
         qx, qy, qz = plotutil.UnstructuredPlotUtilities. \
             specific_discharge(frf, fff, flf,

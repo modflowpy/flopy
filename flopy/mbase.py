@@ -117,6 +117,34 @@ class ModelInterface(object):
             'must define export in child '
             'class to use this base class')
 
+    @property
+    @abc.abstractmethod
+    def laytyp(self):
+        raise NotImplementedError(
+            'must define laytyp in child '
+            'class to use this base class')
+
+    @property
+    @abc.abstractmethod
+    def hdry(self):
+        raise NotImplementedError(
+            'must define hdry in child '
+            'class to use this base class')
+
+    @property
+    @abc.abstractmethod
+    def hnoflo(self):
+        raise NotImplementedError(
+            'must define hnoflo in child '
+            'class to use this base class')
+
+    @property
+    @abc.abstractmethod
+    def laycbd(self):
+        raise NotImplementedError(
+            'must define laycbd in child '
+            'class to use this base class')
+
 
 class BaseModel(ModelInterface):
     """
@@ -263,6 +291,43 @@ class BaseModel(ModelInterface):
     @version.setter
     def version(self, version):
         self._version = version
+
+    @property
+    def laytyp(self):
+        if self.get_package("LPF") is not None:
+            return self.get_package("LPF").laytyp.array
+        if self.get_package("BCF6") is not None:
+            return self.get_package("BCF6").laycon.array
+        if self.get_package("UPW") is not None:
+            return self.get_package("UPW").laycon.array
+
+        return None
+
+    @property
+    def hdry(self):
+        if self.get_package("LPF") is not None:
+            return self.get_package("LPF").hdry
+        if self.get_package("BCF6") is not None:
+            return self.get_package("BCF6").hdry
+        if self.get_package("UPW") is not None:
+            return self.get_package("UPW").hdry
+        return None
+
+    @property
+    def hnoflo(self):
+        try:
+            bas6 = self.get_package("BAS6")
+            return bas6.hnoflo
+        except AttributeError:
+            return None
+
+    @property
+    def laycbd(self):
+        try:
+            dis = self.get_package("DIS")
+            return dis.laycbd.array
+        except AttributeError:
+            return None
 
     # we don't need these - no need for controlled access to array_free_format
     # def set_free_format(self, value=True):

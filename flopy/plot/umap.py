@@ -26,19 +26,18 @@ class UnstructuredMapView(object):
     Parameters:
     ----------
         :param object modelgrid:
-            flopy.utils.reference.SpatialReferenceUnstructured
+            flopy.discretization.unstructuredgrid.UnstructuredGrid
             object
         :param object model: flopy.modflow.Modflow object
         :param object ax: matplotlib.axes object
         :param list/np.ndarray extent:  a list of xmin, xmax, ymin, ymax
             as boundaries for plotting
     """
-    def __init__(self, modelgrid=None, model=None, dis=None, ax=None,
+    def __init__(self, modelgrid=None, model=None, ax=None,
                  extent=None, layer=None):
 
         self.mg = None
         self.layer = layer
-        self.dis = dis
         self.model = model
 
         if model is not None:
@@ -63,7 +62,7 @@ class UnstructuredMapView(object):
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.mg.get_extent()
+            self._extent = self.mg.extent
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -96,7 +95,7 @@ class UnstructuredMapView(object):
         else:
             ax = self.ax
 
-        pc = plotutil.plot_cvfd(self.mg.verts, self.mg.iverts, a=a,
+        pc = plotutil.plot_cvfd(self.mg._vertices, self.mg._iverts, a=a,
                                 ax=ax)
 
         if 'vmin' in kwargs:
@@ -140,7 +139,7 @@ class UnstructuredMapView(object):
                 cmap = kwargs.pop('cmap')
             cmap = None
 
-        contour_set = ax.tricontour(self.mg.xcenter, self.mg.ycenter,
+        contour_set = ax.tricontour(self.mg.xcellcenters, self.mg.ycellcenters,
                                     a, **kwargs)
 
         ax.set_xlim(self.extent[0], self.extent[1])

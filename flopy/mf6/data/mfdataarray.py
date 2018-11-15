@@ -1117,7 +1117,6 @@ class MFArray(mfdata.MFMultiDimVar):
                                                      fignum=fignum,
                                                      **kwargs)
         elif len(self.array.shape) == 3:
-            # todo: trap for array shape here or potentially in util3d helper?
             axes = PlotUtilities._plot_util3d_helper(self,
                                                      filename_base=filename_base,
                                                      file_extension=file_extension,
