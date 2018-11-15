@@ -3,9 +3,9 @@ import itertools
 from .grid import Grid, CachedData
 
 
-class VertexGrid(Grid):
+class UnstructuredGrid(Grid):
     """
-    class for a vertex model grid
+    Class for an unstructured model grid
 
     Parameters
     ----------
@@ -26,30 +26,60 @@ class VertexGrid(Grid):
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
     """
+    def __init__(self, vertices, iverts, xcenters, ycenters,
+                 top=None, botm=None, idomain=None, lenuni=None,
+                 ncpl=None, epsg=None, proj4="EPSG:4326", prj=None,
+                 xoff=0., yoff=0., angrot=0., layered=True):
+        super(UnstructuredGrid, self).__init__(self.grid_type, top, botm, idomain,
+                                               lenuni, epsg, proj4, prj,
+                                               xoff, yoff, angrot)
 
-    def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, grid_type='vertex'):
-        super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
-                                         epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
-        self._cell2d = cell2d
+        self._iverts = iverts
         self._top = top
         self._botm = botm
-        self._idomain = idomain
+        self._ncpl = ncpl
+        self._layered = layered
+        self._xc = xcenters
+        self._yc = ycenters
+
+        if self.layered:
+            assert np.all([n == len(iverts) for n in ncpl])
+            assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
+            assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
+        else:
+            msg = ('Length of iverts must equal ncpl.sum '
+                   '({} {})'.format(len(iverts), ncpl))
+            assert len(iverts) == ncpl.sum(), msg
+            assert np.array(self.xcellcenters).shape[0] == self.ncpl
+            assert np.array(self.ycellcenters).shape[0] == self.ncpl
+
+
+    @property
+    def grid_type(self):
+        return "unstructured"
 
     @property
     def nlay(self):
-        if self._botm is not None:
-            return len(self._botm)
+        if self.layered:
+            return len(self.ncpl)
+        else:
+            return 1
+
+    @property
+    def layered(self):
+        return self._layered
 
     @property
     def ncpl(self):
-        return len(self._botm[0])
+        return self._ncpl
 
     @property
     def shape(self):
-        return self.nlay, self.ncpl
+        if isinstance(self.ncpl, (list, np.ndarray)):
+            return self.nlay, self.ncpl[0]
+        else:
+            return self.nlay, self.ncpl
 
     @property
     def extent(self):
@@ -106,7 +136,7 @@ class VertexGrid(Grid):
         return self._cache_dict[cache_index].data
 
     def intersect(self, x, y, local=True):
-        x, y = super(VertexGrid, self).intersect(x, y, local)
+        x, y = super(UnstructuredGrid, self).intersect(x, y, local)
         raise Exception('Not implemented yet')
 
     def get_cell_vertices(self, cellid):
@@ -123,33 +153,26 @@ class VertexGrid(Grid):
         cache_index_cc = 'cellcenters'
         cache_index_vert = 'xyzgrid'
 
-        vertexdict = {v[0]: [v[1], v[2]]
-                      for v in self._vertices}
-        xcenters = []
-        ycenters = []
+        vertexdict = {ix: list(v[-2:])
+                      for ix, v in enumerate(self._vertices)}
+
+        xcenters = self._xc
+        ycenters = self._yc
         xvertices = []
         yvertices = []
 
         # build xy vertex and cell center info
-        for cell2d in self._cell2d:
-            cell2d = tuple(cell2d)
-            xcenters.append(cell2d[1])
-            ycenters.append(cell2d[2])
-
-            vert_number = []
-            for i in cell2d[4:]:
-                if i is not None:
-                    vert_number.append(int(i))
+        for iverts in self._iverts:
 
             xcellvert = []
             ycellvert = []
-            for ix in vert_number:
+            for ix in iverts:
                 xcellvert.append(vertexdict[ix][0])
                 ycellvert.append(vertexdict[ix][1])
+
             xvertices.append(xcellvert)
             yvertices.append(ycellvert)
 
-        # build z cell centers
         zvertices, zcenters = self._zcoords()
 
         if self._has_ref_coordinates:
@@ -173,42 +196,58 @@ class VertexGrid(Grid):
                                                          yvertices,
                                                          zvertices])
 
+    @classmethod
+    def from_argus_export(cls, fname, nlay=1):
+        """
+        Create a new SpatialReferenceUnstructured grid from an Argus One
+        Trimesh file
 
-if __name__ == "__main__":
-    import os
-    import flopy as fp
+        Parameters
+        ----------
+        fname : string
+            File name
 
-    ws = "../../examples/data/mf6/test003_gwfs_disv"
-    name = "mfsim.nam"
+        nlay : int
+            Number of layers to create
 
-    sim = fp.mf6.modflow.MFSimulation.load(sim_name=name, sim_ws=ws)
+        Returns
+        -------
+            sru : flopy.utils.reference.SpatialReferenceUnstructured
 
-    print(sim.model_names)
-    ml = sim.get_model("gwf_1")
+        """
+        from ..utils.geometry import get_polygon_centroid
+        f = open(fname, 'r')
+        line = f.readline()
+        ll = line.split()
+        ncells, nverts = ll[0:2]
+        ncells = int(ncells)
+        nverts = int(nverts)
+        verts = np.empty((nverts, 2), dtype=np.float)
+        xc = np.empty((ncells), dtype=np.float)
+        yc = np.empty((ncells), dtype=np.float)
 
-    dis = ml.dis
+        # read the vertices
+        f.readline()
+        for ivert in range(nverts):
+            line = f.readline()
+            ll = line.split()
+            c, iv, x, y = ll[0:4]
+            verts[ivert, 0] = x
+            verts[ivert, 1] = y
 
-    t = VertexGrid(dis.vertices.array, dis.cell2d.array, top=dis.top.array,
-                   botm=dis.botm.array, idomain=dis.idomain.array,
-                   epsg=26715, xoff=0, yoff=0, angrot=45)
+        # read the cell information and create iverts, xc, and yc
+        iverts = []
+        for icell in range(ncells):
+            line = f.readline()
+            ll = line.split()
+            ivlist = []
+            for ic in ll[2:5]:
+                ivlist.append(int(ic) - 1)
+            if ivlist[0] != ivlist[-1]:
+                ivlist.append(ivlist[0])
+            iverts.append(ivlist)
+            xc[icell], yc[icell] = get_polygon_centroid(verts[ivlist, :])
 
-    sr_x = t.xvertices
-    sr_y = t.yvertices
-    sr_xc = t.xcellcenters
-    sr_yc = t.ycellcenters
-    sr_lc = t.grid_lines
-    sr_e = t.extent
-
-    print('break')
-
-    t.use_ref_coords = False
-    x = t.xvertices
-    y = t.yvertices
-    z = t.zvertices
-    xc = t.xcellcenters
-    yc = t.ycellcenters
-    zc = t.zcellcenters
-    lc = t.grid_lines
-    e = t.extent
-
-    print('break')
+        # close file and return spatial reference
+        f.close()
+        return cls(verts, iverts, xc, yc, ncpl=np.array(nlay * [len(iverts)]))

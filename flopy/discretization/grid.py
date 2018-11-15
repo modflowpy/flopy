@@ -137,6 +137,8 @@ class Grid(object):
         self._prj = prj
         self._xoff = xoff
         self._yoff = yoff
+        if angrot is None:
+            angrot = 0.0
         self._angrot = angrot
         self._cache_dict = {}
 
@@ -323,6 +325,8 @@ class Grid(object):
             xoff = self._xoff
         if yoff is None:
             yoff = self._yoff
+        if angrot is None:
+            angrot = self._angrot
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
