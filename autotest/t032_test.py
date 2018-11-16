@@ -50,7 +50,7 @@ def test_polygon_from_ij():
              zip(recarray.i, recarray.j)]
 
     assert geoms[0].type == 'Polygon'
-    assert np.abs(geoms[0].bounds[-1] - 5169784.473861726) < 1e-4
+    assert np.abs(geoms[0].bounds[-1] - 5169292.893203464) < 1e-4
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, epsg=26715)
     ep = epsgRef()
