@@ -2507,6 +2507,20 @@ class MFData(DataInterface):
             'must define plotable in child '
             'class to use this base class')
 
+    def export(self, f, **kwargs):
+        from flopy.export import utils
+
+        if self.data_type == DataType.array2d and len(self.array.shape) == 2 \
+                and self.array.shape[1] > 0:
+            return utils.array2d_export(f, self, **kwargs)
+        elif self.data_type == DataType.array3d:
+            return utils.array3d_export(f, self, **kwargs)
+        elif self.data_type == DataType.transient2d:
+            return utils.transient2d_export(f, self, **kwargs)
+        elif self.data_type == DataType.transientlist:
+            return utils.mflist_export(f, self, **kwargs)
+        return utils.transient2d_export(f, self, **kwargs)
+
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
         self._data_storage = None
