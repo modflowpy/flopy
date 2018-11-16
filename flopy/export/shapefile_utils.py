@@ -19,9 +19,20 @@ def import_shapefile():
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
 
+
 def shapefile_version(sf):
     """
     Return the shapefile major version number
+    Parameters
+    ----------
+    sf : shapefile package
+
+    Returns
+    -------
+    int
+    """
+    return int(sf.__version__.split('.')[0])
+
 
 def write_gridlines_shapefile(filename, mg):
     """
