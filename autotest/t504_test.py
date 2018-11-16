@@ -55,6 +55,7 @@ def test001a_tharmonic():
     model = sim.get_model(model_name)
     model.export('{}/tharmonic.nc'.format(model.model_ws))
     model.export('{}/tharmonic.shp'.format(model.model_ws))
+    model.dis.botm.export('{}/botm.shp'.format(model.model_ws))
 
     # write simulation to new location
     sim.write_simulation()
