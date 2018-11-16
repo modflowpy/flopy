@@ -9,12 +9,10 @@ from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  #read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
+from ..export.shapefile_utils import import_shapefile, shapefile_version
 
-try:
-    import shapefile
-except:
-    raise Exception('Error importing shapefile: ' +
-                    'try pip (or conda) install pyshp')
+shapefile = import_shapefile()
+sfv = shapefile_version(shapefile)
 
 
 # todo
@@ -57,31 +55,44 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
+
     if featuretype.lower() not in ['point', 'line', 'polygon']:
         raise Exception('Unrecognized feature type: {}'.format(featuretype))
 
     if featuretype.lower() == 'line':
-        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
             wr.line(line)
             wr.record(i)
 
     elif featuretype.lower() == 'point':
-        wr = shapefile.Writer(shapeType=shapefile.POINT)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POINT)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
             wr.point(point[0], point[1])
             wr.record(i)
 
     elif featuretype.lower() == 'polygon':
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+        if sfv < 2:
+            wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+        else:
+            wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
             wr.poly(polygon)
             wr.record(i)
 
-    wr.save(filename)
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
     return
 
 
@@ -1593,7 +1604,7 @@ class Gridgen(object):
         else:
             s += '  DELR = OPEN/CLOSE delr.dat\n'
             fname = os.path.join(self.model_ws, 'delr.dat')
-            np.savetxt(fname, delr)
+            np.savetxt(fname, np.atleast_2d(delr))
 
         # delc
         delc = self.dis.delc.array
@@ -1602,7 +1613,7 @@ class Gridgen(object):
         else:
             s += '  DELC = OPEN/CLOSE delc.dat\n'
             fname = os.path.join(self.model_ws, 'delc.dat')
-            np.savetxt(fname, delc)
+            np.savetxt(fname, np.atleast_2d(delc))
 
         # top
         top = self.dis.top.array

@@ -1,7 +1,7 @@
 FloPy Changes
 -----------------------------------------------
 ### Version 3.2.11
-* 
+* Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
 
 * Bug fixes:
     * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
