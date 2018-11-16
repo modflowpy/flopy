@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import os
 import numpy as np
-
+from ..discretization import StructuredGrid
 
 def start_tag(f, tag, indent_level, indent_char='  '):
     s = indent_level * indent_char + tag
@@ -35,8 +35,7 @@ class Vtk(object):
             os.remove(output_filename)
         self.output_filename = output_filename
 
-        assert model.dis is not None
-        self.model = model
+        self.model = model.modelgrid
         self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
 
         self.arrays = {}
@@ -97,10 +96,10 @@ class Vtk(object):
 
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
-        dis = self.model.dis
         mg = self.model.modelgrid
-        z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
-                       dis.botm.array])
+        assert(isinstance(mg, StructuredGrid))
+        z = np.vstack([mg.top.reshape(1, mg.nrow, mg.ncol),
+                       mg.botm])
         if shared_vertex:
             verts, iverts = self.get_3d_shared_vertex_connectivity(mg)
         else:
@@ -186,7 +185,9 @@ class Vtk(object):
         # data
         nlay = a.shape[0]
 
-        if ibound is not None:
+        # combine ibound with laycbd when model supports laycbd
+        if ibound is not None and hasattr(self.model, 'dis') and \
+                hasattr(self.model.dis, 'laycbd'):
             cbd = np.where(self.model.dis.laycbd.array > 0)
             ibound = np.insert(ibound, cbd[0]+1, ibound[cbd[0],:,:], axis=0)
 

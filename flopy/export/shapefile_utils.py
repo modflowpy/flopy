@@ -3,12 +3,13 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import shutil
+import json
 import numpy as np
 import os
 import sys
-import numpy.lib.recfunctions as rf
+import warnings
 from ..datbase import DataType, DataInterface, DataListInterface
-from ..utils import Util2d, Util3d, Transient2d, MfList
+from ..utils import Util2d, Util3d, Transient2d, MfList, SpatialReference
 
 
 def import_shapefile():
@@ -57,7 +58,14 @@ def write_gridlines_shapefile(filename, mg):
     else:
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
-    for i, line in enumerate(mg.get_grid_lines()):
+    if isinstance(mg, SpatialReference):
+        grid_lines = mg.get_grid_lines()
+        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
+                      " instead.",
+                      category=DeprecationWarning)
+    else:
+        grid_lines = mg.grid_lines()
+    for i, line in enumerate(grid_lines):
         wr.poly([line])
         wr.record(i)
     if sfv < 2:
@@ -93,15 +101,19 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
         wr = shapefile.Writer(shapeType=shapefile.POLYGON)
     else:
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
-    if mg.grid_type == 'structured':
+    if isinstance(mg, SpatialReference):
+        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
+                      " instead.",
+                      category=DeprecationWarning)
+        wr.field("row", "N", 10, 0)
+        wr.field("column", "N", 10, 0)
+    elif mg.grid_type == 'structured':
         wr.field("row", "N", 10, 0)
         wr.field("column", "N", 10, 0)
     elif mg.grid_type == 'vertex':
         wr.field("node", "N", 10, 0)
     else:
         raise Exception('Grid type {} not supported.'.format(mg.grid_type))
-
-
 
     arrays = []
     names = list(array_dict.keys())
@@ -124,7 +136,7 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
         wr.field(name, *get_pyshp_field_info(array.dtype.name))
         arrays.append(array)
 
-    if mg.grid_type == 'structured':
+    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         for i in range(mg.nrow):
             for j in range(mg.ncol):
                 try:
@@ -152,6 +164,7 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
     print('wrote {}'.format(filename))
     return
 
+
 def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                           epsg=None, prj=None):
 
@@ -163,7 +176,12 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
         w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
-    if mg.grid_type == 'structured':
+    if isinstance(mg, SpatialReference):
+        verts = copy.deepcopy(mg.vertices)
+        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
+                      " instead.",
+                      category=DeprecationWarning)
+    elif mg.grid_type == 'structured':
         verts = [mg.get_cell_vertices(i, j)
                  for i in range(mg.nrow)
                  for j in range(mg.ncol)]
@@ -175,7 +193,7 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
 
 
     # set up the attribute fields
-    if mg.grid_type == 'structured':
+    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         names = ['node', 'row', 'column'] + list(array_dict.keys())
         names = enforce_10ch_limit(names)
         dtypes = [('node', np.dtype('int')),
@@ -194,7 +212,7 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
     for n in names:
         w.field(n, *fieldinfo[n])
 
-    if mg.grid_type == 'structured':
+    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         # set-up array of attributes of shape ncells x nattributes
         node = list(range(1, mg.ncol * mg.nrow + 1))
         col = list(range(1, mg.ncol + 1)) * mg.nrow
@@ -494,7 +512,7 @@ def shp2recarray(shpname):
     return recarray
 
 
-def recarray2shp(recarray, geoms, shpname='recarray.shp', sr=None,
+def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
                  epsg=None, prj=None,
                  **kwargs):
     """
@@ -587,30 +605,18 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', sr=None,
         w.save(shpname)
     else:
         w.close()
-    write_prj(shpname, sr, epsg, prj)
+    write_prj(shpname, mg, epsg, prj)
     print('wrote {}'.format(shpname))
     return
 
 
-def write_prj(shpname, sr=None, epsg=None, prj=None,
+def write_prj(shpname, mg=None, epsg=None, prj=None,
               wkt_string=None):
     # projection file name
     prjname = shpname.replace('.shp', '.prj')
 
-    # temporary fix until code is properly refactored to
-    # pass a new style SpatialReference object through.
-    #if isinstance(sr, StructuredGrid):
-    #    pass
-
-    #if sr is not None and \
-    #        not isinstance(sr, SpatialReference) and \
-    #        not isinstance(sr, OGsr):
-    #    try:
-    #        sr = sr.sr
-    #    except:
-    #        raise TypeError('Unrecognized input type for "sr"')
     # figure which CRS option to use
-    # prioritize args over SpatialReference
+    # prioritize args over grid reference
     # no proj4 option because it is too difficult
     # to create prjfile from proj4 string without OGR
     prjtxt = wkt_string
@@ -620,8 +626,8 @@ def write_prj(shpname, sr=None, epsg=None, prj=None,
     elif prj is not None:
         shutil.copy(prj, prjname)
 
-    elif sr is not None:
-        if sr.epsg is not None:
+    elif mg is not None:
+        if mg.epsg is not None:
             prjtxt = CRS.getprj(epsg)
 
     else:
@@ -899,6 +905,7 @@ class CRS(object):
         """
         return CRS.get_spatialreference(epsg, text='proj4')
 
+
 class EpsgReference:
     """Sets up a local database of projection file text referenced by epsg code.
     The database is located in the site packages folder in epsgref.py, which
@@ -906,8 +913,19 @@ class EpsgReference:
     """
 
     def __init__(self):
-        sp = [f for f in sys.path if f.endswith('site-packages')][0]
-        self.location = os.path.join(sp, 'epsgref.py')
+        try:
+            from appdirs import user_data_dir
+        except ImportError:
+            user_data_dir = None
+        if user_data_dir:
+            datadir = user_data_dir('flopy')
+        else:
+            # if appdirs is not installed, use user's home directory
+            datadir = os.path.join(os.path.expanduser('~'), '.flopy')
+        if not os.path.isdir(datadir):
+            os.makedirs(datadir)
+        dbname = 'epsgref.json'
+        self.location = os.path.join(datadir, dbname)
 
     def _remove_pyc(self):
         try:  # get rid of pyc file
@@ -931,8 +949,11 @@ class EpsgReference:
 
     def add(self, epsg, prj):
         """add an epsg code to epsgref.py"""
-        with open(self.location, 'a') as epsgfile:
-            epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+        data = {}
+        data[epsg] = prj
+        with open(self.location, 'w') as epsgfile:
+            json.dump(data, epsgfile, indent=0)
+            epsgfile.write('\n')
 
     def remove(self, epsg):
         """removes an epsg entry from epsgref.py"""

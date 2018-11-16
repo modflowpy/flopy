@@ -35,8 +35,8 @@ def get_var_array_dict(m):
 def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
                     **kwargs):
     """ helper to export an ensemble of model instances.  Assumes
-    all models have same dis and sr, only difference is properties and
-    boundary conditions.  Assumes model.nam.split('_')[-1] is the
+    all models have same dis and reference information, only difference is
+    properties and boundary conditions.  Assumes model.nam.split('_')[-1] is the
     realization suffix to use in the netcdf variable names
     """
     f_in, f_out = None, None
@@ -125,8 +125,7 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
 
 
 def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
-                            text='',
-                            mask_vals=[], mask_array3d=None):
+                            text='', mask_vals=[], mask_array3d=None):
     if logger:
         logger.log("creating array for {0}".format(
             var_name))
@@ -517,7 +516,7 @@ def mflist_export(f, mfl, **kwargs):
             prj = kwargs.get('prj', None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(ra, geoms=polys, shpname=f,
-                         sr=model_grid, epsg=epsg, prj=prj)
+                         mg=model_grid, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()

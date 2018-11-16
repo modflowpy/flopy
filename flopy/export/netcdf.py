@@ -129,16 +129,15 @@ class NetCdf(object):
 
     Notes
     -----
-    This class relies heavily on the ModflowDis object,
-    including these attributes: lenuni, itmuni, start_datetime, sr
-    (SpatialReference).  Make sure these attributes have meaningful values.
+    This class relies heavily on the grid and modeltime objects,
+    including these attributes: lenuni, itmuni, start_datetime, and proj4.
+    Make sure these attributes have meaningful values.
 
     """
 
     def __init__(self, output_filename, model, time_values=None,
-                 z_positive='up',
-                 verbose=None, prj=None,
-                 logger=None, forgive=False):
+                 z_positive='up', verbose=None, prj=None, logger=None,
+                 forgive=False):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
@@ -170,7 +169,8 @@ class NetCdf(object):
         elif self.model_grid.grid_type == 'vertex':
             self.dimension_names = ('layer', 'ncpl')
         else:
-            raise Exception('Grid type {} not supported.'.format(mg.grid_type))
+            raise Exception('Grid type {} not supported.'.format(
+                self.model_grid.grid_type))
 
         try:
             import dateutil.parser
