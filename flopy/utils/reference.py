@@ -1810,8 +1810,8 @@ class epsgRef:
     """
 
     def __init__(self):
-		warnings.warn(
-				#epsgRef has been deprecated.", category=DeprecationWarning)
+        warnings.warn(
+            "epsgRef has been deprecated.", category=DeprecationWarning)
         try:
             from appdirs import user_data_dir
         except ImportError:
