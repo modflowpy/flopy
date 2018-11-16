@@ -175,8 +175,80 @@ class UnstructuredMapView(object):
     def plot_inactive(self):
         raise NotImplementedError("Function must be called in PlotMapView")
 
-    def plot_bc(self):
-        raise NotImplementedError()
+    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+                plotAll=False, **kwargs):
+        """
+        Plot boundary conditions locations for a specific boundary
+        type from a flopy model
+
+        Parameters
+        ----------
+        ftype : string
+            Package name string ('WEL', 'GHB', etc.). (Default is None)
+        package : flopy.modflow.Modflow package class instance
+            flopy package class instance. (Default is None)
+        kper : int
+            Stress period to plot
+        color : string
+            matplotlib color string. (Default is None)
+        plotAll : bool
+            unused parameter in unstructured grid
+        **kwargs : dictionary
+            keyword arguments passed to matplotlib.collections.PatchCollection
+
+        Returns
+        -------
+        quadmesh : matplotlib.collections.QuadMesh
+
+        """
+        if plotAll:
+            print("plotAll is not used for unstructued grid plotting")
+
+        if package is not None:
+            p = package
+            ftype = p.name[0]
+
+        elif self.model is not None:
+            if ftype is None:
+                raise Exception('ftype not specified')
+            ftype = ftype.upper()
+            p = self.model.get_package(ftype)
+
+        else:
+            raise Exception('Cannot find package to plot')
+
+        arr_dict = p.stress_period_data.to_array(kper)
+        if not arr_dict:
+            return None
+
+        for key in arr_dict:
+            fluxes = np.array(arr_dict[key])
+            break
+
+        plotarray = np.zeros(fluxes.shape, dtype=np.int)
+
+        # Plot the list locations
+        plotarray[fluxes != 0] = 1
+
+        # mask the plot array
+        plotarray = np.ma.masked_equal(plotarray, 0)
+
+        # set the colormap
+        if color is None:
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
+            else:
+                c = plotutil.bc_color_dict['default']
+        else:
+            c = color
+
+        cmap = matplotlib.colors.ListedColormap(['0', c])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+        ax = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
+        return ax
 
     def plot_discharge(self):
         raise NotImplementedError()

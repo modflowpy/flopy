@@ -73,21 +73,10 @@ class StructuredMapView(MapView):
         If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
+    modelgrid : flopy.modflow.StructuredGrid
+        flopy StructuredGrid object
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees.
-    extent : tuple of floats
-        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
 
     Notes
     -----

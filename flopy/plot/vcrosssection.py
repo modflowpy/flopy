@@ -18,6 +18,22 @@ class VertexCrossSection(CrossSection):
 
     Parameters
     ----------
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    modelgrid : flopy.discretization.VertexGrid
+        Vertex model grid object
+    line : dict
+        Dictionary with either "row", "column", or "line" key. If key
+        is "row" or "column" key value should be the zero-based row or
+        column index for cross-section. If key is "line" value should
+        be an array of (x, y) tuples with vertices of cross-section.
+        Vertices should be in map coordinates consistent with xul,
+        yul, and rotation.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
 
     """
     def __init__(self, ax=None, model=None, modelgrid=None,
@@ -468,7 +484,7 @@ class VertexCrossSection(CrossSection):
         Parameters
         ----------
         ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+            ibound array to plot.
 
         color_noflow : string
             (Default is 'black')
@@ -491,11 +507,13 @@ class VertexCrossSection(CrossSection):
         Parameters
         ----------
         ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+            ibound array to plot.
         color_noflow : string
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        color_vpt : str
+            Color for vertical pass through cells (Default is 'red')
         head : numpy.ndarray
             Three-dimensional array to set top of patches to the minimum
             of the top of a layer or the head value. Used to create

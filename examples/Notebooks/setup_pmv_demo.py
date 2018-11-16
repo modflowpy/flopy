@@ -126,7 +126,7 @@ def run():
     nvert = gridprops['nvert']
     vertices = gridprops['vertices']
     cell2d = gridprops['cell2d']
-    cellxy = gridprops['cellxy']
+    # cellxy = gridprops['cellxy']
 
     # create simulation
     sim = flopy.mf6.MFSimulation(sim_name=model_name, version='mf6', exe_name='mf6',

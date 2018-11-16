@@ -23,30 +23,18 @@ class VertexMapView(MapView):
 
     Parameters
     ----------
-    sr : flopy.utils.reference.SpatialReference
-        The spatial reference class (Default is None)
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
         If there is not a current axis then a new one will be created.
+    modelgrid : flopy.discretization.VertexGrid
+        Vertex model grid object
     model : flopy.modflow object
         flopy model object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
-
-    Notes
-    -----
-    #
 
     """
     def __init__(self, modelgrid=None, model=None, ax=None, layer=0,
@@ -241,10 +229,12 @@ class VertexMapView(MapView):
 
         Parameters
         ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+        idomain : numpy.ndarray
+            idomain array to plot.  (Default is modelgrid.idomain)
         color_noflow : string
             (Default is 'black')
+        color_ch : str
+            Color for constant head cells (Default is 'blue')
         color_vpt : string
             Color for vertical pass through cells (Default is 'red'.)
 

@@ -57,8 +57,8 @@ class StructuredCrossSection(CrossSection):
         The plot axis.  If not provided it, plt.gca() will be used.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
+    modelgrid : flopy.discretization.StructuredGrid
+        Structured model grid object
     line : dict
         Dictionary with either "row", "column", or "line" key. If key
         is "row" or "column" key value should be the zero-based row or
@@ -66,14 +66,6 @@ class StructuredCrossSection(CrossSection):
         be an array of (x, y) tuples with vertices of cross-section.
         Vertices should be in map coordinates consistent with xul,
         yul, and rotation.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees. Default is None
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.

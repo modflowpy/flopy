@@ -389,6 +389,8 @@ class PlotMapView(object):
             MODFLOW's 'flow front face'
         fja : numpy.ndarray
             MODFLOW's 'flow ja face' (required for vertex plotting)
+        dis : flopy.modflow.ModflowDis package
+            Depricated parameter
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
         head : numpy.ndarray
@@ -1228,6 +1230,8 @@ class PlotCrossSection(object):
             MODFLOW's 'flow front face'
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
+        fja : numpy.ndarray
+            MODFLOW's 'flow ja face' (Default is None.)
         head : numpy.ndarray
             MODFLOW's head array.  If not provided, then will assume confined
             conditions in order to calculated saturated thickness.
