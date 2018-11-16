@@ -16,6 +16,7 @@ from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
 
+
 class MFComment(object):
     """
     Represents a variable in a MF6 input file
@@ -2497,6 +2498,12 @@ class MFData(DataInterface):
             'must define dtype in child '
             'class to use this base class')
 
+    @property
+    def plotable(self):
+        raise NotImplementedError(
+            'must define plotable in child '
+            'class to use this base class')
+
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
         self._data_storage = None
@@ -2709,6 +2716,12 @@ class MFMultiDimVar(MFData):
     def data_type(self):
         raise NotImplementedError(
             'must define dat_type in child '
+            'class to use this base class')
+
+    @property
+    def plotable(self):
+        raise NotImplementedError(
+            'must define plotable in child '
             'class to use this base class')
 
     def _get_internal_formatting_string(self, layer):

@@ -71,6 +71,10 @@ class MFScalar(mfdata.MFData):
         return DataType.scalar
 
     @property
+    def plotable(self):
+        return False
+
+    @property
     def dtype(self):
         if self.structure.type == DatumType.double_precision:
             return np.float32
@@ -566,6 +570,9 @@ class MFScalar(mfdata.MFData):
         """
         from flopy.plot.plotutil import PlotUtilities
 
+        if not self.plotable:
+            raise TypeError("Scalar values are not plotable")
+
         axes = PlotUtilities._plot_scalar_helper(self,
                                                  filename_base=filename_base,
                                                  file_extension=file_extension,
@@ -640,6 +647,13 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
     @property
     def data_type(self):
         return DataType.transientscalar
+
+    @property
+    def plotable(self):
+        if self.model is None:
+            return False
+        else:
+            return True
 
     def add_transient_key(self, key):
         super(MFScalarTransient, self).add_transient_key(key)
@@ -768,6 +782,10 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
             a list of matplotlib.pyplot.axis is returned.
         """
         from flopy.plot.plotutil import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
         axes = PlotUtilities._plot_transient2d_helper(self,
                                                       filename_base=filename_base,
                                                       file_extension=file_extension,

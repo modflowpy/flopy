@@ -133,6 +133,13 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     def dtype(self):
         return self.get_data().dtype
 
+    @property
+    def plotable(self):
+        if self.model is None:
+            return False
+        else:
+            return True
+
     def to_array(self, kper=0, mask=False):
         i0 = 1
         sarr = self.get_data(key=kper)
@@ -1385,6 +1392,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         """
         from flopy.plot import PlotUtilities
 
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
         if 'cellid' not in self.dtype.names:
             return
 
@@ -1697,6 +1707,9 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             a list of matplotlib.pyplot.axis is returned.
         """
         from flopy.plot import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
 
         if 'cellid' not in self.dtype.names:
             return

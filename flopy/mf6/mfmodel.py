@@ -43,6 +43,8 @@ class MFModel(PackageContainer, ModelInterface):
         relative path to dis file from model working folder
     grid_type : string
         type of grid the model will use (structured, unstructured, vertices)
+    verbose : bool
+        verbose setting for model operations (default False)
 
     Attributes
     ----------
@@ -85,7 +87,7 @@ class MFModel(PackageContainer, ModelInterface):
     def __init__(self, simulation, model_type='gwf6', modelname='model',
                  model_nam_file=None, version='mf6',
                  exe_name='mf6.exe', add_to_simulation=True,
-                 structure=None, model_rel_path='.', **kwargs):
+                 structure=None, model_rel_path='.', verbose=False, **kwargs):
         super(MFModel, self).__init__(simulation.simulation_data, modelname)
         self.simulation = simulation
         self.simulation_data = simulation.simulation_data
@@ -111,6 +113,7 @@ class MFModel(PackageContainer, ModelInterface):
         self.simulation_data.model_dimensions[modelname] = self.dimensions
         self._ftype_num_dict = {}
         self._package_paths = {}
+        self._verbose = verbose
 
         if model_nam_file is None:
             self.model_nam_file = '{}.nam'.format(modelname)
@@ -326,6 +329,14 @@ class MFModel(PackageContainer, ModelInterface):
     def export(self, f, **kwargs):
         from ..export import utils
         return utils.model_export(f, self, **kwargs)
+
+    @property
+    def verbose(self):
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, verbose):
+        self._verbose = verbose
 
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',

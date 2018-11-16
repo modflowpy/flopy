@@ -224,7 +224,7 @@ class Mt3dms(BaseModel):
 
         # Call constructor for parent object
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured)
+                           structured=structured, verbose=verbose)
 
         # Set attributes
         self.version_types = {'mt3dms': 'MT3DMS', 'mt3d-usgs': 'MT3D-USGS'}
@@ -291,7 +291,6 @@ class Mt3dms(BaseModel):
         self.external_units = []
         self.external_binflag = []
         self.external = False
-        self.verbose = verbose
         self.load = load
         # the starting external data unit number
         self._next_ext_unit = 2000

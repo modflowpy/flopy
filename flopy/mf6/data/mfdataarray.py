@@ -284,6 +284,13 @@ class MFArray(mfdata.MFMultiDimVar):
     def dtype(self):
         return self.get_data().dtype.type
 
+    @property
+    def plotable(self):
+        if self.model is None:
+            return False
+        else:
+            return True
+
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)
         self._data_storage = self._new_storage(False)
@@ -1109,6 +1116,9 @@ class MFArray(mfdata.MFMultiDimVar):
         """
         from flopy.plot import PlotUtilities
 
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
         if len(self.array.shape) == 2:
             axes = PlotUtilities._plot_util2d_helper(self,
                                                      title=title,
@@ -1344,7 +1354,9 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
         """
         from flopy.plot.plotutil import PlotUtilities
 
-        # todo: possibly include a check for 2d vs 3d transient arrays
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
         axes = PlotUtilities._plot_transient2d_helper(self,
                                                       filename_base=filename_base,
                                                       file_extension=file_extension,

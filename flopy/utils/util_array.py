@@ -603,6 +603,10 @@ class Util3d(DataInterface):
     def data_type(self):
         return DataType.array3d
 
+    @property
+    def plotable(self):
+        return True
+
     def export(self, f, **kwargs):
         from flopy import export
         return export.utils.array3d_export(f, self, **kwargs)
@@ -996,6 +1000,10 @@ class Transient3d(DataInterface):
     def data_type(self):
         return DataType.transient3d
 
+    @property
+    def plotable(self):
+        return False
+
     def get_zero_3d(self, kper):
         name = self.name_base + str(kper + 1) + '(filled zero)'
         return Util3d(self._model, self.shape,
@@ -1247,6 +1255,10 @@ class Transient2d(DataInterface):
     @property
     def data_type(self):
         return DataType.transient2d
+
+    @property
+    def plotable(self):
+        return True
 
     @staticmethod
     def masked4d_array_to_kper_dict(m4d):
@@ -1751,6 +1763,10 @@ class Util2d(DataInterface):
     @property
     def data_type(self):
         return DataType.array2d
+
+    @property
+    def plotable(self):
+        return True
 
     def _decide_how(self):
         # if a constant was passed in

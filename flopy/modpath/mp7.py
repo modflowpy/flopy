@@ -99,7 +99,7 @@ class Modpath7(BaseModel):
         """
 
         BaseModel.__init__(self, modelname, simfile_ext, exe_name,
-                           model_ws=model_ws)
+                           model_ws=model_ws, verbose=verbose)
 
         self.version_types = {'modpath7': 'MODPATH 7'}
         self.set_version(version)
@@ -353,7 +353,6 @@ class Modpath7(BaseModel):
         # self.external_units = []
         # self.external_binflag = []
 
-        self.verbose = verbose
         return
 
     def __repr__(self):

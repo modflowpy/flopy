@@ -106,7 +106,7 @@ class Modflow(BaseModel):
                  structured=True, listunit=2, model_ws='.', external_path=None,
                  verbose=False, **kwargs):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured, **kwargs)
+                           structured=structured, verbose=verbose, **kwargs)
         self.version_types = {'mf2k': 'MODFLOW-2000', 'mf2005': 'MODFLOW-2005',
                               'mfnwt': 'MODFLOW-NWT', 'mfusg': 'MODFLOW-USG'}
 
@@ -128,8 +128,6 @@ class Modflow(BaseModel):
         # self.external_fnames = []
         # self.external_units = []
         # self.external_binflag = []
-
-        self.verbose = verbose
 
         self.load_fail = False
         # the starting external data unit number

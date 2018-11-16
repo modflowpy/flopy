@@ -324,7 +324,6 @@ class StructuredMapView(MapView):
         """
         err_msg = "plot_grid() must be called " \
                   "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -377,7 +376,7 @@ class StructuredMapView(MapView):
             fluxes = arr_dict[key]
             break
 
-        nlay = self.model.modelgrid.nlay
+        nlay = self.mg.nlay
 
         # Plot the list locations
         plotarray = np.zeros((nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)

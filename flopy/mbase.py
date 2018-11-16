@@ -145,6 +145,13 @@ class ModelInterface(object):
             'must define laycbd in child '
             'class to use this base class')
 
+    @property
+    @abc.abstractmethod
+    def verbose(self):
+        raise NotImplementedError(
+            'must define verbose in child '
+            'class to use this base class')
+
 
 class BaseModel(ModelInterface):
     """
@@ -172,7 +179,7 @@ class BaseModel(ModelInterface):
 
     def __init__(self, modelname='modflowtest', namefile_ext='nam',
                  exe_name='mf2k.exe', model_ws=None,
-                 structured=True, **kwargs):
+                 structured=True, verbose=False, **kwargs):
         """
         BaseModel init
         """
@@ -182,6 +189,7 @@ class BaseModel(ModelInterface):
         self._packagelist = []
         self.heading = ''
         self._exe_name = exe_name
+        self._verbose = verbose
         self.external_extension = 'ref'
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
@@ -291,6 +299,14 @@ class BaseModel(ModelInterface):
     @version.setter
     def version(self, version):
         self._version = version
+
+    @property
+    def verbose(self):
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, verbose):
+        self._verbose = verbose
 
     @property
     def laytyp(self):

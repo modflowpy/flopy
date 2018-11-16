@@ -13,7 +13,7 @@ from flopy.utils import MfList, Util2d, Util3d, Transient2d, geometry
 from flopy.mf6.data.mfdataarray import MFArray
 from flopy.mf6.data.mfdatalist import MFTransientList
 from flopy.plot.plotbase import PlotMapView
-from flopy.datbase import DataType
+from flopy.datbase import DataType, DataInterface
 
 try:
     import shapefile
@@ -546,18 +546,14 @@ class PlotUtilities(object):
         for item, value in package.__dict__.items():
             caxs = []
             # trap non-flopy specific data_types.
-            if isinstance(value, (str, int, float,
-                                  dict, np.ndarray,
-                                  bool)):
-                pass
 
-            elif isinstance(value, list):
+            if isinstance(value, list):
                 for v in value:
                     if isinstance(v, Util3d):
                         if package.parent.verbose:
                             print(
-                                  'plotting {} package Util3d instance: {}'.format(
-                                  package.name[0], item))
+                                'plotting {} package Util3d instance: {}'.format(
+                                    package.name[0], item))
                         fignum = list(range(defaults['initial_fig'],
                                             defaults['initial_fig'] + inc))
                         defaults['initial_fig'] = fignum[-1] + 1
@@ -568,106 +564,111 @@ class PlotUtilities(object):
                                    fignum=fignum, model_name=model_name,
                                    colorbar=True))
 
-            elif isinstance(value, (MfList, MFTransientList)):
-                if package.parent.verbose:
-                    print('plotting {} package MfList instance: {}'.format(
-                          package.name[0], item))
-                if defaults['key'] is None:
-                    names = ['{} {} location stress period {} layer {}'.format(
-                             model_name, package.name[0],
-                             defaults['kper'] + 1, k + 1)
-                        for k in range(package.parent.modelgrid.nlay)]
-                    colorbar = False
-                else:
-                    names = ['{} {} {} data stress period {} layer {}'.format(
-                             model_name, package.name[0], defaults['key'],
-                             defaults['kper'] + 1, k + 1)
-                             for k in range(package.parent.modelgrid.nlay)]
-                    colorbar = True
-
-                fignum = list(range(defaults['initial_fig'],
-                                    defaults['initial_fig'] + inc))
-                defaults['initial_fig'] = fignum[-1] + 1
-                ax = value.plot(defaults['key'],
-                                names,
-                                defaults['kper'],
-                                filename_base=defaults['filename_base'],
-                                file_extension=defaults['file_extension'],
-                                mflay=defaults['mflay'],
-                                fignum=fignum, colorbar=colorbar,
-                                **kwargs)
-
-                if ax is not None:
-                    caxs.append(ax)
-
-            elif isinstance(value, Util3d):
-                if package.parent.verbose:
-                     print('plotting {} package Util3d instance: {}'.format(
-                          package.name[0], item))
-                # fignum = list(range(ifig, ifig + inc))
-                fignum = list(range(defaults['initial_fig'],
-                                    defaults['initial_fig'] + value.shape[0]))
-                defaults['initial_fig'] = fignum[-1] + 1
-                caxs.append(
-                    value.plot(filename_base=defaults['filename_base'],
-                               file_extension=defaults['file_extension'],
-                               mflay=defaults['mflay'],
-                               fignum=fignum,
-                               model_name=model_name,
-                               colorbar=True))
-
-            elif isinstance(value, Util2d):
-                if len(value.shape) == 2:
+            elif isinstance(value, DataInterface):
+                if value.data_type == DataType.transientlist: # isinstance(value, (MfList, MFTransientList)):
                     if package.parent.verbose:
-                        print('plotting {} package Util2d instance: {}'.format(
+                        print('plotting {} package MfList instance: {}'.format(
                               package.name[0], item))
-                    fignum = list(range(defaults['initial_fig'],
-                                        defaults['initial_fig'] + 1))
-                    defaults['initial_fig'] = fignum[-1] + 1
-                    caxs.append(
-                        value.plot(filename_base=defaults['filename_base'],
-                                   file_extension=defaults['file_extension'],
-                                   fignum=fignum, model_name=model_name,
-                                   colorbar=True))
+                    if defaults['key'] is None:
+                        names = ['{} {} location stress period {} layer {}'.format(
+                                 model_name, package.name[0],
+                                 defaults['kper'] + 1, k + 1)
+                            for k in range(package.parent.modelgrid.nlay)]
+                        colorbar = False
+                    else:
+                        names = ['{} {} {} data stress period {} layer {}'.format(
+                                 model_name, package.name[0], defaults['key'],
+                                 defaults['kper'] + 1, k + 1)
+                                 for k in range(package.parent.modelgrid.nlay)]
+                        colorbar = True
 
-            elif isinstance(value, Transient2d):
-                if value.array is not None:
-                    if package.parent.verbose:
-                        print(
-                              'plotting {} package Transient2d instance: {}'.format(
-                               package.name[0], item))
                     fignum = list(range(defaults['initial_fig'],
                                         defaults['initial_fig'] + inc))
                     defaults['initial_fig'] = fignum[-1] + 1
-                    caxs.append(
-                        value.plot(filename_base=defaults['filename_base'],
-                                   file_extension=defaults['file_extension'],
-                                   kper=defaults['kper'],
-                                   fignum=fignum, colorbar=True))
+                    ax = value.plot(defaults['key'],
+                                    names,
+                                    defaults['kper'],
+                                    filename_base=defaults['filename_base'],
+                                    file_extension=defaults['file_extension'],
+                                    mflay=defaults['mflay'],
+                                    fignum=fignum, colorbar=colorbar,
+                                    **kwargs)
 
-            elif isinstance(value, MFArray):
-                if value.array is not None:
-                    if len(value.array.shape) == 2:
+                    if ax is not None:
+                        caxs.append(ax)
+
+                elif value.data_type == DataType.array3d: # isinstance(value, Util3d):
+                    if value.array is not None:
+                        if package.parent.verbose:
+                             print('plotting {} package Util3d instance: {}'.format(
+                                  package.name[0], item))
+                        # fignum = list(range(ifig, ifig + inc))
                         fignum = list(range(defaults['initial_fig'],
-                                            defaults['initial_fig'] + 1))
+                                            defaults['initial_fig'] + value.array.shape[0]))
                         defaults['initial_fig'] = fignum[-1] + 1
                         caxs.append(
                             value.plot(filename_base=defaults['filename_base'],
                                        file_extension=defaults['file_extension'],
-                                       fignum=fignum, model_name=model_name,
+                                       mflay=defaults['mflay'],
+                                       fignum=fignum,
+                                       model_name=model_name,
                                        colorbar=True))
-                    elif len(value.array.shape) == 3:
+
+                elif value.data_type == DataType.array2d: # isinstance(value, Util2d):
+                    if value.array is not None:
+                        if len(value.array.shape) == 2: # is this necessary?
+                            if package.parent.verbose:
+                                print('plotting {} package Util2d instance: {}'.format(
+                                      package.name[0], item))
+                            fignum = list(range(defaults['initial_fig'],
+                                                defaults['initial_fig'] + 1))
+                            defaults['initial_fig'] = fignum[-1] + 1
+                            caxs.append(
+                                value.plot(filename_base=defaults['filename_base'],
+                                           file_extension=defaults['file_extension'],
+                                           fignum=fignum, model_name=model_name,
+                                           colorbar=True))
+
+                elif value.data_type == DataType.transient2d: # isinstance(value, Transient2d):
+                    if value.array is not None:
+                        if package.parent.verbose:
+                            print(
+                                  'plotting {} package Transient2d instance: {}'.format(
+                                   package.name[0], item))
                         fignum = list(range(defaults['initial_fig'],
                                             defaults['initial_fig'] + inc))
                         defaults['initial_fig'] = fignum[-1] + 1
                         caxs.append(
                             value.plot(filename_base=defaults['filename_base'],
                                        file_extension=defaults['file_extension'],
-                                       mflay=defaults['mflay'],
-                                       fignum=fignum, model_name=model_name,
-                                       colorbar=True))
-                    else:
-                        pass
+                                       kper=defaults['kper'],
+                                       fignum=fignum, colorbar=True))
+
+                # elif isinstance(value, MFArray):
+                #     if value.array is not None:
+                #         if len(value.array.shape) == 2:
+                #             fignum = list(range(defaults['initial_fig'],
+                #                                defaults['initial_fig'] + 1))
+                #            defaults['initial_fig'] = fignum[-1] + 1
+                #            caxs.append(
+                #                value.plot(filename_base=defaults['filename_base'],
+                #                           file_extension=defaults['file_extension'],
+                #                           fignum=fignum, model_name=model_name,
+                #                           colorbar=True))
+                #        elif len(value.array.shape) == 3:
+                #            fignum = list(range(defaults['initial_fig'],
+                #                                defaults['initial_fig'] + inc))
+                #            defaults['initial_fig'] = fignum[-1] + 1
+                #            caxs.append(
+                #                value.plot(filename_base=defaults['filename_base'],
+                #                           file_extension=defaults['file_extension'],
+                #                           mflay=defaults['mflay'],
+                #                           fignum=fignum, model_name=model_name,
+                #                           colorbar=True))
+                #        else:
+                #            pass
+                else:
+                    pass
 
             else:
                 pass

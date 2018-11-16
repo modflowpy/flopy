@@ -63,6 +63,13 @@ class PackageInterface(object):
             'must define get_model_dim_arrays in child '
             'class to use this base class')
 
+    @property
+    @abc.abstractmethod
+    def plotable(self):
+        raise NotImplementedError(
+            'must define plotable in child '
+            'class to use this base class')
+
 
 class Package(PackageInterface):
     """
@@ -219,6 +226,10 @@ class Package(PackageInterface):
     @parent.setter
     def parent(self, parent):
         self._parent = parent
+
+    @property
+    def plotable(self):
+        return True
 
     @property
     def data_list(self):
@@ -529,6 +540,9 @@ class Package(PackageInterface):
 
         """
         from flopy.plot import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Package {} is not plotable".format(self.name))
 
         axes = PlotUtilities._plot_package_helper(self, **kwargs)
         return axes

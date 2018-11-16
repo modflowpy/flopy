@@ -478,23 +478,9 @@ class VertexCrossSection(CrossSection):
         quadmesh : matplotlib.collections.PatchCollection
 
         """
-        if ibound is None:
-            if self.mg.idomain is not None:
-                ibound = self.mg.idomain
+        raise NotImplementedError("plot_inactive must be "
+                                  "called from PlotCrossSection")
 
-            else:
-                raise AssertionError("idomain must be provided to use plot_inactive")
-
-        plotarray = np.zeros(ibound.shape, dtype=np.int)
-        idx1 = (ibound == 0)
-        plotarray[idx1] = 1
-        plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
-        bounds = [0, 1, 2]
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-        patches = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
-
-        return patches
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     color_vpt='red', head=None, **kwargs):
@@ -522,28 +508,8 @@ class VertexCrossSection(CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        if ibound is None:
-            if self.mg.idomain is not None:
-                ibound = self.mg.idomain
-
-            else:
-                raise AssertionError("idomain must be supplied to use plot_ibound")
-
-        plotarray = np.zeros(ibound.shape, dtype=np.int)
-        idx1 = (ibound == 0)
-        idx2 = (ibound < 0)
-        plotarray[idx1] = 1
-        plotarray[idx2] = 2
-        plotarray = np.ma.masked_equal(plotarray, 0)
-        cmap = matplotlib.colors.ListedColormap(['none', color_noflow,
-                                                 color_vpt])
-        bounds = [0, 1, 2, 3]
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-
-        # mask active cells
-        patches = self.plot_array(plotarray, masked_values=[0], head=head,
-                                  cmap=cmap, norm=norm, **kwargs)
-        return patches
+        raise NotImplementedError("plot_ibound must be "
+                                  "called from PlotCrossSection")
 
     def plot_grid(self, **kwargs):
         """
@@ -559,18 +525,8 @@ class VertexCrossSection(CrossSection):
             lc : matplotlib.collections.LineCollection
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        pc = self.get_grid_line_collection(**kwargs)
-        if pc is not None:
-            ax.add_collection(pc)
-            ax.set_xlim(self.extent[0], self.extent[1])
-            ax.set_ylim(self.extent[2], self.extent[3])
-
-        return pc
+        raise NotImplementedError("plot_grid must be "
+                                  "called from PlotCrossSection")
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 head=None, **kwargs):
@@ -600,45 +556,8 @@ class VertexCrossSection(CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        # Find package to plot
-        if package is not None:
-            p = package
-            ftype = p.name[0]
-        elif self.model is not None:
-            if ftype is None:
-                raise Exception('ftype not specified')
-            ftype = ftype.upper()
-            p = self.model.get_package(ftype)
-        else:
-            raise Exception('Cannot find package to plot')
-
-        # Get the list data
-        arr_dict = p.stress_period_data.to_array(kper)
-        if not arr_dict:
-            return None
-
-        for key in arr_dict:
-            fluxes = arr_dict[key]
-            break
-
-        plotarray = np.zeros((self.mg.nlay, self.mg.ncpl))
-        plotarray[fluxes != 0] = 1
-        plotarray = np.ma.masked_equal(plotarray, 0)
-
-        if color is None:
-            if ftype in plotutil.bc_color_dict:
-                c = plotutil.bc_color_dict[ftype]
-            else:
-                c = plotutil.bc_color_dict['default']
-        else:
-            c = color
-        cmap = matplotlib.colors.ListedColormap(['none', c])
-        bounds = [0, 1, 2]
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-
-        patches = self.plot_array(plotarray, masked_values=[0],
-                                  head=head, cmap=cmap, norm=norm, **kwargs)
-        return patches
+        raise NotImplementedError("plot_bc must be "
+                                  "called from PlotCrossSection")
 
     def plot_discharge(self, fja=None, head=None,
                        kstep=1, hstep=1, normalize=False,

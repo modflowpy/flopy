@@ -45,7 +45,7 @@ class Modpath(BaseModel):
 
         """
         BaseModel.__init__(self, modelname, simfile_ext, exe_name,
-                           model_ws=model_ws)
+                           model_ws=model_ws, verbose=verbose)
 
         self.version_types = {'modpath': 'MODPATH'}
         self.set_version(version)
@@ -105,7 +105,6 @@ class Modpath(BaseModel):
             assert os.path.exists(
                 external_path), 'external_path does not exist'
             self.external = True
-        self.verbose = verbose
         return
 
     def __repr__(self):

@@ -1221,6 +1221,13 @@ class MFPackage(PackageContainer, PackageInterface):
         self._parent = parent
 
     @property
+    def plotable(self):
+        if self._model_or_sim.type == "Simulation":
+            return False
+        else:
+            return True
+
+    @property
     def data_list(self):
         # return [data_object, data_object, ...]
         return self._data_list
@@ -1690,6 +1697,9 @@ class MFPackage(PackageContainer, PackageInterface):
 
         """
         from flopy.plot.plotutil import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
 
         axes = PlotUtilities._plot_package_helper(self,
                                                   **kwargs)

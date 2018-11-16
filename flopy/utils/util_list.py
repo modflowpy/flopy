@@ -117,6 +117,10 @@ class MfList(DataInterface, DataListInterface):
     def data_type(self):
         return DataType.transientlist
 
+    @property
+    def plotable(self):
+        return True
+
     def get_empty(self, ncell=0):
         d = np.zeros((ncell, len(self.dtype)), dtype=self.dtype)
         d[:, :] = -1.0E+10

@@ -5,7 +5,6 @@ from ..plot.vmap import VertexMapView
 from ..plot.umap import UnstructuredMapView
 from ..plot.crosssection import StructuredCrossSection
 from ..plot.vcrosssection import VertexCrossSection
-from ..utils.reference import SpatialReferenceUnstructured
 from ..plot import plotutil
 from ..utils import geometry
 
@@ -23,8 +22,9 @@ class PlotMapView(object):
 
     Parameters
     ----------
-    sr : flopy.utils.reference.SpatialReference
-        The spatial reference class (Default is None)
+    modelgrid : flopy.discretiztion.Grid
+        The modelgrid class can be StructuredGrid, VertexGrid,
+        or UnstructuredGrid (Default is None)
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
         If there is not a current axis then a new one will be created.
@@ -32,14 +32,6 @@ class PlotMapView(object):
         flopy model object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
@@ -61,13 +53,7 @@ class PlotMapView(object):
         if modelgrid is None and model is not None:
             modelgrid = model.modelgrid
 
-        # todo: remove all SpatialReferenceUnstructured function calls
-        try:
-            tmp = modelgrid.grid_type
-            if not isinstance(tmp, str):
-                tmp = "structured"
-        except:
-            tmp = "structured"
+        tmp = modelgrid.grid_type
 
         if tmp == "structured":
             self.__cls = StructuredMapView(ax=ax, model=model,
@@ -79,10 +65,13 @@ class PlotMapView(object):
                                              model=model,
                                              layer=layer, extent=extent)
 
-        else:
+        elif tmp == "vertex":
             self.__cls = VertexMapView(ax=ax, model=model,
                                        modelgrid=modelgrid, layer=layer,
                                        extent=extent)
+
+        else:
+            raise TypeError("Unrecognized grid type {}".format(tmp))
 
         self.model = self.__cls.model
         self.layer = self.__cls.layer
@@ -240,10 +229,7 @@ class PlotMapView(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        if isinstance(self.mg, SpatialReferenceUnstructured):
-            lc = self.mg.get_grid_line_collection(**kwargs)
-        else:
-            lc = LineCollection(self.__cls.mg.grid_lines, **kwargs)
+        lc = LineCollection(self.__cls.mg.grid_lines, **kwargs)
 
         ax.add_collection(lc)
         ax.set_xlim(self.__cls.extent[0], self.__cls.extent[1])
@@ -555,16 +541,10 @@ class PlotMapView(object):
                 tp = p[idx]
 
             # transform data!
-            if isinstance(self.mg, SpatialReferenceUnstructured):
-                x0r, y0r = geometry.transform(tp['x'], tp['y'],
-                                              self.mg.xul,
-                                              self.mg.yul,
-                                              self.mg.rotation)
-            else:
-                x0r, y0r = geometry.transform(tp['x'], tp['y'],
-                                              self.mg.xoffset,
-                                              self.mg.yoffset,
-                                              self.mg.angrot_radians)
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer
@@ -688,16 +668,11 @@ class PlotMapView(object):
                     idx = (t['time'] <= time)
                 tp = ts[idx]
 
-            if isinstance(self.mg, SpatialReferenceUnstructured):
-                x0r, y0r = geometry.transform(tp['x'], tp['y'],
-                                              self.mg.xul,
-                                              self.mg.yul,
-                                              self.mg.rotation)
-            else:
-                x0r, y0r = geometry.transform(tp['x'], tp['y'],
-                                              self.mg.xoffset,
-                                              self.mg.yoffset,
-                                              self.mg.angrot_radians)
+
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
 
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
@@ -762,6 +737,7 @@ class PlotMapView(object):
         sp : matplotlib.pyplot.scatter
 
         """
+        ep = ep.copy()
         direction = direction.lower()
         if direction == 'starting':
             xp, yp = 'x0', 'y0'
@@ -857,16 +833,10 @@ class PlotMapView(object):
             shrink = float(kwargs.pop('shrink'))
 
         # transform data!
-        if isinstance(self.mg, SpatialReferenceUnstructured):
-            x0r, y0r = geometry.transform(tep[xp], tep[yp],
-                                          self.mg.xul,
-                                          self.mg.yul,
-                                          self.mg.rotation)
-        else:
-            x0r, y0r = geometry.transform(tep[xp], tep[yp],
-                                          self.mg.xoffset,
-                                          self.mg.yoffset,
-                                          self.mg.angrot_radians)
+        x0r, y0r = geometry.transform(tep[xp], tep[yp],
+                                      self.mg.xoffset,
+                                      self.mg.yoffset,
+                                      self.mg.angrot_radians)
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 
@@ -890,6 +860,8 @@ class PlotCrossSection(object):
         The plot axis.  If not provided it, plt.gca() will be used.
     model : flopy.modflow object
         flopy model object. (Default is None)
+    modelgrid : flopy.discretization.Grid object
+        can be a StructuredGrid, VertexGrid, or UnstructuredGrid object
     line : dict
         Dictionary with either "row", "column", or "line" key. If key
         is "row" or "column" key value should be the zero-based row or
@@ -897,14 +869,6 @@ class PlotCrossSection(object):
         be an array of (x, y) tuples with vertices of cross-section.
         Vertices should be in map coordinates consistent with xul,
         yul, and rotation.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees. Default is None
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
@@ -922,12 +886,7 @@ class PlotCrossSection(object):
             modelgrid = model.modelgrid
 
         # update this after unstructured grid is finished!
-        try:
-            tmp = modelgrid.grid_type
-            if not isinstance(tmp, str):
-                tmp = "structured"
-        except:
-            tmp = "structured"
+        tmp = modelgrid.grid_type
 
         if tmp == "structured":
             self.__cls = StructuredCrossSection(ax=ax, model=model,
@@ -937,10 +896,13 @@ class PlotCrossSection(object):
         elif tmp == "unstructured":
             raise NotImplementedError("Unstructured xc not yet implemented")
 
-        else:
+        elif tmp == "vertex":
             self.__cls = VertexCrossSection(ax=ax, model=model,
                                             modelgrid=modelgrid,
                                             line=line, extent=extent)
+
+        else:
+            raise ValueError("Unknown modelgrid type {}".format(tmp))
 
         self.model = self.__cls.model
         self.mg = self.__cls.mg
@@ -1078,11 +1040,25 @@ class PlotCrossSection(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        return self.__cls.plot_inactive(ibound=ibound, color_noflow=color_noflow,
-                                        **kwargs)
+        if ibound is None:
+            if self.mg.idomain is None:
+                raise AssertionError("An idomain array must be provided")
+            else:
+                ibound = self.mg.idomain
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        plotarray[idx1] = 1
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['0', color_noflow])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        patches = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
+
+        return patches
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    head=None, **kwargs):
+                    color_vpt="red", head=None, **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.model
@@ -1107,8 +1083,30 @@ class PlotCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        return self.__cls.plot_ibound(ibound=ibound, color_noflow=color_noflow,
-                                      color_ch=color_ch, head=head, **kwargs)
+        if ibound is None:
+            if self.model is not None:
+                if self.model.version == "mf6":
+                    color_ch = color_vpt
+
+            if self.mg.idomain is None:
+                raise AssertionError("Ibound/Idomain array must be provided")
+
+            ibound = self.mg.idomain
+
+        plotarray = np.zeros(ibound.shape, dtype=np.int)
+        idx1 = (ibound == 0)
+        idx2 = (ibound < 0)
+        plotarray[idx1] = 1
+        plotarray[idx2] = 2
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        cmap = matplotlib.colors.ListedColormap(['none', color_noflow,
+                                                 color_ch])
+        bounds = [0, 1, 2, 3]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        # mask active cells
+        patches = self.plot_array(plotarray, masked_values=[0], head=head,
+                                  cmap=cmap, norm=norm, **kwargs)
+        return patches
 
     def plot_grid(self, **kwargs):
         """
@@ -1124,7 +1122,18 @@ class PlotCrossSection(object):
             lc : matplotlib.collections.LineCollection
 
         """
-        return self.__cls.plot_grid(**kwargs)
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        col = self.get_grid_line_collection(**kwargs)
+        if col is not None:
+            ax.add_collection(col)
+            ax.set_xlim(self.extent[0], self.extent[1])
+            ax.set_ylim(self.extent[2], self.extent[3])
+
+        return col
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 head=None, **kwargs):
@@ -1143,8 +1152,10 @@ class PlotCrossSection(object):
         color : string
             matplotlib color string. (Default is None)
         head : numpy.ndarray
-            Three-dimensional array to set top of patches to the minimum
-            of the top of a layer or the head value. Used to create
+            Three-dimensional array (structured grid) or
+            Two-dimensional array (vertex grid)
+            to set top of patches to the minimum of the top of a\
+            layer or the head value. Used to create
             patches that conform to water-level elevations.
         **kwargs : dictionary
             keyword arguments passed to matplotlib.collections.PatchCollection
@@ -1154,8 +1165,54 @@ class PlotCrossSection(object):
         patches : matplotlib.collections.PatchCollection
 
         """
-        return self.__cls.plot_bc(ftype=ftype, package=package, kper=kper,
-                                  color=color, head=head, **kwargs)
+        # Find package to plot
+        if package is not None:
+            p = package
+            ftype = p.name[0]
+        elif self.model is not None:
+            if ftype is None:
+                raise Exception('ftype not specified')
+            ftype = ftype.upper()
+            p = self.model.get_package(ftype)
+        else:
+            raise Exception('Cannot find package to plot')
+
+        # Get the list data
+        try:
+            arr_dict = p.stress_period_data.to_array(kper)
+        except:
+            raise Exception('Not a list-style boundary package')
+
+        if not arr_dict:
+            return None
+
+        for key in arr_dict:
+            fluxes = arr_dict[key]
+            break
+
+        # Plot the list locations
+        if self.mg.grid_type == "vertex":
+            plotarray = np.zeros((self.mg.nlay, self.mg.ncpl), dtype=np.int)
+        else:
+            plotarray = np.zeros((self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
+
+        plotarray[fluxes != 0] = 1
+
+        plotarray = np.ma.masked_equal(plotarray, 0)
+        if color is None:
+            if ftype in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[ftype]
+            else:
+                c = plotutil.bc_color_dict['default']
+        else:
+            c = color
+        cmap = matplotlib.colors.ListedColormap(['none', c])
+        bounds = [0, 1, 2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+        patches = self.plot_array(plotarray, masked_values=[0],
+                                  head=head, cmap=cmap, norm=norm, **kwargs)
+
+        return patches
 
     def plot_discharge(self, frf=None, fff=None, flf=None, fja=None,
                        head=None, kstep=1, hstep=1, normalize=False,
@@ -1247,4 +1304,3 @@ class PlotCrossSection(object):
         linecollection : matplotlib.collections.LineCollection
         """
         return self.__cls.get_grid_line_collection(**kwargs)
-
