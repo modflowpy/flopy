@@ -1,5 +1,11 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.11
+* Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
+
+* Bug fixes:
+    * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
+
 ### Version 3.2.10
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
 * MODFLOW 6 model and simulation packages can not be retrieved as a `MFSimulation` attribute

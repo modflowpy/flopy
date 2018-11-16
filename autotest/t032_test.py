@@ -2,13 +2,6 @@
 Test shapefile stuff
 """
 import os
-
-# python < 3.4 (reload in default namespace)
-try:
-    from importlib import reload
-except:
-    from imp import reload
-
 import shutil
 import numpy as np
 import flopy
@@ -60,9 +53,8 @@ def test_polygon_from_ij():
     assert np.abs(geoms[0].bounds[-1] - 5169784.473861726) < 1e-4
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, epsg=26715)
-    import epsgref
-    reload(epsgref)
-    from epsgref import prj
+    ep = epsgRef()
+    prj = ep.to_dict()
     assert 26715 in prj
     fpth = os.path.join(mpth, 'test.prj')
     fpth2 = os.path.join(mpth, '26715.prj')
@@ -84,28 +76,20 @@ def test_epsgref():
     ep = epsgRef()
     ep.reset()
 
-    import epsgref
     getprj(4326)
-    reload(epsgref)
-    from epsgref import prj
+    prj = ep.to_dict()
     assert 4326 in prj
 
     ep.add(9999, 'junk')
-    ep._remove_pyc()  # have to do this in python 2, otherwise won't refresh
-    reload(epsgref)
-    from epsgref import prj
+    prj = ep.to_dict()
     assert 9999 in prj
 
     ep.remove(9999)
-    ep._remove_pyc()
-    reload(epsgref)
-    from epsgref import prj
+    prj = ep.to_dict()
     assert 9999 not in prj
 
     ep.reset()
-    ep._remove_pyc()
-    reload(epsgref)
-    from epsgref import prj
+    prj = ep.to_dict()
     assert len(prj) == 0
 
 

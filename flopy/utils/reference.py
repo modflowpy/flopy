@@ -2,10 +2,12 @@
 Module spatial referencing for flopy model objects
 
 """
-import sys
-import os
+import json
 import numpy as np
+import os
 import warnings
+
+from collections import OrderedDict
 
 
 class SpatialReference(object):
@@ -1799,60 +1801,78 @@ class TemporalReference(object):
 
 
 class epsgRef:
-    """Sets up a local database of projection file text referenced by epsg code.
-    The database is located in the site packages folder in epsgref.py, which
-    contains a dictionary, prj, of projection file text keyed by epsg value.
+    """Sets up a local database of text representations of coordinate reference
+    systems, keyed by EPSG code.
+
+    The database is epsgref.json, located in the user's data directory. If
+    optional 'appdirs' package is available, this is in the platform-dependent
+    user directory, otherwise in the user's 'HOME/.flopy' directory.
     """
 
     def __init__(self):
-        warnings.warn(
-            "epsgRef has been deprecated.", category=DeprecationWarning)
-        sp = [f for f in sys.path if f.endswith('site-packages')][0]
-        self.location = os.path.join(sp, 'epsgref.py')
+		warnings.warn(
+				#epsgRef has been deprecated.", category=DeprecationWarning)
+        try:
+            from appdirs import user_data_dir
+        except ImportError:
+            user_data_dir = None
+        if user_data_dir:
+            datadir = user_data_dir('flopy')
+        else:
+            # if appdirs is not installed, use user's home directory
+            datadir = os.path.join(os.path.expanduser('~'), '.flopy')
+        if not os.path.isdir(datadir):
+            os.makedirs(datadir)
+        dbname = 'epsgref.json'
+        self.location = os.path.join(datadir, dbname)
 
-    def _remove_pyc(self):
-        try:  # get rid of pyc file
-            os.remove(self.location + 'c')
-        except:
-            pass
+    def to_dict(self):
+        """Returns dict with EPSG code integer key, and WKT CRS text"""
+        data = OrderedDict()
+        if os.path.exists(self.location):
+            with open(self.location, 'r') as f:
+                loaded_data = json.load(f, object_pairs_hook=OrderedDict)
+            # convert JSON key from str to EPSG integer
+            for key, value in loaded_data.items():
+                try:
+                    data[int(key)] = value
+                except ValueError:
+                    data[key] = value
+        return data
 
-    def make(self):
-        if not os.path.exists(self.location):
-            newfile = open(self.location, 'w')
-            newfile.write('prj = {}\n')
-            newfile.close()
+    def _write(self, data):
+        with open(self.location, 'w') as f:
+            json.dump(data, f, indent=0)
+            f.write('\n')
 
     def reset(self, verbose=True):
         if os.path.exists(self.location):
             os.remove(self.location)
-        self._remove_pyc()
-        self.make()
         if verbose:
             print('Resetting {}'.format(self.location))
 
     def add(self, epsg, prj):
-        """add an epsg code to epsgref.py"""
-        with open(self.location, 'a') as epsgfile:
-            epsgfile.write("prj[{:d}] = '{}'\n".format(epsg, prj))
+        """add an epsg code to epsgref.json"""
+        data = self.to_dict()
+        data[epsg] = prj
+        self._write(data)
+
+    def get(self, epsg):
+        """returns prj from a epsg code, otherwise None if not found"""
+        data = self.to_dict()
+        return data.get(epsg)
 
     def remove(self, epsg):
-        """removes an epsg entry from epsgref.py"""
-        from epsgref import prj
-        self.reset(verbose=False)
-        if epsg in prj.keys():
-            del prj[epsg]
-        for epsg, prj in prj.items():
-            self.add(epsg, prj)
+        """removes an epsg entry from epsgref.json"""
+        data = self.to_dict()
+        if epsg in data:
+            del data[epsg]
+            self._write(data)
 
     @staticmethod
     def show():
-        try:
-            from importlib import reload
-        except:
-            from imp import reload
-        import epsgref
-        from epsgref import prj
-        reload(epsgref)
+        ep = epsgRef()
+        prj = ep.to_dict()
         for k, v in prj.items():
             print('{}:\n{}\n'.format(k, v))
 
@@ -2047,7 +2067,7 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
         epsg code for coordinate system
     addlocalreference : boolean
         adds the projection file text associated with epsg to a local
-        database, epsgref.py, located in site-packages.
+        database, epsgref.json, located in the user's data directory.
 
     References
     ----------
@@ -2061,12 +2081,7 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
     warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
                   "instead.", category=DeprecationWarning)
     epsgfile = epsgRef()
-    wktstr = None
-    try:
-        from epsgref import prj
-        wktstr = prj.get(epsg)
-    except:
-        epsgfile.make()
+    wktstr = epsgfile.get(epsg)
     if wktstr is None:
         wktstr = get_spatialreference(epsg, text=text)
     if addlocalreference and wktstr is not None:
