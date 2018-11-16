@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import os
-import numpy as np
 from ..discretization import StructuredGrid
+
 
 def start_tag(f, tag, indent_level, indent_char='  '):
     s = indent_level * indent_char + tag
@@ -35,8 +35,10 @@ class Vtk(object):
             os.remove(output_filename)
         self.output_filename = output_filename
 
-        self.model = model.modelgrid
-        self.shape = (self.model.nlay, self.model.nrow, self.model.ncol)
+        self.model = model
+        self.modelgrid = model.modelgrid
+        self.shape = (self.modelgrid.nlay, self.modelgrid.nrow,
+                      self.modelgrid.ncol)
 
         self.arrays = {}
 
@@ -63,9 +65,7 @@ class Vtk(object):
         ncells = nlay * nrow * ncol
         ibound = None
         if ibound_filter:
-            assert self.model.bas6, 'Cannot find basic (BAS6) package ' \
-                'and ibound_filter is set to True.'
-            ibound = self.model.bas6.ibound.array
+            ibound = self.modelgrid.idomain
             ncells = (ibound != 0).sum()
         if shared_vertex:
             npoints = (nrow + 1) * (ncol + 1) * (nlay + 1)
@@ -96,14 +96,15 @@ class Vtk(object):
 
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
-        mg = self.model.modelgrid
-        assert(isinstance(mg, StructuredGrid))
-        z = np.vstack([mg.top.reshape(1, mg.nrow, mg.ncol),
-                       mg.botm])
+        assert(isinstance(self.modelgrid, StructuredGrid))
+        z = np.vstack([self.modelgrid.top.reshape(1, self.modelgrid.nrow,
+                                                  self.modelgrid.ncol),
+                       self.modelgrid.botm])
         if shared_vertex:
-            verts, iverts = self.get_3d_shared_vertex_connectivity(mg)
+            verts, iverts = self.get_3d_shared_vertex_connectivity(
+                self.modelgrid)
         else:
-            verts, iverts = self.get_3d_vertex_connectivity(mg)
+            verts, iverts = self.get_3d_vertex_connectivity(self.modelgrid)
 
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)
