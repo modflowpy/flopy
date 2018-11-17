@@ -13,6 +13,7 @@ from .data import mfstructure
 from ..utils import datautil
 from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.vertexgrid import VertexGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
@@ -254,6 +255,22 @@ class MFModel(PackageContainer, ModelInterface):
                                   xoff=self._modelgrid.xoffset,
                                   yoff=self._modelgrid.yoffset,
                                   angrot=self._modelgrid.angrot)
+        elif self.get_grid_type() == DiscretizationType.DISU:
+            disu = self.get_package('disu')
+            iverts = [list(i)[4:] for i in disu.cell2d.array]
+            self._modelgrid = UnstructuredGrid(vertices=np.array(disu.vertices.array),
+                                               iverts=iverts,
+                                               xcenters = disu.cell2d.array['xc'],
+                                               ycenters = disu.cell2d.array['yc'],
+                                               top=disu.top.array, botm=disu.botm.array,
+                                               idomain=disu.idomain.array,
+                                               lenuni=disu.length_units.array,
+                                               proj4=self._modelgrid.proj4,
+                                               epsg=self._modelgrid.epsg,
+                                               xoff=self._modelgrid.xoffset,
+                                               yoff=self._modelgrid.yoffset,
+                                               angrot=self._modelgrid.angrot)
+
         else:
             return self._modelgrid
 
