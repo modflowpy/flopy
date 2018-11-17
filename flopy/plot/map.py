@@ -84,7 +84,7 @@ class StructuredMapView(MapView):
 
     """
 
-    def __init__(self, modelgrid=None, model=None, ax=None, layer=0,
+    def __init__(self, model=None, modelgrid=None, ax=None, layer=0,
                  extent=None):
         super(StructuredMapView, self).__init__(ax=ax, model=model,
                                                 modelgrid=modelgrid, layer=layer,
@@ -734,7 +734,7 @@ class ModelMap(object):
                 rotation=None, length_multiplier=1.):
 
         from ..utils.reference import SpatialReferenceUnstructured
-        from ..plot import PlotMapView
+        from ..plot.plotbase import DeprecatedMapView
 
         err_msg = "ModelMap will be replaced by " \
                   "PlotMapView(); Calling PlotMapView()"
@@ -779,5 +779,5 @@ class ModelMap(object):
         else:
             pass
 
-        return PlotMapView(modelgrid=modelgrid, ax=ax, model=model,
-                           layer=layer, extent=extent)
+        return DeprecatedMapView(model=model, modelgrid=modelgrid, ax=ax,
+                                 layer=layer, extent=extent)

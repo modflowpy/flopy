@@ -993,10 +993,9 @@ class ModelCrossSection(object):
 
     """
     def __new__(cls, ax=None, model=None, dis=None, line=None,
-                xul=None, yul=None, xll=None, yll=None,
-                rotation=None, extent=None, length_multiplier=1.):
+                xul=None, yul=None, rotation=None, extent=None):
 
-        from flopy.plot.plotbase import PlotCrossSection
+        from flopy.plot.plotbase import DeprecatedCrossSection
         from flopy.discretization import StructuredGrid
 
         err_msg = "ModelCrossSection will be replaced by " +\
@@ -1005,9 +1004,9 @@ class ModelCrossSection(object):
 
         modelgrid = None
         if model is not None:
-            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+            if (xul, yul, rotation) != (None, None, None):
                 modelgrid = plotutil._set_coord_info(model.modelgrid,
-                                                     xul, yul, xll, yll,
+                                                     xul, yul, None, None,
                                                      rotation)
 
         elif dis is not None:
@@ -1016,13 +1015,13 @@ class ModelCrossSection(object):
                                        top=dis.top.array,
                                        botm=dis.botm.array)
 
-        if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+        if (xul, yul, rotation) != (None, None, None):
             modelgrid = plotutil._set_coord_info(modelgrid,
-                                          xul, yul, xll, yll,
+                                          xul, yul, None, None,
                                           rotation)
 
 
-        return PlotCrossSection(ax=ax, model=model,
-                                modelgrid=modelgrid,
-                                line=line, extent=extent)
+        return DeprecatedCrossSection(ax=ax, model=model,
+                                      modelgrid=modelgrid,
+                                      line=line, extent=extent)
 

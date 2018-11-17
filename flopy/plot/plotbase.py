@@ -41,7 +41,7 @@ class PlotMapView(object):
 
 
     """
-    def __init__(self, modelgrid=None, model=None, ax=None,
+    def __init__(self, model=None, modelgrid=None, ax=None,
                  layer=0, extent=None):
 
         if plt is None:
@@ -375,7 +375,7 @@ class PlotMapView(object):
 
         return contour_set
 
-    def plot_discharge(self, frf=None, fff=None, fja=None, dis=None,
+    def plot_discharge(self, frf=None, fff=None, fja=None,
                        flf=None, head=None, istep=1, jstep=1,
                        normalize=False, **kwargs):
         """
@@ -413,10 +413,6 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
-        if dis is not None:
-            self.__cls.mg = plotutil._depreciated_dis_handler(modelgrid=self.mg,
-                                                              dis=dis)
-
         if self.mg.grid_type == "vertex":
             return self.__cls.plot_discharge(fja=fja, head=head, istep=istep,
                                              normalize=normalize, **kwargs)
@@ -698,8 +694,6 @@ class PlotMapView(object):
                 lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
 
         return lo
-        # return self.__cls.plot_timeseries(ts=ts, travel_time=travel_time,
-        #                                   **kwargs)
 
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
@@ -852,6 +846,34 @@ class PlotMapView(object):
         return sp
 
 
+class DeprecatedMapView(PlotMapView):
+    """
+    Deprecation handler for the PlotMapView class
+    """
+    def __init__(self, model=None, modelgrid=None, ax=None,
+                 layer=0, extent=None):
+        super(DeprecatedMapView, self).__init__(model=model,
+                                                modelgrid=modelgrid,
+                                                ax=ax,
+                                                layer=layer,
+                                                extent=extent)
+
+    def plot_discharge(self, frf, fff, dis=None,
+                       flf=None, head=None, istep=1, jstep=1,
+                       normalize=False, **kwargs):
+        if dis is not None:
+            self.__cls.mg = plotutil._depreciated_dis_handler(modelgrid=self.mg,
+                                                              dis=dis)
+
+        super(DeprecatedMapView, self).plot_discharge(frf=frf, fff=fff,
+                                                      flf=flf, head=head,
+                                                      istep=1, jstep=1,
+                                                      normalize=normalize,
+                                                      **kwargs)
+
+
+
+
 class PlotCrossSection(object):
     """
     Class to create a cross section of the model.
@@ -877,7 +899,7 @@ class PlotCrossSection(object):
 
     """
 
-    def __init__(self, ax=None, model=None, modelgrid=None,
+    def __init__(self, model=None, modelgrid=None, ax=None,
                  line=None, extent=None):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -1308,3 +1330,27 @@ class PlotCrossSection(object):
         linecollection : matplotlib.collections.LineCollection
         """
         return self.__cls.get_grid_line_collection(**kwargs)
+
+
+class DeprecatedCrossSection(PlotCrossSection):
+    """
+    Deprecation handler for PlotCrossSection
+    """
+    def __init__(self, ax=None, model=None, modelgrid=None,
+                 line=None, extent=None):
+        super(DeprecatedCrossSection, self).__init__(ax=ax, model=model,
+                                                     modelgrid=modelgrid,
+                                                     line=line,
+                                                     extent=extent)
+
+    def plot_discharge(self, frf, fff, flf=None,
+                       head=None, kstep=1, hstep=1, normalize=False,
+                       **kwargs):
+        super(DeprecatedCrossSection, self).plot_discharge(frf=frf,
+                                                           fff=fff,
+                                                           flf=flf,
+                                                           head=head,
+                                                           kstep=kstep,
+                                                           hstep=hstep,
+                                                           normalize=normalize,
+                                                           **kwargs)
