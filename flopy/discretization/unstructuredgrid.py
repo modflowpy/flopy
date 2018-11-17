@@ -62,7 +62,10 @@ class UnstructuredGrid(Grid):
     @property
     def nlay(self):
         if self.layered:
-            return len(self.ncpl)
+            try:
+                return len(self.ncpl)
+            except TypeError:
+                return 1
         else:
             return 1
 
@@ -72,6 +75,8 @@ class UnstructuredGrid(Grid):
 
     @property
     def ncpl(self):
+        if self._ncpl is None:
+            return len(self._iverts)
         return self._ncpl
 
     @property
