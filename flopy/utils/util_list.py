@@ -990,13 +990,24 @@ class MfList(DataInterface, DataListInterface):
 
         """
         i0 = 3
+        unstructured = False
         if 'inode' in self.dtype.names:
             raise NotImplementedError()
+
+        if 'node' in self.dtype.names:
+            if 'i' not in self.dtype.names and\
+                    "j" not in self.dtype.names:
+                i0 = 1
+                unstructured = True
+
         arrays = {}
         for name in self.dtype.names[i0:]:
             if not self.dtype.fields[name][0] == object:
-                arr = np.zeros((self._model.nlay, self._model.nrow,
-                                self._model.ncol))
+                if unstructured:
+                    arr = np.zeros((self._model.nlay * self._model.ncpl,))
+                else:
+                    arr = np.zeros((self._model.nlay, self._model.nrow,
+                                    self._model.ncol))
                 arrays[name] = arr.copy()
 
         # if this kper is not found
@@ -1027,13 +1038,21 @@ class MfList(DataInterface, DataListInterface):
                 raise Exception("MfList: something bad happened")
 
         for name, arr in arrays.items():
-            cnt = np.zeros((self._model.nlay, self._model.nrow,
-                            self._model.ncol),
-                           dtype=np.float)
+            if unstructured:
+                cnt = np.zeros((self._model.nlay * self._model.ncpl,),
+                               dtype=np.float)
+            else:
+                cnt = np.zeros((self._model.nlay, self._model.nrow,
+                                self._model.ncol),
+                                dtype=np.float)
             #print(name,kper)
             for rec in sarr:
-                arr[rec['k'], rec['i'], rec['j']] += rec[name]
-                cnt[rec['k'], rec['i'], rec['j']] += 1.
+                if unstructured:
+                    arr[rec['node']] += rec[name]
+                    cnt[rec['node']] += 1.
+                else:
+                    arr[rec['k'], rec['i'], rec['j']] += rec[name]
+                    cnt[rec['k'], rec['i'], rec['j']] += 1.
             # average keys that should not be added
             if name != 'cond' and name != 'flux':
                 idx = cnt > 0.
