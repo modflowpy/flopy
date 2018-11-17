@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import os
+import numpy as np
 from ..discretization import StructuredGrid
 
 
@@ -221,7 +222,7 @@ class Vtk(object):
         # set the size of the vertex grid
         nrowvert = mg.nrow + 1
         ncolvert = mg.ncol + 1
-        nlayvert = mg.__nlay + 1
+        nlayvert = mg.nlay + 1
         nrvncv = nrowvert * ncolvert
         npoints = nrvncv * nlayvert
 
@@ -232,7 +233,7 @@ class Vtk(object):
         istart = 0
         istop = nrvncv
         top_botm = mg.top_botm
-        for k in range(mg.__nlay + 1):
+        for k in range(mg.nlay + 1):
             verts[istart:istop, 2] = mg.interpolate(top_botm[k],
                                                       verts[istart:istop, :2],
                                                       method='linear')
@@ -242,12 +243,12 @@ class Vtk(object):
         # create the list of points comprising each cell. points must be
         # listed a specific way according to vtk requirements.
         iverts = []
-        for k in range(mg.__nlay):
+        for k in range(mg.nlay):
             koffset = k * nrvncv
             for i in range(mg.nrow):
                 for j in range(mg.ncol):
                     if mg._idomain is not None:
-                        if self._idomain[k, i, j] == 0:
+                        if mg._idomain[k, i, j] == 0:
                             continue
                     iv1 = i * ncolvert + j + koffset
                     iv2 = iv1 + 1
@@ -262,8 +263,8 @@ class Vtk(object):
     @staticmethod
     def get_3d_vertex_connectivity(mg):
         if mg.idomain is None:
-            ncells = mg.__nlay * mg.nrow * mg.ncol
-            ibound = np.ones((mg.__nlay, mg.nrow, mg.ncol), dtype=np.int)
+            ncells = mg.nlay * mg.nrow * mg.ncol
+            ibound = np.ones((mg.nlay, mg.nrow, mg.ncol), dtype=np.int)
         else:
             ncells = (mg.idomain != 0).sum()
             ibound = mg.idomain
@@ -272,7 +273,7 @@ class Vtk(object):
         iverts = []
         ipoint = 0
         top_botm = mg.top_botm
-        for k in range(mg.__nlay):
+        for k in range(mg.nlay):
             for i in range(mg.nrow):
                 for j in range(mg.ncol):
                     if ibound[k, i, j] == 0:
