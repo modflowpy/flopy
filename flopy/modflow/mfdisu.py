@@ -409,6 +409,10 @@ class ModflowDisU(Package):
         z[:] = (self.top[:] - self.bot[:]) / 2.
         return z
 
+    @property
+    def ncpl(self):
+        return self.nodes/self.nlay
+
     @staticmethod
     def load(f, model, ext_unit_dict=None, check=False):
         """

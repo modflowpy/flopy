@@ -286,6 +286,8 @@ class Modflow(BaseModel):
     def nlay(self):
         if (self.dis):
             return self.dis.nlay
+        elif (self.disu):
+            return self.disu.nlay
         else:
             return 0
 
@@ -307,6 +309,17 @@ class Modflow(BaseModel):
     def nper(self):
         if (self.dis):
             return self.dis.nper
+        elif (self.disu):
+            return self.disu.nper
+        else:
+            return 0
+
+    @property
+    def ncpl(self):
+        if (self.dis):
+            return self.dis.nrow * self.dis.ncol
+        elif (self.disu):
+            return self.disu.ncpl
         else:
             return 0
 
