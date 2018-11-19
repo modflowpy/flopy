@@ -11,6 +11,7 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
 from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
 
@@ -235,8 +236,13 @@ class Modflow(BaseModel):
         else:
             ibound = None
 
-        # build grid
         lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+        if self.get_package('disu') is not None:
+            raise NotImplementedError("Unstructured grid <model.modelgrid> generation"
+                                      " not yet implemented for modflow-usg. Please create"
+                                      " modelgrid using flopy.discretization.UnstructuredGrid")
+            #self._modelgrid = UnstructuredGrid()
+        # build grid
         self._modelgrid = StructuredGrid(self.dis.delc.array,
                                          self.dis.delr.array,
                                          self.dis.top.array,

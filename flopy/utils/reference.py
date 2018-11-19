@@ -1732,7 +1732,6 @@ class SpatialReferenceUnstructured(SpatialReference):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        # todo: implement these methods for vertex
         from ..plot import plotutil
 
         patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a,
@@ -1744,7 +1743,6 @@ class SpatialReferenceUnstructured(SpatialReference):
         Get a patch collection of the grid
 
         """
-        # todo: implement vertex plotting methods
         from ..plot import plotutil
         edgecolor = kwargs.pop('colors')
         pc = plotutil.cvfd_to_patch_collection(self.verts, self.iverts)
@@ -1769,7 +1767,6 @@ class SpatialReferenceUnstructured(SpatialReference):
         contour_set : ContourSet
 
         """
-        # todo: implement vertex plotting methods.
         contour_set = ax.tricontour(self.xcenter, self.ycenter,
                                     a, **kwargs)
         return contour_set
