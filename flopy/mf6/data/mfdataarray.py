@@ -687,10 +687,10 @@ class MFArray(mfdata.MFMultiDimVar):
 
             try:
                 # load variable data from current file
-                data_from_file = storage.read_data_from_file(layer, file_handle,
-                                                             multiplier,
-                                                             print_format,
-                                                             di_struct)
+                data_from_file = storage.read_array_data_from_file(layer, file_handle,
+                                                                   multiplier,
+                                                                   print_format,
+                                                                   di_struct)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),

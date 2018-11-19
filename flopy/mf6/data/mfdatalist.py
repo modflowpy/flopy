@@ -145,7 +145,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         sarr = self.get_data(key=kper)
         if not isinstance(sarr, list):
             sarr = [sarr]
-        if len(sarr) == 0:
+        if len(sarr) == 0 or sarr[0] is None:
             return None
         if 'inode' in sarr[0].dtype.names:
             raise NotImplementedError()
@@ -490,7 +490,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 repeating_key=self._current_key)
                         data_val = data_line[index]
                         if data_item.is_cellid or (data_item.possible_cellid and
-                                self._validate_cellid([data_val], 0)):
+                                storage._validate_cellid([data_val], 0)):
                             if data_item.shape is not None and \
                                     len(data_item.shape) > 0 and \
                                     data_item.shape[0] == 'ncelldim':
@@ -677,7 +677,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         # lock things to maximize performance
         self._data_dimensions.lock()
 
-        self._temp_dict = {}
         self._last_line_info = []
         simple_line = False
         data_loaded = []
@@ -710,149 +709,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                       value_, traceback_, message,
                                       self._simulation_data.debug)
         else:
-            try:
-                line_num = 0
-                simple_line = self._load_line(arr_line, line_num, data_loaded,
-                                              True, storage)[1]
-                line_num += 1
-                store_data = True
-            except MFDataException as err:
-                # this could possibly be a constant line.
-                line = file_handle.readline()
-                arr_line = datautil.PyListUtil.\
-                    split_data_line(line)
-                if len(arr_line) >= 2 and arr_line[0].upper() == 'CONSTANT' \
-                        and len(self.structure.data_item_structures) >= 2 and \
-                        self.structure.data_item_structures[0].name.upper() \
-                        == 'CELLID':
-                    # store first line as a comment
-                    if storage.pre_data_comments is None:
-                        storage.pre_data_comments = \
-                                mfdata.MFComment(current_line, self._path,
-                                                 self._simulation_data, 0)
-                    else:
-                        storage.pre_data_comments.add_text(current_line)
-                    # store constant value for all cellids
-                    storage.layer_storage.first_item().data_storage_type = \
-                            mfdata.DataStorageType.internal_constant
-                    storage.store_internal(
-                            storage.convert_data(arr_line[1],
-                            self.structure.data_item_structures[1].type,
-                            self.structure.data_item_structures[0]),
-                            0, const=True, multiplier=[1.0])
-                    line = ' '
-                    while line != '':
-                        line = file_handle.readline()
-                        arr_line = datautil.PyListUtil.\
-                            split_data_line(line)
-                        if arr_line and (len(arr_line[0]) >= 2 and
-                                arr_line[0][:3].upper() == 'END'):
-                            return [False, line]
-                else:
-                    # not a constant or open/close line, exception is valid
-                    comment = 'Unable to process line 1 of data list: ' \
-                              '"{}"'.format(current_line)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data list from '
-                                          'package file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, err)
-        if self.structure.type == DatumType.record or self.structure.type == \
-                DatumType.string:
-            # records only contain a single line
-            storage.append_data(data_loaded)
-            self._data_dimensions.unlock()
-            return [False, None]
+            have_newrec_line, newrec_line, self._data_line =\
+                storage.read_list_data_from_file(file_handle, self._current_key,
+                                                 current_line, self._data_line)
+            return [have_newrec_line, newrec_line]
 
-        # get block recarray list for later processing
-        recarrays = []
-        parent_block = self.structure.parent_block
-        if parent_block is not None:
-            recarrays = parent_block.get_all_recarrays()
-        recarray_len = len(recarrays)
-
-        # loop until end of block
-        line = ' '
-        while line != '':
-            line = file_handle.readline()
-            arr_line = datautil.PyListUtil.\
-                split_data_line(line)
-            if arr_line and (len(arr_line[0]) >= 2 and
-                    arr_line[0][:3].upper() == 'END'):
-                # end of block
-                if store_data:
-                    # store as rec array
-                    storage.set_data(data_loaded, self._current_key)
-                self._data_dimensions.unlock()
-                return [False, line]
-            if recarray_len != 1 and \
-                    not mfdata.MFComment.is_comment(arr_line, True):
-                key = datautil.find_keyword(arr_line,
-                                              self.structure.get_keywords())
-                if key is None:
-                    # unexpected text, may be start of another record
-                    if store_data:
-                        storage.set_data(data_loaded, self._current_key)
-                    self._data_dimensions.unlock()
-                    return [True, line]
-            if simple_line and self.structure.num_optional == 0:
-                # do higher performance quick load
-                self._data_line = ()
-                cellid_index = 0
-                cellid_tuple = ()
-                for index, entry in enumerate(self._last_line_info):
-                    for sub_entry in entry:
-                        if sub_entry[1] is not None:
-                            data_structs = self.structure.data_item_structures
-                            if sub_entry[2] > 0:
-                                # is a cellid
-                                cell_num = storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index])
-                                cellid_tuple += (cell_num - 1,)
-                                # increment index
-                                cellid_index += 1
-                                if cellid_index == sub_entry[2]:
-                                    # end of current cellid
-                                    self._data_line += (cellid_tuple,)
-                                    cellid_index = 0
-                                    cellid_tuple = ()
-                            else:
-                                # not a cellid
-                                self._data_line += (storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index]),)
-                        else:
-                            self._data_line += (None,)
-                data_loaded.append(self._data_line)
-
-            else:
-                try:
-                    self._load_line(arr_line, line_num, data_loaded, False,
-                                    storage)
-                except Exception as ex:
-                    comment = 'Unable to process line {} of data list: ' \
-                              '"{}"'.format(line_num + 1, line)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data list from '
-                                          'package file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, ex)
-            line_num += 1
-        if store_data:
-            # store as rec array
-            storage.set_data(data_loaded, self._current_key)
-        self._data_dimensions.unlock()
         return [False, None]
 
     def _new_storage(self):
@@ -864,477 +725,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def _get_storage_obj(self):
         return self._data_storage
-
-    def _load_line(self, arr_line, line_num, data_loaded, build_type_list,
-                   storage, data_index_start=0, data_set=None,
-                   ignore_optional_vars=False):
-        org_data_line = self._data_line
-        simple_line = True
-        # only initialize if we are at the start of a new line
-        if data_index_start == 0:
-            data_set = self.structure
-            # new line of data
-            self._data_line = ()
-            # determine if at end of block
-            if arr_line and arr_line[0][:3].upper() == 'END':
-                self.enabled = True
-                return arr_line
-        data_index = data_index_start
-        arr_line_len = len(arr_line)
-        if mfdata.MFComment.is_comment(arr_line, True) and \
-                data_index_start == 0:
-            arr_line.insert(0, '\n')
-            self._add_data_line_comment(arr_line, line_num)
-        else:
-            # read variables
-            var_index = 0
-            data = ''
-            for data_item_index, data_item in \
-                    enumerate(data_set.data_item_structures):
-                if not data_item.optional or not ignore_optional_vars:
-                    if data_item.name == 'aux':
-                        data_index = self._process_aux(arr_line, arr_line_len,
-                                                       data_item, data_index,
-                                                       var_index)
-                    # optional mname data items are only specified if the
-                    # package is part of a model
-                    elif not data_item.optional or \
-                            data_item.name[0:5] != 'mname' or \
-                            not storage.in_model:
-                        if data_item.type == DatumType.keyword:
-                            data_index += 1
-                            simple_line = False
-                        elif data_item.type == DatumType.record:
-                            # this is a record within a record, recurse into
-                            # _load_line to load it
-                            data_index = self._load_line(arr_line, line_num,
-                                                         data_loaded,
-                                                         build_type_list,
-                                                         storage,
-                                                         data_index,
-                                                         data_item)[0]
-                            simple_line = False
-                        elif data_item.name != 'boundname' or \
-                                self._data_dimensions.package_dim.boundnames():
-                            if data_item.optional and data == '#':
-                                # comment mark found and expecting optional
-                                # data_item, we are done
-                                break
-                            if data_index >= arr_line_len and data_item.optional:
-                                break
-                            more_data_expected = True
-                            unknown_repeats = False
-                            repeat_count = 0
-                            while more_data_expected or unknown_repeats:
-                                if data_index >= arr_line_len:
-                                    if data_item.optional or unknown_repeats:
-                                        break
-                                    elif self.structure.num_optional >= \
-                                            len(data_set.data_item_structures)\
-                                            - data_item_index:
-                                        # there are enough optional variables
-                                        # to account for the lack of data
-                                        # reload line with all optional
-                                        # variables ignored
-                                        self._data_line = org_data_line
-                                        return self._load_line(arr_line,
-                                                               line_num,
-                                                               data_loaded,
-                                                               build_type_list,
-                                                               storage,
-                                                               data_index_start,
-                                                               data_set, True)
-                                    else:
-                                        comment = 'Not enough data provided ' \
-                                                  'for {}. Data for required ' \
-                                                  'data item "{}" not ' \
-                                                  'found'.format(self.
-                                                                 structure.
-                                                                 name,
-                                                                 data_item.
-                                                                 name)
-                                        type_, value_, \
-                                        traceback_ = sys.exc_info()
-                                        raise MFDataException(
-                                            self.structure.get_model(),
-                                            self.structure.get_package(),
-                                            self._path,
-                                            'loading data list from '
-                                            'package file',
-                                            self.structure.name,
-                                            inspect.stack()[0][3], type_,
-                                            value_, traceback_, comment,
-                                            self._simulation_data.debug)
-
-                                data = arr_line[data_index]
-                                repeat_count += 1
-                                if data_item.type == DatumType.keystring:
-                                    simple_line = False
-                                    if repeat_count <= 1:  # only process the
-                                        # keyword on the first repeat find
-                                        #  data item associated with correct
-                                        # keystring
-                                        name_data = data.lower()
-                                        if name_data not in \
-                                                data_item.keystring_dict:
-                                            name_data = '{}record'.format(
-                                                    name_data)
-                                            if name_data not in \
-                                                    data_item.keystring_dict:
-                                                # data does not match any
-                                                # expected keywords
-                                                if self._simulation_data.\
-                                                    verbosity_level.value >= \
-                                                    VerbosityLevel.normal.\
-                                                        value:
-                                                    print('WARNING: Failed to '
-                                                          'process line {}.  '
-                                                          'Line does not match'
-                                                          ' expected keystring'
-                                                          ' {}'.format(
-                                                          ' '.join(arr_line),
-                                                          data_item.name))
-                                                break
-                                        data_item_ks = \
-                                            data_item.keystring_dict[
-                                            name_data]
-                                        if data_item_ks == 0:
-                                            comment = 'Could not find ' \
-                                                      'keystring ' \
-                                                      '{}.'.format(name_data)
-                                            type_, value_, \
-                                            traceback_ = sys.exc_info()
-                                            raise MFDataException(
-                                                self.structure.get_model(),
-                                                self.structure.get_package(),
-                                                self._path,
-                                                'loading data list from '
-                                                'package file',
-                                                self.structure.name,
-                                                inspect.stack()[0][3], type_,
-                                                value_, traceback_, comment,
-                                                self._simulation_data.debug)
-
-                                        # keyword is always implied in a
-                                        # keystring and should be stored,
-                                        # add a string data_item for the
-                                        # keyword
-                                        if data_item.name in \
-                                                self._temp_dict:
-                                            # used cached data item for
-                                            # performance
-                                            keyword_data_item = \
-                                                self._temp_dict[data_item.name]
-                                        else:
-                                            keyword_data_item = \
-                                                deepcopy(data_item)
-                                            keyword_data_item.type = \
-                                                DatumType.string
-                                            self._temp_dict[data_item.name] \
-                                                = keyword_data_item
-                                        data_index, more_data_expected, \
-                                            unknown_repeats = \
-                                            self._append_data(
-                                                    keyword_data_item,
-                                                    arr_line,
-                                                    arr_line_len,
-                                                    data_index,
-                                                    var_index,
-                                                    repeat_count)
-                                    if isinstance(data_item_ks,
-                                        mfstructure.MFDataStructure):
-                                        dis = \
-                                        data_item_ks.data_item_structures
-                                        for ks_data_item in dis:
-                                            if ks_data_item.type != \
-                                                    DatumType.keyword \
-                                                    and data_index < \
-                                                            arr_line_len:
-                                                # data item contains additional
-                                                # information
-                                                data_index,\
-                                                more_data_expected, \
-                                                unknown_repeats = \
-                                                    self._append_data(
-                                                        ks_data_item,
-                                                        arr_line,
-                                                        arr_line_len,
-                                                        data_index,
-                                                        var_index,
-                                                        repeat_count)
-                                        while data_index < arr_line_len:
-                                            try:
-                                                # append remaining data
-                                                # (temporary fix)
-                                                data_index, \
-                                                more_data_expected, \
-                                                unknown_repeats = \
-                                                    self._append_data(
-                                                        ks_data_item,
-                                                        arr_line,
-                                                        arr_line_len,
-                                                        data_index,
-                                                        var_index,
-                                                        repeat_count)
-                                            except MFDataException:
-                                                break
-                                    else:
-                                        if data_item_ks.type != \
-                                                DatumType.keyword:
-                                            data_index, \
-                                            more_data_expected, \
-                                            unknown_repeats = \
-                                            self._append_data(data_item_ks,
-                                                              arr_line,
-                                                              arr_line_len,
-                                                              data_index,
-                                                              var_index,
-                                                              repeat_count)
-                                        else:
-                                            # append empty data as a placeholder.
-                                            # this is necessarily to keep the
-                                            # recarray a consistent shape
-                                            self._data_line = \
-                                                self._data_line + (None,)
-                                            data_index += 1
-                                else:
-                                    if data_item.tagged and repeat_count == 1:
-                                        # data item tagged, include data item
-                                        # name as a keyword
-                                        di_type = data_item.type
-                                        data_item.type = DatumType.keyword
-                                        data_index, more_data_expected, \
-                                            unknown_repeats = \
-                                            self._append_data(data_item,
-                                                              arr_line,
-                                                              arr_line_len,
-                                                              data_index,
-                                                              var_index,
-                                                              repeat_count)
-                                        data_item.type = di_type
-                                    data_index, more_data_expected, \
-                                        unknown_repeats = \
-                                        self._append_data(data_item,
-                                                          arr_line,
-                                                          arr_line_len,
-                                                          data_index,
-                                                          var_index,
-                                                          repeat_count)
-                                if more_data_expected is None:
-                                    # indeterminate amount of data expected.
-                                    # keep reading data until eoln
-                                    more_data_expected = \
-                                        (data_index < arr_line_len)
-                                simple_line = simple_line and \
-                                        not unknown_repeats and \
-                                        len(data_item.shape) == 0
-                    var_index += 1
-
-            # populate unused optional variables with None type
-            for data_item in data_set.data_item_structures[var_index:]:
-                simple_line = False
-                if data_item.name == 'aux':
-                    self._process_aux(arr_line, arr_line_len, data_item,
-                                      data_index, var_index)
-                elif data_item.name != 'boundname' or \
-                        self._data_dimensions.package_dim.boundnames():
-                    data_index, more_data_expected, \
-                        unknown_repeats = self._append_data(data_item, None, 0,
-                                                            data_index,
-                                                            var_index, 1)
-
-            # only do final processing on outer-most record
-            if data_index_start == 0:
-                # if more pieces exist
-                if arr_line_len > data_index + 1:
-                    # FEATURE: Keep number of white space characters used in
-                    # comments section
-                    storage.comments[line_num] = mfdata.MFComment(
-                            ' '.join(arr_line[data_index+1:]), self._path,
-                            self._simulation_data, line_num)
-                data_loaded.append(self._data_line)
-        return data_index, simple_line
-
-    def _process_aux(self, arr_line, arr_line_len, data_item, data_index,
-                     var_index):
-        aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
-        if aux_var_names is not None:
-            for var_name in aux_var_names[0]:
-                if var_name.lower() != 'auxiliary':
-                    if data_index >= arr_line_len:
-                        # store placeholder None
-                        data_index, more_data_expected, unknown_repeats = \
-                            self._append_data(data_item, None, 0, data_index,
-                                              var_index, 1)
-                    else:
-                        # read in aux variables
-                        data_index, more_data_expected, unknown_repeats = \
-                            self._append_data(data_item, arr_line,
-                                              arr_line_len, data_index,
-                                              var_index, 0)
-        return data_index
-
-    def _append_data(self, data_item, arr_line, arr_line_len, data_index,
-                     var_index, repeat_count):
-        # append to a 2-D list which will later be converted to a numpy
-        # rec array
-        storge = self._get_storage_obj()
-        self._last_line_info.append([])
-        if data_item.is_cellid or (data_item.possible_cellid and
-                                   self._validate_cellid(arr_line,
-                                                         data_index)):
-            if self._data_dimensions is None:
-                comment = 'CellID field specified in for data ' \
-                          '"{}" field "{}" which does not contain a model '\
-                          'grid. This could be due to a problem with ' \
-                          'the flopy definition files. Please get the ' \
-                          'latest flopy definition files' \
-                          '.'.format(self.structure.name,
-                                     data_item.name)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(), self._path,
-                                      'loading data list from package file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_, value_,
-                                      traceback_, comment,
-                                      self._simulation_data.debug)
-            # read in the entire cellid
-            model_grid = self._data_dimensions.get_model_grid()
-            cellid_size = model_grid.get_num_spatial_coordinates()
-            cellid_tuple = ()
-            if not datautil.DatumUtil.is_int(arr_line[data_index]) and \
-                    arr_line[data_index].lower() == 'none':
-                # special case where cellid is 'none', store as tuple of
-                # 'none's
-                cellid_tuple = ('none',) * cellid_size
-                self._last_line_info[-1].append([data_index, 'string',
-                                                 cellid_size])
-                new_index = data_index + 1
-            else:
-                # handle regular cellid
-                if cellid_size + data_index > arr_line_len:
-                    comment = 'Not enough data found when reading cell ID ' \
-                              'in data "{}" field "{}". Expected {} items ' \
-                              'and found {} items'\
-                              '.'.format(self.structure.name,
-                                         data_item.name, cellid_size,
-                                         arr_line_len - data_index)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data list from package '
-                                          'file', self.structure.name,
-                                          inspect.stack()[0][3], type_, value_,
-                                          traceback_, comment,
-                                          self._simulation_data.debug)
-                for index in range(data_index, cellid_size + data_index):
-                    if not datautil.DatumUtil.is_int(arr_line[index]) or \
-                            int(arr_line[index]) < 0:
-                        comment = 'Expected a integer or cell ID in ' \
-                                  'data "{}" field "{}".  Found {} ' \
-                                  'in line "{}"' \
-                                  '. '.format(self.structure.name,
-                                              data_item.name, arr_line[index],
-                                              arr_line)
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'loading data list from package '
-                                              'file', self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_,
-                                              traceback_, comment,
-                                              self._simulation_data.debug)
-
-                    data_converted = storge.convert_data(arr_line[index],
-                                                         data_item.type)
-                    cellid_tuple = cellid_tuple + (int(data_converted) - 1,)
-                    self._last_line_info[-1].append([index, 'integer',
-                                                     cellid_size])
-                new_index = data_index + cellid_size
-            self._data_line = self._data_line + (cellid_tuple,)
-            if data_item.shape is not None and len(data_item.shape) > 0 and \
-                    data_item.shape[0] == 'ncelldim':
-                # shape is the coordinate shape, which has already been read
-                more_data_expected = False
-                unknown_repeats = False
-            else:
-                more_data_expected, unknown_repeats = \
-                    self._resolve_shape(data_item, repeat_count)
-            return new_index, more_data_expected, unknown_repeats
-        else:
-            if arr_line is None:
-                data_converted = None
-                self._last_line_info[-1].append([data_index, None, 0])
-            else:
-                if arr_line[data_index].lower() in \
-                        self._data_dimensions.package_dim.get_tsnames():
-                    # references a time series, store as is
-                    data_converted = arr_line[data_index].lower()
-                    # override recarray data type to support writing
-                    # string values
-                    storge.override_data_type(var_index, object)
-                    self._last_line_info[-1].append([data_index, 'string', 0])
-                else:
-                    data_converted = storge.convert_data(arr_line[data_index],
-                                                         data_item.type,
-                                                         data_item)
-                    self._last_line_info[-1].append([data_index,
-                                                     data_item.type, 0])
-            self._data_line = self._data_line + (data_converted,)
-            more_data_expected, unknown_repeats = \
-                self._resolve_shape(data_item, repeat_count)
-            return data_index + 1, more_data_expected, unknown_repeats
-
-    def _resolve_shape(self, data_item, repeat_count, cellid_size=None):
-        try:
-            resolved_shape, shape_rule = \
-                self._data_dimensions.get_data_shape(data_item, self.structure,
-                                                     self._data_line,
-                                                     repeating_key=
-                                                     self._current_key)
-        except Exception as se:
-            comment = 'Unable to resolve shape for data "{}" field "{}"' \
-                      '.'.format(self.structure.name,
-                                  data_item.name)
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(), self._path,
-                                  'loading data list from package file',
-                                  self.structure.name, inspect.stack()[0][3],
-                                  type_, value_, traceback_, comment,
-                                  self._simulation_data.debug, se)
-
-        if cellid_size is not None:
-            data_item.remove_cellid(resolved_shape, cellid_size)
-
-        if len(resolved_shape) == 1:
-            if repeat_count < resolved_shape[0]:
-                return True, shape_rule is not None
-            elif resolved_shape[0] == -9999:
-                # repeating unknown number of times in 1-D array
-                return False, True
-        return False, False
-
-    def _validate_cellid(self, arr_line, data_index):
-        if not self.structure.model_data:
-            # not model data so this is not a cell id
-            return False
-        if arr_line is None:
-            return False
-        model_grid = self._data_dimensions.get_model_grid()
-        cellid_size = model_grid.get_num_spatial_coordinates()
-        if cellid_size + data_index > len(arr_line):
-            return False
-        for index in range(data_index, cellid_size + data_index):
-            if not datautil.DatumUtil.is_int(arr_line[index]):
-                return False
-            if int(arr_line[index]) <= 0:
-                return False
-        return True
 
     def plot(self, key=None, names=None, filename_base=None,
              file_extension=None, mflay=None, **kwargs):
@@ -1498,31 +888,32 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
-        # initialize these big arrays
-        if model_grid.grid_type() == DiscretizationType.DIS:
-            m4ds = {}
-            for name, array in arrays.items():
-                m4d = np.zeros((nper, model_grid.num_layers,
-                                model_grid.num_rows, model_grid.num_columns))
-                m4d[0, :, :, :] = array
-                m4ds[name] = m4d
-            for kper in range(1, nper):
-                arrays = self.to_array(kper=kper, mask=True)
+        if arrays is not None:
+            # initialize these big arrays
+            if model_grid.grid_type() == DiscretizationType.DIS:
+                m4ds = {}
                 for name, array in arrays.items():
-                    m4ds[name][kper, :, :, :] = array
-            return m4ds
-        else:
-            m3ds = {}
-            for name, array in arrays.items():
-                m3d = np.zeros((nper, model_grid.num_layers,
-                                model_grid.num_cells_per_layer()))
-                m3d[0, :, :] = array
-                m3ds[name] = m3d
-            for kper in range(1, nper):
-                arrays = self.to_array(kper=kper, mask=True)
+                    m4d = np.zeros((nper, model_grid.num_layers,
+                                    model_grid.num_rows, model_grid.num_columns))
+                    m4d[0, :, :, :] = array
+                    m4ds[name] = m4d
+                for kper in range(1, nper):
+                    arrays = self.to_array(kper=kper, mask=True)
+                    for name, array in arrays.items():
+                        m4ds[name][kper, :, :, :] = array
+                return m4ds
+            else:
+                m3ds = {}
                 for name, array in arrays.items():
-                    m3ds[name][kper, :, :] = array
-            return m3ds
+                    m3d = np.zeros((nper, model_grid.num_layers,
+                                    model_grid.num_cells_per_layer()))
+                    m3d[0, :, :] = array
+                    m3ds[name] = m3d
+                for kper in range(1, nper):
+                    arrays = self.to_array(kper=kper, mask=True)
+                    for name, array in arrays.items():
+                        m3ds[name][kper, :, :] = array
+                return m3ds
 
     def masked_4D_arrays_itr(self):
         model_grid = self._data_dimensions.get_model_grid()
@@ -1531,29 +922,29 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         # get the first kper
         arrays = self.to_array(kper=0, mask=True)
 
-        # initialize these big arrays
-        for name, array in arrays.items():
-            if model_grid.grid_type() == DiscretizationType.DIS:
-                m4d = np.zeros((nper, model_grid.num_layers(),
-                                model_grid.num_rows(), model_grid.num_columns()))
-                m4d[0, :, :, :] = array
-                for kper in range(1, nper):
-                    arrays = self.to_array(kper=kper, mask=True)
-                    for tname, array in arrays.items():
-                        if tname == name:
-                            m4d[kper, :, :, :] = array
-                yield name, m4d
-            else:
-                m3d = np.zeros((nper, model_grid.num_layers(),
-                                model_grid.num_cells_per_layer()))
-                m3d[0, :, :] = array
-                for kper in range(1, nper):
-                    arrays = self.to_array(kper=kper, mask=True)
-                    for tname, array in arrays.items():
-                        if tname == name:
-                            m3d[kper, :, :] = array
-                yield name, m3d
-
+        if arrays is not None:
+            # initialize these big arrays
+            for name, array in arrays.items():
+                if model_grid.grid_type() == DiscretizationType.DIS:
+                    m4d = np.zeros((nper, model_grid.num_layers(),
+                                    model_grid.num_rows(), model_grid.num_columns()))
+                    m4d[0, :, :, :] = array
+                    for kper in range(1, nper):
+                        arrays = self.to_array(kper=kper, mask=True)
+                        for tname, array in arrays.items():
+                            if tname == name:
+                                m4d[kper, :, :, :] = array
+                    yield name, m4d
+                else:
+                    m3d = np.zeros((nper, model_grid.num_layers(),
+                                    model_grid.num_cells_per_layer()))
+                    m3d[0, :, :] = array
+                    for kper in range(1, nper):
+                        arrays = self.to_array(kper=kper, mask=True)
+                        for tname, array in arrays.items():
+                            if tname == name:
+                                m3d[kper, :, :] = array
+                    yield name, m3d
 
     def to_array(self, kper=0, mask=False):
         return super(MFTransientList, self).to_array(kper, mask)

@@ -119,6 +119,7 @@ class MFScalar(mfdata.MFData):
                                   self._simulation_data.debug, ex)
 
     def set_data(self, data):
+        storge = self._get_storage_obj()
         if self.structure.type == DatumType.record:
             if data is not None:
                 if not isinstance(data, list) or isinstance(data, np.ndarray) or \
@@ -130,8 +131,7 @@ class MFScalar(mfdata.MFData):
                 data = data[0]
                 if (isinstance(data, list) or isinstance(data, tuple)) and \
                         len(data) > 1:
-                    self._add_data_line_comment(data[1:], 0)
-        storge = self._get_storage_obj()
+                    storge.add_data_line_comment(data[1:], 0)
         data_struct = self.structure.data_item_structures[0]
         try:
             converted_data = storge.convert_data(data, self._data_type,
@@ -537,7 +537,7 @@ class MFScalar(mfdata.MFData):
 
         if len(arr_line) > index_num:
             # save remainder of line as comment
-            self._add_data_line_comment(arr_line[index_num:], 0)
+            storage.add_data_line_comment(arr_line[index_num:], 0)
         return [False, None]
 
     def _new_storage(self):
