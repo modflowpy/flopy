@@ -731,7 +731,7 @@ class ModelMap(object):
     """
     def __new__(cls, sr=None, ax=None, model=None, dis=None, layer=0,
                 extent=None, xul=None, yul=None, xll=None, yll=None,
-                rotation=None, length_multiplier=1.):
+                rotation=None, length_multiplier=None):
 
         from ..utils.reference import SpatialReferenceUnstructured
         from ..plot.plotbase import DeprecatedMapView
@@ -747,6 +747,9 @@ class ModelMap(object):
                                                      xul, yul, xll, yll,
                                                      rotation)
         elif sr is not None:
+            if length_multiplier is not None:
+                sr.length_multiplier = length_multiplier
+
             if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
                 sr.set_spatialreference(xul, yul, xll, yll, rotation)
 
