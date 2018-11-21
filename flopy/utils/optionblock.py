@@ -76,8 +76,11 @@ class OptionBlock(object):
                         else:
                             val.append(str((object.__getattribute__(self, k))))
 
-                s += " ".join(val)
-                s += "\n"
+                if "None" in val:
+                    pass
+                else:
+                    s += " ".join(val)
+                    s += "\n"
             except:
                 pass
 
@@ -89,11 +92,12 @@ class OptionBlock(object):
         Syntactic sugar to allow for dynamic recarray/attribute
         interactions and data type enforcement on dynamic attributes
         """
-        # todo: add a nonetype catch in here....
-
         err_msg = "Data type must be compatible with {}"
         if key in ("_context", "_attr_types", "options_line"):
             self.__dict__[key] = value
+
+        elif value is None:
+            super(OptionBlock, self).__setattr__(key, value)
 
         elif isinstance(value, np.recarray):
             for name in value.dtype.names:
@@ -145,6 +149,8 @@ class OptionBlock(object):
 
                 if not vals[0]:
                     value = False
+                elif None in vals:
+                    value = vals[0]
                 else:
                     value = np.recarray((1,), dtype=dtypes)
                     value[0] = tuple(vals)
@@ -172,6 +178,20 @@ class OptionBlock(object):
         Dynamic attribute creation method
         :return:
         """
+        # set up all attributes for the class!
+        for key, ctx in self._context.items():
+            if ctx[OptionUtil.dtype] in (np.bool_, bool, np.bool):
+                self.__setattr__(key, False)
+            else:
+                self.__setattr__(key, None)
+
+            if ctx[OptionUtil.nested]:
+                for k, d in ctx[OptionUtil.vars].items():
+                    if d[OptionUtil.dtype] in (np.bool_, bool, np.bool):
+                        self.__setattr__(k, False)
+                    else:
+                        self.__setattr__(k, None)
+
         t = self.options_line.split()
         nested = False
         ix = 0
@@ -299,11 +319,11 @@ class OptionUtil(object):
     simple_flag = OrderedDict([(dtype, np.bool_),
                                (nested, False)])
     simple_str = OrderedDict([(dtype, str),
-                               (nested, False)])
+                              (nested, False)])
     simple_float = OrderedDict([(dtype, float),
                                (nested, False)])
     simple_int = OrderedDict([(dtype, int),
-                               (nested, False)])
+                              (nested, False)])
 
     simple_tabfile = OrderedDict([(dtype, np.bool_),
                                   (nested, True),
@@ -316,7 +336,7 @@ class OptionUtil(object):
                                             n_nested: 2,
                                 vars: OrderedDict([('phiramp', simple_float),
                                                    ('iunitramp', simple_int)])}),
-                                ('tabfiles', simple_tabfile)])
+                               ('tabfiles', simple_tabfile)])
 
     _sfrcontext = OrderedDict([("reachinput", simple_flag),
                                ("transroute", simple_flag),
@@ -437,10 +457,12 @@ if __name__ == "__main__":
     import flopy.modflow.mfwel as wel
     import flopy.modflow.mfsfr2 as sfr
     import flopy.modflow.mfuzf1 as uzf
-    options = "WELOPT.txt"
+    options = "WELOPT3.txt"
     f = open(options, 'r')
     opts = OptionBlock.load_options(f, wel.ModflowWel)
     # opts.smoothfact = 0.50
+    opts.specify = True
+    print(opts.specify)
     print(repr(opts))
     print(opts.single_line_options)
     with open("WELOPT2.txt", "w") as f:
