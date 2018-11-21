@@ -33,6 +33,22 @@ class OptionBlock(object):
         t = t[1:-2]
         return " ".join(t)
 
+    def update_from_package(self, pak):
+        """
+        Updater method to check the package and update
+        OptionBlock attribute values based on package
+        values
+        :param pak: flopy.package
+        """
+        for key, ctx in self._context.items():
+            if key in pak.__dict__:
+                val = pak.__dict__[key]
+                self.__setattr__(key, val)
+                if ctx[OptionUtil.nested]:
+                    for k2, v2 in ctx[OptionUtil.vars].items():
+                        if k2 in pak.__dict__:
+                            self.__setattr__(k2, v2)
+
     def __repr__(self):
         """
         Syntactic sugar that creates a dynamic representation
@@ -73,6 +89,8 @@ class OptionBlock(object):
         Syntactic sugar to allow for dynamic recarray/attribute
         interactions and data type enforcement on dynamic attributes
         """
+        # todo: add a nonetype catch in here....
+
         err_msg = "Data type must be compatible with {}"
         if key in ("_context", "_attr_types", "options_line"):
             self.__dict__[key] = value
