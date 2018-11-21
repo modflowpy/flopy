@@ -10,6 +10,7 @@ import glob
 import flopy
 from flopy.utils.util_array import Util2d
 import numpy as np
+import sys
 
 cpth = os.path.join('temp', 't034')
 if not os.path.isdir(cpth):
@@ -189,6 +190,50 @@ def test_load_and_write():
     assert np.sum(uzf.iuzfbnd.array) == 28800
     assert np.isclose(np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4)
 
+
+def test_read_write_nwt_options():
+    if sys.version_info[0] > 2:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
+    from flopy.modflow import ModflowWel, ModflowUzf1, ModflowSfr2
+    from flopy.utils.optionblock import OptionBlock
+
+    welstr = "OPTIONS\nSPECIFY 0.5 10\nTABFILES 2 28\nEND\n"
+    uzfstr = "OPTIONS\nSPECIFYTHTR\nSPECIFYTHTI\nNOSURFLEAK\n" \
+             "SPECIFYSURFK\nSEEPSURFK\nETSQUARE 0.7\nNETFLUX 10 20\n" \
+             "SAVEFINF\nEND\n"
+    sfrstr = "OPTIONS\nREACHINPUT\nTRANSROUTE\nTABFILES 10 21\n" \
+             "LOSSFACTOR 0.5\nSTRHC1KH 0.1\nSTRHC1KV 0.2\nEND\n"
+
+    welopt = OptionBlock.load_options(StringIO(welstr), ModflowWel)
+    uzfopt = OptionBlock.load_options(StringIO(uzfstr), ModflowUzf1)
+    sfropt = OptionBlock.load_options(StringIO(sfrstr), ModflowSfr2)
+
+    assert repr(welopt) == welstr
+    assert repr(uzfopt) == uzfstr
+    assert repr(sfropt) == sfrstr
+
+    ws = os.path.join('temp', 't034')
+
+    welopt.write_options(os.path.join(ws, "welopt.txt"))
+    uzfopt.write_options(os.path.join(ws, 'uzfopt.txt'))
+    sfropt.write_options(os.path.join(ws, 'sfropt.txt'))
+
+    welopt = OptionBlock.load_options(os.path.join(ws, "welopt.txt"),
+                                      ModflowWel)
+    uzfopt = OptionBlock.load_options(os.path.join(ws, 'uzfopt.txt'),
+                                      ModflowUzf1)
+    sfropt = OptionBlock.load_options(os.path.join(ws, "sfropt.txt"),
+                                      ModflowSfr2)
+
+    assert repr(welopt) == welstr
+    assert repr(uzfopt) == uzfstr
+    assert repr(sfropt) == sfrstr
+
+
 if __name__ == '__main__':
-    test_create()
-    test_load_and_write()
+    # test_create()
+    # test_load_and_write()
+    test_read_write_nwt_options()
