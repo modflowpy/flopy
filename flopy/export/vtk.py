@@ -48,9 +48,27 @@ class Vtk(object):
         self.arrays[name] = a
         return
 
-    def write(self, shared_vertex=False, ibound_filter=False):
+    def write(self, shared_vertex=False, ibound_filter=False, htop=None):
         """
-        Write the vtk file
+
+        Parameters
+        ----------
+        shared_vertex : bool
+            Make a smoothed representation of model layers by calculating
+            an interpolated z value for the cell corner vertices.
+
+        ibound_filter : bool
+            Use the ibound array in the basic package of the model that
+            was passed in to exclude cells in the vtk file that have an
+            ibound value of zero.
+
+        htop : ndarray
+            This array must of shape (nlay, nrow, ncol).  If htop is passed
+            then these htop values will be used to set the z elevation for the
+            cell tops.  This makes it possible to show cells based on the
+            saturated thickness.  htop should be calculated by the user as the
+            minimum of the cell top and the head and the maximum of the cell
+            bottom and the head.
 
         """
 
@@ -59,19 +77,27 @@ class Vtk(object):
             print('writing vtk file')
         f = open(self.output_filename, 'w')
 
-        # calculate number of active cells
-        nlay, nrow, ncol = self.shape
-        ncells = nlay * nrow * ncol
         ibound = None
         if ibound_filter:
             assert self.model.bas6, 'Cannot find basic (BAS6) package ' \
                 'and ibound_filter is set to True.'
             ibound = self.model.bas6.ibound.array
-            ncells = (ibound != 0).sum()
+
+        dis = self.model.dis
+        z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
+                       dis.botm.array])
         if shared_vertex:
-            npoints = (nrow + 1) * (ncol + 1) * (nlay + 1)
+            verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(dis.nlay,
+                                                            z, ibound=ibound)
         else:
-            npoints = ncells * 8
+            top = z[:-1]
+            bot = z[1:]
+            if htop is not None:
+                top = htop
+            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, top, bot,
+                                                              ibound=ibound)
+        ncells = len(iverts)
+        npoints = verts.shape[0]
         if self.verbose:
             s = 'Number of point is {}\n ' \
                 'Number of cells is {}\n'.format(npoints, ncells)
@@ -97,15 +123,6 @@ class Vtk(object):
 
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
-        dis = self.model.dis
-        z = np.vstack([dis.top.array.reshape(1, dis.nrow, dis.ncol),
-                       dis.botm.array])
-        if shared_vertex:
-            verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(dis.nlay,
-                                                            z, ibound=ibound)
-        else:
-            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, z,
-                                                              ibound=ibound)
 
         for row in verts:
             s = indent_level * '  ' + '{} {} {} \n'.format(*row)
