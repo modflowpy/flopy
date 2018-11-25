@@ -4,6 +4,7 @@ FloPy Changes
 * Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
 * Added a new flopy3_MT3DMS_examples notebook, which uses Flopy to reproduce the example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
 * Pylint is now used on Travis for the Python 3.5 distribution to check for coding errors.
+* Added a new htop argument to the vtk writer, which allows cell tops to be defined by the simulated head.
 
 * Bug fixes:
     * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
