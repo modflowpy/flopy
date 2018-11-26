@@ -76,6 +76,7 @@ install:
     - pip install nbconvert
     - pip install nose-timer
     - pip install coveralls
+    - pip install pylint
 
 
 # command to run tests
@@ -89,6 +90,7 @@ script:
     - echo pyshp; python -c "import shapefile; print(shapefile.__version__)"
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
+    - echo pylint version; pylint --version
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
     - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
       nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
@@ -98,3 +100,6 @@ script:
 
 after_success:
     - coveralls
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
+      pylint --errors-only ./flopy;
+      fi
