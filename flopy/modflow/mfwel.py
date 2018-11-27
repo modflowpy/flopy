@@ -161,6 +161,8 @@ class ModflowWel(Package):
         if options is None:
             options = []
         self.specify = False
+        self.phiramp = None
+        self.iunitramp = None
         self.options = options
         if isinstance(options, OptionBlock):
             self.specify = self.options.specify

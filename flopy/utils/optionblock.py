@@ -12,14 +12,16 @@ class OptionBlock(object):
     Parameters:
         options_line: (str) single line based options string
         package: (flopy.pakbase.Package) instance
+        block: (bool) flag to write as single line or block type
     """
-    def __init__(self, options_line, package):
+    def __init__(self, options_line, package, block=True):
         self._context = OptionUtil.context[package.ftype().lower()]
         self._attr_types = {}
         self.options_line = options_line
         self.package = package
         self.auxillary = []
         self.noprint = False
+        self.block = block
 
         self.__build_attr_types()
         self._set_attributes()
@@ -237,16 +239,24 @@ class OptionBlock(object):
 
     def write_options(self, f):
         """
-        Method to write the options block to
+        Method to write the options block or options line to
         an open file object.
 
         :param f: (file) open file object
         """
         if isinstance(f, str):
             with open(f, "w") as optfile:
-                optfile.write(repr(self))
+                if self.block:
+                    optfile.write(repr(self))
+                else:
+                    optfile.write(self.single_line_options)
+                    optfile.write("\n")
         else:
-            f.write(repr(self))
+            if self.block:
+                f.write(repr(self))
+            else:
+                f.write(self.single_line_options)
+                f.write("\n")
 
     @staticmethod
     def load_options(options, package):

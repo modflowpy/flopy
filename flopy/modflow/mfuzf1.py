@@ -551,7 +551,7 @@ class ModflowUzf1(Package):
             txt += 'end\n'
             f_uzf.write(txt)
 
-    def write_file(self,f=None):
+    def write_file(self, f=None):
         """
         Write the package file.
 
@@ -563,7 +563,10 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         if f is not None:
-            f_uzf = f
+            if isinstance(f, str):
+                f_uzf = open(f, "w")
+            else:
+                f_uzf = f
         else:
             f_uzf = open(self.fn_path, 'w')
         f_uzf.write('{}\n'.format(self.heading))
@@ -701,20 +704,34 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
         specifythtr, specifythti, nosurfleak, nwt_11_fmt = False, False, False, False
+        etsquare, netflux, rejectsurfk, seepsurfk = None, None, False, False
         options = None
         if model.version == 'mfnwt' and 'options' in line.lower():
             options = OptionBlock.load_options(f, ModflowUzf1)
+            line = f.readline()
+
+        else:
+            query = ("specifythtr", "specifythti", "nosurfleak",
+                     "specifysurfk", "rejectsurfk", "seepsurfk",
+                     "etsquare", "netflux", "savefinf")
+            for i in query:
+                if i in line.lower():
+                    options = OptionBlock(line.lower().strip(),
+                                          ModflowUzf1, block=False)
+                    line = f.readline()
+                    break
+
+        if options is not None:
             specifythtr = options.specifythtr
             specifythti = options.specifythti
             nosurfleak = options.nosurfleak
-        #if len(line.split()) == 1 and 'options' in line.split()[0]:
-        #    nwt_11_fmt = True
-        #if 'options' in line:
-        #    line = read_nwt_options(f)
-        else:
-            specifythtr, specifythti, nosurfleak = _parse1a(line)
+            rejectsurfk = options.rejectsurfk
+            seepsurfk = options.seepsurfk
 
-        line = f.readline()
+            if options.etsquare:
+                etsquare = options.smoothfact
+            if options.netflux:
+                netflux = [options.unitrech, options.unitdis]
 
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
@@ -840,7 +857,10 @@ class ModflowUzf1(Package):
                            surfdep=surfdep, uzgag=uzgag,
                            nwt_11_fmt=nwt_11_fmt,
                            specifythtr=specifythtr, specifythti=specifythti,
-                           nosurfleak=nosurfleak, unitnumber=unitnumber,
+                           nosurfleak=nosurfleak, etsquare=etsquare,
+                           netflux=netflux, seepsurfk=seepsurfk,
+                           rejectsurfk=rejectsurfk,
+                           unitnumber=unitnumber,
                            filenames=filenames, options=options, **arrays)
 
     @staticmethod

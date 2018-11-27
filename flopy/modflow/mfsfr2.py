@@ -640,18 +640,30 @@ class ModflowSfr2(Package):
                 break
 
         options = None
-        if "options" in line.lower() and model.version == "mfnwt":
-            options = OptionBlock.load_options(f, ModflowSfr2)
-            line = next(f)
+        if model.version == "mfnwt":
+            if "options" in line.lower():
+                options = OptionBlock.load_options(f, ModflowSfr2)
 
-            transroute = options.transroute
-            reachinput = options.reachinput
-            if isinstance(options.tabfiles, np.ndarray):
-                tabfiles = True
             else:
-                tabfiles = False
-            numtab = options.numtab if tabfiles else 0
-            maxval = options.maxval if tabfiles else 0
+                query = ("reachinput", "transroute", "tabfiles",
+                         "lossfactor", "strhc1kh", "strhc1kv")
+                for i in query:
+                    if i in line.lower():
+                        options = OptionBlock(line.lower().strip(),
+                                              ModflowSfr2, block=False)
+                        break
+
+            if options is not None:
+                transroute = options.transroute
+                reachinput = options.reachinput
+                if isinstance(options.tabfiles, np.ndarray):
+                    tabfiles = True
+                else:
+                    tabfiles = False
+                numtab = options.numtab if tabfiles else 0
+                maxval = options.maxval if tabfiles else 0
+                line = next(f)
+
         # Item 1
         else:
             if "reachinput" in line.lower():
