@@ -18,6 +18,8 @@ class OptionBlock(object):
         self._attr_types = {}
         self.options_line = options_line
         self.package = package
+        self.auxillary = []
+        self.noprint = False
 
         self.__build_attr_types()
         self._set_attributes()
@@ -45,8 +47,9 @@ class OptionBlock(object):
                 val = pak.__dict__[key]
                 self.__setattr__(key, val)
                 if ctx[OptionUtil.nested]:
-                    for k2, v2 in ctx[OptionUtil.vars].items():
+                    for k2, ctx2 in ctx[OptionUtil.vars].items():
                         if k2 in pak.__dict__:
+                            v2 = pak.__dict__[k2]
                             self.__setattr__(k2, v2)
 
     def __repr__(self):
@@ -341,15 +344,15 @@ class OptionUtil(object):
     _sfrcontext = OrderedDict([("reachinput", simple_flag),
                                ("transroute", simple_flag),
                                ("tabfiles", simple_tabfile),
-                               ("lossfactor", {dtype: str,
+                               ("lossfactor", {dtype: np.bool_,
                                                nested: True,
                                                n_nested: 1,
                                                vars: {"factor": simple_float}}),
-                               ("strhc1kh", {dtype: str,
+                               ("strhc1kh", {dtype: np.bool_,
                                              nested: True,
                                              n_nested: 1,
                                              vars: {"factorkh": simple_float}}),
-                               ("strhc1kv", {dtype: str,
+                               ("strhc1kv", {dtype: np.bool_,
                                              nested: True,
                                              n_nested: 1,
                                              vars: {"factorkv": simple_float}})])
@@ -451,20 +454,3 @@ class OptionUtil(object):
             raise TypeError(err_msg)
 
         return valid
-
-
-if __name__ == "__main__":
-    import flopy.modflow.mfwel as wel
-    import flopy.modflow.mfsfr2 as sfr
-    import flopy.modflow.mfuzf1 as uzf
-    options = "WELOPT3.txt"
-    f = open(options, 'r')
-    opts = OptionBlock.load_options(f, wel.ModflowWel)
-    # opts.smoothfact = 0.50
-    opts.specify = True
-    print(opts.specify)
-    print(repr(opts))
-    print(opts.single_line_options)
-    with open("WELOPT2.txt", "w") as f:
-        opts.write_options(f)
-        f.write(opts.single_line_options)

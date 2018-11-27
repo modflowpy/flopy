@@ -17,6 +17,7 @@ from numpy.lib.recfunctions import stack_arrays
 
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
+from .utils import OptionBlock
 
 
 class Package(object):
@@ -652,6 +653,13 @@ class Package(object):
             line = f.readline()
             if line[0] != '#':
                 break
+
+        # check for mfnwt version 11 option block
+        nwt_options = None
+        if model.version == "mfnwt" and "options" in line.lower():
+            nwt_options = OptionBlock.load_options(line, pack_type)
+            line = f.readline()
+
         # check for parameters
         nppak = 0
         if "parameter" in line.lower():
@@ -665,6 +673,7 @@ class Package(object):
                     print('   Parameters detected. Number of parameters = ',
                           nppak)
             line = f.readline()
+
         # dataset 2a
         t = line.strip().split()
         ipakcb = 0
@@ -686,12 +695,24 @@ class Package(object):
                     it += 1
                 it += 1
 
+        # add auxillary information to nwt options
+        if nwt_options is not None and options:
+            if options[0] == 'noprint':
+                nwt_options.noprint = True
+                if len(options) > 1:
+                    nwt_options.auxillary = options[1:]
+            else:
+                nwt_options.auxillary = options[1:]
+
+            options = nwt_options
+
         # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
         if 'modflowwel' in str(pack_type).lower():
             partype = ['flux']
 
+        # check for "standard" single line options from mfnwt
         if 'nwt' in model.version.lower() and \
             'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
 
@@ -710,6 +731,7 @@ class Package(object):
                 options.append('specify {} {} '.format(phiramp, phiramp_unit))
             else:
                 f.seek(ipos)
+
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(
                 pack_type).lower():
             partype = ['shead', 'ehead']

@@ -14,6 +14,7 @@ from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
+import warnings
 
 
 class ModflowWel(Package):
@@ -156,18 +157,28 @@ class ModflowWel(Package):
 
         self.ipakcb = ipakcb
         self.np = 0
+
         if options is None:
             options = []
         self.specify = False
-        for idx, opt in enumerate(options):
-            if 'specify' in opt:
-                t = opt.strip().split()
-                self.specify = True
-                self.phiramp = np.float(t[1])
-                self.phiramp_unit = np.int(t[2])
-                options.pop(idx)
-                break
-        #self.options = options
+        self.options = options
+        if isinstance(options, OptionBlock):
+            self.specify = self.options.specify
+            self.phiramp = self.options.phiramp
+            self.iunitramp = self.options.iunitramp
+            # this is to grab the aux variables...
+            options = []
+
+        else:
+            for idx, opt in enumerate(options):
+                if 'specify' in opt:
+                    t = opt.strip().split()
+                    self.specify = True
+                    self.phiramp = np.float(t[1])
+                    self.iunitramp = np.int(t[2])
+                    self.options.pop(idx)
+                    break
+
         #self.parent.add_package(self)
 
         if dtype is not None:
@@ -188,14 +199,27 @@ class ModflowWel(Package):
                 if ladd:
                     options.append('aux {} '.format(name))
 
-        # add options
-        self.options = options
+        if isinstance(self.options, OptionBlock):
+            self.options.auxillary = options
+        else:
+            self.options = options
 
         # initialize MfList
         self.stress_period_data = MfList(self, stress_period_data,
                                          binary=binary)
 
         self.parent.add_package(self)
+
+    @property
+    def phiramp_unit(self):
+        err = "phiramp_unit will be replaced " \
+              "with iunitramp for consistency"
+        warnings.warn(err, DeprecationWarning)
+        return self.iunitramp
+
+    @phiramp_unit.setter
+    def phiramp_unit(self, phiramp_unit):
+        self.iunitramp = phiramp_unit
 
     def ncells(self):
         # Returns the  maximum number of cells that have a well
@@ -213,6 +237,8 @@ class ModflowWel(Package):
         """
         f_wel = open(self.fn_path, 'w')
         f_wel.write('%s\n' % self.heading)
+        # todo: write options here!
+
         line = (
         ' {0:9d} {1:9d}'.format(self.stress_period_data.mxact, self.ipakcb))
 

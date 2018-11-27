@@ -13,6 +13,7 @@ import numpy as np
 from ..utils.flopy_io import pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
+from ..utils.optionblock import OptionBlock
 
 
 class ModflowUzf1(Package):
@@ -308,7 +309,7 @@ class ModflowUzf1(Package):
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
                  etsquare=None, netflux=None, nuzgag=None,
                  uzgag=None, extension='uzf', unitnumber=None,
-                 filenames=None):
+                 filenames=None, options=None):
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1.defaultunit()
@@ -432,7 +433,7 @@ class ModflowUzf1(Package):
             self.ntrail2 = ntrail2
             self.nsets = nsets
         self.surfdep = surfdep
-
+        self.options = options
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
         self.iuzfbnd = Util2d(model, (nrow, ncol), np.int32, iuzfbnd,
@@ -568,7 +569,12 @@ class ModflowUzf1(Package):
         f_uzf.write('{}\n'.format(self.heading))
 
         # Dataset 1a
-        self._write_1a(f_uzf)
+        if isinstance(self.options, OptionBlock) and self.parent.version == "mfnwt":
+            self.options.update_from_package(self)
+            self.options.write_options(f_uzf)
+
+        else:
+            self._write_1a(f_uzf)
 
         # Dataset 1b
         if self.iuzfopt > 0:
@@ -695,12 +701,21 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
         specifythtr, specifythti, nosurfleak, nwt_11_fmt = False, False, False, False
-        if len(line.split()) == 1 and 'options' in line.split()[0]:
-            nwt_11_fmt = True
-        if 'options' in line:
-            line = read_nwt_options(f)
+        options = None
+        if model.version == 'mfnwt' and 'options' in line.lower():
+            options = OptionBlock.load_options(f, ModflowUzf1)
+            specifythtr = options.specifythtr
+            specifythti = options.specifythti
+            nosurfleak = options.nosurfleak
+        #if len(line.split()) == 1 and 'options' in line.split()[0]:
+        #    nwt_11_fmt = True
+        #if 'options' in line:
+        #    line = read_nwt_options(f)
+        else:
             specifythtr, specifythti, nosurfleak = _parse1a(line)
-            line = f.readline()
+
+        line = f.readline()
+
         # dataset 1b
         nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
         ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
@@ -826,7 +841,7 @@ class ModflowUzf1(Package):
                            nwt_11_fmt=nwt_11_fmt,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, unitnumber=unitnumber,
-                           filenames=filenames, **arrays)
+                           filenames=filenames, options=options, **arrays)
 
     @staticmethod
     def ftype():

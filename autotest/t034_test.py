@@ -233,7 +233,65 @@ def test_read_write_nwt_options():
     assert repr(sfropt) == sfrstr
 
 
+def load_write_sfr_with_option_block():
+    ws = os.path.join("..", "examples", "data", "options")
+    sfr_name = "sagehen_ob.sfr"
+
+    ml = flopy.modflow.Modflow(modelname="optionblock",
+                               version='mfnwt', verbose=False)
+
+    dis = flopy.modflow.ModflowDis.load(os.path.join(ws, "sagehen.dis"),
+                                        model=ml, ext_unit_dict={},
+                                        check=False)
+
+    sfr = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name),
+                                         ml, nper=2, ext_unit_dict={})
+
+    sfr_name2 = "sagehen_ob2.sfr"
+    sfr.write_file(filename=os.path.join(ws,sfr_name2))
+
+    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+                                          ml, nper=2, ext_unit_dict={})
+
+    assert sfr.options.reachinput == sfr2.options.reachinput
+    assert sfr.options.strhc1kh == sfr2.options.strhc1kh
+    assert sfr.options.factorkh == sfr.options.factorkh
+    assert sfr.options.strhc1kv == sfr2.options.strhc1kv
+    assert sfr.options.factorkv == sfr2.options.factorkv
+    assert sfr2.options.factorkv == 0.4
+    assert sfr2.options.factorkh == 0.2
+
+    sfr2.options.strhc1kh = False
+    sfr2.options.strhc1kv = False
+    sfr2.write_file(os.path.join(ws, sfr_name2))
+
+    sfr3 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+                                          ml, nper=2, ext_unit_dict={})
+
+    assert sfr3.options.strhc1kh == False
+    assert sfr3.options.strhc1kv == False
+
+
+def load_write_sfr_with_option_line():
+    pass
+
+def load_write_uzf_with_option_block():
+    pass
+
+def load_write_uzf_with_option_line():
+    pass
+
+def load_write_wel_with_option_block():
+    pass
+
+def load_write_wel_with_option_line():
+    pass
+
 if __name__ == '__main__':
     # test_create()
     # test_load_and_write()
-    test_read_write_nwt_options()
+    # test_read_write_nwt_options()
+    load_write_sfr_with_option_block()
+    # todo: create sfr load, uzf load, and wel load tests
+    # todo: create load and edit options tests with each
+    # todo: class
