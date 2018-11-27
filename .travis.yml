@@ -15,6 +15,7 @@ matrix:
 
   allow_failures:
     - python: "3.6-dev"
+    - python: "3.7-dev"
     - python: "nightly"
 
 cache:
@@ -75,6 +76,7 @@ install:
     - pip install nbconvert
     - pip install nose-timer
     - pip install coveralls
+    - pip install pylint
 
 
 # command to run tests
@@ -85,8 +87,10 @@ script:
     - echo flopy version; python -c "from __future__ import print_function; import flopy; print(flopy.__version__)"
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - echo pandas version; python -c "import pandas as pd; print(pd.__version__)"
+    - echo pyshp; python -c "import shapefile; print(shapefile.__version__)"
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
+    - echo pylint version; pylint --version
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
     - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
       nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
@@ -96,3 +100,6 @@ script:
 
 after_success:
     - coveralls
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
+      pylint --errors-only ./flopy;
+      fi

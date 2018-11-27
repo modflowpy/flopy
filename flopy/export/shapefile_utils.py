@@ -4,7 +4,6 @@ Module for exporting and importing flopy model attributes
 import copy
 import shutil
 import numpy as np
-import numpy.lib.recfunctions as rf
 
 from ..utils import Util2d, Util3d, Transient2d, MfList
 from ..utils.reference import getprj
@@ -17,6 +16,21 @@ def import_shapefile():
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
+
+def shapefile_version(sf):
+    """
+    Return the shapefile major version number
+
+    Parameters
+    ----------
+    sf : shapefile package
+
+    Returns
+    -------
+    None
+
+    """
+    return int(sf.__version__.split('.')[0])
 
 
 def write_gridlines_shapefile(filename, sr):
@@ -35,18 +49,21 @@ def write_gridlines_shapefile(filename, sr):
     None
 
     """
-    try:
-        import shapefile
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
-
-    wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
+    else:
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     for i, line in enumerate(sr.get_grid_lines()):
         wr.poly([line])
         wr.record(i)
-    wr.save(filename)
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
+    return
 
 
 def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
@@ -69,13 +86,12 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
 
     """
 
-    try:
-        import shapefile
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
-
-    wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
+    else:
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     wr.field("row", "N", 10, 0)
     wr.field("column", "N", 10, 0)
 
@@ -99,21 +115,34 @@ def write_grid_shapefile(filename, sr, array_dict, nan_val=-1.0e9):
     for i in range(sr.nrow):
         for j in range(sr.ncol):
             pts = sr.get_vertices(i, j)
-            wr.poly(parts=[pts])
+            wr.poly([pts])
             rec = [i + 1, j + 1]
             for array in arrays:
                 rec.append(array[i, j])
             wr.record(*rec)
-    wr.save(filename)
+
+    # close or write the file
+    if sfv < 2:
+        wr.save(filename)
+    else:
+        wr.close()
     print('wrote {}'.format(filename))
+    return
+
 
 def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
                           epsg=None, prj=None):
-    sf = import_shapefile()
+
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        w = shapefile.Writer(shapeType=shapefile.POLYGON)
+    else:
+        w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w.autoBalance = 1
+
     verts = copy.deepcopy(sr.vertices)
 
-    w = sf.Writer(5)  # polygon
-    w.autoBalance = 1
     # set up the attribute fields
     names = ['row', 'column'] + list(array_dict.keys())
     names = enforce_10ch_limit(names)
@@ -133,10 +162,16 @@ def write_grid_shapefile2(filename, sr, array_dict, nan_val=-1.0e9,
     for i, r in enumerate(at):
         w.poly([verts[i]])
         w.record(*r)
-    w.save(filename)
+
+    # close
+    if sfv < 2:
+        w.save(filename)
+    else:
+        w.close()
     print('wrote {}'.format(filename))
     # write the projection file
     write_prj(filename, epsg, prj)
+    return
 
 
 def model_attributes_to_shapefile(filename, ml, package_names=None,
@@ -352,6 +387,7 @@ def shp2recarray(shpname):
     Returns
     -------
     recarray : np.recarray
+
     """
     try:
         import shapefile as sf
@@ -361,7 +397,7 @@ def shp2recarray(shpname):
     from ..utils.geometry import shape
 
     sfobj = sf.Reader(shpname)
-    dtype = [(f[0], get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
+    dtype = [(str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
 
     geoms = [shape(s) for s in sfobj.iterShapes()]
     records = [tuple(r) + (geoms[i],) for i, r in
@@ -382,7 +418,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
     Parameters
     ----------
-    recarray : np.recarry
+    recarray : np.recarray
         Numpy record array with attribute information that will go in the shapefile
     geoms : list of flopy.utils.geometry objects
         The number of geometries in geoms must equal the number of records in
@@ -403,11 +439,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
     flopy.reference for more details.
 
     """
-    try:
-        import shapefile as sf
-    except Exception as e:
-        raise Exception("io.to_shapefile(): error " +
-                        "importing shapefile - try pip install pyshp")
+
+
     if len(recarray) != len(geoms):
         raise IndexError(
             'Number of geometries must equal the number of records!')
@@ -421,8 +454,16 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
             geomtype = g.shapeType
         except:
             continue
-    w = sf.Writer(geomtype)
+
+    # set up for pyshp 1 or 2
+    shapefile = import_shapefile()
+    sfv = shapefile_version(shapefile)
+    if sfv < 2:
+        w = shapefile.Writer(shapeType=geomtype)
+    else:
+        w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
+
     # set up the attribute fields
     names = enforce_10ch_limit(recarray.dtype.names)
     for i, npdtype in enumerate(recarray.dtype.descr):
@@ -433,21 +474,37 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', epsg=None, prj=None,
 
     # write the geometry and attributes for each record
     ralist = recarray.tolist()
-    if geomtype == 5:
+    if geomtype == shapefile.POLYGON:
         for i, r in enumerate(ralist):
             w.poly(geoms[i].pyshp_parts)
             w.record(*r)
-    elif geomtype == 3:
+    elif geomtype == shapefile.POLYLINE:
         for i, r in enumerate(ralist):
             w.line(geoms[i].pyshp_parts)
             w.record(*r)
-    elif geomtype == 1:
-        for i, r in enumerate(ralist):
-            w.point(*geoms[i].pyshp_parts)
-            w.record(*r)
-    w.save(shpname)
+    elif geomtype == shapefile.POINT:
+        # pyshp version 2.x w.point() method can only take x and y
+        # code will need to be refactored in order to write POINTZ
+        # shapes with the z attribute.  The pyshp version 1.x
+        # method w.point() took a z attribute, but only wrote it if
+        # the shapeType was shapefile.POINTZ, which it is not for
+        # flopy, even if the point is 3D.
+        if sfv < 2:
+            for i, r in enumerate(ralist):
+                w.point(*geoms[i].pyshp_parts)
+                w.record(*r)
+        else:
+            for i, r in enumerate(ralist):
+                w.point(*geoms[i].pyshp_parts[:2])
+                w.record(*r)
+
+    if sfv < 2:
+        w.save(shpname)
+    else:
+        w.close()
     write_prj(shpname, epsg, prj)
     print('wrote {}'.format(shpname))
+    return
 
 
 def write_prj(shpname, epsg=None, prj=None):
@@ -466,3 +523,4 @@ def write_prj(shpname, epsg=None, prj=None):
         print('No CRS information for writing a .prj file.\n'
               'Supply an epsg code or .prj file path to the '
               'model spatial reference or .export() method.')
+    return
