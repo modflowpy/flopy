@@ -165,7 +165,11 @@ class ModflowWel(Package):
         self.iunitramp = None
         self.options = options
         if isinstance(options, OptionBlock):
-            self.specify = self.options.specify
+            if not self.options.specify:
+                self.specify = self.options.specify
+            else:
+                self.specify = True
+
             self.phiramp = self.options.phiramp
             self.iunitramp = self.options.iunitramp
             # this is to grab the aux variables...
@@ -202,7 +206,8 @@ class ModflowWel(Package):
                     options.append('aux {} '.format(name))
 
         if isinstance(self.options, OptionBlock):
-            self.options.auxillary = options
+            if not self.options.auxillary:
+                self.options.auxillary = options
         else:
             self.options = options
 
@@ -228,30 +233,63 @@ class ModflowWel(Package):
         # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, f=None):
         """
         Write the package file.
+
+        Parameters:
+            f: (str) optional file name
 
         Returns
         -------
         None
 
         """
-        f_wel = open(self.fn_path, 'w')
+        if f is not None:
+            if isinstance(f, str):
+                f_wel = open(f, "w")
+            else:
+                f_wel = f
+        else:
+            f_wel = open(self.fn_path, 'w')
+
         f_wel.write('%s\n' % self.heading)
-        # todo: write options here!
+
+        if isinstance(self.options, OptionBlock) and \
+                self.parent.version == "mfnwt":
+
+            self.options.update_from_package(self)
+            if self.options.block:
+                self.options.write_options(f_wel)
 
         line = (
-        ' {0:9d} {1:9d}'.format(self.stress_period_data.mxact, self.ipakcb))
+        ' {0:9d} {1:9d} '.format(self.stress_period_data.mxact, self.ipakcb))
 
-        for opt in self.options:
-            line += ' ' + str(opt)
+        if isinstance(self.options, OptionBlock):
+            if self.options.noprint:
+                line += "NOPRINT "
+            if self.options.auxillary:
+                line += " ".join([str(aux).upper() for aux in
+                                  self.options.auxillary])
+
+        else:
+            for opt in self.options:
+                line += ' ' + str(opt)
+
         line += '\n'
         f_wel.write(line)
 
-        if self.specify and self.parent.version == 'mfnwt':
-            f_wel.write('SPECIFY {0:10.5g} {1:10d}\n'.format(self.phiramp,
-                                                             self.phiramp_unit))
+        if isinstance(self.options, OptionBlock) and \
+                self.parent.version == 'mfnwt':
+            if not self.options.block:
+                if isinstance(self.options.specify, np.ndarray):
+                    self.options.tabfiles = False
+                    self.options.write_options(f_wel)
+
+        else:
+            if self.specify and self.parent.version == 'mfnwt':
+                f_wel.write('SPECIFY {0:10.5g} {1:10d}\n'.format(self.phiramp,
+                                                                 self.iunitramp))
 
         self.stress_period_data.write_transient(f_wel)
         f_wel.close()

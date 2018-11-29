@@ -1,5 +1,6 @@
 # test well scenario for GSFloPy Development
-5 0
+5 0 noprint
+Specify 0.01 10
 5
 1 35 12 20
 1 36 13 21

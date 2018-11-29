@@ -58,7 +58,7 @@ def test_create():
                                     nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
                                     ipakcb=0,
                                     iuzfcb2=61,
-                                    # binary output of recharge and groundwater discharge
+                                    # binary output of recharge and groundwater dischargepytho
                                     ntrail2=25, nsets=20,
                                     surfdep=1.0, uzgag=uzgag,
                                     iuzfbnd=m.bas6.ibound.array,
@@ -393,11 +393,75 @@ def test_load_write_uzf_option_line():
     assert uzf2.options.savefinf
 
 
-def load_write_wel_with_option_block():
-    pass
+def test_load_write_wel_option_block():
+    ws = os.path.join("..", "examples", "data", "options")
+    wel_name = "sagehen_ob.wel"
 
-def load_write_wel_with_option_line():
-    pass
+    ml = flopy.modflow.Modflow(modelname="optionblock",
+                               version='mfnwt', verbose=False)
+
+    wel = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name),
+                                        ml, nper=2, ext_unit_dict={},
+                                        check=False)
+
+    wel_name2 = "sagehen_ob2.wel"
+    wel.write_file(os.path.join(ws, wel_name2))
+    ml.remove_package("WEL")
+
+    wel2 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+                                         ml, nper=2, ext_unit_dict={},
+                                         check=False)
+
+    assert wel2.options.tabfiles == wel.options.tabfiles
+    assert wel2.options.specify == wel.options.specify
+    assert wel2.options.noprint == wel.options.noprint
+
+    wel2.options.tabfiles = False
+    wel2.phiramp = 0.4
+
+    wel2.write_file(os.path.join(ws, wel_name2))
+    ml.remove_package("WEL")
+
+    wel3 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+                                         ml, nper=2, ext_unit_dict={},
+                                         check=False)
+
+    assert not wel3.options.tabfiles
+    assert wel3.options.phiramp == 0.4
+    assert wel3.options.noprint
+
+
+def test_load_write_wel_option_line():
+    ws = os.path.join("..", "examples", "data", "options")
+    wel_name = "sagehen.wel"
+
+    # test with modflow-nwt
+    ml = flopy.modflow.Modflow(modelname="optionblock",
+                               version='mfnwt', verbose=False)
+
+    wel = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name),
+                                        ml, nper=2, ext_unit_dict={},
+                                        check=False)
+
+    assert wel.options.noprint
+    assert wel.specify
+    assert wel.phiramp - 0.1 < 0.0001
+    assert wel.iunitramp == 10
+
+    wel.iunitramp = 20
+    wel_name2 = "sagehen2.wel"
+    wel.write_file(os.path.join(ws, wel_name2))
+    ml.remove_package("WEL")
+
+    wel2 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+                                         ml, nper=2, ext_unit_dict={},
+                                         check=False)
+
+    assert wel.options.noprint
+    assert wel.specify
+    assert wel.phiramp - 0.1 < 0.0001
+    assert wel.iunitramp == 20
+
 
 if __name__ == '__main__':
     # test_create()
@@ -405,8 +469,7 @@ if __name__ == '__main__':
     # test_read_write_nwt_options()
     # test_load_write_sfr_option_block()
     # test_load_write_sfr_option_line()
-    test_load_write_uzf_option_block()
-    test_load_write_uzf_option_line()
-    # todo: create sfr load, uzf load, and wel load tests
-    # todo: create load and edit options tests with each
-    # todo: class
+    # test_load_write_uzf_option_block()
+    # test_load_write_uzf_option_line()
+    test_load_write_wel_option_block()
+    test_load_write_wel_option_line()

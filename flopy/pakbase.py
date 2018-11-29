@@ -657,7 +657,7 @@ class Package(object):
         # check for mfnwt version 11 option block
         nwt_options = None
         if model.version == "mfnwt" and "options" in line.lower():
-            nwt_options = OptionBlock.load_options(line, pack_type)
+            nwt_options = OptionBlock.load_options(f, pack_type)
             line = f.readline()
 
         # check for parameters
@@ -687,8 +687,8 @@ class Package(object):
             it = 2
             while it < len(t):
                 toption = t[it]
-                if toption.lower() is 'noprint':
-                    options.append(toption)
+                if toption.lower() == 'noprint':
+                    options.append(toption.lower())
                 elif 'aux' in toption.lower():
                     options.append(' '.join(t[it:it + 2]))
                     aux_names.append(t[it + 1].lower())
@@ -702,7 +702,7 @@ class Package(object):
                 if len(options) > 1:
                     nwt_options.auxillary = options[1:]
             else:
-                nwt_options.auxillary = options[1:]
+                nwt_options.auxillary = options
 
             options = nwt_options
 
@@ -716,19 +716,22 @@ class Package(object):
         if 'nwt' in model.version.lower() and \
             'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
 
-            specify = False
             ipos = f.tell()
             line = f.readline()
             # test for specify keyword if a NWT well file
             if 'specify' in line.lower():
-                specify = True
-                t = line.strip().split()
-                phiramp = np.float32(t[1])
-                try:
-                    phiramp_unit = np.int32(t[2])
-                except:
-                    phiramp_unit = 2
-                options.append('specify {} {} '.format(phiramp, phiramp_unit))
+                nwt_options = OptionBlock(line.lower().strip(),
+                                          pack_type, block=False)
+                if options:
+                    if options[0] == "noprint":
+                        nwt_options.noprint = True
+                        if len(options) > 1:
+                            nwt_options.auxillary = options[1:]
+
+                    else:
+                        nwt_options.auxillary = options
+
+                options = nwt_options
             else:
                 f.seek(ipos)
 

@@ -666,6 +666,7 @@ class ModflowSfr2(Package):
 
         # Item 1
         else:
+            # modflow-2005 based item 1
             if "reachinput" in line.lower():
                 """
                 When REACHINPUT is specified, variable ISFROPT is read in data set 1c.
