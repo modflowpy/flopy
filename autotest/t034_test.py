@@ -215,17 +215,15 @@ def test_read_write_nwt_options():
     assert repr(uzfopt) == uzfstr
     assert repr(sfropt) == sfrstr
 
-    ws = os.path.join('temp', 't034')
+    welopt.write_options(os.path.join(cpth, "welopt.txt"))
+    uzfopt.write_options(os.path.join(cpth, 'uzfopt.txt'))
+    sfropt.write_options(os.path.join(cpth, 'sfropt.txt'))
 
-    welopt.write_options(os.path.join(ws, "welopt.txt"))
-    uzfopt.write_options(os.path.join(ws, 'uzfopt.txt'))
-    sfropt.write_options(os.path.join(ws, 'sfropt.txt'))
-
-    welopt = OptionBlock.load_options(os.path.join(ws, "welopt.txt"),
+    welopt = OptionBlock.load_options(os.path.join(cpth, "welopt.txt"),
                                       ModflowWel)
-    uzfopt = OptionBlock.load_options(os.path.join(ws, 'uzfopt.txt'),
+    uzfopt = OptionBlock.load_options(os.path.join(cpth, 'uzfopt.txt'),
                                       ModflowUzf1)
-    sfropt = OptionBlock.load_options(os.path.join(ws, "sfropt.txt"),
+    sfropt = OptionBlock.load_options(os.path.join(cpth, "sfropt.txt"),
                                       ModflowSfr2)
 
     assert repr(welopt) == welstr
@@ -248,10 +246,10 @@ def test_load_write_sfr_option_block():
                                          ml, nper=2, ext_unit_dict={})
 
     sfr_name2 = "sagehen_ob2.sfr"
-    sfr.write_file(filename=os.path.join(ws,sfr_name2))
+    sfr.write_file(filename=os.path.join(cpth, sfr_name2))
     ml.remove_package('SFR')
 
-    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(cpth, sfr_name2),
                                           ml, nper=2, ext_unit_dict={})
 
     assert sfr.options.reachinput == sfr2.options.reachinput
@@ -264,10 +262,10 @@ def test_load_write_sfr_option_block():
 
     sfr2.options.strhc1kh = False
     sfr2.options.strhc1kv = False
-    sfr2.write_file(os.path.join(ws, sfr_name2))
+    sfr2.write_file(os.path.join(cpth, sfr_name2))
     ml.remove_package("SFR")
 
-    sfr3 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+    sfr3 = flopy.modflow.ModflowSfr2.load(os.path.join(cpth, sfr_name2),
                                           ml, nper=2, ext_unit_dict={})
 
     assert sfr3.options.strhc1kh == False
@@ -290,10 +288,10 @@ def test_load_write_sfr_option_line():
                                          ml, nper=2, ext_unit_dict={})
 
     sfr_name2 = "sagehen2.sfr"
-    sfr.write_file(os.path.join(ws, sfr_name2))
+    sfr.write_file(os.path.join(cpth, sfr_name2))
     ml.remove_package('SFR')
 
-    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(cpth, sfr_name2),
                                           ml, nper=2, ext_unit_dict={})
 
     assert sfr2.reachinput
@@ -312,10 +310,10 @@ def test_load_write_sfr_option_line():
                                          ml, nper=2, ext_unit_dict={})
 
     sfr_name2 = "sagehen2.sfr"
-    sfr.write_file(os.path.join(ws, sfr_name2))
+    sfr.write_file(os.path.join(cpth, sfr_name2))
     ml.remove_package("SFR")
 
-    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(ws, sfr_name2),
+    sfr2 = flopy.modflow.ModflowSfr2.load(os.path.join(cpth, sfr_name2),
                                           ml, nper=2, ext_unit_dict={})
 
     assert sfr2.reachinput
@@ -337,10 +335,10 @@ def test_load_write_uzf_option_block():
                                          check=False)
 
     uzf_name2 = "sagehen_ob2.uzf"
-    uzf.write_file(os.path.join(ws, uzf_name2))
+    uzf.write_file(os.path.join(cpth, uzf_name2))
     ml.remove_package("UZF")
 
-    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(ws, uzf_name2),
+    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(cpth, uzf_name2),
                                           ml, ext_unit_dict=None,
                                           check=False)
 
@@ -350,15 +348,16 @@ def test_load_write_uzf_option_block():
 
     uzf2.smoothfact = 0.4
 
-    uzf2.write_file(os.path.join(ws, uzf_name2))
+    uzf2.write_file(os.path.join(cpth, uzf_name2))
     ml.remove_package("UZF")
 
-    uzf3 = flopy.modflow.ModflowUzf1.load(os.path.join(ws, uzf_name2),
+    uzf3 = flopy.modflow.ModflowUzf1.load(os.path.join(cpth, uzf_name2),
                                           ml, check=False)
 
     assert uzf3.options.smoothfact == 0.4
     assert uzf3.smoothfact == 0.4
     ml.remove_package("UZF")
+
 
 def test_load_write_uzf_option_line():
     ws = os.path.join("..", "examples", "data", "options")
@@ -381,10 +380,10 @@ def test_load_write_uzf_option_line():
     assert uzf.options.savefinf
 
     uzf_name2 = "sagehen2.uzf"
-    uzf.write_file(os.path.join(ws, uzf_name2))
+    uzf.write_file(os.path.join(cpth, uzf_name2))
     ml.remove_package("UZF")
 
-    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(ws, uzf_name2),
+    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(cpth, uzf_name2),
                                           ml, check=False)
 
     assert uzf2.nosurfleak
@@ -405,10 +404,10 @@ def test_load_write_wel_option_block():
                                         check=False)
 
     wel_name2 = "sagehen_ob2.wel"
-    wel.write_file(os.path.join(ws, wel_name2))
+    wel.write_file(os.path.join(cpth, wel_name2))
     ml.remove_package("WEL")
 
-    wel2 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+    wel2 = flopy.modflow.ModflowWel.load(os.path.join(cpth, wel_name2),
                                          ml, nper=2, ext_unit_dict={},
                                          check=False)
 
@@ -419,10 +418,10 @@ def test_load_write_wel_option_block():
     wel2.options.tabfiles = False
     wel2.phiramp = 0.4
 
-    wel2.write_file(os.path.join(ws, wel_name2))
+    wel2.write_file(os.path.join(cpth, wel_name2))
     ml.remove_package("WEL")
 
-    wel3 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+    wel3 = flopy.modflow.ModflowWel.load(os.path.join(cpth, wel_name2),
                                          ml, nper=2, ext_unit_dict={},
                                          check=False)
 
@@ -450,10 +449,10 @@ def test_load_write_wel_option_line():
 
     wel.iunitramp = 20
     wel_name2 = "sagehen2.wel"
-    wel.write_file(os.path.join(ws, wel_name2))
+    wel.write_file(os.path.join(cpth, wel_name2))
     ml.remove_package("WEL")
 
-    wel2 = flopy.modflow.ModflowWel.load(os.path.join(ws, wel_name2),
+    wel2 = flopy.modflow.ModflowWel.load(os.path.join(cpth, wel_name2),
                                          ml, nper=2, ext_unit_dict={},
                                          check=False)
 
@@ -471,5 +470,5 @@ if __name__ == '__main__':
     # test_load_write_sfr_option_line()
     # test_load_write_uzf_option_block()
     # test_load_write_uzf_option_line()
-    test_load_write_wel_option_block()
+    # test_load_write_wel_option_block()
     test_load_write_wel_option_line()
