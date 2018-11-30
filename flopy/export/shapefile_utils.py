@@ -441,7 +441,7 @@ def enforce_10ch_limit(names):
     -------
     names : list of unique strings of len <= 10.
     """
-    names = [n[:9] + '1' if len(n) > 10 else n
+    names = [n[:5] + n[-4:] + '_' if len(n) > 10 else n
              for n in names]
     dups = {x: names.count(x) for x in names}
     suffix = {n: list(range(cnt)) for n, cnt in dups.items() if cnt > 1}
