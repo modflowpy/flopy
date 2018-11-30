@@ -382,7 +382,8 @@ class Modflow(BaseModel):
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('{}\n'.format(self.heading))
-        f_nam.write('#' + str(self.modelgrid))
+        if self.structured:
+            f_nam.write('#' + str(self.modelgrid))
         f_nam.write(" ;start_datetime:{0}\n".format(self.start_datetime))
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
