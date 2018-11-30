@@ -340,8 +340,6 @@ class PlotUtilities(object):
                 Empty list is returned if filename_base is not None. Otherwise
                 a list of matplotlib.pyplot.axis are returned.
         """
-        # todo: add downstream capability for formatting model names into figure titles, etc...
-        # todo: decide whether we plot one model at a time or join the models in each plot....
         defaults = {"kper": 0, "mflay": None, "filename_base": None,
                     "file_extension": "png", "key": None}
 
@@ -1183,8 +1181,18 @@ class PlotUtilities(object):
             if key in kwargs:
                 defaults[key] = kwargs.pop(key)
 
+        # test if this is vertex or structured grid
+        if model is not None:
+            grid_type = model.modelgrid.grid_type
+
+        elif modelgrid is not None:
+            grid_type = modelgrid.grid_type
+
+        else:
+            grid_type = "structured"
+
         # reshape 2d arrays to 3d for convenience
-        if len(plotarray.shape) == 2:
+        if len(plotarray.shape) == 2 and grid_type == "structured":
             plotarray = plotarray.reshape((1, plotarray.shape[0],
                                            plotarray.shape[1]))
 
@@ -1392,7 +1400,11 @@ class PlotUtilities(object):
         """
         if names is not None:
             if not isinstance(names, list):
-                names = [names]
+                if maxlay > 1:
+                    names = ["{} layer {}".format(names, i + 1)
+                             for i in range(maxlay)]
+                else:
+                    names = [names]
             assert len(names) == maxlay
         return names
 
