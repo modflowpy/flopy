@@ -755,7 +755,6 @@ def test_rotation():
     assert np.abs(mg4.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg4.yvertices[0, 0] - yul) < 1e-4
 
-
 def test_sr_with_Map():
     import matplotlib.pyplot as plt
     m = flopy.modflow.Modflow(rotation=20.)
@@ -763,11 +762,68 @@ def test_sr_with_Map():
                                    delr=250.,
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
-    xll, yll, rotation = 500000., 2934000., 45.
+    xul, yul, rotation = 500000., 2934000., 45.
+    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
+                                   rotation=rotation)
+    lc = modelmap.plot_grid()
+    xll, yll = modelmap.mg.xoffset, modelmap.mg.yoffset
+    plt.close()
+
+    def check_vertices():
+        xllp, yllp = lc._paths[0].vertices[0]
+        xulp, yulp = lc._paths[0].vertices[1]
+        assert np.abs(xllp - xll) < 1e-6
+        assert np.abs(yllp - yll) < 1e-6
+        assert np.abs(xulp - xul) < 1e-6
+        assert np.abs(yulp - yul) < 1e-6
+
+    check_vertices()
+
     modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
                                    rotation=rotation)
     lc = modelmap.plot_grid()
+    check_vertices()
     plt.close()
+
+    # transformation in m.sr
+    sr = flopy.utils.SpatialReference(delr=m.dis.delr.array,
+                                      delc=m.dis.delc.array,
+                                      xll=xll, yll=yll, rotation=rotation)
+    m.sr = copy.deepcopy(sr)
+    modelmap = flopy.plot.ModelMap(model=m)
+    lc = modelmap.plot_grid()
+    check_vertices()
+    plt.close()
+
+    # transformation assign from sr instance
+    m.sr._reset()
+    m.sr.set_spatialreference()
+    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    lc = modelmap.plot_grid()
+    check_vertices()
+    plt.close()
+
+    # test plotting of line with specification of xul, yul in Dis/Model Map
+    mf = flopy.modflow.Modflow()
+
+    # Model domain and grid definition
+    dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=10, ncol=20, delr=1., delc=1., xul=100, yul=210)
+    #fig, ax = plt.subplots()
+    verts = [[101., 201.], [119., 209.]]
+    modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
+                                              xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+    linecollection = modelxsect.plot_grid()
+    plt.close()
+
+
+def test_modelgrid_with_PlotMapView():
+    import matplotlib.pyplot as plt
+    m = flopy.modflow.Modflow(rotation=20.)
+    dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
+                                   delr=250.,
+                                   delc=250., top=10, botm=0)
+    # transformation assigned by arguments
+    xll, yll, rotation = 500000., 2934000., 45.
 
     def check_vertices():
         #vertices = modelmap.mg.xyvertices
@@ -785,38 +841,24 @@ def test_sr_with_Map():
     check_vertices()
     plt.close()
 
-    # transformation in m.sr
-    #sr = flopy.grid.reference.SpatialReference(delc=m.dis.delc.array,
-    #                                           xll=xll, yll=yll,
-    #                                           rotation=rotation)
-    #m.sr = copy.deepcopy(sr)
-
     modelmap = flopy.plot.PlotMapView(modelgrid=m.modelgrid)
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
 
-    # transformation assign from sr instance
-    #m.modelgrid.sr._reset()
-    #m.modelgrid.sr.set_spatialreference(delc=m.dis.delc.array,
-    #                                    xll=xll, yll=yll,
-    #                                    rotation=rotation)
-    #modelmap = flopy.plot.PlotMapView(dis=m.dis)
-    #lc = modelmap.plot_grid()
-    #check_vertices()
-    #plt.close()
-
-    # test plotting of line with specification of xul, yul in Dis/Model Map
     mf = flopy.modflow.Modflow()
 
     # Model domain and grid definition
     dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=10, ncol=20, delr=1., delc=1., xul=100, yul=210)
     #fig, ax = plt.subplots()
     verts = [[101., 201.], [119., 209.]]
-    modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
-                                              xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+    # modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
+    #                                           xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+    mf.modelgrid.set_coord_info(xoff=mf.dis.sr.xll, yoff=mf.dis.sr.yll)
+    modelxsect = flopy.plot.PlotCrossSection(model=mf, line={'line': verts})
     linecollection = modelxsect.plot_grid()
     plt.close()
+
 
 def test_get_vertices():
     from flopy.utils.reference import SpatialReference
@@ -844,6 +886,25 @@ def test_get_vertices():
 
     a2 = np.array(mg.get_cell_vertices(0, 0))
     assert np.array_equal(a1, a2)
+
+def test_vertex_model_dot_plot():
+    # load up the vertex example problem
+    sim_name = "mfsim.nam"
+    sim_path = "../examples/data/mf6/test003_gwftri_disv"
+    disv_sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, version="mf6", exe_name="mf6",
+                                           sim_ws=sim_path)
+    disv_ml = disv_sim.get_model('gwf_1')
+
+    ax = disv_ml.plot()
+
+    assert ax
+
+def test_model_dot_plot():
+    loadpth = os.path.join('..', 'examples', 'data', 'secp')
+    ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
+
+    ax = ml.plot()
+    assert ax
 
 def test_get_rc_from_node_coordinates():
     m = flopy.modflow.Modflow(rotation=20.)
@@ -999,8 +1060,11 @@ if __name__ == '__main__':
     # build_sfr_netcdf()
     # test_mg()
     # test_mbase_modelgrid()
-    #test_rotation()
+    # test_rotation()
+    # test_model_dot_plot()
+    # test_vertex_model_dot_plot()
     test_sr_with_Map()
+    test_modelgrid_with_PlotMapView()
     # test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()
