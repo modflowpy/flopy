@@ -1189,6 +1189,7 @@ class MFPackage(PackageContainer, PackageInterface):
         if hasattr(self, name):
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
+                self.parent._mg_resync = True
                 try:
                     attribute.set_data(value)
                 except MFDataException as mfde:

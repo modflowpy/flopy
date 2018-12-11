@@ -61,6 +61,9 @@ class FileData(object):
 
 
 class ModelInterface(object):
+    def __init__(self):
+        self._mg_resync = True
+        self._modelgrid = None
 
     @property
     @abc.abstractmethod
@@ -183,6 +186,7 @@ class BaseModel(ModelInterface):
         """
         BaseModel init
         """
+        ModelInterface.__init__(self)
         self.__name = modelname
         self.namefile_ext = namefile_ext
         self._namefile = self.__name + '.' + self.namefile_ext

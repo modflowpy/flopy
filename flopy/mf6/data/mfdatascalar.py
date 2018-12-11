@@ -7,6 +7,7 @@ from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
 from ...datbase import DataType
 
+
 class MFScalar(mfdata.MFData):
     """
     Provides an interface for the user to access and update MODFLOW
@@ -119,6 +120,7 @@ class MFScalar(mfdata.MFData):
                                   self._simulation_data.debug, ex)
 
     def set_data(self, data):
+        self._resync()
         storge = self._get_storage_obj()
         if self.structure.type == DatumType.record:
             if data is not None:
@@ -399,7 +401,7 @@ class MFScalar(mfdata.MFData):
              pre_data_comments=None):
         super(MFScalar, self).load(first_line, file_handle, block_header,
                                    pre_data_comments=None)
-
+        self._resync()
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)

@@ -231,6 +231,9 @@ class Modflow(BaseModel):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.bas6 is not None:
             ibound = self.bas6.ibound.array
         else:

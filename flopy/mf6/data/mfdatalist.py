@@ -242,6 +242,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   self._simulation_data.debug, ex)
 
     def set_data(self, data, autofill=False):
+        self._resync()
         try:
             if self._get_storage_obj() is None:
                 self._data_storage = self._new_storage()
@@ -258,6 +259,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
     def append_data(self, data):
         try:
+            self._resync()
             if self._get_storage_obj() is None:
                 self._data_storage = self._new_storage()
             # store data
@@ -273,6 +275,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   self._simulation_data.debug, ex)
 
     def append_list_as_record(self, record):
+        self._resync()
         try:
             # convert to tuple
             tuple_record = ()
@@ -673,7 +676,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
              pre_data_comments=None):
         super(MFList, self).load(first_line, file_handle, block_header,
                                  pre_data_comments=None)
-
+        self._resync()
         # lock things to maximize performance
         self._data_dimensions.lock()
 

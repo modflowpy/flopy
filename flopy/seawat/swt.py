@@ -155,6 +155,9 @@ class Seawat(BaseModel):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.bas is not None:
             ibound = self.bas.ibound.array
         else:

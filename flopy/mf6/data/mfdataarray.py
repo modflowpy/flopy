@@ -236,6 +236,7 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def __setitem__(self, k, value):
         storage = self._get_storage_obj()
+        self._resync()
         if storage.layered:
             if isinstance(k, int):
                 k = (k,)
@@ -447,6 +448,7 @@ class MFArray(mfdata.MFMultiDimVar):
         return None
 
     def set_data(self, data, multiplier=[1.0], layer=None):
+        self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
         if isinstance(layer, int):
@@ -470,7 +472,7 @@ class MFArray(mfdata.MFMultiDimVar):
              pre_data_comments=None):
         super(MFArray, self).load(first_line, file_handle, block_header,
                                   pre_data_comments=None)
-
+        self._resync()
         if self.structure.layered:
             try:
                 model_grid = self._data_dimensions.get_model_grid()

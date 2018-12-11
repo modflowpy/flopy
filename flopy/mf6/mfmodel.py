@@ -232,6 +232,9 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
             self._modelgrid = StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,

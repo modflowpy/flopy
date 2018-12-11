@@ -3177,7 +3177,8 @@ class MFData(DataInterface):
 
     @property
     def model(self):
-        if self._model_or_sim.type == 'Model':
+        if self._model_or_sim is not None and \
+                self._model_or_sim.type == 'Model':
             return self._model_or_sim
         else:
             return None
@@ -3199,6 +3200,11 @@ class MFData(DataInterface):
         raise NotImplementedError(
             'must define plotable in child '
             'class to use this base class')
+
+    def _resync(self):
+        model = self.model
+        if model is not None:
+            model._mg_resync = True
 
     def export(self, f, **kwargs):
         from flopy.export import utils

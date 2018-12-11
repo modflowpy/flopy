@@ -493,7 +493,6 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-
         for item in models:
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])

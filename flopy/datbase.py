@@ -52,13 +52,6 @@ class DataInterface(object):
 
     @property
     @abc.abstractmethod
-    def grid(self):
-        raise NotImplementedError(
-            'must define name in child '
-            'class to use this base class')
-
-    @property
-    @abc.abstractmethod
     def plotable(self):
         raise NotImplementedError(
             'must define plotable in child '

@@ -164,6 +164,8 @@ class Package(PackageInterface):
     def __setattr__(self, key, value):
         var_dict = vars(self)
         if key in list(var_dict.keys()):
+            if hasattr(self, 'parent'):
+                self.parent._mg_resync = True
             old_value = var_dict[key]
             if isinstance(old_value, Util2d):
                 value = Util2d(self.parent, old_value.shape,

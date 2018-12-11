@@ -344,6 +344,9 @@ class Mt3dms(BaseModel):
 
     @property
     def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
         if self.mf.bas is not None:
             ibound = self.btn.icbund.array
         else:
