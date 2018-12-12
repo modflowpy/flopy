@@ -330,7 +330,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                             # fix for mf6 case.  TODO: fix this in the mf6 code
                             arr = arr[0]
                         assert arr.shape == horz_shape
-                        name = '{}_{:03d}'.format(aname, ilay + 1)
+                        name = '{}_{}'.format(aname, ilay + 1)
                         array_dict[name] = arr
                 elif a.data_type == DataType.transient2d:#elif isinstance(a, Transient2d):
                     try: # Not sure how best to check if an object has array data
@@ -340,7 +340,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                                                                    pak.name[0]))
                         continue
                     for kper in range(a.array.shape[0]):
-                        name = '{}{:03d}'.format(
+                        name = '{}{}'.format(
                             shape_attr_name(a.name), kper + 1)
                         arr = a.array[kper][0]
                         assert arr.shape == horz_shape
@@ -354,7 +354,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         for kper in range(array.shape[0]):
                             for k in range(array.shape[1]):
                                 n = shape_attr_name(name, length=4)
-                                aname = "{}{:03d}{:03d}".format(n, k + 1, kper + 1)
+                                aname = "{}{}{}".format(n, k + 1, kper + 1)
                                 arr = array[kper][k]
                                 assert arr.shape == horz_shape
                                 if np.all(np.isnan(arr)):
@@ -366,7 +366,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 v.data_type == DataType.array3d:
                             for ilay in range(a.model.modelgrid.nlay):
                                 u2d = a[ilay]
-                                name = '{}_{:03d}'.format(
+                                name = '{}_{}'.format(
                                     shape_attr_name(u2d.name), ilay + 1)
                                 arr = u2d.array
                                 assert arr.shape == horz_shape

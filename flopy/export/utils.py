@@ -495,7 +495,7 @@ def mflist_export(f, mfl, **kwargs):
                     for k in range(array.shape[0]):
                         # aname = name+"{0:03d}_{1:02d}".format(kk, k)
                         n = shapefile_utils.shape_attr_name(name, length=4)
-                        aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
+                        aname = "{}{}{}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
             shapefile_utils.write_grid_shapefile2(f, model_grid, array_dict)
         else:
@@ -602,7 +602,7 @@ def transient2d_export(f, t2d, **kwargs):
         array_dict = {}
         for kper in range(t2d.model.modelgrid.sim_time.nper):
             u2d = t2d[kper]
-            name = '{}_{:03d}'.format(
+            name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
         shapefile_utils.write_grid_shapefile2(f, t2d.model.modelgrid,
@@ -712,7 +712,7 @@ def array3d_export(f, u3d, **kwargs):
         array_dict = {}
         for ilay in range(u3d.model.modelgrid.nlay):
             u2d = u3d[ilay]
-            name = '{}_{:03d}'.format(
+            name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
         shapefile_utils.write_grid_shapefile2(f, u3d.model.modelgrid,

@@ -180,11 +180,11 @@ class LayerFile(object):
                                   .transpose()).transpose()
         if mflay != None:
             attrib_dict = {
-                attrib_name + '{0:03d}'.format(mflay): plotarray[0, :, :]}
+                attrib_name + '{}'.format(mflay): plotarray[0, :, :]}
         else:
             attrib_dict = {}
             for k in range(plotarray.shape[0]):
-                name = attrib_name + '{0:03d}'.format(k)
+                name = attrib_name + '{}'.format(k)
                 attrib_dict[name] = plotarray[k]
 
         from ..export.shapefile_utils import write_grid_shapefile2
