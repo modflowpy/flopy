@@ -1174,8 +1174,8 @@ def test006_gwf3_disv():
     assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
                                 outfile=outfile)
 
-    # export to netcdf
-    model.export(os.path.join(run_folder, "test006_gwf3.nc"))
+    # export to netcdf - temporarily disabled
+    #model.export(os.path.join(run_folder, "test006_gwf3.nc"))
     # export to shape file
     model.export(os.path.join(run_folder, "test006_gwf3.shp"))
 

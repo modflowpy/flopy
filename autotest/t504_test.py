@@ -173,8 +173,10 @@ def test003_gwfs_disv():
         budget_frf = sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
-    # change some settings
     model = sim.get_model(model_name)
+    model.export('{}/{}.shp'.format(pth, test_ex_name))
+
+    # change some settings
     chd_head_left = model.get_package('CHD_LEFT')
     chd_left_period = chd_head_left.stress_period_data.array
     chd_left_period[0][4][1] = 15.0
