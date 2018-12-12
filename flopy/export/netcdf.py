@@ -166,8 +166,8 @@ class NetCdf(object):
         if self.model_grid.grid_type == 'structured':
             self.dimension_names = ('layer', 'y', 'x')
             STANDARD_VARS.extend(['delc', 'delr'])
-        elif self.model_grid.grid_type == 'vertex':
-            self.dimension_names = ('layer', 'ncpl')
+        #elif self.model_grid.grid_type == 'vertex':
+        #    self.dimension_names = ('layer', 'ncpl')
         else:
             raise Exception('Grid type {} not supported.'.format(
                 self.model_grid.grid_type))
