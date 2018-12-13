@@ -1,9 +1,9 @@
                                    MODFLOW 6
                 U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
                           GROUNDWATER FLOW MODEL (GWF)
-                            VERSION 6.0.3 08/09/2018
+                       VERSION mf6.0.2 February 23, 2018
 
-   MODFLOW 6 compiled Aug 09 2018 13:40:32 with IFORT compiler (ver. 18.0.3)
+   MODFLOW 6 compiled Feb 21 2018 10:49:51 with IFORT compiler (ver. 18.0.1)
 
 This software has been approved for release by the U.S. Geological 
 Survey (USGS). Although the software has been subjected to rigorous 
@@ -170,9 +170,9 @@ Precision of REAL variables: 15
  END PROCESSING GRIDDATA
     BINARY GRID INFORMATION WILL BE WRITTEN TO:
       UNIT NUMBER: 1012
-      FILE NAME: C:\Users\jlarsen\Desktop\triangles\tri_model_cnst.disv.grb
+      FILE NAME: C:\Users\jlarsen\Desktop\flopy-ogw\trunk\examples\data\mf6\test003_gwftri_disv\tri_model_cnst.disv.grb
 
- OPENED C:\Users\jlarsen\Desktop\triangles\tri_model_cnst.disv.grb
+ OPENED C:\Users\jlarsen\Desktop\flopy-ogw\trunk\examples\data\mf6\test003_gwftri_disv\tri_model_cnst.disv.grb
  FILE TYPE:DATA(BINARY)   UNIT 1012   STATUS:REPLACE             
  FORMAT:UNFORMATTED            ACCESS:STREAM              
  ACTION:READWRITE           
@@ -236,6 +236,7 @@ Precision of REAL variables: 15
       9      1    180       5.000    
      10      1    200       5.000    
  UBDSV1 SAVING     FLOW-JA-FACE ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
+ UBDSV06 SAVING       DATA-SPDIS IN MODEL GWF_1            PACKAGE NPF             CONNECTED TO MODEL GWF_1            PACKAGE NPF              ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
  UBDSV06 SAVING              CHD IN MODEL GWF_1            PACKAGE GWF_1           CONNECTED TO MODEL GWF_1            PACKAGE CHD_LEFT         ON UNIT   1014 AT TIME STEP      1, STRESS PERIOD      1
 
               CHD (CHD_LEFT)   PERIOD 1   STEP 1

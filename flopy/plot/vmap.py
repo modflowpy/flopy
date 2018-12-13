@@ -11,37 +11,42 @@ except ImportError:
     plt = None
 
 from . import plotutil
-from .map import MapView
+from .map import _MapView
 
 import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class VertexMapView(MapView):
+class _VertexMapView(_MapView):
     """
-    Class to create a map of the model.
+    Class to create a VertexGrid based map of the model.
 
     Parameters
     ----------
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    modelgrid : flopy.discretization.VertexGrid
+        Vertex model grid object
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
         If there is not a current axis then a new one will be created.
-    modelgrid : flopy.discretization.VertexGrid
-        Vertex model grid object
-    model : flopy.modflow object
-        flopy model object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
 
+     Notes
+    -----
+        _VertexMapView should not be instantiated directly. PlotMapView uses
+        this class for VertexGrid specific plotting routines.
+
     """
     def __init__(self, modelgrid=None, model=None, ax=None, layer=0,
                  extent=None):
-        super(VertexMapView, self).__init__(ax=ax, model=model,
-                                            modelgrid=modelgrid, layer=layer,
-                                            extent=extent)
+        super(_VertexMapView, self).__init__(ax=ax, model=model,
+                                             modelgrid=modelgrid, layer=layer,
+                                             extent=extent)
 
     @property
     def extent(self):
@@ -131,7 +136,7 @@ class VertexMapView(MapView):
 
         Returns
         -------
-        contour_set : matplotlib.pyplot.contour
+        contour_set : matplotlib.tri.tricontour object
 
         """
         import matplotlib.tri as tri
@@ -200,69 +205,14 @@ class VertexMapView(MapView):
 
         return contour_set
 
-    def plot_inactive(self, idomain=None, color_noflow='black', **kwargs):
-        """
-        Make a plot of inactive cells.  If not specified, then pull ibound
-        from the self.ml
+    def plot_inactive(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+    def plot_ibound(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        color_noflow : string
-            (Default is 'black')
-
-        Returns
-        -------
-        quadmesh : matplotlib.pyplot.axes object
-
-        """
-        raise NotImplementedError("plot_inactive must be called "
-                                  "from a PlotMapView instance")
-
-    def plot_ibound(self, idomain=None, color_noflow='black', color_ch="blue",
-                    color_vpt="red", **kwargs):
-        """
-        Make a plot of ibound.  If not specified, then pull ibound from the
-        self.ml
-
-        Parameters
-        ----------
-        idomain : numpy.ndarray
-            idomain array to plot.  (Default is modelgrid.idomain)
-        color_noflow : string
-            (Default is 'black')
-        color_ch : str
-            Color for constant head cells (Default is 'blue')
-        color_vpt : string
-            Color for vertical pass through cells (Default is 'red'.)
-
-        Returns
-        -------
-        ax : matplotlib.pyplot.axes object
-
-        """
-        raise NotImplementedError("plot_ibound must be called"
-                                 " from PlotMapView instance")
-
-    def plot_grid(self, **kwargs):
-        """
-        Plot the grid lines.
-
-        Parameters
-        ----------
-        kwargs : ax, colors.  The remaining kwargs are passed into the
-            the LineCollection constructor.
-
-        Returns
-        -------
-        lc : matplotlib.collections.LineCollection
-
-        """
-        err_msg = "plot_grid() must be called " \
-                  "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
+    def plot_grid(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -348,140 +298,26 @@ class VertexMapView(MapView):
 
         return ax
 
-    def plot_shapefile(self, shp, **kwargs):
-        return NotImplementedError()
+    def plot_shapefile(self):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-    def plot_cvfd(self, verts, iverts, **kwargs):
-        return NotImplementedError()
+    def plot_cvfd(self):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
-        return NotImplementedError()
+    def contour_array_cvfd(self,):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-    def plot_discharge(self, fja, head=None, istep=1,
-                       normalize=False, **kwargs):
-        """
-        Use quiver to plot vectors.
+    def plot_specific_discharge(self):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-        Parameters
-        ----------
-        fja : numpy.ndarray
-            MODFLOW's 'flow ja face'
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        istep : int
-            frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
+    def plot_discharge(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors of specific discharge.
+    def plot_pathline(self):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-        """
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
-        else:
-            pivot = 'middle'
+    def plot_timeseries(self):
+        return NotImplementedError("Function must be called in PlotMapView")
 
-        top = self.mg.top
-        botm = self.mg.botm
-        idomain = self.mg.idomain
-
-        if self.mg.top is None:
-            err = "StructuredModelGrid must have top and " \
-                  "botm defined to use plot_discharge()"
-            raise AssertionError(err)
-
-        if self.mg.idomain is None:
-            idomain = np.ones((self.mg.nlay, self.mg.ncpl), dtype=int)
-
-        fja = np.array(fja)
-        nlay = self.mg.nlay
-
-        delr = np.tile([np.max(i) - np.min(i) for i in self.mg.yvertices], (nlay, 1))
-        delc = np.tile([np.max(i) - np.min(i) for i in self.mg.xvertices], (nlay, 1))
-
-        # no modflow6 equivalent?????
-        hnoflo = 999.
-        hdry = 999.
-
-        if head is None:
-            head = np.zeros(botm.shape)
-
-        if len(head.shape) == 3:
-            head.shape = (nlay, -1)
-
-        # if isinstance(fja, list):
-        #    fja = fja[0]
-
-        if len(fja.shape) == 4:
-            fja = fja[0][0][0]
-
-        laytyp = np.zeros((nlay,))
-        if self.model is not None:
-            if self.model.laytyp is not None:
-                laytyp = self.model.laytyp
-
-        sat_thk = plotutil.PlotUtilities.\
-            saturated_thickness(head, top,
-                                botm, laytyp,
-                                mask_values=[hnoflo, hdry])
-
-        frf, fff, flf = plotutil.UnstructuredPlotUtilities.\
-            vectorize_flow(fja, model_grid=self.mg,
-                           idomain=idomain)
-
-        qx, qy, qz = plotutil.UnstructuredPlotUtilities.\
-            specific_discharge(frf, fff, flf,
-                               delr, delc, sat_thk)
-
-        # Select the correct layer slice
-        u = qx[self.layer, :]
-        v = qy[self.layer, :]
-
-        # apply step
-        x = self.mg.xcellcenters[::istep]
-        y = self.mg.ycellcenters[::istep]
-        u = u[::istep]
-        v = v[::istep]
-        # normalize
-        if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
-            u[idx] /= vmag[idx]
-            v[idx] /= vmag[idx]
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        # mask discharge in inactive cells
-        idx = (idomain[self.layer, ::istep] == 0)
-        idx[idomain[self.layer, ::istep] == -1] = 1
-
-        u[idx] = np.nan
-        v[idx] = np.nan
-
-        # Rotate and plot, offsets must be zero since
-        # these are vectors not locations
-        urot, vrot = geometry.rotate(u, v, 0., 0.,
-                                     self.mg.angrot_radians)
-        quiver = ax.quiver(x, y, urot, vrot, scale=1, units='xy', pivot=pivot, **kwargs)
-        return quiver
-
-    def plot_pathline(self, pl, travel_time=None, **kwargs):
-        return NotImplementedError("MODPATH 7 support is not yet implemented")
-
-    def plot_timeseries(self, ts, travel_time=None, **kwargs):
-        return NotImplementedError("MODPATH 7 support is not yet implemented")
-
-    def plot_endpoint(self, ep, direction="ending", selection=None,
-                      selection_direction=None, **kwargs):
-        return NotImplementedError("MODPATH 7 support is not yet implemented")
+    def plot_endpoint(self):
+        return NotImplementedError("Function must be called in PlotMapView")

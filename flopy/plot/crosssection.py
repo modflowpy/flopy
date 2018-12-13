@@ -12,14 +12,21 @@ import copy
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class CrossSection(object):
+class _CrossSection(object):
     """
     Base class for CrossSection plotting. Handles the model grid
     transforms and searching for modelgrid and dis file information.
 
     This class must be general with absolutely no code specific to
-    a single model grid type as that would break the CrossSection plotting
-    ability of one or more child classes.
+    a single model grid type. The user should not directly instantiate this
+    class
+
+    Parameters
+    ----------
+    ax : matplotlib.pyplot.axes object
+    model: flopy.mf6.Modflow or flopy.modflow.Modflow object
+    modelgrid: flopy.discretization.grid object
+
     """
     def __init__(self, ax=None, model=None, modelgrid=None):
 
@@ -47,9 +54,12 @@ class CrossSection(object):
             raise AssertionError("modelgrid top and botm must be defined")
 
 
-class StructuredCrossSection(CrossSection):
+class _StructuredCrossSection(_CrossSection):
     """
-    Class to create a cross section of the model.
+    Class to create a cross section of the model using
+    Structured discretization.
+
+    Class is not to be instantiated by the user.
 
     Parameters
     ----------
@@ -74,8 +84,8 @@ class StructuredCrossSection(CrossSection):
 
     def __init__(self, ax=None, model=None, modelgrid=None,
                  line=None, extent=None):
-        super(StructuredCrossSection, self).__init__(ax=ax, model=model,
-                                                     modelgrid=modelgrid)
+        super(_StructuredCrossSection, self).__init__(ax=ax, model=model,
+                                                      modelgrid=modelgrid)
 
         if line is None:
             s = 'line must be specified.'
@@ -167,11 +177,13 @@ class StructuredCrossSection(CrossSection):
                 self.ncb += 1
         self.active = np.ones((self.mg.nlay + self.ncb), dtype=np.int)
         kon = 0
-        for k in range(self.mg.nlay):
-            if self.laycbd[k] > 0:
+
+        if len(self.laycbd) > 0:
+            for k in range(self.mg.nlay):
+                if self.laycbd[k] > 0:
+                    kon += 1
+                    self.active[kon] = 0
                 kon += 1
-                self.active[kon] = 0
-            kon += 1
 
         top = self.mg.top
         botm = self.mg.botm
@@ -484,277 +496,23 @@ class StructuredCrossSection(CrossSection):
                                       vpts, **kwargs)
         return contour_set
 
-    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
-        """
-        Make a plot of inactive cells.  If not specified, then pull ibound
-        from the self.ml
+    def plot_inactive(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+    def plot_ibound(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        color_noflow : string
-            (Default is 'black')
+    def plot_grid(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
+    def plot_bc(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        """
-        raise NotImplementedError("plot_inactive must be "
-                                  "called from PlotCrossSection")
+    def plot_specific_discharge(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    color_vpt="red", head=None, **kwargs):
-        """
-        Make a plot of ibound.  If not specified, then pull ibound from the
-        self.model
-
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
-        color_noflow : string
-            (Default is 'black')
-        color_ch : string
-            Color for constant heads (Default is 'blue'.)
-        color_vpt : str
-            Color for vertical pass through cells (Default is 'red')
-        head : numpy.ndarray
-            Three-dimensional array to set top of patches to the minimum
-            of the top of a layer or the head value. Used to create
-            patches that conform to water-level elevations.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.collections.PatchCollection
-
-        Returns
-        -------
-        patches : matplotlib.collections.PatchCollection
-
-        """
-        raise NotImplementedError("plot_ibound must be "
-                                  "called from PlotCrossSection")
-
-    def plot_grid(self, **kwargs):
-        """
-        Plot the grid lines.
-
-        Parameters
-        ----------
-            kwargs : ax, colors.  The remaining kwargs are passed into the
-                the LineCollection constructor.
-
-        Returns
-        -------
-            lc : matplotlib.collections.LineCollection
-
-        """
-        raise NotImplementedError("plot_grid must be "
-                                  "called from PlotCrossSection")
-
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
-                head=None, **kwargs):
-        """
-        Plot boundary conditions locations for a specific boundary
-        type from a flopy model
-
-        Parameters
-        ----------
-        ftype : string
-            Package name string ('WEL', 'GHB', etc.). (Default is None)
-        package : flopy.modflow.Modflow package class instance
-            flopy package class instance. (Default is None)
-        kper : int
-            Stress period to plot
-        color : string
-            matplotlib color string. (Default is None)
-        head : numpy.ndarray
-            Three-dimensional array to set top of patches to the minimum
-            of the top of a layer or the head value. Used to create
-            patches that conform to water-level elevations.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.collections.PatchCollection
-
-        Returns
-        -------
-        patches : matplotlib.collections.PatchCollection
-
-        """
-        raise NotImplementedError("plot_bc must be "
-                                  "called from PlotCrossSection")
-
-    def plot_discharge(self, frf, fff, flf=None, head=None,
-                       kstep=1, hstep=1, normalize=False,
-                       **kwargs):
-        """
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        kstep : int
-            layer frequency to plot. (Default is 1.)
-        hstep : int
-            horizontal frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors
-
-        """
-        # remove 'pivot' keyword argument
-        # by default the center of the arrow is plotted in the center of a cell
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
-        else:
-            pivot = 'middle'
-
-        # Calculate specific discharge
-        ib = self.idomain
-
-        delr = self.mg.delr
-        delc = self.mg.delc
-        top = self.mg.top
-        botm = self.mg.botm
-        nlay, nrow, ncol = botm.shape
-        laytyp = None
-        hnoflo = 999.
-        hdry = 999.
-
-        if self.model is not None:
-            if self.model.laytyp is not None:
-                laytyp = self.model.laytyp
-
-            if self.model.hnoflo is not None:
-                hnoflo = self.model.hnoflo
-
-            if self.model.hdry is not None:
-                hdry = self.model.hdry
-
-        # If no access to head or laytyp, then calculate confined saturated
-        # thickness by setting laytyp to zeros
-        if head is None or laytyp is None:
-            head = np.zeros(botm.shape, np.float32)
-            laytyp = np.zeros((nlay), dtype=np.int)
-            head[0, :, :] = top
-            if nlay > 1:
-                head[1:, :, :] = botm[:-1, :, :]
-
-        sat_thk = plotutil.PlotUtilities.\
-            saturated_thickness(head, top, botm,
-                                laytyp, [hnoflo, hdry])
-
-        # Calculate specific discharge
-        qx, qy, qz = plotutil.PlotUtilities.\
-            centered_specific_discharge(frf, fff, flf,
-                                        delr, delc, sat_thk)
-
-        if qz is None:
-            qz = np.zeros((qx.shape), dtype=np.float)
-
-        # Select correct specific discharge direction
-        if self.direction == 'x':
-            u = qx[:, :, :]
-            u2 = -qy[:, :, :]
-            v = qz[:, :, :]
-        elif self.direction == 'y':
-            u = -qy[:, :, :]
-            u2 = -qx[:, :, :]
-            v = qz[:, :, :]
-        elif self.direction == 'xy':
-            print('csplot_discharge does not support arbitrary cross-sections')
-            return None
-
-        if isinstance(head, np.ndarray):
-            zcentergrid = self.set_zcentergrid(head)
-        else:
-            zcentergrid = self.zcentergrid
-
-        if nlay == 1:
-            x = []
-            z = []
-            for k in range(nlay):
-                for i in range(self.xcentergrid.shape[1]):
-                    x.append(self.xcentergrid[k, i])
-                    z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
-            x = np.array(x).reshape((1, self.xcentergrid.shape[1]))
-            z = np.array(z).reshape((1, self.xcentergrid.shape[1]))
-        else:
-            x = self.xcentergrid
-            z = zcentergrid
-
-        upts = []
-        u2pts = []
-        vpts = []
-        ibpts = []
-        xedge, yedge = self.mg.xyedges
-        for k in range(self.mg.nlay):
-            upts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge, u[k, :, :]))
-            u2pts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge,
-                                                    u2[k, :, :]))
-            vpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge, v[k, :, :]))
-            ibpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                    yedge,
-                                                    ib[k, :, :]))
-        # convert upts, u2pts, and vpts to numpy arrays
-        upts = np.array(upts)
-        u2pts = np.array(u2pts)
-        vpts = np.array(vpts)
-        ibpts = np.array(ibpts)
-
-        # Select correct slice and apply step
-        x = x[::kstep, ::hstep]
-        z = z[::kstep, ::hstep]
-        upts = upts[::kstep, ::hstep]
-        u2pts = u2pts[::kstep, ::hstep]
-        vpts = vpts[::kstep, ::hstep]
-        ibpts = ibpts[::kstep, ::hstep]
-
-        # normalize
-        if normalize:
-            if self.direction == 'xy':
-                vmag = np.sqrt(upts ** 2. + u2pts ** 2. + vpts ** 2.)
-            else:
-                vmag = np.sqrt(upts ** 2. + vpts ** 2.)
-            idx = vmag > 0.
-            upts[idx] /= vmag[idx]
-            u2pts[idx] /= vmag[idx]
-            vpts[idx] /= vmag[idx]
-
-        # upts and vpts has a value for the left and right
-        # sides of a cell. Sample every other value for quiver
-        upts = upts[:, ::2]
-        vpts = vpts[:, ::2]
-        ibpts = ibpts[:, ::2]
-
-        # mask discharge in inactive cells
-        idx = (ibpts == 0)
-        upts[idx] = np.nan
-        vpts[idx] = np.nan
-
-        # plot the vectors
-        quiver = self.ax.quiver(x, z, upts, vpts, pivot=pivot, **kwargs)
-
-        return quiver
+    def plot_discharge(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """

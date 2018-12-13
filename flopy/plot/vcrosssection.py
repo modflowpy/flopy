@@ -7,14 +7,17 @@ except:
     plt = None
 from flopy.plot import plotutil
 from flopy.utils import geometry
-from flopy.plot.crosssection import CrossSection
+from flopy.plot.crosssection import _CrossSection
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
-class VertexCrossSection(CrossSection):
+class _VertexCrossSection(_CrossSection):
     """
-    Class to create a cross section of the model from a VertexGrid
+    Class to create a cross section of the model from a vertex
+    discretization.
+
+    Class is not to be instantiated by the user!
 
     Parameters
     ----------
@@ -38,8 +41,8 @@ class VertexCrossSection(CrossSection):
     """
     def __init__(self, ax=None, model=None, modelgrid=None,
                  line=None, extent=None):
-        super(VertexCrossSection, self).__init__(ax=ax, model=model,
-                                                 modelgrid=modelgrid)
+        super(_VertexCrossSection, self).__init__(ax=ax, model=model,
+                                                  modelgrid=modelgrid)
 
         if line is None:
             err_msg = 'line must be specified.'
@@ -174,7 +177,6 @@ class VertexCrossSection(CrossSection):
         self.laycbd = None
         self.zpts = None
         self.xcentergrid = None
-        self.ycentergrid = None
         self.zcentergrid = None
 
         # Set axis limits
@@ -476,246 +478,25 @@ class VertexCrossSection(CrossSection):
 
         return contour_set
 
-    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
-        """
-        Make a plot of inactive cells.  If not specified, then pull ibound
-        from the self.ml
-
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.
-
-        color_noflow : string
-            (Default is 'black')
-
-        Returns
-        -------
-        quadmesh : matplotlib.collections.PatchCollection
-
-        """
-        raise NotImplementedError("plot_inactive must be "
-                                  "called from PlotCrossSection")
+    def plot_inactive(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
 
-    def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    color_vpt='red', head=None, **kwargs):
-        """
-        Make a plot of ibound.  If not specified, then pull ibound from the
-        self.model
+    def plot_ibound(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.
-        color_noflow : string
-            (Default is 'black')
-        color_ch : string
-            Color for constant heads (Default is 'blue'.)
-        color_vpt : str
-            Color for vertical pass through cells (Default is 'red')
-        head : numpy.ndarray
-            Three-dimensional array to set top of patches to the minimum
-            of the top of a layer or the head value. Used to create
-            patches that conform to water-level elevations.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.collections.PatchCollection
+    def plot_grid(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        Returns
-        -------
-        patches : matplotlib.collections.PatchCollection
+    def plot_bc(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-        """
-        raise NotImplementedError("plot_ibound must be "
-                                  "called from PlotCrossSection")
+    def plot_specific_discharge(self):
+        raise NotImplementedError("Function must be called in PlotCrossSection")
 
-    def plot_grid(self, **kwargs):
-        """
-        Plot the grid lines.
-
-        Parameters
-        ----------
-            kwargs : ax, colors.  The remaining kwargs are passed into the
-                the LineCollection constructor.
-
-        Returns
-        -------
-            lc : matplotlib.collections.LineCollection
-
-        """
-        raise NotImplementedError("plot_grid must be "
-                                  "called from PlotCrossSection")
-
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
-                head=None, **kwargs):
-        """
-        Plot boundary conditions locations for a specific boundary
-        type from a flopy model
-
-        Parameters
-        ----------
-        ftype : string
-            Package name string ('WEL', 'GHB', etc.). (Default is None)
-        package : flopy.modflow.Modflow package class instance
-            flopy package class instance. (Default is None)
-        kper : int
-            Stress period to plot
-        color : string
-            matplotlib color string. (Default is None)
-        head : numpy.ndarray
-            Three-dimensional array to set top of patches to the minimum
-            of the top of a layer or the head value. Used to create
-            patches that conform to water-level elevations.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.collections.PatchCollection
-
-        Returns
-        -------
-        patches : matplotlib.collections.PatchCollection
-
-        """
-        raise NotImplementedError("plot_bc must be "
-                                  "called from PlotCrossSection")
-
-    def plot_discharge(self, fja=None, head=None,
-                       kstep=1, hstep=1, normalize=False,
-                       **kwargs):
-        """
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        fja : numpy.ndarray
-            MODFLOW's 'flow ja face'
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        kstep : int
-            layer frequency to plot. (Default is 1.)
-        hstep : int
-            horizontal frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors
-
-        """
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
-        else:
-            pivot = 'middle'
-
-        pts = self.pts
-
-        # check that the cross section in not arbitrary within a tolerance...
-        xuniform = [True if abs(pts.T[0, 0] - i) < 1
-                    else False for i in pts.T[0]]
-        yuniform = [True if abs(pts.T[1, 0] - i) < 1
-                    else False for i in pts.T[1]]
-        if not np.all(xuniform):
-            if not np.all(yuniform):
-                err_msg = "plot_discharge cannot plot " \
-                          "aribtrary cross sections"
-                raise AssertionError(err_msg)
-
-        top = self.mg.top
-        botm = self.mg.botm
-
-        fja = np.array(fja)
-        nlay = self.mg.nlay
-        ncpl = self.mg.ncpl
-
-        delr = np.tile([np.max(i) - np.min(i) for i in self.yvertices], (nlay, 1))
-        delc = np.tile([np.max(i) - np.min(i) for i in self.xvertices], (nlay, 1))
-
-        # no modflow6 equivalent???
-        hnoflo = 999.
-        hdry = 999.
-
-        if head is None:
-            head = np.zeros(botm.shape)
-
-        if len(head.shape) == 3:
-            head.shape = (nlay, -1)
-
-        if len(fja.shape) == 4:
-            fja = fja[0][0][0]
-
-        # kstep implementation, check for bugs!
-        projpts = {key: value for key, value in self.projpts.items()
-                   if (key // ncpl) % kstep == 0}
-
-        if isinstance(head, np.ndarray):
-            # pipe kstep to set_zcentergrid to assure consistent array size
-            zcenters = self.set_zcentergrid(np.ravel(head), kstep=kstep)
-        else:
-            zcenters = [np.mean(np.array(v).T[1]) for i, v
-                        in sorted(projpts.items())]
-
-        laytyp = np.zeros((nlay,))
-        if self.model is not None:
-            if self.model.laytyp is not None:
-                laytyp = self.model.laytyp
-
-        sat_thk = plotutil.PlotUtilities. \
-            saturated_thickness(head, top,
-                                botm, laytyp,
-                                mask_values=[hnoflo, hdry])
-
-        frf, fff, flf = plotutil.UnstructuredPlotUtilities. \
-            vectorize_flow(fja, model_grid=self.mg,
-                           idomain=self.idomain)
-
-        qx, qy, qz = plotutil.UnstructuredPlotUtilities. \
-            specific_discharge(frf, fff, flf,
-                               delr, delc, sat_thk)
-
-        # determine the projection direction
-        if self.direction == "x":
-            qx = np.ravel(qx)
-            u = np.array([qx[cell] for cell
-                          in sorted(projpts)])
-            x = [np.mean(np.array(v).T[0]) for i, v
-                 in sorted(projpts.items())]
-
-        else:
-            qy = np.ravel(qy)
-            u = np.array([qy[cell] for cell
-                          in sorted(projpts)])
-            x = [np.mean(np.array(v).T[0]) for i, v
-                 in sorted(projpts.items())]
-
-        qz = np.ravel(qz)
-        v = np.array([-qz[cell] for cell
-                      in sorted(projpts)])
-        y = np.ravel(zcenters)
-
-        x = x[::hstep]
-        y = y[::hstep]
-        u = u[::hstep]
-        v = v[::hstep]
-        # normalize
-        if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
-            u[idx] /= vmag[idx]
-            v[idx] /= vmag[idx]
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        quiver = ax.quiver(x, y, u, v, scale=1, units='xy', pivot=pivot, **kwargs)
-
-        return quiver
+    def plot_discharge(self):
+        raise NotImplementedError("plot_specific_discharge must be "
+                                  "used for VertexGrid models")
 
     def get_grid_patch_collection(self, projpts, plotarray, **kwargs):
         """

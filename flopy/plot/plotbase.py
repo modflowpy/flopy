@@ -1,10 +1,10 @@
 import sys
 import numpy as np
-from ..plot.map import StructuredMapView
-from ..plot.vmap import VertexMapView
-from ..plot.umap import UnstructuredMapView
-from ..plot.crosssection import StructuredCrossSection
-from ..plot.vcrosssection import VertexCrossSection
+from ..plot.map import _StructuredMapView
+from ..plot.vmap import _VertexMapView
+from ..plot.umap import _UnstructuredMapView
+from ..plot.crosssection import _StructuredCrossSection
+from ..plot.vcrosssection import _VertexCrossSection
 from ..plot import plotutil
 from ..utils import geometry
 
@@ -56,19 +56,19 @@ class PlotMapView(object):
         tmp = modelgrid.grid_type
 
         if tmp == "structured":
-            self.__cls = StructuredMapView(ax=ax, model=model,
-                                           modelgrid=modelgrid, layer=layer,
-                                           extent=extent)
+            self.__cls = _StructuredMapView(ax=ax, model=model,
+                                            modelgrid=modelgrid, layer=layer,
+                                            extent=extent)
 
         elif tmp == "unstructured":
-            self.__cls = UnstructuredMapView(ax=ax, modelgrid=modelgrid,
-                                             model=model,
-                                             layer=layer, extent=extent)
+            self.__cls = _UnstructuredMapView(ax=ax, modelgrid=modelgrid,
+                                              model=model,
+                                              layer=layer, extent=extent)
 
         elif tmp == "vertex":
-            self.__cls = VertexMapView(ax=ax, model=model,
-                                       modelgrid=modelgrid, layer=layer,
-                                       extent=extent)
+            self.__cls = _VertexMapView(ax=ax, model=model,
+                                        modelgrid=modelgrid, layer=layer,
+                                        extent=extent)
 
         else:
             raise TypeError("Unrecognized grid type {}".format(tmp))
@@ -275,7 +275,7 @@ class PlotMapView(object):
 
         Parameters
         ----------
-        shp : string
+        shp : string or pyshp shapefile object
             Name of the shapefile to plot
 
         kwargs : dictionary
@@ -375,7 +375,92 @@ class PlotMapView(object):
 
         return contour_set
 
-    def plot_discharge(self, frf=None, fff=None, fja=None,
+    def plot_specific_discharge(self, spdis, istep=1,
+                                jstep=1, normalize=False, **kwargs):
+        """
+        Method to plot specific discharge from discharge vectors
+        provided by the cell by cell flow output file. In MODFLOW-6
+        this option is controled in the NPF options block. This method
+        uses matplotlib quiver to create a matplotlib plot of the output.
+
+        Parameters:
+        ----------
+            qx: (np.ndarray)
+            qy: (np.ndarray)
+            qz: (np.ndarray)
+            istep: (int) row frequency to plot. (Default is 1.)
+            jstep: (int) column frequency to plot. (Default is 1.)
+            kwargs: matplotlib.pyplot keyword arguments for the
+                plt.quiver method.
+
+        Returns:
+            quiver: (matplotlib.pyplot.quiver) quiver plot of discharge vectors
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if isinstance(spdis, list):
+            print("Warning: Selecting the final stress period from Specific"
+                  " Discharge list")
+            spdis = spdis[-1]
+
+        if self.mg.grid_type == "structured":
+            ncpl = self.mg.nrow * self.mg.ncol
+
+        else:
+            ncpl = self.mg.ncpl
+
+        nlay = self.mg.nlay
+
+        qx = np.zeros((nlay * ncpl))
+        qy = np.zeros((nlay * ncpl))
+
+        idx = np.array(spdis['node']) - 1
+        qx[idx] = spdis['qx']
+        qy[idx] = spdis["qy"]
+
+        if self.mg.grid_type == "structured":
+            qx.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            qy.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            x = self.mg.xcellcenters[::istep, ::jstep]
+            y = self.mg.ycellcenters[::istep, ::jstep]
+            u = qx[:, ::istep, ::jstep]
+            v = qy[:, ::istep, ::jstep]
+        else:
+            qx.shape = (self.mg.nlay, self.mg.ncpl)
+            qy.shape = (self.mg.nlay, self.mg.ncpl)
+            x = self.mg.xcellcenters[::istep]
+            y = self.mg.ycellcenters[::istep]
+            u = qx[:, ::istep]
+            v = qy[:, ::istep]
+
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        u[u == 0] = np.nan
+        v[v == 0] = np.nan
+
+        u = u[self.layer, :]
+        v = v[self.layer, :]
+        # Rotate and plot, offsets must be zero since
+        # these are vectors not locations
+        urot, vrot = geometry.rotate(u, v, 0., 0.,
+                                     self.mg.angrot_radians)
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+        return quiver
+
+    def plot_discharge(self, frf=None, fff=None,
                        flf=None, head=None, istep=1, jstep=1,
                        normalize=False, **kwargs):
         """
@@ -387,8 +472,6 @@ class PlotMapView(object):
             MODFLOW's 'flow right face'
         fff : numpy.ndarray
             MODFLOW's 'flow front face'
-        fja : numpy.ndarray
-            MODFLOW's 'flow ja face' (required for vertex plotting)
         dis : flopy.modflow.ModflowDis package
             Depricated parameter
         flf : numpy.ndarray
@@ -413,17 +496,72 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
-        if self.mg.grid_type == "vertex":
-            return self.__cls.plot_discharge(fja=fja, head=head, istep=istep,
-                                             normalize=normalize, **kwargs)
-
-        elif self.mg.grid_type == "unstructured":
-            return self.__cls.plot_discharge()
+        if self.mg.grid_type != "structured":
+            err_msg = "Use plot_specific_discharge for " \
+                      "{} grids".format(self.mg.grid_type)
+            raise NotImplementedError(err_msg)
 
         else:
-            return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf, head=head,
-                                             istep=istep, jstep=jstep, normalize=normalize,
-                                             **kwargs)
+            if self.mg.top is None:
+                err = "StructuredModelGrid must have top and " \
+                      "botm defined to use plot_discharge()"
+                raise AssertionError(err)
+
+            ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
+            if self.mg.idomain is not None:
+                ib = self.mg.idomain
+
+            delr = self.mg.delr
+            delc = self.mg.delc
+            top = np.copy(self.mg.top)
+            botm = np.copy(self.mg.botm)
+            nlay, nrow, ncol = botm.shape
+            laytyp = None
+            hnoflo = 999.
+            hdry = 999.
+
+            if self.model is not None:
+                if self.model.laytyp is not None:
+                    laytyp = self.model.laytyp
+
+                if self.model.hnoflo is not None:
+                    hnoflo = self.model.hnoflo
+
+                if self.model.hdry is not None:
+                    hdry = self.model.hdry
+
+            # If no access to head or laytyp, then calculate confined saturated
+            # thickness by setting laytyp to zeros
+            if head is None or laytyp is None:
+                head = np.zeros(botm.shape, np.float32)
+                laytyp = np.zeros((nlay,), dtype=np.int)
+
+            # calculate the saturated thickness
+            sat_thk = plotutil.PlotUtilities. \
+                saturated_thickness(head, top, botm, laytyp,
+                                    [hnoflo, hdry])
+
+            # Calculate specific discharge
+            qx, qy, qz = plotutil.PlotUtilities. \
+                centered_specific_discharge(frf, fff, flf, delr,
+                                            delc, sat_thk)
+            ib = ib.ravel()
+            qx = qx.ravel()
+            qy = qy.ravel()
+
+            temp = []
+            for ix, val in enumerate(ib):
+                if val != 0:
+                    temp.append((ix + 1, qx[ix], qy[ix]))
+
+            spdis = np.recarray((len(temp),), dtype=[('node', np.int),
+                                                     ("qx", np.float),
+                                                     ("qy", np.float)])
+            for ix, tup in enumerate(temp):
+                spdis[ix] = tup
+
+            self.plot_specific_discharge(spdis, istep=istep, jstep=jstep,
+                                         normalize=normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
@@ -872,8 +1010,6 @@ class DeprecatedMapView(PlotMapView):
                                                       **kwargs)
 
 
-
-
 class PlotCrossSection(object):
     """
     Class to create a cross section of the model.
@@ -913,17 +1049,17 @@ class PlotCrossSection(object):
         tmp = modelgrid.grid_type
 
         if tmp == "structured":
-            self.__cls = StructuredCrossSection(ax=ax, model=model,
-                                                modelgrid=modelgrid,
-                                                line=line, extent=extent)
+            self.__cls = _StructuredCrossSection(ax=ax, model=model,
+                                                 modelgrid=modelgrid,
+                                                 line=line, extent=extent)
 
         elif tmp == "unstructured":
             raise NotImplementedError("Unstructured xc not yet implemented")
 
         elif tmp == "vertex":
-            self.__cls = VertexCrossSection(ax=ax, model=model,
-                                            modelgrid=modelgrid,
-                                            line=line, extent=extent)
+            self.__cls = _VertexCrossSection(ax=ax, model=model,
+                                             modelgrid=modelgrid,
+                                             line=line, extent=extent)
 
         else:
             raise ValueError("Unknown modelgrid type {}".format(tmp))
@@ -1238,7 +1374,190 @@ class PlotCrossSection(object):
 
         return patches
 
-    def plot_discharge(self, frf=None, fff=None, flf=None, fja=None,
+    def plot_specific_discharge(self, spdis, head=None, kstep=1,
+                                hstep=1, normalize=False, **kwargs):
+        """
+        Use quiver to plot vectors.
+
+        Parameters
+        ----------
+        spdis : np.recarray
+            numpy recarray of specific discharge information. This
+            can be grabbed directly from the CBC file if SAVE_SPECIFIC_DISCHARGE
+            is used in the MF6 NPF file.
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then the quivers will be plotted
+            in the cell center.
+        kstep : int
+            layer frequency to plot. (Default is 1.)
+        hstep : int
+            horizontal frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
+        kwargs : dictionary
+            Keyword arguments passed to plt.quiver()
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            Vectors
+
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if isinstance(spdis, list):
+            print("Warning: Selecting the final stress period from Specific"
+                  " Discharge list")
+            spdis = spdis[-1]
+
+        if self.mg.grid_type == "structured":
+            ncpl = self.mg.nrow * self.mg.ncol
+
+        else:
+            ncpl = self.mg.ncpl
+
+        nlay = self.mg.nlay
+
+        qx = np.zeros((nlay * ncpl))
+        qz = np.zeros((nlay * ncpl))
+        ib = np.zeros((nlay * ncpl), dtype=bool)
+
+        idx = np.array(spdis['node']) - 1
+
+        # check that vertex grid cross sections are not arbitrary
+        # within a tolerance!
+        if self.mg.grid_type != 'structured':
+            pts = self.pts
+            xuniform = [True if abs(pts.T[0, 0] - i) < 1
+                        else False for i in pts.T[0]]
+            yuniform = [True if abs(pts.T[1, 0] - i) < 1
+                        else False for i in pts.T[1]]
+            if not np.all(xuniform):
+                if not np.all(yuniform):
+                    err_msg = "plot_specific_discharge does not " \
+                              "support aribtrary cross sections"
+                    raise AssertionError(err_msg)
+
+        if self.direction == 'x':
+            qx[idx] = spdis['qx']
+        elif self.direction == 'y':
+            qx[idx] = spdis['qy']
+        else:
+            err_msg = 'plot_specific_discharge does not ' \
+                      'support arbitrary cross-sections'
+            raise AssertionError(err_msg)
+
+        qz[idx] = spdis["qz"]
+        ib[idx] = True
+
+        if self.mg.grid_type == "structured":
+            qx.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            qz.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            ib.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+
+            if isinstance(head, np.ndarray):
+                zcentergrid = self.__cls.set_zcentergrid(head)
+            else:
+                zcentergrid = self.zcentergrid
+
+            if nlay == 1:
+                x = []
+                z = []
+                for k in range(nlay):
+                    for i in range(self.xcentergrid.shape[1]):
+                        x.append(self.xcentergrid[k, i])
+                        z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
+                x = np.array(x).reshape((1, self.xcentergrid.shape[1]))
+                z = np.array(z).reshape((1, self.xcentergrid.shape[1]))
+            else:
+                x = self.xcentergrid
+                z = zcentergrid
+
+            u = []
+            v = []
+            ibx = []
+            xedge, yedge = self.mg.xyedges
+            for k in range(self.mg.nlay):
+                u.append(plotutil.cell_value_points(self.xpts, xedge,
+                                                    yedge, qx[k, :, :]))
+                v.append(plotutil.cell_value_points(self.xpts, xedge,
+                                                    yedge, qz[k, :, :]))
+                ibx.append(plotutil.cell_value_points(self.xpts, xedge,
+                                                      yedge, ib[k, :, :]))
+            u = np.array(u)
+            v = np.array(v)
+            ibx = np.array(ibx)
+            x = x[::kstep, ::hstep]
+            z = z[::kstep, ::hstep]
+            u = u[::kstep, ::hstep]
+            v = v[::kstep, ::hstep]
+            ib = ibx[::kstep, ::hstep]
+
+            # upts and vpts has a value for the left and right
+            # sides of a cell. Sample every other value for quiver
+            u = u[:, ::2]
+            v = v[:, ::2]
+            ib = ib[:, ::2]
+
+        else:
+            # kstep implementation for vertex grid
+            projpts = {key: value for key, value in self.__cls.projpts.items()
+                       if (key // ncpl) % kstep == 0}
+
+            # set x and z centers
+            if isinstance(head, np.ndarray):
+                # pipe kstep to set_zcentergrid to assure consistent array size
+                zcenters = self.__cls.set_zcentergrid(np.ravel(head), kstep=kstep)
+            else:
+                zcenters = [np.mean(np.array(v).T[1]) for i, v
+                            in sorted(projpts.items())]
+
+            u = np.array([qx[cell] for cell in sorted(projpts)])
+
+            if self.direction == "x":
+                x = np.array([np.mean(np.array(v).T[0]) for i, v
+                                     in sorted(projpts.items())])
+            else:
+                x = np.array([np.mean(np.array(v).T[1]) for i, v
+                                     in sorted(projpts.items())])
+
+            z = np.ravel(zcenters)
+            v = np.array([qz[cell] for cell
+                          in sorted(projpts)])
+            ib = np.array([ib[cell] for cell
+                           in sorted(projpts)])
+
+            x = x[::hstep]
+            z = z[::hstep]
+            u = u[::hstep]
+            v = v[::hstep]
+            ib = ib[::hstep]
+
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        # mask with an ibound array
+        u[~ib] = np.nan
+        v[~ib] = np.nan
+
+        quiver = ax.quiver(x, z, u, v, pivot=pivot, **kwargs)
+
+        return quiver
+
+    def plot_discharge(self, frf, fff, flf=None,
                        head=None, kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
@@ -1252,8 +1571,6 @@ class PlotCrossSection(object):
             MODFLOW's 'flow front face'
         flf : numpy.ndarray
             MODFLOW's 'flow lower face' (Default is None.)
-        fja : numpy.ndarray
-            MODFLOW's 'flow ja face' (Default is None.)
         head : numpy.ndarray
             MODFLOW's head array.  If not provided, then will assume confined
             conditions in order to calculated saturated thickness.
@@ -1274,17 +1591,76 @@ class PlotCrossSection(object):
             Vectors
 
         """
-        if self.mg.grid_type == "vertex":
-            return self.__cls.plot_discharge(fja=fja, head=head, kstep=kstep,
-                                             hstep=hstep, normalize=normalize, **kwargs)
-
-        elif self.mg.grid_type == "unstructured":
-            raise self.__cls.plot_discharge()
+        if self.mg.grid_type != "structured":
+            err_msg = "Use plot_specific_discharge for " \
+                      "{} grids".format(self.mg.grid_type)
+            raise NotImplementedError(err_msg)
 
         else:
-            return self.__cls.plot_discharge(frf=frf, fff=fff, flf=flf, head=head,
-                                             kstep=kstep, hstep=hstep, normalize=normalize,
-                                             **kwargs)
+            ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
+            if self.mg.idomain is not None:
+                ib = self.mg.idomain
+
+            delr = self.mg.delr
+            delc = self.mg.delc
+            top = self.mg.top
+            botm = self.mg.botm
+            nlay, nrow, ncol = botm.shape
+            laytyp = None
+            hnoflo = 999.
+            hdry = 999.
+
+            if self.model is not None:
+                if self.model.laytyp is not None:
+                    laytyp = self.model.laytyp
+
+                if self.model.hnoflo is not None:
+                    hnoflo = self.model.hnoflo
+
+                if self.model.hdry is not None:
+                    hdry = self.model.hdry
+
+            # If no access to head or laytyp, then calculate confined saturated
+            # thickness by setting laytyp to zeros
+            if head is None or laytyp is None:
+                head = np.zeros(botm.shape, np.float32)
+                laytyp = np.zeros((nlay), dtype=np.int)
+                head[0, :, :] = top
+                if nlay > 1:
+                    head[1:, :, :] = botm[:-1, :, :]
+
+            sat_thk = plotutil.PlotUtilities. \
+                saturated_thickness(head, top, botm,
+                                    laytyp, [hnoflo, hdry])
+
+            # Calculate specific discharge
+            qx, qy, qz = plotutil.PlotUtilities. \
+                centered_specific_discharge(frf, fff, flf,
+                                            delr, delc, sat_thk)
+
+            if qz is None:
+                qz = np.zeros((qx.shape), dtype=np.float)
+
+            ib = ib.ravel()
+            qx = qx.ravel()
+            qy = qy.ravel()
+            qz = qz.ravel()
+
+            temp = []
+            for ix, val in enumerate(ib):
+                if val != 0:
+                    temp.append((ix + 1, qx[ix], -qy[ix], qz[ix]))
+
+            spdis = np.recarray((len(temp),), dtype=[('node', np.int),
+                                                     ("qx", np.float),
+                                                     ("qy", np.float),
+                                                     ("qz", np.float)])
+            for ix, tup in enumerate(temp):
+                spdis[ix] = tup
+
+            self.plot_specific_discharge(spdis, head=head, kstep=kstep,
+                                         hstep=hstep, normalize=normalize,
+                                         **kwargs)
 
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """

@@ -1,8 +1,8 @@
                                    MODFLOW 6
                 U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
-                            VERSION 6.0.3 08/09/2018
+                       VERSION mf6.0.2 February 23, 2018
 
-   MODFLOW 6 compiled Aug 09 2018 13:40:32 with IFORT compiler (ver. 18.0.3)
+   MODFLOW 6 compiled Feb 21 2018 10:49:51 with IFORT compiler (ver. 18.0.1)
 
 This software has been approved for release by the U.S. Geological 
 Survey (USGS). Although the software has been subjected to rigorous 
@@ -19,19 +19,13 @@ and distribution information.
 
 
 System command used to initiate simulation:
-mf6.exe
+"C:\Users\jlarsen\Desktop\flopy-ogw\trunk\examples\data\mf6\test003_gwftri_disv\mf6.exe"
 
 MODFLOW was compiled using uniform precision.
-Real Variables
-  PRECISION: 15
-  KIND: 8
-  TINY (smallest non-zero value):    2.225074-308
-  HUGE (largest value):    1.797693+308
-Integer Variables
-  KIND: 4
-  HUGE (largest value): 2147483647
-  BIT_SIZE: 32
- 
+Precision of REAL variables: 15
+Fortran KIND value for REAL variables: 8
+Fortran KIND value for INTEGER variables: 4
+
 
  OPENED mfsim.nam
  FILE TYPE:NAM   UNIT 1001   STATUS:OLD                 
@@ -153,12 +147,12 @@ Integer Variables
 
  INFORMATION ON VARIABLES STORED IN THE MEMORY MANAGER
  
- Number of allocated integer variables:   42944
- Number of allocated real variables:    36973
- Allocated memory in megabytes:    0.467560    
+ Number of allocated integer variables:   42943
+ Number of allocated real variables:    39325
+ Allocated memory in megabytes:    0.486372    
  
 
- Run end date and time (yyyy/mm/dd hh:mm:ss): 2018/09/13 11:15:16
- Elapsed run time:  0.046 Seconds
+ Run end date and time (yyyy/mm/dd hh:mm:ss): 2018/12/12 10:28:40
+ Elapsed run time:  0.109 Seconds
 
  Normal termination of simulation.

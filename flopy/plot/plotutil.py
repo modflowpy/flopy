@@ -313,32 +313,34 @@ class PlotUtilities(object):
         Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         model input data from a model instance
 
-        Args:
-            model: Flopy model instance
-            SelPackList: (list) list of package names to plot, if none
-                all packages will be plotted
+        Parameters
+        ----------
+        model: Flopy model instance
+        SelPackList: (list) list of package names to plot, if none
+            all packages will be plotted
 
-            **kwargs : dict
-                filename_base : str
-                    Base file name that will be used to automatically generate file
-                    names for output image files. Plots will be exported as image
-                    files if file_name_base is not None. (default is None)
-                file_extension : str
-                    Valid matplotlib.pyplot file extension for savefig(). Only used
-                    if filename_base is not None. (default is 'png')
-                mflay : int
-                    MODFLOW zero-based layer number to return.  If None, then all
-                    all layers will be included. (default is None)
-                kper : int
-                    MODFLOW zero-based stress period number to return.
-                    (default is zero)
-                key : str
-                    MfList dictionary key. (default is None)
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return.
+                (default is zero)
+            key : str
+                MfList dictionary key. (default is None)
 
-        Returns:
-            axes : list
-                Empty list is returned if filename_base is not None. Otherwise
-                a list of matplotlib.pyplot.axis are returned.
+        Returns
+        -------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
         """
         defaults = {"kper": 0, "mflay": None, "filename_base": None,
                     "file_extension": "png", "key": None}
@@ -397,32 +399,34 @@ class PlotUtilities(object):
         Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         model input data from a model instance
 
-        Args:
-            model: Flopy model instance
-            SelPackList: (list) list of package names to plot, if none
-                all packages will be plotted
+        Parameters
+        ----------
+        model: Flopy model instance
+        SelPackList: (list) list of package names to plot, if none
+            all packages will be plotted
 
-            **kwargs : dict
-                filename_base : str
-                    Base file name that will be used to automatically generate file
-                    names for output image files. Plots will be exported as image
-                    files if file_name_base is not None. (default is None)
-                file_extension : str
-                    Valid matplotlib.pyplot file extension for savefig(). Only used
-                    if filename_base is not None. (default is 'png')
-                mflay : int
-                    MODFLOW zero-based layer number to return.  If None, then all
-                    all layers will be included. (default is None)
-                kper : int
-                    MODFLOW zero-based stress period number to return.
-                    (default is zero)
-                key : str
-                    MfList dictionary key. (default is None)
+        **kwargs : dict
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+            mflay : int
+                MODFLOW zero-based layer number to return.  If None, then all
+                all layers will be included. (default is None)
+            kper : int
+                MODFLOW zero-based stress period number to return.
+                (default is zero)
+            key : str
+                MfList dictionary key. (default is None)
 
-        Returns:
-            axes : list
-                Empty list is returned if filename_base is not None. Otherwise
-                a list of matplotlib.pyplot.axis are returned.
+        Returns
+        -------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis are returned.
         """
         # valid keyword arguments
         defaults = {"kper": 0, "mflay": None, "filename_base": None,
@@ -512,7 +516,7 @@ class PlotUtilities(object):
                 MfList dictionary key. (default is None)
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.
@@ -642,29 +646,6 @@ class PlotUtilities(object):
                                        kper=defaults['kper'],
                                        fignum=fignum, colorbar=True))
 
-                # elif isinstance(value, MFArray):
-                #     if value.array is not None:
-                #         if len(value.array.shape) == 2:
-                #             fignum = list(range(defaults['initial_fig'],
-                #                                defaults['initial_fig'] + 1))
-                #            defaults['initial_fig'] = fignum[-1] + 1
-                #            caxs.append(
-                #                value.plot(filename_base=defaults['filename_base'],
-                #                           file_extension=defaults['file_extension'],
-                #                           fignum=fignum, model_name=model_name,
-                #                           colorbar=True))
-                #        elif len(value.array.shape) == 3:
-                #            fignum = list(range(defaults['initial_fig'],
-                #                                defaults['initial_fig'] + inc))
-                #            defaults['initial_fig'] = fignum[-1] + 1
-                #            caxs.append(
-                #                value.plot(filename_base=defaults['filename_base'],
-                #                           file_extension=defaults['file_extension'],
-                #                           mflay=defaults['mflay'],
-                #                           fignum=fignum, model_name=model_name,
-                #                           colorbar=True))
-                #        else:
-                #            pass
                 else:
                     pass
 
@@ -740,11 +721,11 @@ class PlotUtilities(object):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
-        :return:
+
         """
         if file_extension is not None:
             fext = file_extension
@@ -857,7 +838,7 @@ class PlotUtilities(object):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
@@ -936,10 +917,11 @@ class PlotUtilities(object):
                 List of unique values to be excluded from the plot.
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
+
         """
         model_name = ""
         if "model_name" in kwargs:
@@ -1034,10 +1016,11 @@ class PlotUtilities(object):
                 extracted. (default is zero).
 
         Returns
-        ----------
+        -------
         axes : list
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis is returned.
+
         """
         if file_extension is not None:
             fext = file_extension
@@ -1096,18 +1079,21 @@ class PlotUtilities(object):
         """
         Helper method to plot scalar objects
 
-        Parameters:
-            scalar : flopy.mf6.data.mfscalar object
-            filename_base : str
-                Base file name that will be used to automatically generate file
-                names for output image files. Plots will be exported as image
-                files if file_name_base is not None. (default is None)
-            file_extension : str
-                Valid matplotlib.pyplot file extension for savefig(). Only used
-                if filename_base is not None. (default is 'png')
+        Parameters
+        ----------
+        scalar : flopy.mf6.data.mfscalar object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
 
-        Returns:
-             axes: list matplotlib.axes object
+        Returns
+        -------
+         axes: list matplotlib.axes object
+
         """
         if file_extension is not None:
             fext = file_extension
@@ -1138,29 +1124,31 @@ class PlotUtilities(object):
         """
         Helper method to plot array objects
 
-        Parameters:
-            plotarray : np.array object
-            model: fp.modflow.Modflow object
-                optional if spatial reference is provided
-            modelgrid: fp.discretization.ModelGrid object
-                object that defines the spatial orientation of a modflow
-                grid within flopy. Optional if model object is provided
-            axes: matplotlib.axes object
-                existing matplotlib axis object to layer additional
-                plotting on to. Optional.
-            names: list
-                list of figure titles (optional)
-            filenames: list
-                list of filenames to save figures to (optional)
-            fignum:
-                list of figure numbers (optional)
-            mflay: int
-                modflow model layer
-            **kwargs:
-                keyword arguments
+        Parameters
+        ----------
+        plotarray : np.array object
+        model: fp.modflow.Modflow object
+            optional if spatial reference is provided
+        modelgrid: fp.discretization.ModelGrid object
+            object that defines the spatial orientation of a modflow
+            grid within flopy. Optional if model object is provided
+        axes: matplotlib.axes object
+            existing matplotlib axis object to layer additional
+            plotting on to. Optional.
+        names: list
+            list of figure titles (optional)
+        filenames: list
+            list of filenames to save figures to (optional)
+        fignum:
+            list of figure numbers (optional)
+        mflay: int
+            modflow model layer
+        **kwargs:
+            keyword arguments
 
         Returns:
-             axes: list matplotlib.axes object
+         axes: list matplotlib.axes object
+
         """
 
         defaults = {'figsize': None, 'masked_values': None,
@@ -1267,26 +1255,28 @@ class PlotUtilities(object):
                         axes=None, names=None, filenames=None, fignum=None,
                         mflay=None, **kwargs):
         """
-            Helper method to plot bc objects from flopy packages
+        Helper method to plot bc objects from flopy packages
 
-            Parameters:
-                package : flopy.pakbase.Package objects
-                axes: matplotlib.axes object
-                    existing matplotlib axis object to layer additional
-                    plotting on to. Optional.
-                names: list
-                    list of figure titles (optional)
-                filenames: list
-                    list of filenames to save figures to (optional)
-                fignum:
-                    list of figure numbers (optional)
-                mflay: int
-                    modflow model layer
-                **kwargs:
-                    keyword arguments
+        Parameters
+        ----------
+        package : flopy.pakbase.Package objects
+        axes: matplotlib.axes object
+            existing matplotlib axis object to layer additional
+            plotting on to. Optional.
+        names: list
+            list of figure titles (optional)
+        filenames: list
+            list of filenames to save figures to (optional)
+        fignum:
+            list of figure numbers (optional)
+        mflay: int
+            modflow model layer
+        **kwargs:
+            keyword arguments
 
-            Returns:
-                 axes: list matplotlib.axes object
+        Returns
+        -------
+        axes: list matplotlib.axes object
         """
 
         if plt is None:
@@ -1358,15 +1348,17 @@ class PlotUtilities(object):
         Re-usable method to check for mflay and set
         the range of plottable layers
 
-        Parameters:
+        Parameters
+        ----------
+        mflay : int
+        maxlay : int
+            maximum number of layers in the plotting array
 
-            mflay: (int)
-            maxlay: (int)
-                maximum number of layers in the plotting array
+        Returns
+        -------
+        i0, i1 :  int, int
+            minimum and maximum bounds on the layer range
 
-        Returns:
-            i0, i1:  (int), (int)
-                minimum and maximum bounds on the layer range
         """
         if mflay is not None:
             i0 = int(mflay)
@@ -1384,19 +1376,21 @@ class PlotUtilities(object):
         """
         Checks the supplied name variable for shape
 
-        Parameters:
+        Parameters
+        ----------
+        names : list of str
+            if names is not none, asserts that there is
+            a name supplied for each plot that will be
+            generated
 
-            names: (list), (str)
-                if names is not none, asserts that there is
-                a name supplied for each plot that will be
-                generated
+        maxlay : int
+            maximum number of layers in the plotting array
 
-            maxlay: (int)
-                maximum number of layers in the plotting array
+        Returns
+        -------
+        names:  list or None
+            list of names or None
 
-        Returns:
-            names:  (list) or (None)
-                list of names or None
         """
         if names is not None:
             if not isinstance(names, list):
@@ -1415,18 +1409,21 @@ class PlotUtilities(object):
         numbers to join to figure objects. Checks
         for existing figures.
 
-        Parameters:
-            fignum: (list)
-                list of figure numbers
-            maxlay: (int)
-                maximum number of layers in the plotting array
-            i0: (int)
-                minimum layer range
-            i1: (int)
-                maximum layer range
+        Parameters
+        ----------
+        fignum : list
+            list of figure numbers
+        maxlay : int
+            maximum number of layers in the plotting array
+        i0 : int
+            minimum layer range
+        i1 : int
+            maximum layer range
 
-        Returns:
-            fignum (list)
+        Returns
+        -------
+        fignum : list
+
         """
         if fignum is not None:
             if not isinstance(fignum, list):
@@ -1458,22 +1455,25 @@ class PlotUtilities(object):
         Method to prepare axes objects for plotting
 
         Parameters
-            axes: (list)
-                matplotlib.axes objects
-            mflay: (int)
-                layer to plot or None
-            i0: (int)
-                minimum range of layers to plot
-            i1: (int)
-                maximum range of layers to plot
-            defaults: (dict)
-                the default dictionary from the parent plotting method
-            fignum: (list)
-                list of figure numbers
+        ----------
+        axes : list
+            matplotlib.axes objects
+        mflay : int
+            layer to plot or None
+        i0 : int
+            minimum range of layers to plot
+        i1 : int
+            maximum range of layers to plot
+        defaults : dict
+            the default dictionary from the parent plotting method
+        fignum : list
+            list of figure numbers
 
         Returns
-            axes: (list)
-                matplotlib.axes objects
+        -------
+        axes : list
+            matplotlib.axes objects
+
         """
         if axes is not None:
             if not isinstance(axes, list):
@@ -1661,420 +1661,7 @@ class UnstructuredPlotUtilities(object):
     Collection of unstructured grid and vertex grid compatible
     plotting helper functions
     """
-
-    @staticmethod
-    def create_connection_array(model_grid):
-        """
-        Uses a triangulation matrix to crate a grid connection
-        array in the x, y dimension; for Vertex Grids
-
-        Method could be extended to include the z-direction
-        for true unstructured grids with a little effort.
-
-        Parameters:
-            model_grid: (VertexModelGrid)
-            idomain: idomain array
-
-        Returns:
-             list of connections
-        """
-        xverts = np.array(model_grid.xvertices)
-        yverts = np.array(model_grid.yvertices)
-        # use a triangulation matrix scheme to find connections!
-
-        iac = []
-        for cell, xv_set in enumerate(xverts):
-
-            yv_set = yverts[cell]
-            conn = []
-            for ix, x0 in enumerate(xv_set):
-                x1 = xv_set[ix - 1]
-                y0 = yv_set[ix]
-                y1 = yv_set[ix - 1]
-
-                xlen = x1 - x0
-                ylen = y1 - y0
-                dist = UnstructuredPlotUtilities.hypot(xlen, ylen)
-
-                xlen0 = xverts - x0
-                ylen0 = yverts - y0
-                dist0 = UnstructuredPlotUtilities.hypot(xlen0, ylen0)
-
-                xlen1 = xverts - x1
-                ylen1 = yverts - y1
-                dist1 = UnstructuredPlotUtilities.hypot(xlen1, ylen1)
-
-                distance = abs((dist0 + dist1) - dist)
-
-                intersection = np.where(distance < 1e-04)
-
-                if len(intersection) > 0:
-                    cells, counts = np.unique(intersection[0],
-                                              return_counts=True)
-
-                    for ix, count in enumerate(counts):
-                        if cells[ix] != cell:
-                            if count >= 2:
-                                conn.append(int(cells[ix]))
-                            elif count == 1:
-                                # check that this is not a shared corner vertex!
-                                # if is is not, then add it to connection list!
-                                if x0 not in xverts[cell] or x1 not in xverts[cell]:
-                                    if y0 not in yverts[cell] or y1 not in yverts[cell]:
-                                        conn.append(int(cells[ix]))
-            if not conn:
-                raise Exception("Something went wrong finding connections!")
-
-            iac.append([cell] + sorted(conn))
-
-        return iac
-
-    @staticmethod
-    def hypot(xdist, ydist):
-        """
-        Calculate the absolute distance from a point
-        """
-        return np.sqrt(xdist ** 2 + ydist ** 2)
-
-    @staticmethod
-    def create_ja(ca, idomain):
-        """
-        Uses a connection array and the idomain to build
-        a full jagged array for flows.
-
-        Parameters
-            ca: (list) connection array
-            idomain: np.ndarray Modflow6 idomain array
-
-        Returns
-            ja: (np.ndarray)
-        """
-        nlay = idomain.shape[0]
-        ncpl = len(idomain[0])
-        ja = []
-
-        for lay in range(nlay):
-            for cell in ca:
-                if idomain[lay][cell[0]] < 1:
-                    pass
-
-                else:
-                    # look for connections at top and bottom
-                    x = []
-                    for ix, c in enumerate(cell):
-                        if ix == 0:
-                            x.append(c + (lay * ncpl))
-                            t = UnstructuredPlotUtilities.\
-                                find_upper_connection(idomain, lay,
-                                                      cell[0],
-                                                      ncpl=ncpl,
-                                                      ilay=lay)
-                            if t is not None:
-                                x.append(t)
-
-                        else:
-                            if idomain[lay][c] > 0:
-                                x.append(c + (lay * ncpl))
-
-                    t = UnstructuredPlotUtilities.\
-                        find_lower_connection(idomain, lay,
-                                              cell[0],
-                                              ncpl=ncpl,
-                                              ilay=lay)
-
-                    if t is not None:
-                        x.append(t)
-
-                    if x:
-                        ja.append(x)
-
-        return ja
-
-    @staticmethod
-    def find_upper_connection(idomain, lay, c, ncpl, ilay):
-        """
-        Recursive function to find connections for ja. Includes vertical
-        pass through support.
-
-        Parameters:
-            idomain: (np.ndarray) idomain model array
-            lay: (int) current layer
-            c: (int) cell number, zero based
-            ncpl: (int) number of cells per layer
-            ilay: (int) initial layer number corresponding to c
-        :return:
-        """
-        if lay - 1 < 0:
-            return None
-
-        ncadj = (lay - ilay) + 1
-
-        if idomain[lay - 1][c] <= 0:
-            if lay - 2 < 0:
-                return None
-            try:
-                if idomain[lay - 2][c] > 0:
-                    cell = c + (ilay * ncpl) - ((ncadj + 1) * ncpl)
-
-                elif idomain[lay - 2][c] == 0:
-                    return None
-
-                else:
-                    cell = UnstructuredPlotUtilities.\
-                        find_lower_connection(idomain, lay + 1,
-                                              c, ncpl, ilay)
-            except IndexError:
-                return None
-
-        else:
-            return c + (ilay * ncpl) - (ncpl * ncadj)
-
-        return cell
-
-    @staticmethod
-    def find_lower_connection(idomain, lay, c, ncpl, ilay):
-        """
-        Recursive function to find connections for ja. Includes vertical
-        pass through support.
-
-        Parameters:
-            idomain: (np.ndarray) idomain model array
-            lay: (int) current layer
-            c: (int) cell number, zero based
-            ncpl: (int) number of cells per layer
-            ilay: (int) initial layer number
-
-        :return:
-        """
-        if lay + 1 == len(idomain):
-            return None
-
-        ncadj = (lay - ilay) + 1
-
-        if idomain[lay + 1][c] <= 0:
-            try:
-                if idomain[lay + 2][c] > 0:
-                    cell = c + (ilay * ncpl) + ((ncadj + 1) * ncpl)
-
-                elif idomain[lay + 2][c] == 0:
-                    return None
-
-                else:
-                    cell = UnstructuredPlotUtilities.\
-                        find_lower_connection(idomain, lay + 1,
-                                              c, ncpl, ilay)
-
-            except IndexError:
-                return None
-
-        else:
-            return c + (ilay * ncpl) + (ncpl * ncadj)
-
-        return cell
-
-    @staticmethod
-    def vectorize_flow(fja, model_grid, idomain):
-        """
-        Method to take discretization info. and a FLOW JA FACE array
-        and create 1d list of fluid vectors in the flow right face, and flow front
-        face directions. Used with the quiver plot. Can be extended to return cell
-        averaged flow in vector directions as well.
-
-        Parameters
-        ----------
-        fja: ndarray:
-            1d flow ja face array from the cell by cell flow file
-        dis: (object)
-            Dis object <StructuredDisFile> or <VertexDisFile>
-
-        Returns
-        -------
-        frf_arr = array of flow right face values
-        fff_arr = array of flow forward face values
-        """
-        # create a jagged connection array from the model_grid
-        ca = UnstructuredPlotUtilities.create_connection_array(model_grid)
-        ja = UnstructuredPlotUtilities.create_ja(ca, idomain)
-
-        nlay = model_grid.nlay
-
-        # problems because we are working with rotated data. Need un-rotated data!
-        if model_grid.grid_type == "vertex":
-            xcellcenters, ycellcenters = geometry.transform(model_grid.xcellcenters,
-                                                            model_grid.ycellcenters,
-                                                            model_grid.xoffset,
-                                                            model_grid.yoffset,
-                                                            model_grid.angrot_radians,
-                                                            inverse=True)
-            xcenter = np.tile(xcellcenters, nlay)
-            ycenter = np.tile(ycellcenters, nlay)
-            zcenter = np.ravel(model_grid.zcellcenters)
-            ncpl = model_grid.ncpl
-
-        else:
-            raise AssertionError('distype not supported by quiver function')
-
-        frf_arr = np.zeros((nlay, ncpl))
-        fff_arr = np.zeros((nlay, ncpl))
-        flf_arr = np.zeros((nlay, ncpl))
-
-        flux_arr = []
-        i = 0
-        for cell in ja:
-            t = []
-            for c in cell:
-                t.append(fja[i])
-                i += 1
-            flux_arr.append(t)
-
-        xy_angle_arr = []
-        xz_angle_arr = []
-        for j in ja:
-            i = j[0]
-            xtmp = xcenter[j] - xcenter[i]
-            ytmp = ycenter[j] - ycenter[i]
-            ztmp = zcenter[j] - zcenter[i]
-            xytmp = xtmp + ytmp
-            compare = xtmp + ytmp
-            xyzcompare = xytmp + ztmp
-            xtmp[compare == 0.] = np.nan
-            ytmp[compare == 0.] = np.nan
-            ztmp[xyzcompare == 0.] = np.nan
-            xytmp[xyzcompare == 0.] = np.nan
-            xy_angle_arr.append(np.arctan2(ytmp, xtmp) * -180 / np.pi)
-            xz_angle_arr.append(np.arctan2(ztmp, xytmp) * -180 / np.pi)
-
-        for i, cell in enumerate(xy_angle_arr):
-            frf, fff = 0., 0.
-            for j, angle in enumerate(cell):
-                if angle < 0.:
-                    angle += 360
-
-                if 0. <= angle < 90:
-                    frf += flux_arr[i][j] * ((90. - angle) / 90.)
-                    fff += flux_arr[i][j] * (angle / 90.)
-
-                elif 90. <= angle < 180.:
-                    fff += flux_arr[i][j] * ((180. - angle) / 90.)
-
-                elif 270 <= angle <= 360.:
-                    frf += flux_arr[i][j] * ((angle - 270.) / 90.)
-
-                else:
-                    pass
-
-            cell_num = ja[i][0]
-            if cell_num >= ncpl:
-                lay = cell_num // ncpl
-                while cell_num >= ncpl:
-                    cell_num -= ncpl
-            else:
-                lay = 0
-
-            frf_arr[lay][cell_num] = frf
-            fff_arr[lay][cell_num] = fff
-
-        for i, cell in enumerate(xz_angle_arr):
-            flf = 0.
-            for j, angle in enumerate(cell):
-                if angle < 0.:
-                    angle += 360
-
-                if 0. <= angle < 90:
-                    flf += flux_arr[i][j] * (angle / 90.)
-
-                elif 90 <= angle < 180:
-                    flf += flux_arr[i][j] * ((180 - angle) / 90.)
-
-                else:
-                    pass
-
-            cell_num = ja[i][0]
-            if cell_num >= ncpl:
-                lay = cell_num // ncpl
-                while cell_num >= ncpl:
-                    cell_num -= ncpl
-            else:
-                lay = 0
-
-            flf_arr[lay][cell_num] = flf
-
-        return frf_arr, fff_arr, flf_arr
-
-    @staticmethod
-    def specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
-        """
-        Using the MODFLOW discharge, calculate the specific discharge
-        by dividing by the flow width
-
-        Not cell centered due to the large quantity of required information
-        for unstructured/vertex grid to perform this calculation
-
-        Parameters
-        ----------
-        Qx : numpy.ndarray
-            MODFLOW 'flow right face'
-        Qy : numpy.ndarray
-            MODFLOW 'flow front face'.  The sign on this array will be flipped
-            by this function so that the y axis is positive to north.
-        Qz : numpy.ndarray
-            MODFLOW 'flow lower face'.  The sign on this array will be flipped by
-            this function so that the z axis is positive in the upward direction.
-        delr : numpy.ndarray
-            MODFLOW delr array
-        delc : numpy.ndarray
-            MODFLOW delc array
-        sat_thk : numpy.ndarray
-            Saturated thickness for each cell
-
-        Returns
-        -------
-        (qx, qy, qz) : tuple of numpy.ndarrays
-            Specific discharge arrays
-
-        """
-        qx = None
-        qy = None
-        qz = None
-
-        if Qx is not None:
-
-            if len(Qx.shape) != 1:
-                nlay, ncpl = Qx.shape
-            else:
-                nlay = 1
-                ncpl = Qx.shape[0]
-
-            qx = np.zeros(Qx.shape, dtype=Qx.dtype)
-            qx = Qx / (delc * sat_thk)
-            qx = -qx
-
-        if Qy is not None:
-
-            if len(Qy.shape) != 1:
-                nlay, ncpl = Qy.shape
-            else:
-                nlay = 1
-                ncpl = Qy.shape[0]
-
-            qy = np.zeros(Qy.shape, dtype=Qy.dtype)
-            qy = Qy / (delr * sat_thk)
-            qy = -qy
-
-        if Qz is not None:
-
-            if len(Qz.shape) != 1:
-                nlay, ncpl = Qz.shape
-            else:
-                nlay = 1
-                ncpl = Qz.shape[0]
-
-            qz = np.zeros(Qz.shape, dtype=Qz.dtype)
-            qz = Qz / (delr * sat_thk)
-            qz = -qz
-
-        return (qx, qy, qz)
-
+    
     @staticmethod
     def line_intersect_grid(ptsin, xgrid, ygrid):
         """
@@ -2083,12 +1670,21 @@ class UnstructuredPlotUtilities(object):
         intersection x, y vertex points. Should be quite fast for large model
         grids!
 
-        Parameters:
-            pts: (list) list of tuple line vertex pairs (ex. [(1, 0), (10, 0)]
-            xgrid: (np.array) model grid x vertices
-            ygrid: (np.array) model grid y vertices
-            returncellid: bool flag to return the cellids with vertices
-        :return:
+        Parameters
+        ----------
+        pts : list
+            list of tuple line vertex pairs (ex. [(1, 0), (10, 0)]
+        xgrid : np.array
+            model grid x vertices
+        ygrid : np.array
+            model grid y vertices
+        returncellid : bool
+            flag to return the cellids with vertices
+
+        Returns
+        -------
+        vdict : dict of cell vertices
+
         """
         # make sure xedge and yedge are numpy arrays
         if not isinstance(xgrid, np.ndarray):
@@ -2206,13 +1802,17 @@ class UnstructuredPlotUtilities(object):
     def arctan2(verts):
         """
         Reads 2 dimensional set of verts and orders them using the arctan 2 method
+
         Parameters
         ----------
-        verts: (np.array, float) Nx2 array of verts
+        verts: np.array of floats
+            Nx2 array of verts
 
         Returns
         -------
-        verts: (np.array, float) Nx2 array of verts
+        verts: np.array of float
+            Nx2 array of verts
+
         """
         center = verts.mean(axis=0)
         x = verts.T[0] - center[0]
@@ -2431,7 +2031,10 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
 
     from matplotlib.patches import Polygon, Circle, Path, PathPatch
     from matplotlib.collections import PatchCollection
-    sf = shapefile.Reader(shp)
+    if isinstance(shp, str):
+        sf = shapefile.Reader(shp)
+    else:
+        sf = shp
     shapes = sf.shapes()
     nshp = len(shapes)
     ptchs = []
@@ -2948,6 +2551,26 @@ def cell_value_points(pts, xedge, yedge, vdata):
 
 
 def _set_coord_info(mg, xul, yul, xll, yll, rotation):
+    """
+
+    Parameters
+    ----------
+    mg : fp.discretization.Grid
+    xul : float
+        upper left x-coordinate location
+    yul : float
+        upper left y-coordinate location
+    xll : float
+        lower left x-coordinate location
+    yll : float
+        lower left y-coordinate location
+    rotation : float
+        model grid rotation
+
+    Returns
+    -------
+    mg : fp.discretization.Grid object
+    """
     import warnings
     if xul is not None and yul is not None:
         warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
@@ -2968,6 +2591,20 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
 
 
 def _depreciated_dis_handler(modelgrid, dis):
+    """
+    PlotMapView handler for the deprecated dis parameter
+    which adds top and botm information to the modelgrid
+
+    Parmaeter
+    ---------
+    modelgrid : fp.discretization.Grid
+    dis : fp.modflow.ModflowDis object
+
+    Returns
+    -------
+    modelgrid : fp.discretization.Grid
+
+    """
     # creates a new modelgrid instance with the dis information
     from flopy.discretization import StructuredGrid, VertexGrid, UnstructuredGrid
     import warnings

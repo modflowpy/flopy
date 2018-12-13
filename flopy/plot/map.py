@@ -17,12 +17,25 @@ import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-
-class MapView(object):
+class _MapView(object):
     """
     This class is a base for all three mapview types. No information
     specific to a single type of model grid ex.(Structured, Vertex, Unstructured)
-    can be present in this class or it will break the plotting functionality!
+    is contained in this class!
+
+    This class is not to be instantiated by the User.
+
+    Parameters
+    ----------
+    modelgrid : fp.discretization.Grid object
+        StructuredGrid, UnstructuredGrid, or VertexGrid
+    ax : matplotlib.pyplot.axes object, optional
+    model : fp.modflow.Modflow object
+    layer : int
+        model layer to plot
+    extent : tuple of floats
+        the plotting extent as (xmin, xmax, ymin, ymax)
+
     """
     def __init__(self, modelgrid=None, ax=None, model=None, layer=0,
                  extent=None):
@@ -60,35 +73,37 @@ class MapView(object):
             self._extent = None
 
 
-class StructuredMapView(MapView):
+class _StructuredMapView(_MapView):
     """
     Class to create a map of the model.
 
     Parameters
     ----------
-    sr : flopy.utils.reference.SpatialReference
-        The spatial reference class (Default is None)
-    ax : matplotlib.pyplot axis
-        The plot axis.  If not provided it, plt.gca() will be used.
-        If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
     modelgrid : flopy.modflow.StructuredGrid
         flopy StructuredGrid object
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
 
     Notes
     -----
-
+    StructuredMapView should not be instantiated directly. PlotMapView uses
+    this class for StructuredGrid specific plotting routines.
 
     """
 
     def __init__(self, model=None, modelgrid=None, ax=None, layer=0,
                  extent=None):
-        super(StructuredMapView, self).__init__(ax=ax, model=model,
-                                                modelgrid=modelgrid, layer=layer,
-                                                extent=extent)
+        super(_StructuredMapView, self).__init__(ax=ax, model=model,
+                                                 modelgrid=modelgrid, layer=layer,
+                                                 extent=extent)
 
     @property
     def extent(self):
@@ -125,7 +140,7 @@ class StructuredMapView(MapView):
         elif a.ndim == 1:
             plotarray = a
         else:
-            raise Exception('Array must be of dimension 1, 2 or 3')
+            raise Exception('Array must be of dimension 1, 2, or 3')
 
         if masked_values is not None:
             for mval in masked_values:
@@ -251,68 +266,15 @@ class StructuredMapView(MapView):
 
         return contour_set
 
-    def plot_inactive(self, ibound=None, color_noflow='black', **kwargs):
-        """
-        Make a plot of inactive cells.  If not specified, then pull ibound
-        from the self.ml
-
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
-
-        color_noflow : string
-            (Default is 'black')
-
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
-
-        """
-        raise NotImplementedError("plot_inactive must be called "
-                                  "from a PlotMapView instance")
+    def plot_inactive(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
                     color_vpt="red", **kwargs):
-        """
-        Make a plot of ibound.  If not specified, then pull ibound from the
-        self.ml
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        Parameters
-        ----------
-        ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
-        color_noflow : string
-            (Default is 'black')
-        color_ch : string
-            Color for constant heads (Default is 'blue'.)
-        color_vpt: string
-            Color for vertical pass through cells (Default is "red".)
-
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
-
-        """
-        raise NotImplementedError("plot_ibound must be "
-                                  "called from PlotMapView")
-
-    def plot_grid(self, **kwargs):
-        """
-        Plot the grid lines.
-
-        Parameters
-        ----------
-        kwargs : ax, colors.  The remaining kwargs are passed into the
-            the LineCollection constructor.
-
-        Returns
-        -------
-        lc : matplotlib.collections.LineCollection
-
-        """
-        err_msg = "plot_grid() must be called " \
-                  "from a PlotMapView instance"
+    def plot_grid(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
     def plot_bc(self, ftype=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
@@ -399,292 +361,28 @@ class StructuredMapView(MapView):
 
         return quadmesh
 
-    def plot_shapefile(self, shp, **kwargs):
-        """
-        Plot a shapefile.  The shapefile must be in the same coordinates as
-        the rotated and offset grid.
+    def plot_shapefile(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        Parameters
-        ----------
-        shp : string
-            Name of the shapefile to plot
+    def plot_cvfd(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_shapefile()
+    def contour_array_cvfd(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        """
-        err_msg = "plot_shapefile() must be called " \
-                  "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
+    def plot_specific_discharge(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-    def plot_cvfd(self, verts, iverts, **kwargs):
-        """
-        Plot a cvfd grid.  The vertices must be in the same coordinates as
-        the rotated and offset grid.
+    def plot_discharge(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        Parameters
-        ----------
-        verts : ndarray
-            2d array of x and y points.
-        iverts : list of lists
-            should be of len(ncells) with a list of vertex number for each cell
+    def plot_pathline(self):
+        raise NotImplementedError("Function must be called in PlotMapView")
 
-        kwargs : dictionary
-            Keyword arguments passed to plotutil.plot_cvfd()
-
-        """
-        err_msg = "plot_cvfd() must be called " \
-                  "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
-
-    def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
-        """
-        Contour an array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer).
-
-        Parameters
-        ----------
-        vertc : np.ndarray
-            Array with of size (nc, 2) with centroid location of cvfd
-        a : numpy.ndarray
-            Array to plot.
-        masked_values : iterable of floats, ints
-            Values to mask.
-        **kwargs : dictionary
-            keyword arguments passed to matplotlib.pyplot.pcolormesh
-
-        Returns
-        -------
-        contour_set : matplotlib.pyplot.contour
-
-        """
-        err_msg = "contour_array_cvfd() must be called " \
-                  "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
-
-    def plot_discharge(self, frf, fff, flf=None, head=None, istep=1,
-                       jstep=1, normalize=False, **kwargs):
-        """
-        Use quiver to plot vectors.
-
-        Parameters
-        ----------
-        frf : numpy.ndarray
-            MODFLOW's 'flow right face'
-        fff : numpy.ndarray
-            MODFLOW's 'flow front face'
-        flf : numpy.ndarray
-            MODFLOW's 'flow lower face' (Default is None.)
-        head : numpy.ndarray
-            MODFLOW's head array.  If not provided, then will assume confined
-            conditions in order to calculated saturated thickness.
-        istep : int
-            row frequency to plot. (Default is 1.)
-        jstep : int
-            column frequency to plot. (Default is 1.)
-        normalize : bool
-            boolean flag used to determine if discharge vectors should
-            be normalized using the magnitude of the specific discharge in each
-            cell. (default is False)
-        kwargs : dictionary
-            Keyword arguments passed to plt.quiver()
-
-        Returns
-        -------
-        quiver : matplotlib.pyplot.quiver
-            Vectors of specific discharge.
-
-        """
-        # by default the center of the arrow is plotted in the center of a cell
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
-        else:
-            pivot = 'middle'
-
-        if self.mg.top is None:
-            err = "StructuredModelGrid must have top and " \
-                  "botm defined to use plot_discharge()"
-            raise AssertionError(err)
-
-        ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
-        if self.mg.idomain is not None:
-            ib = self.mg.idomain
-
-        delr = self.mg.delr
-        delc = self.mg.delc
-        top = np.copy(self.mg.top)
-        botm = np.copy(self.mg.botm)
-        nlay, nrow, ncol = botm.shape
-        laytyp = None
-        hnoflo = 999.
-        hdry = 999.
-
-        if self.model is not None:
-            if self.model.laytyp is not None:
-                laytyp = self.model.laytyp
-
-            if self.model.hnoflo is not None:
-                hnoflo = self.model.hnoflo
-
-            if self.model.hdry is not None:
-                hdry = self.model.hdry
-
-        # If no access to head or laytyp, then calculate confined saturated
-        # thickness by setting laytyp to zeros
-        if head is None or laytyp is None:
-            head = np.zeros(botm.shape, np.float32)
-            laytyp = np.zeros((nlay,), dtype=np.int)
-
-        # calculate the saturated thickness
-        sat_thk = plotutil.PlotUtilities.\
-            saturated_thickness(head, top, botm, laytyp,
-                                [hnoflo, hdry])
-
-        # Calculate specific discharge
-        qx, qy, qz = plotutil.PlotUtilities.\
-            centered_specific_discharge(frf, fff, flf, delr,
-                                        delc, sat_thk)
-
-        # Select correct slice
-        u = qx[self.layer, :, :]
-        v = qy[self.layer, :, :]
-        # apply step
-
-        xcentergrid = np.array(self.mg.xcellcenters)
-        ycentergrid = np.array(self.mg.ycellcenters)
-
-        x = xcentergrid[::istep, ::jstep]
-        y = ycentergrid[::istep, ::jstep]
-        u = u[::istep, ::jstep]
-        v = v[::istep, ::jstep]
-        # normalize
-        if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
-            u[idx] /= vmag[idx]
-            v[idx] /= vmag[idx]
-
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        # mask discharge in inactive cells
-        idx = (ib[self.layer, ::istep, ::jstep] == 0)
-        u[idx] = np.nan
-        v[idx] = np.nan
-
-        # Rotate and plot, offsets must be zero since
-        # these are vectors, not locations.
-        urot, vrot = geometry.rotate(u, v, 0., 0.,
-                                     self.mg.angrot_radians)
-        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
-
-        return quiver
-
-    def plot_pathline(self, pl, travel_time=None, **kwargs):
-        """
-        Plot the MODPATH pathlines.
-
-        Parameters
-        ----------
-        pl : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
-            modpathfile PathlineFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
-            'k', and 'particleid'.
-        travel_time: float or str
-            travel_time is a travel time selection for the displayed
-            pathlines. If a float is passed then pathlines with times
-            less than or equal to the passed time are plotted. If a
-            string is passed a variety logical constraints can be added
-            in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
-            >. For example, to select all pathlines less than 10000 days
-            travel_time='< 10000' would be passed to plot_pathline.
-            (default is None)
-        kwargs : layer, ax, colors.  The remaining kwargs are passed
-            into the LineCollection constructor. If layer='all',
-            pathlines are output for all layers
-
-        Returns
-        -------
-        lc : matplotlib.collections.LineCollection
-
-        """
-        err_msg = "plot_pathline() must be called " \
-                  "from a PlotMapView instance"
-        raise NotImplementedError(err_msg)
-
-    def plot_timeseries(self, ts, travel_time=None, **kwargs):
-        """
-        Plot the MODPATH timeseries.
-
-        Parameters
-        ----------
-        ts : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
-            modpathfile TimeseriesFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
-            'k', and 'particleid'.
-        travel_time: float or str
-            travel_time is a travel time selection for the displayed
-            pathlines. If a float is passed then pathlines with times
-            less than or equal to the passed time are plotted. If a
-            string is passed a variety logical constraints can be added
-            in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
-            >. For example, to select all pathlines less than 10000 days
-            travel_time='< 10000' would be passed to plot_pathline.
-            (default is None)
-        kwargs : layer, ax, colors.  The remaining kwargs are passed
-            into the LineCollection constructor. If layer='all',
-            pathlines are output for all layers
-
-        Returns
-        -------
-            lo : list of Line2D objects
-        """
+    def plot_timeseries(self):
         return NotImplementedError("Function must be called from PlotMapView")
 
-    def plot_endpoint(self, ep, direction='ending',
-                      selection=None, selection_direction=None, **kwargs):
-        """
-        Plot the MODPATH endpoints.
-
-        Parameters
-        ----------
-        ep : rec array
-            A numpy recarray with the endpoint particle data from the
-            MODPATH 6 endpoint file
-        direction : str
-            String defining if starting or ending particle locations should be
-            considered. (default is 'ending')
-        selection : tuple
-            tuple that defines the zero-base layer, row, column location
-            (l, r, c) or (l, nnode) to use to make a selection of particle endpoints.
-            The selection could be a well location to determine capture zone
-            for the well. If selection is None, all particle endpoints for
-            the user-sepcified direction will be plotted. (default is None)
-        selection_direction : str
-            String defining is a selection should be made on starting or
-            ending particle locations. If selection is not None and
-            selection_direction is None, the selection direction will be set
-            to the opposite of direction. (default is None)
-
-        kwargs : ax, c, s or size, colorbar, colorbar_label, shrink. The
-            remaining kwargs are passed into the matplotlib scatter
-            method. If colorbar is True a colorbar will be added to the plot.
-            If colorbar_label is passed in and colorbar is True then
-            colorbar_label will be passed to the colorbar set_label()
-            method. If shrink is passed in and colorbar is True then
-            the colorbar size will be set using shrink.
-
-        Returns
-        -------
-        sp : matplotlib.pyplot.scatter
-
-        """
+    def plot_endpoint(self):
         raise NotImplementedError("Function must be called from PlotMapView")
 
 
@@ -718,6 +416,9 @@ class ModelMap(object):
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
+    length_multiplier : float
+        scaling factor for conversion from model units to another unit
+        length base ex. ft to m.
 
     Notes
     -----

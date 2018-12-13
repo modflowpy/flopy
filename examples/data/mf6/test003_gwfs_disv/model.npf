@@ -1,6 +1,7 @@
 begin options
   PRINT_FLOWS
   SAVE_FLOWS
+  SAVE_SPECIFIC_DISCHARGE
 end options
 #
 BEGIN GRIDDATA

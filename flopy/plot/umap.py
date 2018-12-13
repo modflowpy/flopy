@@ -2,6 +2,7 @@ import copy, warnings
 import sys
 import numpy as np
 from ..utils import geometry
+from .map import _MapView
 
 try:
     import matplotlib.pyplot as plt
@@ -14,28 +15,44 @@ import warnings
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class UnstructuredMapView(object):
+class _UnstructuredMapView(_MapView):
     """
-    UnstructutredMapView is the class that holds unique code for
+    _UnstructutredMapView is a class that holds unique code for
     plotting unstructured discretization modflow models. this class
     is a work in progress, but currently supports plotting arrays,
     contouring arrays, plotting ibound arrays, plotting modpath results,
     and plotting inactive arrays. More support will be added in the
     future
 
-    Parameters:
+    Parameters
     ----------
-        :param object modelgrid:
-            flopy.discretization.unstructuredgrid.UnstructuredGrid
-            object
-        :param object model: flopy.modflow.Modflow object
-        :param object ax: matplotlib.axes object
-        :param list/np.ndarray extent:  a list of xmin, xmax, ymin, ymax
-            as boundaries for plotting
-    """
-    def __init__(self, modelgrid=None, model=None, ax=None,
-                 extent=None, layer=None):
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    modelgrid : flopy.modflow.StructuredGrid
+        flopy StructuredGrid object
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
+    layer : int
+        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
 
+    Notes
+    -----
+    _UnstructuredMapView should not be instantiated directly. PlotMapView uses
+    this class for UnstructuredGrid specific plotting routines.
+
+    """
+    def __init__(self, model=None, modelgrid=None, ax=None,
+                 layer=None, extent=None):
+        super(_UnstructuredMapView, self).__init__(modelgrid=modelgrid,
+                                                   ax=ax,
+                                                   model=model,
+                                                   layer=layer,
+                                                   extent=extent)
+        """
         self.mg = None
         self.layer = layer
         self.model = model
@@ -58,12 +75,14 @@ class UnstructuredMapView(object):
                 self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg='white')
 
         self._extent = extent
+        """
 
     @property
     def extent(self):
         if self._extent is None:
             self._extent = self.mg.extent
         return self._extent
+
 
     def plot_array(self, a, masked_values=None, **kwargs):
         """
@@ -121,6 +140,22 @@ class UnstructuredMapView(object):
         return pc
 
     def contour_array(self, a, masked_values=None, **kwargs):
+        """
+        Contour an array using matplotlib.tri.tricontour methods
+
+        Parameters
+        ----------
+        a : np.ndarray or list
+            array of values to contour
+        masked_values : list
+            values to mask out of the contours, ex. noflow values
+        kwargs : ax and matplotlib.tri.tricontour keyword arguments
+
+        Returns
+        -------
+        contour_set : matplotlib.tri.tricontour object
+
+        """
 
         if not isinstance(a, np.ndarray):
             a = np.array(a)
@@ -147,29 +182,10 @@ class UnstructuredMapView(object):
 
         return contour_set
 
-    def plot_ibound(self, idomain=None, color_noflow='black', color_ch='blue',
-                    color_vpt="red", **kwargs):
-        """
-        Make a plot of ibound.  If not specified, then pull ibound from the
-        self.ml
-
-        Parameters
-        ----------
-        idomain : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
-        color_noflow : string
-            (Default is 'black')
-        color_ch : string
-            Color for constant heads (Default is 'blue'.)
-        color_vpt: string
-            Color for vertical pass through cells mf6 (Default is "red")
-        Returns
-        -------
-        quadmesh : matplotlib.collections.QuadMesh
-        """
+    def plot_ibound(self):
         raise NotImplementedError("Function must be called from PlotMapView")
 
-    def plot_grid_lines(self, **kwargs):
+    def plot_grid_lines(self):
         raise NotImplementedError("Function must be called in PlotMapView")
 
     def plot_inactive(self):
@@ -251,7 +267,7 @@ class UnstructuredMapView(object):
         return ax
 
     def plot_discharge(self):
-        raise NotImplementedError()
+        raise NotImplementedError("Function must be called in PlotMapView")
 
     def plot_pathline(self):
         raise NotImplementedError("Function must be called in PlotMapView")
