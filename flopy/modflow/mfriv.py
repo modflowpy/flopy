@@ -229,7 +229,6 @@ class ModflowRiv(Package):
         chk.summarize()
         return chk
 
-
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
         # get an empty recarray that correponds to dtype

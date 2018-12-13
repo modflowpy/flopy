@@ -130,7 +130,7 @@ class MfList(DataInterface, DataListInterface):
         from flopy import export
         return export.utils.mflist_export(f, self, **kwargs)
 
-    def append(self,other):
+    def append(self, other):
         """ append the recarrays from one MfList to another
         Parameters
         ----------
@@ -140,12 +140,13 @@ class MfList(DataInterface, DataListInterface):
         -------
             dict of {kper:recarray}
         """
-        if not isinstance(other,MfList):
-            other = MfList(self.package,data=other,dtype=self.dtype,
+        if not isinstance(other, MfList):
+            other = MfList(self.package, data=other, dtype=self.dtype,
                            model=self._model,
                            list_free_format=self.list_free_format)
-        assert isinstance(other,MfList),"MfList.append(): other arg must be "+\
-                                        "MfList or dict, not {0}".format(type(other))
+        msg = "MfList.append(): other arg must be " + \
+              "MfList or dict, not {0}".format(type(other))
+        assert isinstance(other, MfList), msg
 
         other_kpers = list(other.data.keys())
         other_kpers.sort()
@@ -161,20 +162,16 @@ class MfList(DataInterface, DataListInterface):
             other_len = other_data.shape[0]
             self_len = self_data.shape[0]
 
-
-
             if (other_len == 0 and self_len == 0) or\
                (kper not in self_kpers and kper not in other_kpers):
                 continue
-
-
             elif self_len == 0:
                 new_dict[kper] = other_data
             elif other_len == 0:
                 new_dict[kper] = self_data
             else:
                 new_len = other_data.shape[0] + self_data.shape[0]
-                new_data = np.recarray(new_len,dtype=self.dtype)
+                new_data = np.recarray(new_len, dtype=self.dtype)
                 new_data[:self_len] = self_data
                 new_data[self_len:self_len+other_len] = other_data
                 new_dict[kper] = new_data
@@ -260,7 +257,7 @@ class MfList(DataInterface, DataListInterface):
         fmts = []
         for field in self.dtype.descr:
             vtype = field[1][1].lower()
-            if vtype == 'i' or vtype == 'b':
+            if vtype in ('i', 'b'):
                 if use_free:
                     fmts.append('%9d')
                 else:
@@ -280,10 +277,10 @@ class MfList(DataInterface, DataListInterface):
                 else:
                     fmts.append('%10s')
             elif vtype == 's':
-                raise TypeError(
-                        "MfList.fmt_string error: 'str' type found in dtype. "
-                        "This gives unpredictable results when "
-                        "recarray to file - change to 'object' type")
+                msg = ("MfList.fmt_string error: 'str' type found in dtype. "
+                       "This gives unpredictable results when "
+                       "recarray to file - change to 'object' type")
+                raise TypeError(msg)
             else:
                 raise TypeError("MfList.fmt_string error: unknown vtype in "
                                 "field: {}".format(field))
@@ -308,7 +305,7 @@ class MfList(DataInterface, DataListInterface):
 
         # If data is a dict, the we have to assume it is keyed on kper
         if isinstance(data, dict):
-            if len(list(data.keys())) == 0:
+            if not list(data.keys()):
                 raise Exception("MfList error: data dict is empty")
             for kper, d in data.items():
                 try:
@@ -367,15 +364,15 @@ class MfList(DataInterface, DataListInterface):
 
     def __cast_int(self, kper, d):
         # If d is an integer, then it must be 0 or -1
-        if (d > 0):
-            raise Exception("MfList error: dict integer value for " + \
-                            "kper {0:10d} must be 0 or -1, " + \
+        if d > 0:
+            raise Exception("MfList error: dict integer value for "
+                            "kper {0:10d} must be 0 or -1, "
                             "not {1:10d}".format(kper, d))
-        if (d == 0):
+        if d == 0:
             self.__data[kper] = 0
             self.__vtype[kper] = None
         else:
-            if (kper == 0):
+            if kper == 0:
                 raise Exception("MfList error: dict integer value for " + \
                                 "kper 0 for cannot be negative")
             self.__data[kper] = -1
@@ -390,7 +387,7 @@ class MfList(DataInterface, DataListInterface):
 
     def __cast_ndarray(self, kper, d):
         d = np.atleast_2d(d)
-        if (d.dtype != self.__dtype):
+        if d.dtype != self.__dtype:
             assert d.shape[1] == len(self.dtype), "MfList error: ndarray " + \
                                                   "shape " + str(d.shape) + \
                                                   " doesn't match dtype " + \
@@ -409,25 +406,26 @@ class MfList(DataInterface, DataListInterface):
     def get_dataframe(self, squeeze=True):
         """
         Cast recarrays for stress periods into single
-        dataframe containing all stress periods. 
-        
+        dataframe containing all stress periods.
+
         Parameters
         ----------
         squeeze : bool
             Reduce number of columns in dataframe to only include
             stress periods where a variable changes.
-        
+
         Returns
         -------
         df : dataframe
-            Dataframe of shape nrow = ncells, ncol = nvar x nper. If 
-            the squeeze option is choosen, nper is the number of 
-            stress periods where at least one cells is different, 
+            Dataframe of shape nrow = ncells, ncol = nvar x nper. If
+            the squeeze option is choosen, nper is the number of
+            stress periods where at least one cells is different,
             otherwise it is equal to the number of keys in MfList.data.
-        
+
         Notes
         -----
         Requires pandas.
+
         """
         try:
             import pandas as pd
@@ -490,19 +488,19 @@ class MfList(DataInterface, DataListInterface):
             "MfList.add_record() error: length of index arg +" + \
             "length of value arg != length of self dtype"
         # If we already have something for this kper, then add to it
-        if (kper in list(self.__data.keys())):
+        if kper in list(self.__data.keys()):
             # If a 0 or -1, reset
-            if (self.vtype[kper] == int):
+            if self.vtype[kper] == int:
                 self.__data[kper] = self.get_empty(1)
                 self.__vtype[kper] = np.recarray
             # If filename, load into recarray
-            if (self.vtype[kper] == str):
+            if self.vtype[kper] == str:
                 d = self.__fromfile(self.data[kper])
                 d.resize(d.shape[0], d.shape[1])
                 self.__data[kper] = d
                 self.__vtype[kper] = np.recarray
             # Extend the recarray
-            if (self.vtype[kper] == np.recarray):
+            if self.vtype[kper] == np.recarray:
                 shape = self.__data[kper].shape
                 self.__data[kper].resize(shape[0] + 1, shape[1])
         else:
@@ -518,7 +516,7 @@ class MfList(DataInterface, DataListInterface):
 
     def __getitem__(self, kper):
         # Get the recarray for a given kper
-        # If the data entry for kper is a string, 
+        # If the data entry for kper is a string,
         # return the corresponding recarray,
         # but don't reset the value in the data dict
         # assert kper in list(self.data.keys()), "MfList.__getitem__() kper " + \
@@ -534,18 +532,18 @@ class MfList(DataInterface, DataListInterface):
                 return self.get_empty()
             else:
                 return self.data[self.__find_last_kper(kper)]
-        if (self.vtype[kper] == int):
-            if (self.data[kper] == 0):
+        if self.vtype[kper] == int:
+            if self.data[kper] == 0:
                 return self.get_empty()
             else:
                 return self.data[self.__find_last_kper(kper)]
-        if (self.vtype[kper] == str):
+        if self.vtype[kper] == str:
             return self.__fromfile(self.data[kper])
-        if (self.vtype[kper] == np.recarray):
+        if self.vtype[kper] == np.recarray:
             return self.data[kper]
 
     def __setitem__(self, kper, data):
-        if (kper in list(self.__data.keys())):
+        if kper in list(self.__data.keys()):
             if self._model.verbose:
                 print('removing existing data for kper={}'.format(kper))
             self.data.pop(kper)
@@ -580,7 +578,7 @@ class MfList(DataInterface, DataListInterface):
         try:
             d = np.genfromtxt(f, dtype=self.dtype)
         except Exception as e:
-            raise Exception("MfList.__fromfile() error reading recarray " + \
+            raise Exception("MfList.__fromfile() error reading recarray " +
                             "from file " + str(e))
         return d
 
@@ -605,16 +603,14 @@ class MfList(DataInterface, DataListInterface):
                 #                            self._model.external_path)
                 filename = self.package.name[0] + \
                             "_{0:04d}.dat".format(kper)
-                # py_filepath = os.path.join(py_filepath, filename)
-                # filenames.append(py_filepath)
                 filenames.append(filename)
         return filenames
 
-    def get_filename(self,kper):
+    def get_filename(self, kper):
         ext = "dat"
         if self.binary:
             ext = 'bin'
-        return self.package.name[0] + '_{0:04d}.{1}'.format(kper,ext)
+        return self.package.name[0] + '_{0:04d}.{1}'.format(kper, ext)
 
     @property
     def binary(self):
@@ -630,19 +626,19 @@ class MfList(DataInterface, DataListInterface):
         kpers = list(self.data.keys())
         kpers.sort()
         first = kpers[0]
-        if (single_per == None):
+        if single_per is None:
             loop_over_kpers = list(range(0, max(nper, max(kpers) + 1)))
         else:
-            if (not isinstance(single_per, list)):
+            if not isinstance(single_per, list):
                 single_per = [single_per]
             loop_over_kpers = single_per
 
         for kper in loop_over_kpers:
             # Fill missing early kpers with 0
-            if (kper < first):
+            if kper < first:
                 itmp = 0
                 kper_vtype = int
-            elif (kper in kpers):
+            elif kper in kpers:
                 kper_data = self.__data[kper]
                 kper_vtype = self.__vtype[kper]
                 if (kper_vtype == str):
@@ -650,7 +646,7 @@ class MfList(DataInterface, DataListInterface):
                         kper_data = self.__fromfile(kper_data)
                         kper_vtype = np.recarray
                     itmp = self.get_itmp(kper)
-                if (kper_vtype == np.recarray):
+                if kper_vtype == np.recarray:
                     itmp = kper_data.shape[0]
                 elif (kper_vtype == int) or (kper_vtype is None):
                     itmp = kper_data
@@ -711,7 +707,7 @@ class MfList(DataInterface, DataListInterface):
         # Add one to the kij indices
         lnames = [name.lower() for name in self.dtype.names]
         # --make copy of data for multiple calls
-        d = np.recarray.copy(data)
+        d = data.copy()
         for idx in ['k', 'i', 'j', 'node']:
             if idx in lnames:
                 d[idx] += 1
@@ -732,28 +728,28 @@ class MfList(DataInterface, DataListInterface):
                           "not found in self.dtype names: " + str(names))
             return
         nr, nc, nl, nper = self._model.get_nrow_ncol_nlay_nper()
-        if (nl == 0):
+        if nl == 0:
             warnings.warn("MfList.check_kij(): unable to get dis info from " +
                           "model")
             return
         for kper in list(self.data.keys()):
             out_idx = []
             data = self[kper]
-            if (data is not None):
+            if data is not None:
                 k = data['k']
                 k_idx = np.where(np.logical_or(k < 0, k >= nl))
-                if (k_idx[0].shape[0] > 0):
+                if k_idx[0].shape[0] > 0:
                     out_idx.extend(list(k_idx[0]))
                 i = data['i']
                 i_idx = np.where(np.logical_or(i < 0, i >= nr))
-                if (i_idx[0].shape[0] > 0):
+                if i_idx[0].shape[0] > 0:
                     out_idx.extend(list(i_idx[0]))
                 j = data['j']
                 j_idx = np.where(np.logical_or(j < 0, j >= nc))
-                if (j_idx[0].shape[0]):
+                if j_idx[0].shape[0]:
                     out_idx.extend(list(j_idx[0]))
 
-                if (len(out_idx) > 0):
+                if len(out_idx) > 0:
                     warn_str = "MfList.check_kij(): warning the following " + \
                                "indices are out of bounds in kper " + \
                                str(kper) + ':\n'
@@ -789,12 +785,12 @@ class MfList(DataInterface, DataListInterface):
             raise NotImplementedError("MfList.get_indices requires kij")
         kpers = list(self.data.keys())
         kpers.sort()
-        indices = None
+        indices = []
         for i, kper in enumerate(kpers):
             kper_vtype = self.__vtype[kper]
             if (kper_vtype != int) or (kper_vtype is not None):
                 d = self.data[kper]
-                if indices is None:
+                if not indices:
                     indices = list(zip(d['k'], d['i'], d['j']))
                 else:
                     new_indices = list(zip(d['k'], d['i'], d['j']))
@@ -1054,7 +1050,7 @@ class MfList(DataInterface, DataListInterface):
                     arr[rec['k'], rec['i'], rec['j']] += rec[name]
                     cnt[rec['k'], rec['i'], rec['j']] += 1.
             # average keys that should not be added
-            if name != 'cond' and name != 'flux':
+            if name not in ('cond', 'flux'):
                 idx = cnt > 0.
                 arr[idx] /= cnt[idx]
             if mask:

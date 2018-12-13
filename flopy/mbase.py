@@ -37,7 +37,7 @@ iprn = -1  # Printout flag. If >= 0 then array values read are printed in listin
 
 
 
-class FileData(object):
+class FileDataEntry(object):
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
         self.unit = unit
@@ -49,6 +49,7 @@ class FileData(object):
 class FileData(object):
     def __init__(self):
         self.file_data = []
+        return
 
     def add_file(self, fname, unit, binflag=False, output=False, package=None):
         ipop = []
@@ -56,8 +57,9 @@ class FileData(object):
             if file_data.fname == fname or file_data.unit == unit:
                 ipop.append(idx)
 
-        self.file_data.append(FileData(fname, unit, binflag=binflag,
-                                       output=output, package=package))
+        self.file_data.append(FileDataEntry(fname, unit, binflag=binflag,
+                                            output=output, package=package))
+        return
 
 
 class ModelInterface(object):
@@ -243,6 +245,7 @@ class BaseModel(ModelInterface):
         self.external_binflag = []
         self.external_output = []
         self.package_units = []
+        self._next_ext_unit = None
 
         # output files
         self.output_fnames = []
