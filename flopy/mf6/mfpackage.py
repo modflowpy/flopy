@@ -1108,7 +1108,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
         self._model_or_sim = model_or_sim
         self._data_list = []
-        self.package_type = package_type
+        self._package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
             self.model_name = model_or_sim.name
         else:
@@ -1204,6 +1204,10 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def __str__(self):
         return self._get_data_str(False)
+
+    @property
+    def package_type(self):
+        return self._package_type
 
     @property
     def name(self):

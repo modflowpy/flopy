@@ -975,12 +975,14 @@ class BaseModel(ModelInterface):
                 return pp
         return None
 
-    def get_package_list(self):
+    def get_package_list(self, ftype=None):
         """
         Get a list of all the package names.
 
         Parameters
         ----------
+        ftype : str
+            Type of package, 'RIV', 'LPF', etc.
 
         Returns
         -------
@@ -991,7 +993,10 @@ class BaseModel(ModelInterface):
         """
         val = []
         for pp in (self.packagelist):
-            val.append(pp.name[0].upper())
+            if ftype is None:
+                val.append(pp.name[0].upper())
+            elif pp.package_type.lower() == ftype:
+                val.append(pp.name[0].upper())
         return val
 
     def set_version(self, version):

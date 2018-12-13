@@ -179,7 +179,7 @@ class DfnPackage(Dfn):
     def __init__(self, package):
         super(DfnPackage, self).__init__()
         self.package = package
-        self.package_type = package.package_type
+        self.package_type = package._package_type
         self.dfn_file_name = package.dfn_file_name
         # the package type is always the text after the last -
         package_name = self.package_type.split('-')

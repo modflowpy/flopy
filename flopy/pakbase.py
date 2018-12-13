@@ -51,6 +51,13 @@ class PackageInterface(object):
 
     @property
     @abc.abstractmethod
+    def package_type(self):
+        raise NotImplementedError(
+            'must define get_model_dim_arrays in child '
+            'class to use this base class')
+
+    @property
+    @abc.abstractmethod
     def data_list(self):
         # [data_object, data_object, ...]
         raise NotImplementedError(
@@ -230,6 +237,11 @@ class Package(PackageInterface):
     @parent.setter
     def parent(self, parent):
         self._parent = parent
+
+    @property
+    def package_type(self):
+        if len(self.extension) > 0:
+            return self.extension[0]
 
     @property
     def plotable(self):
