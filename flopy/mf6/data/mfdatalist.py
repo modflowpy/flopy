@@ -719,55 +719,59 @@ class MFList(mfdata.MFMultiDimVar):
                         storage.set_data(data_loaded, self._current_key)
                     self._data_dimensions.unlock()
                     return [True, line]
-            if simple_line and self.structure.num_optional == 0:
-                # do higher performance quick load
-                self._data_line = ()
-                cellid_index = 0
-                cellid_tuple = ()
-                for index, entry in enumerate(self._last_line_info):
-                    for sub_entry in entry:
-                        if sub_entry[1] is not None:
-                            data_structs = self.structure.data_item_structures
-                            if sub_entry[2] > 0:
-                                # is a cellid
-                                cell_num = storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index])
-                                cellid_tuple += (cell_num - 1,)
-                                # increment index
-                                cellid_index += 1
-                                if cellid_index == sub_entry[2]:
-                                    # end of current cellid
-                                    self._data_line += (cellid_tuple,)
-                                    cellid_index = 0
-                                    cellid_tuple = ()
+            if len(arr_line) > 0:
+                if simple_line and self.structure.num_optional == 0:
+                    # do higher performance quick load
+                    self._data_line = ()
+                    cellid_index = 0
+                    cellid_tuple = ()
+                    for index, entry in enumerate(self._last_line_info):
+                        for sub_entry in entry:
+                            if sub_entry[1] is not None:
+                                data_structs = self.structure.\
+                                    data_item_structures
+                                if sub_entry[2] > 0:
+                                    # is a cellid
+                                    cell_num = storage.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index])
+                                    cellid_tuple += (cell_num - 1,)
+                                    # increment index
+                                    cellid_index += 1
+                                    if cellid_index == sub_entry[2]:
+                                        # end of current cellid
+                                        self._data_line += (cellid_tuple,)
+                                        cellid_index = 0
+                                        cellid_tuple = ()
+                                else:
+                                    # not a cellid
+                                    self._data_line += (storage.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index]),)
                             else:
-                                # not a cellid
-                                self._data_line += (storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index]),)
-                        else:
-                            self._data_line += (None,)
-                data_loaded.append(self._data_line)
+                                self._data_line += (None,)
+                    data_loaded.append(self._data_line)
 
-            else:
-                try:
-                    self._load_line(arr_line, line_num, data_loaded, False,
-                                    storage)
-                except Exception as ex:
-                    comment = 'Unable to process line {} of data list: ' \
-                              '"{}"'.format(line_num + 1, line)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data list from '
-                                          'package file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, ex)
-            line_num += 1
+                else:
+                    try:
+                        self._load_line(arr_line, line_num, data_loaded, False,
+                                        storage)
+                    except Exception as ex:
+                        comment = 'Unable to process line {} of data list: ' \
+                                  '"{}"'.format(line_num + 1, line)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(self.structure.get_model(),
+                                              self.structure.get_package(),
+                                              self._path,
+                                              'loading data list from '
+                                              'package file',
+                                              self.structure.name,
+                                              inspect.stack()[0][3], type_,
+                                              value_, traceback_, comment,
+                                              self._simulation_data.debug, ex)
+                line_num += 1
         if store_data:
             # store as rec array
             storage.set_data(data_loaded, self._current_key)
