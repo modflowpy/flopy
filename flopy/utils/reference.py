@@ -1416,9 +1416,38 @@ class SpatialReference(object):
                                    iv1 + nrvncv, iv2 + nrvncv,
                                    iv4, iv3, iv1, iv2])
 
+        # renumber and reduce the vertices if ibound_filter
+        if ibound is not None:
+
+            # go through the vertex list and mark vertices that are used
+            ivertrenum = np.zeros(npoints, dtype=np.int)
+            for vlist in iverts:
+                for iv in vlist:
+                    # mark vertices that are actually used
+                    ivertrenum[iv] = 1
+
+            # renumber vertices that are used, skip those that are not
+            inum = 0
+            for i in range(npoints):
+                if ivertrenum[i] > 0:
+                    inum += 1
+                    ivertrenum[i] = inum
+            ivertrenum -= 1
+
+            # reassign the vertex list using the new vertex numbers
+            iverts2 = []
+            for vlist in iverts:
+                vlist2 = []
+                for iv in vlist:
+                    vlist2.append(ivertrenum[iv])
+                iverts2.append(vlist2)
+            iverts = iverts2
+            idx = np.where(ivertrenum >= 0)
+            verts = verts[idx]
+
         return verts, iverts
 
-    def get_3d_vertex_connectivity(self, nlay, botm, ibound=None):
+    def get_3d_vertex_connectivity(self, nlay, top, bot, ibound=None):
         if ibound is None:
             ncells = nlay * self.nrow * self.ncol
             ibound = np.ones((nlay, self.nrow, self.ncol), dtype=np.int)
@@ -1438,7 +1467,7 @@ class SpatialReference(object):
                     pts = self.get_vertices(i, j)
                     pt0, pt1, pt2, pt3, pt0 = pts
 
-                    z = botm[k + 1, i, j]
+                    z = bot[k, i, j]
 
                     verts[ipoint, 0:2] = np.array(pt1)
                     verts[ipoint, 2] = z
@@ -1460,7 +1489,7 @@ class SpatialReference(object):
                     ivert.append(ipoint)
                     ipoint += 1
 
-                    z = botm[k, i, j]
+                    z = top[k, i, j]
 
                     verts[ipoint, 0:2] = np.array(pt1)
                     verts[ipoint, 2] = z

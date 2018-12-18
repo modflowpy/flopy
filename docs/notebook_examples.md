@@ -45,6 +45,8 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + The [Zaidel discontinuous water-table example](../examples/Notebooks/flopy3_Zaidel_example.ipynb), which simulates a discontinuous water table over a stairway impervious base, from http://onlinelibrary.wiley.com/doi/10.1111/gwat.12019/abstract. This IPython Notebook build files for MODFLOW-USG. (http://pubs.usgs.gov/tm/06/a45/). 
 
++ The [MT3DMS Example Problems](../examples/Notebooks/flopy3_MT3DMS_examples.ipynb), which uses to Flopy to reproduce the ten example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
+
 + An overview of the options for creating a Source/Sink Mixing (SSM) Package for MT3DMS and SEAWAT is given in the [flopy3ssm](../examples/Notebooks/flopy3_multi-component_SSM.ipynb) Notebook.
 
 + The ['Crank-Nicolson' example distributed with MT3D-USGS](../examples/Notebooks/flopy3_MT3D-USGS_example.ipynb), a simple MT3D-USGS model that uses the SFT Package.

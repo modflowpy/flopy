@@ -561,7 +561,7 @@ class ModflowSfr2(Package):
                              ('reachID', np.int),
                              ('outreach', np.int)])
         else:
-            return np.dtype([('node', np.int)
+            return np.dtype([('node', np.int),
                              ('iseg', np.int),
                              ('ireach', np.int),
                              ('rchlen', np.float32),

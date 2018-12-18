@@ -33,7 +33,7 @@ iprn = -1  # Printout flag. If >= 0 then array values read are printed in listin
 
 
 
-class FileData(object):
+class FileDataEntry(object):
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
         self.unit = unit
@@ -45,6 +45,7 @@ class FileData(object):
 class FileData(object):
     def __init__(self):
         self.file_data = []
+        return
 
     def add_file(self, fname, unit, binflag=False, output=False, package=None):
         ipop = []
@@ -52,8 +53,9 @@ class FileData(object):
             if file_data.fname == fname or file_data.unit == unit:
                 ipop.append(idx)
 
-        self.file_data.append(FileData(fname, unit, binflag=binflag,
-                                       output=output, package=package))
+        self.file_data.append(FileDataEntry(fname, unit, binflag=binflag,
+                                            output=output, package=package))
+        return
 
 
 class BaseModel(object):
@@ -127,6 +129,7 @@ class BaseModel(object):
         self.external_binflag = []
         self.external_output = []
         self.package_units = []
+        self._next_ext_unit = None
 
         # output files
         self.output_fnames = []
@@ -135,37 +138,6 @@ class BaseModel(object):
         self.output_packages = []
 
         return
-
-    # we don't need these - no need for controlled access to array_free_format
-    # def set_free_format(self, value=True):
-    #     """
-    #     Set the free format flag for the model instance
-    #
-    #     Parameters
-    #     ----------
-    #     value : bool
-    #         Boolean value to set free format flag for model. (default is True)
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     if not isinstance(value, bool):
-    #         print('Error: set_free_format passed value must be a boolean')
-    #         return False
-    #     self.array_free_format = value
-    #
-    # def get_free_format(self):
-    #     """
-    #     Return the free format flag for the model
-    #
-    #     Returns
-    #     -------
-    #     out : bool
-    #         Free format flag for the model
-    #
-    #     """
-    #     return self.array_free_format
 
     def next_unit(self, i=None):
         if i is not None:
