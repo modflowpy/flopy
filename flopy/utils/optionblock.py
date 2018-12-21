@@ -49,7 +49,7 @@ class OptionBlock(object):
         """
         Updater method to check the package and update
         OptionBlock attribute values based on package
-        values
+        values.
 
         Parameters
         ----------
