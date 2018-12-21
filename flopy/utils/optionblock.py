@@ -96,6 +96,15 @@ class OptionBlock(object):
         """
         Syntactic sugar to allow for dynamic recarray/attribute
         interactions and data type enforcement on dynamic attributes
+
+        Parameters
+        ----------
+            key : str
+                string refering to an attribute
+            value : object
+                a python object (int, str, float, bool) that
+                is consistant with the attribute data type
+
         """
         err_msg = "Data type must be compatible with {}"
         if key in ("_context", "_attr_types", "options_line"):
@@ -139,6 +148,9 @@ class OptionBlock(object):
     def __getattribute__(self, item):
         """
         Syntactic sugar that creates recarrays of nested/related items.
+        Ex. Tabfiles, numtab, and maxval will be returned in a
+        recarray if the user calls <.tabfiles>
+
         """
         if item in ("__dict__", "_context", "package"):
             value = object.__getattribute__(self, item)
@@ -170,7 +182,10 @@ class OptionBlock(object):
     def __build_attr_types(self):
         """
         Method to build a type dictionary for type
-        enforcements in __setattr__
+        enforcements in __setattr__. This uses the package's
+        contex tree to build and enforce attribute
+        types for the class
+
         """
         for key, value in self._context.items():
             self._attr_types[key] = value[OptionUtil.dtype]
@@ -180,8 +195,9 @@ class OptionBlock(object):
 
     def _set_attributes(self):
         """
-        Dynamic attribute creation method
-        :return:
+        Dynamic attribute creation method. This uses the
+        package's context tree to build attributes for the class
+
         """
         # set up all attributes for the class!
         for key, ctx in self._context.items():
@@ -242,7 +258,9 @@ class OptionBlock(object):
         Method to write the options block or options line to
         an open file object.
 
-        :param f: (file) open file object
+        Parameters
+            f : file, str
+                open file object, or path to file
         """
         if isinstance(f, str):
             with open(f, "w") as optfile:
@@ -265,9 +283,18 @@ class OptionBlock(object):
         block and uses context from option util dictionaries
         to check the validity of the data
 
-        :param options: (str, list, or file)
-        :param package: flopy.package type ex. flopy.modflow.ModflowWel
-        :return: OptionBlock
+        Parameters
+        ----------
+            options: str or file
+                string path to a file or file object
+            package : flopy.package type
+                valid packages include flopy.modflow.ModflowWel,
+                flopy.modflow.ModflowUzf1, flopy.modflow.ModflowSfr2
+
+        Returns
+        -------
+            OptionBlock object
+
         """
         context = OptionUtil.context[package.ftype().lower()]
 
@@ -395,13 +422,18 @@ class OptionUtil(object):
         by removing comments and other formatting functions.
         Necessary for comment lines and empty lines.
 
-        :param line: (str)
-        :return:
-            (str)
+        Parameters
+        ----------
+        line : str
+
+        Returns
+        -------
+        s : str
+
         """
         s = ""
         for i in line.strip().lower():
-            if i in ("#", "!"):
+            if i in ("#", "!", ";"):
                 return s
             else:
                 s += i
@@ -412,8 +444,15 @@ class OptionUtil(object):
         """
         Simple method to check that a string is a valid
         floating point variable
-        :param s: (str)
-        :return:
+
+        Parameters
+        ----------
+        s : str
+
+        Returns
+        -------
+            bool
+
         """
         try:
             float(s)
@@ -426,8 +465,15 @@ class OptionUtil(object):
         """
         Simple data check method to check that a string
         is a valid integer
-        :param s: (str)
-        :return:
+
+        Parameters
+        ----------
+        s : str
+
+        Returns
+        -------
+            bool
+
         """
         try:
             float(s)
@@ -440,9 +486,17 @@ class OptionUtil(object):
         """
         Check to see if a dtype is valid before setting
         as an attribute
-        :param dtype: python type
-        :param val: string
-        :return: bool
+
+        Parameters
+        ----------
+        dtype : type
+            int, float, str, bool, etc...
+        val : string
+
+        Returns
+        -------
+            bool
+
         """
         valid = False
         if dtype == np.bool_:

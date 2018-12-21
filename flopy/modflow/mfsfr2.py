@@ -640,6 +640,7 @@ class ModflowSfr2(Package):
                 break
 
         options = None
+        # todo: change logic to handle nwt and mf2005.
         if model.version == "mfnwt":
             if "options" in line.lower():
                 options = OptionBlock.load_options(f, ModflowSfr2)

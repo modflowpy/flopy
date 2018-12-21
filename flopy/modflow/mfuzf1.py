@@ -310,6 +310,8 @@ class ModflowUzf1(Package):
                  etsquare=None, netflux=None, nuzgag=None,
                  uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None, options=None):
+
+        # todo: deprecate the nwt_11_option flag
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1.defaultunit()
