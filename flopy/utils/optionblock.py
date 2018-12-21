@@ -9,10 +9,15 @@ class OptionBlock(object):
     information and routines that can be shared throughout
     all option block classes.
 
-    Parameters:
-        options_line: (str) single line based options string
-        package: (flopy.pakbase.Package) instance
-        block: (bool) flag to write as single line or block type
+    Parameters
+    ----------
+    options_line : str
+        single line based options string
+    package : flopy.pakbase.Package instance
+        valid packages include ModflowWel, ModflowSfr2, ModflowUzf1
+    block : bool
+        flag to write as single line or block type
+
     """
     def __init__(self, options_line, package, block=True):
         self._context = OptionUtil.context[package.ftype().lower()]
@@ -31,7 +36,10 @@ class OptionBlock(object):
         """
         Method to get the single line representation of the
         Options Block
-        :return: (str)
+
+        Returns
+        -------
+        t : (str) single line representation of Options
         """
         t = repr(self).split("\n")
         t = t[1:-2]
@@ -42,7 +50,12 @@ class OptionBlock(object):
         Updater method to check the package and update
         OptionBlock attribute values based on package
         values
-        :param pak: flopy.package
+
+        Parameters
+        ----------
+        pak : flopy.package
+            valid packages include ModflowWel, ModflowSfr2,
+            and ModflowUzf1 instances
         """
         for key, ctx in self._context.items():
             if key in pak.__dict__:
