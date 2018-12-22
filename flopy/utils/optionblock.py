@@ -367,6 +367,7 @@ class OptionUtil(object):
     nested = "nested"
     dtype = "dtype"
     n_nested = "nvars"
+
     vars = "vars"
 
     simple_flag = OrderedDict([(dtype, np.bool_),
