@@ -14,6 +14,7 @@ from ..utils.flopy_io import pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
+from collections import OrderedDict
 import warnings
 
 
@@ -297,6 +298,35 @@ class ModflowUzf1(Package):
     >>> uzf = flopy.modflow.ModflowUzf1(ml, ...)
 
     """
+    _options = OrderedDict([('specifythtr',
+                             OptionBlock.simple_flag),
+                            ('specifythti',
+                             OptionBlock.simple_flag),
+                            ('nosurfleak',
+                             OptionBlock.simple_flag),
+                            ('specifysurfk',
+                             OptionBlock.simple_flag),
+                            ('rejectsurfk',
+                             OptionBlock.simple_flag),
+                            ("seepsurfk",
+                             OptionBlock.simple_flag),
+                            ("etsquare",
+                                {OptionBlock.dtype: np.bool_,
+                                 OptionBlock.nested: True,
+                                 OptionBlock.n_nested: 1,
+                                 OptionBlock.vars:
+                                     {"smoothfact":
+                                      OptionBlock.simple_float}}),
+                            ("netflux",
+                                {OptionBlock.dtype: np.bool_,
+                                 OptionBlock.nested: True,
+                                 OptionBlock.n_nested: 2,
+                                 OptionBlock.vars:
+                                     OrderedDict([("unitrech",
+                                                   OptionBlock.simple_int),
+                                                  ("unitdis",
+                                                   OptionBlock.simple_int)])}),
+                            ("savefinf", OptionBlock.simple_flag)])
 
     def __init__(self, model,
                  nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,

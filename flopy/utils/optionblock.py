@@ -19,8 +19,28 @@ class OptionBlock(object):
         flag to write as single line or block type
 
     """
+    nested = "nested"
+    dtype = "dtype"
+    n_nested = "nvars"
+    vars = "vars"
+
+    simple_flag = OrderedDict([(dtype, np.bool_),
+                               (nested, False)])
+    simple_str = OrderedDict([(dtype, str),
+                              (nested, False)])
+    simple_float = OrderedDict([(dtype, float),
+                                (nested, False)])
+    simple_int = OrderedDict([(dtype, int),
+                              (nested, False)])
+
+    simple_tabfile = OrderedDict([(dtype, np.bool_),
+                                  (nested, True),
+                                  (n_nested, 2),
+                                  (vars, OrderedDict([('numtab', simple_int),
+                                                      ('maxval', simple_int)]))])
+
     def __init__(self, options_line, package, block=True):
-        self._context = OptionUtil.context[package.ftype().lower()]
+        self._context = package._options
         self._attr_types = {}
         self.options_line = options_line
         self.package = package
@@ -61,8 +81,8 @@ class OptionBlock(object):
             if key in pak.__dict__:
                 val = pak.__dict__[key]
                 self.__setattr__(key, val)
-                if ctx[OptionUtil.nested]:
-                    for k2, ctx2 in ctx[OptionUtil.vars].items():
+                if ctx[OptionBlock.nested]:
+                    for k2, ctx2 in ctx[OptionBlock.vars].items():
                         if k2 in pak.__dict__:
                             v2 = pak.__dict__[k2]
                             self.__setattr__(k2, v2)
@@ -76,7 +96,7 @@ class OptionBlock(object):
         for key, ctx in self._context.items():
             try:
                 val = []
-                if ctx[OptionUtil.dtype] == np.bool_:
+                if ctx[OptionBlock.dtype] == np.bool_:
                     if not object.__getattribute__(self, key):
                         continue
                     else:
@@ -84,9 +104,9 @@ class OptionBlock(object):
                 else:
                     val.append(str(object.__getattribute__(self, key)))
 
-                if ctx[OptionUtil.nested]:
-                    for k, d in ctx[OptionUtil.vars].items():
-                        if d[OptionUtil.dtype] == np.bool_:
+                if ctx[OptionBlock.nested]:
+                    for k, d in ctx[OptionBlock.vars].items():
+                        if d[OptionBlock.dtype] == np.bool_:
                             if not object.__getattribute__(self, k):
                                 pass
                             else:
@@ -170,12 +190,12 @@ class OptionBlock(object):
 
         elif item in object.__getattribute__(self, "_context"):
             ctx = object.__getattribute__(self, "_context")[item]
-            if ctx[OptionUtil.nested]:
+            if ctx[OptionBlock.nested]:
                 vals = [object.__getattribute__(self, item)]
-                dtypes = [(item, ctx[OptionUtil.dtype])]
-                for key, d in ctx[OptionUtil.vars].items():
+                dtypes = [(item, ctx[OptionBlock.dtype])]
+                for key, d in ctx[OptionBlock.vars].items():
                     vals.append(object.__getattribute__(self, key))
-                    dtypes.append((key, d[OptionUtil.dtype]))
+                    dtypes.append((key, d[OptionBlock.dtype]))
 
                 if not vals[0]:
                     value = False
@@ -201,10 +221,10 @@ class OptionBlock(object):
 
         """
         for key, value in self._context.items():
-            self._attr_types[key] = value[OptionUtil.dtype]
-            if OptionUtil.vars in value:
-                for k, d in value[OptionUtil.vars].items():
-                    self._attr_types[k] = d[OptionUtil.dtype]
+            self._attr_types[key] = value[OptionBlock.dtype]
+            if OptionBlock.vars in value:
+                for k, d in value[OptionBlock.vars].items():
+                    self._attr_types[k] = d[OptionBlock.dtype]
 
     def _set_attributes(self):
         """
@@ -214,14 +234,14 @@ class OptionBlock(object):
         """
         # set up all attributes for the class!
         for key, ctx in self._context.items():
-            if ctx[OptionUtil.dtype] in (np.bool_, bool, np.bool):
+            if ctx[OptionBlock.dtype] in (np.bool_, bool, np.bool):
                 self.__setattr__(key, False)
             else:
                 self.__setattr__(key, None)
 
-            if ctx[OptionUtil.nested]:
-                for k, d in ctx[OptionUtil.vars].items():
-                    if d[OptionUtil.dtype] in (np.bool_, bool, np.bool):
+            if ctx[OptionBlock.nested]:
+                for k, d in ctx[OptionBlock.vars].items():
+                    if d[OptionBlock.dtype] in (np.bool_, bool, np.bool):
                         self.__setattr__(k, False)
                     else:
                         self.__setattr__(k, None)
@@ -234,8 +254,8 @@ class OptionBlock(object):
                 if t[ix] in self._context:
                     key = t[ix]
                     ctx = self._context[key]
-                    dtype = ctx[OptionUtil.dtype]
-                    nested = ctx[OptionUtil.nested]
+                    dtype = ctx[OptionBlock.dtype]
+                    nested = ctx[OptionBlock.nested]
 
                     OptionUtil.isvalid(dtype, t[ix])
 
@@ -252,8 +272,8 @@ class OptionBlock(object):
 
             else:
                 ctx = self._context[t[ix - 1]]
-                for key, d in ctx[OptionUtil.vars].items():
-                    dtype = d[OptionUtil.dtype]
+                for key, d in ctx[OptionBlock.vars].items():
+                    dtype = d[OptionBlock.dtype]
 
                     OptionUtil.isvalid(dtype, t[ix])
 
@@ -309,7 +329,7 @@ class OptionBlock(object):
             OptionBlock object
 
         """
-        context = OptionUtil.context[package.ftype().lower()]
+        context = package._options
 
         if hasattr(options, "read"):
             pass
@@ -338,13 +358,13 @@ class OptionBlock(object):
                     option_line += key + " "
                     ctx = context[key]
 
-                    if ctx[OptionUtil.nested]:
+                    if ctx[OptionBlock.nested]:
                         ix = 1
 
-                        for k, d in ctx[OptionUtil.vars].items():
-                            if d[OptionUtil.dtype] == float:
+                        for k, d in ctx[OptionBlock.vars].items():
+                            if d[OptionBlock.dtype] == float:
                                 valid = OptionUtil.isfloat(t[ix])
-                            elif d[OptionUtil.dtype] == int:
+                            elif d[OptionBlock.dtype] == int:
                                 valid = OptionUtil.isint(t[ix])
                             else:
                                 valid = True
@@ -363,71 +383,6 @@ class OptionBlock(object):
 
 
 class OptionUtil(object):
-
-    nested = "nested"
-    dtype = "dtype"
-    n_nested = "nvars"
-
-    vars = "vars"
-
-    simple_flag = OrderedDict([(dtype, np.bool_),
-                               (nested, False)])
-    simple_str = OrderedDict([(dtype, str),
-                              (nested, False)])
-    simple_float = OrderedDict([(dtype, float),
-                               (nested, False)])
-    simple_int = OrderedDict([(dtype, int),
-                              (nested, False)])
-
-    simple_tabfile = OrderedDict([(dtype, np.bool_),
-                                  (nested, True),
-                                  (n_nested, 2),
-                                  (vars, OrderedDict([('numtab', simple_int),
-                                                      ('maxval', simple_int)]))])
-
-    _welcontext = OrderedDict([('specify', {dtype: np.bool_,
-                                            nested: True,
-                                            n_nested: 2,
-                                vars: OrderedDict([('phiramp', simple_float),
-                                                   ('iunitramp', simple_int)])}),
-                               ('tabfiles', simple_tabfile)])
-
-    _sfrcontext = OrderedDict([("reachinput", simple_flag),
-                               ("transroute", simple_flag),
-                               ("tabfiles", simple_tabfile),
-                               ("lossfactor", {dtype: np.bool_,
-                                               nested: True,
-                                               n_nested: 1,
-                                               vars: {"factor": simple_float}}),
-                               ("strhc1kh", {dtype: np.bool_,
-                                             nested: True,
-                                             n_nested: 1,
-                                             vars: {"factorkh": simple_float}}),
-                               ("strhc1kv", {dtype: np.bool_,
-                                             nested: True,
-                                             n_nested: 1,
-                                             vars: {"factorkv": simple_float}})])
-
-    _uzfcontext = OrderedDict([('specifythtr', simple_flag),
-                               ('specifythti', simple_flag),
-                               ('nosurfleak', simple_flag),
-                               ('specifysurfk', simple_flag),
-                               ('rejectsurfk', simple_flag),
-                               ("seepsurfk", simple_flag),
-                               ("etsquare", {dtype: np.bool_,
-                                             nested: True,
-                                             n_nested: 1,
-                                             vars: {"smoothfact": simple_float}}),
-                               ("netflux", {dtype: np.bool_,
-                                            nested: True,
-                                            n_nested: 2,
-                                            vars: OrderedDict([("unitrech", simple_int),
-                                                               ("unitdis", simple_int)])}),
-                               ("savefinf", simple_flag)])
-
-    context = {"wel": _welcontext,
-               "sfr": _sfrcontext,
-               "uzf": _uzfcontext}
 
     @staticmethod
     def prep_line(line):
