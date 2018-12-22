@@ -14,6 +14,7 @@ from ..utils.flopy_io import pop_item, line_parse, read_nwt_options
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
+import warnings
 
 
 class ModflowUzf1(Package):
@@ -399,6 +400,11 @@ class ModflowUzf1(Package):
         self.url = 'uzf_unsaturated_zone_flow_pack.htm'
 
         # Data Set 1a
+        if nwt_11_fmt:
+            warnings.warn("nwt_11_fmt has been deprecated,"
+                          " and will be removed in the next release"
+                          " please provide a flopy.utils.OptionBlock object"
+                          " to the options argument",DeprecationWarning)
         self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = specifythtr
         self.specifythti = specifythti
@@ -528,6 +534,7 @@ class ModflowUzf1(Package):
 
     def _write_1a(self, f_uzf):
 
+        # the nwt_11_fmt code is slated for removal (deprecated!)
         if not self.nwt_11_fmt:
             specify_temp = ''
             if self.specifythtr > 0:
@@ -705,7 +712,7 @@ class ModflowUzf1(Package):
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
         # dataset 1a
-        specifythtr, specifythti, nosurfleak, nwt_11_fmt = False, False, False, False
+        specifythtr, specifythti, nosurfleak = False, False, False
         etsquare, netflux, rejectsurfk, seepsurfk = None, None, False, False
         options = None
         if model.version == 'mfnwt' and 'options' in line.lower():
@@ -857,7 +864,6 @@ class ModflowUzf1(Package):
                            ipakcb=ipakcb, iuzfcb2=iuzfcb2,
                            ntrail2=ntrail2, nsets=nsets2,
                            surfdep=surfdep, uzgag=uzgag,
-                           nwt_11_fmt=nwt_11_fmt,
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, etsquare=etsquare,
                            netflux=netflux, seepsurfk=seepsurfk,

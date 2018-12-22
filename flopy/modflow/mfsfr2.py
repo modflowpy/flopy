@@ -640,65 +640,36 @@ class ModflowSfr2(Package):
                 break
 
         options = None
-        # todo: change logic to handle nwt and mf2005.
-        if model.version == "mfnwt":
-            if "options" in line.lower():
-                options = OptionBlock.load_options(f, ModflowSfr2)
+        if model.version == "mfnwt" and "options" in line.lower():
+            options = OptionBlock.load_options(f, ModflowSfr2)
 
-            else:
-                query = ("reachinput", "transroute", "tabfiles",
-                         "lossfactor", "strhc1kh", "strhc1kv")
-                for i in query:
-                    if i in line.lower():
-                        options = OptionBlock(line.lower().strip(),
-                                              ModflowSfr2, block=False)
-                        break
-
-            if options is not None:
-                transroute = options.transroute
-                reachinput = options.reachinput
-                if isinstance(options.tabfiles, np.ndarray):
-                    tabfiles = True
-                else:
-                    tabfiles = False
-                numtab = options.numtab if tabfiles else 0
-                maxval = options.maxval if tabfiles else 0
-                line = next(f)
-
-        # Item 1
         else:
-            # modflow-2005 based item 1
-            if "reachinput" in line.lower():
-                """
-                When REACHINPUT is specified, variable ISFROPT is read in data set 1c.
-                ISFROPT can be used to change the default format for entering reach and segment data
-                or to specify that unsaturated flow beneath streams will be simulated.
-                """
-                reachinput = True
-            if "transroute" in line.lower():
-                """When TRANSROUTE is specified, optional variables IRTFLG, NUMTIM, WEIGHT, and FLWTOL
-                also must be specified in Item 1c.
-                """
-                transroute = True
-            if transroute or reachinput:
-                line = next(f)
+            query = ("reachinput", "transroute", "tabfiles",
+                     "lossfactor", "strhc1kh", "strhc1kv")
+            for i in query:
+                if i in line.lower():
+                    options = OptionBlock(line.lower().strip(),
+                                          ModflowSfr2, block=False)
+                    break
+
+        if options is not None:
+            line = next(f)
+            # check for 1b in modflow-2005
             if "tabfiles" in line.lower():
-                """
-                tabfiles
-                An optional character variable that is a flag to indicate that inflows to one or more stream
-                segments will be specified with tabular inflow files.
-                numtab
-                An integer value equal to the number of tabular inflow files that will be read if TABFILES
-                is specified. A separate input file is required for each segment that receives specified inflow.
-                Thus, the maximum value of NUMTAB that can be specified is equal to the total number of
-                segments specified in Item 1c with variables NSS. The name (Fname) and unit number (Nunit)
-                of each tabular file must be specified in the MODFLOW-2005 Name File using tile type (Ftype) DATA.
-                maxval
-    
-                """
-                tabfiles, numtab, maxval = line.strip().split()
-                numtab, maxval = int(numtab), int(maxval)
+                t = line.strip.split()
+                options.tabfiles = True
+                options.numtab = int(t[1])
+                options.maxval = int(t[2])
                 line = next(f)
+
+            transroute = options.transroute
+            reachinput = options.reachinput
+            if isinstance(options.tabfiles, np.ndarray):
+                tabfiles = True
+            else:
+                tabfiles = False
+            numtab = options.numtab if tabfiles else 0
+            maxval = options.maxval if tabfiles else 0
 
         # item 1c
         nstrm, nss, nsfrpar, nparseg, const, dleak, ipakcb, istcb2, \
