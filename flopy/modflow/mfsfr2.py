@@ -660,7 +660,7 @@ class ModflowSfr2(Package):
             f = open(filename, 'r')
         # Item 0 -- header
         while True:
-            line = next(f)
+            line = f.readline()
             if line[0] != '#':
                 break
 
@@ -678,14 +678,14 @@ class ModflowSfr2(Package):
                     break
 
         if options is not None:
-            line = next(f)
+            line = f.readline()
             # check for 1b in modflow-2005
             if "tabfiles" in line.lower():
                 t = line.strip().split()
                 options.tabfiles = True
                 options.numtab = int(t[1])
                 options.maxval = int(t[2])
-                line = next(f)
+                line = f.readline()
 
             # set varibles to be passed to class args
             transroute = options.transroute
@@ -712,7 +712,7 @@ class ModflowSfr2(Package):
 
         lines = []
         for i in range(abs(nstrm)):
-            line = next(f)
+            line = f.readline()
             line = line_parse(line)
             ireach = tuple(map(float, line[:len(dtypes)]))
             lines.append(ireach)
@@ -737,7 +737,7 @@ class ModflowSfr2(Package):
         aux_variables = {}  # not sure where the auxillary variables are supposed to go
         for i in range(0, nper):
             # Dataset 5
-            dataset_5[i] = _get_dataset(next(f), [1, 0, 0, 0])
+            dataset_5[i] = _get_dataset(f.readline(), [1, 0, 0, 0])
             itmp = dataset_5[i][0]
             if itmp > 0:
                 # Item 6
@@ -748,13 +748,13 @@ class ModflowSfr2(Package):
                 current_6e = {}
                 #print(i,icalc,nstrm,isfropt,reachinput)
                 for j in range(itmp):
-                    dataset_6a = _parse_6a(next(f), option)
+                    dataset_6a = _parse_6a(f.readline(), option)
                     current_aux[j] = dataset_6a[-1]
                     dataset_6a = dataset_6a[:-1]  # drop xyz
                     icalc = dataset_6a[1]
-                    dataset_6b = _parse_6bc(next(f), icalc, nstrm, isfropt,
+                    dataset_6b = _parse_6bc(f.readline(), icalc, nstrm, isfropt,
                                             reachinput, per=i)
-                    dataset_6c = _parse_6bc(next(f), icalc, nstrm, isfropt,
+                    dataset_6c = _parse_6bc(f.readline(), icalc, nstrm, isfropt,
                                             reachinput, per=i)
 
                     current[j] = dataset_6a + dataset_6b + dataset_6c
@@ -767,15 +767,15 @@ class ModflowSfr2(Package):
                             dataset_6d = []
                             for k in range(2):
                                 dataset_6d.append(
-                                    _get_dataset(next(f), [0.0] * 8))
-                                # dataset_6d.append(list(map(float, next(f).strip().split())))
+                                    _get_dataset(f.readline(), [0.0] * 8))
+                                # dataset_6d.append(list(map(float, f.readline().strip().split())))
                             current_6d[j + 1] = dataset_6d
                     if icalc == 4:
                         nstrpts = dataset_6a[5]
                         dataset_6e = []
                         for k in range(3):
                             dataset_6e.append(
-                                _get_dataset(next(f), [0.0] * nstrpts))
+                                _get_dataset(f.readline(), [0.0] * nstrpts))
                         current_6e[j + 1] = dataset_6e
 
                 segment_data[i] = current
@@ -787,7 +787,7 @@ class ModflowSfr2(Package):
 
             if tabfiles and i == 0:
                 for j in range(numtab):
-                    segnum, numval, iunit = map(int, next(f).strip().split())
+                    segnum, numval, iunit = map(int, f.readline().strip().split())
                     tabfiles_dict[segnum] = {'numval': numval, 'inuit': iunit}
 
             else:
