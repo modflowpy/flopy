@@ -656,7 +656,7 @@ class ModflowSfr2(Package):
             line = next(f)
             # check for 1b in modflow-2005
             if "tabfiles" in line.lower():
-                t = line.strip.split()
+                t = line.strip().split()
                 options.tabfiles = True
                 options.numtab = int(t[1])
                 options.maxval = int(t[2])
