@@ -216,17 +216,18 @@ class MFSimulation(PackageContainer):
     ----------
     sim_name : string
         name of the simulation.
-    sim_nam_file : string
-        relative to the simulation name file from the simulation working
-        folder.
     version : string
         MODFLOW version
     exe_name : string
         relative path to MODFLOW executable from the simulation working folder
     sim_ws : string
         path to simulation working folder
-    sim_tdis_file : string
-        relative path to MODFLOW TDIS file
+    verbosity_level : int
+        verbosity level of standard output
+            0 : no standard output
+            1 : standard error/warning messages with some informational messages
+            2 : verbose mode with full error/warning/informational messages.
+                this is ideal for debugging
 
     Attributes
     ----------
@@ -295,8 +296,11 @@ class MFSimulation(PackageContainer):
 
     """
     def __init__(self, sim_name='sim', version='mf6',
-                 exe_name='mf6.exe', sim_ws='.'):
+                 exe_name='mf6.exe', sim_ws='.',
+                 verbosity_level=1):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
+        self.simulation_data.verbosity_level = self._resolve_verbosity_level(
+            verbosity_level)
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -329,14 +333,15 @@ class MFSimulation(PackageContainer):
         self.name_file = mfnam.ModflowNam(self, fname='mfsim.nam')
 
         # try to build directory structure
-        try:
-            os.makedirs(self.simulation_data.mfpath.get_sim_path())
-        except OSError as e:
-            if e.errno == errno.EEXIST and \
-                self.simulation_data.verbosity_level.value >= \
-                    VerbosityLevel.normal.value:
-                print('Directory structure already exists for simulation path '
-                      '{}'.format(self.simulation_data.mfpath.get_sim_path()))
+        sim_path = self.simulation_data.mfpath.get_sim_path()
+        if not os.path.isdir(sim_path):
+            try:
+                os.makedirs(sim_path)
+            except OSError as e:
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.quiet.value:
+                    print('An error occurred when trying to create the '
+                          'directory {}: {}'.format(sim_path, e.strerror))
 
         # set simulation validity initially to false since the user must first
         # add at least one model to the simulation and fill out the name and
@@ -419,7 +424,7 @@ class MFSimulation(PackageContainer):
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
-             sim_ws='.', strict=True, verbosity_level=VerbosityLevel.normal):
+             sim_ws='.', strict=True, verbosity_level=1):
         """
         Load an existing model.
 
@@ -427,9 +432,6 @@ class MFSimulation(PackageContainer):
         ----------
         sim_name : string
             name of the simulation.
-        sim_nam_file : string
-            relative to the simulation name file from the simulation working
-            folder.
         version : string
             MODFLOW version
         exe_name : string
@@ -439,8 +441,13 @@ class MFSimulation(PackageContainer):
             path to simulation working folder
         strict : boolean
             strict enforcement of file formatting
-        verbosity_level : VerbosityLevel
-            verbosity level of console output messages
+        verbosity_level : int
+            verbosity level of standard output
+                0 : no standard output
+                1 : standard error/warning messages with some informational
+                    messages
+                2 : verbose mode with full error/warning/informational
+                    messages.  this is ideal for debugging
         Returns
         -------
         sim : MFSimulation object
@@ -450,8 +457,8 @@ class MFSimulation(PackageContainer):
         >>> s = flopy6.mfsimulation.load('my simulation')
         """
         # initialize
-        instance = cls(sim_name, version, exe_name, sim_ws)
-        instance.simulation_data.verbosity_level = verbosity_level
+        instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level)
+        verbosity_level = instance.simulation_data.verbosity_level
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print('loading simulation...')
@@ -1374,6 +1381,17 @@ class MFSimulation(PackageContainer):
         # each model has an imsfile
 
         return True
+
+    @staticmethod
+    def _resolve_verbosity_level(verbosity_level):
+        if verbosity_level == 0:
+            return VerbosityLevel.quiet
+        elif verbosity_level == 1:
+            return VerbosityLevel.normal
+        elif verbosity_level == 2:
+            return VerbosityLevel.verbose
+        else:
+            return verbosity_level
 
     def _get_package_path(self, package):
         if package.parent_file is not None:
