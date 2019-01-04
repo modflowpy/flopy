@@ -128,7 +128,7 @@ def test_cellbudgetfile_position():
     except:
         assert False, 'could not list records on {}'.format(opth)
 
-    names = v2.get_unique_record_names()
+    names = v2.get_unique_record_names(decode=True)
 
     cbcd2 = []
     for i in range(0, v2.get_nrecords()):

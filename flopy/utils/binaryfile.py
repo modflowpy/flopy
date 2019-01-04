@@ -854,9 +854,14 @@ class CellBudgetFile(object):
             print(rec)
         return
 
-    def get_unique_record_names(self):
+    def get_unique_record_names(self, decode=False):
         """
         Get a list of unique record names in the file
+
+        Parameters
+        ----------
+        decode : bool
+            Optional boolean used to decode byte strings (default is False).
 
         Returns
         ----------
@@ -864,16 +869,24 @@ class CellBudgetFile(object):
             List of unique text names in the binary file.
 
         """
-        names = []
-        for text in self.textlist:
-            if isinstance(text, bytes):
-                text = text.decode()
-            names.append(text)
+        if decode:
+            names = []
+            for text in self.textlist:
+                if isinstance(text, bytes):
+                    text = text.decode()
+                names.append(text)
+        else:
+            names = self.textlist
         return names
 
-    def get_unique_package_names(self):
+    def get_unique_package_names(self, decode=False):
         """
         Get a list of unique package names in the file
+
+        Parameters
+        ----------
+        decode : bool
+            Optional boolean used to decode byte strings (default is False).
 
         Returns
         ----------
@@ -881,11 +894,14 @@ class CellBudgetFile(object):
             List of unique package names in the binary file.
 
         """
-        names = []
-        for text in self.paknamlist:
-            if isinstance(text, bytes):
-                text = text.decode()
-            names.append(text)
+        if decode:
+            names = []
+            for text in self.paknamlist:
+                if isinstance(text, bytes):
+                    text = text.decode()
+                names.append(text)
+        else:
+            names = self.paknamlist
         return names
 
     def _unique_package_names(self):

@@ -161,7 +161,7 @@ class ZoneBudget(object):
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip() for n in
-                             self.cbc.get_unique_record_names()]
+                             self.cbc.get_unique_record_names(decode=True)]
 
         # Get imeth for each record in the CellBudgetFile record list
         self.imeth = {}
