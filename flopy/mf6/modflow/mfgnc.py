@@ -72,6 +72,10 @@ class ModflowGnc(mfpackage.MFPackage):
           node in CELLIDSJ. Note that if the number of actual contributing
           cells is less than NUMALPHAJ for any ghost node, then dummy CELLIDS
           should be inserted with an associated contributing factor of zero.
+          The sum of ALPHASJ should be less than one. This is because one minus
+          the sum of ALPHASJ is equal to the alpha term (alpha n in equation
+          4-61 of the GWF Model report) that is multiplied by the head in cell
+          n.
     fname : String
         File name for this package.
     pname : String
