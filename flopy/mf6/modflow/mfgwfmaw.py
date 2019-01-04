@@ -127,16 +127,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           equation that is used to calculate the saturated conductance for the
           multi-aquifer well. Possible multi-aquifer well CONDEQN strings
           include: SPECIFIED--character keyword to indicate the multi-aquifer
-          well saturated conductance will be specified. THEIM--character
+          well saturated conductance will be specified. THIEM--character
           keyword to indicate the multi-aquifer well saturated conductance will
-          be calculated using the Theim equation, which considers the cell top
+          be calculated using the Thiem equation, which considers the cell top
           and bottom, aquifer hydraulic conductivity, and effective cell and
           well radius. SKIN--character keyword to indicate that the multi-
           aquifer well saturated conductance will be calculated using the cell
           top and bottom, aquifer and screen hydraulic conductivity, and well
           and skin radius. CUMULATIVE--character keyword to indicate that the
           multi-aquifer well saturated conductance will be calculated using a
-          combination of the Theim and SKIN equations. MEAN--character keyword
+          combination of the Thiem and SKIN equations. MEAN--character keyword
           to indicate the multi-aquifer well saturated conductance will be
           calculated using the aquifer and screen top and bottom, aquifer and
           screen hydraulic conductivity, and well and skin radius.
@@ -177,27 +177,27 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           (DISU) input file, CELLID is the node number for the cell. One or
           more screened intervals can be connected to the same CELLID if
           CONDEQN for a well is MEAN. The program will terminate with an error
-          if MAW wells using SPECIFIED, THEIM, SKIN, or CUMULATIVE conductance
+          if MAW wells using SPECIFIED, THIEM, SKIN, or CUMULATIVE conductance
           equations have more than one connection to the same CELLID.
         * scrn_top (double) value that defines the top elevation of the screen
           for the multi-aquifer well connection. If the specified SCRN_TOP is
           greater than the top of the GWF cell it is set equal to the top of
-          the cell. SCRN_TOP can be any value if CONDEQN is SPECIFIED, THEIM,
+          the cell. SCRN_TOP can be any value if CONDEQN is SPECIFIED, THIEM,
           SKIN, or COMPOSITE and SCRN_TOP is set to the top of the cell.
         * scrn_bot (double) value that defines the bottom elevation of the
           screen for the multi-aquifer well connection. If the specified
           SCRN_BOT is less than the bottom of the GWF cell it is set equal to
           the bottom of the cell. SCRN_BOT can be any value if CONDEQN is
-          SPECIFIED, THEIM, SKIN, or COMPOSITE and SCRN_BOT is set to the
+          SPECIFIED, THIEM, SKIN, or COMPOSITE and SCRN_BOT is set to the
           bottom of the cell.
         * hk_skin (double) value that defines the skin (filter pack) hydraulic
           conductivity (if CONDEQN for the multi-aquifer well is SKIN,
           CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer
           well is SPECIFIED) for each GWF node connected to the multi-aquifer
-          well (NGWFNODES). HK_SKIN can be any value if CONDEQN is THEIM.
+          well (NGWFNODES). HK_SKIN can be any value if CONDEQN is THIEM.
         * radius_skin (double) real value that defines the skin radius (filter
           pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
-          if CONDEQN is SPECIFIED or THEIM. Otherwise, RADIUS_SKIN must be
+          if CONDEQN is SPECIFIED or THIEM. Otherwise, RADIUS_SKIN must be
           greater than RADIUS for the multi-aquifer well.
     perioddata : [wellno, mawsetting]
         * wellno (integer) integer value that defines the well number

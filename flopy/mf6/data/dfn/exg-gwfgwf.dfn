@@ -254,7 +254,7 @@ tagged false
 reader urword
 optional false
 longname connection distance
-description is the distance between the center of cell 1 and the its shared face with cell 2.
+description is the distance between the center of cell 2 and the its shared face with cell 1.
 
 block exchangedata
 name hwva
