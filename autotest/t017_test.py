@@ -1,10 +1,17 @@
 # Test binary and formatted data readers
+import os
+import shutil
 import numpy as np
+import flopy
 
+cpth = os.path.join('temp', 't017')
+# delete the directory if it exists
+if os.path.isdir(cpth):
+    shutil.rmtree(cpth)
+os.makedirs(cpth)
 
 def test_formattedfile_read():
-    import os
-    import flopy
+
     h = flopy.utils.FormattedHeadFile(
         os.path.join('..', 'examples', 'data', 'mf2005_test',
                      'test1tr.githds'))
@@ -31,8 +38,6 @@ def test_formattedfile_read():
 
 
 def test_binaryfile_read():
-    import os
-    import flopy
 
     h = flopy.utils.HeadFile(
         os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
@@ -59,8 +64,6 @@ def test_binaryfile_read():
 
 
 def test_cellbudgetfile_read():
-    import os
-    import flopy
 
     v = flopy.utils.CellBudgetFile(
         os.path.join('..', 'examples', 'data', 'mf2005_test', 'mnw1.gitcbc'))
@@ -83,9 +86,64 @@ def test_cellbudgetfile_read():
     return
 
 
+def test_cellbudgetfile_position():
+
+    fpth = os.path.join('..', 'examples', 'data', 'zonbud_examples',
+                        'freyberg.gitcbc')
+    v = flopy.utils.CellBudgetFile(fpth)
+    assert isinstance(v, flopy.utils.CellBudgetFile)
+
+    # starting position of data
+    idx = 8767
+    ipos = v.get_position(idx)
+    ival = 50235424
+    assert ipos == ival, 'position of index 8767 != {}'.format(ival)
+
+    ipos = v.get_position(idx, header=True)
+    ival = 50235372
+    assert ipos == ival, 'position of index 8767 header != {}'.format(ival)
+
+    cbcd = []
+    for i in range(idx, v.get_nrecords()):
+        cbcd.append(v.get_data(i)[0])
+
+    # write the last entry as a new binary file
+    fin = open(fpth, 'rb')
+    fin.seek(ipos)
+    length = os.path.getsize(fpth) - ipos
+
+    buffsize = 32
+    opth = os.path.join(cpth, 'end.cbc')
+    with open(opth, 'wb') as fout:
+        while length:
+            chunk = min(buffsize, length)
+            data = fin.read(chunk)
+            fout.write(data)
+            length -= chunk
+
+    v2 = flopy.utils.CellBudgetFile(opth, verbose=True)
+
+    try:
+        v2.list_records()
+    except:
+        assert False, 'could not list records on {}'.format(opth)
+
+    names = v2.get_unique_record_names()
+
+    cbcd2 = []
+    for i in range(0, v2.get_nrecords()):
+        cbcd2.append(v2.get_data(i)[0])
+
+    for i, (d1, d2) in enumerate(zip(cbcd, cbcd2)):
+        msg = '{} data from slice is not identical'.format(names[i].rstrip())
+        assert np.array_equal(d1, d2), msg
+
+    return
+
+
+
+
 def test_cellbudgetfile_readrecord():
-    import os
-    import flopy
 
     v = flopy.utils.CellBudgetFile(
         os.path.join('..', 'examples', 'data', 'mf2005_test',
@@ -117,9 +175,9 @@ def test_cellbudgetfile_readrecord():
 
     records = v.get_unique_record_names()
     for record in records:
-        indices = v.get_indices(text=record.decode().strip())
+        indices = v.get_indices(text=record.strip())
         for idx, kk in enumerate(kstpkper):
-            t0 = v.get_data(kstpkper=kk, text=record.decode().strip())[0]
+            t0 = v.get_data(kstpkper=kk, text=record.strip())[0]
             t1 = v.get_data(idx=indices[idx], text=record)[0]
             assert np.array_equal(t0, t1), \
                 'binary budget item {0} read using kstpkper != binary budget item {0} read using idx'.format(
@@ -129,8 +187,6 @@ def test_cellbudgetfile_readrecord():
 
 
 def test_cellbudgetfile_readrecord_waux():
-    import os
-    import flopy
 
     v = flopy.utils.CellBudgetFile(
         os.path.join('..', 'examples', 'data', 'mf2005_test',
@@ -161,9 +217,9 @@ def test_cellbudgetfile_readrecord_waux():
 
     records = v.get_unique_record_names()
     for record in records:
-        indices = v.get_indices(text=record.decode().strip())
+        indices = v.get_indices(text=record.strip())
         for idx, kk in enumerate(kstpkper):
-            t0 = v.get_data(kstpkper=kk, text=record.decode().strip())[0]
+            t0 = v.get_data(kstpkper=kk, text=record.strip())[0]
             t1 = v.get_data(idx=indices[idx], text=record)[0]
             assert np.array_equal(t0, t1), \
                 'binary budget item {0} read using kstpkper != binary budget item {0} read using idx'.format(
@@ -173,9 +229,7 @@ def test_cellbudgetfile_readrecord_waux():
 
 
 def test_binaryfile_writeread():
-    import os
-    import numpy as np
-    import flopy
+
     pth = os.path.join("..", "examples", "data", "nwt_test")
     model = 'Pr3_MFNWT_lower.nam'
     ml = flopy.modflow.Modflow.load(model, version='mfnwt', model_ws=pth)
@@ -235,6 +289,7 @@ def test_binaryfile_writeread():
 
 
 if __name__ == '__main__':
+    test_cellbudgetfile_position()
     test_binaryfile_writeread()
     test_formattedfile_read()
     test_binaryfile_read()
