@@ -463,14 +463,15 @@ class ModflowSfr2(Package):
     def dataset_5(self):
         """auto-update itmp so it is consistent with segment_data."""
         ds5 = self._dataset_5
+        nss = self.nss
         if ds5 is None:
             irdflag = self._get_flag('irdflag')
             iptflag = self._get_flag('iptflag')
-            ds5 = {0: [self.nss, irdflag[0], iptflag[0]]}
+            ds5 = {0: [nss, irdflag[0], iptflag[0]]}
             for per in range(1, self.nper):
                 sd = self.segment_data.get(per, None)
                 if sd is None:
-                    ds5[per] = [-self.nss, irdflag[per], iptflag[per]]
+                    ds5[per] = [-nss, irdflag[per], iptflag[per]]
                 else:
                     ds5[per] = [len(sd), irdflag[per], iptflag[per]]
         return ds5
