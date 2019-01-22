@@ -160,8 +160,8 @@ class ZoneBudget(object):
         self._iflow_recnames = self._get_internal_flow_record_names()
 
         # All record names in the cell-by-cell budget binary file
-        self.record_names = [n.strip().decode("utf-8") for n in
-                             self.cbc.get_unique_record_names()]
+        self.record_names = [n.strip() for n in
+                             self.cbc.get_unique_record_names(decode=True)]
 
         # Get imeth for each record in the CellBudgetFile record list
         self.imeth = {}

@@ -111,10 +111,11 @@ class ModflowGwfdis(mfpackage.MFPackage):
            ["block griddata", "name top", "type double precision", 
             "shape (ncol, nrow)", "reader readarray", "default_value 1.0"],
            ["block griddata", "name botm", "type double precision", 
-            "shape (ncol, nrow, nlay)", "reader readarray", 
+            "shape (ncol, nrow, nlay)", "reader readarray", "layered true", 
             "default_value 0."],
            ["block griddata", "name idomain", "type integer", 
-            "shape (ncol, nrow, nlay)", "reader readarray", "optional true"]]
+            "shape (ncol, nrow, nlay)", "reader readarray", "layered true", 
+            "optional true"]]
 
     def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None, nlay=1,

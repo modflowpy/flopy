@@ -2735,7 +2735,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
-                iprn = int(raw[3])
+                iprn = 0
+                if len(raw) >= 4:
+                    iprn = int(raw[3])
             elif raw[0].lower() == 'external':
                 if ext_unit_dict is not None:
                     try:
@@ -2750,7 +2752,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
-                iprn = int(raw[4])
+                iprn = 0
+                if len(raw) >= 5:
+                    iprn = int(raw[4])
             elif raw[0].lower() == 'open/close':
                 fname = raw[1].strip()
                 if isfloat:
@@ -2758,7 +2762,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
-                iprn = int(raw[4])
+                iprn = 0
+                if len(raw) >= 5:
+                    iprn = int(raw[4])
                 npl, fmt, width, decimal = None, None, None, None
         else:
             locat = np.int(line[0:10].strip())

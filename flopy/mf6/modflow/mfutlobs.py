@@ -80,7 +80,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block continuous", "name output", 
             "type record fileout obs_output_file_name binary", "shape", 
-            "block_variable true", "in_record = false", "reader urword", 
+            "block_variable true", "in_record false", "reader urword", 
             "optional false"],
            ["block continuous", "name fileout", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
