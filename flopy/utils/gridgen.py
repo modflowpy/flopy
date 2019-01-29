@@ -621,8 +621,8 @@ class Gridgen(object):
             if tpk.min() == tpk.max():
                 tpk = tpk.min()
             else:
-                tpk = Util2d(model, (1, nodelay[k]), np.float32,
-                             np.reshape(tpk, (1, nodelay[k])),
+                tpk = Util2d(model, (nodelay[k],), np.float32,
+                             np.reshape(tpk, (nodelay[k],)),
                              name='top {}'.format(k + 1))
             top[k] = tpk
 
@@ -638,8 +638,8 @@ class Gridgen(object):
             if btk.min() == btk.max():
                 btk = btk.min()
             else:
-                btk = Util2d(model, (1, nodelay[k]), np.float32,
-                             np.reshape(btk, (1, nodelay[k])),
+                btk = Util2d(model, (nodelay[k],), np.float32,
+                             np.reshape(btk, (nodelay[k],)),
                              name='bot {}'.format(k + 1))
             bot[k] = btk
 
@@ -657,8 +657,8 @@ class Gridgen(object):
             if ark.min() == ark.max():
                 ark = ark.min()
             else:
-                ark = Util2d(model, (1, nodelay[k]), np.float32,
-                             np.reshape(ark, (1, nodelay[k])),
+                ark = Util2d(model, (nodelay[k],), np.float32,
+                             np.reshape(ark, (nodelay[k],)),
                              name='area layer {}'.format(k + 1))
             area[k] = ark
             istart = istop
