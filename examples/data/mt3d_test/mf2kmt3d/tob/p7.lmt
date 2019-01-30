@@ -2,7 +2,7 @@
 # EXAMPLE INPUT DATA FILE FOR THE LINK-MT3DMS (LMT6) PACKAGE
 #
 # The capital letters are keywords that must not be altered except that
-# thet can appear in either uppercase or lowercase.
+# they can appear in either uppercase or lowercase.
 #
 # Assign any valid file name for the flow-transport link file
 # to be produced by the LMT Package. Leave the input blank to use the

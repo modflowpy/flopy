@@ -78,7 +78,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 	* apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
 	* any other analysis where a distribution of transmissivity is needed for a specified vertical interval of the model.
 
-+ An overview of utilties for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
++ An overview of utilities for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
 
 #### ***Export examples***
 

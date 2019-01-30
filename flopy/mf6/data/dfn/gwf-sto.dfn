@@ -78,7 +78,7 @@ valid
 reader urword
 optional true
 longname steady state indicator
-description keyword to indicate that stress-period IPER is steady-state. Steady-state conditions will apply until the TRANSIENT keyword is specified in a subsequent BEGIN PERIOD block.
+description keyword to indicate that stress period IPER is steady-state. Steady-state conditions will apply until the TRANSIENT keyword is specified in a subsequent BEGIN PERIOD block.
 
 block period
 name transient
@@ -88,5 +88,5 @@ valid
 reader urword
 optional true
 longname transient indicator
-description keyword to indicate that stress-period IPER is transient. Transient conditions will apply until the STEADY-STATE keyword is specified in a subsequent BEGIN PERIOD block.
+description keyword to indicate that stress period IPER is transient. Transient conditions will apply until the STEADY-STATE keyword is specified in a subsequent BEGIN PERIOD block.
 

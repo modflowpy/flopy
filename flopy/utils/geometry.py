@@ -23,7 +23,7 @@ class Polygon:
         ----------
         exterior : (x, y, z) coordinates of exterior
         interiors : tuple of (x, y, z) coordinates of each interior polygon
-        patch : descardes.PolygonPatch representation
+        patch : descartes.PolygonPatch representation
         bounds : (xmin, ymin, xmax, ymax)
             Tuple describing bounding box for polygon
         geojson : dict

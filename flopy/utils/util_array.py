@@ -970,7 +970,7 @@ class Transient3d(object):
         self.__value = value
         self.name_base = name
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         self.array_free_format = array_free_format
@@ -1204,7 +1204,7 @@ class Transient2d(object):
         self.__value = value
         self.name_base = name
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         self.array_free_format = array_free_format

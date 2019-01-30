@@ -151,7 +151,7 @@ class ModflowSwt(Package):
         by interbed system, vertical displacement, preconsolidation stress, change in
         preconsolidation stress, geostatic stress, change in geostatic stress, effective
         stress, void ration, thickness of compressible sediments, and layer-center
-        elecation will be printed. If ids16 is None and iswtoc>0 then print code 0
+        elevation will be printed. If ids16 is None and iswtoc>0 then print code 0
         will be used for all data which is output to the binary swtsidence output file
         (unit=1054). The 26 entries in ids16 correspond to ifm1, iun1, ifm2, iun2, ifm3,
         iun3, ifm4, iun4, ifm5, iun5, ifm6, iun6, ifm7, iun7, ifm8, iun8, ifm9,

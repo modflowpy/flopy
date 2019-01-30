@@ -48,7 +48,7 @@ def test_lkt_with_multispecies():
     
     ## Instantiate solver package for MODFLOW-NWT
     
-    # Newton-Rhapson Solver: Create a flopy nwt package object
+    # Newton-Raphson Solver: Create a flopy nwt package object
     
     headtol = 1.0E-4 
     fluxtol = 5      

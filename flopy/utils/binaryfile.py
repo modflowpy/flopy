@@ -1004,7 +1004,7 @@ class CellBudgetFile(object):
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
-            array, even for those list-style records writen as part of a
+            array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns
@@ -1236,7 +1236,7 @@ class CellBudgetFile(object):
             The zero-based record number.  The first record is record 0.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
-            array, even for those list-style records writen as part of a
+            array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns

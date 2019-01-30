@@ -1,5 +1,5 @@
 """
-Test postprocessing utilties
+Test postprocessing utilities
 """
 
 import sys

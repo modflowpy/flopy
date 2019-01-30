@@ -169,7 +169,7 @@ class ModflowGhb(Package):
     def ncells(self):
         """
         Returns the  maximum number of cells that have a ghb cell
-        (developped for MT3DMS SSM package)
+        (developed for MT3DMS SSM package)
         """
         return self.stress_period_data.mxact
 
@@ -206,7 +206,7 @@ class ModflowGhb(Package):
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recaray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowGhb.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)

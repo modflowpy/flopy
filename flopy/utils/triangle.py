@@ -16,7 +16,7 @@ class Triangle(object):
     model_ws : str
         workspace location for creating triangle files (default is '.')
     exe_name : str
-        path and name of the triangle program. (default is triange, which
+        path and name of the triangle program. (default is triangle, which
         means that the triangle program must be in your path)
     maximum_area : float
         the maximum area for any triangle.  The default value is None, which

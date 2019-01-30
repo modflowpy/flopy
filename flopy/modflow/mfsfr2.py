@@ -523,7 +523,7 @@ class ModflowSfr2(Package):
     @staticmethod
     def get_empty_reach_data(nreaches=0, aux_names=None, structured=True,
                              default_value=0.):
-        # get an empty recarray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowSfr2.get_default_reach_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
@@ -533,7 +533,7 @@ class ModflowSfr2(Package):
 
     @staticmethod
     def get_empty_segment_data(nsegments=0, aux_names=None, default_value=0.):
-        # get an empty recarray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowSfr2.get_default_segment_dtype()
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
@@ -707,7 +707,7 @@ class ModflowSfr2(Package):
         channel_geometry_data = {}
         channel_flow_data = {}
         dataset_5 = {}
-        aux_variables = {}  # not sure where the auxillary variables are supposed to go
+        aux_variables = {}  # not sure where the auxiliary variables are supposed to go
         for i in range(0, nper):
             # Dataset 5
             dataset_5[i] = _get_dataset(next(f), [1, 0, 0, 0])
@@ -716,7 +716,7 @@ class ModflowSfr2(Package):
                 # Item 6
                 current = ModflowSfr2.get_empty_segment_data(nsegments=itmp,
                                                              aux_names=option)
-                current_aux = {}  # container to hold any auxillary variables
+                current_aux = {}  # container to hold any auxiliary variables
                 current_6d = {}  # these could also be implemented as structured arrays with a column for segment number
                 current_6e = {}
                 #print(i,icalc,nstrm,isfropt,reachinput)
@@ -1104,7 +1104,7 @@ class ModflowSfr2(Package):
         self.reach_data['slope'] = slopes
 
     def get_upsegs(self):
-        """From segment_data, returns nested dict of all upstream segments by segemnt,
+        """From segment_data, returns nested dict of all upstream segments by segment,
         by stress period.
 
         Returns
@@ -1341,7 +1341,7 @@ class ModflowSfr2(Package):
         Returns
         -------
         headwaters : np.ndarray (1-D)
-            One dimmensional array listing all headwater segments.
+            One dimensional array listing all headwater segments.
         """
         upsegs = [self.segment_data[per].nseg[
                       self.segment_data[per].outseg == s].tolist()
@@ -1359,7 +1359,7 @@ class ModflowSfr2(Package):
             (e.g. hcond1 for hydraulic conductivity)
             For segments with icalc=2 (specified channel geometry); if width1 is given,
             the eigth distance point (XCPT8) from dataset 6d will be used as the stream width.
-            For icalc=3, an abitrary width of 5 is assigned.
+            For icalc=3, an arbitrary width of 5 is assigned.
             For icalc=4, the mean value for width given in item 6e is used.
         segvar2 : str
             Column/variable name in segment_data array for representing start of segment
@@ -1370,7 +1370,7 @@ class ModflowSfr2(Package):
         Returns
         -------
         reach_values : 1D array
-            One dimmensional array of interpolated values of same length as reach_data array.
+            One dimensional array of interpolated values of same length as reach_data array.
             For example, hcond1 and hcond2 could be entered as inputs to get values for the
             strhc1 (hydraulic conductivity) column in reach_data.
 
@@ -2170,7 +2170,7 @@ class check:
         passed = False
         if self.sfr.isfropt in [1, 2, 3]:
             if np.diff(self.reach_data.strtop).max() == 0:
-                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+                txt += 'isfropt setting of 1,2 or 3 requires strtop information!\n'
             else:
                 is_less = self.reach_data.strtop < min_strtop
                 if np.any(is_less):
@@ -2197,7 +2197,7 @@ class check:
         passed = False
         if self.sfr.isfropt in [1, 2, 3]:
             if np.diff(self.reach_data.strtop).max() == 0:
-                txt += 'isfropt setting of 1,2 or 3 requries strtop information!\n'
+                txt += 'isfropt setting of 1,2 or 3 requires strtop information!\n'
             else:
                 is_greater = self.reach_data.strtop > max_strtop
                 if np.any(is_greater):
@@ -2339,7 +2339,7 @@ class check:
             print(headertxt.strip())
         txt = ''
         if self.sfr.parent.dis is None:
-            txt += 'No DIS file supplied; cannot check SFR elevations agains model grid.'
+            txt += 'No DIS file supplied; cannot check SFR elevations against model grid.'
             self._txt_footer(headertxt, txt, '')
             return
         passed = False
@@ -2461,7 +2461,7 @@ class check:
         passed = False
         if self.sfr.isfropt in [1, 2, 3]:
             if np.diff(self.reach_data.slope).max() == 0:
-                txt += 'isfropt setting of 1,2 or 3 requries slope information!\n'
+                txt += 'isfropt setting of 1,2 or 3 requires slope information!\n'
             else:
                 is_less = self.reach_data.slope < minimum_slope
                 if np.any(is_less):
@@ -2488,7 +2488,7 @@ class check:
         passed = False
         if self.sfr.isfropt in [1, 2, 3]:
             if np.diff(self.reach_data.slope).max() == 0:
-                txt += 'isfropt setting of 1,2 or 3 requries slope information!\n'
+                txt += 'isfropt setting of 1,2 or 3 requires slope information!\n'
             else:
                 is_greater = self.reach_data.slope > maximum_slope
 
@@ -2530,7 +2530,7 @@ def _check_numbers(n, numbers, level=1, datatype='reach'):
         txt += 'Invalid {} numbering\n'.format(datatype)
         if level == 1:
             non_consecutive = np.append(np.diff(numbers) != 1,
-                                        False)  # consistent dimmension for boolean array
+                                        False)  # consistent dimension for boolean array
             gaps = num_range[non_consecutive] + 1
             if len(gaps) > 0:
                 gapstr = ' '.join(map(str, gaps))
@@ -2579,12 +2579,12 @@ def _get_dataset(line, dataset):
 
 
 def _get_duplicates(a):
-    """Returns duplcate values in an array, similar to pandas .duplicated() method
+    """Returns duplicate values in an array, similar to pandas .duplicated() method
     http://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
     """
     s = np.sort(a, axis=None)
     equal_to_previous_item = np.append(s[1:] == s[:-1],
-                                       False)  # maintain same dimmension for boolean array
+                                       False)  # maintain same dimension for boolean array
     return np.unique(s[equal_to_previous_item])
 
 
@@ -2745,7 +2745,7 @@ def _parse_1c(line, reachinput, transroute):
             weight = float(line.pop(0))
             flwtol = float(line.pop(0))
 
-    # auxillary variables (MODFLOW-LGR)
+    # auxiliary variables (MODFLOW-LGR)
     option = [line[i] for i in np.arange(1, len(line)) if
               'aux' in line[i - 1].lower()]
 
