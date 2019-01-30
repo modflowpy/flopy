@@ -585,8 +585,12 @@ class MFArray(mfdata.MFMultiDimVar):
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         di_struct = self.structure.data_item_structures[0]
         if not di_struct.just_data or mfdatautil.max_tuple_abs_size(layer) > 0:
-            arr_line = mfdatautil.ArrayUtil.\
-                split_data_line(file_handle.readline())
+            line = ' '
+            arr_line = []
+            while line != '' and len(arr_line) == 0:
+                line = file_handle.readline()
+                arr_line = mfdatautil.ArrayUtil.\
+                    split_data_line(line)
         layer_storage = storage.layer_storage[layer]
         # if constant
         if arr_line[0].upper() == 'CONSTANT':

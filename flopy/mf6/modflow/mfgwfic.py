@@ -43,7 +43,8 @@ class ModflowGwfic(mfpackage.MFPackage):
     dfn_file_name = "gwf-ic.dfn"
 
     dfn = [["block griddata", "name strt", "type double precision", 
-            "shape (nodes)", "reader readarray", "default_value 1.0"]]
+            "shape (nodes)", "reader readarray", "layered true", 
+            "default_value 1.0"]]
 
     def __init__(self, model, loading_package=False, strt=1.0, fname=None,
                  pname=None, parent_file=None):

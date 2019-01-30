@@ -25,7 +25,8 @@ class Mt3dRct(Package):
     ireact : int
         ireact is a flag indicating which type of kinetic rate reaction is
         simulated: ireact = 0, no kinetic rate reaction is simulated;
-        ireact = 1, first-order irreversible reaction. Note that this reaction
+        ireact = 1, first-order irreversible reaction, ireact = 100,
+        zero-order reactions (decay or production). Note that this reaction
         package is not intended for modeling chemical reactions between
         species. An add-on reaction package developed specifically for that
         purpose may be used. (default is 0).

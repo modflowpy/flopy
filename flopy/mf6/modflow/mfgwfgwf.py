@@ -116,8 +116,8 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           then the connection is horizontal for a vertically staggered grid.
         * cl1 (double) is the distance between the center of cell 1 and the its
           shared face with cell 2.
-        * cl2 (double) is the distance between the center of cell 1 and the its
-          shared face with cell 2.
+        * cl2 (double) is the distance between the center of cell 2 and the its
+          shared face with cell 1.
         * hwva (double) is the horizontal width of the flow connection between
           cell 1 and cell 2 if IHC :math:`>` 0, or it is the area perpendicular
           to flow of the vertical connection between cell 1 and cell 2 if IHC =
