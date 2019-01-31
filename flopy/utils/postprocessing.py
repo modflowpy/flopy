@@ -21,7 +21,7 @@ def get_transmissivities(heads, m,
     r : 1D array-like of ints, of length n locations
         row indices (optional; alternately specify x, y)
     c : 1D array-like of ints, of length n locations
-        column indicies (optional; alternately specify x, y)
+        column indices (optional; alternately specify x, y)
     x : 1D array-like of floats, of length n locations
         x locations in real world coordinates (optional)
     y : 1D array-like of floats, of length n locations

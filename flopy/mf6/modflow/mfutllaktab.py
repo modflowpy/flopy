@@ -20,7 +20,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         * nrow (integer) integer value specifying the number of rows in the
           lake table. There must be NROW rows of data in the TABLE block.
     ncol : integer
-        * ncol (integer) integer value specifying the number of colums in the
+        * ncol (integer) integer value specifying the number of columns in the
           lake table. There must be NCOL columns of data in the TABLE block.
           For lakes with HORIZONTAL and/or VERTICAL CTYPE connections, NCOL
           must be equal to 3. For lakes with EMBEDDEDH or EMBEDDEDV CTYPE

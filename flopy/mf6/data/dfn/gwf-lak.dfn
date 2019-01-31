@@ -333,7 +333,7 @@ description REPLACE boundname {'{#1}': 'lake'}
 block connectiondata
 name connectiondata
 type recarray lakeno iconn cellid claktype bedleak belev telev connlen connwidth
-shape (sum(nlakecon))
+shape (sum(nlakeconn))
 reader urword
 longname
 description
@@ -378,7 +378,7 @@ tagged false
 in_record true
 reader urword
 longname lake connection type
-description character string that defines the lake-GWF connection type for the lake connection. Possible lake-GWF connection type strings include:  VERTICAL--character keyword to indicate the lake-GWF connection is vertical  and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. HORIZONTAL--character keyword to indicate the lake-GWF connection is horizontal and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDH--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDV--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. Embedded lakes can only be connected to a single cell (NLAKCONN = 1) and there must be a lake table associated with each embedded lake.
+description character string that defines the lake-GWF connection type for the lake connection. Possible lake-GWF connection type strings include:  VERTICAL--character keyword to indicate the lake-GWF connection is vertical  and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. HORIZONTAL--character keyword to indicate the lake-GWF connection is horizontal and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDH--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{11}$ tensor component defined for CELLID in the NPF package. EMBEDDEDV--character keyword to indicate the lake-GWF connection is embedded in a single cell and connection conductance calculations use the hydraulic conductivity corresponding to the $K_{33}$ tensor component defined for CELLID in the NPF package. Embedded lakes can only be connected to a single cell (NLAKECONN = 1) and there must be a lake table associated with each embedded lake.
 
 block connectiondata
 name bedleak

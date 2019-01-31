@@ -35,7 +35,7 @@ class ModflowHyd(Package):
         is located may be a no-flow cell. (default is -999.)
     obsdata : list of lists, numpy array, or numpy recarray (nhyd, 7)
         Each row of obsdata includes data defining pckg (3 character string),
-        arr (2 characater string), intyp (1 character string) klay (int),
+        arr (2 character string), intyp (1 character string) klay (int),
         xl (float), yl (float), hydlbl (14 character string) for each observation.
 
         pckg : str
@@ -246,7 +246,7 @@ class ModflowHyd(Package):
 
     @staticmethod
     def get_empty(ncells=0):
-        # get an empty recaray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowHyd.get_default_dtype()
         return create_empty_recarray(ncells, dtype)
 

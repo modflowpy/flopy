@@ -50,7 +50,7 @@ class ModflowPbc(Package):
         self.parent.add_package(self)
 
     def ncells(self):
-        # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
+        # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         return self.mxactp
 
     def write_file(self):

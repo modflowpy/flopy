@@ -145,7 +145,7 @@ class FormattedLayerFile(LayerFile):
 
     def _store_record(self, header, ipos):
         """
-        Store file header information in various formats for quick retreival
+        Store file header information in various formats for quick retrieval
 
         """
         self.recordarray.append(header)
@@ -176,7 +176,7 @@ class FormattedLayerFile(LayerFile):
         current_row = 0
         current_col = 0
         result = np.empty((nrow, ncol), self.realtype)
-        # Loop until all data retreived or eof
+        # Loop until all data retrieved or eof
         while (
                 current_row < nrow or current_col < ncol) and self.file.tell() != self.totalbytes:
             line = self.file.readline()
@@ -207,7 +207,7 @@ class FormattedLayerFile(LayerFile):
         """
         current_col = 0
         result = None
-        # Loop until data retreived or eof
+        # Loop until data retrieved or eof
         while (
                 current_col < self.ncol - 1 or self.file.tell() == self.totalbytes) and current_col <= i:
             line = self.file.readline()

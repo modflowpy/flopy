@@ -23,7 +23,7 @@ class ModflowBcf(Package):
         (default is 53)
     intercellt : int
         Intercell transmissivities, harmonic mean (0), arithmetic mean (1),
-        logarithmetic mean (2), combination (3). (default is 0)
+        logarithmic mean (2), combination (3). (default is 0)
     laycon : int
         Layer type, confined (0), unconfined (1), constant T, variable S (2),
         variable T, variable S (default is 3)
@@ -39,7 +39,7 @@ class ModflowBcf(Package):
     iwetit : int
         iteration interval in wetting/drying algorithm (default is 1)
     ihdwet : int
-        flag to indicate how initial head is computd for cells that become
+        flag to indicate how initial head is computed for cells that become
         wet (default is 0)
     tran : float or array of floats (nlay, nrow, ncol), optional
         transmissivity (only read if laycon is 0 or 2) (default is 1.0)

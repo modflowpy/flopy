@@ -110,7 +110,7 @@ def test_compare2zonebudget(rtol=1e-2):
     return
 
 
-# def test_comare2mflist_mlt(rtol=1e-2):
+# def test_compare2mflist_mlt(rtol=1e-2):
 #
 #     loadpth = os.path.join('..', 'examples', 'data', 'zonbud_examples', 'freyberg_mlt')
 #
@@ -233,7 +233,7 @@ def test_get_model_shape():
 
 
 if __name__ == '__main__':
-    # test_comare2mflist_mlt()
+    # test_compare2mflist_mlt()
     test_compare2zonebudget()
     test_zonbud_aliases()
     test_zonbud_to_csv()

@@ -46,7 +46,7 @@ class MtListBudget(object):
 
         self.tssp_lines = 0
 
-        # Assign the budgetkey, which should have been overriden
+        # Assign the budgetkey, which should have been overridden
         self.gw_budget_key = ">>>for component no."
         line = 'STREAM MASS BUDGETS AT END OF TRANSPORT STEP'
         self.sw_budget_key = line.lower()
@@ -148,7 +148,7 @@ class MtListBudget(object):
             df_gw.index = df_gw.totim
         df_sw = None
         if len(self.sw_data) > 0:
-            # trim the lists so that they are all the same lenght
+            # trim the lists so that they are all the same length
             # in case of a read fail
             min_len = 1e+10
             for i, lst in self.sw_data.items():

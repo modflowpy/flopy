@@ -76,7 +76,7 @@ def test_gridgen():
         g.build()
 
         # test the different gridprops dictionaries, which contain all the
-        # information needed to make the different discretiztion packages
+        # information needed to make the different discretization packages
         gridprops = g.get_gridprops_disv()
         gridprops = g.get_gridprops()
         #gridprops = g.get_gridprops_disu6()
