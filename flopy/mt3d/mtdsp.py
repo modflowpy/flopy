@@ -77,7 +77,7 @@ class Mt3dDsp(Package):
     kwargs : dictionary
         If a multi-species simulation, then dmcoef values can be specified for
         other species as dmcoef2, dmcoef3, etc.  For example:
-        dmcoef1=1.e-10, dmcoef2=4.e-10, ...  If a value is not specifed, then
+        dmcoef1=1.e-10, dmcoef2=4.e-10, ...  If a value is not specified, then
         dmcoef is set to 0.0.
 
     Attributes

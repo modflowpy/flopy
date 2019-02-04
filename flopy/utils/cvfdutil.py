@@ -3,7 +3,7 @@ import numpy as np
 
 
 def area_of_polygon(x, y):
-    """Calculates the signed area of an arbitrary polygon given its verticies
+    """Calculates the signed area of an arbitrary polygon given its vertices
     http://stackoverflow.com/a/4682656/190597 (Joe Kington)
     http://softsurfer.com/Archive/algorithm_0101/algorithm_0101.htm#2D%20Polygons
     """

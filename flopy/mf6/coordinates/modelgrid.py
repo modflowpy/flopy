@@ -299,8 +299,8 @@ class ModelGrid(object):
     simulation_data : object
         contains all simulation related data
     grid_type : enumeration
-        type of model grid (DiscritizationType.DIS, DiscritizationType.DISV,
-        DiscritizationType.DISU)
+        type of model grid (DiscretizationType.DIS, DiscretizationType.DISV,
+        DiscretizationType.DISU)
 
     Methods
     ----------
@@ -310,7 +310,7 @@ class ModelGrid(object):
         returns True if the grid type is consistent with the current
         simulation data
     grid_connections_array : ()
-        for DiscritizationType.DISU grids, returns an array containing the
+        for DiscretizationType.DISU grids, returns an array containing the
         number of connections of it cell
     get_horizontal_cross_section_dim_arrays : ()
         returns a list of numpy ndarrays sized to the horizontal cross section
@@ -327,24 +327,24 @@ class ModelGrid(object):
         returns a numpy ndarray sized to a model layer
     get_horizontal_cross_section_dim_names : ()
         returns the appropriate dimension axis for a horizontal cross section
-        based on the model discritization type
+        based on the model discretization type
     get_model_dim_names : ()
         returns the names of the model dimensions based on the model
-        discritization type
+        discretization type
     get_num_spatial_coordinates : ()
         returns the number of spatial coordinates based on the model
-        discritization type
+        discretization type
     num_rows
-        returns the number of model rows.  model discritization type must be
+        returns the number of model rows.  model discretization type must be
         DIS
     num_columns
-        returns the number of model columns.  model discritization type must
+        returns the number of model columns.  model discretization type must
         be DIS
     num_connections
-        returns the number of model connections.  model discritization type
+        returns the number of model connections.  model discretization type
         must be DIS
     num_cells_per_layer
-        returns the number of cells per model layer.  model discritization
+        returns the number of cells per model layer.  model discretization
         type must be DIS or DISV
     num_layers
         returns the number of layers in the model
@@ -353,7 +353,7 @@ class ModelGrid(object):
     get_all_model_cells
         returns a list of all model cells, represented as a layer/row/column
         tuple, a layer/cellid tuple, or a cellid for the DIS, DISV, and DISU
-        discritizations, respectively
+        discretizations, respectively
 
     See Also
     --------
@@ -385,7 +385,7 @@ class ModelGrid(object):
             name of a model in the simulation
         Returns
         -------
-        grid type : DiscritizationType
+        grid type : DiscretizationType
         """
         package_recarray = simulation_data.mfdata[
             (model_name, 'nam', 'packages', 'packages')]
@@ -513,7 +513,7 @@ class ModelGrid(object):
     def change_grid_spacing(self, spacing_factor):
         self.test = 1
 
-    def change_discritization_type(self, new_dis_type):
+    def change_discretization_type(self, new_dis_type):
         self.test = 1
 
     def num_rows(self):
@@ -555,7 +555,7 @@ class ModelGrid(object):
                 (self._model_name, 'disv', 'dimensions', 'ncpl')].get_data()
         elif self.grid_type() == DiscretizationType.DISU:
             except_str = 'ERROR: Model "{}" is unstructured and does not ' \
-                         'have a consistant number of cells per ' \
+                         'have a consistent number of cells per ' \
                          'layer.'.format(self._model_name)
             print(except_str)
             raise MFGridException(except_str)

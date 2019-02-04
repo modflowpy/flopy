@@ -196,7 +196,7 @@ class ModflowHfb(Package):
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
         """
-        Get an empty recarray that correponds to hfb dtype and has
+        Get an empty recarray that corresponds to hfb dtype and has
         been extended to include aux variables and associated
         aux names.
 

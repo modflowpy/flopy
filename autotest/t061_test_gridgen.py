@@ -31,7 +31,7 @@ def test_gridgen():
     delr = Lx / ncol
     delc = Ly / nrow
     top = 400
-    botm = [220, 200, 0]
+    botm = [220, 200, np.random.random((nrow, ncol))]
 
     # create a dummy dis package for gridgen
     ms = flopy.modflow.Modflow()
@@ -76,7 +76,7 @@ def test_gridgen():
         g.build()
 
         # test the different gridprops dictionaries, which contain all the
-        # information needed to make the different discretiztion packages
+        # information needed to make the different discretization packages
         gridprops = g.get_gridprops_disv()
         gridprops = g.get_gridprops()
         #gridprops = g.get_gridprops_disu6()
@@ -99,6 +99,9 @@ def test_gridgen():
                'cells {} <> {}'.format(nlist, nlist2))
         assert nlist == nlist2, msg
 
+        # test getting a modflow-usg disu package
+        mu = flopy.modflow.Modflow(version='mfusg', structured=False)
+        disu = g.get_disu(mu)
 
     return
 

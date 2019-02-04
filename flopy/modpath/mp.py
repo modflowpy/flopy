@@ -169,7 +169,7 @@ class Modpath(BaseModel):
              are 'endpoint', 'pathline', and 'timeseries'.
              (default is 'PATHLINE')
         trackdir : str
-            Keywork that defines the MODPATH particle tracking direction.
+            Keyword that defines the MODPATH particle tracking direction.
             Available trackdir's are 'backward' and 'forward'.
             (default is 'forward')
         packages : str or list of strings

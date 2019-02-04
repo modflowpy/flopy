@@ -33,7 +33,7 @@ name output
 type record fileout obs_output_file_name binary
 shape
 block_variable true
-in_record = false
+in_record false
 reader urword
 optional false
 longname

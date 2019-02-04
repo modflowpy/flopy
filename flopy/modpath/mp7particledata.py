@@ -455,7 +455,7 @@ class FaceDataType(object):
     rowdivisions5 : int
         The number of row subdivisions that define the two-dimensional array
         of particles on the bottom cell face (face 5) (default is 3).
-    columndivisons5 : int
+    columndivisions5 : int
         The number of column subdivisions that define the two-dimensional array
         of particles on the bottom cell face (face 5) (default is 3).
     rowdivisions6 : int
@@ -478,7 +478,7 @@ class FaceDataType(object):
                  verticaldivisions2=3, horizontaldivisions2=3,
                  verticaldivisions3=3, horizontaldivisions3=3,
                  verticaldivisions4=3, horizontaldivisions4=3,
-                 rowdivisions5=3, columndivisons5=3,
+                 rowdivisions5=3, columndivisions5=3,
                  rowdivisions6=3, columndivisions6=3):
         """
         Class constructor
@@ -498,7 +498,7 @@ class FaceDataType(object):
         self.verticaldivisions4 = verticaldivisions4
         self.horizontaldivisions4 = horizontaldivisions4
         self.rowdivisions5 = rowdivisions5
-        self.columndivisons5 = columndivisons5
+        self.columndivisions5 = columndivisions5
         self.rowdivisions6 = rowdivisions6
         self.columndivisions6 = columndivisions6
         return
@@ -528,7 +528,7 @@ class FaceDataType(object):
                           self.verticaldivisions2, self.horizontaldivisions2,
                           self.verticaldivisions3, self.horizontaldivisions3,
                           self.verticaldivisions4, self.horizontaldivisions4,
-                          self.rowdivisions5, self.columndivisons5,
+                          self.rowdivisions5, self.columndivisions5,
                           self.rowdivisions6, self.columndivisions6)
         f.write(line)
 
@@ -557,7 +557,7 @@ class CellDataType(object):
         Number of particles in a cell in the row (y-coordinate)
         direction (default is 3).
     layercelldivisions : int
-        Number of oarticles in a cell in the layer (z-coordinate)
+        Number of particles in a cell in the layer (z-coordinate)
         direction (default is 3).
 
     Examples

@@ -161,7 +161,7 @@ def update_version():
             "__build__ = '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)\n")
         f.write("__git_commit__ = '{:d}'.format(commit)\n")
         f.close()
-        print('Succesfully updated version.py')
+        print('Successfully updated version.py')
     except:
         print('There was a problem updating the version file')
         sys.exit(1)

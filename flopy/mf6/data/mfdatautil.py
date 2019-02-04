@@ -132,7 +132,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
         data_struct, data_dimensions = self._get_data_dimensions(model)
         datum_type = data_struct.get_datum_type()
         data_type = data_struct.get_datatype()
-        # build a temporary data storge object
+        # build a temporary data storage object
         data_storage = mfdata.DataStorage(
                 model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
@@ -268,7 +268,7 @@ class ListTemplateGenerator(TemplateGenerator):
 
         data_struct, data_dimensions = self._get_data_dimensions(model)
         data_type = data_struct.get_datatype()
-        # build a temporary data storge object
+        # build a temporary data storage object
         data_storage = mfdata.DataStorage(
                 model.simulation_data, data_dimensions, None,
                 mfdata.DataStorageType.internal_array,
@@ -290,7 +290,7 @@ class ListTemplateGenerator(TemplateGenerator):
             for index in range(0, len(type_list)):
                 type_list[index] = (type_list[index][0], object)
 
-        # build rec array
+        # build recarray
         template_data = self._build_template_data(type_list)
         rec_array_data = []
         if maxbound is not None:
@@ -366,7 +366,7 @@ class ArrayUtil(object):
         compares two lists, returns true if they are identical (with max_error)
     spilt_data_line : (line : string) : list
         splits a string apart (using split) and then cleans up the results
-        dealing with various MODFLOW input file releated delimiters.  returns
+        dealing with various MODFLOW input file related delimiters.  returns
         the delimiter type used.
     clean_numeric : (text : string) : string
         returns a cleaned up version of 'text' with only numeric characters
@@ -506,7 +506,7 @@ class ArrayUtil(object):
         else:
             clean_line = line.strip().split()
             if external_file:
-                # try lots of different delimitiers for external files and use the
+                # try lots of different delimiters for external files and use the
                 # one the breaks the data apart the most
                 max_split_size = len(clean_line)
                 max_split_type = None

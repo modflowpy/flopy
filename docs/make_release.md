@@ -97,7 +97,7 @@ Instructions for making a FloPy release
 
     from a terminal.
 
-3.  Pull upsteam [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock) into local copy of the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) repo:
+3.  Pull upstream [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock) into local copy of the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) repo:
 
     ```
     cd /Users/jdhughes/Documents/Development/flopy-feedstock_git

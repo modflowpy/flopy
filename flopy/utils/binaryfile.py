@@ -555,6 +555,7 @@ class CellBudgetFile(object):
         self.times = []
         self.kstpkper = []
         self.recordarray = []
+        self.iposheader = []
         self.iposarray = []
         self.textlist = []
         self.imethlist = []
@@ -647,6 +648,7 @@ class CellBudgetFile(object):
         self.recorddict = OrderedDict()
         ipos = 0
         while ipos < self.totalbytes:
+            self.iposheader.append(ipos)
             header = self._get_header()
             self.nrecords += 1
             totim = header['totim']
@@ -693,6 +695,7 @@ class CellBudgetFile(object):
 
         # convert to numpy arrays
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
+        self.iposheader = np.array(self.iposheader, dtype=np.int64)
         self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nper = self.recordarray["kper"].max()
         return
@@ -851,29 +854,55 @@ class CellBudgetFile(object):
             print(rec)
         return
 
-    def get_unique_record_names(self):
+    def get_unique_record_names(self, decode=False):
         """
         Get a list of unique record names in the file
 
+        Parameters
+        ----------
+        decode : bool
+            Optional boolean used to decode byte strings (default is False).
+
         Returns
         ----------
-        out : list of strings
+        names : list of strings
             List of unique text names in the binary file.
 
         """
-        return self.textlist
+        if decode:
+            names = []
+            for text in self.textlist:
+                if isinstance(text, bytes):
+                    text = text.decode()
+                names.append(text)
+        else:
+            names = self.textlist
+        return names
 
-    def get_unique_package_names(self):
+    def get_unique_package_names(self, decode=False):
         """
         Get a list of unique package names in the file
 
+        Parameters
+        ----------
+        decode : bool
+            Optional boolean used to decode byte strings (default is False).
+
         Returns
         ----------
-        out : list of strings
+        names : list of strings
             List of unique package names in the binary file.
 
         """
-        return self.paknamlist
+        if decode:
+            names = []
+            for text in self.paknamlist:
+                if isinstance(text, bytes):
+                    text = text.decode()
+                names.append(text)
+        else:
+            names = self.paknamlist
+        return names
 
     def _unique_package_names(self):
         """
@@ -907,6 +936,12 @@ class CellBudgetFile(object):
         """
         Get a list of indices for a selected record name
 
+        Parameters
+        ----------
+        text : str
+            The text identifier for the record.  Examples include
+            'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
+
         Returns
         ----------
         out : tuple
@@ -923,10 +958,37 @@ class CellBudgetFile(object):
             select_indices = None
         return select_indices
 
+    def get_position(self, idx, header=False):
+        """
+        Get the starting position of the data or header for a specified record
+        number in the binary budget file.
+
+        Parameters
+        ----------
+        idx : int
+            The zero-based record number.  The first record is record 0.
+        header : bool
+            If True, the position of the start of the header data is returned.
+            If False, the position of the start of the data is returned
+            (default is False).
+
+        Returns
+        -------
+        ipos : int64
+            The position of the start of the data in the cell budget file
+            or the start of the header.
+
+        """
+        if header:
+            ipos = self.iposheader[idx]
+        else:
+            ipos = self.iposarray[idx]
+        return ipos
+
     def get_data(self, idx=None, kstpkper=None, totim=None, text=None,
                  paknam=None, full3D=False):
         """
-        get data from the budget file.
+        Get data from the binary budget file.
 
         Parameters
         ----------
@@ -942,7 +1004,7 @@ class CellBudgetFile(object):
             'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
-            array, even for those list-style records writen as part of a
+            array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns
@@ -1174,7 +1236,7 @@ class CellBudgetFile(object):
             The zero-based record number.  The first record is record 0.
         full3D : boolean
             If true, then return the record as a three dimensional numpy
-            array, even for those list-style records writen as part of a
+            array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
 
         Returns

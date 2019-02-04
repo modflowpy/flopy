@@ -108,7 +108,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           has a default value of 7 and can be increased to lower mass balance
           error in the unsaturated zone.
     nwavesets : integer
-        * nwavesets (integer) is the number of UZF cells specified. NWAVSETS
+        * nwavesets (integer) is the number of UZF cells specified. NWAVESETS
           has a default value of 40 and can be increased if more waves are
           required to resolve variations in water content within the
           unsaturated zone.

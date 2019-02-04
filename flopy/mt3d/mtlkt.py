@@ -57,7 +57,7 @@ class Mt3dLkt(Package):
                the LAK input via the RNF variable appearing in record set 9a 
                and want to assign a non-zero concentration (default is zero) 
                associated with this specified source, use ISFBCTYP=2;
-           3   a Pump boundary condition.  Users who specify a withdrawl
+           3   a Pump boundary condition.  Users who specify a withdrawal
                from a lake via the WTHDRW variable appearing in record set 9a 
                and want to assign a non-zero concentration (default is zero) 
                associated with this specified source, use ISFBCTYP=2;
@@ -239,7 +239,7 @@ class Mt3dLkt(Package):
 
             # List of concentrations associated with fluxes in/out of lake
             # (Evap, precip, specified runoff into the lake, specified
-            # withdrawl directly from the lake
+            # withdrawal directly from the lake
             if self.lk_stress_period_data is not None:
                 self.lk_stress_period_data.write_transient(f_lkt,
                                                            single_per=kper)

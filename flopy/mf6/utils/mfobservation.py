@@ -57,7 +57,7 @@ class Observations:
         parameters:
         -----------
         text = (str) specific modflow record name contained in Obs.out file
-        idx = (int), (slice(start, stop)) interger or slice of data to be
+        idx = (int), (slice(start, stop)) integer or slice of data to be
         returned. corresponds to kstp*kper - 1
         totim = (float) model time value to return data from
         
@@ -179,7 +179,7 @@ class Observations:
 
         Parameters
         ----------
-        keys: (string) sting of dictionary/observation keys seperated by comma.
+        keys: (string) sting of dictionary/observation keys separated by comma.
               (optional)
         idx: (int) time index location (optional)
         totim: (float) simulation time (optional)
@@ -270,7 +270,7 @@ class Observations:
         elif key_type is list:
             pass
         else:
-            err = 'Invalid key type: supply a strg of keys seperated by , ' \
+            err = 'Invalid key type: supply a string of keys separated by , ' \
                   'or a list of keys'
             raise TypeError(err)
         return keys
@@ -433,7 +433,7 @@ class MFObservationRequester:
         ----------
         partial_key: (list) partial dictionary key
         OBS8: (string) OBS8 mfdict key name
-        obstype: (string) SINGLE or CONTINUOS
+        obstype: (string) SINGLE or CONTINUOUS
 
         Returns:
         --------

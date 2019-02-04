@@ -255,7 +255,7 @@ class SpatialReference(object):
                 import pyproj
 
                 crs = pyproj.Proj(self.proj4_str,
-                                  preseve_units=True,
+                                  preserve_units=True,
                                   errcheck=True)
                 proj_str = crs.srs
             else:
@@ -997,9 +997,9 @@ class SpatialReference(object):
         ----------
         filename : str
             Path of output file. Export format is determined by
-            file extention.
+            file extension.
             '.asc'  Arc Ascii grid
-            '.tif'  GeoTIFF (requries rasterio package)
+            '.tif'  GeoTIFF (requires rasterio package)
             '.shp'  Shapefile
         a : 2D numpy.ndarray
             Array to export
@@ -1184,7 +1184,7 @@ class SpatialReference(object):
         Parameters
         ----------
         filename : str
-            Path of output file with '.shp' extention.
+            Path of output file with '.shp' extension.
         a : 2D numpy array
             Array to contour
         epsg : int
@@ -1929,12 +1929,12 @@ class crs(object):
 
     @property
     def crs(self):
-        """Dict mapping crs attibutes to proj4 parameters"""
+        """Dict mapping crs attributes to proj4 parameters"""
         proj = None
         if self.projcs is not None:
             # projection
             if 'mercator' in self.projcs.lower():
-                if 'transvers' in self.projcs.lower() or \
+                if 'transverse' in self.projcs.lower() or \
                         'tm' in self.projcs.lower():
                     proj = 'tmerc'
                 else:
@@ -1964,11 +1964,11 @@ class crs(object):
             datum = 'wgs84'
 
         # ellipse
-        if '1866' in self.spheriod_name:
+        if '1866' in self.spheroid_name:
             ellps = 'clrk66'
-        elif 'grs' in self.spheriod_name.lower():
+        elif 'grs' in self.spheroid_name.lower():
             ellps = 'grs80'
-        elif 'wgs' in self.spheriod_name.lower():
+        elif 'wgs' in self.spheroid_name.lower():
             ellps = 'wgs84'
 
         # prime meridian
@@ -2034,7 +2034,7 @@ class crs(object):
         self.geogcs = self._gettxt('GEOGCS["', '"')
         self.datum = self._gettxt('DATUM["', '"')
         tmp = self._getgcsparam('SPHEROID')
-        self.spheriod_name = tmp.pop(0)
+        self.spheroid_name = tmp.pop(0)
         self.semi_major_axis = tmp.pop(0)
         self.inverse_flattening = tmp.pop(0)
         self.primem = self._getgcsparam('PRIMEM')

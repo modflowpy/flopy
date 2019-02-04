@@ -74,8 +74,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           Package can be used with the Water Mover (MVR) Package. When the
           MOVER option is specified, additional memory is allocated within the
           package to store the available, provided, and received water.
-    maximum_iterations : double
-        * maximum_iterations (double) value that defines an maximum number of
+    maximum_iterations : integer
+        * maximum_iterations (integer) value that defines the maximum number of
           Streamflow Routing Newton-Raphson iterations allowed for a reach. By
           default, MAXSFRIT is equal to 100.
     maximum_depth_change : double
@@ -267,16 +267,26 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   evaporation rate should be provided. If the Options block
                   includes a TIMESERIESFILE entry (see the "Time-Variable
                   Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, evaporation rates are zero for each reach.
+                  entering the time-series name in place of a numeric value. If
+                  the volumetric evaporation rate for a reach exceeds the
+                  sources of water to the reach (upstream and specified
+                  inflows, rainfall, and runoff but excluding groundwater
+                  leakage into the reach) the volumetric evaporation rate is
+                  limited to the sources of water to the reach. By default,
+                  evaporation rates are zero for each reach.
             runoff : [string]
                 * runoff (string) real or character value that defines the
                   volumetric rate of diffuse overland runoff that enters the
                   streamflow routing reach. If the Options block includes a
                   TIMESERIESFILE entry (see the "Time-Variable Input" section),
                   values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. By default,
-                  runoff rates are zero for each reach.
+                  time-series name in place of a numeric value. If the
+                  volumetric runoff rate for a reach is negative and exceeds
+                  inflows to the reach (upstream and specified inflows, and
+                  rainfall but excluding groundwater leakage into the reach)
+                  the volumetric runoff rate is limited to inflows to the reach
+                  and the volumetric evaporation rate for the reach is set to
+                  zero. By default, runoff rates are zero for each reach.
             diversionrecord : [idv, divrate]
                 * idv (integer) diversion number.
                 * divrate (double) real or character value that defines the
@@ -391,8 +401,8 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "reader urword", "optional false"],
            ["block options", "name mover", "type keyword", "tagged true", 
             "reader urword", "optional true"],
-           ["block options", "name maximum_iterations", 
-            "type double precision", "reader urword", "optional true"],
+           ["block options", "name maximum_iterations", "type integer", 
+            "reader urword", "optional true"],
            ["block options", "name maximum_depth_change", 
             "type double precision", "reader urword", "optional true"],
            ["block options", "name unit_conversion", 

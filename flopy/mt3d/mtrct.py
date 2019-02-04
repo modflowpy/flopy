@@ -44,7 +44,7 @@ class Mt3dRct(Package):
     rhob : float or array of floats (nlay, nrow, ncol)
         rhob is the bulk density of the aquifer medium (unit, ML-3). rhob is
         used if isothm = 1, 2, 3, 4, or 6. If rhob is not user-specified and
-        isothem is not 5 then rhob is set to 1.8e3. (default is None)
+        isothm is not 5 then rhob is set to 1.8e3. (default is None)
     prsity2 : float or array of floats (nlay, nrow, ncol)
         prsity2 is the porosity of the immobile domain (the ratio of pore
         spaces filled with immobile fluids over the bulk volume of the aquifer
