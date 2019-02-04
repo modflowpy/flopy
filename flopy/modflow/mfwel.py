@@ -113,10 +113,11 @@ class ModflowWel(Package):
     _options = OrderedDict([('specify', {OptionBlock.dtype: np.bool_,
                                          OptionBlock.nested: True,
                                          OptionBlock.n_nested: 2,
-                                         "vars": OrderedDict([('phiramp',
-                                                               OptionBlock.simple_float),
-                                                              ('iunitramp',
-                                                               OptionBlock.simple_int)])}),
+                                         OptionBlock.vars: OrderedDict(
+                                             [('phiramp',
+                                               OptionBlock.simple_float),
+                                              ('iunitramp',
+                                               OptionBlock.simple_int)])}),
                             ('tabfiles', OptionBlock.simple_tabfile)])
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
