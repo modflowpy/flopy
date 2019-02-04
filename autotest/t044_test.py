@@ -108,3 +108,4 @@ if __name__ == '__main__':
     #for namfile, pth in zip(mf_items, pths):
     #    load_and_write_pcgn(namfile, pth)
     load_and_write_pcgn(mf_items[1],pths[1] )
+    # test_mf2005pcgnload()

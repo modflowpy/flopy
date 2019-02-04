@@ -10,7 +10,7 @@ MODFLOW Guide
 
 import sys
 import numpy as np
-from ..utils.flopy_io import pop_item, line_parse, read_nwt_options
+from ..utils.flopy_io import pop_item, line_parse
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d
 from ..utils.optionblock import OptionBlock
@@ -342,7 +342,6 @@ class ModflowUzf1(Package):
                  uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None, options=None):
 
-        # todo: deprecate the nwt_11_option flag
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowUzf1.defaultunit()
@@ -434,7 +433,7 @@ class ModflowUzf1(Package):
             warnings.warn("nwt_11_fmt has been deprecated,"
                           " and will be removed in the next release"
                           " please provide a flopy.utils.OptionBlock object"
-                          " to the options argument",DeprecationWarning)
+                          " to the options argument", DeprecationWarning)
         self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = specifythtr
         self.specifythti = specifythti

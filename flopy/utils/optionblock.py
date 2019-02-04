@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import numpy as np
+from ..utils import flopy_io
 
 
 class OptionBlock(object):
@@ -344,7 +345,8 @@ class OptionBlock(object):
 
         option_line = ""
         while True:
-            line = OptionUtil.prep_line(options.readline())
+            line = flopy_io.line_strip(options.readline())
+            line = line.lower()
             if not line:
                 continue
 
@@ -383,30 +385,6 @@ class OptionBlock(object):
 
 
 class OptionUtil(object):
-
-    @staticmethod
-    def prep_line(line):
-        """
-        Method to prepare a line for later data processing
-        by removing comments and other formatting functions.
-        Necessary for comment lines and empty lines.
-
-        Parameters
-        ----------
-        line : str
-
-        Returns
-        -------
-        s : str
-
-        """
-        s = ""
-        for i in line.strip().lower():
-            if i in ("#", "!", ";"):
-                return s
-            else:
-                s += i
-        return s
 
     @staticmethod
     def isfloat(s):

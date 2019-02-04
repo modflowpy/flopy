@@ -195,8 +195,6 @@ class ModflowWel(Package):
                     self.options.pop(idx)
                     break
 
-        #self.parent.add_package(self)
-
         if dtype is not None:
             self.dtype = dtype
         else:
