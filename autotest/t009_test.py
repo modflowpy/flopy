@@ -449,8 +449,8 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    #test_sfr()
-    test_sfr_renumbering()
+    test_sfr()
+    # test_sfr_renumbering()
     #test_example()
     #test_export()
     #test_transient_example()

@@ -1617,37 +1617,12 @@ class ModflowSfr2(Package):
         if isinstance(self.options, OptionBlock) and self.parent.version == "mfnwt":
             self.options.update_from_package(self)
             self.options.write_options(f_sfr)
+        elif isinstance(self.options, OptionBlock):
+            self.options.update_from_package(self)
+            self.options.block = False
+            self.options.write_options(f_sfr)
         else:
-            if self.reachinput:
-                """
-                When REACHINPUT is specified, variable ISFROPT is read in data set 1c.
-                ISFROPT can be used to change the default format for entering reach and segment data
-                or to specify that unsaturated flow beneath streams will be simulated.
-                """
-                f_sfr.write('reachinput ')
-            if self.transroute:
-                """When TRANSROUTE is specified, optional variables IRTFLG, NUMTIM, WEIGHT, and FLWTOL
-                also must be specified in Item 1c.
-                """
-                f_sfr.write('transroute')
-            if self.transroute or self.reachinput:
-                f_sfr.write('\n')
-            if self.tabfiles:
-                """
-                tabfiles
-                An optional character variable that is a flag to indicate that inflows to one or more stream
-                segments will be specified with tabular inflow files.
-                numtab
-                An integer value equal to the number of tabular inflow files that will be read if TABFILES
-                is specified. A separate input file is required for each segment that receives specified inflow.
-                Thus, the maximum value of NUMTAB that can be specified is equal to the total number of
-                segments specified in Item 1c with variables NSS. The name (Fname) and unit number (Nunit)
-                of each tabular file must be specified in the MODFLOW-2005 Name File using tile type (Ftype) DATA.
-                maxval
-    
-                """
-                f_sfr.write(
-                    '{} {} {}\n'.format(self.tabfiles, self.numtab, self.maxval))
+            pass
 
         self._write_1c(f_sfr)
 
