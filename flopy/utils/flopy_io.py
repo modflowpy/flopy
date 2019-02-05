@@ -139,7 +139,6 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
     out += '\n'
     return out
 
-
 def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
     """
     Parse a fixed format line using user provided data
@@ -193,7 +192,6 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
                 break
             istart = istop
     return out
-
 
 def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     """
@@ -254,7 +252,6 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
 
     wel = ModflowWel(model,stress_period_data=sp_data)
     return wel
-
 
 def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
             **kwargs):

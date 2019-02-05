@@ -58,7 +58,7 @@ def test_create():
                                     nuztop=1, iuzfopt=1, irunflg=1, ietflg=1,
                                     ipakcb=0,
                                     iuzfcb2=61,
-                                    # binary output of recharge and groundwater dischargepytho
+                                    # binary output of recharge and groundwater discharge
                                     ntrail2=25, nsets=20,
                                     surfdep=1.0, uzgag=uzgag,
                                     iuzfbnd=m.bas6.ibound.array,
@@ -463,8 +463,8 @@ def test_load_write_wel_option_line():
 
 
 if __name__ == '__main__':
-    # test_create()
-    # test_load_and_write()
+    test_create()
+    test_load_and_write()
     test_read_write_nwt_options()
     test_load_write_sfr_option_block()
     test_load_write_sfr_option_line()
