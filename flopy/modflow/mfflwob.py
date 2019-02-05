@@ -414,10 +414,10 @@ class ModflowFlwob(Package):
 
         nqobfb = np.zeros(nqfb, dtype=np.int32)
         nqclfb = np.zeros(nqfb, dtype=np.int32)
-        obsnam = np.empty(nqtfb, dtype=object)
-        irefsp = np.zeros(nqtfb, dtype=np.int32)
-        toffset = np.zeros(nqtfb, dtype=np.float32)
-        flwobs = np.zeros(nqtfb, dtype=np.float32)
+        obsnam = []
+        irefsp = []
+        toffset = []
+        flwobs = []
 
         layer = []
         row = []
@@ -440,10 +440,10 @@ class ModflowFlwob(Package):
             while True:
                 line = f.readline()
                 t = line.strip().split()
-                obsnam[nobs + ntimes] = t[0]
-                irefsp[nobs + ntimes] = int(t[1])
-                toffset[nobs + ntimes] = float(t[2])
-                flwobs[nobs + ntimes] = float(t[3])
+                obsnam.append(t[0])
+                irefsp.append(int(t[1]))
+                toffset.append(float(t[2]))
+                flwobs.append(float(t[3]))
                 ntimes += 1
                 if ntimes == nqobfb[nobs]:
                     break
