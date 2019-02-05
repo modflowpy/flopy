@@ -1,5 +1,14 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.11
+* Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
+* Added a new flopy3_MT3DMS_examples notebook, which uses Flopy to reproduce the example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
+* Pylint is now used on Travis for the Python 3.5 distribution to check for coding errors.
+* Added a new htop argument to the vtk writer, which allows cell tops to be defined by the simulated head.
+
+* Bug fixes:
+    * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
+
 ### Version 3.2.10
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
 * MODFLOW 6 model and simulation packages can not be retrieved as a `MFSimulation` attribute
@@ -31,7 +40,7 @@ FloPy Changes
     * Fixed bug in `mfsfr.py` when writing kinematic data (`irtflg >0`).
     * Fixed issue from change in MODFLOW 6 `inspect.getargspec()` method (for getting method arguments).
     * Fixed MODFLOW 6 BINARY keyword for reading binary data from a file using  `OPEN/CLOSE` (needs parentheses around it).
-    * Fixed bug in `mtlkt.py` when instatiating, loading, and/or writing lkt input file related to multi-species problems.
+    * Fixed bug in `mtlkt.py` when initiating, loading, and/or writing lkt input file related to multi-species problems.
 
 
 ### Version 3.2.9
@@ -77,11 +86,11 @@ FloPy Changes
 * Added support for FORTRAN free format array data using n*value where n is the number of times value is repeated.
 * Added support for comma separators in 1D data in LPF and UPF files
 * Added support for comma separators on non array data lines in DIS, BCF, LPF, UPW, HFB, and RCH Packages.
-* Added `.reset_budgetunit()` method to OC package to faciltate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
+* Added `.reset_budgetunit()` method to OC package to facilitate saving cell-by-cell binary output to a single file for all packages that can save cell-by-cell output.
 * Added a `.get_residual()` method to the `CellBudgetFile` class.
 * Added support for binary stress period files (`OPEN/CLOSE filename (BINARY)`) in `wel` stress packages on load and instantiation. Will extend to other list-based MODFLOW stress packages.
 * Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `.get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
-* Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complient metadata for NetCDF export
+* Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complaint metadata for NetCDF export
 * Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported (for example, `package.stress_period_data.export('stuff.shp', sparse=True)`)
 * Added additional SFR2 package functionality: 
 	*  `.export_linkages()` and `.export_outlets()` methods to export routing linkages and outlets
@@ -168,7 +177,7 @@ FloPy Changes
 * Added support for LAK and GAGE packages - full load and write functionality supported.
 * Added support for MNW2 package. Load and write of .mnw2 package files supported. Support for .mnwi, or the results files (.qsu, .byn) not yet implemented.
 * Improved support for changing the output format of arrays and variables written to MODFLOW input files. 
-* Restructued SEAWAT support so that packages can be added directly to the SEAWAT model, in addition to the approach of adding a modflow model and a mt3d model.  Can now load a SEAWAT model.
+* Restructured SEAWAT support so that packages can be added directly to the SEAWAT model, in addition to the approach of adding a modflow model and a mt3d model.  Can now load a SEAWAT model.
 * Added load support for MT3DMS Reactions package
 * Added multi-species support for MT3DMS Reactions package
 * Added static method to Mt3dms().load_mas that reads an MT3D mass file and returns a recarray

@@ -33,7 +33,7 @@ iprn = -1  # Printout flag. If >= 0 then array values read are printed in listin
 
 
 
-class FileData(object):
+class FileDataEntry(object):
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
         self.unit = unit
@@ -45,6 +45,7 @@ class FileData(object):
 class FileData(object):
     def __init__(self):
         self.file_data = []
+        return
 
     def add_file(self, fname, unit, binflag=False, output=False, package=None):
         ipop = []
@@ -52,8 +53,9 @@ class FileData(object):
             if file_data.fname == fname or file_data.unit == unit:
                 ipop.append(idx)
 
-        self.file_data.append(FileData(fname, unit, binflag=binflag,
-                                       output=output, package=package))
+        self.file_data.append(FileDataEntry(fname, unit, binflag=binflag,
+                                            output=output, package=package))
+        return
 
 
 class BaseModel(object):
@@ -127,6 +129,7 @@ class BaseModel(object):
         self.external_binflag = []
         self.external_output = []
         self.package_units = []
+        self._next_ext_unit = None
 
         # output files
         self.output_fnames = []
@@ -135,37 +138,6 @@ class BaseModel(object):
         self.output_packages = []
 
         return
-
-    # we don't need these - no need for controlled access to array_free_format
-    # def set_free_format(self, value=True):
-    #     """
-    #     Set the free format flag for the model instance
-    #
-    #     Parameters
-    #     ----------
-    #     value : bool
-    #         Boolean value to set free format flag for model. (default is True)
-    #
-    #     Returns
-    #     -------
-    #
-    #     """
-    #     if not isinstance(value, bool):
-    #         print('Error: set_free_format passed value must be a boolean')
-    #         return False
-    #     self.array_free_format = value
-    #
-    # def get_free_format(self):
-    #     """
-    #     Return the free format flag for the model
-    #
-    #     Returns
-    #     -------
-    #     out : bool
-    #         Free format flag for the model
-    #
-    #     """
-    #     return self.array_free_format
 
     def next_unit(self, i=None):
         if i is not None:
@@ -991,7 +963,7 @@ class BaseModel(object):
         # performed on a model load
         if self.parameter_load and not self.free_format_input:
             if self.verbose:
-                print('\nReseting free_format_input to True to ' +
+                print('\nResetting free_format_input to True to ' +
                       'preserve the precision of the parameter data.')
             self.free_format_input = True
 
@@ -1006,7 +978,7 @@ class BaseModel(object):
                 # model-level package check above
                 # otherwise checks are run twice
                 # or the model level check procedure would have to be split up
-                # or each package would need a check arguemnt,
+                # or each package would need a check argument,
                 # or default for package level check would have to be False
                 try:
                     p.write_file(check=False)
@@ -1338,7 +1310,7 @@ def run_model(exe_name, namefile, model_ws='./',
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
     use_async : boolean
-        asynchonously read model stdout and report with timestamps.  good for
+        asynchronously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
     cargs : str or list of strings

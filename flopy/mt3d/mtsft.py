@@ -551,7 +551,7 @@ class Mt3dSft(Package):
                       'read COLDSF')
 
 
-        coldsf = Util2d.load(f, model, (nsfinit,), np.float32, 'coldsf1',
+        coldsf = Util2d.load(f, model, (np.abs(nsfinit),), np.float32, 'coldsf1',
                              ext_unit_dict, array_format=model.array_format)
 
         kwargs = {}
@@ -574,14 +574,14 @@ class Mt3dSft(Package):
                 print('   Using historic MT3DMS array reader utilities to ' \
                       'read DISPSF')
 
-        dispsf = Util2d.load(f, model, (nsfinit,), np.float32, 'dispsf1',
+        dispsf = Util2d.load(f, model, (np.abs(nsfinit),), np.float32, 'dispsf1',
                              ext_unit_dict, array_format=model.array_format)
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
                 name = "dispsf" + str(icomp)
                 if model.verbose:
                     print('   loading {}...'.format(name))
-                u2d = Util2d.load(f, model, (nsfinit,), np.float32,
+                u2d = Util2d.load(f, model, (np.abs(nsfinit),), np.float32,
                                   name, ext_unit_dict, array_format=model.array_format)
                 kwargs[name] = u2d
 

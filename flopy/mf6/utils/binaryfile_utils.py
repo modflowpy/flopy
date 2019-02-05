@@ -81,7 +81,7 @@ class MFOutputRequester:
         if key in self.dataDict:
             if (key[0], 'disv', 'dimensions', 'nvert') in self.mfdict:
                 self.querybinarydata = \
-                    self._querybinarydata_verticed(self.mfdict, key)
+                    self._querybinarydata_vertices(self.mfdict, key)
             elif (key[0], 'disu', 'connectiondata', 'iac') in self.mfdict:
                 self.querybinarydata = self._querybinarydata_unstructured(key)
             else:
@@ -108,7 +108,7 @@ class MFOutputRequester:
         else:
             return np.array(bindata.get_alldata())
 
-    def _querybinarydata_verticed(self, mfdict, key):
+    def _querybinarydata_vertices(self, mfdict, key):
         # Basic definition to get output data from binary output files for
         # simulations that define grid by vertices
         path = self.dataDict[key]
@@ -198,7 +198,7 @@ class MFOutputRequester:
 
         Returns
         -------
-        information defining specifice vertices for all model cells to be added
+        information defining specified vertices for all model cells to be added
         to xarray as coordinates.
         cellid: (list) corresponds to the modflow CELL2d cell number
         xcyc: (n x 2) dimensional Pandas object of tuples defining the CELL2d
@@ -209,9 +209,9 @@ class MFOutputRequester:
         yv: (n x nverts) dimensional Pandas object of tuples. Contains y
         vertices for a cell
         topv: (n x nlayers) dimensional Pandas object of cell top elevations
-        coresponding to a row column location
+        corresponding to a row column location
         botmv: (n x nlayers) dimensional Pandas object of cell bottom
-        elevations coresponding to a row column location
+        elevations corresponding to a row column location
         """
 
         try:
@@ -351,7 +351,7 @@ class MFOutputRequester:
 
 
 def _reshape_binary_data(data, dtype=None):
-    # removes unneccesary dimensions from data returned by
+    # removes unnecessary dimensions from data returned by
     # flopy.utils.binaryfile
     time = len(data)
     data = np.array(data)

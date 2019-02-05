@@ -643,7 +643,7 @@ def test005_advgw_tidal():
                                   timeseries=ts_recarray,
                                   time_series_namerecord='tides',
                                   interpolation_methodrecord='linear')
-    obs_recarray = {'ghb_obs.csv': [('ghb-2-6-10', 'GHB', (1, 5, 9)),
+    obs_recarray = {('ghb_obs.csv', 'binary'): [('ghb-2-6-10', 'GHB', (1, 5, 9)),
                                     ('ghb-3-6-10', 'GHB', (2, 5, 9))],
                     'ghb_flows.csv': [('Estuary2', 'GHB', 'Estuary-L2'),
                                       ('Estuary3', 'GHB', 'Estuary-L3')]}
@@ -832,7 +832,7 @@ def test005_advgw_tidal():
                                    time_series_namerecord='rch_3',
                                    interpolation_methodrecord='linear')
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -1035,7 +1035,7 @@ def test035_fhb():
                                   time_series_namerecord='head',
                                   interpolation_methodrecord='linearend')
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -1158,7 +1158,7 @@ def test006_gwf3_disv():
                                 numgnc=24, numalphaj=1,
                                 gncdata=gncrecarray)
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location

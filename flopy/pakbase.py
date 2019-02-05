@@ -32,7 +32,7 @@ class Package(object):
 
         """
         self.parent = parent  # To be able to access the parent modflow object's attributes
-        if (not isinstance(extension, list)):
+        if not isinstance(extension, list):
             extension = [extension]
         self.extension = []
         self.file_name = []
@@ -70,40 +70,42 @@ class Package(object):
             if not (attr in exclude_attributes):
                 if (isinstance(value, list)):
                     if (len(value) == 1):
-                        s = s + ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
+                        s += ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
                     else:
-                        s = s + ' {0:s} (list, items = {1:d}\n'.format(attr,
+                        s += ' {0:s} (list, items = {1:d}\n'.format(attr,
                                                                        len(
                                                                            value))
                 elif (isinstance(value, np.ndarray)):
-                    s = s + ' {0:s} (array, shape = {1:s})\n'.format(attr,
+                    s += ' {0:s} (array, shape = {1:s})\n'.format(attr,
                                                                      value.shape.__str__()[
                                                                      1:-1])
                 else:
-                    s = s + ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value),
+                    s += ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value),
                                                               str(type(value))[
                                                               7:-2])
         return s
 
     def __getitem__(self, item):
         if hasattr(self, 'stress_period_data'):
-            # added this check because stress_period_data also used in Oc and Oc88 but is not a MfList
+            # added this check because stress_period_data also used in Oc and
+            # Oc88 but is not a MfList
+            spd = getattr(self, 'stress_period_data')
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
                     assert item in list(
-                        self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
+                        spd.data.keys()), "package.__getitem__() kper " + str(
                         item) + " not in data.keys()"
-                    return self.stress_period_data[item]
-                else:
-                    if item[1] not in self.dtype.names:
-                        raise Exception(
-                            "package.__getitem(): item \'" + item + "\' not in dtype names " + str(
-                                self.dtype.names))
-                    assert item[0] in list(
-                        self.stress_period_data.data.keys()), "package.__getitem__() kper " + str(
-                        item[0]) + " not in data.keys()"
-                    if self.stress_period_data.vtype[item[0]] == np.recarray:
-                        return self.stress_period_data[item[0]][item[1]]
+                    return spd[item]
+
+                if item[1] not in self.dtype.names:
+                    raise Exception(
+                        "package.__getitem(): item \'" + str(item) +
+                        "\' not in dtype names " + str(self.dtype.names))
+                assert item[0] in list(
+                    spd.data.keys()), "package.__getitem__() kper " + str(
+                    item[0]) + " not in data.keys()"
+                if spd.vtype[item[0]] == np.recarray:
+                    return spd[item[0]][item[1]]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("package.__setitem__() not implemented")
@@ -222,22 +224,23 @@ class Package(object):
                         self.name[0] != 'OC':
             spd_inds_valid = True
             chk = check(self, f=f, verbose=verbose, level=level)
-            for per in self.stress_period_data.data.keys():
-                if isinstance(self.stress_period_data.data[per], np.recarray):
-                    spd = self.stress_period_data.data[per]
-                    inds = (spd.k, spd.i, spd.j) if self.parent.structured \
-                        else (spd.node)
+            spd = getattr(self, 'stress_period_data')
+            for per in spd.data.keys():
+                if isinstance(spd.data[per], np.recarray):
+                    spdata = self.stress_period_data.data[per]
+                    inds = (spdata.k, spdata.i, spdata.j) if self.parent.structured \
+                        else (spdata.node)
 
                     # General BC checks
                     # check for valid cell indices
-                    spd_inds_valid = chk._stress_period_data_valid_indices(spd)
+                    spd_inds_valid = chk._stress_period_data_valid_indices(spdata)
 
                     # first check for and list nan values
-                    chk._stress_period_data_nans(spd)
+                    chk._stress_period_data_nans(spdata)
 
                     if spd_inds_valid:
                         # next check for BCs in inactive cells
-                        chk._stress_period_data_inactivecells(spd)
+                        chk._stress_period_data_inactivecells(spdata)
 
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages
@@ -246,8 +249,8 @@ class Package(object):
                             # also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
-                            chk.stress_period_data_values(spd, spd[
-                                elev_name] < botms,
+                            chk.stress_period_data_values(spdata,
+                                                          spdata[elev_name] < botms,
                                                           col=elev_name,
                                                           error_name='BC elevation below cell bottom',
                                                           error_type='Error')
@@ -260,7 +263,7 @@ class Package(object):
             chk = check(self, f=f, verbose=verbose, level=level)
             active = chk.get_active()
 
-            # check for confined layers above convertable layers
+            # check for confined layers above convertible layers
             confined = False
             thickstrt = False
             for option in self.options:
@@ -300,7 +303,7 @@ class Package(object):
                            .format(name, mx), 'Warning')
 
             # check for unusually high or low values of hydraulic conductivity
-            if self.layvka.sum() > 0:  # convert vertical anistropy to Kv for checking
+            if self.layvka.sum() > 0:  # convert vertical anisotropy to Kv for checking
                 vka = self.vka.array.copy()
                 for l in range(vka.shape[0]):
                     vka[l] *= self.hk.array[l] if self.layvka.array[
@@ -320,10 +323,9 @@ class Package(object):
                 vkcb = self.vkcb.array.copy()
                 for l in range(self.vkcb.shape[0]):
                     if self.parent.dis.laycbd[l] == 0:
-                        vkcb[l, :,
-                        :] = 1  # assign 1 instead of zero as default value that won't violate checker
+                        # assign 1 instead of zero as default value that won't violate checker
                         # (allows for same structure as other checks)
-
+                        vkcb[l, :, :] = 1
                 chk.values(vkcb, active & (vkcb <= 0),
                            'zero or negative quasi-3D confining bed Kv values',
                            'Error')
@@ -353,7 +355,7 @@ class Package(object):
 
                 # only check specific yield for convertible layers
                 inds = np.array(
-                    [True if l > 0 or l < 0 and 'THICKSRT' in self.options
+                    [True if l > 0 or l < 0 and 'THICKSTRT' in self.options
                      else False for l in self.laytyp])
                 sarrays['sy'] = sarrays['sy'][inds, :, :]
                 active = active[inds, :, :]
@@ -790,14 +792,14 @@ class Package(object):
                                     current = np.atleast_2d(current).transpose()
                                 #current = np.atleast_2d(np.loadtxt(oc_filename,
                                 #                                   dtype=current.dtype)).transpose()
-                                current = np.core.records.fromarrays(current,dtype=cd)
+                                current = np.core.records.fromarrays(current, dtype=cd)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
                                 "Package.load() error loading open/close file " + oc_filename + \
                                 " :" + str(e))
                         assert current.shape[
-                                   0] == itmp, "Package.load() error: open/close rec array from file " + \
+                                   0] == itmp, "Package.load() error: open/close recarray from file " + \
                                                oc_filename + " shape (" + str(current.shape) + \
                                                ") does not match itmp: {0:d}".format(
                                                    itmp)

@@ -414,7 +414,11 @@ class MFBlock(object):
             if isinstance(data, dict):
                 # Add block headers for each dictionary key
                 for index in data:
-                    self._build_repeating_header([index])
+                    if isinstance(index, tuple):
+                        header_list = list(index)
+                    else:
+                        header_list = [index]
+                    self._build_repeating_header(header_list)
             elif isinstance(data, list):
                 # Add a single block header of value 0
                 self._build_repeating_header([0])
@@ -738,7 +742,7 @@ class MFBlock(object):
                         if self._simulation_data.verbosity_level.value >= \
                                 VerbosityLevel.verbose.value:
                             print('        loading child package {}..'
-                                  '.'.format(package_info[0]))
+                                  '.'.format(package_info[1]))
                         self._model_or_sim.load_package(package_info[0],
                                                         package_info[1],
                                                         package_info[1], True,
@@ -812,21 +816,17 @@ class MFBlock(object):
                                                       'in block "{}".'.format(
                                                   dataset.structure.name,
                                                   self.structure.name))
-                    file_locations = []
                     if isinstance(data, np.recarray):
-                        # get the correct part of the recarray
-                        for entry in data:
-                            file_locations.append(entry[index])
+                        file_location = data[-1][index]
                     else:
-                        file_locations.append(data)
+                        file_location = data
                     package_info_list = []
-                    for file_location in file_locations:
-                        file_path, file_name = os.path.split(file_location)
-                        dict_package_name = '{}_{}'.format(package_type,
-                                                           self.path[-2])
-                        package_info_list.append((package_type, file_name,
-                                                  file_path,
-                                                  dict_package_name))
+                    file_path, file_name = os.path.split(file_location)
+                    dict_package_name = '{}_{}'.format(package_type,
+                                                       self.path[-2])
+                    package_info_list.append((package_type, file_name,
+                                              file_path,
+                                              dict_package_name))
                     return package_info_list
                 return None
         return None

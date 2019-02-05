@@ -60,6 +60,14 @@ optional false
 longname file keyword
 description name of the ascii comma separated values output file to write solver convergence information. If PRINT\_OPTION is NONE or SUMMARY, comma separated values output includes maximum head change convergence information at the end of each outer iteration for each time step. If PRINT\_OPTION is ALL, comma separated values output includes maximum head change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
 
+block options
+name no_ptc
+type keyword
+reader urword
+optional true
+longname no pseudo-transient continuation
+description is a flag that is used to disable pseudo-transient continuation (PTC). Option only applies to steady-state stress periods for models using the Newton-Raphson formulation. For many problems, PTC can significantly improve convergence behavior for steady-state simulations, and for this reason it is active by default.  In some cases, however, PTC can worsen the convergence behavior, especially when the initial conditions are similar to the solution.  When the initial conditions are similar to, or exactly the same as, the solution and convergence is slow, then this NO\_PTC option should be used to deactivate PTC.  This NO\_PTC option should also be used in order to compare convergence behavior with other MODFLOW versions, as PTC is only available in MODFLOW 6.
+
 
 # --------------------- sln ims nonlinear ---------------------
 

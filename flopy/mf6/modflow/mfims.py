@@ -58,6 +58,19 @@ class ModflowIms(mfpackage.MFPackage):
           information for the solution and each model (if the solution includes
           more than one model) and linear acceleration information for each
           inner iteration.
+    no_ptc : boolean
+        * no_ptc (boolean) is a flag that is used to disable pseudo-transient
+          continuation (PTC). Option only applies to steady-state stress
+          periods for models using the Newton-Raphson formulation. For many
+          problems, PTC can significantly improve convergence behavior for
+          steady-state simulations, and for this reason it is active by
+          default. In some cases, however, PTC can worsen the convergence
+          behavior, especially when the initial conditions are similar to the
+          solution. When the initial conditions are similar to, or exactly the
+          same as, the solution and convergence is slow, then this NO_PTC
+          option should be used to deactivate PTC. This NO_PTC option should
+          also be used in order to compare convergence behavior with other
+          MODFLOW versions, as PTC is only available in MODFLOW 6.
     outer_hclose : double
         * outer_hclose (double) real value defining the head change criterion
           for convergence of the outer (nonlinear) iterations, in units of
@@ -287,6 +300,8 @@ class ModflowIms(mfpackage.MFPackage):
            ["block options", "name csvfile", "type string", 
             "preserve_case true", "shape", "in_record true", "reader urword", 
             "tagged false", "optional false"],
+           ["block options", "name no_ptc", "type keyword", "reader urword", 
+            "optional true"],
            ["block nonlinear", "name outer_hclose", "type double precision", 
             "reader urword", "optional false"],
            ["block nonlinear", "name outer_maximum", "type integer", 
@@ -338,7 +353,7 @@ class ModflowIms(mfpackage.MFPackage):
             "reader urword", "optional true"]]
 
     def __init__(self, simulation, loading_package=False, print_option=None,
-                 complexity=None, csv_output_filerecord=None,
+                 complexity=None, csv_output_filerecord=None, no_ptc=None,
                  outer_hclose=None, outer_maximum=None, under_relaxation=None,
                  under_relaxation_theta=None, under_relaxation_kappa=None,
                  under_relaxation_gamma=None, under_relaxation_momentum=None,
@@ -360,6 +375,7 @@ class ModflowIms(mfpackage.MFPackage):
         self.complexity = self.build_mfdata("complexity",  complexity)
         self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord", 
                                                        csv_output_filerecord)
+        self.no_ptc = self.build_mfdata("no_ptc",  no_ptc)
         self.outer_hclose = self.build_mfdata("outer_hclose",  outer_hclose)
         self.outer_maximum = self.build_mfdata("outer_maximum",  outer_maximum)
         self.under_relaxation = self.build_mfdata("under_relaxation", 

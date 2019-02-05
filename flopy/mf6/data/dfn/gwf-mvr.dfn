@@ -107,7 +107,7 @@ tagged false
 in_record true
 optional true
 longname
-description name of model containing the package.
+description name of model containing the package.  Model names are assigned by the user in the simulation name file.
 
 block packages
 name pname
@@ -118,7 +118,7 @@ tagged false
 in_record true
 optional false
 longname
-description is the name of a package that may be included in a subsequent stress period block.
+description is the name of a package that may be included in a subsequent stress period block.  The package name is assigned in the name file for the GWF Model.  Package names are optionally provided in the name file.  If they are not provided by the user, then packages are assigned a default value, which is the package acronym followed by a hyphen and the package number.  For example, the first Drain Package is named DRN-1.  The second Drain Package is named DRN-2, and so forth.
 
 
 # --------------------- gwf mvr period ---------------------
@@ -173,7 +173,7 @@ tagged false
 in_record true
 reader urword
 longname provider reach
-description is the identifier for the provider.  This is the well number, reach number, lake number, etc.
+description is the identifier for the provider.  For the standard boundary packages, the provider identifier is the number of the boundary as it is listed in the package input file. (Note that the order of these boundaries may change by stress period, which must be accounted for in the Mover Package.)  So the first well has an identifier of one.  The second is two, and so forth.  For the advanced packages, the identifier is the reach number (SFR Package), well number (MAW Package), or UZF cell number.  For the Lake Package, ID1 is the lake outlet number.  Thus, outflows from a single lake can be routed to different streams, for example.
 numeric_index true
 
 block period
@@ -205,7 +205,7 @@ tagged false
 in_record true
 reader urword
 longname receiver reach
-description is the identifier for the receiver.  This is the well number, reach number, lake number, etc.
+description is the identifier for the receiver.  The receiver identifier is the reach number (SFR Package), Lake number (LAK Package), well number (MAW Package), or UZF cell number.
 numeric_index true
 
 block period

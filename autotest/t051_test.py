@@ -12,7 +12,7 @@ os.makedirs(cpth)
 
 
 def test_default_oc_stress_period_data():
-    m = flopy.modflow.Modflow(verbose=True)
+    m = flopy.modflow.Modflow(model_ws=cpth, verbose=True)
     dis = flopy.modflow.ModflowDis(m,nper=10,perlen=10.0,nstp=5)
     bas = flopy.modflow.ModflowBas(m)
     lpf = flopy.modflow.ModflowLpf(m, ipakcb=100)

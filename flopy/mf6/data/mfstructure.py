@@ -164,7 +164,7 @@ class DfnPackage(Dfn):
         returns flag for multi-package support
     get_block_structure_dict : (path : tuple, common : bool, model_file :
             bool) : dict
-        returns a dictionray of block structure information for the package
+        returns a dictionary of block structure information for the package
 
     See Also
     --------
@@ -371,7 +371,7 @@ class DfnFile(Dfn):
         the data item name as the dictionary key
     get_block_structure_dict : (path : tuple, common : bool, model_file :
             bool) : dict
-        returns a dictionray of block structure information for the package
+        returns a dictionary of block structure information for the package
 
     See Also
     --------

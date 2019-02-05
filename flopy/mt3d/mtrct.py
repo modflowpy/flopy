@@ -25,7 +25,8 @@ class Mt3dRct(Package):
     ireact : int
         ireact is a flag indicating which type of kinetic rate reaction is
         simulated: ireact = 0, no kinetic rate reaction is simulated;
-        ireact = 1, first-order irreversible reaction. Note that this reaction
+        ireact = 1, first-order irreversible reaction, ireact = 100,
+        zero-order reactions (decay or production). Note that this reaction
         package is not intended for modeling chemical reactions between
         species. An add-on reaction package developed specifically for that
         purpose may be used. (default is 0).
@@ -43,7 +44,7 @@ class Mt3dRct(Package):
     rhob : float or array of floats (nlay, nrow, ncol)
         rhob is the bulk density of the aquifer medium (unit, ML-3). rhob is
         used if isothm = 1, 2, 3, 4, or 6. If rhob is not user-specified and
-        isothem is not 5 then rhob is set to 1.8e3. (default is None)
+        isothm is not 5 then rhob is set to 1.8e3. (default is None)
     prsity2 : float or array of floats (nlay, nrow, ncol)
         prsity2 is the porosity of the immobile domain (the ratio of pore
         spaces filled with immobile fluids over the bulk volume of the aquifer

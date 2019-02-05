@@ -487,7 +487,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                     k_data_item.possible_cellid,
                                                     k_data_item))
                                         except Exception as ex:
-                                            message = 'An error occured ' \
+                                            message = 'An error occurred ' \
                                                       'while converting data '\
                                                       'to a string. This ' \
                                                       'error occurred while ' \
@@ -543,7 +543,7 @@ class MFList(mfdata.MFMultiDimVar):
                                                               possible_cellid,
                                                               data_item))
                                 except Exception as ex:
-                                    message = 'An error occured while ' \
+                                    message = 'An error occurred while ' \
                                               'converting data to a ' \
                                               'string. ' \
                                               'This error occurred while ' \
@@ -705,7 +705,7 @@ class MFList(mfdata.MFMultiDimVar):
                     arr_line[0][:3].upper() == 'END'):
                 # end of block
                 if store_data:
-                    # store as rec array
+                    # store as recarray
                     storage.set_data(data_loaded, self._current_key)
                 self._data_dimensions.unlock()
                 return [False, line]
@@ -719,57 +719,61 @@ class MFList(mfdata.MFMultiDimVar):
                         storage.set_data(data_loaded, self._current_key)
                     self._data_dimensions.unlock()
                     return [True, line]
-            if simple_line and self.structure.num_optional == 0:
-                # do higher performance quick load
-                self._data_line = ()
-                cellid_index = 0
-                cellid_tuple = ()
-                for index, entry in enumerate(self._last_line_info):
-                    for sub_entry in entry:
-                        if sub_entry[1] is not None:
-                            data_structs = self.structure.data_item_structures
-                            if sub_entry[2] > 0:
-                                # is a cellid
-                                cell_num = storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index])
-                                cellid_tuple += (cell_num - 1,)
-                                # increment index
-                                cellid_index += 1
-                                if cellid_index == sub_entry[2]:
-                                    # end of current cellid
-                                    self._data_line += (cellid_tuple,)
-                                    cellid_index = 0
-                                    cellid_tuple = ()
+            if len(arr_line) > 0:
+                if simple_line and self.structure.num_optional == 0:
+                    # do higher performance quick load
+                    self._data_line = ()
+                    cellid_index = 0
+                    cellid_tuple = ()
+                    for index, entry in enumerate(self._last_line_info):
+                        for sub_entry in entry:
+                            if sub_entry[1] is not None:
+                                data_structs = self.structure.\
+                                    data_item_structures
+                                if sub_entry[2] > 0:
+                                    # is a cellid
+                                    cell_num = storage.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index])
+                                    cellid_tuple += (cell_num - 1,)
+                                    # increment index
+                                    cellid_index += 1
+                                    if cellid_index == sub_entry[2]:
+                                        # end of current cellid
+                                        self._data_line += (cellid_tuple,)
+                                        cellid_index = 0
+                                        cellid_tuple = ()
+                                else:
+                                    # not a cellid
+                                    self._data_line += (storage.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index]),)
                             else:
-                                # not a cellid
-                                self._data_line += (storage.convert_data(
-                                        arr_line[sub_entry[0]], sub_entry[1],
-                                        data_structs[index]),)
-                        else:
-                            self._data_line += (None,)
-                data_loaded.append(self._data_line)
+                                self._data_line += (None,)
+                    data_loaded.append(self._data_line)
 
-            else:
-                try:
-                    self._load_line(arr_line, line_num, data_loaded, False,
-                                    storage)
-                except Exception as ex:
-                    comment = 'Unable to process line {} of data list: ' \
-                              '"{}"'.format(line_num + 1, line)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data list from '
-                                          'package file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, comment,
-                                          self._simulation_data.debug, ex)
-            line_num += 1
+                else:
+                    try:
+                        self._load_line(arr_line, line_num, data_loaded, False,
+                                        storage)
+                    except Exception as ex:
+                        comment = 'Unable to process line {} of data list: ' \
+                                  '"{}"'.format(line_num + 1, line)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(self.structure.get_model(),
+                                              self.structure.get_package(),
+                                              self._path,
+                                              'loading data list from '
+                                              'package file',
+                                              self.structure.name,
+                                              inspect.stack()[0][3], type_,
+                                              value_, traceback_, comment,
+                                              self._simulation_data.debug, ex)
+                line_num += 1
         if store_data:
-            # store as rec array
+            # store as recarray
             storage.set_data(data_loaded, self._current_key)
         self._data_dimensions.unlock()
         return [False, None]
@@ -1096,8 +1100,8 @@ class MFList(mfdata.MFMultiDimVar):
     def _append_data(self, data_item, arr_line, arr_line_len, data_index,
                      var_index, repeat_count):
         # append to a 2-D list which will later be converted to a numpy
-        # rec array
-        storge = self._get_storage_obj()
+        # recarray
+        storage = self._get_storage_obj()
         self._last_line_info.append([])
         if data_item.is_cellid or (data_item.possible_cellid and
                                    self._validate_cellid(arr_line,
@@ -1168,8 +1172,8 @@ class MFList(mfdata.MFMultiDimVar):
                                               traceback_, comment,
                                               self._simulation_data.debug)
 
-                    data_converted = storge.convert_data(arr_line[index],
-                                                         data_item.type)
+                    data_converted = storage.convert_data(arr_line[index],
+                                                          data_item.type)
                     cellid_tuple = cellid_tuple + (int(data_converted) - 1,)
                     self._last_line_info[-1].append([index, 'integer',
                                                      cellid_size])
@@ -1195,12 +1199,12 @@ class MFList(mfdata.MFMultiDimVar):
                     data_converted = arr_line[data_index].lower()
                     # override recarray data type to support writing
                     # string values
-                    storge.override_data_type(var_index, object)
+                    storage.override_data_type(var_index, object)
                     self._last_line_info[-1].append([data_index, 'string', 0])
                 else:
-                    data_converted = storge.convert_data(arr_line[data_index],
-                                                         data_item.type,
-                                                         data_item)
+                    data_converted = storage.convert_data(arr_line[data_index],
+                                                          data_item.type,
+                                                          data_item)
                     self._last_line_info[-1].append([data_index,
                                                      data_item.type, 0])
             self._data_line = self._data_line + (data_converted,)

@@ -1329,7 +1329,7 @@ class DataStorage(object):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
-            message= 'Can not convert {} to internal data. Exernal to ' \
+            message= 'Can not convert {} to internal data. External to ' \
                      'internal file operations currently only supported ' \
                      'for ndarrays.'.format(path[-1])
             type_, value_, traceback_ = sys.exc_info()
@@ -2335,9 +2335,12 @@ class MFTransient(object):
     def _set_data_prep(self, data, transient_key=0):
         if isinstance(transient_key, int):
             self._verify_sp(transient_key)
-        self._current_key = transient_key
-        if transient_key not in self._data_storage:
-            self.add_transient_key(transient_key)
+        if isinstance(transient_key, tuple):
+            self._current_key = transient_key[0]
+        else:
+            self._current_key = transient_key
+        if self._current_key not in self._data_storage:
+            self.add_transient_key(self._current_key)
 
     def _get_file_entry_prep(self, transient_key=0):
         if isinstance(transient_key, int):
@@ -2403,7 +2406,7 @@ class MFData(object):
         <package>, <block>, <data>)
     dimensions : DataDimensions
         object used to retrieve dimension information about data
-    *arges, **kwargs : exists to support different child class parameter sets
+    *args, **kwargs : exists to support different child class parameter sets
         with extra init parameters
 
     Attributes

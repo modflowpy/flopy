@@ -43,22 +43,38 @@ class ModflowMvr(mfpackage.MFPackage):
         * maxpackages (integer) integer value specifying the number of unique
           packages that are included in this water mover input file.
     packages : [mname, pname]
-        * mname (string) name of model containing the package.
+        * mname (string) name of model containing the package. Model names are
+          assigned by the user in the simulation name file.
         * pname (string) is the name of a package that may be included in a
-          subsequent stress period block.
+          subsequent stress period block. The package name is assigned in the
+          name file for the GWF Model. Package names are optionally provided in
+          the name file. If they are not provided by the user, then packages
+          are assigned a default value, which is the package acronym followed
+          by a hyphen and the package number. For example, the first Drain
+          Package is named DRN-1. The second Drain Package is named DRN-2, and
+          so forth.
     perioddata : [mname1, pname1, id1, mname2, pname2, id2, mvrtype, value]
         * mname1 (string) name of model containing the package, PNAME1.
         * pname1 (string) is the package name for the provider. The package
           PNAME1 must be designated to provide water through the MVR Package by
           specifying the keyword "MOVER" in its OPTIONS block.
-        * id1 (integer) is the identifier for the provider. This is the well
-          number, reach number, lake number, etc.
+        * id1 (integer) is the identifier for the provider. For the standard
+          boundary packages, the provider identifier is the number of the
+          boundary as it is listed in the package input file. (Note that the
+          order of these boundaries may change by stress period, which must be
+          accounted for in the Mover Package.) So the first well has an
+          identifier of one. The second is two, and so forth. For the advanced
+          packages, the identifier is the reach number (SFR Package), well
+          number (MAW Package), or UZF cell number. For the Lake Package, ID1
+          is the lake outlet number. Thus, outflows from a single lake can be
+          routed to different streams, for example.
         * mname2 (string) name of model containing the package, PNAME2.
         * pname2 (string) is the package name for the receiver. The package
           PNAME2 must be designated to receive water from the MVR Package by
           specifying the keyword "MOVER" in its OPTIONS block.
-        * id2 (integer) is the identifier for the receiver. This is the well
-          number, reach number, lake number, etc.
+        * id2 (integer) is the identifier for the receiver. The receiver
+          identifier is the reach number (SFR Package), Lake number (LAK
+          Package), well number (MAW Package), or UZF cell number.
         * mvrtype (string) is the character string signifying the method for
           determining how much water will be moved. Supported values are
           "FACTOR" "EXCESS" "THRESHOLD" and "UPTO". These four options

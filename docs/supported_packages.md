@@ -23,7 +23,7 @@ FloPy Supported Packages
 | Layer Property Flow (LPF)                      | Supported            | Supported            | Supported            |
 | Link-AMG (LMG)                                 | Not supported        | Not supported        | Not supported        |
 | MODFLOW Link-MT3DMS (LMT)                      | Supported            | Supported            | Not supported        |
-| Multipler (MULT)                               | Not supported        | Supported            | Not supported        |
+| Multiplier (MULT)                              | Not supported        | Supported            | Not supported        |
 | Multi-Node Well 1 (MNW1)                       | Supported            | Supported            | Not supported        |
 | Multi-Node Well 2 (MNW2)                       | Supported            | Supported            | Not supported        |
 | Multi-Node Well Information (MNWI)             | Supported            | Supported            | Not supported        |
@@ -44,7 +44,7 @@ FloPy Supported Packages
 | Subsidence (SUB)                               | Supported            | Supported            | Not supported        |
 | Subsidence and Aquifer-System <br />Compaction (SWT) | Supported            | Supported            | Not supported        |
 | Upstream Weighted (UPW)                        | Supported            | Supported            | Not supported        |
-| Unzaturated Zone Flow (UZF)                    | Supported            | Supported            | Not supported        |
+| Unsaturated Zone Flow (UZF)                    | Supported            | Supported            | Not supported        |
 | Well (WEL)                                     | Supported            | Supported            | Not supported        |
 | Zone (ZONE)                                    | Not supported        | Supported            | Not supported        |
 

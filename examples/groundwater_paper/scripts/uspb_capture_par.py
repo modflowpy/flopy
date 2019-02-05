@@ -287,7 +287,7 @@ def doit():
     #close summary file
     fs.close()
     
-    # clean up working directorys
+    # clean up working directories
     for idx in range(nproc):
         filelist = [f for f in os.listdir(cf_pths[idx])]
         for f in filelist:

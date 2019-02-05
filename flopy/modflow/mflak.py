@@ -36,6 +36,9 @@ class ModflowLak(Package):
         Control or ICBCFL is not equal to 0, the cell-by-cell flows will be
         printed in the standard output file. ICBCFL is specified in the input
         to the Output Control Option of MODFLOW.
+    lwrt : int or list of ints (one per SP)
+        lwrt > 0, suppresses printout from the lake package. Default is 0 (to
+        print budget information)
     theta : float
         Explicit (THETA = 0.0), semi-implicit (0.0 < THETA < 1.0), or implicit
         (THETA = 1.0) solution for lake stages. SURFDEPTH is read only if
@@ -57,7 +60,7 @@ class ModflowLak(Package):
             is a steady state stress period as defined in Ss/tr in the
             Discretization file.
         *	SSCNCR and NSSITR can be read for a transient only simulation by
-            placing a negative sign immeditately in front of THETA. A negative
+            placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
             (p. 52). A negative THETA is automatically reset to a positive
@@ -74,7 +77,7 @@ class ModflowLak(Package):
             periods is a steady state stress period as defined in Ss/tr in the
             Discretization file.
         *	SSCNCR and NSSITR can be read for a transient only simulation by
-            placing a negative sign immeditately in front of THETA. A negative
+            placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
             (p. 52). A negative THETA is automatically reset to a positive
@@ -165,7 +168,7 @@ class ModflowLak(Package):
                 system being described in this record. The center lake number
                 is listed first.
         And dataset 8b contains 
-            SILLVT : sequnce of floats
+            SILLVT : sequence of floats
                 A sequence of sill elevations for each sublakes that determines
                 whether the center lake is connected with a given sublake.
                 Values are entered for each sublake in the order the sublakes
@@ -207,7 +210,7 @@ class ModflowLak(Package):
                 augmentation. Normally, this would be used to specify the
                 rate of artificial withdrawal from a lake for human water use,
                 or if negative, artificial augmentation of a lake volume for
-                esthetic or recreational purposes.
+                aesthetic or recreational purposes.
             SSMN : float
                 Minimum stage allowed for each lake in steady-state solution.
                 See notes on ssmn and ssmx above.
@@ -260,7 +263,7 @@ class ModflowLak(Package):
                  tab_files=None, tab_units=None, lakarr=None, bdlknc=None,
                  sill_data=None, flux_data=None,
                  extension='lak', unitnumber=None, filenames=None,
-                 options=None, **kwargs):
+                 options=None, lwrt=0,  **kwargs):
         """
         Package constructor.
 
@@ -347,6 +350,8 @@ class ModflowLak(Package):
         self.nssitr = nssitr
         self.sscncr = sscncr
         self.surfdep = surfdep
+        self.lwrt = lwrt
+
         if isinstance(stages, float):
             if self.nlakes == 1:
                 stages = np.array([self.nlakes], dtype=np.float) * stages
@@ -514,8 +519,11 @@ class ModflowLak(Package):
             itmp2 = 0
             if kper in ds9_keys:
                 itmp2 = 1
-
-            t = [itmp, itmp2, 1]
+            if isinstance(self.lwrt, list):
+                tmplwrt = self.lwrt[kper]
+            else:
+                tmplwrt = self.lwrt
+            t = [itmp, itmp2, tmplwrt]
             comment = 'Stress period {}'.format(kper + 1)
             f.write(write_fixed_var(t, free=self.parent.free_format_input,
                                     comment=comment))
@@ -587,8 +595,8 @@ class ModflowLak(Package):
 
         Returns
         -------
-        str : ModflowStr object
-            ModflowStr object.
+        str : ModflowLak object
+            ModflowLak object.
 
         Examples
         --------
@@ -686,6 +694,7 @@ class ModflowLak(Package):
         lake_lknc = {}
         sill_data = {}
         flux_data = {}
+        lwrt = []
         for iper in range(nper):
             if model.verbose:
                 print("   reading lak dataset 4 - " +
@@ -695,7 +704,8 @@ class ModflowLak(Package):
                 t = line.split()
             else:
                 t = read_fixed_var(line, ncol=3)
-            itmp, itmp1, lwrt = int(t[0]), int(t[1]), int(t[2])
+            itmp, itmp1, tmplwrt = int(t[0]), int(t[1]), int(t[2])
+            lwrt.append(tmplwrt)
 
             if itmp > 0:
                 if model.verbose:
@@ -806,7 +816,8 @@ class ModflowLak(Package):
 
         lakpak = ModflowLak(model, options=options, nlakes=nlakes,
                             ipakcb=ipakcb, theta=theta, nssitr=nssitr,
-                            surfdep=surfdep, sscncr=sscncr, stages=stages,
+                            surfdep=surfdep, sscncr=sscncr, lwrt=lwrt,
+                            stages=stages,
                             stage_range=stage_range, tab_units=tab_units,
                             lakarr=lake_loc, bdlknc=lake_lknc,
                             sill_data=sill_data, flux_data=flux_data,

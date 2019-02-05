@@ -109,7 +109,7 @@ def test_unitnums_load_and_write():
     assert m.load_fail is False, 'failed to load all packages'
 
     msg = 'modflow-2005 testsfr2_tab does not have ' + \
-          '1 layer, 7 rows, and 100 colummns'
+          '1 layer, 7 rows, and 100 columns'
     v = (m.nlay, m.nrow, m.ncol, m.nper)
     assert v == (1, 7, 100, 50), msg
 

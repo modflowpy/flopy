@@ -970,7 +970,7 @@ class Transient3d(object):
         self.__value = value
         self.name_base = name
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         self.array_free_format = array_free_format
@@ -1204,7 +1204,7 @@ class Transient2d(object):
         self.__value = value
         self.name_base = name
         self.fmtin = fmtin
-        self.cnstst = cnstnt
+        self.cnstnt = cnstnt
         self.iprn = iprn
         self.locat = locat
         self.array_free_format = array_free_format
@@ -2398,7 +2398,7 @@ class Util2d(object):
     def write_txt(shape, file_out, data, fortran_format="(FREE)",
                   python_format=None):
         if fortran_format.upper() == '(FREE)' and python_format is None:
-            np.savetxt(file_out, data,
+            np.savetxt(file_out, np.atleast_2d(data),
                        ArrayFormat.get_default_numpy_fmt(data.dtype),
                        delimiter='')
             return
@@ -2747,7 +2747,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[1].lower())
                 fmtin = raw[2].strip()
-                iprn = int(raw[3])
+                iprn = 0
+                if len(raw) >= 4:
+                    iprn = int(raw[3])
             elif raw[0].lower() == 'external':
                 if ext_unit_dict is not None:
                     try:
@@ -2762,7 +2764,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
-                iprn = int(raw[4])
+                iprn = 0
+                if len(raw) >= 5:
+                    iprn = int(raw[4])
             elif raw[0].lower() == 'open/close':
                 fname = raw[1].strip()
                 if isfloat:
@@ -2770,7 +2774,9 @@ class Util2d(object):
                 else:
                     cnstnt = np.int(raw[2].lower())
                 fmtin = raw[3].strip()
-                iprn = int(raw[4])
+                iprn = 0
+                if len(raw) >= 5:
+                    iprn = int(raw[4])
                 npl, fmt, width, decimal = None, None, None, None
         else:
             locat = np.int(line[0:10].strip())

@@ -79,7 +79,7 @@ class SeawatVsc(Package):
     amucoeff : float
         is the coefficient array of size MUNCOEFF. AMUCOEFF is A in
         equations 18, 19, and 20.
-    muncoef : int
+    muncoeff : int
         is the size of the AMUCOEFF array.
     invisc : int
         is a flag. INVISC is read only if MT3DMUFLG is equal to zero.
@@ -95,7 +95,7 @@ class SeawatVsc(Package):
         is the fluid viscosity array read for each layer using the
         MODFLOW-2000 U2DREL array reader. The VISC array is read only if
         MT3DMUFLG is equal to zero. The VISC array may also be entered in
-        terms of solute concen- tration (or any other units) if INVISC is set
+        terms of solute concentration (or any other units) if INVISC is set
         to 2, and the simple linear expression in item 3 can be used to
         represent the relation to viscosity.
     extension : string

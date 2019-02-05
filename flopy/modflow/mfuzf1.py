@@ -155,7 +155,7 @@ class ModflowUzf1(Package):
     specifysurfk : boolean
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When SPECIFYSURFK is specified, 
-        the variable SURFK is specfied in Data Set 4b.
+        the variable SURFK is specified in Data Set 4b.
     rejectsurfk : boolean
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
         An optional character variable. When REJECTSURFK is specified, 
@@ -177,7 +177,7 @@ class ModflowUzf1(Package):
         for smoothfact (default is None).
         For example, if the interval factor (smoothfact) 
         is specified as smoothfact=0.1 (recommended), 
-        then the smoothing inerval will be calculated as: 
+        then the smoothing interval will be calculated as: 
         SMOOTHINT = 0.1*EXTDP and  is applied over the range for groundwater head (h):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
@@ -519,7 +519,7 @@ class ModflowUzf1(Package):
         return lst
 
     def ncells(self):
-        # Returns the  maximum number of cells that have recharge (developped for MT3DMS SSM package)
+        # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 

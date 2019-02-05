@@ -36,7 +36,7 @@ MFData --* MFArray --* MFTransientArray
 
 MFData --* MFList --* MFTransientList
 
-MFData --* MFScalar --* MFTranientScalar
+MFData --* MFScalar --* MFTransientScalar
 
 MFTransientData --* MFTransientArray, MFTransientList, MFTransientScalar
 							 

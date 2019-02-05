@@ -749,7 +749,7 @@ class VertexSpatialReference(object):
 
     def _get_rotated_vertices(self):
         """
-        Adjusts position and rotates verticies if applicable
+        Adjusts position and rotates vertices if applicable
 
         Returns
         -------
@@ -862,7 +862,7 @@ class SpatialReference(object):
                                       'implemented')
 
         else:
-            raise TypeError('Discretation type {} not '
+            raise TypeError('Discretization type {} not '
                             'supported'.format(distype))
 
         return new

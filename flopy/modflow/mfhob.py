@@ -628,7 +628,7 @@ class HeadObservation(object):
         d : np.recarray
 
         """
-        # get an empty recaray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = self._get_dtype()
         d = create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
         d['obsname'] = ''

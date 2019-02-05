@@ -105,7 +105,7 @@ def test_facenode_is3():
                                     verticaldivisions4=0,
                                     horizontaldivisions4=0,
                                     rowdivisions5=0,
-                                    columndivisons5=0,
+                                    columndivisions5=0,
                                     rowdivisions6=3,
                                     columndivisions6=3)
     p = flopy.modpath.NodeParticleData(subdivisiondata=sd, nodes=locs)
@@ -139,7 +139,7 @@ def test_facenode_is3a():
                                     verticaldivisions4=0,
                                     horizontaldivisions4=0,
                                     rowdivisions5=0,
-                                    columndivisons5=0,
+                                    columndivisions5=0,
                                     rowdivisions6=3,
                                     columndivisions6=3)
     p = flopy.modpath.NodeParticleData(subdivisiondata=[sd, sd],
@@ -166,7 +166,7 @@ def test_facenode_is2a():
                                     verticaldivisions4=0,
                                     horizontaldivisions4=0,
                                     rowdivisions5=0,
-                                    columndivisons5=0,
+                                    columndivisions5=0,
                                     rowdivisions6=3,
                                     columndivisions6=3)
     p = flopy.modpath.LRCParticleData(subdivisiondata=[sd, sd],

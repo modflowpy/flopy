@@ -229,10 +229,9 @@ class ModflowRiv(Package):
         chk.summarize()
         return chk
 
-
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recarray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowRiv.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)

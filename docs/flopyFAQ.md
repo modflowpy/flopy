@@ -6,7 +6,7 @@ Frequently Asked Questions
 #### Working with existing models
 
 + [How do I load an existing MODFLOW-2005 model](../examples/FAQ/load_existing_mf2005.ipynb)
-+ [How do I load an existing MODFLOW model with auxillary stress package data](../examples/FAQ/load_existing_model_wAUX.ipynb)
++ [How do I load an existing MODFLOW model with auxiliary stress package data](../examples/FAQ/load_existing_model_wAUX.ipynb)
 
 #### Running a MODFLOW model
 

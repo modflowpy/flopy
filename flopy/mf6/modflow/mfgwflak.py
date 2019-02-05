@@ -168,7 +168,7 @@ class ModflowGwflak(mfpackage.MFPackage):
           connection conductance calculations use the hydraulic conductivity
           corresponding to the :math:`K_{33}` tensor component defined for
           CELLID in the NPF package. Embedded lakes can only be connected to a
-          single cell (NLAKCONN = 1) and there must be a lake table associated
+          single cell (NLAKECONN = 1) and there must be a lake table associated
           with each embedded lake.
         * bedleak (double) character string or real value that defines the bed
           leakance for the lake-GWF connection. BEDLEAK must be greater than or
@@ -262,7 +262,7 @@ class ModflowGwflak(mfpackage.MFPackage):
           greater than zero and less than or equal to NLAKES.
         * laksetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          LAKSETTING string include: STATUS, STAGE, STAGE, EVAPORATION,
+          LAKSETTING string include: STATUS, STAGE, RAINFALL, EVAPORATION,
           RUNOFFON, WITHDRAWAL, and AUXILIARY.
             status : [string]
                 * status (string) keyword option to define lake status. STATUS
@@ -357,13 +357,12 @@ class ModflowGwflak(mfpackage.MFPackage):
                   obtained from a time series by entering the time-series name
                   in place of a numeric value.
             rough : [string]
-                * rough (string) real or character value that defines the width
-                  of the lake outlet. A specified WIDTH value is only used for
-                  active lakes if COUTTYPE for lake outlet OUTLETNO is not
-                  SPECIFIED. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
+                * rough (string) real value that defines the roughness
+                  coefficient for the lake outlet. Any value can be specified
+                  if COUTTYPE is not MANNING. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
     fname : String
         File name for this package.
     pname : String
@@ -487,7 +486,7 @@ class ModflowGwflak(mfpackage.MFPackage):
            ["block connectiondata", "name connectiondata", 
             "type recarray lakeno iconn cellid claktype bedleak belev telev " 
             "connlen connwidth", 
-            "shape (sum(nlakecon))", "reader urword"],
+            "shape (sum(nlakeconn))", "reader urword"],
            ["block connectiondata", "name lakeno", "type integer", "shape", 
             "tagged false", "in_record true", "reader urword", 
             "numeric_index true"],

@@ -502,7 +502,7 @@ class Mt3dms(BaseModel):
                     verbose=verbose, model_ws=model_ws,
                     modflowmodel=modflowmodel)
 
-        files_succesfully_loaded = []
+        files_successfully_loaded = []
         files_not_loaded = []
 
         # read name file
@@ -565,7 +565,7 @@ class Mt3dms(BaseModel):
                                    ext_unit_dict=ext_unit_dict)
         except Exception as e:
             raise Exception('error loading BTN: {0}'.format(str(e)))
-        files_succesfully_loaded.append(btn.filename)
+        files_successfully_loaded.append(btn.filename)
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
@@ -603,7 +603,7 @@ class Mt3dms(BaseModel):
                         try:
                             pck = item.package.load(item.filename, mt,
                                                     ext_unit_dict=ext_unit_dict)
-                            files_succesfully_loaded.append(item.filename)
+                            files_successfully_loaded.append(item.filename)
                             if mt.verbose:
                                 sys.stdout.write(
                                     '   {:4s} package load...success\n'
@@ -617,7 +617,7 @@ class Mt3dms(BaseModel):
                     else:
                         pck = item.package.load(item.filename, mt,
                                                 ext_unit_dict=ext_unit_dict)
-                        files_succesfully_loaded.append(item.filename)
+                        files_successfully_loaded.append(item.filename)
                         if mt.verbose:
                             sys.stdout.write(
                                 '   {:4s} package load...success\n'
@@ -659,9 +659,9 @@ class Mt3dms(BaseModel):
         if mt.verbose:
             print(1 * '\n')
             s = '   The following {0} packages were successfully loaded.' \
-                .format(len(files_succesfully_loaded))
+                .format(len(files_successfully_loaded))
             print(s)
-            for fname in files_succesfully_loaded:
+            for fname in files_successfully_loaded:
                 print('      ' + os.path.basename(fname))
             if len(files_not_loaded) > 0:
                 s = '   The following {0} packages were not loaded.'.format(
