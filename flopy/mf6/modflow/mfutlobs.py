@@ -16,14 +16,6 @@ class ModflowUtlobs(mfpackage.MFPackage):
     loading_package : bool
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
-    precision : double
-        * precision (double) Keyword and precision specifier for output of
-          binary data, which can be either SINGLE or DOUBLE. The default is
-          DOUBLE. When simulated values are written to a file specified as file
-          type DATA(BINARY) in the Name File, the precision specifier controls
-          whether the data (including simulated values and, for continuous
-          observations, time values) are written as single- or double-
-          precision.
     digits : integer
         * digits (integer) Keyword and an integer digits specifier used for
           conversion of simulated values to text on output. The default is 5
@@ -72,9 +64,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
     package_type = "obs"
     dfn_file_name = "utl-obs.dfn"
 
-    dfn = [["block options", "name precision", "type double precision", 
-            "shape", "reader urword", "optional true"],
-           ["block options", "name digits", "type integer", "shape", 
+    dfn = [["block options", "name digits", "type integer", "shape", 
             "reader urword", "optional true"],
            ["block options", "name print_input", "type keyword", 
             "reader urword", "optional true"],
@@ -104,14 +94,13 @@ class ModflowUtlobs(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword", 
             "optional true", "numeric_index true"]]
 
-    def __init__(self, model, loading_package=False, precision=None,
-                 digits=None, print_input=None, continuous=None, fname=None,
-                 pname=None, parent_file=None):
+    def __init__(self, model, loading_package=False, digits=None,
+                 print_input=None, continuous=None, fname=None, pname=None,
+                 parent_file=None):
         super(ModflowUtlobs, self).__init__(model, "obs", fname, pname,
                                             loading_package, parent_file)        
 
         # set up variables
-        self.precision = self.build_mfdata("precision",  precision)
         self.digits = self.build_mfdata("digits",  digits)
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.continuous = self.build_mfdata("continuous",  continuous)
