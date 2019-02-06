@@ -1,15 +1,6 @@
 # --------------------- gwf obs options ---------------------
 
 block options
-name precision
-type double precision
-shape
-reader urword
-optional true
-longname
-description Keyword and precision specifier for output of binary data, which can be either SINGLE or DOUBLE. The default is DOUBLE. When simulated values are written to a file specified as file type DATA(BINARY) in the Name File, the precision specifier controls whether the data (including simulated values and, for continuous observations, time values) are written as single- or double-precision.
-
-block options
 name digits
 type integer
 shape

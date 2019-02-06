@@ -6,18 +6,17 @@ mfsimulation module.  contains the MFSimulation class
 import errno, sys, inspect
 import collections
 import os.path
-import numpy as np
-from flopy.mbase import run_model
-from flopy.mf6.mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
-                             PackageContainerType, MFDataException, \
-                             FlopyException, VerbosityLevel
-from flopy.mf6.mfmodel import MFModel
-from flopy.mf6.mfpackage import MFPackage
-from flopy.mf6.data.mfstructure import DatumType
-from flopy.mf6.data import mfstructure, mfdata
-from flopy.mf6.utils import binaryfile_utils
-from flopy.mf6.utils import mfobservation
-from flopy.mf6.modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
+from ...mbase import run_model
+from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
+                     PackageContainerType, MFDataException, FlopyException, \
+                     VerbosityLevel
+from ..mfmodel import MFModel
+from ..mfpackage import MFPackage
+from ..data.mfstructure import DatumType
+from ..data import mfstructure, mfdata
+from ..utils import binaryfile_utils
+from ..utils import mfobservation
+from ..modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
 
 
 class SimulationDict(collections.OrderedDict):
