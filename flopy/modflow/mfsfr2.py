@@ -329,6 +329,11 @@ class ModflowSfr2(Package):
         self.numtab = 0 if not tabfiles else len(tabfiles_dict)
         self.maxval = np.max([tb['numval'] for tb in
                               tabfiles_dict.values()]) if self.numtab > 0 else 0
+
+        if options is None:
+            if (reachinput, transroute, tabfiles) != (False, False, False):
+                options = OptionBlock("", ModflowSfr2, block=False)
+
         self.options = options
 
         # Dataset 1c. ----------------------------------------------------------------------

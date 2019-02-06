@@ -458,6 +458,15 @@ class ModflowUzf1(Package):
             self.netflux = True
             self.unitrech, self.unitdis = netflux
 
+        if options is None:
+            if (specifythti, specifythtr, nosurfleak, specifysurfk, rejectsurfk,
+                seepsurfk, self.etsquare, self.netflux) != (False, False, False,
+                                                            False, False, False,
+                                                            False, False):
+                options = OptionBlock("", ModflowUzf1, block=False)
+
+        self.options = options
+
         # Data Set 1b
         # NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
         self.nuztop = nuztop
@@ -470,7 +479,7 @@ class ModflowUzf1(Package):
             self.ntrail2 = ntrail2
             self.nsets = nsets
         self.surfdep = surfdep
-        self.options = options
+
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
         self.iuzfbnd = Util2d(model, (nrow, ncol), np.int32, iuzfbnd,
