@@ -106,11 +106,11 @@ class MFScalar(mfdata.MFData):
                 if (isinstance(data, list) or isinstance(data, tuple)) and \
                         len(data) > 1:
                     self._add_data_line_comment(data[1:], 0)
-        storge = self._get_storage_obj()
+        storage = self._get_storage_obj()
         data_struct = self.structure.data_item_structures[0]
         try:
-            converted_data = storge.convert_data(data, self._data_type,
-                                                 data_struct)
+            converted_data = storage.convert_data(data, self._data_type,
+                                                  data_struct)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             comment = 'Could not convert data "{}" to type ' \
@@ -124,7 +124,7 @@ class MFScalar(mfdata.MFData):
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
         try:
-            storge.set_data(converted_data, key=self._current_key)
+            storage.set_data(converted_data, key=self._current_key)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             comment = 'Could not set data "{}" to type ' \

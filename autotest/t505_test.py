@@ -832,7 +832,7 @@ def test005_advgw_tidal():
                                    time_series_namerecord='rch_3',
                                    interpolation_methodrecord='linear')
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -1035,7 +1035,7 @@ def test035_fhb():
                                   time_series_namerecord='head',
                                   interpolation_methodrecord='linearend')
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -1158,7 +1158,7 @@ def test006_gwf3_disv():
                                 numgnc=24, numalphaj=1,
                                 gncdata=gncrecarray)
 
-    # charnge folder to save simulation
+    # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location

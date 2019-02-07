@@ -218,7 +218,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   In cases where the simulated leakage calculated using the
                   specified stage exceeds the sum of inflows to the reach, the
                   stage is set to the top of the reach and leakage is set equal
-                  to the sum of inflows. Upstream factions should be changed
+                  to the sum of inflows. Upstream fractions should be changed
                   using the UPSTREAM_FRACTION SFRSETTING if the status for one
                   or more reaches is changed to ACTIVE or INACTIVE. For
                   example, if one of two downstream connections for a reach is

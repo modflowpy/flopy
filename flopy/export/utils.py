@@ -325,7 +325,7 @@ def output_helper(f, ml, oudic, **kwargs):
                                             mask_array3d=mask_array3d)
 
             else:
-                estr = "unrecognized file extention:{0}".format(filename)
+                estr = "unrecognized file extension:{0}".format(filename)
                 if logger:
                     logger.lraise(estr)
                 else:

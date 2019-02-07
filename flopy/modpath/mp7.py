@@ -402,7 +402,7 @@ class Modpath7(BaseModel):
             Basename for MODPATH 7 input and output files (default is
             'modpath7test').
         trackdir : str
-            Keywork that defines the MODPATH particle tracking direction.
+            Keyword that defines the MODPATH particle tracking direction.
             Available trackdir's are 'backward' and 'forward'.
             (default is 'forward')
         flowmodel : flopy.modflow.Modflow or flopy.mf6.MFModel object
@@ -421,7 +421,7 @@ class Modpath7(BaseModel):
             Number of particles in a cell in the row (y-coordinate)
             direction (default is 2).
         layercelldivisions : int
-            Number of oarticles in a cell in the layer (z-coordinate)
+            Number of particles in a cell in the layer (z-coordinate)
             direction (default is 2).
         nodes : int, list of ints, tuple of ints, or np.ndarray
             Nodes (zero-based) with particles. If  (default is node 0).

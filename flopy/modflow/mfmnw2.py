@@ -103,7 +103,7 @@ class Mnw(object):
         The number of entries (lines) in dataset 2h corresponds to the value of PUMPCAP.
         If PUMPCAP does not equal 0, it must be set to an integer value of between 1 and 25, inclusive.
     rw : float
-        radius of the well (losstype == 'THEIM', 'SKIN', or 'GENERAL')
+        radius of the well (losstype == 'THIEM', 'SKIN', or 'GENERAL')
     rskin : float
         radius to the outer limit of the skin (losstype == 'SKIN')
     kskin : float
@@ -158,7 +158,7 @@ class Mnw(object):
             zbotm : float
                 bottom elevation of open intervals of vertical well.
             wellid : str
-            losstyp : str
+            losstype : str
             pumploc : int
             qlimit : int
             ppflag : int
@@ -215,7 +215,7 @@ class Mnw(object):
             qcut : int
             qfrcmn : float
             qfrcmx : float
-        Note: If auxillary variables are also being used, additional columns for these must be included.
+        Note: If auxiliary variables are also being used, additional columns for these must be included.
     pumplay : int
     pumprow : int
     pumpcol : int
@@ -398,7 +398,7 @@ class Mnw(object):
     def get_empty_stress_period_data(nper=0, aux_names=None, structured=True,
                                      default_value=0):
         """
-        Get an empty stress_period_data recarray that correponds to dtype
+        Get an empty stress_period_data recarray that corresponds to dtype
 
         Parameters
         ----------
@@ -867,7 +867,7 @@ class ModflowMnw2(Package):
         self.nodtot = nodtot  # user-specified maximum number of nodes
         self.ipakcb = ipakcb
         self.mnwprnt = int(mnwprnt)  # -verbosity flag
-        self.aux = aux  # -list of optional auxilary parameters
+        self.aux = aux  # -list of optional auxiliary parameters
 
         # Datasets 2-4 are contained in node_data and stress_period_data tables
         # and/or in Mnw objects
@@ -880,7 +880,7 @@ class ModflowMnw2(Package):
                      n in self.node_data.dtype.names]
             for n in names:
                 self.node_data[n] = node_data[
-                    n]  # rec array of Mnw properties by node
+                    n]  # recarray of Mnw properties by node
             self.nodtot = len(self.node_data)
             self.node_data.sort(order=['wellid', 'k'])
             # Python 3.5.0 produces a segmentation fault when trying to sort BR MNW wells
@@ -934,7 +934,7 @@ class ModflowMnw2(Package):
     def get_empty_node_data(maxnodes=0, aux_names=None, structured=True,
                             default_value=0):
         """
-        get an empty recarray that correponds to dtype
+        get an empty recarray that corresponds to dtype
 
         Parameters
         ----------
@@ -1326,7 +1326,7 @@ class ModflowMnw2(Package):
 
     def make_node_data(self, mnwobjs):
         """
-        Make node_data rec array from Mnw objects
+        Make node_data recarray from Mnw objects
 
         Parameters
         ----------
@@ -1349,7 +1349,7 @@ class ModflowMnw2(Package):
 
     def make_stress_period_data(self, mnwobjs):
         """
-        Make stress_period_data rec array from Mnw objects
+        Make stress_period_data recarray from Mnw objects
 
         Parameters
         ----------

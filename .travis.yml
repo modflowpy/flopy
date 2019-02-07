@@ -88,6 +88,7 @@ script:
     - echo numpy version; python -c "import numpy; print(numpy.version.version)"
     - echo pandas version; python -c "import pandas as pd; print(pd.__version__)"
     - echo pyshp; python -c "import shapefile; print(shapefile.__version__)"
+    - echo nosetests version; nosetests --version
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
     - echo pylint version; pylint --version

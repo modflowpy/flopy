@@ -38,11 +38,11 @@ class ModflowGwfsto(mfpackage.MFPackage):
           than or equal to 0. Specific yield does not have to be specified if
           there are no convertible cells (ICONVERT=0 in every cell).
     steady_state : boolean
-        * steady-state (boolean) keyword to indicate that stress-period IPER is
+        * steady-state (boolean) keyword to indicate that stress period IPER is
           steady-state. Steady-state conditions will apply until the TRANSIENT
           keyword is specified in a subsequent BEGIN PERIOD block.
     transient : boolean
-        * transient (boolean) keyword to indicate that stress-period IPER is
+        * transient (boolean) keyword to indicate that stress period IPER is
           transient. Transient conditions will apply until the STEADY-STATE
           keyword is specified in a subsequent BEGIN PERIOD block.
     fname : String

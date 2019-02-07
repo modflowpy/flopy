@@ -60,7 +60,7 @@ class ModflowLak(Package):
             is a steady state stress period as defined in Ss/tr in the
             Discretization file.
         *	SSCNCR and NSSITR can be read for a transient only simulation by
-            placing a negative sign immeditately in front of THETA. A negative
+            placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
             (p. 52). A negative THETA is automatically reset to a positive
@@ -77,7 +77,7 @@ class ModflowLak(Package):
             periods is a steady state stress period as defined in Ss/tr in the
             Discretization file.
         *	SSCNCR and NSSITR can be read for a transient only simulation by
-            placing a negative sign immeditately in front of THETA. A negative
+            placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
             (p. 52). A negative THETA is automatically reset to a positive
@@ -168,7 +168,7 @@ class ModflowLak(Package):
                 system being described in this record. The center lake number
                 is listed first.
         And dataset 8b contains 
-            SILLVT : sequnce of floats
+            SILLVT : sequence of floats
                 A sequence of sill elevations for each sublakes that determines
                 whether the center lake is connected with a given sublake.
                 Values are entered for each sublake in the order the sublakes
@@ -210,7 +210,7 @@ class ModflowLak(Package):
                 augmentation. Normally, this would be used to specify the
                 rate of artificial withdrawal from a lake for human water use,
                 or if negative, artificial augmentation of a lake volume for
-                esthetic or recreational purposes.
+                aesthetic or recreational purposes.
             SSMN : float
                 Minimum stage allowed for each lake in steady-state solution.
                 See notes on ssmn and ssmx above.

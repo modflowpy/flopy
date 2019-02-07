@@ -33,7 +33,7 @@ class ModflowMnw1(Package):
         head loss type for each well
     wel1_bynode_qsum : list of lists or None
         nested list containing file names, unit numbers, and ALLTIME flag for
-        auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
         if None, these optional external filenames and unit numbers are not written out
     itmp : array
         number of wells to be simulated for each stress period (shape : (NPER))
@@ -122,7 +122,7 @@ class ModflowMnw1(Package):
         self.nomoiter = nomoiter        #-integer indicating the number of iterations for which flow in MNW wells is calculated
         self.kspref = kspref            #-alphanumeric key indicating which set of water levels are to be used as reference values for calculating drawdown
         self.losstype = losstype          #-string indicating head loss type for each well
-        self.wel1_bynode_qsum = wel1_bynode_qsum #-nested list containing file names, unit numbers, and ALLTIME flag for auxilary output, e.g. [['test.ByNode',92,'ALLTIME']]
+        self.wel1_bynode_qsum = wel1_bynode_qsum #-nested list containing file names, unit numbers, and ALLTIME flag for auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
         #if stress_period_data is not None:
         #    for per, spd in stress_period_data.items():
         #        for n in spd.dtype.names:
@@ -150,7 +150,7 @@ class ModflowMnw1(Package):
     @staticmethod
     def get_empty_stress_period_data(itmp, structured=True,
                                      default_value=0):
-        # get an empty recarray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowMnw1.get_default_dtype(structured=structured)
         return create_empty_recarray(itmp, dtype, default_value=default_value)
 
