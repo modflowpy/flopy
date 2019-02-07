@@ -17,6 +17,7 @@ from numpy.lib.recfunctions import stack_arrays
 
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
+from .utils import OptionBlock
 
 
 class Package(object):
@@ -652,6 +653,13 @@ class Package(object):
             line = f.readline()
             if line[0] != '#':
                 break
+
+        # check for mfnwt version 11 option block
+        nwt_options = None
+        if model.version == "mfnwt" and "options" in line.lower():
+            nwt_options = OptionBlock.load_options(f, pack_type)
+            line = f.readline()
+
         # check for parameters
         nppak = 0
         if "parameter" in line.lower():
@@ -665,6 +673,7 @@ class Package(object):
                     print('   Parameters detected. Number of parameters = ',
                           nppak)
             line = f.readline()
+
         # dataset 2a
         t = line.strip().split()
         ipakcb = 0
@@ -678,13 +687,24 @@ class Package(object):
             it = 2
             while it < len(t):
                 toption = t[it]
-                if toption.lower() is 'noprint':
-                    options.append(toption)
+                if toption.lower() == 'noprint':
+                    options.append(toption.lower())
                 elif 'aux' in toption.lower():
                     options.append(' '.join(t[it:it + 2]))
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
+
+        # add auxillary information to nwt options
+        if nwt_options is not None and options:
+            if options[0] == 'noprint':
+                nwt_options.noprint = True
+                if len(options) > 1:
+                    nwt_options.auxillary = options[1:]
+            else:
+                nwt_options.auxillary = options
+
+            options = nwt_options
 
         # set partype
         #  and read phiramp for modflow-nwt well package
@@ -692,24 +712,29 @@ class Package(object):
         if 'modflowwel' in str(pack_type).lower():
             partype = ['flux']
 
+        # check for "standard" single line options from mfnwt
         if 'nwt' in model.version.lower() and \
             'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
 
-            specify = False
             ipos = f.tell()
             line = f.readline()
             # test for specify keyword if a NWT well file
             if 'specify' in line.lower():
-                specify = True
-                t = line.strip().split()
-                phiramp = np.float32(t[1])
-                try:
-                    phiramp_unit = np.int32(t[2])
-                except:
-                    phiramp_unit = 2
-                options.append('specify {} {} '.format(phiramp, phiramp_unit))
+                nwt_options = OptionBlock(line.lower().strip(),
+                                          pack_type, block=False)
+                if options:
+                    if options[0] == "noprint":
+                        nwt_options.noprint = True
+                        if len(options) > 1:
+                            nwt_options.auxillary = options[1:]
+
+                    else:
+                        nwt_options.auxillary = options
+
+                options = nwt_options
             else:
                 f.seek(ipos)
+
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(
                 pack_type).lower():
             partype = ['shead', 'ehead']
