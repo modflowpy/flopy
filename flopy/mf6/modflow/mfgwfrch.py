@@ -110,7 +110,7 @@ class ModflowGwfrch(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'rch', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfrch"
-    package_type = "rch"
+    _package_type = "rch"
     dfn_file_name = "gwf-rch.dfn"
 
     dfn = [["block options", "name fixed_cell", "type keyword", "shape", 

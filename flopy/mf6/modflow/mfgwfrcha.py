@@ -107,7 +107,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
                                        'recharge'))
     aux = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
     package_abbr = "gwfrcha"
-    package_type = "rcha"
+    _package_type = "rcha"
     dfn_file_name = "gwf-rcha.dfn"
 
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 

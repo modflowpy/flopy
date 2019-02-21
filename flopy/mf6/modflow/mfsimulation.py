@@ -392,7 +392,7 @@ class MFSimulation(PackageContainer):
                    '{}\n\n'.format(self.name, file_mgt.get_sim_path(),
                                    self.exe_name)
 
-        for package in self.packagelist:
+        for package in self._packagelist:
             pk_str = package._get_data_str(formal, False)
             if formal:
                 if len(pk_str.strip()) > 0:
@@ -420,6 +420,13 @@ class MFSimulation(PackageContainer):
                                '@@@@@@@@@@@@@@@@@@@@\n\n' \
                                '{}\n'.format(data_str, model.name, mod_str)
         return data_str
+
+    @property
+    def model_names(self):
+        """
+        Returns a list of model names associated with this simulation
+        """
+        return self._models.keys()
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
@@ -492,7 +499,6 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-
         for item in models:
             # resolve model working folder and name file
             path, name_file = os.path.split(item[1])
@@ -588,7 +594,7 @@ class MFSimulation(PackageContainer):
         for solution_group in solution_group_list:
             for solution_info in solution_group:
                 ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
-                                            pname=solution_info[2])
+                                        pname=solution_info[2])
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print('  loading ims package {}..'
                           '.'.format(ims_file._get_pname()))
@@ -983,7 +989,6 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
-
         return self._models[model_name]
 
     def get_exchange_file(self, filename):
@@ -1163,7 +1168,7 @@ class MFSimulation(PackageContainer):
             if package.package_name is not None:
                 pname = package.package_name.lower()
             if package.package_type.lower() == 'tdis' and self._tdis_file is \
-                    not None and self._tdis_file in self.packagelist:
+                    not None and self._tdis_file in self._packagelist:
                 # tdis package already exists. there can be only one tdis
                 # package.  remove existing tdis package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1173,7 +1178,7 @@ class MFSimulation(PackageContainer):
                 self._remove_package(self._tdis_file)
             elif package.package_type.lower() == 'gnc' and \
                     package.filename in self._ghost_node_files and \
-                    self._ghost_node_files[package.filename] in self.packagelist:
+                    self._ghost_node_files[package.filename] in self._packagelist:
                 # gnc package with same file name already exists.  remove old
                 # gnc package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1185,7 +1190,7 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             elif package.package_type.lower() == 'mvr' and \
                      package.filename in self._mover_files and \
-                     self._mover_files[package.filename] in self.packagelist:
+                     self._mover_files[package.filename] in self._packagelist:
                 # mvr package with same file name already exists.  remove old
                 # mvr package
                 if self.simulation_data.verbosity_level.value >= \
@@ -1318,6 +1323,11 @@ class MFSimulation(PackageContainer):
 
         return self.structure.model_struct_objs[model_type]
 
+    def get_ims_package(self, key):
+        if key in self._ims_files:
+            return self._ims_files[key]
+        return None
+
     def remove_model(self, model_name):
         """
         remove a model from the simulation.
@@ -1405,10 +1415,8 @@ class MFSimulation(PackageContainer):
                 rec_array = solution_recarray.get_data(solution_group_num[0])
             except MFDataException as mfde:
                 message = 'An error occurred while getting solution group' \
-                          '"{}" from the simulation name file.  The error ' \
-                          'occurred while replacing IMS file "{}" with "{}"' \
-                          'at index "{}"'.format(solution_group_num[0],
-                                                 item, new_item, index)
+                          '"{}" from the simulation name file' \
+                          '.'.format(solution_group_num[0])
                 raise MFDataException(mfdata_except=mfde,
                                       package='nam',
                                       message=message)
@@ -1471,3 +1479,43 @@ class MFSimulation(PackageContainer):
                         return True
         return False
 
+
+    def plot(self, model_list=None, SelPackList=None, **kwargs):
+        """
+        Method to plot a whole simulation or a series of models
+        that are part of a simualtion
+
+        Parameters:
+            model_list: (list) list of model names to plot, if none
+                all models will be plotted
+            SelPackList: (list) list of package names to plot, if none
+                all packages will be plotted
+
+            kwargs:
+                filename_base : str
+                    Base file name that will be used to automatically generate file
+                    names for output image files. Plots will be exported as image
+                    files if file_name_base is not None. (default is None)
+                file_extension : str
+                    Valid matplotlib.pyplot file extension for savefig(). Only used
+                    if filename_base is not None. (default is 'png')
+                mflay : int
+                    MODFLOW zero-based layer number to return.  If None, then all
+                    all layers will be included. (default is None)
+                kper : int
+                    MODFLOW zero-based stress period number to return.
+                    (default is zero)
+                key : str
+                    MfList dictionary key. (default is None)
+
+
+        Returns:
+             axes: (list) matplotlib.pyplot.axes objects
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        axes = PlotUtilities._plot_simulation_helper(self,
+                                                     model_list=model_list,
+                                                     SelPackList=SelPackList,
+                                                     **kwargs)
+        return axes

@@ -11,9 +11,11 @@ from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
-from ..data.mfdatautil import DatumUtil, FileIter, MultiListIter, ArrayUtil, \
-                              ConstIter, ArrayIndexIter, MultiList
+from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
+                              ConstIter, ArrayIndexIter, MultiList, find_keyword
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
+from ...datbase import DataInterface, DataType
+from .mfstructure import MFDataStructure
 
 
 class MFComment(object):
@@ -287,6 +289,10 @@ class LayerStorage(object):
         self.factor = 1.0
         self.iprn = None
         self.binary = False
+
+    @property
+    def name(self):
+        return self._data_storage_parent.data_dimensions.structure.name
 
     def __repr__(self):
         if self.data_storage_type == DataStorageType.internal_constant:
@@ -889,7 +895,7 @@ class DataStorage(object):
             if 'filename' in data:
                 self.process_open_close_line(data, layer)
                 return
-        self.store_internal(data, layer, multiplier, key=key,
+        self.store_internal(data, layer, False, multiplier, key=key,
                             autofill=autofill)
 
     def _set_array(self, data, layer, multiplier, key, autofill):
@@ -1006,7 +1012,7 @@ class DataStorage(object):
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
         if not (layer_storage.data_storage_type ==
                 DataStorageType.internal_constant and
-                    ArrayUtil.has_one_item(data)) and \
+                    PyListUtil.has_one_item(data)) and \
                 self._verify_data(MultiListIter(data), layer):
             # store data as is
             self.store_internal(data, layer, False, multiplier, key=key)
@@ -1050,6 +1056,8 @@ class DataStorage(object):
                     self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
                 else:
+                    if data is None:
+                        self.set_data(None)
                     if autofill and data is not None:
                         if isinstance(data, tuple) and isinstance(data[0],
                                                                   tuple):
@@ -1072,52 +1080,9 @@ class DataStorage(object):
                                 data[data_index] = \
                                         (data_item_structs[0].name.lower(),) \
                                         + data[data_index]
-                    if data is None:
-                        self.set_data(None)
-                    else:
-                        self.build_type_list(data=data, key=key)
-                        if autofill and data is not None:
-                            # resolve any fields with data types that do not
-                            # agree with the expected type list
-                            self._resolve_multitype_fields(data)
-                        if isinstance(data, list):
-                            # data needs to be stored as tuples within a list.
-                            # if this is not the case try to fix it
-                            self._tupleize_data(data)
-                            # add placeholders to data so it agrees with
-                            # expected dimensions of recarray
-                            self._add_placeholders(data)
-                        self._verify_list(data)
-                        try:
-                            new_data = np.rec.array(data,
-                                                    self._recarray_type_list)
-                        except:
-                            data_expected = []
-                            for data_type in self._recarray_type_list:
-                                data_expected.append('<{}>'.format(
-                                    data_type[0]))
-                            message = 'An error occurred when storing data ' \
-                                      '"{}" in a recarray. {} data is a one ' \
-                                      'or two dimensional list containing ' \
-                                      'the variables "{}" (some variables ' \
-                                      'may be optional, see MF6 ' \
-                                      'documentation), but data "{}" was ' \
-                                      'supplied.'.format(
-                                          self.data_dimensions.structure.name,
-                                          self.data_dimensions.structure.name,
-                                          ' '.join(data_expected), data)
-                            type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(
-                                self.data_dimensions.structure.get_model(),
-                                self.data_dimensions.structure.get_package(),
-                                self.data_dimensions.structure.path,
-                                'setting array data',
-                                self.data_dimensions.structure.name,
-                                inspect.stack()[0][3], type_, value_,
-                                traceback_, message,
-                                self._simulation_data.debug)
-                        self.set_data(new_data)
-
+                    if data is not None:
+                        new_data = self._build_recarray(data, key, autofill)
+                        self.layer_storage.first_item().internal_data = new_data
         elif self.data_structure_type == DataStructureType.scalar:
             self.layer_storage.first_item().internal_data = data
         else:
@@ -1151,6 +1116,51 @@ class DataStorage(object):
                         self._simulation_data.debug)
             self.layer_storage[layer].factor = multiplier
             self.layer_storage[layer].iprn = print_format
+
+    def _build_recarray(self, data, key, autofill):
+        self.build_type_list(data=data, key=key)
+        if autofill and data is not None:
+            # resolve any fields with data types that do not
+            # agree with the expected type list
+            self._resolve_multitype_fields(data)
+        if isinstance(data, list):
+            # data needs to be stored as tuples within a list.
+            # if this is not the case try to fix it
+            self._tupleize_data(data)
+            # add placeholders to data so it agrees with
+            # expected dimensions of recarray
+            self._add_placeholders(data)
+        self._verify_list(data)
+        try:
+            new_data = np.rec.array(data,
+                                    self._recarray_type_list)
+        except:
+            data_expected = []
+            for data_type in self._recarray_type_list:
+                data_expected.append('<{}>'.format(
+                    data_type[0]))
+            message = 'An error occurred when storing data ' \
+                      '"{}" in a recarray. {} data is a one ' \
+                      'or two dimensional list containing ' \
+                      'the variables "{}" (some variables ' \
+                      'may be optional, see MF6 ' \
+                      'documentation), but data "{}" was ' \
+                      'supplied.'.format(
+                self.data_dimensions.structure.name,
+                self.data_dimensions.structure.name,
+                ' '.join(data_expected), data)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'setting array data',
+                self.data_dimensions.structure.name,
+                inspect.stack()[0][3], type_, value_,
+                traceback_, message,
+                self._simulation_data.debug)
+        self._verify_list(new_data)
+        return new_data
 
     def _resolve_multitype_fields(self, data):
         # find any data fields where the data is not a consistent type
@@ -1325,7 +1335,8 @@ class DataStorage(object):
                             self.layer_storage[layer].iprn,
                             binary=self.layer_storage[layer].binary)
 
-    def external_to_internal(self, layer=None, store_internal=False):
+    def external_to_internal(self, layer=None, store_internal=False,
+                             current_key=None):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
@@ -1345,7 +1356,7 @@ class DataStorage(object):
             data_out = self._build_full_data(store_internal)
         else:
             # load data from external file
-            data_out, current_size = self.read_data_from_file(layer)
+            data_out, current_size = self.read_array_data_from_file(layer)
             if self.layer_storage[layer].factor is not None:
                 data_out = data_out * self.layer_storage[layer].factor
 
@@ -1364,8 +1375,29 @@ class DataStorage(object):
                                 print_format,
                                 self.layer_storage[layer].internal_data)
 
-    def read_data_from_file(self, layer, fd=None, multiplier=None,
-                            print_format=None, data_item=None):
+    def _open_ext_file(self, layer):
+        model_dim = self.data_dimensions.package_dim.model_dim[0]
+        read_file = self._simulation_data.mfpath.resolve_path(
+            self.layer_storage[layer].fname, model_dim.model_name)
+        try:
+            fd = open(read_file, 'r')
+            return fd
+        except:
+            message = 'Unable to open file {}.  Make sure the file ' \
+                      'is not locked and the folder exists' \
+                      '.'.format(read_file)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path,
+                'opening external file for writing',
+                self.data_dimensions.structure.name, inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+
+    def read_array_data_from_file(self, layer, fd=None, multiplier=None,
+                                  print_format=None, data_item=None):
         if multiplier is not None:
             self.layer_storage[layer].factor = multiplier
         if print_format is not None:
@@ -1379,29 +1411,13 @@ class DataStorage(object):
         close_file = False
         if fd is None:
             close_file = True
-            model_dim = self.data_dimensions.package_dim.model_dim[0]
-            read_file = self._simulation_data.mfpath.resolve_path(
-                        self.layer_storage[layer].fname, model_dim.model_name)
-            try:
-                fd = open(read_file, 'r')
-            except:
-                message = 'Unable to open file {}.  Make sure the file ' \
-                          'is not locked and the folder exists' \
-                          '.'.format(read_file)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.data_dimensions.structure.get_model(),
-                    self.data_dimensions.structure.get_package(),
-                    self.data_dimensions.structure.path,
-                    'opening external file for writing',
-                    self.data_dimensions.structure.name, inspect.stack()[0][3],
-                    type_, value_, traceback_, message,
-                    self._simulation_data.debug)
+            fd = self._open_ext_file(layer)
+
         line = ' '
-        ArrayUtil.reset_delimiter_used()
+        PyListUtil.reset_delimiter_used()
         while line != '':
             line = fd.readline()
-            arr_line = ArrayUtil.split_data_line(line, True)
+            arr_line = PyListUtil.split_data_line(line, True)
             for data in arr_line:
                 if data != '':
                     if current_size == data_size:
@@ -1442,6 +1458,688 @@ class DataStorage(object):
         dimensions = self.get_data_dimensions(layer)
         data_out = np.reshape(data_out, dimensions)
         return data_out, current_size
+
+    def read_list_data_from_file(self, file_handle, current_key,
+                                 current_line=None, data_line=None,
+                                 store_internal=True):
+        data_rec = None
+        data_loaded = []
+        self._temp_dict = {}
+        self._last_line_info = []
+        store_data = False
+        simple_line = False
+        struct = self.data_dimensions.structure
+        if current_line is None:
+            current_line = file_handle.readline()
+        arr_line = PyListUtil.split_data_line(current_line)
+        line_num = 0
+
+        try:
+            ln, simple_line, data_line = self._load_list_line(
+                arr_line, line_num, data_loaded, True, current_key=current_key,
+                data_line=data_line)
+            line_num += 1
+            store_data = True
+        except MFDataException as err:
+            # this could possibly be a constant line.
+            line = file_handle.readline()
+            arr_line = PyListUtil.split_data_line(line)
+            if len(arr_line) >= 2 and arr_line[0].upper() == 'CONSTANT' \
+                    and len(struct.data_item_structures) >= 2 and \
+                    struct.data_item_structures[0].name.upper() \
+                    == 'CELLID':
+                # store first line as a comment
+                if self.pre_data_comments is None:
+                    self.pre_data_comments = \
+                            MFComment(current_line, struct.path,
+                                      self._simulation_data, 0)
+                else:
+                    self.pre_data_comments.add_text(current_line)
+                # store constant value for all cellids
+                    self.layer_storage.first_item().data_storage_type = \
+                        DataStorageType.internal_constant
+                    if store_internal:
+                        self.store_internal(
+                            self.convert_data(arr_line[1],
+                                              struct.data_item_structures[1].type,
+                                              struct.data_item_structures[0]),
+                            0, const=True, multiplier=[1.0])
+                    else:
+                        data_rec = self._build_recarray(arr_line[1], None,
+                                                        True)
+                line = ' '
+                while line != '':
+                    line = file_handle.readline()
+                    arr_line = PyListUtil.split_data_line(line)
+                    if arr_line and (len(arr_line[0]) >= 2 and
+                            arr_line[0][:3].upper() == 'END'):
+                        return [False, line, data_line]
+            else:
+                # not a constant or open/close line, exception is valid
+                comment = 'Unable to process line 1 of data list: ' \
+                          '"{}"'.format(current_line)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(struct.get_model(), struct.get_package(),
+                                      struct.path,
+                                      'loading data list from '
+                                      'package file',
+                                      struct.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, comment,
+                                      self._simulation_data.debug, err)
+
+        if struct.type == DatumType.record or struct.type == DatumType.string:
+            # records only contain a single line
+            self.append_data(data_loaded)
+            self.data_dimensions.unlock()
+            return [False, None, data_line]
+
+        # get block recarray list for later processing
+        recarrays = []
+        parent_block = struct.parent_block
+        if parent_block is not None:
+            recarrays = parent_block.get_all_recarrays()
+        recarray_len = len(recarrays)
+
+        # loop until end of block
+        line = ' '
+        while line != '':
+            line = file_handle.readline()
+            arr_line = PyListUtil.split_data_line(line)
+            if arr_line and (len(arr_line[0]) >= 2 and
+                    arr_line[0][:3].upper() == 'END'):
+                # end of block
+                if store_data:
+                    if store_internal:
+                        # store as rec array
+                        self.store_internal(data_loaded, None, False, current_key)
+                    else:
+                        data_rec = self._build_recarray(data_loaded,
+                                                        current_key, True)
+                self.data_dimensions.unlock()
+                return [False, line, data_line]
+            if recarray_len != 1 and \
+                    not MFComment.is_comment(arr_line, True):
+                key = find_keyword(arr_line, struct.get_keywords())
+                if key is None:
+                    # unexpected text, may be start of another record
+                    if store_data:
+                        if store_internal:
+                            self.store_internal(data_loaded, None, False,
+                                                current_key)
+                        else:
+                            data_rec = self._build_recarray(data_loaded,
+                                                            current_key, True)
+                    self.data_dimensions.unlock()
+                    return [True, line, data_line]
+            if simple_line and struct.num_optional == 0:
+                if MFComment.is_comment(arr_line,
+                                        True):
+                    arr_line.insert(0, '\n')
+                    self.add_data_line_comment(arr_line, line_num)
+                else:
+                    # do higher performance quick load
+                    self._data_line = ()
+                    cellid_index = 0
+                    cellid_tuple = ()
+                    for index, entry in enumerate(self._last_line_info):
+                        for sub_entry in entry:
+                            if sub_entry[1] is not None:
+                                data_structs = struct.data_item_structures
+                                if sub_entry[2] > 0:
+                                    # is a cellid
+                                    cell_num = self.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index])
+                                    cellid_tuple += (cell_num - 1,)
+                                    # increment index
+                                    cellid_index += 1
+                                    if cellid_index == sub_entry[2]:
+                                        # end of current cellid
+                                        self._data_line += (cellid_tuple,)
+                                        cellid_index = 0
+                                        cellid_tuple = ()
+                                else:
+                                    # not a cellid
+                                    self._data_line += (self.convert_data(
+                                            arr_line[sub_entry[0]],
+                                            sub_entry[1],
+                                            data_structs[index]),)
+                            else:
+                                self._data_line += (None,)
+                    data_loaded.append(self._data_line)
+
+            else:
+                try:
+                    idx, sl, data_line = \
+                        self._load_list_line(arr_line, line_num, data_loaded,
+                                             False, current_key=current_key,
+                                             data_line=data_line)
+                except Exception as ex:
+                    comment = 'Unable to process line {} of data list: ' \
+                              '"{}"'.format(line_num + 1, line)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(struct.get_model(),
+                                          struct.get_package(),
+                                          struct.path,
+                                          'loading data list from '
+                                          'package file',
+                                          struct.name,
+                                          inspect.stack()[0][3], type_,
+                                          value_, traceback_, comment,
+                                          self._simulation_data.debug, ex)
+            line_num += 1
+        if store_data:
+            # store as rec array
+            self.store_internal(data_loaded, None, False, current_key)
+        self.data_dimensions.unlock()
+        if not store_internal:
+            return data_rec
+        else:
+            return [False, None, data_line]
+
+    def _load_list_line(self, arr_line, line_num, data_loaded, build_type_list,
+                        current_key, data_index_start=0, data_set=None,
+                        ignore_optional_vars=False, data_line=None):
+        struct = self.data_dimensions.structure
+        org_data_line = data_line
+        simple_line = True
+        # only initialize if we are at the start of a new line
+        if data_index_start == 0:
+            data_set = struct
+            # new line of data
+            data_line = ()
+            # determine if at end of block
+            if arr_line and arr_line[0][:3].upper() == 'END':
+                self.enabled = True
+                return 0, simple_line, data_line
+        data_index = data_index_start
+        arr_line_len = len(arr_line)
+        if MFComment.is_comment(arr_line, True) and data_index_start == 0:
+            arr_line.insert(0, '\n')
+            self.add_data_line_comment(arr_line, line_num)
+        else:
+            # read variables
+            var_index = 0
+            data = ''
+            for data_item_index, data_item in \
+                    enumerate(data_set.data_item_structures):
+                if not data_item.optional or not ignore_optional_vars:
+                    if data_item.name == 'aux':
+                        data_index, data_line = \
+                            self._process_aux(arr_line, arr_line_len, data_item,
+                                              data_index, var_index,
+                                              current_key, data_line)
+                    # optional mname data items are only specified if the
+                    # package is part of a model
+                    elif not data_item.optional or \
+                            data_item.name[0:5] != 'mname' or \
+                            not self.in_model:
+                        if data_item.type == DatumType.keyword:
+                            data_index += 1
+                            simple_line = False
+                        elif data_item.type == DatumType.record:
+                            # this is a record within a record, recurse into
+                            # _load_line to load it
+                            data_index, sl, data_line = self._load_list_line(
+                                arr_line, line_num, data_loaded,
+                                build_type_list, current_key, data_index,
+                                data_item, False, data_line=data_line)
+                            simple_line = False
+                        elif data_item.name != 'boundname' or \
+                                self.data_dimensions.package_dim.boundnames():
+                            if data_item.optional and data == '#':
+                                # comment mark found and expecting optional
+                                # data_item, we are done
+                                break
+                            if data_index >= arr_line_len and data_item.optional:
+                                break
+                            more_data_expected = True
+                            unknown_repeats = False
+                            repeat_count = 0
+                            while more_data_expected or unknown_repeats:
+                                if data_index >= arr_line_len:
+                                    if data_item.optional or unknown_repeats:
+                                        break
+                                    elif struct.num_optional >= \
+                                            len(data_set.data_item_structures)\
+                                            - data_item_index:
+                                        # there are enough optional variables
+                                        # to account for the lack of data
+                                        # reload line with all optional
+                                        # variables ignored
+                                        data_line = org_data_line
+                                        return self._load_list_line(arr_line,
+                                                               line_num,
+                                                               data_loaded,
+                                                               build_type_list,
+                                                               current_key,
+                                                               data_index_start,
+                                                               data_set, True,
+                                                               data_line=
+                                                                    data_line)
+                                    else:
+                                        comment = 'Not enough data provided ' \
+                                                  'for {}. Data for required ' \
+                                                  'data item "{}" not ' \
+                                                  'found'.format(struct.name,
+                                                                 data_item.
+                                                                 name)
+                                        type_, value_, \
+                                        traceback_ = sys.exc_info()
+                                        raise MFDataException(
+                                            struct.get_model(),
+                                            struct.get_package(),
+                                            struct.path,
+                                            'loading data list from '
+                                            'package file',
+                                            struct.name,
+                                            inspect.stack()[0][3], type_,
+                                            value_, traceback_, comment,
+                                            self._simulation_data.debug)
+
+                                data = arr_line[data_index]
+                                repeat_count += 1
+                                if data_item.type == DatumType.keystring:
+                                    simple_line = False
+                                    if repeat_count <= 1:  # only process the
+                                        # keyword on the first repeat find
+                                        #  data item associated with correct
+                                        # keystring
+                                        name_data = data.lower()
+                                        if name_data not in \
+                                                data_item.keystring_dict:
+                                            name_data = '{}record'.format(
+                                                    name_data)
+                                            if name_data not in \
+                                                    data_item.keystring_dict:
+                                                # data does not match any
+                                                # expected keywords
+                                                if self._simulation_data.\
+                                                    verbosity_level.value >= \
+                                                    VerbosityLevel.normal.\
+                                                        value:
+                                                    print('WARNING: Failed to '
+                                                          'process line {}.  '
+                                                          'Line does not match'
+                                                          ' expected keystring'
+                                                          ' {}'.format(
+                                                          ' '.join(arr_line),
+                                                          data_item.name))
+                                                break
+                                        data_item_ks = \
+                                            data_item.keystring_dict[
+                                            name_data]
+                                        if data_item_ks == 0:
+                                            comment = 'Could not find ' \
+                                                      'keystring ' \
+                                                      '{}.'.format(name_data)
+                                            type_, value_, \
+                                            traceback_ = sys.exc_info()
+                                            raise MFDataException(
+                                                struct.get_model(),
+                                                struct.get_package(),
+                                                struct.path,
+                                                'loading data list from '
+                                                'package file',
+                                                struct.name,
+                                                inspect.stack()[0][3], type_,
+                                                value_, traceback_, comment,
+                                                self._simulation_data.debug)
+
+                                        # keyword is always implied in a
+                                        # keystring and should be stored,
+                                        # add a string data_item for the
+                                        # keyword
+                                        if data_item.name in \
+                                                self._temp_dict:
+                                            # used cached data item for
+                                            # performance
+                                            keyword_data_item = \
+                                                self._temp_dict[data_item.name]
+                                        else:
+                                            keyword_data_item = \
+                                                deepcopy(data_item)
+                                            keyword_data_item.type = \
+                                                DatumType.string
+                                            self._temp_dict[data_item.name] \
+                                                = keyword_data_item
+                                        data_index, more_data_expected, \
+                                            unknown_repeats, data_line = \
+                                            self._append_data_list(
+                                                    keyword_data_item,
+                                                    arr_line,
+                                                    arr_line_len,
+                                                    data_index,
+                                                    var_index,
+                                                    repeat_count,
+                                                    current_key,
+                                                    data_line)
+                                    if isinstance(data_item_ks,
+                                                  MFDataStructure):
+                                        dis = \
+                                        data_item_ks.data_item_structures
+                                        for ks_data_item in dis:
+                                            if ks_data_item.type != \
+                                                    DatumType.keyword \
+                                                    and data_index < \
+                                                            arr_line_len:
+                                                # data item contains additional
+                                                # information
+                                                data_index, more_data_expected,\
+                                                unknown_repeats, data_line = \
+                                                    self._append_data_list(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count,
+                                                        current_key,
+                                                        data_line)
+                                        while data_index < arr_line_len:
+                                            try:
+                                                # append remaining data
+                                                # (temporary fix)
+                                                data_index, more_data_expected, \
+                                                unknown_repeats, data_line = \
+                                                    self._append_data_list(
+                                                        ks_data_item,
+                                                        arr_line,
+                                                        arr_line_len,
+                                                        data_index,
+                                                        var_index,
+                                                        repeat_count,
+                                                        current_key,
+                                                        data_line)
+                                            except MFDataException:
+                                                break
+                                    else:
+                                        if data_item_ks.type != \
+                                                DatumType.keyword:
+                                            data_index, more_data_expected, \
+                                            unknown_repeats, data_line = \
+                                            self._append_data_list(data_item_ks,
+                                                              arr_line,
+                                                              arr_line_len,
+                                                              data_index,
+                                                              var_index,
+                                                              repeat_count,
+                                                              current_key,
+                                                              data_line)
+                                        else:
+                                            # append empty data as a placeholder.
+                                            # this is necessarily to keep the
+                                            # recarray a consistent shape
+                                            data_line = \
+                                                data_line + (None,)
+                                            data_index += 1
+                                else:
+                                    if data_item.tagged and repeat_count == 1:
+                                        # data item tagged, include data item
+                                        # name as a keyword
+                                        di_type = data_item.type
+                                        data_item.type = DatumType.keyword
+                                        data_index, more_data_expected, \
+                                            unknown_repeats, data_line = \
+                                            self._append_data_list(data_item,
+                                                              arr_line,
+                                                              arr_line_len,
+                                                              data_index,
+                                                              var_index,
+                                                              repeat_count,
+                                                              current_key,
+                                                              data_line)
+                                        data_item.type = di_type
+                                    data_index, more_data_expected, \
+                                        unknown_repeats, data_line = \
+                                        self._append_data_list(data_item,
+                                                          arr_line,
+                                                          arr_line_len,
+                                                          data_index,
+                                                          var_index,
+                                                          repeat_count,
+                                                          current_key,
+                                                          data_line)
+                                if more_data_expected is None:
+                                    # indeterminate amount of data expected.
+                                    # keep reading data until eoln
+                                    more_data_expected = \
+                                        (data_index < arr_line_len)
+                                simple_line = simple_line and \
+                                        not unknown_repeats and \
+                                        len(data_item.shape) == 0
+                    var_index += 1
+
+            # populate unused optional variables with None type
+            for data_item in data_set.data_item_structures[var_index:]:
+                simple_line = False
+                if data_item.name == 'aux':
+                    idx, data_line = \
+                        self._process_aux(arr_line, arr_line_len, data_item,
+                                          data_index, var_index, current_key,
+                                          data_line)
+                elif data_item.name != 'boundname' or \
+                        self.data_dimensions.package_dim.boundnames():
+                    data_index, more_data_expected, \
+                        unknown_repeats, data_line = \
+                        self._append_data_list(data_item, None, 0, data_index,
+                                               var_index, 1, current_key,
+                                               data_line)
+
+            # only do final processing on outer-most record
+            if data_index_start == 0:
+                # if more pieces exist
+                if arr_line_len > data_index + 1:
+                    # FEATURE: Keep number of white space characters used in
+                    # comments section
+                    self.comments[line_num] = MFComment(
+                            ' '.join(arr_line[data_index+1:]), struct.path,
+                            self._simulation_data, line_num)
+                data_loaded.append(data_line)
+        return data_index, simple_line, data_line
+
+    def _process_aux(self, arr_line, arr_line_len, data_item, data_index,
+                     var_index, current_key, data_line):
+        aux_var_names = self.data_dimensions.package_dim.get_aux_variables()
+        if aux_var_names is not None:
+            for var_name in aux_var_names[0]:
+                if var_name.lower() != 'auxiliary':
+                    if data_index >= arr_line_len:
+                        # store placeholder None
+                        data_index, more_data_expected, unknown_repeats, \
+                            data_line = \
+                            self._append_data_list(data_item, None, 0,
+                                                   data_index, var_index, 1,
+                                                   current_key, data_line)
+                    else:
+                        # read in aux variables
+                        data_index, more_data_expected, unknown_repeats,\
+                            data_line= \
+                            self._append_data_list(data_item, arr_line,
+                                                   arr_line_len, data_index,
+                                                   var_index, 0, current_key,
+                                                   data_line)
+        return data_index, data_line
+
+    def _append_data_list(self, data_item, arr_line, arr_line_len, data_index,
+                     var_index, repeat_count, current_key, data_line):
+        # append to a 2-D list which will later be converted to a numpy
+        # rec array
+        struct = self.data_dimensions.structure
+        self._last_line_info.append([])
+        if data_item.is_cellid or (data_item.possible_cellid and
+                                   self._validate_cellid(arr_line,
+                                                         data_index)):
+            if self.data_dimensions is None:
+                comment = 'CellID field specified in for data ' \
+                          '"{}" field "{}" which does not contain a model '\
+                          'grid. This could be due to a problem with ' \
+                          'the flopy definition files. Please get the ' \
+                          'latest flopy definition files' \
+                          '.'.format(struct.name, data_item.name)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(struct.get_model(),
+                                      struct.get_package(), struct.path,
+                                      'loading data list from package file',
+                                      struct.name,
+                                      inspect.stack()[0][3], type_, value_,
+                                      traceback_, comment,
+                                      self._simulation_data.debug)
+            # read in the entire cellid
+            model_grid = self.data_dimensions.get_model_grid()
+            cellid_size = model_grid.get_num_spatial_coordinates()
+            cellid_tuple = ()
+            if not DatumUtil.is_int(arr_line[data_index]) and \
+                    arr_line[data_index].lower() == 'none':
+                # special case where cellid is 'none', store as tuple of
+                # 'none's
+                cellid_tuple = ('none',) * cellid_size
+                self._last_line_info[-1].append([data_index, DatumType.string,
+                                                 cellid_size])
+                new_index = data_index + 1
+            else:
+                # handle regular cellid
+                if cellid_size + data_index > arr_line_len:
+                    comment = 'Not enough data found when reading cell ID ' \
+                              'in data "{}" field "{}". Expected {} items ' \
+                              'and found {} items'\
+                              '.'.format(struct.name,
+                                         data_item.name, cellid_size,
+                                         arr_line_len - data_index)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(struct.get_model(),
+                                          struct.get_package(),
+                                          struct.path,
+                                          'loading data list from package '
+                                          'file', struct.name,
+                                          inspect.stack()[0][3], type_, value_,
+                                          traceback_, comment,
+                                          self._simulation_data.debug)
+                for index in range(data_index, cellid_size + data_index):
+                    if not DatumUtil.is_int(arr_line[index]) or \
+                            int(arr_line[index]) < 0:
+                        comment = 'Expected a integer or cell ID in ' \
+                                  'data "{}" field "{}".  Found {} ' \
+                                  'in line "{}"' \
+                                  '. '.format(struct.name,
+                                              data_item.name, arr_line[index],
+                                              arr_line)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(struct.get_model(),
+                                              struct.get_package(),
+                                              struct.path,
+                                              'loading data list from package '
+                                              'file', struct.name,
+                                              inspect.stack()[0][3], type_,
+                                              value_,
+                                              traceback_, comment,
+                                              self._simulation_data.debug)
+
+                    data_converted = self.convert_data(arr_line[index],
+                                                       data_item.type)
+                    cellid_tuple = cellid_tuple + (int(data_converted) - 1,)
+                    self._last_line_info[-1].append([index, DatumType.integer,
+                                                     cellid_size])
+                new_index = data_index + cellid_size
+            data_line = data_line + (cellid_tuple,)
+            if data_item.shape is not None and len(data_item.shape) > 0 and \
+                    data_item.shape[0] == 'ncelldim':
+                # shape is the coordinate shape, which has already been read
+                more_data_expected = False
+                unknown_repeats = False
+            else:
+                more_data_expected, unknown_repeats = \
+                    self._resolve_shape_list(data_item, repeat_count,
+                                             current_key, data_line)
+            return new_index, more_data_expected, unknown_repeats, data_line
+        else:
+            if arr_line is None:
+                data_converted = None
+                self._last_line_info[-1].append([data_index, None, 0])
+            else:
+                if arr_line[data_index].lower() in \
+                        self.data_dimensions.package_dim.get_tsnames():
+                    # references a time series, store as is
+                    data_converted = arr_line[data_index].lower()
+                    # override recarray data type to support writing
+                    # string values
+                    self.override_data_type(var_index, object)
+                    self._last_line_info[-1].append([data_index,
+                                                     DatumType.string, 0])
+                else:
+                    data_converted = self.convert_data(arr_line[data_index],
+                                                         data_item.type,
+                                                         data_item)
+                    self._last_line_info[-1].append([data_index,
+                                                     data_item.type, 0])
+            data_line = data_line + (data_converted,)
+            more_data_expected, unknown_repeats = \
+                self._resolve_shape_list(data_item, repeat_count, current_key,
+                                         data_line)
+            return data_index + 1, more_data_expected, unknown_repeats, \
+                   data_line
+
+    def _resolve_shape_list(self, data_item, repeat_count, current_key,
+                            data_line, cellid_size=None):
+        struct = self.data_dimensions.structure
+        try:
+            resolved_shape, shape_rule = \
+                self.data_dimensions.get_data_shape(data_item, struct,
+                                                     data_line,
+                                                     repeating_key=
+                                                     current_key)
+        except Exception as se:
+            comment = 'Unable to resolve shape for data "{}" field "{}"' \
+                      '.'.format(struct.name,
+                                  data_item.name)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(struct.get_model(),
+                                  struct.get_package(), struct.path,
+                                  'loading data list from package file',
+                                  struct.name, inspect.stack()[0][3],
+                                  type_, value_, traceback_, comment,
+                                  self._simulation_data.debug, se)
+
+        if cellid_size is not None:
+            data_item.remove_cellid(resolved_shape, cellid_size)
+
+        if len(resolved_shape) == 1:
+            if repeat_count < resolved_shape[0]:
+                return True, shape_rule is not None
+            elif resolved_shape[0] == -9999:
+                # repeating unknown number of times in 1-D array
+                return False, True
+        return False, False
+
+    def _validate_cellid(self, arr_line, data_index):
+        if not self.data_dimensions.structure.model_data:
+            # not model data so this is not a cell id
+            return False
+        if arr_line is None:
+            return False
+        model_grid = self.data_dimensions.get_model_grid()
+        cellid_size = model_grid.get_num_spatial_coordinates()
+        if cellid_size + data_index > len(arr_line):
+            return False
+        for index in range(data_index, cellid_size + data_index):
+            if not DatumUtil.is_int(arr_line[index]):
+                return False
+            if int(arr_line[index]) <= 0:
+                return False
+        return True
+
+    def add_data_line_comment(self, comment, line_num):
+        if line_num in self.comments:
+            self.comments[line_num].add_text('\n')
+            self.comments[line_num].add_text(' '.join(comment))
+        else:
+            self.comments[line_num] = MFComment(' '.join(comment),
+                                                self.data_dimensions.structure.
+                                                path,
+                                                self._simulation_data,
+                                                line_num)
 
     def to_string(self, val, type, is_cellid=False, possible_cellid=False,
                   data_item=None):
@@ -1814,9 +2512,9 @@ class DataStorage(object):
             else:
                 if self.layer_storage.get_total_size() == 1 or \
                         not self.layered:
-                    full_data = self.read_data_from_file(layer)[0] * mult
+                    full_data = self.read_array_data_from_file(layer)[0] * mult
                 else:
-                    full_data[layer] = self.read_data_from_file(layer)[0]*mult
+                    full_data[layer] = self.read_array_data_from_file(layer)[0] * mult
         return full_data
 
     def _resolve_layer(self, layer):
@@ -2080,7 +2778,7 @@ class DataStorage(object):
                             if data is not None:
                                 # shape is an indeterminate 1-d array and
                                 # should consume the remainder of the data
-                                max_s = ArrayUtil.max_multi_dim_list_size(data)
+                                max_s = PyListUtil.max_multi_dim_list_size(data)
                                 resolved_shape[0] = \
                                     max_s - len(self._recarray_type_list)
                             else:
@@ -2171,7 +2869,7 @@ class DataStorage(object):
     def convert_data(self, data, type, data_item=None):
         if type == DatumType.double_precision:
             if data_item is not None and data_item.support_negative_index:
-                val = int(ArrayUtil.clean_numeric(data))
+                val = int(PyListUtil.clean_numeric(data))
                 if val == -1:
                     return -0.0
                 elif val == 1:
@@ -2203,7 +2901,7 @@ class DataStorage(object):
                     return float(data)
                 except (ValueError, TypeError):
                     try:
-                        return float(ArrayUtil.clean_numeric(data))
+                        return float(PyListUtil.clean_numeric(data))
                     except (ValueError, TypeError):
                         message = 'Data "{}" with value "{}" can ' \
                                   'not be converted to float' \
@@ -2221,12 +2919,12 @@ class DataStorage(object):
                             traceback_, message, self._simulation_data.debug)
         elif type == DatumType.integer:
             if data_item is not None and data_item.numeric_index:
-                return int(ArrayUtil.clean_numeric(data)) - 1
+                return int(PyListUtil.clean_numeric(data)) - 1
             try:
                 return int(data)
             except (ValueError, TypeError):
                 try:
-                    return int(ArrayUtil.clean_numeric(data))
+                    return int(PyListUtil.clean_numeric(data))
                 except (ValueError, TypeError):
                     message = 'Data "{}" with value "{}" can not be ' \
                               'converted to int' \
@@ -2388,7 +3086,7 @@ class MFTransient(object):
         return True
 
 
-class MFData(object):
+class MFData(DataInterface):
     """
     Base class for all data.  This class contains internal objects and methods
     that most end users will not need to access directly.
@@ -2432,11 +3130,12 @@ class MFData(object):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
+    def __init__(self, sim_data, model_or_sim, structure, enable=True, path=None,
                  dimensions=None, *args, **kwargs):
         # initialize
         self._current_key = None
         self._simulation_data = sim_data
+        self._model_or_sim = model_or_sim
         self.structure = structure
         self.enabled = enable
         self.repeating = False
@@ -2471,6 +3170,55 @@ class MFData(object):
     def array(self):
         kwargs = {'array': True}
         return self.get_data(apply_mult=True, **kwargs)
+
+    @property
+    def name(self):
+        return self.structure.name
+
+    @property
+    def model(self):
+        if self._model_or_sim is not None and \
+                self._model_or_sim.type == 'Model':
+            return self._model_or_sim
+        else:
+            return None
+
+    @property
+    def data_type(self):
+        raise NotImplementedError(
+            'must define dat_type in child '
+            'class to use this base class')
+
+    @property
+    def dtype(self):
+        raise NotImplementedError(
+            'must define dtype in child '
+            'class to use this base class')
+
+    @property
+    def plotable(self):
+        raise NotImplementedError(
+            'must define plotable in child '
+            'class to use this base class')
+
+    def _resync(self):
+        model = self.model
+        if model is not None:
+            model._mg_resync = True
+
+    def export(self, f, **kwargs):
+        from flopy.export import utils
+
+        if self.data_type == DataType.array2d and len(self.array.shape) == 2 \
+                and self.array.shape[1] > 0:
+            return utils.array2d_export(f, self, **kwargs)
+        elif self.data_type == DataType.array3d:
+            return utils.array3d_export(f, self, **kwargs)
+        elif self.data_type == DataType.transient2d:
+            return utils.transient2d_export(f, self, **kwargs)
+        elif self.data_type == DataType.transientlist:
+            return utils.mflist_export(f, self, **kwargs)
+        return utils.transient2d_export(f, self, **kwargs)
 
     def new_simulation(self, sim_data):
         self._simulation_data = sim_data
@@ -2643,7 +3391,7 @@ class MFData(object):
             storage.pre_data_comments = None
 
         # read through any fully commented or empty lines
-        arr_line = ArrayUtil.split_data_line(line)
+        arr_line = PyListUtil.split_data_line(line)
         while MFComment.is_comment(arr_line, True) and line != '':
             if storage.pre_data_comments:
                 storage.pre_data_comments.add_text('\n')
@@ -2653,32 +3401,33 @@ class MFData(object):
                                                       self._simulation_data,
                                                       line_num)
 
-            self._add_data_line_comment(arr_line, line_num)
+            storage.add_data_line_comment(arr_line, line_num)
 
             line = file_handle.readline()
-            arr_line = ArrayUtil.split_data_line(line)
+            arr_line = PyListUtil.split_data_line(line)
         return line
-
-    def _add_data_line_comment(self, comment, line_num):
-        storage = self._get_storage_obj()
-        if line_num in storage.comments:
-            storage.comments[line_num].add_text('\n')
-            storage.comments[line_num].add_text(' '.join(comment))
-        else:
-            storage.comments[line_num] = MFComment(' '.join(comment),
-                                                   self._path,
-                                                   self._simulation_data,
-                                                   line_num)
 
     def _get_storage_obj(self):
         return self._data_storage
 
 
 class MFMultiDimVar(MFData):
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
-        super(MFMultiDimVar, self).__init__(sim_data, structure, enable, path,
-                                            dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
+        super(MFMultiDimVar, self).__init__(sim_data, model_or_sim, structure,
+                                            enable, path, dimensions)
+
+    @property
+    def data_type(self):
+        raise NotImplementedError(
+            'must define dat_type in child '
+            'class to use this base class')
+
+    @property
+    def plotable(self):
+        raise NotImplementedError(
+            'must define plotable in child '
+            'class to use this base class')
 
     def _get_internal_formatting_string(self, layer):
         if layer is None:

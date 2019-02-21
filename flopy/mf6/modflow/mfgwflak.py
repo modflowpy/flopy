@@ -396,7 +396,7 @@ class ModflowGwflak(mfpackage.MFPackage):
     outletperioddata = ListTemplateGenerator(('gwf6', 'lak', 'period', 
                                               'outletperioddata'))
     package_abbr = "gwflak"
-    package_type = "lak"
+    _package_type = "lak"
     dfn_file_name = "gwf-lak.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

@@ -110,7 +110,7 @@ class ModflowGwfevta(mfpackage.MFPackage):
     aux = ArrayTemplateGenerator(('gwf6', 'evta', 'period', 
                                   'aux(iaux)'))
     package_abbr = "gwfevta"
-    package_type = "evta"
+    _package_type = "evta"
     dfn_file_name = "gwf-evta.dfn"
 
     dfn = [["block options", "name readasarrays", "type keyword", "shape", 

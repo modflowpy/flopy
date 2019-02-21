@@ -203,3 +203,64 @@ def parsenamefile(namfilename, packages, verbose=True):
                 key = ftype
         ext_unit_dict[key] = NamData(ftype, fname, filehandle, packages)
     return ext_unit_dict
+
+def attribs_from_namfile_header(namefile):
+    # check for reference info in the nam file header
+    defaults = {"xll": None, "yll": None,
+                "xul": None, "yul": None, "rotation": 0.,
+                "proj4_str": None}
+    if namefile is None:
+        return defaults
+    header = []
+    with open(namefile, 'r') as f:
+        for line in f:
+            if not line.startswith('#'):
+                break
+            header.extend(line.strip().replace('#', '').split(';'))
+
+    for item in header:
+        if "xll" in item.lower():
+            try:
+                xll = float(item.split(':')[1])
+                defaults["xll"] = xll
+            except:
+                pass
+        elif "yll" in item.lower():
+            try:
+                yll = float(item.split(':')[1])
+                defaults["yll"] = yll
+            except:
+                pass
+        elif "xul" in item.lower():
+            try:
+                xul = float(item.split(':')[1])
+                defaults["xul"] = xul
+            except:
+                pass
+        elif "yul" in item.lower():
+            try:
+                yul = float(item.split(':')[1])
+                defaults["yul"] = yul
+            except:
+                pass
+        elif "rotation" in item.lower():
+            try:
+                angrot = float(item.split(':')[1])
+                defaults["rotation"] = angrot
+            except:
+                pass
+        elif "proj4_str" in item.lower():
+            try:
+                proj4 = ':'.join(item.split(':')[1:]).strip()
+                if proj4.lower() == 'none':
+                    proj4 = None
+                defaults['proj4_str'] = proj4
+            except:
+                pass
+        elif "start" in item.lower():
+            try:
+                start_datetime = item.split(':')[1].strip()
+                defaults["start_datetime"] = start_datetime
+            except:
+                pass
+    return defaults

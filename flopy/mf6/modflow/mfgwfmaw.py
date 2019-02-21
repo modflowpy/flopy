@@ -317,7 +317,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     perioddata = ListTemplateGenerator(('gwf6', 'maw', 'period', 
                                         'perioddata'))
     package_abbr = "gwfmaw"
-    package_type = "maw"
+    _package_type = "maw"
     dfn_file_name = "gwf-maw.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

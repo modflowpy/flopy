@@ -71,7 +71,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
     packages = ListTemplateGenerator(('gwf6', 'nam', 'packages', 
                                       'packages'))
     package_abbr = "gwfnam"
-    package_type = "nam"
+    _package_type = "nam"
     dfn_file_name = "gwf-nam.dfn"
 
     dfn = [["block options", "name list", "type string", "reader urword", 

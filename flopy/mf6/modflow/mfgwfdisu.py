@@ -165,7 +165,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                                       'vertices'))
     cell2d = ListTemplateGenerator(('gwf6', 'disu', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisu"
-    package_type = "disu"
+    _package_type = "disu"
     dfn_file_name = "gwf-disu.dfn"
 
     dfn = [["block options", "name length_units", "type string", 
