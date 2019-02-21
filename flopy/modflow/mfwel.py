@@ -13,6 +13,9 @@ import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
+from ..utils.optionblock import OptionBlock
+from collections import OrderedDict
+import warnings
 
 
 class ModflowWel(Package):
@@ -107,6 +110,15 @@ class ModflowWel(Package):
     >>> wel = flopy.modflow.ModflowWel(m, stress_period_data=lrcq)
 
     """
+    _options = OrderedDict([('specify', {OptionBlock.dtype: np.bool_,
+                                         OptionBlock.nested: True,
+                                         OptionBlock.n_nested: 2,
+                                         OptionBlock.vars: OrderedDict(
+                                             [('phiramp',
+                                               OptionBlock.simple_float),
+                                              ('iunitramp',
+                                               OptionBlock.simple_int)])}),
+                            ('tabfiles', OptionBlock.simple_tabfile)])
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
                  extension='wel', options=None, binary=False,
@@ -155,19 +167,33 @@ class ModflowWel(Package):
 
         self.ipakcb = ipakcb
         self.np = 0
+
         if options is None:
             options = []
         self.specify = False
-        for idx, opt in enumerate(options):
-            if 'specify' in opt:
-                t = opt.strip().split()
+        self.phiramp = None
+        self.iunitramp = None
+        self.options = options
+        if isinstance(options, OptionBlock):
+            if not self.options.specify:
+                self.specify = self.options.specify
+            else:
                 self.specify = True
-                self.phiramp = np.float(t[1])
-                self.phiramp_unit = np.int(t[2])
-                options.pop(idx)
-                break
-        #self.options = options
-        #self.parent.add_package(self)
+
+            self.phiramp = self.options.phiramp
+            self.iunitramp = self.options.iunitramp
+            # this is to grab the aux variables...
+            options = []
+
+        else:
+            for idx, opt in enumerate(options):
+                if 'specify' in opt:
+                    t = opt.strip().split()
+                    self.specify = True
+                    self.phiramp = np.float(t[1])
+                    self.iunitramp = np.int(t[2])
+                    self.options.pop(idx)
+                    break
 
         if dtype is not None:
             self.dtype = dtype
@@ -187,8 +213,11 @@ class ModflowWel(Package):
                 if ladd:
                     options.append('aux {} '.format(name))
 
-        # add options
-        self.options = options
+        if isinstance(self.options, OptionBlock):
+            if not self.options.auxillary:
+                self.options.auxillary = options
+        else:
+            self.options = options
 
         # initialize MfList
         self.stress_period_data = MfList(self, stress_period_data,
@@ -196,33 +225,79 @@ class ModflowWel(Package):
 
         self.parent.add_package(self)
 
+    @property
+    def phiramp_unit(self):
+        err = "phiramp_unit will be replaced " \
+              "with iunitramp for consistency"
+        warnings.warn(err, DeprecationWarning)
+        return self.iunitramp
+
+    @phiramp_unit.setter
+    def phiramp_unit(self, phiramp_unit):
+        self.iunitramp = phiramp_unit
+
     def ncells(self):
         # Returns the  maximum number of cells that have a well
         # (developed for MT3DMS SSM package)
         return self.stress_period_data.mxact
 
-    def write_file(self):
+    def write_file(self, f=None):
         """
         Write the package file.
+
+        Parameters:
+            f: (str) optional file name
 
         Returns
         -------
         None
 
         """
-        f_wel = open(self.fn_path, 'w')
-        f_wel.write('%s\n' % self.heading)
-        line = (
-        ' {0:9d} {1:9d}'.format(self.stress_period_data.mxact, self.ipakcb))
+        if f is not None:
+            if isinstance(f, str):
+                f_wel = open(f, "w")
+            else:
+                f_wel = f
+        else:
+            f_wel = open(self.fn_path, 'w')
 
-        for opt in self.options:
-            line += ' ' + str(opt)
+        f_wel.write('%s\n' % self.heading)
+
+        if isinstance(self.options, OptionBlock) and \
+                self.parent.version == "mfnwt":
+
+            self.options.update_from_package(self)
+            if self.options.block:
+                self.options.write_options(f_wel)
+
+        line = (
+        ' {0:9d} {1:9d} '.format(self.stress_period_data.mxact, self.ipakcb))
+
+        if isinstance(self.options, OptionBlock):
+            if self.options.noprint:
+                line += "NOPRINT "
+            if self.options.auxillary:
+                line += " ".join([str(aux).upper() for aux in
+                                  self.options.auxillary])
+
+        else:
+            for opt in self.options:
+                line += ' ' + str(opt)
+
         line += '\n'
         f_wel.write(line)
 
-        if self.specify and self.parent.version == 'mfnwt':
-            f_wel.write('SPECIFY {0:10.5g} {1:10d}\n'.format(self.phiramp,
-                                                             self.phiramp_unit))
+        if isinstance(self.options, OptionBlock) and \
+                self.parent.version == 'mfnwt':
+            if not self.options.block:
+                if isinstance(self.options.specify, np.ndarray):
+                    self.options.tabfiles = False
+                    self.options.write_options(f_wel)
+
+        else:
+            if self.specify and self.parent.version == 'mfnwt':
+                f_wel.write('SPECIFY {0:10.5g} {1:10d}\n'.format(self.phiramp,
+                                                                 self.iunitramp))
 
         self.stress_period_data.write_transient(f_wel)
         f_wel.close()

@@ -129,7 +129,7 @@ class ModflowGage(Package):
                     for n in range(numgage):
                         files.append(filenames[n+1])
 
-            # convert gage_data to a recarry, if necessary
+            # convert gage_data to a recarray, if necessary
             if isinstance(gage_data, np.ndarray):
                 if not gage_data.dtype == dtype:
                     gage_data = np.core.records.fromarrays(
@@ -204,7 +204,7 @@ class ModflowGage(Package):
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recaray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowGage.get_default_dtype()
         return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 

@@ -965,7 +965,7 @@ class BaseModel(object):
         # performed on a model load
         if self.parameter_load and not self.free_format_input:
             if self.verbose:
-                print('\nReseting free_format_input to True to ' +
+                print('\nResetting free_format_input to True to ' +
                       'preserve the precision of the parameter data.')
             self.free_format_input = True
 
@@ -980,7 +980,7 @@ class BaseModel(object):
                 # model-level package check above
                 # otherwise checks are run twice
                 # or the model level check procedure would have to be split up
-                # or each package would need a check arguemnt,
+                # or each package would need a check argument,
                 # or default for package level check would have to be False
                 try:
                     p.write_file(check=False)
@@ -1312,7 +1312,7 @@ def run_model(exe_name, namefile, model_ws='./',
         Normal termination message used to determine if the
         run terminated normally. (default is 'normal termination')
     use_async : boolean
-        asynchonously read model stdout and report with timestamps.  good for
+        asynchronously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
         really fast
     cargs : str or list of strings

@@ -446,7 +446,7 @@ class ModflowOc(Package):
         [100, 101]
 
         """
-        # set iubud by iterating through the pacakages
+        # set iubud by iterating through the packages
         self._set_budgetunit()
         return self.iubud
 

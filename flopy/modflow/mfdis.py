@@ -88,7 +88,7 @@ class ModflowDis(Package):
         PROJ4 string that defines the xul-yul coordinate system
         (.e.g. '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ').
         Can be an EPSG code (e.g. 'EPSG:4326'). Default is 'EPSG:4326'
-    start_dateteim : str
+    start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
 
     Attributes
@@ -397,7 +397,7 @@ class ModflowDis(Package):
                 y[r] = self.delc[r] / 2.
             else:
                 y[r] = y[r - 1] + (self.delc[r] + self.delc[r - 1]) / 2.
-        # Invert y to convert to a cartesian coordiante system
+        # Invert y to convert to a Cartesian coordinate system
         y = y[::-1]
         # In column direction
         x = np.empty((self.ncol))

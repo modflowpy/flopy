@@ -168,7 +168,7 @@ class ModflowGwflak(mfpackage.MFPackage):
           connection conductance calculations use the hydraulic conductivity
           corresponding to the :math:`K_{33}` tensor component defined for
           CELLID in the NPF package. Embedded lakes can only be connected to a
-          single cell (NLAKCONN = 1) and there must be a lake table associated
+          single cell (NLAKECONN = 1) and there must be a lake table associated
           with each embedded lake.
         * bedleak (double) character string or real value that defines the bed
           leakance for the lake-GWF connection. BEDLEAK must be greater than or
@@ -486,7 +486,7 @@ class ModflowGwflak(mfpackage.MFPackage):
            ["block connectiondata", "name connectiondata", 
             "type recarray lakeno iconn cellid claktype bedleak belev telev " 
             "connlen connwidth", 
-            "shape (sum(nlakecon))", "reader urword"],
+            "shape (sum(nlakeconn))", "reader urword"],
            ["block connectiondata", "name lakeno", "type integer", "shape", 
             "tagged false", "in_record true", "reader urword", 
             "numeric_index true"],

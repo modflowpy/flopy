@@ -311,7 +311,7 @@ def stress_util2d(ml, nlay, nrow, ncol):
     # util2d binary check
     ml.lpf.vka[0].format.binary = True
 
-    # util3d cnstnt propogation test
+    # util3d cnstnt propagation test
     ml.lpf.vka.cnstnt = 2.0
     ml.write_input()
 

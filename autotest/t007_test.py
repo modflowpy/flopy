@@ -892,7 +892,7 @@ def test_wkt_parse():
             wkttxt = wkttxt.replace("'", '"')
         if len(wkttxt) > 0 and 'projcs' in wkttxt.lower():
             crsobj = crs(esri_wkt=wkttxt)
-            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheriod_name',
+            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheroid_name',
                             'semi_major_axis', 'inverse_flattening',
                             'primem', 'gcs_unit']
             for k in geocs_params:

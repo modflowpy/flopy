@@ -40,7 +40,7 @@ class Lgr(object):
         xllp : float
             x location of parent grid lower left corner
         yllp : float
-            y locaiton of parent grid lower left corner
+            y location of parent grid lower left corner
 
         """
 

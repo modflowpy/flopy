@@ -54,7 +54,7 @@ class ListBudget(object):
 
         self.tssp_lines = 0
 
-        # Assign the budgetkey, which should have been overriden
+        # Assign the budgetkey, which should have been overridden
         if budgetkey is None:
             self.set_budget_key()
         else:
@@ -265,7 +265,7 @@ class ListBudget(object):
         Returns
         -------
         out : float
-        Floating point value with the runtime in requested units. Returns NaN if runtime not foudn in list file
+        Floating point value with the runtime in requested units. Returns NaN if runtime not found in list file
 
         Examples
         --------

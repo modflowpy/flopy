@@ -175,7 +175,7 @@ class ModflowChd(Package):
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
-        # get an empty recaray that corresponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype = ModflowChd.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)

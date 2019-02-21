@@ -47,7 +47,7 @@ class MtListBudget(object):
         self.tssp_lines = 0
         self.tkstp_overflow = 100000  # in case transport step number goes above 99999 which might be outputted as *****
 
-        # Assign the budgetkey, which should have been overriden
+        # Assign the budgetkey, which should have been overridden
         self.gw_budget_key = ">>>for component no."
         line = 'STREAM MASS BUDGETS AT END OF TRANSPORT STEP'
         self.sw_budget_key = line.lower()

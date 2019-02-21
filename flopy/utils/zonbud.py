@@ -279,7 +279,7 @@ class ZoneBudget(object):
 
         Returns
         -------
-        budget_list : list of reecord arrays
+        budget_list : list of record arrays
             A list of the zonebudget record arrays.
 
         Examples
@@ -475,7 +475,7 @@ class ZoneBudget(object):
 
         Returns
         -------
-        Noen
+        None
 
         """
         # Initialize an array to track where the constant head cells
@@ -850,7 +850,7 @@ class ZoneBudget(object):
 
                 # Get indices where flow face values are negative (flow into higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
-                # Create an interable tuple of (from zone, to zone, flux)
+                # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
@@ -876,7 +876,7 @@ class ZoneBudget(object):
 
                 # Get indices where flow face values are positive (flow out of higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
-                # Create an interable tuple of (from zone, to zone, flux)
+                # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))

@@ -626,7 +626,7 @@ class NetCdf(object):
             proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
         try:
-            self.grid_crs = Proj(proj4_str, preseve_units=True, errcheck=True)
+            self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
 
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))

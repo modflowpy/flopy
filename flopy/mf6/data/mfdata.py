@@ -1329,7 +1329,7 @@ class DataStorage(object):
         # currently only support files containing ndarrays
         if self.data_structure_type != DataStructureType.ndarray:
             path = self.data_dimensions.structure.path
-            message= 'Can not convert {} to internal data. Exernal to ' \
+            message= 'Can not convert {} to internal data. External to ' \
                      'internal file operations currently only supported ' \
                      'for ndarrays.'.format(path[-1])
             type_, value_, traceback_ = sys.exc_info()
@@ -2406,7 +2406,7 @@ class MFData(object):
         <package>, <block>, <data>)
     dimensions : DataDimensions
         object used to retrieve dimension information about data
-    *arges, **kwargs : exists to support different child class parameter sets
+    *args, **kwargs : exists to support different child class parameter sets
         with extra init parameters
 
     Attributes

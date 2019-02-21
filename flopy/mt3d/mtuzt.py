@@ -22,7 +22,7 @@ class Mt3dUzt(Package):
         Is a flag that indicates whether or not ET is being simulated in the 
         UZF1 flow package (=0 indicates that ET is not being simulated).  
         If ET is not being simulated, IET informs FMI package not to look 
-        for UZET and GWET arrays in the flow-tranpsort link file.
+        for UZET and GWET arrays in the flow-transport link file.
     iuzfbnd : array of ints
         Specifies which row/column indices variably-saturated transport will 
         be simulated in.

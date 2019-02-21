@@ -66,7 +66,7 @@ class ModflowStr(Package):
         datasets 6 and 8.
 
         The value for stress period data for a stress period can be an integer
-        (-1 or 0), a list of lists, a numpy array, or a numpy recarry. If
+        (-1 or 0), a list of lists, a numpy array, or a numpy recarray. If
         stress period data for a stress period contains an integer, a -1 denotes
         data from the previous stress period will be reused and a 0 indicates
         there are no str reaches for this stress period.
@@ -119,7 +119,7 @@ class ModflowStr(Package):
         a integer value is specified for stress period data.
 
         The value for segment data for a stress period can be an integer
-        (-1 or 0), a list of lists, a numpy array, or a numpy recarry. If
+        (-1 or 0), a list of lists, a numpy array, or a numpy recarray. If
         segment data for a stress period contains an integer, a -1 denotes
         data from the previous stress period will be reused and a 0 indicates
         there are no str segments for this stress period.
@@ -373,7 +373,7 @@ class ModflowStr(Package):
 
     @staticmethod
     def get_empty(ncells=0, nss=0, aux_names=None, structured=True):
-        # get an empty recarray that correponds to dtype
+        # get an empty recarray that corresponds to dtype
         dtype, dtype2 = ModflowStr.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)

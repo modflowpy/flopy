@@ -19,7 +19,7 @@ Well model will use SKIN   !!  Other options are Linear and NonLinear:2.00  --Ex
         2        15         9      0      -1
         2        13         7      0      -1                      SITE:Simple-C
         1        18         4      0      -1.
-#                                Multi-node switch    Switch to specify Hlim         Auxillary
+#                                Multi-node switch    Switch to specify Hlim         Auxiliary
 #                                         |           as difference from Href        definitions
 #                                         |                   |                      
 #    lay        row       col       Q     |  Conc   rw  Skin  | Hlim   Href   QWZN   |

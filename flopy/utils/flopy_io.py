@@ -4,8 +4,23 @@ Module for input/output utilities
 import sys
 import numpy as np
 
+
 def _fmt_string(array, float_format='{}'):
-    """makes a formatting string for a rec-array; given a desired float_format."""
+    """
+    makes a formatting string for a rec-array;
+    given a desired float_format.
+
+    Parameters
+    ----------
+    array : np.recarray
+    float_format : str
+        formatter for floating point variable
+
+    Returns
+    -------
+    fmt_string : str
+        formatting string for writing output
+    """
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
@@ -24,16 +39,36 @@ def _fmt_string(array, float_format='{}'):
                             "in dtype:" + vtype)
     return fmt_string
 
+
+def line_strip(line):
+    """
+    Remove comments and replace commas from input text
+    for a free formatted modflow input file
+
+    Parameters
+    ----------
+        line : str
+            a line of text from a modflow input file
+
+    Returns
+    -------
+        str : line with comments removed and commas replaced
+    """
+    for comment_flag in [';', '#', '!!']:
+        line = line.split(comment_flag)[0]
+    line = line.strip()
+    return line.replace(',', ' ')
+
+
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
     case where a free formatted MODFLOW input file may have commas in
     it.
     """
-    for comment_flag in [';', '#', '!!']:
-        line = line.split(comment_flag)[0]
-    line = line.replace(',', ' ')
-    return line.strip().split()
+    line = line_strip(line)
+    return line.split()
+
 
 def pop_item(line, dtype=str):
     if len(line) > 0:
@@ -46,16 +81,6 @@ def pop_item(line, dtype=str):
             # '-10.'
             return int(float(line.pop(0)))
     return dtype(0)
-
-def read_nwt_options(f):
-    """convert options codeblock to single line."""
-    options = []
-    while True:
-        options += line_parse(f.readline().lower())
-        if 'end' in options:
-            return ' '.join(options[:-1])
-
-
 
 
 def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):

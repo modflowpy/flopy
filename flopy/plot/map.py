@@ -625,10 +625,10 @@ class ModelMap(object):
 
         Parameters
         ----------
-        pl : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
+        pl : list of recarrays or a single recarray
+            recarray or list of recarrays is data returned from
             modpathfile PathlineFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            methods. Data in recarray is 'x', 'y', 'z', 'time',
             'k', and 'particleid'.
         travel_time: float or str
             travel_time is a travel time selection for the displayed
@@ -780,7 +780,7 @@ class ModelMap(object):
 
         Parameters
         ----------
-        ep : rec array
+        ep : recarray
             A numpy recarray with the endpoint particle data from the
             MODPATH 6 endpoint file
         direction : str
@@ -791,7 +791,7 @@ class ModelMap(object):
             (l, r, c) to use to make a selection of particle endpoints.
             The selection could be a well location to determine capture zone
             for the well. If selection is None, all particle endpoints for
-            the user-sepcified direction will be plotted. (default is None)
+            the user-specified direction will be plotted. (default is None)
         selection_direction : str
             String defining is a selection should be made on starting or
             ending particle locations. If selection is not None and
@@ -937,10 +937,10 @@ class ModelMap(object):
 
         Parameters
         ----------
-        ts : list of rec arrays or a single rec array
-            rec array or list of rec arrays is data returned from
+        ts : list of recarrays or a single recarray
+            recarray or list of recarrays is data returned from
             modpathfile TimeseriesFile get_data() or get_alldata()
-            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            methods. Data in recarray is 'x', 'y', 'z', 'time',
             'k', and 'particleid'.
         travel_time: float or str
             travel_time is a travel time selection for the displayed

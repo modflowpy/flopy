@@ -56,7 +56,7 @@ def load_lak(mfnam, pth, run):
         fn0 = os.path.join(lpth, mfnam)
 
 
-    # write free format files - wont run without resetting to free format - evt externa file issue
+    # write free format files - wont run without resetting to free format - evt external file issue
     m.free_format_input = True
 
     # rewrite files

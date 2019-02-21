@@ -1,0 +1,17 @@
+# test well scenario for GSFloPy Development
+OPTIONS
+Specify 0.1 90
+END
+5 0 noprint
+5
+1 35 12 20
+1 36 13 21
+1 37 14 22
+1 45 12 33
+2 12 50	1000
+5 
+2 35 12 10
+2 36 12 11
+2 37 12 14
+1 35 12 20
+1 36 13 21
