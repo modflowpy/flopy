@@ -2349,6 +2349,7 @@ class Util2d(object):
         """
         if len(shape) == 1:
             num_items = shape[0]
+            ncol = num_items
         elif len(shape) == 2:
             nrow, ncol = shape
             num_items = nrow * ncol
@@ -2368,7 +2369,7 @@ class Util2d(object):
                 if ',' in line:
                     line = line.replace(',', ' ')
                 if '*' in line:  # use slower method for these types of lines
-                    for item in line.split():
+                    for item in line.split()[0:ncol]:
                         if '*' in item:
                             num, val = item.split('*')
                             # repeat val num times
@@ -2376,7 +2377,7 @@ class Util2d(object):
                         else:
                             items.append(item)
                 else:
-                    items += line.split()
+                    items += line.split()[0:ncol]
             else:  # fixed width
                 pos = 0
                 for i in range(npl):
