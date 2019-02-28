@@ -2366,18 +2366,30 @@ class Util2d(object):
             if len(line) == 0:
                 raise ValueError('Util2d.load_txt(): no data found')
             if npl == 'free':
-                if ',' in line:
-                    line = line.replace(',', ' ')
-                if '*' in line:  # use slower method for these types of lines
-                    for item in line.split()[0:ncol]:
-                        if '*' in item:
-                            num, val = item.split('*')
-                            # repeat val num times
-                            items += int(num) * [val]
-                        else:
-                            items.append(item)
-                else:
-                    items += line.split()[0:ncol]
+                # supports both wrapped and unwrapped arrays,
+                # with comment on the very last line after ncol number of items
+                # have been read for each row 
+                col_items = []
+                while True:
+                    if ',' in line:
+                        line = line.replace(',', ' ')
+                    col_data = line.split() 
+                    if '*' in line:  # use slower method for these types of lines
+                        for item in col_data:
+                            if '*' in item:
+                                num, val = item.split('*')
+                                # repeat val num times
+                                col_items += int(num) * [val]
+                            else:
+                                col_items.append(item)
+                    else:
+                        col_items += col_data
+                    if len(col_items) >= ncol:
+                        items.extend(col_items[0:ncol])
+                        break
+                    else:
+                        line = file_in.readline()
+
             else:  # fixed width
                 pos = 0
                 for i in range(npl):

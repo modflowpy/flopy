@@ -41,6 +41,32 @@ def test_load_txt_free():
     np.testing.assert_equal(fa, a)
     assert fa.dtype == a.dtype
 
+    # unwrapped array
+    a = np.array([[1,1,1,1],[2,2,2,2],[3,3,3,3],[4,4,4,4]], dtype=np.int)
+    fp = StringIO(dedent(u'''\
+        1 1 1 1 row 1 
+        2 2 2 2
+        3 3 3 3 row 3
+        4*4 row 4
+    '''))
+    fa = Util2d.load_txt(a.shape, fp, a.dtype, '(FREE)')
+    np.testing.assert_equal(fa, a)
+    assert fa.dtype == a.dtype
+
+    # wrapped array
+    a = np.array([[2,2,2,2],[3,3,3,3],[4,4,4,4],[5,5,5,5]], dtype=np.int)
+    fp = StringIO(dedent(u'''\
+        2 2 2 
+        2 row 1 
+        3 
+        3 3 3 row 2
+        3*4 4 row 3
+        5 5 5 5 row 4
+    '''))
+    fa = Util2d.load_txt(a.shape, fp, a.dtype, '(FREE)')
+    np.testing.assert_equal(fa, a)
+    assert fa.dtype == a.dtype
+
 
 def test_load_txt_fixed():
     a = np.arange(10, dtype=np.int32).reshape((2, 5))
