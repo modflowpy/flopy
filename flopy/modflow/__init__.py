@@ -6,6 +6,7 @@ from .mfchd import ModflowChd
 from .mffhb import ModflowFhb
 from .mfdis import ModflowDis
 from .mfdrn import ModflowDrn
+from .mfdrt import ModflowDrt
 from .mfevt import ModflowEvt
 from .mfghb import ModflowGhb
 from .mfpbc import ModflowPbc
