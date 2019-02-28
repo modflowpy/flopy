@@ -93,6 +93,8 @@ class ModflowDrn(Package):
     Notes
     -----
     Parameters are not supported in FloPy.
+    If "RETURNFLOW" in passed in options, the drain return package (DRT) activated, which expects
+    a different (longer) dtype for stress_period_data
 
     Examples
     --------
@@ -130,8 +132,17 @@ class ModflowDrn(Package):
         else:
             ipakcb = 0
 
-        # Fill namefile items
-        name = [ModflowDrn.ftype()]
+        if options is None:
+            options = []
+        self.is_drt = False
+        for opt in options:
+            if opt.upper() == "RETURNFLOW":
+                self.is_drt = True
+                break
+        if self.is_drt:
+            name = ["DRT"]
+        else:
+            name = [ModflowDrn.ftype()]
         units = [unitnumber]
         extra = ['']
 
@@ -150,8 +161,8 @@ class ModflowDrn(Package):
         self.ipakcb = ipakcb
 
         self.np = 0
-        if options is None:
-            options = []
+
+
         self.options = options
         if dtype is not None:
             self.dtype = dtype
@@ -196,6 +207,9 @@ class ModflowDrn(Package):
         f_drn.write('{0}\n'.format(self.heading))
         # f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))
         line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)
+
+        if self.is_drt:
+            line += "{0:10d}{0:10d}".format(0)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
