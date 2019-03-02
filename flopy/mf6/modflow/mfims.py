@@ -281,7 +281,7 @@ class ModflowIms(mfpackage.MFPackage):
     rcloserecord = ListTemplateGenerator(('ims', 'linear', 
                                           'rcloserecord'))
     package_abbr = "ims"
-    package_type = "ims"
+    _package_type = "ims"
     dfn_file_name = "sln-ims.dfn"
 
     dfn = [["block options", "name print_option", "type string", 

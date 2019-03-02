@@ -23,7 +23,8 @@ contribute.
 __name__ = 'flopy'
 __author__ = 'Mark Bakker, Vincent Post, Christian D. Langevin, ' + \
              'Joseph D. Hughes, Jeremy T. White, Andrew T. Leaf, ' + \
-             'Scott R. Paulinski, Jeffrey J. Starn, and Michael N. Fienen'
+             'Scott R. Paulinski, Jeffrey J. Starn, Michael N. Fienen, ' +\
+             'and Joshua D. Larsen'
 
 from .version import __version__, __build__, __git_commit__
 
@@ -38,4 +39,6 @@ from . import plot
 from . import export
 from . import pest
 from . import mf6
+from . import discretization
+
 from .mbase import run_model, which

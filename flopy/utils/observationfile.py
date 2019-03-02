@@ -3,6 +3,7 @@ import numpy as np
 
 from ..utils.utils_def import FlopyBinaryData
 
+
 class ObsFiles(FlopyBinaryData):
     def __init__(self):
         super(ObsFiles, self).__init__()

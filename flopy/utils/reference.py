@@ -5,6 +5,7 @@ Module spatial referencing for flopy model objects
 import json
 import numpy as np
 import os
+import warnings
 
 from collections import OrderedDict
 
@@ -119,6 +120,9 @@ class SpatialReference(object):
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str=None, epsg=None, prj=None, units=None,
                  length_multiplier=None):
+        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
+                      " instead.",
+                      category=DeprecationWarning)
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
@@ -236,6 +240,8 @@ class SpatialReference(object):
                     wkt = src.read()
             elif self.epsg is not None:
                 wkt = getprj(self.epsg)
+            else:
+                return None
             return wkt
         else:
             return self._wkt
@@ -807,7 +813,7 @@ class SpatialReference(object):
 
     def get_grid_lines(self):
         """
-            Get the grid lines as a list
+        Get the grid lines as a list
 
         """
         xmin = self.xedge[0]
@@ -841,10 +847,11 @@ class SpatialReference(object):
         Get a LineCollection of the grid
 
         """
-        from matplotlib.collections import LineCollection
+        from flopy.plot import ModelMap
 
-        lc = LineCollection(self.get_grid_lines(), **kwargs)
-        return lc
+        map = ModelMap(sr=self)
+        ax = map.plot_grid(**kwargs)
+        return ax
 
     def get_xcenter_array(self):
         """
@@ -931,6 +938,9 @@ class SpatialReference(object):
             return [v.tolist() for v in vrts]
 
     def get_rc(self, x, y):
+        return self.get_ij(x, y)
+
+    def get_ij(self, x, y):
         """Return the row and column of a point or sequence of points
         in real-world coordinates.
 
@@ -941,8 +951,8 @@ class SpatialReference(object):
 
         Returns
         -------
-        r : row or sequence of rows (zero-based)
-        c : column or sequence of columns (zero-based)
+        i : row or sequence of rows (zero-based)
+        j : column or sequence of columns (zero-based)
         """
         if np.isscalar(x):
             c = (np.abs(self.xcentergrid[0] - x)).argmin()
@@ -954,7 +964,7 @@ class SpatialReference(object):
             r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
         return r, c
 
-    def get_grid_map_plotter(self):
+    def get_grid_map_plotter(self, **kwargs):
         """
         Create a QuadMesh plotting object for this grid
 
@@ -963,10 +973,9 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        from matplotlib.collections import QuadMesh
-        verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
-        qm = QuadMesh(self.ncol, self.nrow, verts)
-        return qm
+        # why is this a seperate method it returns a similar repr
+        # as get_grid_line_collection!
+        return self.get_grid_line_collection(**kwargs)
 
     def plot_array(self, a, ax=None, **kwargs):
         """
@@ -981,11 +990,15 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        import matplotlib.pyplot as plt
-        if ax is None:
-            ax = plt.gca()
-        qm = ax.pcolormesh(self.xgrid, self.ygrid, a, **kwargs)
-        return qm
+        from flopy.plot.plotutil import PlotUtilities
+        from flopy.discretization import StructuredGrid
+        mg = StructuredGrid(delc=self.delc,
+                            delr=self.delr,
+                            xoff=self.xll,
+                            yoff=self.yll,
+                            angrot=self.rotation)
+        ax = PlotUtilities._plot_array_helper(a, modelgrid=mg, axes=ax, **kwargs)
+        return ax
 
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
@@ -1080,7 +1093,7 @@ class SpatialReference(object):
                 return
             dxdy = self.delc[0] * self.length_multiplier
             trans = Affine.translation(self.xul, self.yul) * \
-                    Affine.rotation(self.rotation) * \
+                    Affine.angrot(self.rotation) * \
                     Affine.scale(dxdy, -dxdy)
 
             # third dimension is the number of bands
@@ -1232,38 +1245,12 @@ class SpatialReference(object):
         contour_set : ContourSet
 
         """
-        try:
-            import matplotlib.tri as tri
-        except:
-            tri = None
-        plot_triplot = False
-        if 'plot_triplot' in kwargs:
-            plot_triplot = kwargs.pop('plot_triplot')
-        if 'extent' in kwargs and tri is not None:
-            extent = kwargs.pop('extent')
-            idx = (self.xcentergrid >= extent[0]) & (
-                    self.xcentergrid <= extent[1]) & (
-                          self.ycentergrid >= extent[2]) & (
-                          self.ycentergrid <= extent[3])
-            a = a[idx].flatten()
-            xc = self.xcentergrid[idx].flatten()
-            yc = self.ycentergrid[idx].flatten()
-            triang = tri.Triangulation(xc, yc)
-            try:
-                amask = a.mask
-                mask = [False for i in range(triang.triangles.shape[0])]
-                for ipos, (n0, n1, n2) in enumerate(triang.triangles):
-                    if amask[n0] or amask[n1] or amask[n2]:
-                        mask[ipos] = True
-                triang.set_mask(mask)
-            except:
-                mask = None
-            contour_set = ax.tricontour(triang, a, **kwargs)
-            if plot_triplot:
-                ax.triplot(triang, color='black', marker='o', lw=0.75)
-        else:
-            contour_set = ax.contour(self.xcentergrid, self.ycentergrid,
-                                     a, **kwargs)
+        from flopy.plot import ModelMap
+
+        kwargs['ax'] = ax
+        map = ModelMap(sr=self)
+        contour_set = map.contour_array(a=a, **kwargs)
+
         return contour_set
 
     @property
@@ -1577,6 +1564,9 @@ class SpatialReferenceUnstructured(SpatialReference):
     def __init__(self, xc, yc, verts, iverts, ncpl, layered=True, lenuni=1,
                  proj4_str="EPSG:4326", epsg=None, units=None,
                  length_multiplier=1.):
+        warnings.warn("SpatialReferenceUnstructured has been deprecated. "
+                      "Use VertexGrid instead.",
+                      category=DeprecationWarning)
         self.xc = xc
         self.yc = yc
         self.verts = verts
@@ -1608,6 +1598,10 @@ class SpatialReferenceUnstructured(SpatialReference):
             assert self.xc.shape[0] == self.ncpl.sum()
             assert self.yc.shape[0] == self.ncpl.sum()
         return
+
+    @property
+    def grid_type(self):
+        return "unstructured"
 
     def write_shapefile(self, filename='grid.shp'):
         """
@@ -1768,8 +1762,7 @@ class SpatialReferenceUnstructured(SpatialReference):
 
         """
         from ..plot import plotutil
-        if ax is None:
-            ax = plt.gca()
+
         patch_collection = plotutil.plot_cvfd(self.verts, self.iverts, a=a,
                                               ax=ax)
         return patch_collection
@@ -1843,6 +1836,8 @@ class epsgRef:
     """
 
     def __init__(self):
+        warnings.warn(
+            "epsgRef has been deprecated.", category=DeprecationWarning)
         try:
             from appdirs import user_data_dir
         except ImportError:
@@ -1913,7 +1908,6 @@ class crs(object):
     and translate between different formats."""
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
-
         self.wktstr = None
         if prj is not None:
             with open(prj) as input:
@@ -2110,6 +2104,8 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
     prj : str
         text for a projection (*.prj) file.
     """
+    warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
+                  "instead.", category=DeprecationWarning)
     epsgfile = epsgRef()
     wktstr = epsgfile.get(epsg)
     if wktstr is None:
@@ -2139,6 +2135,9 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     """
     from flopy.utils.flopy_io import get_url_text
+
+    warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
+                  "instead.", category=DeprecationWarning)
 
     epsg_categories = ['epsg', 'esri']
     for cat in epsg_categories:
@@ -2176,4 +2175,7 @@ def getproj4(epsg):
     prj : str
         text for a projection (*.prj) file.
     """
+    warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
+                  "instead.", category=DeprecationWarning)
+
     return get_spatialreference(epsg, text='proj4')

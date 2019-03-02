@@ -61,7 +61,7 @@ class ModflowUtlts(mfpackage.MFPackage):
                                                'sfacrecord_single'))
     timeseries = ListTemplateGenerator(('ts', 'timeseries', 'timeseries'))
     package_abbr = "utlts"
-    package_type = "ts"
+    _package_type = "ts"
     dfn_file_name = "utl-ts.dfn"
 
     dfn = [["block attributes", "name time_series_namerecord", 

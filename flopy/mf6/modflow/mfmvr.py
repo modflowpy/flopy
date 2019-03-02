@@ -100,7 +100,7 @@ class ModflowMvr(mfpackage.MFPackage):
     packages = ListTemplateGenerator(('mvr', 'packages', 'packages'))
     perioddata = ListTemplateGenerator(('mvr', 'period', 'perioddata'))
     package_abbr = "mvr"
-    package_type = "mvr"
+    _package_type = "mvr"
     dfn_file_name = "gwf-mvr.dfn"
 
     dfn = [["block options", "name print_input", "type keyword", 

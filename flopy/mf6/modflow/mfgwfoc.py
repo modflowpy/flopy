@@ -96,7 +96,7 @@ class ModflowGwfoc(mfpackage.MFPackage):
     printrecord = ListTemplateGenerator(('gwf6', 'oc', 'period', 
                                          'printrecord'))
     package_abbr = "gwfoc"
-    package_type = "oc"
+    _package_type = "oc"
     dfn_file_name = "gwf-oc.dfn"
 
     dfn = [["block options", "name budget_filerecord", 

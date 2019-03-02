@@ -133,7 +133,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'evt', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfevt"
-    package_type = "evt"
+    _package_type = "evt"
     dfn_file_name = "gwf-evt.dfn"
 
     dfn = [["block options", "name fixed_cell", "type keyword", "shape", 

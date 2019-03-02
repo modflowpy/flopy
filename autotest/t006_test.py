@@ -20,9 +20,8 @@ def test_binaryfile_reference():
     h = flopy.utils.HeadFile(
         os.path.join('..', 'examples', 'data', 'freyberg', 'freyberg.githds'))
     assert isinstance(h, flopy.utils.HeadFile)
-    h.sr.xul = 1000.0
-    h.sr.yul = 200.0
-    h.sr.rotation = 15.0
+    h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
+
     if matplotlib is not None:
         assert isinstance(h.plot(), matplotlib.axes.Axes)
     return
@@ -33,9 +32,8 @@ def test_formattedfile_reference():
         os.path.join('..', 'examples', 'data', 'mf2005_test',
                      'test1tr.githds'))
     assert isinstance(h, flopy.utils.FormattedHeadFile)
-    h.sr.xul = 1000.0
-    h.sr.yul = 200.0
-    h.sr.rotation = 15.0
+    h.mg.set_coord_info(xoff=1000.0, yoff=200.0, angrot=15.0)
+
     if matplotlib is not None:
         assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
     return
@@ -101,7 +99,7 @@ if __name__ == '__main__':
     # test_mbase_sr()
     # test_sr()
     # test_dis_reference()
-    #test_mflist_reference()
-    test_cbc_ts()
+    test_mflist_reference()
+    # test_cbc_ts()
     # test_formattedfile_reference()
     # test_binaryfile_reference()

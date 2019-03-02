@@ -36,6 +36,7 @@ class acdd:
 
         self.id = sciencebase_id
         self.model = model
+        self.model_grid = model.modelgrid
         self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(
             sciencebase_id)
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
@@ -89,8 +90,8 @@ class acdd:
         self.geospatial_lat_max = self.bounds.get('maxY')
         self.geospatial_lon_min = self.bounds.get('minX')
         self.geospatial_lon_max = self.bounds.get('maxX')
-        self.geospatial_vertical_min = self.model.dis.botm.array.min()
-        self.geospatial_vertical_max = self.model.dis.top.array.max()
+        self.geospatial_vertical_min = self.model_grid.botm.min()
+        self.geospatial_vertical_max = self.model_grid.top.max()
         self.geospatial_vertical_positive = 'up'  # assumed to always be up for GW models
         self.time_coverage_start = self.time_coverage.get('start')
         self.time_coverage_end = self.time_coverage.get('end')
@@ -174,12 +175,12 @@ class acdd:
         for t in ['start', 'end']:
             tc[t] = [d.get('dateString') for d in l
                      if t in d['type'].lower()][0]
-        if not np.all(self.model.dis.steady) and pd:
+        if not np.all(self.model_grid.steady) and pd:
             # replace with times from model reference
-            tc['start'] = self.model.dis.start_datetime
-            strt = pd.Timestamp(self.model.dis.start_datetime)
-            mlen = self.model.dis.perlen.array.sum()
-            tunits = self.model.dis.itmuni_dict[self.model.dis.itmuni]
+            tc['start'] = self.model_grid.sim_time.tr.start_datetime
+            strt = pd.Timestamp(self.model_grid.sim_time.tr.start_datetime)
+            mlen = self.model_grid.sim_time.perlen.sum()
+            tunits = self.model_grid.sim_time.time_units
             tc['duration'] = '{} {}'.format(mlen, tunits)
             end = strt + pd.Timedelta(mlen, unit='d')
             tc['end'] = str(end)
