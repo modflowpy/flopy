@@ -47,7 +47,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     """
     table = ListTemplateGenerator(('tab', 'table', 'table'))
     package_abbr = "utltab"
-    package_type = "tab"
+    _package_type = "tab"
     dfn_file_name = "utl-lak-tab.dfn"
 
     dfn = [["block dimensions", "name nrow", "type integer", 

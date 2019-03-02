@@ -118,7 +118,7 @@ class ModflowGwfriv(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'riv', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfriv"
-    package_type = "riv"
+    _package_type = "riv"
     dfn_file_name = "gwf-riv.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

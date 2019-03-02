@@ -117,7 +117,7 @@ class ModflowGwfghb(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'ghb', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfghb"
-    package_type = "ghb"
+    _package_type = "ghb"
     dfn_file_name = "gwf-ghb.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

@@ -184,7 +184,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     wetdry = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 
                                      'wetdry'))
     package_abbr = "gwfnpf"
-    package_type = "npf"
+    _package_type = "npf"
     dfn_file_name = "gwf-npf.dfn"
 
     dfn = [["block options", "name save_flows", "type keyword", 

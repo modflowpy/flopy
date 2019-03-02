@@ -234,7 +234,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     perioddata = ListTemplateGenerator(('gwf6', 'uzf', 'period', 
                                         'perioddata'))
     package_abbr = "gwfuzf"
-    package_type = "uzf"
+    _package_type = "uzf"
     dfn_file_name = "gwf-uzf.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

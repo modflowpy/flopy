@@ -1,4 +1,4 @@
-from ..data import mfdatautil
+from ...utils import datautil
 
 
 def make_int_tuple(str_list):
@@ -105,7 +105,7 @@ def read_std_array(array_file, data_type):
     data_list = []
     fd = open(array_file, 'r')
     for current_line in fd:
-        split_line = mfdatautil.ArrayUtil.split_data_line(current_line)
+        split_line = datautil.PyListUtil.split_data_line(current_line)
         for data in split_line:
             if data_type == 'float':
                 data_list.append(float(data))

@@ -60,7 +60,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
     ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
     sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
     package_abbr = "gwfsto"
-    package_type = "sto"
+    _package_type = "sto"
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [["block options", "name save_flows", "type keyword", 

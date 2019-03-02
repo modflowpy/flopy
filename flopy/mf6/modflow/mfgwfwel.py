@@ -122,7 +122,7 @@ class ModflowGwfwel(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'wel', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfwel"
-    package_type = "wel"
+    _package_type = "wel"
     dfn_file_name = "gwf-wel.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

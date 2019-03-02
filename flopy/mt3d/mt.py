@@ -15,7 +15,8 @@ from .mtphc import Mt3dPhc
 from .mtuzt import Mt3dUzt
 from .mtsft import Mt3dSft
 from .mtlkt import Mt3dLkt
-
+from ..discretization.structuredgrid import StructuredGrid
+from flopy.discretization.modeltime import ModelTime
 
 class Mt3dList(Package):
     """
@@ -223,7 +224,7 @@ class Mt3dms(BaseModel):
 
         # Call constructor for parent object
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured)
+                           structured=structured, verbose=verbose)
 
         # Set attributes
         self.version_types = {'mt3dms': 'MT3DMS', 'mt3d-usgs': 'MT3D-USGS'}
@@ -290,7 +291,6 @@ class Mt3dms(BaseModel):
         self.external_units = []
         self.external_binflag = []
         self.external = False
-        self.verbose = verbose
         self.load = load
         # the starting external data unit number
         self._next_ext_unit = 2000
@@ -330,6 +330,63 @@ class Mt3dms(BaseModel):
     def __repr__(self):
         return 'MT3DMS model'
 
+    @property
+    def modeltime(self):
+        # build model time
+        data_frame = {'perlen': self.mf.dis.perlen.array,
+                      'nstp': self.mf.dis.nstp.array,
+                      'tsmult': self.mf.dis.tsmult.array}
+        self._model_time = ModelTime(data_frame,
+                                     self.mf.dis.itmuni_dict[
+                                         self.mf.dis.itmuni],
+                                     self.dis.start_datetime)
+        return self._model_time
+
+    @property
+    def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
+        if self.mf.bas is not None:
+            ibound = self.btn.icbund.array
+        else:
+            ibound = None
+        # build grid
+        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
+                                         delr=self.mf.dis.delr.array,
+                                         top=self.mf.dis.top.array,
+                                         botm=self.mf.dis.botm.array,
+                                         idomain=ibound,
+                                         proj4 = self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff = self._modelgrid.xoffset,
+                                         yoff = self._modelgrid.yoffset,
+                                         angrot = self._modelgrid.angrot)
+
+        # resolve offsets
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
+
+        return self._modelgrid
+
+    @property
+    def solver_tols(self):
+        if self.gcg is not None:
+            return self.gcg.cclose, -999
+        return None
 
     @property
     def sr(self):

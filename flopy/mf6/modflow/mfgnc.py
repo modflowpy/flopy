@@ -88,7 +88,7 @@ class ModflowGnc(mfpackage.MFPackage):
     """
     gncdata = ListTemplateGenerator(('gnc', 'gncdata', 'gncdata'))
     package_abbr = "gnc"
-    package_type = "gnc"
+    _package_type = "gnc"
     dfn_file_name = "gwf-gnc.dfn"
 
     dfn = [["block options", "name print_input", "type keyword", 

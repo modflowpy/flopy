@@ -146,7 +146,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
     exchangedata = ListTemplateGenerator(('gwfgwf', 'exchangedata', 
                                           'exchangedata'))
     package_abbr = "gwfgwf"
-    package_type = "gwfgwf"
+    _package_type = "gwfgwf"
     dfn_file_name = "exg-gwfgwf.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

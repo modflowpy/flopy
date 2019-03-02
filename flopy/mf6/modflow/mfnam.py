@@ -73,7 +73,7 @@ class ModflowNam(mfpackage.MFPackage):
     solutiongroup = ListTemplateGenerator(('nam', 'solutiongroup', 
                                            'solutiongroup'))
     package_abbr = "nam"
-    package_type = "nam"
+    _package_type = "nam"
     dfn_file_name = "sim-nam.dfn"
 
     dfn = [["block options", "name continue", "type keyword", 

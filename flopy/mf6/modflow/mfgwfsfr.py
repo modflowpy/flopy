@@ -342,7 +342,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     perioddata = ListTemplateGenerator(('gwf6', 'sfr', 'period', 
                                         'perioddata'))
     package_abbr = "gwfsfr"
-    package_type = "sfr"
+    _package_type = "sfr"
     dfn_file_name = "gwf-sfr.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 
