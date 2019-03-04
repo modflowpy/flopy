@@ -4,14 +4,15 @@ import os
 import numpy as np
 from ..utils import Util2d, Util3d, Transient2d, MfList, \
     HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
-from ..mbase import BaseModel
-from ..pakbase import Package
+from ..mbase import BaseModel, ModelInterface
+from ..pakbase import PackageInterface
+from ..datbase import DataType, DataInterface, DataListInterface
 from . import NetCdf, netcdf
 from . import shapefile_utils
 
 
-NC_PRECISION_TYPE = {np.float32: "f4", np.int: "i4", np.int64: "i4",
-                     np.int32: "i4"}
+NC_PRECISION_TYPE = {np.float64: "f8", np.float32: "f4", np.int: "i4",
+                     np.int64: "i4", np.int32: "i4"}
 
 path = os.path.split(netcdf.__file__)[0]
 with open(path + '/longnames.json') as f:
@@ -34,8 +35,8 @@ def get_var_array_dict(m):
 def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
                     **kwargs):
     """ helper to export an ensemble of model instances.  Assumes
-    all models have same dis and sr, only difference is properties and
-    boundary conditions.  Assumes model.nam.split('_')[-1] is the
+    all models have same dis and reference information, only difference is
+    properties and boundary conditions.  Assumes model.nam.split('_')[-1] is the
     realization suffix to use in the netcdf variable names
     """
     f_in, f_out = None, None
@@ -124,8 +125,7 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
 
 
 def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
-                            text='',
-                            mask_vals=[], mask_array3d=None):
+                            text='', mask_vals=[], mask_array3d=None):
     if logger:
         logger.log("creating array for {0}".format(
             var_name))
@@ -193,9 +193,10 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
     if units is not None:
         attribs["units"] = units
     try:
+        dim_tuple = ("time",) + f.dimension_names
         var = f.create_variable(var_name, attribs,
                                 precision_str=precision_str,
-                                dimensions=("time", "layer", "y", "x"))
+                                dimensions=dim_tuple)
     except Exception as e:
         estr = "error creating variable {0}:\n{1}".format(
             var_name, str(e))
@@ -340,8 +341,8 @@ def output_helper(f, ml, oudic, **kwargs):
     return f
 
 
-def model_helper(f, ml, **kwargs):
-    assert isinstance(ml, BaseModel)
+def model_export(f, ml, **kwargs):
+    assert isinstance(ml, ModelInterface)
     package_names = kwargs.get("package_names", None)
     if package_names is None:
         package_names = [pak.name[0] for pak in ml.packagelist]
@@ -372,8 +373,8 @@ def model_helper(f, ml, **kwargs):
     return f
 
 
-def package_helper(f, pak, **kwargs):
-    assert isinstance(pak, Package)
+def package_export(f, pak, **kwargs):
+    assert isinstance(pak, PackageInterface)
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, pak.parent)
 
@@ -383,38 +384,34 @@ def package_helper(f, pak, **kwargs):
                                                       **kwargs)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
-        attrs = dir(pak)
-        if 'sr' in attrs:
-            attrs.remove('sr')
-        if 'start_datetime' in attrs:
-            attrs.remove('start_datetime')
-        for attr in attrs:
-            if '__' in attr:
-                continue
-            a = pak.__getattribute__(attr)
-            if isinstance(a, Util2d) and len(a.shape) == 2 and a.shape[1] > 0:
-                try:
-                    f = util2d_helper(f, a, **kwargs)
-                except:
-                    f.logger.warn(
-                        "error adding {0} as variable".format(a.name))
-            elif isinstance(a, Util3d):
-                f = util3d_helper(f, a, **kwargs)
-            elif isinstance(a, Transient2d):
-                f = transient2d_helper(f, a, **kwargs)
-            elif isinstance(a, MfList):
-                f = mflist_helper(f, a, **kwargs)
-            elif isinstance(a, list):
-                for v in a:
-                    if isinstance(v, Util3d):
-                        f = util3d_helper(f, v, **kwargs)
+        for a in pak.data_list:
+            if isinstance(a, DataInterface):
+                if a.array is not None:
+                    if a.data_type == DataType.array2d and len(a.array.shape) == 2 \
+                            and a.array.shape[1] > 0:
+                        try:
+                            f = array2d_export(f, a, **kwargs)
+                        except:
+                            f.logger.warn(
+                                "error adding {0} as variable".format(a.name))
+                    elif a.data_type == DataType.array3d:
+                        f = array3d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transient2d:
+                        f = transient2d_export(f, a, **kwargs)
+                    elif  a.data_type == DataType.transientlist:
+                        f = mflist_export(f, a, **kwargs)
+                    elif isinstance(a, list):
+                        for v in a:
+                            if isinstance(a, DataInterface) and \
+                                    v.data_type == DataType.array3d:
+                                f = array3d_export(f, v, **kwargs)
         return f
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def generic_array_helper(f, array, var_name="generic_array",
+def generic_array_export(f, array, var_name="generic_array",
                          dimensions=("time", "layer", "y", "x"),
                          precision_str="f4", units="unitless", **kwargs):
     # assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
@@ -459,7 +456,7 @@ def generic_array_helper(f, array, var_name="generic_array",
     return f
 
 
-def mflist_helper(f, mfl, **kwargs):
+def mflist_export(f, mfl, **kwargs):
     """ export helper for MfList instances
 
     Parameters
@@ -468,8 +465,9 @@ def mflist_helper(f, mfl, **kwargs):
         mfl : MfList instance
 
     """
-    assert isinstance(mfl, MfList) \
-        , "mflist_helper only helps MfList instances"
+    assert isinstance(mfl, DataListInterface) and \
+           isinstance(mfl, DataInterface) \
+        , "mflist_helper only helps instances that support DataListInterface"
 
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, mfl.model)
@@ -478,8 +476,11 @@ def mflist_helper(f, mfl, **kwargs):
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
-        if mfl.sr is None:
-            raise Exception("MfList.to_shapefile: SpatialReference not set")
+
+        model_grid = mfl.model.modelgrid
+
+        if model_grid is None:
+            raise Exception("MfList.to_shapefile: ModelGrid is not set")
         import flopy.utils.flopy_io as fio
         if kper is None:
             keys = mfl.data.keys()
@@ -494,30 +495,28 @@ def mflist_helper(f, mfl, **kwargs):
                     for k in range(array.shape[0]):
                         # aname = name+"{0:03d}_{1:02d}".format(kk, k)
                         n = shapefile_utils.shape_attr_name(name, length=4)
-                        aname = "{}{:03d}{:03d}".format(n, k + 1, int(kk) + 1)
+                        aname = "{}{}{}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile(f, mfl.sr, array_dict)
+            shapefile_utils.write_grid_shapefile2(f, model_grid, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
             #if np.isscalar(kper):
             #    kper = [kper]
-            sr = mfl.model.sr
+            model_grid = mfl.mg
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
-                verts = np.array(sr.get_vertices(ra.i, ra.j))
+                verts = np.array(model_grid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = sr.get_vertices(df.i.values, df.j.values)
+                verts = np.array([model_grid.get_cell_vertices(i, df.j.values[ix])
+                                  for ix, i in enumerate(df.i.values)])
                 ra = df.to_records(index=False)
-            # write the projection file
-            if sr.epsg is None:
-                epsg = kwargs.get('epsg', None)
-            else:
-                epsg = sr.epsg
+            epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             polys = np.array([Polygon(v) for v in verts])
-            recarray2shp(ra, geoms=polys, shpname=f, epsg=epsg, prj=prj)
+            recarray2shp(ra, geoms=polys, shpname=f,
+                         mg=model_grid, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
@@ -552,9 +551,10 @@ def mflist_helper(f, mfl, **kwargs):
             if units is not None:
                 attribs["units"] = units
             try:
+                dim_tuple = ("time",) + f.dimension_names
                 var = f.create_variable(var_name, attribs,
                                         precision_str=precision_str,
-                                        dimensions=("time", "layer", "y", "x"))
+                                        dimensions=dim_tuple)
             except Exception as e:
                 estr = "error creating variable {0}:\n{1}".format(var_name,
                                                                   str(e))
@@ -576,7 +576,7 @@ def mflist_helper(f, mfl, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def transient2d_helper(f, t2d, **kwargs):
+def transient2d_export(f, t2d, **kwargs):
     """ export helper for Transient2d instances
 
     Parameters
@@ -588,8 +588,9 @@ def transient2d_helper(f, t2d, **kwargs):
 
     """
 
-    assert isinstance(t2d, Transient2d) \
-        , "transient2d_helper only helps Transient2d instances"
+    assert isinstance(t2d, DataInterface) \
+        , "transient2d_helper only helps instances that support " \
+          "DataInterface"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -599,22 +600,20 @@ def transient2d_helper(f, t2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for kper in range(t2d.model.nper):
+        for kper in range(t2d.model.modelgrid.sim_time.nper):
             u2d = t2d[kper]
-            name = '{}_{:03d}'.format(
+            name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, t2d.model.sr, array_dict)
+        shapefile_utils.write_grid_shapefile2(f, t2d.model.modelgrid,
+                                             array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # mask the array is defined by any row col with at lease
         # one active cell
         mask = None
-        if t2d.model.bas6 is not None:
-            ibnd = np.abs(t2d.model.bas6.ibound.array).sum(axis=0)
-            mask = ibnd == 0
-        elif t2d.model.btn is not None:
-            ibnd = np.abs(t2d.model.btn.icbund.array).sum(axis=0)
+        if t2d.model.modelgrid.idomain is not None:
+            ibnd = np.abs(t2d.model.modelgrid.idomain).sum(axis=0)
             mask = ibnd == 0
 
         # f.log("getting 4D array for {0}".format(t2d.name_base))
@@ -638,7 +637,7 @@ def transient2d_helper(f, t2d, **kwargs):
                 #    array[:, 0, t2d.model.btn.icbund.array[0] == 0] = \
                 #        f.fillvalue
 
-        var_name = t2d.name_base.replace('_', '')
+        var_name = t2d.name.replace('_', '')
         if isinstance(f, dict):
             array[array == netcdf.FILLVALUE] = np.NaN
             f[var_name] = array
@@ -665,9 +664,10 @@ def transient2d_helper(f, t2d, **kwargs):
         if np.isnan(attribs["min"]) or np.isnan(attribs["max"]):
             raise Exception("error processing {0}: all NaNs".format(var_name))
         try:
+            dim_tuple = ("time",) + f.dimension_names
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("time", "layer", "y", "x"))
+                                    dimensions=dim_tuple)
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -685,7 +685,7 @@ def transient2d_helper(f, t2d, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def util3d_helper(f, u3d, **kwargs):
+def array3d_export(f, u3d, **kwargs):
     """ export helper for Transient2d instances
 
     Parameters
@@ -697,8 +697,10 @@ def util3d_helper(f, u3d, **kwargs):
 
     """
 
-    assert isinstance(u3d, Util3d), "util3d_helper only helps Util3d instances"
-    assert len(u3d.shape) == 3, "util3d_helper only supports 3D arrays"
+    assert isinstance(u3d, DataInterface), "array3d_export only helps " \
+                                           "instances that support " \
+                                           "DataInterface"
+    #assert len(u3d.array.shape) == 3, "array3d_export only supports 3D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -708,16 +710,19 @@ def util3d_helper(f, u3d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for ilay in range(u3d.model.nlay):
+        for ilay in range(u3d.model.modelgrid.nlay):
             u2d = u3d[ilay]
-            name = '{}_{:03d}'.format(
+            name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile(f, u3d.model.sr,
+        shapefile_utils.write_grid_shapefile2(f, u3d.model.modelgrid,
                                              array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
-        var_name = u3d.name[0].replace(' ', '_').lower()
+        var_name = u3d.name
+        if isinstance(var_name, list) or isinstance(var_name, tuple):
+            var_name = var_name[0]
+        var_name = var_name.replace(' ', '_').lower()
         # f.log("getting 3D array for {0}".format(var_name))
         array = u3d.array
 
@@ -732,10 +737,9 @@ def util3d_helper(f, u3d, **kwargs):
         # f.log("getting 3D array for {0}".format(var_name))
         #
         mask = None
-        if u3d.model.bas6 is not None and "ibound" not in var_name:
-            mask = u3d.model.bas6.ibound.array == 0
-        elif u3d.model.btn is not None and 'icbund' not in var_name:
-            mask = u3d.model.btn.icbund.array == 0
+        if u3d.model.modelgrid.idomain is not None and "ibound" not in \
+                var_name:
+            mask = u3d.model.modelgrid.idomain == 0
 
         if mask is not None and array.shape != mask.shape:
             # f.log("broadcasting 3D array for {0}".format(var_name))
@@ -749,10 +753,12 @@ def util3d_helper(f, u3d, **kwargs):
         # happens when NaN is already in array
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                # if u3d.model.bas6 is not None and "ibound" not in var_name:
-                #    array[u3d.model.bas6.ibound.array == 0] = np.NaN
+                # if u3d.model.modelgrid.bas6 is not None and "ibound" not
+                # in var_name:
+                #    array[u3d.model.modelgrid.bas6.ibound.array == 0] =
+                # np.NaN
                 # elif u3d.model.btn is not None and 'icbund' not in var_name:
-                #    array[u3d.model.btn.icbund.array == 0] = np.NaN
+                #    array[u3d.model.modelgrid.btn.icbund.array == 0] = np.NaN
                 if mask is not None:
                     array[mask] = np.NaN
                 array[array <= min_valid] = np.NaN
@@ -764,10 +770,10 @@ def util3d_helper(f, u3d, **kwargs):
                     array[mask] = netcdf.FILLVALUE
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u3d.model.bas6 is not None and "ibound" not in var_name:
-                    array[u3d.model.bas6.ibound.array == 0] = netcdf.FILLVALUE
-                elif u3d.model.btn is not None and 'icbund' not in var_name:
-                    array[u3d.model.btn.icbund.array == 0] = netcdf.FILLVALUE
+                if u3d.model.modelgrid.idomain is not None and "ibound" not\
+                        in var_name:
+                    array[u3d.model.modelgrid.idomain == 0] = \
+                        netcdf.FILLVALUE
 
         if isinstance(f, dict):
             f[var_name] = array
@@ -792,7 +798,7 @@ def util3d_helper(f, u3d, **kwargs):
         try:
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("layer", "y", "x"))
+                                    dimensions=f.dimension_names)
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -810,7 +816,7 @@ def util3d_helper(f, u3d, **kwargs):
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
 
-def util2d_helper(f, u2d, **kwargs):
+def array2d_export(f, u2d, **kwargs):
     """ export helper for Util2d instances
 
     Parameters
@@ -821,8 +827,10 @@ def util2d_helper(f, u2d, **kwargs):
         max_valid : maximum valid value
 
     """
-    assert isinstance(u2d, Util2d), "util2d_helper only helps Util2d instances"
-    assert len(u2d.shape) == 2, "util2d_helper only supports 2D arrays"
+    assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
+                                           "instances that support " \
+                                           "DataInterface"
+    assert len(u2d.array.shape) == 2, "util2d_helper only supports 2D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -832,12 +840,12 @@ def util2d_helper(f, u2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile(f, u2d.model.sr,
+        shapefile_utils.write_grid_shapefile2(f, u2d.model.modelgrid,
                                              {name: u2d.array})
         return
 
     elif isinstance(f, str) and f.lower().endswith(".asc"):
-        u2d.model.sr.export_array(f, u2d.array, **kwargs)
+        export_array( u2d.model.modelgrid, f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -849,12 +857,10 @@ def util2d_helper(f, u2d, **kwargs):
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                if u2d.model.bas6 is not None and \
-                                "ibound" not in u2d.name.lower():
-                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = np.NaN
-                elif u2d.model.btn is not None and \
-                                "icbund" not in u2d.name.lower():
-                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = np.NaN
+                if u2d.model.modelgrid.idomain is not None and \
+                                "ibound" not in u2d.name.lower() and \
+                                "idomain" not in u2d.name.lower():
+                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -862,13 +868,11 @@ def util2d_helper(f, u2d, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u2d.model.bas6 is not None and \
-                                "ibound" not in u2d.name.lower():
-                    array[u2d.model.bas6.ibound.array[0, :, :] == 0] = \
-                        netcdf.FILLVALUE
-                elif u2d.model.btn is not None and \
+                if u2d.model.modelgrid.idomain is not None and \
+                                "ibound" not in u2d.name.lower() and \
+                                "idomain" not in u2d.name.lower() and \
                                 "icbund" not in u2d.name.lower():
-                    array[u2d.model.btn.icbund.array[0, :, :] == 0] = \
+                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = \
                         netcdf.FILLVALUE
         var_name = u2d.name
         if isinstance(f, dict):
@@ -895,7 +899,7 @@ def util2d_helper(f, u2d, **kwargs):
         try:
             var = f.create_variable(var_name, attribs,
                                     precision_str=precision_str,
-                                    dimensions=("y", "x"))
+                                    dimensions=f.dimension_names[1:])
         except Exception as e:
             estr = "error creating variable {0}:\n{1}".format(var_name, str(e))
             f.logger.warn(estr)
@@ -912,3 +916,258 @@ def util2d_helper(f, u2d, **kwargs):
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
+
+def export_array(modelgrid, filename, a, nodata=-9999,
+                 fieldname='value',
+                 **kwargs):
+    """Write a numpy array to Arc Ascii grid
+    or shapefile with the model reference.
+    Parameters
+    ----------
+    filename : str
+        Path of output file. Export format is determined by
+        file extention.
+        '.asc'  Arc Ascii grid
+        '.tif'  GeoTIFF (requries rasterio package)
+        '.shp'  Shapefile
+    a : 2D numpy.ndarray
+        Array to export
+    nodata : scalar
+        Value to assign to np.nan entries (default -9999)
+    fieldname : str
+        Attribute field name for array values (shapefile export only).
+        (default 'values')
+    kwargs:
+        keyword arguments to np.savetxt (ascii)
+        rasterio.open (GeoTIFF)
+        or flopy.export.shapefile_utils.write_grid_shapefile2
+
+    Notes
+    -----
+    Rotated grids will be either be unrotated prior to export,
+    using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
+    included in their transform property (GeoTiff format). In either case
+    the pixels will be displayed in the (unrotated) projected geographic coordinate system,
+    so the pixels will no longer align exactly with the model grid
+    (as displayed from a shapefile, for example). A key difference between
+    Arc Ascii and GeoTiff (besides disk usage) is that the
+    unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
+    will have the same number of rows and pixels as the original.
+    """
+
+    if filename.lower().endswith(".asc"):
+        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+                or modelgrid.delr[0] != modelgrid.delc[0]:
+            raise ValueError('Arc ascii arrays require a uniform grid.')
+
+        xoffset, yoffset = modelgrid.xoffset, modelgrid.yoffset
+        cellsize = modelgrid.delr[0] # * self.length_multiplier
+        fmt = kwargs.get('fmt', '%.18e')
+        a = a.copy()
+        a[np.isnan(a)] = nodata
+        if modelgrid.angrot != 0:
+            try:
+                from scipy.ndimage import rotate
+                a = rotate(a, modelgrid.angrot, cval=nodata)
+                height_rot, width_rot = a.shape
+                xmin, ymin, xmax, ymax = modelgrid.extent
+                dx = (xmax - xmin) / width_rot
+                dy = (ymax - ymin) / height_rot
+                cellsize = np.max((dx, dy))
+                # cellsize = np.cos(np.radians(self.rotation)) * cellsize
+                xoffset, yoffset = xmin, ymin
+            except ImportError:
+                print('scipy package required to export rotated grid.')
+                pass
+
+        filename = '.'.join(
+            filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
+        nrow, ncol = a.shape
+        a[np.isnan(a)] = nodata
+        txt = 'ncols  {:d}\n'.format(ncol)
+        txt += 'nrows  {:d}\n'.format(nrow)
+        txt += 'xllcorner  {:f}\n'.format(xoffset)
+        txt += 'yllcorner  {:f}\n'.format(yoffset)
+        txt += 'cellsize  {}\n'.format(cellsize)
+        # ensure that nodata fmt consistent w values
+        txt += 'NODATA_value  {}\n'.format(fmt) % (nodata)
+        with open(filename, 'w') as output:
+            output.write(txt)
+        with open(filename, 'ab') as output:
+            np.savetxt(output, a, **kwargs)
+        print('wrote {}'.format(filename))
+
+    elif filename.lower().endswith(".tif"):
+        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+                or modelgrid.delr[0] != modelgrid.delc[0]:
+            raise ValueError('GeoTIFF export require a uniform grid.')
+        try:
+            import rasterio
+            from rasterio import Affine
+        except:
+            print('GeoTIFF export requires the rasterio package.')
+            return
+        dxdy = modelgrid.delc[0] # * self.length_multiplier
+        trans = Affine.translation(modelgrid.xoffset, modelgrid.yoffset) * \
+                Affine.rotation(modelgrid.angrot) * \
+                Affine.scale(dxdy, -dxdy)
+
+        # third dimension is the number of bands
+        a = a.copy()
+        if len(a.shape) == 2:
+            a = np.reshape(a, (1, a.shape[0], a.shape[1]))
+        if a.dtype.name == 'int64':
+            a = a.astype('int32')
+            dtype = rasterio.int32
+        elif a.dtype.name == 'int32':
+            dtype = rasterio.int32
+        elif a.dtype.name == 'float64':
+            dtype = rasterio.float64
+        elif a.dtype.name == 'float32':
+            dtype = rasterio.float32
+        else:
+            msg = 'ERROR: invalid dtype "{}"'.format(a.dtype.name)
+            raise TypeError(msg)
+
+        meta = {'count': a.shape[0],
+                'width': a.shape[2],
+                'height': a.shape[1],
+                'nodata': nodata,
+                'dtype': dtype,
+                'driver': 'GTiff',
+                'crs': modelgrid.proj4,
+                'transform': trans
+                }
+        meta.update(kwargs)
+        with rasterio.open(filename, 'w', **meta) as dst:
+            dst.write(a)
+        print('wrote {}'.format(filename))
+
+    elif filename.lower().endswith(".shp"):
+        from ..export.shapefile_utils import write_grid_shapefile2
+        epsg = kwargs.get('epsg', None)
+        prj = kwargs.get('prj', None)
+        if epsg is None and prj is None:
+            epsg = modelgrid.epsg
+        write_grid_shapefile2(filename, modelgrid, array_dict={fieldname: a},
+                              nan_val=nodata,
+                              epsg=epsg, prj=prj)
+
+
+def export_contours(modelgrid, filename, contours,
+                    fieldname='level', epsg=None, prj=None,
+                    **kwargs):
+    """Convert matplotlib contour plot object to shapefile.
+
+    Parameters
+    ----------
+    filename : str
+        path of output shapefile
+    contours : matplotlib.contour.QuadContourSet or list of them
+        (object returned by matplotlib.pyplot.contour)
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+    **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+
+    Returns
+    -------
+    df : dataframe of shapefile contents
+    """
+    from flopy.utils.geometry import LineString
+    from flopy.export.shapefile_utils import recarray2shp
+
+    if not isinstance(contours, list):
+        contours = [contours]
+
+    if epsg is None:
+        epsg = modelgrid.epsg
+    if prj is None:
+        prj = modelgrid.proj4
+
+    geoms = []
+    level = []
+    for ctr in contours:
+        levels = ctr.levels
+        for i, c in enumerate(ctr.collections):
+            paths = c.get_paths()
+            geoms += [LineString(p.vertices) for p in paths]
+            level += list(np.ones(len(paths)) * levels[i])
+
+    # convert the dictionary to a recarray
+    ra = np.array(level,
+                  dtype=[(fieldname, float)]).view(np.recarray)
+
+    recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
+
+
+def export_array_contours(modelgrid, filename, a,
+                          fieldname='level',
+                          interval=None,
+                          levels=None,
+                          maxlevels=1000,
+                          epsg=None,
+                          prj=None,
+                          **kwargs):
+    """Contour an array using matplotlib; write shapefile of contours.
+
+    Parameters
+    ----------
+    filename : str
+        Path of output file with '.shp' extention.
+    a : 2D numpy array
+        Array to contour
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+    **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+    """
+    import matplotlib.pyplot as plt
+
+    if epsg is None:
+        epsg = modelgrid.epsg
+    if prj is None:
+        prj = modelgrid.proj4
+
+    if interval is not None:
+        min = np.nanmin(a)
+        max = np.nanmax(a)
+        nlevels = np.round(np.abs(max - min) / interval, 2)
+        msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
+            nlevels,
+            interval,
+            maxlevels)
+        assert nlevels < maxlevels, msg
+        levels = np.arange(min, max, interval)
+    fig, ax = plt.subplots()
+    ctr = contour_array(modelgrid, ax, a, levels=levels)
+    export_contours(modelgrid, filename, ctr, fieldname, epsg, prj, **kwargs)
+    plt.close()
+
+
+def contour_array(modelgrid, ax, a, **kwargs):
+    """
+    Create a QuadMesh plot of the specified array using pcolormesh
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        ax to add the contours
+
+    a : np.ndarray
+        array to contour
+
+    Returns
+    -------
+    contour_set : ContourSet
+
+    """
+    from flopy.plot import PlotMapView
+
+    kwargs['ax'] = ax
+    map = PlotMapView(modelgrid=modelgrid)
+    contour_set = map.contour_array(a=a, **kwargs)
+
+    return contour_set

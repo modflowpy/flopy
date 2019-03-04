@@ -48,7 +48,7 @@ class ModflowUtltas(mfpackage.MFPackage):
                                         'sfacrecord'))
     tas_array = ArrayTemplateGenerator(('tas', 'time', 'tas_array'))
     package_abbr = "utltas"
-    package_type = "tas"
+    _package_type = "tas"
     dfn_file_name = "utl-tas.dfn"
 
     dfn = [["block attributes", "name time_series_namerecord", 

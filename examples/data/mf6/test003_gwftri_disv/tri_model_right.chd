@@ -1,0 +1,23 @@
+begin options
+  PRINT_INPUT
+  PRINT_FLOWS
+  SAVE_FLOWS
+end options
+
+begin dimensions
+  MAXBOUND 10
+end dimensions
+
+begin period 1
+#layer 1
+ 1 20  5.
+ 1 40  5.
+ 1 60  5.
+ 1 80  5.
+ 1 100  5.
+ 1 120  5.
+ 1 140  5.
+ 1 160  5.
+ 1 180  5.
+ 1 200  5.
+end period

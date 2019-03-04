@@ -85,7 +85,7 @@ class ModflowGwfdis(mfpackage.MFPackage):
     idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 
                                       'idomain'))
     package_abbr = "gwfdis"
-    package_type = "dis"
+    _package_type = "dis"
     dfn_file_name = "gwf-dis.dfn"
 
     dfn = [["block options", "name length_units", "type string", 

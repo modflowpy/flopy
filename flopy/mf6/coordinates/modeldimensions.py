@@ -8,9 +8,8 @@ from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
 from ..mfbase import StructException, FlopyException
 from ..data.mfstructure import DatumType
-from ..data.mfdatautil import DatumUtil, NameIter
 from ..utils.mfenums import DiscretizationType
-
+from ...utils.datautil import DatumUtil, NameIter
 
 class DataDimensions(object):
     """

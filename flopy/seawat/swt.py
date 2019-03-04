@@ -5,6 +5,9 @@ from ..modflow import Modflow
 from ..mt3d import Mt3dms
 from .swtvdf import SeawatVdf
 from .swtvsc import SeawatVsc
+from ..discretization.structuredgrid import StructuredGrid
+from flopy.discretization.modeltime import ModelTime
+
 
 class SeawatList(Package):
     """
@@ -80,7 +83,7 @@ class Seawat(BaseModel):
 
         # Call constructor for parent object
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured)
+                           structured=structured, verbose=verbose)
 
         # Set attributes
         self.version_types = {'seawat': 'SEAWAT'}
@@ -109,7 +112,6 @@ class Seawat(BaseModel):
         self.external_units = []
         self.external_binflag = []
         self.external = False
-        self.verbose = verbose
         self.load = load
         # the starting external data unit number
         self._next_ext_unit = 3000
@@ -139,6 +141,57 @@ class Seawat(BaseModel):
         self.mfnam_packages['vdf'] = SeawatVdf
         self.mfnam_packages['vsc'] = SeawatVsc
         return
+
+    @property
+    def modeltime(self):
+        # build model time
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
+        self._model_time = ModelTime(data_frame,
+                                     self.dis.itmuni_dict[self.dis.itmuni],
+                                     self.dis.start_datetime)
+        return self._model_time
+
+    @property
+    def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
+        if self.bas is not None:
+            ibound = self.bas.ibound.array
+        else:
+            ibound = None
+        # build grid
+        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+        self._modelgrid = StructuredGrid(self.dis.delc.array,
+                                         self.dis.delr.array,
+                                         self.dis.top.array,
+                                         self.dis.botm.array, ibound,
+                                         lenuni=lenuni[self.dis.lenuni],
+                                         proj4=self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff=self._modelgrid.xoffset,
+                                         yoff=self._modelgrid.yoffset,
+                                         angrot=self._modelgrid.angrot)
+
+        # resolve offsets
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
+        return self._modelgrid
 
     @property
     def nlay(self):
@@ -391,8 +444,6 @@ class Seawat(BaseModel):
             mt.external_fnames = []
             ms._mt = mt
         ms._mf = mf
-
-
 
         # return model object
         return ms

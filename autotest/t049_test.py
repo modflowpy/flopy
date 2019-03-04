@@ -158,12 +158,12 @@ def test_pathline_plot():
 
     # determine version
     ver = pthobj.version
-    assert ver == 6, '{} is not a MODPATH version 6 pathline file'.format(fpth)
+    assert ver == 6, '{} is not a MODPATH version 6 pathline file'.format(pthfile)
 
     # get all pathline data
     plines = pthobj.get_alldata()
 
-    mm = flopy.plot.ModelMap(model=m)
+    mm = flopy.plot.PlotMapView(model=m)
     try:
         mm.plot_pathline(plines, colors='blue', layer='all')
     except:
@@ -183,7 +183,7 @@ def test_pathline_plot():
     except:
         assert False, 'could not save plot as {}'.format(fpth)
 
-    mm = flopy.plot.ModelMap(model=m)
+    mm = flopy.plot.PlotMapView(model=m)
     try:
         mm.plot_pathline(plines, colors='green', layer=0)
     except:
@@ -203,7 +203,7 @@ def test_pathline_plot():
     except:
         assert False, 'could not save plot as {}'.format(fpth)
 
-    mm = flopy.plot.ModelMap(model=m)
+    mm = flopy.plot.PlotMapView(model=m)
     try:
         mm.plot_pathline(plines, colors='red')
     except:
@@ -263,7 +263,7 @@ def test_mp5_load():
     colors = hsv(np.linspace(0, 1.0, nptl))
 
     # plot the pathlines one pathline at a time
-    mm = flopy.plot.ModelMap(model=m)
+    mm = flopy.plot.PlotMapView(model=m)
     for n in pthobj.nid:
         p = pthobj.get_data(partid=n)
         e = endobj.get_data(partid=n)
@@ -392,8 +392,8 @@ def eval_timeseries(file):
 
 
 if __name__ == '__main__':
-    # test_modpath()
-    # test_pathline_plot()
-    # test_mp5_load()
+    test_modpath()
+    test_pathline_plot()
+    test_mp5_load()
     test_mp5_timeseries_load()
     test_mp6_timeseries_load()

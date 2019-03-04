@@ -61,7 +61,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
     continuous = ListTemplateGenerator(('obs', 'continuous', 
                                         'continuous'))
     package_abbr = "utlobs"
-    package_type = "obs"
+    _package_type = "obs"
     dfn_file_name = "utl-obs.dfn"
 
     dfn = [["block options", "name digits", "type integer", "shape", 

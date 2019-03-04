@@ -98,7 +98,7 @@ class ModflowLgr(BaseModel):
                  external_path=None,
                  verbose=False, **kwargs):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=True, **kwargs)
+                           structured=True, verbose=verbose, **kwargs)
         self.version_types = {'mflgr': 'MODFLOW-LGR'}
 
         self.set_version(version)
@@ -106,8 +106,6 @@ class ModflowLgr(BaseModel):
         # external option stuff
         self.array_free_format = True
         self.array_format = 'modflow'
-
-        self.verbose = verbose
 
         self.iupbhsv = iupbhsv
         self.iupbfsv = iupbfsv
@@ -154,7 +152,6 @@ class ModflowLgr(BaseModel):
             else:
                 os.makedirs(os.path.join(model_ws, external_path))
         self.external_path = external_path
-        self.verbose = verbose
 
         return
 
