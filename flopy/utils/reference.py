@@ -850,8 +850,8 @@ class SpatialReference(object):
         from flopy.plot import ModelMap
 
         map = ModelMap(sr=self)
-        ax = map.plot_grid(**kwargs)
-        return ax
+        lc = map.plot_grid(**kwargs)
+        return lc
 
     def get_xcenter_array(self):
         """
@@ -973,9 +973,10 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        # why is this a seperate method it returns a similar repr
-        # as get_grid_line_collection!
-        return self.get_grid_line_collection(**kwargs)
+        from matplotlib.collections import QuadMesh
+        verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
+        qm = QuadMesh(self.ncol, self.nrow, verts)
+        return qm
 
     def plot_array(self, a, ax=None, **kwargs):
         """
@@ -990,15 +991,11 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        from flopy.plot.plotutil import PlotUtilities
-        from flopy.discretization import StructuredGrid
-        mg = StructuredGrid(delc=self.delc,
-                            delr=self.delr,
-                            xoff=self.xll,
-                            yoff=self.yll,
-                            angrot=self.rotation)
-        ax = PlotUtilities._plot_array_helper(a, modelgrid=mg, axes=ax, **kwargs)
-        return ax
+        import matplotlib.pyplot as plt
+        if ax is None:
+            ax = plt.gca()
+        qm = ax.pcolormesh(self.xgrid, self.ygrid, a, **kwargs)
+        return qm
 
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
