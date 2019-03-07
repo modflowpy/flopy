@@ -3206,6 +3206,13 @@ class MFData(DataInterface):
         if model is not None:
             model._mg_resync = True
 
+    @staticmethod
+    def _tas_info(str):
+        lst_str = str.split(' ')
+        if len(lst_str) >= 2 and lst_str[0].lower() == 'timearrayseries':
+            return lst_str[1], lst_str[0]
+        return None, None
+
     def export(self, f, **kwargs):
         from flopy.export import utils
 

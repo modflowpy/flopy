@@ -453,6 +453,13 @@ class MFArray(mfdata.MFMultiDimVar):
             self._data_storage = self._new_storage(False)
         if isinstance(layer, int):
             layer = (layer,)
+        if isinstance(data, str):
+            # check to see if this is a time series array
+            tas_name, tas_label = self._tas_info(data)
+            if tas_name is not None:
+                # verify and save as time series array
+                self._set_tas(self._get_storage_obj(), tas_name, tas_label)
+                return
         try:
             self._get_storage_obj().set_data(data, layer, multiplier,
                                              key=self._current_key)
@@ -467,6 +474,39 @@ class MFArray(mfdata.MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
         self._layer_shape = self._get_storage_obj().layer_storage.list_shape
+
+    def _set_tas(self, storage, tas_name, tas_label):
+        package_dim = self._data_dimensions.package_dim
+        tas_names = package_dim.get_tasnames()
+        if tas_name.lower() in tas_names:
+            # this is a time series array with a valid tas variable
+            storage.data_structure_type = \
+                mfdata.DataStructureType.scalar
+            try:
+                storage.set_data('{} {}'.format(tas_label, tas_name), 0,
+                                 key=self._current_key)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'storing data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
+        else:
+            message = 'TIMEARRAYSERIES keyword not ' \
+                      'followed by a valid TAS variable. '
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.structure.get_model(),
+                                  self.structure.get_package(),
+                                  self._path,
+                                  'loading data from file',
+                                  self.structure.name,
+                                  inspect.stack()[0][3], type_,
+                                  value_, traceback_, message,
+                                  self._simulation_data.debug)
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
@@ -507,37 +547,8 @@ class MFArray(mfdata.MFMultiDimVar):
         if len(arr_line) > 2:
             # check for time array series
             if arr_line[1].upper() == 'TIMEARRAYSERIES':
-                tas_names = package_dim.get_tasnames()
-                if arr_line[2].lower() in tas_names:
-                    # this is a time series array with a valid tas variable
-                    storage.data_structure_type = \
-                            mfdata.DataStructureType.scalar
-                    try:
-                        storage.set_data(' '.join(arr_line[1:3]), 0,
-                                         key=self._current_key)
-                    except Exception as ex:
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'storing data',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_, traceback_, None,
-                                              self._simulation_data.debug, ex)
-                    return [False, None]
-                else:
-                    message = 'TIMEARRAYSERIES keyword not ' \
-                              'followed by a valid TAS variable. '
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data from file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, message,
-                                          self._simulation_data.debug)
+                self._set_tas(storage, arr_line[2], arr_line[1])
+                return [False, None]
         if not self.structure.data_item_structures[0].just_data:
             # verify keyword
             index_num, aux_var_index = self._load_keyword(arr_line, 0)
