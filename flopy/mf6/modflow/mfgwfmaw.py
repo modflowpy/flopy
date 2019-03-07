@@ -211,6 +211,24 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                 * status (string) keyword option to define well status. STATUS
                   can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
                   ACTIVE.
+            well_head : [double]
+                * well_head (double) is the head in the multi-aquifer well.
+                  WELL_HEAD is only applied to constant head (STATUS is
+                  CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer
+                  wells. If the Options block includes a TIMESERIESFILE entry
+                  (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            rate : [double]
+                * rate (double) is the volumetric pumping rate for the multi-
+                  aquifer well. A positive value indicates recharge and a
+                  negative value indicates discharge (pumping). RATE only
+                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
+                  If the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, the RATE for each multi-aquifer
+                  well is zero.
             flowing_wellrecord : [fwelev, fwcond, fwrlen]
                 * fwelev (double) elevation used to determine whether or not
                   the well is flowing.
@@ -223,24 +241,26 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   reduced. This reduction length can be used to improve the
                   stability of simulations with flowing wells so that there is
                   not an abrupt change in flowing well rates.
-            rate : [double]
-                * rate (double) is the volumetric pumping rate for the multi-
-                  aquifer well. A positive value indicates recharge and a
-                  negative value indicates discharge (pumping). RATE only
-                  applies to active (IBOUND :math:`>` 0) multi-aquifer wells.
-                  If the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, the RATE for each multi-aquifer
-                  well is zero.
-            well_head : [double]
-                * well_head (double) is the head in the multi-aquifer well.
-                  WELL_HEAD is only applied to constant head (STATUS is
-                  CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer
-                  wells. If the Options block includes a TIMESERIESFILE entry
-                  (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+            rate_scalingrecord : [pump_elevation, scaling_length]
+                * pump_elevation (double) is the elevation of the multi-aquifer
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
+                  By default, PUMP_ELEVATION is set equal to the bottom of the
+                  largest GWF node number connected to a MAW well.
+                * scaling_length (double) height above the pump elevation
+                  (SCALING_LENGTH) below which the pumping rate is reduced. The
+                  default value for SCALING_LENGTH is the well radius.
             head_limit : [string]
                 * head_limit (string) is the limiting water level (head) in the
                   well, which is the minimum of the well RATE or the well
@@ -269,26 +289,6 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   aquifer exceeds maxrate. Reactivation of the well cannot
                   occur until the next time step if a well is shutdown to
                   reduce oscillations. maxrate must be greater than MINRATE.
-            rate_scalingrecord : [pump_elevation, scaling_length]
-                * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
-                  than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
-                * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
     fname : String
         File name for this package.
     pname : String
