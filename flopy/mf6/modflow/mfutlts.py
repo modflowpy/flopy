@@ -130,3 +130,43 @@ class ModflowUtlts(mfpackage.MFPackage):
         self.sfacrecord_single = self.build_mfdata("sfacrecord_single", 
                                                    sfacrecord_single)
         self.timeseries = self.build_mfdata("timeseries",  timeseries)
+
+
+class UtltsPackages(mfpackage.MFChildPackages):
+    package_abbr = "utltspackages"
+
+    def initialize(self, time_series_namerecord=None,
+                   interpolation_methodrecord=None,
+                   interpolation_methodrecord_single=None, sfacrecord=None,
+                   sfacrecord_single=None, timeseries=None, fname=None,
+                   pname=None):
+        new_package = ModflowUtlts(self._model,
+                                    time_series_namerecord=
+                                    time_series_namerecord,
+                                    interpolation_methodrecord=
+                                    interpolation_methodrecord,
+                                    interpolation_methodrecord_single=
+                                    interpolation_methodrecord_single,
+                                    sfacrecord=sfacrecord,
+                                    sfacrecord_single=sfacrecord_single,
+                                    timeseries=timeseries, fname=fname,
+                                    pname=pname, parent_file=self._cpparent)
+        self._init_package(new_package, fname)
+
+    def append_package(self, time_series_namerecord=None,
+                   interpolation_methodrecord=None,
+                   interpolation_methodrecord_single=None, sfacrecord=None,
+                   sfacrecord_single=None, timeseries=None, fname=None,
+                   pname=None):
+        new_package = ModflowUtlts(self._model,
+                                    time_series_namerecord=
+                                    time_series_namerecord,
+                                    interpolation_methodrecord=
+                                    interpolation_methodrecord,
+                                    interpolation_methodrecord_single=
+                                    interpolation_methodrecord_single,
+                                    sfacrecord=sfacrecord,
+                                    sfacrecord_single=sfacrecord_single,
+                                    timeseries=timeseries, fname=fname,
+                                    pname=pname, parent_file=self._cpparent)
+        self._append_package(new_package, fname)

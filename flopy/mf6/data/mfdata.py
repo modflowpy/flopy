@@ -2201,8 +2201,8 @@ class DataStorage(object):
                 if isinstance(val, str):
                     return str(int(val) + 1)
                 else:
-                    return str(val+1)
-            return str(val)
+                    return str(int(val)+1)
+            return str(int(val))
         elif type == DatumType.string:
             try:
                 arr_val = val.split()

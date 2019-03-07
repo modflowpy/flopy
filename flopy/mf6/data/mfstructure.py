@@ -766,6 +766,9 @@ class MFDataItemStructure(object):
         self.default_value = None
         self.numeric_index = False
         self.support_negative_index = False
+        self.construct_package = None
+        self.construct_data = None
+        self.parameter_name = None
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -900,6 +903,12 @@ class MFDataItemStructure(object):
                 self.type_string = 'double_precision'
                 self.type = self._str_to_enum_type(self.type_string)
                 self.type_obj = self._get_type()
+            elif arr_line[0] == 'construct_package':
+                self.construct_package = arr_line[1]
+            elif arr_line[0] == 'construct_data':
+                self.construct_data = arr_line[1]
+            elif arr_line[0] == 'parameter_name':
+                self.parameter_name = arr_line[1]
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1197,6 +1206,9 @@ class MFDataStructure(object):
         self.model_data = model_data
         self.num_optional = 0
         self.parent_block = None
+        self.construct_package = data_item.construct_package
+        self.construct_data = data_item.construct_data
+        self.parameter_name = data_item.parameter_name
 
         # self.data_item_structures_dict = OrderedDict()
         self.data_item_structures = []
@@ -1466,13 +1478,40 @@ class MFDataStructure(object):
                                                   keystr_desc)
         return description
 
+    def get_subpackage_description(self, line_size=79,
+                                   initial_indent='        ',
+                                   level_indent='    '):
+        item_desc = '* Contains data for the {} package. Data can be' \
+                    'stored in a dictionary containing data for the {} ' \
+                    'package with variable names as keys and package data as ' \
+                    'values. Data just for the {} variable is also ' \
+                    'acceptable. See {} package documentation for more ' \
+                    'information' \
+                    '.'.format(self.construct_package,
+                               self.construct_package,
+                               self.parameter_name,
+                               self.construct_package)
+        twr = TextWrapper(width=line_size,
+                          initial_indent=initial_indent,
+                          subsequent_indent='  {}'.format(
+                              initial_indent))
+        return '\n'.join(twr.wrap(item_desc))
+
     def get_doc_string(self, line_size=79, initial_indent='    ',
                         level_indent='    '):
-        description = self.get_description(line_size,
-                                           initial_indent + level_indent,
-                                           level_indent)
-        param_doc_string = '{} : {}'.format(self.python_name,
-                                            self.get_type_string())
+        if self.parameter_name is not None:
+            description = self.get_subpackage_description(
+                line_size, initial_indent + level_indent, level_indent)
+            var_name = self.parameter_name
+            type_name = '{}varname:data{} or {} data'.format(
+                '{', '}', self.construct_data)
+        else:
+            description = self.get_description(line_size,
+                                               initial_indent + level_indent,
+                                               level_indent)
+            var_name = self.python_name
+            type_name = self.get_type_string()
+        param_doc_string = '{} : {}'.format(var_name, type_name)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
                           subsequent_indent='  {}'.format(initial_indent))
         param_doc_string = '\n'.join(twr.wrap(param_doc_string))

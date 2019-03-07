@@ -18,6 +18,7 @@ from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
+from .data import mfstructure, mfdatautil
 
 
 class MFModel(PackageContainer, ModelInterface):
@@ -186,7 +187,7 @@ class MFModel(PackageContainer, ModelInterface):
         file_mgr = self.simulation_data.mfpath
         data_str = 'name = {}\nmodel_type = {}\nversion = {}\nmodel_' \
                    'relative_path = {}' \
-                   '\n\n'.format(self.name, self.model_type, self._version,
+                   '\n\n'.format(self.name, self.model_type, self.version,
                                  file_mgr.model_relative_path[self.name])
 
         for package in self.packagelist:
@@ -691,7 +692,7 @@ class MFModel(PackageContainer, ModelInterface):
             try:
                 new_rec_array = None
                 for item in package_data:
-                    if item[1] != package.filename:
+                    if item[1] != package._filename:
                         if new_rec_array is None:
                             new_rec_array = np.rec.array(item, package_data.dtype)
                         else:
@@ -794,7 +795,7 @@ class MFModel(PackageContainer, ModelInterface):
                 package.package_name = package.package_type
 
         if set_package_filename:
-            package.filename = '{}.{}'.format(self.name, package.package_type)
+            package._filename = '{}.{}'.format(self.name, package.package_type)
 
         if add_to_package_list:
             self._add_package(package, path)
@@ -809,7 +810,7 @@ class MFModel(PackageContainer, ModelInterface):
                 # Model Assumption - assuming all name files have a package
                 # recarray
                 self.name_file.packages.\
-                    update_record(['{}6'.format(pkg_type), package.filename,
+                    update_record(['{}6'.format(pkg_type), package._filename,
                                    package.package_name], 0)
         if package_struct is not None:
             return (path, package_struct)

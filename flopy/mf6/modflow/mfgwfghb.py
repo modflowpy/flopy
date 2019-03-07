@@ -49,17 +49,16 @@ class ModflowGwfghb(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that general-head boundary
           flow terms will be written to the file specified with "BUDGET
           FILEOUT" in Output Control.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the General-Head Boundary package. See the "Observation utility"
-          section for instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the General-
-          Head Boundary package.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can bestored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can bestored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     mover : boolean
         * mover (boolean) keyword to indicate that this instance of the
           General-Head Boundary Package can be used with the Water Mover (MVR)
@@ -133,8 +132,9 @@ class ModflowGwfghb(mfpackage.MFPackage):
            ["block options", "name save_flows", "type keyword", 
             "reader urword", "optional true"],
            ["block options", "name ts_filerecord", 
-            "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record ts6 filein ts6_filename", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries", "shape", 
+            "reader urword", "tagged true", "optional true"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -145,8 +145,9 @@ class ModflowGwfghb(mfpackage.MFPackage):
             "preserve_case true", "in_record true", "reader urword", 
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
-            "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record obs6 filein obs6_filename", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations", 
+            "shape", "reader urword", "tagged true", "optional true"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -181,8 +182,8 @@ class ModflowGwfghb(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
-                 print_flows=None, save_flows=None, ts_filerecord=None,
-                 obs_filerecord=None, mover=None, maxbound=None,
+                 print_flows=None, save_flows=None, timeseries=None,
+                 observations=None, mover=None, maxbound=None,
                  stress_period_data=None, fname=None, pname=None,
                  parent_file=None):
         super(ModflowGwfghb, self).__init__(model, "ghb", fname, pname,
@@ -195,9 +196,16 @@ class ModflowGwfghb(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.print_flows = self.build_mfdata("print_flows",  print_flows)
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
         self.stress_period_data = self.build_mfdata("stress_period_data", 

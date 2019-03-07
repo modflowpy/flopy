@@ -104,3 +104,23 @@ class ModflowUtlobs(mfpackage.MFPackage):
         self.digits = self.build_mfdata("digits",  digits)
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.continuous = self.build_mfdata("continuous",  continuous)
+
+
+class UtlobsPackages(mfpackage.MFChildPackages):
+    package_abbr = "utlobspackages"
+
+    def initialize(self, digits=None, print_input=None, continuous=None,
+                   fname=None, pname=None):
+        new_package = ModflowUtlobs(self._model, digits=digits,
+                                    print_input=print_input,
+                                    continuous=continuous, fname=fname,
+                                    pname=pname, parent_file=self._cpparent)
+        self._init_package(new_package, fname)
+
+    def append_package(self, digits=None, print_input=None, continuous=None,
+                   fname=None, pname=None):
+        new_package = ModflowUtlobs(self._model, digits=digits,
+                                    print_input=print_input,
+                                    continuous=continuous, fname=fname,
+                                    pname=pname, parent_file=self._cpparent)
+        self._append_package(new_package, fname)

@@ -253,8 +253,8 @@ class MFSimulation(PackageContainer):
 
     Methods
     -------
-    load : (sim_name : string, sim_name_file : string, version : string,
-            exe_name : string, sim_ws : string, strict : boolean,
+    load : (sim_name : string, version : string, exe_name : string,
+            sim_ws : string, strict : boolean,
             verbosity_level : VerbosityLevel) :
             MFSimulation
         a class method that loads a simulation from files
@@ -481,7 +481,7 @@ class MFSimulation(PackageContainer):
         instance._tdis_file = mftdis.ModflowTdis(instance,
                                                  fname=tdis_attr.get_data())
 
-        instance._tdis_file.filename = instance.simulation_data.mfdata[
+        instance._tdis_file._filename = instance.simulation_data.mfdata[
             ('nam', 'timing', tdis_pkg)].get_data()
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print('  loading tdis package...')
@@ -594,7 +594,7 @@ class MFSimulation(PackageContainer):
         for solution_group in solution_group_list:
             for solution_info in solution_group:
                 ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
-                                        pname=solution_info[2])
+                                            pname=solution_info[2])
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print('  loading ims package {}..'
                           '.'.format(ims_file._get_pname()))

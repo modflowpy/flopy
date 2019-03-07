@@ -106,23 +106,26 @@ def build_dfn_string(dfn_list):
     return dfn_string
 
 
-def create_init_var(clean_ds_name, data_structure_name):
+def create_init_var(clean_ds_name, data_structure_name, init_val=None):
+    if init_val is None:
+        init_val = clean_ds_name
+
     init_var = '        self.{} = self.build_mfdata('.format(clean_ds_name)
     leading_spaces = ' ' * len(init_var)
     if len(init_var) + len(data_structure_name) + 2 > 79:
         second_line = '\n            "{}", '.format(data_structure_name)
         if len(second_line) + len(clean_ds_name) + 2 > 79:
             init_var = '{}{}\n            {})'.format(init_var, second_line,
-                                                      clean_ds_name)
+                                                      init_val)
         else:
-            init_var = '{}{} {})'.format(init_var, second_line, clean_ds_name)
+            init_var = '{}{} {})'.format(init_var, second_line, init_val)
     else:
         init_var = '{}"{}", '.format(init_var, data_structure_name)
         if len(init_var) + len(clean_ds_name) + 2 > 79:
             init_var = '{}\n{}{})'.format(init_var, leading_spaces,
-                                          clean_ds_name)
+                                          init_val)
         else:
-            init_var = '{} {})'.format(init_var, clean_ds_name)
+            init_var = '{} {})'.format(init_var, init_val)
     return init_var
 
 
@@ -172,19 +175,51 @@ def format_var_list(base_string, var_list, is_tuple=False):
         return '{})'.format(base_string)
 
 
+def create_package_init_var(parameter_name, package_abbr, data_name):
+    one_line = '        self._{}_package = self.build_child_package('\
+        .format(package_abbr)
+    one_line_b = '"{}", {},'.format(package_abbr, parameter_name)
+    leading_spaces = ' ' * len(one_line)
+    two_line = '\n{}"{}", '.format(leading_spaces, data_name)
+    three_line = '\n{}self._{}_filerecord)'.format(leading_spaces, package_abbr)
+    return '{}{}{}{}'.format(one_line, one_line_b, two_line, three_line)
+
+
+
 def add_var(init_vars, class_vars, init_param_list, package_properties,
             doc_string, data_structure_dict, default_value, name,
             python_name, description, path, data_type,
-            basic_init=False):
+            basic_init=False, construct_package=None, construct_data=None,
+            parameter_name=None, set_param_list=[]):
     clean_ds_name = datautil.clean_name(python_name)
-    if basic_init:
-        init_vars.append(create_basic_init(clean_ds_name))
+    if construct_package is None:
+        # add variable initialization lines
+        if basic_init:
+            init_vars.append(create_basic_init(clean_ds_name))
+        else:
+            init_vars.append(create_init_var(clean_ds_name, name))
+        # add to parameter list
+        if default_value is None:
+            default_value = 'None'
+        init_param_list.append('{}={}'.format(clean_ds_name, default_value))
+        # add to set parameter list
+        set_param_list.append('{}={}'.format(clean_ds_name,
+                                             clean_ds_name))
     else:
-        init_vars.append(create_init_var(clean_ds_name, name))
-    # may implement default value here in the future
-    if default_value is None:
-        default_value = 'None'
-    init_param_list.append('{}={}'.format(clean_ds_name, default_value))
+        clean_parameter_name = datautil.clean_name(parameter_name)
+        # init hidden variable
+        init_vars.append(create_init_var('_{}'.format(clean_ds_name), name,
+                                         'None'))
+        # init child package
+        init_vars.append(create_package_init_var(clean_parameter_name,
+                                                 construct_package,
+                                                 construct_data))
+        # add to parameter list
+        init_param_list.append('{}=None'.format(clean_parameter_name))
+        # add to set parameter list
+        set_param_list.append('{}={}'.format(clean_parameter_name,
+                                             clean_parameter_name))
+
     package_properties.append(create_property(clean_ds_name))
     doc_string.add_parameter(description, model_parameter=True)
     data_structure_dict[python_name] = 0
@@ -196,7 +231,8 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
             class_vars.append(format_var_list(new_class_var, path, True))
 
 
-def build_init_string(init_string, init_param_list):
+def build_init_string(init_string, init_param_list,
+                      whitespace='                 '):
     line_chars = len(init_string)
     for index, param in enumerate(init_param_list):
         if index + 1 < len(init_param_list):
@@ -204,9 +240,18 @@ def build_init_string(init_string, init_param_list):
         else:
             line_chars += len(param) + 3
         if line_chars > 79:
-            init_string = '{},\n                 {}'.format(
-                init_string, param)
-            line_chars = len(param) + len('                 ') + 1
+            if len(param) + len(whitespace) + 1 > 79:
+                # try to break apart at = sign
+                param_list = param.split('=')
+                if len(param_list) == 2:
+                    init_string = '{},\n{}{}=\n{}{}'.format(
+                        init_string, whitespace, param_list[0], whitespace,
+                        param_list[1])
+                    line_chars = len(param_list[1]) + len(whitespace) + 1
+                    continue
+            init_string = '{},\n{}{}'.format(
+                init_string, whitespace, param)
+            line_chars = len(param) + len(whitespace) + 1
         else:
             init_string = '{}, {}'.format(init_string, param)
     return '{}):\n'.format(init_string)
@@ -290,6 +335,7 @@ def create_packages():
         package_properties = []
         init_vars = []
         init_param_list = []
+        set_param_list = []
         class_vars = []
         dfn_string = build_dfn_string(package[3])
         package_abbr = clean_class_string(
@@ -350,7 +396,12 @@ def create_packages():
                             data_structure.name, data_structure.python_name,
                             data_structure.get_doc_string(79, indent, indent),
                             data_structure.path,
-                            data_structure.get_datatype())
+                            data_structure.get_datatype(),
+                            False,
+                            data_structure.construct_package,
+                            data_structure.construct_data,
+                            data_structure.parameter_name,
+                            set_param_list)
 
 
         # add extra docstrings for additional variables
@@ -428,6 +479,43 @@ def create_packages():
         pb_file = open(os.path.join(util_path, '..', 'modflow',
                                     'mf{}.py'.format(package_name)), 'w')
         pb_file.write(package_string)
+
+        if package[2] == 'utl':
+            set_param_list.append('fname=fname')
+            set_param_list.append('pname=pname')
+            set_param_list.append('parent_file=self._cpparent')
+            whsp_1 = '                   '
+            whsp_2 = '                                    '
+
+            # write out child packages class
+            chld_cls = '\n\nclass Utl{}Packages(mfpackage.MFChildPackage' \
+                         's):\n'.format(package_short_name)
+            chld_var = '    package_abbr = "utl{}packages"\n\n'.format(
+                package_short_name)
+            chld_init = '    def initialize(self'
+            chld_init = build_init_string(chld_init, init_param_list[:-1],
+                                          whsp_1)
+            init_pkg = '\n        self._init_package(new_package, fname)'
+            params_init = '        new_package = ModflowUtl{}(' \
+                          'self._model'.format(package_short_name)
+            params_init = build_init_string(params_init, set_param_list, whsp_2)
+
+            chld_appn = '    def append_package(self'
+            chld_appn = build_init_string(chld_appn, init_param_list[:-1],
+                                          whsp_1)
+            append_pkg = '\n        self._append_package(new_package, fname)'
+            params_appn = '        new_package = ModflowUtl{}(' \
+                          'self._model'.format(package_short_name)
+            params_appn = build_init_string(params_appn, set_param_list,
+                                            whsp_2)
+            packages_str = '{}{}{}{}{}\n\n{}{}{}\n'.format(chld_cls, chld_var,
+                                                       chld_init,
+                                                       params_init[:-2],
+                                                       init_pkg,
+                                                       chld_appn,
+                                                       params_appn[:-2],
+                                                       append_pkg,)
+            pb_file.write(packages_str)
         pb_file.close()
 
         init_file.write('from .mf{} import '

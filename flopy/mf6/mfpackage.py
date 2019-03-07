@@ -4,6 +4,7 @@ import errno
 import inspect
 import numpy as np
 from collections import OrderedDict
+from pathlib import Path
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
@@ -1150,7 +1151,7 @@ class MFPackage(PackageContainer, PackageInterface):
             self.package_name = None
 
         if filename is None:
-            self.filename = MFFileMgmt.string_to_file_path('{}.{}'.format(
+            self._filename = MFFileMgmt.string_to_file_path('{}.{}'.format(
               self._model_or_sim.name, package_type))
         else:
             if not isinstance(filename, str):
@@ -1164,7 +1165,7 @@ class MFPackage(PackageContainer, PackageInterface):
                                       traceback_, message,
                                       model_or_sim.simulation_data.debug)
 
-            self.filename = MFFileMgmt.string_to_file_path(filename)
+            self._filename = MFFileMgmt.string_to_file_path(filename)
 
         self.path, \
             self.structure = model_or_sim.register_package(self,
@@ -1177,21 +1178,26 @@ class MFPackage(PackageContainer, PackageInterface):
             if self._simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('WARNING: Package type {} failed to register property.'
-                      ' {}'.format(self.package_type, self.path))
+                      ' {}'.format(self._package_type, self.path))
         if parent_file is not None:
             self.container_type.append(PackageContainerType.package)
         # init variables that may be used later
         self.post_block_comments = None
         self.last_error = None
         self.bc_color = "black"
+        self.__inattr = False
+        self._child_package_groups = {}
 
     def __setattr__(self, name, value):
-        if hasattr(self, name):
+        if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
                 self.parent._mg_resync = True
                 try:
-                    attribute.set_data(value)
+                    if isinstance(attribute, mfdatalist.MFList):
+                        attribute.set_data(value, autofill=True)
+                    else:
+                        attribute.set_data(value)
                 except MFDataException as mfde:
                     raise MFDataException(mfdata_except=mfde,
                                           model=self.model_name,
@@ -1204,6 +1210,24 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def __str__(self):
         return self._get_data_str(False)
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, fname):
+        if isinstance(self.parent_file, MFPackage) and \
+                self.structure.file_type in \
+                self.parent_file._child_package_groups:
+            try:
+                child_pkg_group = self.parent_file._child_package_groups[
+                    self.structure.file_type]
+                child_pkg_group._update_filename(self._filename, fname)
+            except:
+                print('WARNING: Unable to update file name for parent'
+                      'package of {}.'.format(self.name))
+        self._filename = fname
 
     @property
     def package_type(self):
@@ -1245,7 +1269,7 @@ class MFPackage(PackageContainer, PackageInterface):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
                    '\nmodel_or_simulation_package = {}' \
                    '\n{}_name = {}' \
-                   '\n'.format(self._get_pname(), self.filename,
+                   '\n'.format(self._get_pname(), self._filename,
                                self.package_type,
                                self._model_or_sim.type.lower(),
                                self._model_or_sim.type.lower(),
@@ -1275,7 +1299,7 @@ class MFPackage(PackageContainer, PackageInterface):
         if self.package_name is not None:
             return '{}'.format(self.package_name)
         else:
-            return '{}'.format(self.filename)
+            return '{}'.format(self._filename)
 
     def _get_block_header_info(self, line, path):
         # init
@@ -1376,6 +1400,59 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def remove(self):
         self._model_or_sim.remove_package(self)
+
+    def build_child_packages_container(self, pkg_type, filerecord):
+        # get package class
+        package_obj = self.package_factory(pkg_type,
+                                           self._model_or_sim.model_type)
+        # create child package object
+        child_pkgs_name = 'utl{}packages'.format(pkg_type)
+        child_pkgs_obj = self.package_factory(child_pkgs_name, '')
+        child_pkgs = child_pkgs_obj(self._model_or_sim, self, pkg_type,
+                                    filerecord, None, package_obj)
+        setattr(self, pkg_type, child_pkgs)
+        self._child_package_groups[pkg_type] = child_pkgs
+
+    def build_child_package(self, pkg_type, data, parameter_name, filerecord):
+        if not hasattr(self, pkg_type):
+            self.build_child_packages_container(pkg_type, filerecord)
+        if data is not None:
+            package_group = getattr(self, pkg_type)
+            # build child package file name
+            child_path = package_group._next_default_file_path()
+            # create new empty child package
+            package_obj = self.package_factory(pkg_type,
+                                               self._model_or_sim.model_type)
+            package = package_obj(self._model_or_sim, fname=child_path,
+                                  parent_file=self)
+            assert hasattr(package, parameter_name)
+
+            if isinstance(data, dict):
+                # evaluate and add data to package
+                unused_data = {}
+                for key, value in data.items():
+                    # if key is an attribute of the child package
+                    if isinstance(key, str) and hasattr(package, key):
+                        # set child package attribute
+                        child_data_attr = getattr(package, key)
+                        if isinstance(child_data_attr, mfdatalist.MFList):
+                            child_data_attr.set_data(value, autofill=True)
+                        elif isinstance(child_data_attr, mfdata.MFData):
+                            child_data_attr.set_data(value)
+                        elif key == 'fname' or key == 'filename':
+                            child_path = value
+                            package._filename = value
+                        else:
+                            setattr(package, key, value)
+                    else:
+                        unused_data[key] = value
+                if unused_data:
+                    setattr(package, parameter_name, unused_data)
+            else:
+                setattr(package, parameter_name, data)
+
+            # append package to list
+            package_group._init_package(package, child_path)
 
     def build_mfdata(self, var_name, data=None):
         if self.loading_package:
@@ -1599,7 +1676,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 if exchange_rec_array is None:
                     return None
                 for exchange in exchange_rec_array:
-                    if exchange[1].lower() == self.filename.lower():
+                    if exchange[1].lower() == self._filename.lower():
                         model_dims = [modeldimensions.ModelDimensions(
                                           exchange[2], self._simulation_data),
                                       modeldimensions.ModelDimensions(
@@ -1630,7 +1707,7 @@ class MFPackage(PackageContainer, PackageInterface):
         if not self.is_valid():
             message = 'Unable to write out model file "{}" due to the ' \
                         'following error: ' \
-                        '{} ({})'.format(self.filename, self.last_error,
+                        '{} ({})'.format(self._filename, self.last_error,
                                          self.path)
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.model_name, self._get_pname(),
@@ -1659,10 +1736,10 @@ class MFPackage(PackageContainer, PackageInterface):
     def get_file_path(self):
         if self.path[0] in self._simulation_data.mfpath.model_relative_path:
             return os.path.join(self._simulation_data.mfpath.get_model_path(
-                self.path[0]), self.filename)
+                self.path[0]), self._filename)
         else:
             return os.path.join(self._simulation_data.mfpath.get_sim_path(),
-                                self.filename)
+                                self._filename)
 
     def export(self, f, **kwargs):
         from flopy import export
@@ -1709,3 +1786,123 @@ class MFPackage(PackageContainer, PackageInterface):
         axes = PlotUtilities._plot_package_helper(self,
                                                   **kwargs)
         return axes
+
+
+class MFChildPackages:
+    def __init__(self, model, parent, pkg_type, filerecord, package=None,
+                 package_class=None):
+        self._packages = []
+        self._filerecord = filerecord
+        if package is not None:
+            self._packages.append(package)
+        self._model = model
+        self._cpparent = parent
+        self._pkg_type = pkg_type
+        self._package_class = package_class
+        self._inattr = False
+
+    def __getattribute__(self, name):
+        if name == '_MFChildPackages_packages' or name == \
+                '_MFChildPackages_inattr' or name == '_packages' or \
+                name == '_inattr':
+            return super(MFChildPackages, self).__getattribute__(name)
+
+        if self._inattr is not None and not self._inattr:
+            if self._packages and hasattr(self._packages[0], name):
+                self._inattr = True
+                item = getattr(self._packages[0], name)
+                self._inattr = False
+                return item
+        return super(MFChildPackages, self).__getattribute__(name)
+
+    def __getattr__(self, attr):
+        if attr == '_MFChildPackages_inattr' or attr == '_inattr':
+            return None
+        raise AttributeError(attr)
+
+    def __getitem__(self, k):
+        if isinstance(k, int):
+            if k < len(self._packages):
+                return self._packages[k]
+        raise Exception('Package index {} does not exist.'.format(k))
+
+    def __setattr__(self, name, value):
+        if name != '_packages' and name != '_model' and name != '_cpparent' and \
+                name != '_inattr' and name != '_filerecord' and \
+                name != '_package_class' and name != '_pkg_type':
+            if len(self._packages) == 0:
+                fnm = self.__default_file_path_base(Path(self._cpparent.filename))
+                self._init_package(self._package_class(self._model), fnm)
+            package = self._packages[0]
+            setattr(package, name, value)
+            return
+        super(MFChildPackages, self).__setattr__(name, value)
+
+    def __default_file_path_base(self, file_path, suffix=''):
+        return '{}.{}{}.{}'.format(file_path.stem, file_path.suffix[1:],
+                                   suffix, self._pkg_type)
+
+    def __file_path_taken(self, possible_path):
+        for package in self._packages:
+            # Do case insensitive compare
+            if package.filename.lower() == possible_path.lower():
+                return True
+        return False
+
+    def _next_default_file_path(self):
+        file_path = Path(self._cpparent.filename)
+        possible_path = self.__default_file_path_base(file_path)
+        suffix = 0
+        while self.__file_path_taken(possible_path):
+            possible_path = self.__default_file_path_base(file_path, suffix)
+            suffix += 1
+        return possible_path
+
+    def _init_package(self, package, fname):
+        # clear out existing packages
+        self._remove_packages()
+        if fname is None:
+            # build a file name
+            fname = self._next_default_file_path()
+            package._filename = fname
+        # set file record variable
+        self._filerecord.set_data(fname, autofill=True)
+        # add the package to the list
+        self._packages.append(package)
+
+    def _update_filename(self, old_fname, new_fname):
+        file_record = self._filerecord.get_data()
+        new_file_record_data = []
+        if file_record is not None:
+            file_record_data = file_record[0]
+            for item in file_record_data:
+                if item.lower() == old_fname.lower():
+                    new_file_record_data.append((new_fname,))
+                else:
+                    new_file_record_data.append((item,))
+        else:
+            new_file_record_data.append((new_fname,))
+        self._filerecord.set_data(new_file_record_data)
+
+    def _append_package(self, package, fname):
+        if fname is None:
+            # build a file name
+            fname = self._next_default_file_path()
+            package._filename = fname
+
+        # set file record variable
+        file_record = self._filerecord.get_data()
+        file_record_data = file_record[0]
+        new_file_record_data = []
+        for item in file_record_data:
+            new_file_record_data.append((item,))
+        new_file_record_data.append((fname,))
+        self._filerecord.set_data(new_file_record_data)
+
+        # add the package to the list
+        self._packages.append(package)
+
+    def _remove_packages(self):
+        for package in self._packages:
+            self._model.remove_package(package)
+        self._packages = []

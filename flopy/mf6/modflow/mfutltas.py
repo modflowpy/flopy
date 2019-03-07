@@ -96,3 +96,33 @@ class ModflowUtltas(mfpackage.MFPackage):
             "interpolation_methodrecord",  interpolation_methodrecord)
         self.sfacrecord = self.build_mfdata("sfacrecord",  sfacrecord)
         self.tas_array = self.build_mfdata("tas_array",  tas_array)
+
+
+class UtltasPackages(mfpackage.MFChildPackages):
+    package_abbr = "utltaspackages"
+
+    def initialize(self, time_series_namerecord=None,
+                   interpolation_methodrecord=None, sfacrecord=None,
+                   tas_array=None, fname=None, pname=None):
+        new_package = ModflowUtltas(self._model,
+                                    time_series_namerecord=
+                                    time_series_namerecord,
+                                    interpolation_methodrecord=
+                                    interpolation_methodrecord,
+                                    sfacrecord=sfacrecord, tas_array=tas_array,
+                                    fname=fname, pname=pname,
+                                    parent_file=self._cpparent)
+        self._init_package(new_package, fname)
+
+    def append_package(self, time_series_namerecord=None,
+                   interpolation_methodrecord=None, sfacrecord=None,
+                   tas_array=None, fname=None, pname=None):
+        new_package = ModflowUtltas(self._model,
+                                    time_series_namerecord=
+                                    time_series_namerecord,
+                                    interpolation_methodrecord=
+                                    interpolation_methodrecord,
+                                    sfacrecord=sfacrecord, tas_array=tas_array,
+                                    fname=fname, pname=pname,
+                                    parent_file=self._cpparent)
+        self._append_package(new_package, fname)
