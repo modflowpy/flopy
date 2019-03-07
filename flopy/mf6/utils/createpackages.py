@@ -371,7 +371,7 @@ def create_packages():
         class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n'.format(
             package_name.title())
         class_def_string = class_def_string.replace('-', '_')
-        class_var_string = '{}\n    package_abbr = "{}"\n    package_type = ' \
+        class_var_string = '{}\n    package_abbr = "{}"\n    _package_type = ' \
                            '"{}"\n    dfn_file_name = "{}"' \
                            '\n'.format('\n'.join(class_vars), package_abbr,
                                        package[4], package[0].dfn_file_name)
