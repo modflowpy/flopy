@@ -206,9 +206,21 @@ class Modflow(BaseModel):
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
-        return 'MODFLOW %d layer(s), %d row(s), %d column(s), %d stress period(s)' % (
-        nlay, nrow, ncol, nper)
-
+        if nrow is not None:
+            # structured case
+            s = ('MODFLOW {} layer(s) {} row(s) {} column(s) '
+                 '{} stress period(s)'.format(nlay, nrow, ncol, nper))
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            nodelay = ' '.join(str(i) for i in ncol)
+            print(nodelay, nlay, nper)
+            s = ('MODFLOW unstructured\n'
+                 '  nodes = {}\n'
+                 '  layers = {}\n'
+                 '  periods = {}\n'
+                 '  nodelay = {}\n'.format(nodes, nlay, nper, ncol))
+        return s
     #
     # def next_ext_unit(self):
     #     """

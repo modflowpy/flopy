@@ -1,8 +1,8 @@
 import os
 import textwrap
 from enum import Enum
-from ...mf6.data import mfstructure, mfdatautil
-from ...utils import datautil
+from flopy.mf6.data import mfstructure, mfdatautil
+from flopy.utils import datautil
 
 """
 createpackages.py is a utility script that reads in the file definition 
