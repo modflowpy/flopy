@@ -64,6 +64,9 @@ description REPLACE save_flows {'{#1}': 'evapotranspiration'}
 block options
 name tas_filerecord
 type record tas6 filein tas6_filename
+construct_package tas
+construct_data tas_array
+parameter_name timearrayseries
 shape
 reader urword
 tagged true
@@ -107,6 +110,9 @@ description defines a time-array-series file defining a time-array series that c
 block options
 name obs_filerecord
 type record obs6 filein obs6_filename
+construct_package obs
+construct_data continuous
+parameter_name observations
 shape
 reader urword
 tagged true

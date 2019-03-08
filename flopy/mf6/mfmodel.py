@@ -155,7 +155,7 @@ class MFModel(PackageContainer, ModelInterface):
                         '{}.'.format(model_type[0:3])
             raise FlopyException(excpt_str)
 
-        self.name_file = package_obj(self, fname=self.model_nam_file,
+        self.name_file = package_obj(self, filename=self.model_nam_file,
                                      pname=self.name)
 
     def __getattr__(self, item):
@@ -889,7 +889,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         # create package
         package_obj = self.package_factory(ftype, model_type)
-        package = package_obj(self, fname=fname, pname=dict_package_name,
+        package = package_obj(self, filename=fname, pname=dict_package_name,
                               loading_package=True,
                               parent_file=parent_package)
         try:
@@ -897,7 +897,7 @@ class MFModel(PackageContainer, ModelInterface):
         except ReadAsArraysException:
             #  create ReadAsArrays package and load it instead
             package_obj = self.package_factory('{}a'.format(ftype), model_type)
-            package = package_obj(self, fname=fname, pname=dict_package_name,
+            package = package_obj(self, filename=fname, pname=dict_package_name,
                                   loading_package=True,
                                   parent_file=parent_package)
             package.load(strict)

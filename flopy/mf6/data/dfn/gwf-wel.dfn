@@ -62,6 +62,9 @@ description keyword and real value that defines the fraction of the cell thickne
 block options
 name ts_filerecord
 type record ts6 filein ts6_filename
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
 shape
 reader urword
 tagged true
@@ -105,6 +108,9 @@ description REPLACE timeseriesfile {}
 block options
 name obs_filerecord
 type record obs6 filein obs6_filename
+construct_package obs
+construct_data continuous
+parameter_name observations
 shape
 reader urword
 tagged true

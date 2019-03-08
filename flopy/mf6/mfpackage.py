@@ -1423,7 +1423,7 @@ class MFPackage(PackageContainer, PackageInterface):
             # create new empty child package
             package_obj = self.package_factory(pkg_type,
                                                self._model_or_sim.model_type)
-            package = package_obj(self._model_or_sim, fname=child_path,
+            package = package_obj(self._model_or_sim, filename=child_path,
                                   parent_file=self)
             assert hasattr(package, parameter_name)
 

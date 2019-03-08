@@ -97,7 +97,7 @@ class ModflowGwfghb(mfpackage.MFPackage):
           is an ASCII character variable that can contain as many as 40
           characters. If BOUNDNAME contains spaces in it, then the entire name
           must be enclosed within single quotes.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -184,9 +184,9 @@ class ModflowGwfghb(mfpackage.MFPackage):
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, timeseries=None,
                  observations=None, mover=None, maxbound=None,
-                 stress_period_data=None, fname=None, pname=None,
+                 stress_period_data=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfghb, self).__init__(model, "ghb", fname, pname,
+        super(ModflowGwfghb, self).__init__(model, "ghb", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

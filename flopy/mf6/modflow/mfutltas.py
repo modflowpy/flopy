@@ -30,7 +30,7 @@ class ModflowUtltas(mfpackage.MFPackage):
     tas_array : [double]
         * tas_array (double) An array of numeric, floating-point values, or a
           constant value, readable by the U2DREL array-reading utility.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -84,9 +84,9 @@ class ModflowUtltas(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False,
                  time_series_namerecord=None, interpolation_methodrecord=None,
-                 sfacrecord=None, tas_array=None, fname=None, pname=None,
+                 sfacrecord=None, tas_array=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowUtltas, self).__init__(model, "tas", fname, pname,
+        super(ModflowUtltas, self).__init__(model, "tas", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -103,26 +103,26 @@ class UtltasPackages(mfpackage.MFChildPackages):
 
     def initialize(self, time_series_namerecord=None,
                    interpolation_methodrecord=None, sfacrecord=None,
-                   tas_array=None, fname=None, pname=None):
+                   tas_array=None, filename=None, pname=None):
         new_package = ModflowUtltas(self._model,
                                     time_series_namerecord=
                                     time_series_namerecord,
                                     interpolation_methodrecord=
                                     interpolation_methodrecord,
                                     sfacrecord=sfacrecord, tas_array=tas_array,
-                                    fname=fname, pname=pname,
+                                    filename=filename, pname=pname,
                                     parent_file=self._cpparent)
-        self._init_package(new_package, fname)
+        self._init_package(new_package, filename)
 
     def append_package(self, time_series_namerecord=None,
                    interpolation_methodrecord=None, sfacrecord=None,
-                   tas_array=None, fname=None, pname=None):
+                   tas_array=None, filename=None, pname=None):
         new_package = ModflowUtltas(self._model,
                                     time_series_namerecord=
                                     time_series_namerecord,
                                     interpolation_methodrecord=
                                     interpolation_methodrecord,
                                     sfacrecord=sfacrecord, tas_array=tas_array,
-                                    fname=fname, pname=pname,
+                                    filename=filename, pname=pname,
                                     parent_file=self._cpparent)
-        self._append_package(new_package, fname)
+        self._append_package(new_package, filename)

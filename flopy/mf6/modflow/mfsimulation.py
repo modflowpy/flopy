@@ -329,7 +329,7 @@ class MFSimulation(PackageContainer):
         self.simulation_data.mfpath.set_last_accessed_path()
 
         # build simulation name file
-        self.name_file = mfnam.ModflowNam(self, fname='mfsim.nam')
+        self.name_file = mfnam.ModflowNam(self, filename='mfsim.nam')
 
         # try to build directory structure
         sim_path = self.simulation_data.mfpath.get_sim_path()
@@ -479,7 +479,7 @@ class MFSimulation(PackageContainer):
                                    get_version_string())
         tdis_attr = getattr(instance.name_file, tdis_pkg)
         instance._tdis_file = mftdis.ModflowTdis(instance,
-                                                 fname=tdis_attr.get_data())
+                                                 filename=tdis_attr.get_data())
 
         instance._tdis_file._filename = instance.simulation_data.mfdata[
             ('nam', 'timing', tdis_pkg)].get_data()
@@ -567,7 +567,7 @@ class MFSimulation(PackageContainer):
                 exchange_file = package_obj(instance, exgtype=exgfile[0],
                                             exgmnamea=exgfile[2],
                                             exgmnameb=exgfile[3],
-                                            fname=exgfile[1],
+                                            filename=exgfile[1],
                                             pname=exchange_name,
                                             loading_package=True)
                 if verbosity_level.value >= VerbosityLevel.normal.value:
@@ -593,7 +593,7 @@ class MFSimulation(PackageContainer):
                                   message=message)
         for solution_group in solution_group_list:
             for solution_info in solution_group:
-                ims_file = mfims.ModflowIms(instance, fname=solution_info[1],
+                ims_file = mfims.ModflowIms(instance, filename=solution_info[1],
                                             pname=solution_info[2])
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print('  loading ims package {}..'
@@ -637,7 +637,7 @@ class MFSimulation(PackageContainer):
                     package_abbr = 'GWF'
                 # build package name and package
                 gnc_name = '{}-GNC_{}'.format(package_abbr, self._gnc_file_num)
-                ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, fname=fname,
+                ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, filename=fname,
                                                          pname=gnc_name,
                                                          parent_file=
                                                          parent_package,
@@ -654,7 +654,7 @@ class MFSimulation(PackageContainer):
                     package_abbr = 'GWF'
                 # build package name and package
                 mvr_name = '{}-MVR_{}'.format(package_abbr, self._mvr_file_num)
-                mover_file = mfgwfmvr.ModflowGwfmvr(self, fname=fname,
+                mover_file = mfgwfmvr.ModflowGwfmvr(self, filename=fname,
                                                     pname=mvr_name,
                                                     parent_file=parent_package,
                                                     loading_package=True)
@@ -664,7 +664,7 @@ class MFSimulation(PackageContainer):
         else:
             # create package
             package_obj = self.package_factory(ftype, '')
-            package = package_obj(self, fname=fname, pname=dict_package_name,
+            package = package_obj(self, filename=fname, pname=dict_package_name,
                                   add_to_package_list=False,
                                   parent_file=parent_package,
                                   loading_package=True)

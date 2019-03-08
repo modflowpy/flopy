@@ -58,17 +58,16 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the SFR package. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the SFR
-          package.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can bestored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can bestored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     mover : boolean
         * mover (boolean) keyword to indicate that this instance of the SFR
           Package can be used with the Water Mover (MVR) Package. When the
@@ -227,42 +226,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   respectively, to ensure that the active reach receives all of
                   the downstream outflow from the upstream reach. By default,
                   STATUS is ACTIVE.
-            rainfall : [string]
-                * rainfall (string) real or character value that defines the
-                  volumetric rate per unit area of water added by precipitation
-                  directly on the streamflow routing reach. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. By
-                  default, rainfall rates are zero for each reach.
-            upstream_fraction : [double]
-                * upstream_fraction (double) real value that defines the
-                  fraction of upstream flow (USTRF) from each upstream reach
-                  that is applied as upstream inflow to the reach. The sum of
-                  all USTRF values for all reaches connected to the same
-                  upstream reach must be equal to one.
-            diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
-                * divrate (double) real or character value that defines the
-                  volumetric diversion (DIVFLOW) rate for the streamflow
-                  routing reach. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            evaporation : [string]
-                * evaporation (string) real or character value that defines the
-                  volumetric rate per unit area of water subtracted by
-                  evaporation from the streamflow routing reach. A positive
-                  evaporation rate should be provided. If the Options block
-                  includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value. If
-                  the volumetric evaporation rate for a reach exceeds the
-                  sources of water to the reach (upstream and specified
-                  inflows, rainfall, and runoff but excluding groundwater
-                  leakage into the reach) the volumetric evaporation rate is
-                  limited to the sources of water to the reach. By default,
-                  evaporation rates are zero for each reach.
             manning : [string]
                 * manning (string) real or character value that defines the
                   Manning's roughness coefficient for the reach. MANNING must
@@ -270,30 +233,6 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   TIMESERIESFILE entry (see the "Time-Variable Input" section),
                   values can be obtained from a time series by entering the
                   time-series name in place of a numeric value.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  volumetric rate of diffuse overland runoff that enters the
-                  streamflow routing reach. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value. If the
-                  volumetric runoff rate for a reach is negative and exceeds
-                  inflows to the reach (upstream and specified inflows, and
-                  rainfall but excluding groundwater leakage into the reach)
-                  the volumetric runoff rate is limited to inflows to the reach
-                  and the volumetric evaporation rate for the reach is set to
-                  zero. By default, runoff rates are zero for each reach.
             stage : [string]
                 * stage (string) real or character value that defines the stage
                   for the reach. The specified STAGE is only applied if the
@@ -312,7 +251,67 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   time series by entering the time-series name in place of a
                   numeric value. By default, inflow rates are zero for each
                   reach.
-    fname : String
+            rainfall : [string]
+                * rainfall (string) real or character value that defines the
+                  volumetric rate per unit area of water added by precipitation
+                  directly on the streamflow routing reach. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, rainfall rates are zero for each reach.
+            evaporation : [string]
+                * evaporation (string) real or character value that defines the
+                  volumetric rate per unit area of water subtracted by
+                  evaporation from the streamflow routing reach. A positive
+                  evaporation rate should be provided. If the Options block
+                  includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. If
+                  the volumetric evaporation rate for a reach exceeds the
+                  sources of water to the reach (upstream and specified
+                  inflows, rainfall, and runoff but excluding groundwater
+                  leakage into the reach) the volumetric evaporation rate is
+                  limited to the sources of water to the reach. By default,
+                  evaporation rates are zero for each reach.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  volumetric rate of diffuse overland runoff that enters the
+                  streamflow routing reach. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value. If the
+                  volumetric runoff rate for a reach is negative and exceeds
+                  inflows to the reach (upstream and specified inflows, and
+                  rainfall but excluding groundwater leakage into the reach)
+                  the volumetric runoff rate is limited to inflows to the reach
+                  and the volumetric evaporation rate for the reach is set to
+                  zero. By default, runoff rates are zero for each reach.
+            diversionrecord : [idv, divrate]
+                * idv (integer) diversion number.
+                * divrate (double) real or character value that defines the
+                  volumetric diversion (DIVFLOW) rate for the streamflow
+                  routing reach. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            upstream_fraction : [double]
+                * upstream_fraction (double) real value that defines the
+                  fraction of upstream flow (USTRF) from each upstream reach
+                  that is applied as upstream inflow to the reach. The sum of
+                  all USTRF values for all reaches connected to the same
+                  upstream reach must be equal to one.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -379,8 +378,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "preserve_case true", "shape", "in_record true", "reader urword", 
             "tagged false", "optional false"],
            ["block options", "name ts_filerecord", 
-            "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record ts6 filein ts6_filename", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries", "shape", 
+            "reader urword", "tagged true", "optional true"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -391,8 +391,9 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "preserve_case true", "in_record true", "reader urword", 
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
-            "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record obs6 filein obs6_filename", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations", 
+            "shape", "reader urword", "tagged true", "optional true"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -529,13 +530,13 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, auxiliary=None,
                  boundnames=None, print_input=None, print_stage=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
-                 budget_filerecord=None, ts_filerecord=None,
-                 obs_filerecord=None, mover=None, maximum_iterations=None,
+                 budget_filerecord=None, timeseries=None, observations=None,
+                 mover=None, maximum_iterations=None,
                  maximum_depth_change=None, unit_conversion=None,
                  nreaches=None, packagedata=None, connectiondata=None,
-                 diversions=None, perioddata=None, fname=None, pname=None,
+                 diversions=None, perioddata=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfsfr, self).__init__(model, "sfr", fname, pname,
+        super(ModflowGwfsfr, self).__init__(model, "sfr", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -549,9 +550,16 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                                                   stage_filerecord)
         self.budget_filerecord = self.build_mfdata("budget_filerecord", 
                                                    budget_filerecord)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.maximum_iterations = self.build_mfdata("maximum_iterations", 
                                                     maximum_iterations)

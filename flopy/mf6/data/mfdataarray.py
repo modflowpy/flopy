@@ -5,7 +5,7 @@ from ..data.mfstructure import DatumType
 from ..data import mfdatautil, mfdata
 from ...utils import datautil
 from ...utils.datautil import MultiList
-from ..mfbase import ExtFileAction, MFDataException
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 
@@ -478,35 +478,27 @@ class MFArray(mfdata.MFMultiDimVar):
     def _set_tas(self, storage, tas_name, tas_label):
         package_dim = self._data_dimensions.package_dim
         tas_names = package_dim.get_tasnames()
-        if tas_name.lower() in tas_names:
-            # this is a time series array with a valid tas variable
-            storage.data_structure_type = \
-                mfdata.DataStructureType.scalar
-            try:
-                storage.set_data('{} {}'.format(tas_label, tas_name), 0,
-                                 key=self._current_key)
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'storing data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug, ex)
-        else:
-            message = 'TIMEARRAYSERIES keyword not ' \
-                      'followed by a valid TAS variable. '
+        if tas_name.lower() not in tas_names and \
+                self._simulation_data.verbosity_level.value >= \
+                VerbosityLevel.normal.value:
+            print('WARNING: Time array series name {} not found in any '
+                  'time series file'.format(tas_name))
+        # this is a time series array with a valid tas variable
+        storage.data_structure_type = \
+            mfdata.DataStructureType.scalar
+        try:
+            storage.set_data('{} {}'.format(tas_label, tas_name), 0,
+                             key=self._current_key)
+        except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),
                                   self.structure.get_package(),
                                   self._path,
-                                  'loading data from file',
+                                  'storing data',
                                   self.structure.name,
                                   inspect.stack()[0][3], type_,
-                                  value_, traceback_, message,
-                                  self._simulation_data.debug)
+                                  value_, traceback_, None,
+                                  self._simulation_data.debug, ex)
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):

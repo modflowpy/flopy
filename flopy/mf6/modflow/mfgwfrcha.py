@@ -85,7 +85,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           auxiliary variable, then a value of zero is assigned. If the value
           specified here for the auxiliary variable is the same as auxmultname,
           then the recharge array will be multiplied by this array.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -161,9 +161,9 @@ class ModflowGwfrcha(mfpackage.MFPackage):
                  fixed_cell=None, auxiliary=None, auxmultname=None,
                  print_input=None, print_flows=None, save_flows=None,
                  timearrayseries=None, observations=None, irch=None,
-                 recharge=1.e-3, aux=None, fname=None, pname=None,
+                 recharge=1.e-3, aux=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfrcha, self).__init__(model, "rcha", fname, pname,
+        super(ModflowGwfrcha, self).__init__(model, "rcha", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables

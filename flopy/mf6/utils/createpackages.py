@@ -405,7 +405,7 @@ def create_packages():
 
 
         # add extra docstrings for additional variables
-        doc_string.add_parameter('    fname : String\n        '
+        doc_string.add_parameter('    filename : String\n        '
                                  'File name for this package.')
         doc_string.add_parameter('    pname : String\n        '
                                  'Package name for this package.')
@@ -450,7 +450,7 @@ def create_packages():
                                      beginning_of_list=True)
             init_string_full = '{}, model, loading_package=False'.format(
                 init_string_full)
-        init_param_list.append('fname=None')
+        init_param_list.append('filename=None')
         init_param_list.append('pname=None')
         init_param_list.append('parent_file=None')
         init_string_full = build_init_string(init_string_full, init_param_list)
@@ -463,7 +463,7 @@ def create_packages():
         parent_init_string = '        super(Modflow{}, self)' \
                              '.__init__('.format(package_name.title())
         spaces = ' ' * len(parent_init_string)
-        parent_init_string = '{}{}, "{}", fname, pname,\n{}' \
+        parent_init_string = '{}{}, "{}", filename, pname,\n{}' \
                              'loading_package, parent_file)        \n\n' \
                              '        # set up variables'.format(
             parent_init_string, init_var, package_short_name, spaces)
@@ -481,7 +481,7 @@ def create_packages():
         pb_file.write(package_string)
 
         if package[2] == 'utl':
-            set_param_list.append('fname=fname')
+            set_param_list.append('filename=filename')
             set_param_list.append('pname=pname')
             set_param_list.append('parent_file=self._cpparent')
             whsp_1 = '                   '
@@ -495,7 +495,7 @@ def create_packages():
             chld_init = '    def initialize(self'
             chld_init = build_init_string(chld_init, init_param_list[:-1],
                                           whsp_1)
-            init_pkg = '\n        self._init_package(new_package, fname)'
+            init_pkg = '\n        self._init_package(new_package, filename)'
             params_init = '        new_package = ModflowUtl{}(' \
                           'self._model'.format(package_short_name)
             params_init = build_init_string(params_init, set_param_list, whsp_2)
@@ -503,7 +503,7 @@ def create_packages():
             chld_appn = '    def append_package(self'
             chld_appn = build_init_string(chld_appn, init_param_list[:-1],
                                           whsp_1)
-            append_pkg = '\n        self._append_package(new_package, fname)'
+            append_pkg = '\n        self._append_package(new_package, filename)'
             params_appn = '        new_package = ModflowUtl{}(' \
                           'self._model'.format(package_short_name)
             params_appn = build_init_string(params_appn, set_param_list,

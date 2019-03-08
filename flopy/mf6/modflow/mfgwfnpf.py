@@ -158,7 +158,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           "REWET" is specified in the OPTIONS block. If "REWET" is not
           specified in the options block, then WETDRY can be entered, and
           memory will be allocated for it, even though it is not used.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -252,9 +252,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
                  cvoptions=None, perched=None, rewet_record=None,
                  xt3doptions=None, save_specific_discharge=None, icelltype=0,
                  k=1.0, k22=None, k33=None, angle1=None, angle2=None,
-                 angle3=None, wetdry=None, fname=None, pname=None,
+                 angle3=None, wetdry=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfnpf, self).__init__(model, "npf", fname, pname,
+        super(ModflowGwfnpf, self).__init__(model, "npf", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

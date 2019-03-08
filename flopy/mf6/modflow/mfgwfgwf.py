@@ -86,12 +86,11 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           name must be included before package name 1 and package name 2 in the
           BEGIN PERIOD block. This allows providers and receivers to be located
           in both models listed as part of this exchange.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) is the file name of the observations input
-          file for this exchange. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          ref{table:obstype} lists observation type(s) supported by the GWF-GWF
-          package.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can bestored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     nexg : integer
         * nexg (integer) keyword and integer value specifying the number of
           GWF-GWF exchanges.
@@ -126,7 +125,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           each GWFGWF Exchange. The values of auxiliary variables must be
           present for each exchange. The values must be specified in the order
           of the auxiliary variables specified in the OPTIONS block.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -191,8 +190,9 @@ class ModflowGwfgwf(mfpackage.MFPackage):
             "preserve_case true", "in_record true", "tagged false", 
             "reader urword", "optional false"],
            ["block options", "name obs_filerecord", 
-            "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record obs6 filein obs6_filename", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations", 
+            "shape", "reader urword", "tagged true", "optional true"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -230,10 +230,10 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                  exgmnamea=None, exgmnameb=None, auxiliary=None,
                  print_input=None, print_flows=None, save_flows=None,
                  cell_averaging=None, cvoptions=None, newton=None,
-                 gnc_filerecord=None, mvr_filerecord=None, obs_filerecord=None,
-                 nexg=None, exchangedata=None, fname=None, pname=None,
+                 gnc_filerecord=None, mvr_filerecord=None, observations=None,
+                 nexg=None, exchangedata=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfgwf, self).__init__(simulation, "gwfgwf", fname, pname,
+        super(ModflowGwfgwf, self).__init__(simulation, "gwfgwf", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -257,7 +257,10 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                                                 gnc_filerecord)
         self.mvr_filerecord = self.build_mfdata("mvr_filerecord", 
                                                 mvr_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.nexg = self.build_mfdata("nexg",  nexg)
         self.exchangedata = self.build_mfdata("exchangedata",  exchangedata)

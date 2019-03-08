@@ -38,7 +38,7 @@ class ModflowTdis(mfpackage.MFPackage):
           time step, :math:`\\Delta t_1`, is related to PERLEN, NSTP, and
           TSMULT by the relation :math:`\\Delta t_1= perlen \\frac{tsmult -
           1}{tsmult^{nstp}-1}`.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -75,8 +75,8 @@ class ModflowTdis(mfpackage.MFPackage):
 
     def __init__(self, simulation, loading_package=False, time_units=None,
                  start_date_time=None, nper=1, perioddata=((1.0, 1, 1.0),),
-                 fname=None, pname=None, parent_file=None):
-        super(ModflowTdis, self).__init__(simulation, "tdis", fname, pname,
+                 filename=None, pname=None, parent_file=None):
+        super(ModflowTdis, self).__init__(simulation, "tdis", filename, pname,
                                           loading_package, parent_file)        
 
         # set up variables

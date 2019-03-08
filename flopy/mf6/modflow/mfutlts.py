@@ -40,7 +40,7 @@ class ModflowUtlts(mfpackage.MFPackage):
           strictly increasing.
         * ts_array (double) A 2-D array of numeric, floating-point values, or a
           constant value, readable by the U2DREL array-reading utility.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -113,9 +113,9 @@ class ModflowUtlts(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False,
                  time_series_namerecord=None, interpolation_methodrecord=None,
                  interpolation_methodrecord_single=None, sfacrecord=None,
-                 sfacrecord_single=None, timeseries=None, fname=None,
+                 sfacrecord_single=None, timeseries=None, filename=None,
                  pname=None, parent_file=None):
-        super(ModflowUtlts, self).__init__(model, "ts", fname, pname,
+        super(ModflowUtlts, self).__init__(model, "ts", filename, pname,
                                            loading_package, parent_file)        
 
         # set up variables
@@ -138,7 +138,7 @@ class UtltsPackages(mfpackage.MFChildPackages):
     def initialize(self, time_series_namerecord=None,
                    interpolation_methodrecord=None,
                    interpolation_methodrecord_single=None, sfacrecord=None,
-                   sfacrecord_single=None, timeseries=None, fname=None,
+                   sfacrecord_single=None, timeseries=None, filename=None,
                    pname=None):
         new_package = ModflowUtlts(self._model,
                                     time_series_namerecord=
@@ -149,14 +149,14 @@ class UtltsPackages(mfpackage.MFChildPackages):
                                     interpolation_methodrecord_single,
                                     sfacrecord=sfacrecord,
                                     sfacrecord_single=sfacrecord_single,
-                                    timeseries=timeseries, fname=fname,
+                                    timeseries=timeseries, filename=filename,
                                     pname=pname, parent_file=self._cpparent)
-        self._init_package(new_package, fname)
+        self._init_package(new_package, filename)
 
     def append_package(self, time_series_namerecord=None,
                    interpolation_methodrecord=None,
                    interpolation_methodrecord_single=None, sfacrecord=None,
-                   sfacrecord_single=None, timeseries=None, fname=None,
+                   sfacrecord_single=None, timeseries=None, filename=None,
                    pname=None):
         new_package = ModflowUtlts(self._model,
                                     time_series_namerecord=
@@ -167,6 +167,6 @@ class UtltsPackages(mfpackage.MFChildPackages):
                                     interpolation_methodrecord_single,
                                     sfacrecord=sfacrecord,
                                     sfacrecord_single=sfacrecord_single,
-                                    timeseries=timeseries, fname=fname,
+                                    timeseries=timeseries, filename=filename,
                                     pname=pname, parent_file=self._cpparent)
-        self._append_package(new_package, fname)
+        self._append_package(new_package, filename)

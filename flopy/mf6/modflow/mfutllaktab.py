@@ -35,7 +35,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         * barea (double) real value that defines the lake-GWF exchange area
           corresponding to the stage specified on the line. BAREA is only
           specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -68,11 +68,29 @@ class ModflowUtllaktab(mfpackage.MFPackage):
             "optional true"]]
 
     def __init__(self, model, loading_package=False, nrow=None, ncol=None,
-                 table=None, fname=None, pname=None, parent_file=None):
-        super(ModflowUtllaktab, self).__init__(model, "tab", fname, pname,
+                 table=None, filename=None, pname=None, parent_file=None):
+        super(ModflowUtllaktab, self).__init__(model, "tab", filename, pname,
                                                loading_package, parent_file)        
 
         # set up variables
         self.nrow = self.build_mfdata("nrow",  nrow)
         self.ncol = self.build_mfdata("ncol",  ncol)
         self.table = self.build_mfdata("table",  table)
+
+
+class UtltabPackages(mfpackage.MFChildPackages):
+    package_abbr = "utltabpackages"
+
+    def initialize(self, nrow=None, ncol=None, table=None, filename=None,
+                   pname=None):
+        new_package = ModflowUtltab(self._model, nrow=nrow, ncol=ncol,
+                                    table=table, filename=filename,
+                                    pname=pname, parent_file=self._cpparent)
+        self._init_package(new_package, filename)
+
+    def append_package(self, nrow=None, ncol=None, table=None, filename=None,
+                   pname=None):
+        new_package = ModflowUtltab(self._model, nrow=nrow, ncol=ncol,
+                                    table=table, filename=filename,
+                                    pname=pname, parent_file=self._cpparent)
+        self._append_package(new_package, filename)

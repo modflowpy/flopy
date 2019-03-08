@@ -136,7 +136,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         * icvert (integer) is an array of integer values containing vertex
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -236,9 +236,9 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nodes=None, nja=None, nvert=None, top=None, bot=None,
                  area=None, iac=None, ja=None, ihc=None, cl12=None, hwva=None,
-                 angldegx=None, vertices=None, cell2d=None, fname=None,
+                 angldegx=None, vertices=None, cell2d=None, filename=None,
                  pname=None, parent_file=None):
-        super(ModflowGwfdisu, self).__init__(model, "disu", fname, pname,
+        super(ModflowGwfdisu, self).__init__(model, "disu", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables

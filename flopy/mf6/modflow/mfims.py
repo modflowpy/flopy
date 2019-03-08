@@ -266,7 +266,7 @@ class ModflowIms(mfpackage.MFPackage):
           matrix reordering approach used. By default, matrix reordering is not
           applied. NONE - original ordering. RCM - reverse Cuthill McKee
           ordering. MD - minimum degree ordering.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -365,9 +365,9 @@ class ModflowIms(mfpackage.MFPackage):
                  preconditioner_levels=None,
                  preconditioner_drop_tolerance=None,
                  number_orthogonalizations=None, scaling_method=None,
-                 reordering_method=None, fname=None, pname=None,
+                 reordering_method=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowIms, self).__init__(simulation, "ims", fname, pname,
+        super(ModflowIms, self).__init__(simulation, "ims", filename, pname,
                                          loading_package, parent_file)        
 
         # set up variables
