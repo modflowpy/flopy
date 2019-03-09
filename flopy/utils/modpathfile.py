@@ -9,6 +9,7 @@ important classes that can be accessed by the user.
 
 import itertools
 import collections
+import warnings
 import numpy as np
 
 try:
@@ -188,7 +189,7 @@ class PathlineFile():
             t = [int(s) for j, s in enumerate(line.split()) if j < 4]
             sequencenumber, group, particleid, pathlinecount = t[0:4]
             ndata += pathlinecount
-            # read the particle data
+            # read in the particle data
             d = np.loadtxt(itertools.islice(self.file, 0, pathlinecount),
                            dtype=dtyper)
             key = (idx, sequencenumber, group, particleid, pathlinecount)
@@ -420,7 +421,7 @@ class PathlineFile():
                         one_per_particle=True,
                         direction='ending',
                         shpname='endpoints.shp',
-                        sr=None, epsg=None,
+                        mg=None, epsg=None, sr=None,
                         **kwargs):
         """
         Write pathlines to a shapefile
@@ -441,17 +442,19 @@ class PathlineFile():
             one_per_particle=False. (default is 'ending')
         shpname : str
             File path for shapefile
-        sr : flopy.utils.reference.SpatialReference instance
+        mg : flopy.discretization.grid instance
             Used to scale and rotate Global x,y,z values in MODPATH Endpoint
             file.
         epsg : int
             EPSG code for writing projection (.prj) file. If this is not
-            supplied, the proj4 string or epgs code associated with sr will be
+            supplied, the proj4 string or epgs code associated with mg will be
             used.
         kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
         from ..utils.reference import SpatialReference
+        from ..utils import geometry
+        from ..discretization import StructuredGrid
         from ..utils.geometry import LineString
         from ..export.shapefile_utils import recarray2shp
 
@@ -470,11 +473,17 @@ class PathlineFile():
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
-        if sr is None:
-            sr = SpatialReference()
+        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
+            warnings.warn("Deprecation warning: SpatialReference is deprecated."
+                          "Use the Grid class instead.", DeprecationWarning)
+            if isinstance(mg, SpatialReference):
+                sr = mg
+            mg = StructuredGrid(sr.delc, sr.delr)
+            mg.set_coord_info(xoff=sr.xll, yoff=sr.yll, angrot=sr.rotation,
+                              epsg=sr.epsg, proj4=sr.proj4_str)
 
         if epsg is None:
-            epsg = sr.epsg
+            epsg = mg.epsg
 
         particles = np.unique(pth.particleid)
         geoms = []
@@ -505,7 +514,8 @@ class PathlineFile():
             for pid in particles:
                 ra = pth[pth.particleid == pid]
 
-                x, y = sr.transform(ra.x, ra.y)
+                x, y = geometry.transform(ra.x, ra.y, mg.xoffset,
+                                          mg.yoffset, mg.angrot_radians)
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
 
@@ -533,7 +543,11 @@ class PathlineFile():
             pthdata = []
             for pid in particles:
                 ra = pth[pth.particleid == pid]
-                x, y = sr.transform(ra.x, ra.y)
+                if isinstance(mg, StructuredGrid):
+                    x, y = geometry.transform(ra.x, ra.y, mg.xoffset,
+                                              mg.yoffset, mg.angrot_radians)
+                else:
+                    x, y = mg.transform(ra.x, ra.y)
                 z = ra.z
                 geoms += [LineString([(x[i - 1], y[i - 1], z[i - 1]),
                                       (x[i], y[i], z[i])])
@@ -948,7 +962,7 @@ class EndpointFile():
 
     def write_shapefile(self, endpoint_data=None,
                         shpname='endpoints.shp',
-                        direction='ending', sr=None, epsg=None,
+                        direction='ending', mg=None, epsg=None, sr=None,
                         **kwargs):
         """
         Write particle starting / ending locations to shapefile.
@@ -970,6 +984,8 @@ class EndpointFile():
 
         """
         from ..utils.reference import SpatialReference
+        from ..utils import geometry
+        from ..discretization import StructuredGrid
         from ..utils.geometry import Point
         from ..export.shapefile_utils import recarray2shp
 
@@ -985,9 +1001,23 @@ class EndpointFile():
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-        if sr is None:
-            sr = SpatialReference()
-        x, y = sr.transform(epd[xcol], epd[ycol])
+        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
+            warnings.warn("Deprecation warning: SpatialReference is deprecated."
+                          "Use the Grid class instead.", DeprecationWarning)
+            if isinstance(mg, SpatialReference):
+                sr = mg
+            mg = StructuredGrid(sr.delc, sr.delr)
+            mg.set_coord_info(xoff=sr.xll, yoff=sr.yll, angrot=sr.rotation,
+                              epsg=sr.epsg, proj4=sr.proj4_str)
+        if epsg is None:
+            epsg = mg.epsg
+
+        if isinstance(mg, StructuredGrid):
+            x, y = geometry.transform(epd[xcol], epd[ycol],
+                                      xoff=mg.xoffset, yoff=mg.yoffset,
+                                      angrot_radians=mg.angrot_radians)
+        else:
+            x, y = mg.get_coords(epd[xcol], epd[ycol])
         z = epd[zcol]
 
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]

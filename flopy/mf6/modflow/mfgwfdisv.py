@@ -103,7 +103,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
                                       'vertices'))
     cell2d = ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisv"
-    package_type = "disv"
+    _package_type = "disv"
     dfn_file_name = "gwf-disv.dfn"
 
     dfn = [["block options", "name length_units", "type string", 
@@ -123,7 +123,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
            ["block dimensions", "name nvert", "type integer", 
             "reader urword", "optional false"],
            ["block griddata", "name top", "type double precision", 
-            "shape (1, ncpl)", "reader readarray"],
+            "shape (ncpl)", "reader readarray"],
            ["block griddata", "name botm", "type double precision", 
             "shape (nlay, ncpl)", "reader readarray", "layered true"],
            ["block griddata", "name idomain", "type integer", 

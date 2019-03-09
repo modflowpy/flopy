@@ -51,7 +51,7 @@ class ModflowTdis(mfpackage.MFPackage):
     perioddata = ListTemplateGenerator(('tdis', 'perioddata', 
                                         'perioddata'))
     package_abbr = "tdis"
-    package_type = "tdis"
+    _package_type = "tdis"
     dfn_file_name = "sim-tdis.dfn"
 
     dfn = [["block options", "name time_units", "type string", 

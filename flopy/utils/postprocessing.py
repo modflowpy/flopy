@@ -43,7 +43,7 @@ def get_transmissivities(heads, m,
         pass
     elif x is not None and y is not None:
         # get row, col for observation locations
-        r, c = m.sr.get_rc(x, y)
+        r, c = m.sr.get_ij(x, y)
     else:
         raise ValueError('Must specify row, column or x, y locations.')
 

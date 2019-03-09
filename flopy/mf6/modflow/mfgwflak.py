@@ -268,13 +268,6 @@ class ModflowGwflak(mfpackage.MFPackage):
                 * status (string) keyword option to define lake status. STATUS
                   can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
                   ACTIVE.
-            stage : [string]
-                * stage (string) real or character value that defines the stage
-                  for the lake. The specified STAGE is only applied if the lake
-                  is a constant stage lake. If the Options block includes a
-                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
-                  values can be obtained from a time series by entering the
-                  time-series name in place of a numeric value.
             rainfall : [string]
                 * rainfall (string) real or character value that defines the
                   rainfall rate :math:`(LT^{-1})` for the lake. Value must be
@@ -285,20 +278,6 @@ class ModflowGwflak(mfpackage.MFPackage):
             evaporation : [string]
                 * evaporation (string) real or character value that defines the
                   maximum evaporation rate :math:`(LT^{-1})` for the lake.
-                  Value must be greater than or equal to zero. If the Options
-                  block includes a TIMESERIESFILE entry (see the "Time-Variable
-                  Input" section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value.
-            runoff : [string]
-                * runoff (string) real or character value that defines the
-                  runoff rate :math:`(L^3 T^{-1})` for the lake. Value must be
-                  greater than or equal to zero. If the Options block includes
-                  a TIMESERIESFILE entry (see the "Time-Variable Input"
-                  section), values can be obtained from a time series by
-                  entering the time-series name in place of a numeric value.
-            withdrawal : [string]
-                * withdrawal (string) real or character value that defines the
-                  maximum withdrawal rate :math:`(L^3 T^{-1})` for the lake.
                   Value must be greater than or equal to zero. If the Options
                   block includes a TIMESERIESFILE entry (see the "Time-Variable
                   Input" section), values can be obtained from a time series by
@@ -314,6 +293,27 @@ class ModflowGwflak(mfpackage.MFPackage):
                   Variable Input" section), values can be obtained from a time
                   series by entering the time-series name in place of a numeric
                   value.
+            withdrawal : [string]
+                * withdrawal (string) real or character value that defines the
+                  maximum withdrawal rate :math:`(L^3 T^{-1})` for the lake.
+                  Value must be greater than or equal to zero. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            runoff : [string]
+                * runoff (string) real or character value that defines the
+                  runoff rate :math:`(L^3 T^{-1})` for the lake. Value must be
+                  greater than or equal to zero. If the Options block includes
+                  a TIMESERIESFILE entry (see the "Time-Variable Input"
+                  section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value.
+            stage : [string]
+                * stage (string) real or character value that defines the stage
+                  for the lake. The specified STAGE is only applied if the lake
+                  is a constant stage lake. If the Options block includes a
+                  TIMESERIESFILE entry (see the "Time-Variable Input" section),
+                  values can be obtained from a time series by entering the
+                  time-series name in place of a numeric value.
     outletperioddata : [outletno, outletsetting]
         * outletno (integer) integer value that defines the outlet number
           associated with the specified PERIOD data on the line. OUTLETNO must
@@ -321,6 +321,22 @@ class ModflowGwflak(mfpackage.MFPackage):
         * outletsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           OUTLETSETTING string include: RATE, INVERT, WIDTH, SLOPE, and ROUGH.
+            slope : [string]
+                * slope (string) real or character value that defines the bed
+                  slope for the lake outlet. A specified SLOPE value is only
+                  used for active lakes if COUTTYPE for lake outlet OUTLETNO is
+                  MANNING. If the Options block includes a TIMESERIESFILE entry
+                  (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
+            width : [string]
+                * width (string) real or character value that defines the width
+                  of the lake outlet. A specified WIDTH value is only used for
+                  active lakes if COUTTYPE for lake outlet OUTLETNO is not
+                  SPECIFIED. If the Options block includes a TIMESERIESFILE
+                  entry (see the "Time-Variable Input" section), values can be
+                  obtained from a time series by entering the time-series name
+                  in place of a numeric value.
             rate : [string]
                 * rate (string) real or character value that defines the
                   extraction rate for the lake outflow. A positive value
@@ -340,22 +356,6 @@ class ModflowGwflak(mfpackage.MFPackage):
                   includes a TIMESERIESFILE entry (see the "Time-Variable
                   Input" section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value.
-            width : [string]
-                * width (string) real or character value that defines the width
-                  of the lake outlet. A specified WIDTH value is only used for
-                  active lakes if COUTTYPE for lake outlet OUTLETNO is not
-                  SPECIFIED. If the Options block includes a TIMESERIESFILE
-                  entry (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
-            slope : [string]
-                * slope (string) real or character value that defines the bed
-                  slope for the lake outlet. A specified SLOPE value is only
-                  used for active lakes if COUTTYPE for lake outlet OUTLETNO is
-                  MANNING. If the Options block includes a TIMESERIESFILE entry
-                  (see the "Time-Variable Input" section), values can be
-                  obtained from a time series by entering the time-series name
-                  in place of a numeric value.
             rough : [string]
                 * rough (string) real value that defines the roughness
                   coefficient for the lake outlet. Any value can be specified
@@ -396,7 +396,7 @@ class ModflowGwflak(mfpackage.MFPackage):
     outletperioddata = ListTemplateGenerator(('gwf6', 'lak', 'period', 
                                               'outletperioddata'))
     package_abbr = "gwflak"
-    package_type = "lak"
+    _package_type = "lak"
     dfn_file_name = "gwf-lak.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 

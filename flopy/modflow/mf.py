@@ -9,7 +9,10 @@ import inspect
 import flopy
 from ..mbase import BaseModel
 from ..pakbase import Package
-from ..utils import mfreadnam, SpatialReference, TemporalReference
+from ..utils import mfreadnam
+from ..discretization.structuredgrid import StructuredGrid
+from ..discretization.unstructuredgrid import UnstructuredGrid
+from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
 
 
@@ -104,7 +107,7 @@ class Modflow(BaseModel):
                  structured=True, listunit=2, model_ws='.', external_path=None,
                  verbose=False, **kwargs):
         BaseModel.__init__(self, modelname, namefile_ext, exe_name, model_ws,
-                           structured=structured, **kwargs)
+                           structured=structured, verbose=verbose, **kwargs)
         self.version_types = {'mf2k': 'MODFLOW-2000', 'mf2005': 'MODFLOW-2005',
                               'mfnwt': 'MODFLOW-NWT', 'mfusg': 'MODFLOW-USG'}
 
@@ -126,8 +129,6 @@ class Modflow(BaseModel):
         # self.external_fnames = []
         # self.external_units = []
         # self.external_binflag = []
-
-        self.verbose = verbose
 
         self.load_fail = False
         # the starting external data unit number
@@ -170,6 +171,7 @@ class Modflow(BaseModel):
             "mnw2": flopy.modflow.ModflowMnw2,
             "mnwi": flopy.modflow.ModflowMnwi,
             "drn": flopy.modflow.ModflowDrn,
+            "drt": flopy.modflow.ModflowDrt,
             "rch": flopy.modflow.ModflowRch,
             "evt": flopy.modflow.ModflowEvt,
             "ghb": flopy.modflow.ModflowGhb,
@@ -204,9 +206,21 @@ class Modflow(BaseModel):
 
     def __repr__(self):
         nrow, ncol, nlay, nper = self.get_nrow_ncol_nlay_nper()
-        return 'MODFLOW %d layer(s), %d row(s), %d column(s), %d stress period(s)' % (
-        nlay, nrow, ncol, nper)
-
+        if nrow is not None:
+            # structured case
+            s = ('MODFLOW {} layer(s) {} row(s) {} column(s) '
+                 '{} stress period(s)'.format(nlay, nrow, ncol, nper))
+        else:
+            # unstructured case
+            nodes = ncol.sum()
+            nodelay = ' '.join(str(i) for i in ncol)
+            print(nodelay, nlay, nper)
+            s = ('MODFLOW unstructured\n'
+                 '  nodes = {}\n'
+                 '  layers = {}\n'
+                 '  periods = {}\n'
+                 '  nodelay = {}\n'.format(nodes, nlay, nper, ncol))
+        return s
     #
     # def next_ext_unit(self):
     #     """
@@ -218,9 +232,84 @@ class Modflow(BaseModel):
     #     return next_unit
 
     @property
+    def modeltime(self):
+        # build model time
+        data_frame = {'perlen': self.dis.perlen.array,
+                      'nstp': self.dis.nstp.array,
+                      'tsmult': self.dis.tsmult.array}
+        self._model_time = ModelTime(data_frame,
+                                     self.dis.itmuni_dict[self.dis.itmuni],
+                                     self.dis.start_datetime)
+        return self._model_time
+
+    @property
+    def modelgrid(self):
+        if not self._mg_resync:
+            return self._modelgrid
+
+        if self.bas6 is not None:
+            ibound = self.bas6.ibound.array
+        else:
+            ibound = None
+
+        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+        if self.get_package('disu') is not None:
+            raise NotImplementedError("Unstructured grid <model.modelgrid> generation"
+                                      " not yet implemented for modflow-usg. Please create"
+                                      " modelgrid using flopy.discretization.UnstructuredGrid")
+            #self._modelgrid = UnstructuredGrid()
+        # build grid
+        self._modelgrid = StructuredGrid(self.dis.delc.array,
+                                         self.dis.delr.array,
+                                         self.dis.top.array,
+                                         self.dis.botm.array, ibound,
+                                         lenuni[self.dis.lenuni],
+                                         proj4=self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff=self._modelgrid.xoffset,
+                                         yoff=self._modelgrid.yoffset,
+                                         angrot=self._modelgrid.angrot)
+
+        # resolve offsets
+        xoff = self._modelgrid.xoffset
+        if xoff is None:
+            if self._xul is not None:
+                xoff = self._modelgrid._xul_to_xll(self._xul)
+            else:
+                xoff = 0.0
+        yoff = self._modelgrid.yoffset
+        if yoff is None:
+            if self._yul is not None:
+                yoff = self._modelgrid._yul_to_yll(self._yul)
+            else:
+                yoff = 0.0
+        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                                       self._modelgrid.epsg,
+                                       self._modelgrid.proj4)
+        return self._modelgrid
+
+    @modelgrid.setter
+    def modelgrid(self, value):
+        self._modelgrid = value
+
+    @property
+    def solver_tols(self):
+        if self.pcg is not None:
+            return self.pcg.hclose, self.pcg.rclose
+        elif self.nwt is not None:
+            return self.nwt.headtol, self.nwt.fluxtol
+        elif self.sip is not None:
+            return self.sip.hclose, -999
+        elif self.gmg is not None:
+            return self.gmg.hclose, self.gmg.rclose
+        return None
+
+    @property
     def nlay(self):
         if (self.dis):
             return self.dis.nlay
+        elif (self.disu):
+            return self.disu.nlay
         else:
             return 0
 
@@ -242,6 +331,17 @@ class Modflow(BaseModel):
     def nper(self):
         if (self.dis):
             return self.dis.nper
+        elif (self.disu):
+            return self.disu.nper
+        else:
+            return 0
+
+    @property
+    def ncpl(self):
+        if (self.dis):
+            return self.dis.nrow * self.dis.ncol
+        elif (self.disu):
+            return self.disu.ncpl
         else:
             return 0
 
@@ -298,7 +398,8 @@ class Modflow(BaseModel):
         fn_path = os.path.join(self.model_ws, self.namefile)
         f_nam = open(fn_path, 'w')
         f_nam.write('{}\n'.format(self.heading))
-        f_nam.write('#' + str(self.sr))
+        if self.structured:
+            f_nam.write('#' + str(self.modelgrid))
         f_nam.write(" ;start_datetime:{0}\n".format(self.start_datetime))
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
@@ -539,14 +640,14 @@ class Modflow(BaseModel):
         if verbose:
             print('\nCreating new model with name: {}\n{}\n'
                   .format(modelname, 50 * '-'))
+
+        attribs = mfreadnam.attribs_from_namfile_header(os.path.join(model_ws, f))
+
         ml = Modflow(modelname, version=version, exe_name=exe_name,
-                     verbose=verbose, model_ws=model_ws)
+                     verbose=verbose, model_ws=model_ws, **attribs)
 
         files_successfully_loaded = []
         files_not_loaded = []
-
-        # set the reference information
-        ref_attributes = SpatialReference.load(namefile_path)
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
@@ -617,25 +718,8 @@ class Modflow(BaseModel):
             print('   {:4s} package load...success'.format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
         ext_unit_dict.pop(dis_key)
-        start_datetime = ref_attributes.pop("start_datetime", "01-01-1970")
-        itmuni = ref_attributes.pop("itmuni", 4)
-        ref_source = ref_attributes.pop("source", "defaults")
-        if ml.structured:
-            # get model units from usgs.model.reference, if provided
-            if ref_source == 'usgs.model.reference':
-                pass
-            # otherwise get them from the DIS file
-            else:
-                itmuni = dis.itmuni
-                ref_attributes['lenuni'] = dis.lenuni
-            sr = SpatialReference(delr=ml.dis.delr.array, delc=ml.dis.delc.array,
-                                  **ref_attributes)
-        else:
-            sr = None
 
-        dis.sr = sr
-        dis.tr = TemporalReference(itmuni=itmuni, start_datetime=start_datetime)
-        dis.start_datetime = start_datetime
+        dis.start_datetime = ml._start_datetime
 
         if load_only is None:
             # load all packages/files

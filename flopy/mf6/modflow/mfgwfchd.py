@@ -103,7 +103,7 @@ class ModflowGwfchd(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'chd', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfchd"
-    package_type = "chd"
+    _package_type = "chd"
     dfn_file_name = "gwf-chd.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 
