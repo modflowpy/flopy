@@ -192,7 +192,7 @@ tagged true
 reader urword
 optional true
 longname
-description keyword specifying that ET in the unsaturated (UZF) and saturated zones (GWF) will be simulated. ET can be simulated in the UZF cell and not the GWF cell by emitting keywords LINEAR\_GWET and SQUARE\_GWET.
+description keyword specifying that ET in the unsaturated (UZF) and saturated zones (GWF) will be simulated. ET can be simulated in the UZF cell and not the GWF cell by omitting keywords LINEAR\_GWET and SQUARE\_GWET.
 
 block options
 name linear_gwet
@@ -248,7 +248,7 @@ type integer
 reader urword
 optional false
 longname number of UZF cells
-description is the number of UZF cells.  More than 1 UZF cell can be assigned to a GWF cell; however, only 1 GWF cell can be assigned to a single UZF cell. If the MULTILAYER option is used then UZF cells can be assigned to GWF cells below (in deeper layers than) the upper most active GWF cells.
+description is the number of UZF cells.  More than one UZF cell can be assigned to a GWF cell; however, only one GWF cell can be assigned to a single UZF cell. If more than one UZF cell is assigned to a GWF cell, then an auxiliary variable should be used to reduce the surface area of the UZF cell with the AUXMULTNAME option.
 
 block dimensions
 name ntrailwaves
@@ -316,7 +316,7 @@ tagged false
 in_record true
 reader urword
 longname vertical connection flag
-description integer value set to specify underlying UZF cell that receives water flowing to bottom of cell. If unsaturated zone flow reaches water table before the cell bottom then water is added to GWF cell instead of flowing to underlying UZF cell. A value of 0 indicates the UZF cell is not connected to an underlying UZF cell.
+description integer value set to specify underlying UZF cell that receives water flowing to bottom of cell. If unsaturated zone flow reaches the water table before the cell bottom, then water is added to the GWF cell instead of flowing to the underlying UZF cell. A value of 0 indicates the UZF cell is not connected to an underlying UZF cell.
 numeric_index true
 
 block packagedata

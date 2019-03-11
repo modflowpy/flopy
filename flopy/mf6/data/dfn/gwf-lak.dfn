@@ -130,6 +130,9 @@ description name of the binary output file to write budget information.
 block options
 name ts_filerecord
 type record ts6 filein ts6_filename
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
 shape
 reader urword
 tagged true
@@ -162,9 +165,6 @@ description keyword to specify that an input filename is expected next.
 block options
 name ts6_filename
 type string
-construct_package ts
-construct_data timeseries
-parameter_name timeseries
 preserve_case true
 in_record true
 reader urword
