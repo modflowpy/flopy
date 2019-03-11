@@ -1264,6 +1264,8 @@ class MFSimulation(PackageContainer):
                 self.register_ims_package(package, None)
             return path, self.structure.package_struct_objs[
                 package.package_type.lower()]
+        else:
+            self._other_files[package.filename] = package
 
         if package.package_type.lower() in self.structure.package_struct_objs:
             return path, self.structure.package_struct_objs[

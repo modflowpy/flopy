@@ -184,7 +184,10 @@ def np001():
 
     drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=1,
-                                stress_period_data=[((0, 0, 0), 80, 60.0)])
+                                timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                stress_period_data=[((0, 0, 0), 80, 'drn_1')])
+    drn_package.ts.time_series_namerecord = 'drn_1'
+    drn_package.ts.interpolation_methodrecord = 'linearend'
 
     riv_package = ModflowGwfriv(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=1,
@@ -193,7 +196,7 @@ def np001():
 
     # verify package look-up
     pkgs = model.get_package()
-    assert (len(pkgs) == 8)
+    assert (len(pkgs) == 9)
     pkg = model.get_package('oc')
     assert isinstance(pkg, ModflowGwfoc)
     pkg = sim.get_package('tdis')
@@ -1254,6 +1257,13 @@ def test006_2models_gnc():
                                 gncdata=gncrecarray)
 
     exgrecarray = testutils.read_exchangedata(os.path.join(pth, 'exg.txt'))
+
+    # build obs dictionary
+    gwf_obs = {('gwfgwf_obs.csv'): [('gwf-1-3-2_1-1-1', 'flow-ja-face',
+                                     (0, 2, 1), (0, 0, 0)),
+                                    ('gwf-1-3-2_1-2-1', 'flow-ja-face',
+                                     (0, 2, 1), (0, 1, 0))]}
+
     # test exg delete
     newexgrecarray = exgrecarray[10:]
     exg_package = ModflowGwfgwf(sim, print_input=True, print_flows=True,
@@ -1269,7 +1279,7 @@ def test006_2models_gnc():
                                 gnc_filerecord='test006_2models_gnc.gnc',
                                 nexg=36, exchangedata=exgrecarray,
                                 exgtype='gwf6-gwf6', exgmnamea=model_name_1,
-                                exgmnameb=model_name_2)
+                                exgmnameb=model_name_2, observations=gwf_obs)
 
     # change folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -1446,12 +1456,21 @@ def test028_sfr():
 
     surf = testutils.read_std_array(os.path.join(pth, 'surface.txt'), 'float')
     surf_data = ['internal', 'factor', 1.0, 'iprn', -1, surf]
-    evt_package = ModflowGwfevta(model, readasarrays=True,
-                                 surface=surf_data, rate=9.5E-08, depth=15.0,
+
+    # build time array series
+    tas = {0.0: 9.5E-08, 6.0E09: 9.5E-08,
+           'filename': 'test028_sfr.evt.tas',
+           'time_series_namerecord': 'evtarray_1',
+           'interpolation_methodrecord': 'LINEAR'}
+
+    evt_package = ModflowGwfevta(model, readasarrays=True, timearrayseries=tas,
+                                 surface=surf_data, depth=15.0,
+                                 rate='TIMEARRAYSERIES evtarray_1',
                                  filename='test1tr.evt')
-    obs_data = testutils.read_obs(os.path.join(pth, 'evt_obs.txt'))
-    obs_dict = {'test1tr.evt.csv': obs_data}
-    evt_package.obs.initialize(filename='test1tr.evt.obs', print_input=True,
+    # attach obs package to evt
+    obs_dict = {'test028_sfr.evt.csv': [('obs-1', 'EVT', (0, 1, 5)),
+                                        ('obs-2', 'EVT', (0, 2, 3))]}
+    evt_package.obs.initialize(filename='test028_sfr.evt.obs', print_input=True,
                                continuous=obs_dict)
 
     stress_period_data = {
@@ -1543,12 +1562,12 @@ def test028_sfr():
 
 
 if __name__ == '__main__':
-    test005_advgw_tidal()
-    test006_gwf3_disv()
     np001()
     np002()
     test004_bcfss()
+    test005_advgw_tidal()
     test006_2models_gnc()
+    test006_gwf3_disv()
     test021_twri()
     test028_sfr()
     test035_fhb()
