@@ -1792,7 +1792,7 @@ class MFPackage(PackageContainer, PackageInterface):
         return axes
 
 
-class MFChildPackages:
+class MFChildPackages(object):
     def __init__(self, model, parent, pkg_type, filerecord, package=None,
                  package_class=None):
         self._packages = []
@@ -1830,17 +1830,17 @@ class MFChildPackages:
                 return self._packages[k]
         raise Exception('Package index {} does not exist.'.format(k))
 
-    def __setattr__(self, name, value):
-        if name != '_packages' and name != '_model' and name != '_cpparent' and \
-                name != '_inattr' and name != '_filerecord' and \
-                name != '_package_class' and name != '_pkg_type':
+    def __setattr__(self, key, value):
+        if key != '_packages' and key != '_model' and key != '_cpparent' and \
+                key != '_inattr' and key != '_filerecord' and \
+                key != '_package_class' and key != '_pkg_type':
             if len(self._packages) == 0:
                 fnm = self.__default_file_path_base(self._cpparent.filename)
                 self._init_package(self._package_class(self._model), fnm)
             package = self._packages[0]
-            setattr(package, name, value)
+            setattr(package, key, value)
             return
-        super(MFChildPackages, self).__setattr__(name, value)
+        super(MFChildPackages, self).__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=''):
         root, stem = os.path.split(file_path)
