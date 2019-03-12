@@ -90,12 +90,12 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           RATE_SCALING option instead of the HEAD_LIMIT option is recommended.
           By default, SHUTDOWN_KAPPA is 0.0001.
     timeseries : {varname:data} or timeseries data
-        * Contains data for the ts package. Data can bestored in a dictionary
+        * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
           package data as values. Data just for the timeseries variable is also
           acceptable. See ts package documentation for more information.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
@@ -243,16 +243,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             head_limit : [string]
                 * head_limit (string) is the limiting water level (head) in the
                   well, which is the minimum of the well RATE or the well
-                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
-                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
-                  deactivated by specifying the text string `OFF'. The
-                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
-                  available in the MNW2~\citep{konikow2009} package for
-                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
-                  facilitate backward compatibility with previous versions of
-                  MODFLOW but use of the RATE\_SCALING option instead of the
-                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
-                  `OFF'.
+                  inflow rate from the aquifer. HEAD_LIMIT can be applied to
+                  extraction wells (RATE :math:`<` 0) or injection wells (RATE
+                  :math:`>` 0). HEAD\_LIMIT can be deactivated by specifying
+                  the text string `OFF'. The HEAD\_LIMIT option is based on the
+                  HEAD\_LIMIT functionality available in the
+                  MNW2~\citep{konikow2009} package for MODFLOW-2005. The
+                  HEAD\_LIMIT option has been included to facilitate backward
+                  compatibility with previous versions of MODFLOW but use of
+                  the RATE\_SCALING option instead of the HEAD\_LIMIT option is
+                  recommended. By default, HEAD\_LIMIT is `OFF'.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
@@ -270,13 +270,12 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   reduce oscillations. maxrate must be greater than MINRATE.
             rate_scalingrecord : [pump_elevation, scaling_length]
                 * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION should not be less
                   than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
                 * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
+                  (SCALING_LENGTH). If the simulated well head is below this
+                  elevation (pump elevation plus the scaling length), then the
+                  pumping rate is reduced.
             auxiliaryrecord : [auxname, auxval]
                 * auxname (string) name for the auxiliary variable to be
                   assigned AUXVAL. AUXNAME must match one of the auxiliary

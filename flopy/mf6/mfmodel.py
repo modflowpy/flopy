@@ -908,6 +908,8 @@ class MFModel(PackageContainer, ModelInterface):
             # register child package with the parent package
             parent_package._add_package(package, package.path)
 
+        return package
+
     def plot(self, SelPackList=None, **kwargs):
         """
         Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)

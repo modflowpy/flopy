@@ -53,12 +53,12 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         * budgetfile (string) name of the binary output file to write budget
           information.
     timeseries : {varname:data} or timeseries data
-        * Contains data for the ts package. Data can bestored in a dictionary
+        * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
           package data as values. Data just for the timeseries variable is also
           acceptable. See ts package documentation for more information.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
@@ -70,7 +70,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     simulate_et : boolean
         * simulate_et (boolean) keyword specifying that ET in the unsaturated
           (UZF) and saturated zones (GWF) will be simulated. ET can be
-          simulated in the UZF cell and not the GWF cell by emitting keywords
+          simulated in the UZF cell and not the GWF cell by omitting keywords
           LINEAR_GWET and SQUARE_GWET.
     linear_gwet : boolean
         * linear_gwet (boolean) keyword specifying that groundwater ET will be
@@ -97,11 +97,11 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           formulation. Capillary pressure is calculated using the Brooks-Corey
           retention function.
     nuzfcells : integer
-        * nuzfcells (integer) is the number of UZF cells. More than 1 UZF cell
-          can be assigned to a GWF cell; however, only 1 GWF cell can be
-          assigned to a single UZF cell. If the MULTILAYER option is used then
-          UZF cells can be assigned to GWF cells below (in deeper layers than)
-          the upper most active GWF cells.
+        * nuzfcells (integer) is the number of UZF cells. More than one UZF
+          cell can be assigned to a GWF cell; however, only one GWF cell can be
+          assigned to a single UZF cell. If more than one UZF cell is assigned
+          to a GWF cell, then an auxiliary variable should be used to reduce
+          the surface area of the UZF cell with the AUXMULTNAME option.
     ntrailwaves : integer
         * ntrailwaves (integer) is the number of trailing waves. NTRAILWAVES
           has a default value of 7 and can be increased to lower mass balance
@@ -131,9 +131,10 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           surface cell.
         * ivertcon (integer) integer value set to specify underlying UZF cell
           that receives water flowing to bottom of cell. If unsaturated zone
-          flow reaches water table before the cell bottom then water is added
-          to GWF cell instead of flowing to underlying UZF cell. A value of 0
-          indicates the UZF cell is not connected to an underlying UZF cell.
+          flow reaches the water table before the cell bottom, then water is
+          added to the GWF cell instead of flowing to the underlying UZF cell.
+          A value of 0 indicates the UZF cell is not connected to an underlying
+          UZF cell.
         * surfdep (double) is the surface depression depth of the UZF cell.
         * vks (double) is the vertical saturated hydraulic conductivity of the
           UZF cell.

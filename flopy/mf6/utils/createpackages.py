@@ -185,7 +185,6 @@ def create_package_init_var(parameter_name, package_abbr, data_name):
     return '{}{}{}{}'.format(one_line, one_line_b, two_line, three_line)
 
 
-
 def add_var(init_vars, class_vars, init_param_list, package_properties,
             doc_string, data_structure_dict, default_value, name,
             python_name, description, path, data_type,
@@ -480,12 +479,18 @@ def create_packages():
                                     'mf{}.py'.format(package_name)), 'w')
         pb_file.write(package_string)
 
-        if package[2] == 'utl':
+        if package[2] == 'utl' and package_abbr != 'utltab':
             set_param_list.append('filename=filename')
             set_param_list.append('pname=pname')
             set_param_list.append('parent_file=self._cpparent')
             whsp_1 = '                   '
             whsp_2 = '                                    '
+
+            chld_doc_string = '    """\n    Utl{}Packages is a container ' \
+                              'class for the ModflowUtl{} class.\n\n    ' \
+                              'Methods\n    ----------' \
+                              '\n'.format(package_short_name,
+                                          package_short_name)
 
             # write out child packages class
             chld_cls = '\n\nclass Utl{}Packages(mfpackage.MFChildPackage' \
@@ -499,22 +504,43 @@ def create_packages():
             params_init = '        new_package = ModflowUtl{}(' \
                           'self._model'.format(package_short_name)
             params_init = build_init_string(params_init, set_param_list, whsp_2)
+            chld_doc_string = '{}    initialize\n        Initializes a new ' \
+                              'ModflowUtl{} package removing any sibling ' \
+                              'child\n        packages attached to the same ' \
+                              'parent package. See ModflowUtl{} init\n ' \
+                              '       documentation for definition of ' \
+                              'parameters.\n'.format(chld_doc_string,
+                                                     package_short_name,
+                                                     package_short_name)
 
-            chld_appn = '    def append_package(self'
-            chld_appn = build_init_string(chld_appn, init_param_list[:-1],
-                                          whsp_1)
-            append_pkg = '\n        self._append_package(new_package, filename)'
-            params_appn = '        new_package = ModflowUtl{}(' \
-                          'self._model'.format(package_short_name)
-            params_appn = build_init_string(params_appn, set_param_list,
-                                            whsp_2)
-            packages_str = '{}{}{}{}{}\n\n{}{}{}\n'.format(chld_cls, chld_var,
-                                                       chld_init,
-                                                       params_init[:-2],
-                                                       init_pkg,
-                                                       chld_appn,
-                                                       params_appn[:-2],
-                                                       append_pkg,)
+            chld_appn = ''
+            params_appn = ''
+            append_pkg = ''
+            if package_abbr != 'utlobs':  # Hard coded obs no multi-pkg support
+                chld_appn = '\n\n    def append_package(self'
+                chld_appn = build_init_string(chld_appn, init_param_list[:-1],
+                                              whsp_1)
+                append_pkg = '\n        self._append_package(new_package, ' \
+                             'filename)'
+                params_appn = '        new_package = ModflowUtl{}(' \
+                              'self._model'.format(package_short_name)
+                params_appn = build_init_string(params_appn, set_param_list,
+                                                whsp_2)
+                chld_doc_string = '{}    append_package\n        Adds a ' \
+                                  'new ModflowUtl{} package to the container.' \
+                                  ' See ModflowUtl{}\n        init ' \
+                                  'documentation for definition of ' \
+                                  'parameters.\n'.format(chld_doc_string,
+                                                         package_short_name,
+                                                         package_short_name)
+            chld_doc_string = '{}    """\n'.format(chld_doc_string)
+            packages_str = '{}{}{}{}{}{}{}{}{}\n'.format(chld_cls,
+                                                         chld_doc_string,
+                                                         chld_var, chld_init,
+                                                         params_init[:-2],
+                                                         init_pkg, chld_appn,
+                                                         params_appn[:-2],
+                                                         append_pkg,)
             pb_file.write(packages_str)
         pb_file.close()
 

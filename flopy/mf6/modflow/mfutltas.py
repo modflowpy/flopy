@@ -99,6 +99,19 @@ class ModflowUtltas(mfpackage.MFPackage):
 
 
 class UtltasPackages(mfpackage.MFChildPackages):
+    """
+    UtltasPackages is a container class for the ModflowUtltas class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowUtltas package removing any sibling child
+        packages attached to the same parent package. See ModflowUtltas init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowUtltas package to the container. See ModflowUtltas
+        init documentation for definition of parameters.
+    """
     package_abbr = "utltaspackages"
 
     def initialize(self, time_series_namerecord=None,

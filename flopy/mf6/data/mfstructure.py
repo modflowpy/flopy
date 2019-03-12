@@ -769,6 +769,7 @@ class MFDataItemStructure(object):
         self.construct_package = None
         self.construct_data = None
         self.parameter_name = None
+        self.one_per_pkg = False
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -909,6 +910,8 @@ class MFDataItemStructure(object):
                 self.construct_data = arr_line[1]
             elif arr_line[0] == 'parameter_name':
                 self.parameter_name = arr_line[1]
+            elif arr_line[0] == 'one_per_pkg':
+                self.one_per_pkg = bool(arr_line[1])
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1209,6 +1212,7 @@ class MFDataStructure(object):
         self.construct_package = data_item.construct_package
         self.construct_data = data_item.construct_data
         self.parameter_name = data_item.parameter_name
+        self.one_per_pkg = data_item.one_per_pkg
 
         # self.data_item_structures_dict = OrderedDict()
         self.data_item_structures = []
@@ -1481,7 +1485,7 @@ class MFDataStructure(object):
     def get_subpackage_description(self, line_size=79,
                                    initial_indent='        ',
                                    level_indent='    '):
-        item_desc = '* Contains data for the {} package. Data can be' \
+        item_desc = '* Contains data for the {} package. Data can be ' \
                     'stored in a dictionary containing data for the {} ' \
                     'package with variable names as keys and package data as ' \
                     'values. Data just for the {} variable is also ' \

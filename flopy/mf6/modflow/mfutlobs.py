@@ -107,6 +107,16 @@ class ModflowUtlobs(mfpackage.MFPackage):
 
 
 class UtlobsPackages(mfpackage.MFChildPackages):
+    """
+    UtlobsPackages is a container class for the ModflowUtlobs class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowUtlobs package removing any sibling child
+        packages attached to the same parent package. See ModflowUtlobs init
+        documentation for definition of parameters.
+    """
     package_abbr = "utlobspackages"
 
     def initialize(self, digits=None, print_input=None, continuous=None,
@@ -116,11 +126,3 @@ class UtlobsPackages(mfpackage.MFChildPackages):
                                     continuous=continuous, filename=filename,
                                     pname=pname, parent_file=self._cpparent)
         self._init_package(new_package, filename)
-
-    def append_package(self, digits=None, print_input=None, continuous=None,
-                   filename=None, pname=None):
-        new_package = ModflowUtlobs(self._model, digits=digits,
-                                    print_input=print_input,
-                                    continuous=continuous, filename=filename,
-                                    pname=pname, parent_file=self._cpparent)
-        self._append_package(new_package, filename)

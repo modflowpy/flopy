@@ -58,13 +58,13 @@ class ModflowGwflak(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can be stored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
@@ -432,8 +432,9 @@ class ModflowGwflak(mfpackage.MFPackage):
             "preserve_case true", "shape", "in_record true", "reader urword", 
             "tagged false", "optional false"],
            ["block options", "name ts_filerecord", 
-            "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "type record ts6 filein ts6_filename", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries", "shape", 
+            "reader urword", "tagged true", "optional true"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -441,10 +442,8 @@ class ModflowGwflak(mfpackage.MFPackage):
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
            ["block options", "name ts6_filename", "type string", 
-            "construct_package ts", "construct_data timeseries", 
-            "parameter_name timeseries", "preserve_case true", 
-            "in_record true", "reader urword", "optional false", 
-            "tagged false"],
+            "preserve_case true", "in_record true", "reader urword", 
+            "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
             "type record obs6 filein obs6_filename", "construct_package obs", 
             "construct_data continuous", "parameter_name observations", 
@@ -619,7 +618,7 @@ class ModflowGwflak(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, auxiliary=None,
                  boundnames=None, print_input=None, print_stage=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
-                 budget_filerecord=None, ts_filerecord=None, observations=None,
+                 budget_filerecord=None, timeseries=None, observations=None,
                  mover=None, surfdep=None, time_conversion=None,
                  length_conversion=None, nlakes=None, noutlets=None,
                  ntables=None, packagedata=None, connectiondata=None,
@@ -640,7 +639,11 @@ class ModflowGwflak(mfpackage.MFPackage):
                                                   stage_filerecord)
         self.budget_filerecord = self.build_mfdata("budget_filerecord", 
                                                    budget_filerecord)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
         self._obs_filerecord = self.build_mfdata("obs_filerecord", 
                                                  None)
         self._obs_package = self.build_child_package("obs", observations,

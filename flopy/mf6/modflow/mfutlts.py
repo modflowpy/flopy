@@ -133,6 +133,19 @@ class ModflowUtlts(mfpackage.MFPackage):
 
 
 class UtltsPackages(mfpackage.MFChildPackages):
+    """
+    UtltsPackages is a container class for the ModflowUtlts class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowUtlts package removing any sibling child
+        packages attached to the same parent package. See ModflowUtlts init
+        documentation for definition of parameters.
+    append_package
+        Adds a new ModflowUtlts package to the container. See ModflowUtlts
+        init documentation for definition of parameters.
+    """
     package_abbr = "utltspackages"
 
     def initialize(self, time_series_namerecord=None,

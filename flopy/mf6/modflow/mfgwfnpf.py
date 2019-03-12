@@ -68,7 +68,12 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         * save_specific_discharge (boolean) keyword to indicate that x, y, and
           z components of specific discharge will be calculated at cell centers
           and written to the cell-by-cell flow file, which is specified with
-          "BUDGET SAVE FILE" in Output Control.
+          "BUDGET SAVE FILE" in Output Control. If this option is activated,
+          then additional information may be required in the discretization
+          packages and the GWF Exchange package (if GWF models are coupled).
+          Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block
+          of the DISU Package; ANGLDEGX must also be specified for the GWF
+          Exchange as an auxiliary variable.
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;

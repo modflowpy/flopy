@@ -645,6 +645,7 @@ class MFSimulation(PackageContainer):
                 ghost_node_file.load(strict)
                 self._ghost_node_files[fname] = ghost_node_file
                 self._gnc_file_num += 1
+                return ghost_node_file
         elif ftype == 'mvr':
             if fname not in self._mover_files:
                 # Get package type from parent package
@@ -661,6 +662,7 @@ class MFSimulation(PackageContainer):
                 mover_file.load(strict)
                 self._mover_files[fname] = mover_file
                 self._mvr_file_num += 1
+                return mover_file
         else:
             # create package
             package_obj = self.package_factory(ftype, '')
@@ -683,6 +685,7 @@ class MFSimulation(PackageContainer):
                         VerbosityLevel.normal.value:
                     print('WARNING: Unsupported file type {} for '
                           'simulation.'.format(package.package_type))
+            return package
 
     def register_ims_package(self, ims_file, model_list):
         """

@@ -55,12 +55,12 @@ class ModflowGwfevta(mfpackage.MFPackage):
           terms will be written to the file specified with "BUDGET FILEOUT" in
           Output Control.
     timearrayseries : {varname:data} or tas_array data
-        * Contains data for the tas package. Data can bestored in a dictionary
+        * Contains data for the tas package. Data can be stored in a dictionary
           containing data for the tas package with variable names as keys and
           package data as values. Data just for the timearrayseries variable is
           also acceptable. See tas package documentation for more information.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.

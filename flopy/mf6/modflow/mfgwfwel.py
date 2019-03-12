@@ -60,12 +60,12 @@ class ModflowGwfwel(mfpackage.MFPackage):
           than or equal to zero. By default, negative pumping rates are not
           reduced during a simulation.
     timeseries : {varname:data} or timeseries data
-        * Contains data for the ts package. Data can bestored in a dictionary
+        * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
           package data as values. Data just for the timeseries variable is also
           acceptable. See ts package documentation for more information.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.

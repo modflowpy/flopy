@@ -29,12 +29,17 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           they will be available for use by other parts of the program. If an
           auxiliary variable with the name "ANGLDEGX" is found, then this
           information will be used as the angle (provided in degrees) between
-          the connection face normal and the x axis. Additional information on
-          "ANGLDEGX" is provided in the description of the DISU Package. If an
-          auxiliary variable with the name "CDIST" is found, then this
-          information will be used as the straight-line connection distance
-          between the two cell centers. CDIST is required if specific discharge
-          is calculated for either of the groundwater models.
+          the connection face normal and the x axis, where a value of zero
+          indicates that a normal vector points directly along the positive x
+          axis. The connection face normal is a normal vector on the cell face
+          shared between the cell in model 1 and the cell in model 2 pointing
+          away from the model 1 cell. Additional information on "ANGLDEGX" is
+          provided in the description of the DISU Package. If an auxiliary
+          variable with the name "CDIST" is found, then this information will
+          be used as the straight-line connection distance, including the
+          vertical component, between the two cell centers. Both ANGLDEGX and
+          CDIST are required if specific discharge is calculated for either of
+          the groundwater models.
     print_input : boolean
         * print_input (boolean) keyword to indicate that the list of exchange
           entries will be echoed to the listing file immediately after it is
@@ -87,7 +92,7 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           BEGIN PERIOD block. This allows providers and receivers to be located
           in both models listed as part of this exchange.
     observations : {varname:data} or continuous data
-        * Contains data for the obs package. Data can bestored in a dictionary
+        * Contains data for the obs package. Data can be stored in a dictionary
           containing data for the obs package with variable names as keys and
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.

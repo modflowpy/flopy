@@ -633,18 +633,15 @@ class MFBlock(object):
                                              self.block_headers[-1],
                                              initial_comment)
                 except MFDataException as mfde:
-                    raise MFDataException(mfdata_except=mfde,
-                                          model=self._container_package.
-                                          model_name,
-                                          package=self._container_package.
-                                          _get_pname(),
-                                          message='Error occurred while '
-                                                  'loading data "{}" in '
-                                                  'block "{}" from file "{}"'
-                                                  '.'.format(
-                                              dataset.structure.name,
-                                              self.structure.name,
-                                              fd_block.name))
+                    raise MFDataException(
+                        mfdata_except=mfde, model=self._container_package.
+                        model_name,
+                        package=self._container_package._get_pname(),
+                        message='Error occurred while loading data "{}" in '
+                                'block "{}" from file "{}"'
+                                '.'.format(dataset.structure.name,
+                                           self.structure.name,
+                                           fd_block.name))
                 package_info_list = self._get_package_info(dataset)
                 if package_info_list is not None:
                     for package_info in package_info_list:
@@ -652,13 +649,15 @@ class MFBlock(object):
                                 VerbosityLevel.verbose.value:
                             print('        loading child package {}..'
                                   '.'.format(package_info[0]))
-                        self._model_or_sim.load_package(package_info[0],
-                                                        package_info[1],
-                                                        package_info[1], True,
-                                                        package_info[2],
-                                                        package_info[3],
-                                                        self._container_package
-                                                        )
+                        pkg = self._model_or_sim.load_package(
+                            package_info[0], package_info[1],
+                            package_info[1], True, package_info[2],
+                            package_info[3], self._container_package)
+                        if hasattr(self._container_package, package_info[0]):
+                            package_group = getattr(self._container_package,
+                                                    package_info[0])
+                            package_group._append_package(pkg, pkg.filename,
+                                                          False)
 
                 if next_line[1] is not None:
                     arr_line = datautil.PyListUtil.split_data_line(
@@ -757,13 +756,15 @@ class MFBlock(object):
                                 VerbosityLevel.verbose.value:
                             print('        loading child package {}..'
                                   '.'.format(package_info[1]))
-                        self._model_or_sim.load_package(package_info[0],
-                                                        package_info[1],
-                                                        package_info[1], True,
-                                                        package_info[2],
-                                                        package_info[3],
-                                                        self._container_package
-                                                        )
+                        pkg = self._model_or_sim.load_package(
+                            package_info[0], package_info[1], package_info[1],
+                            True, package_info[2], package_info[3],
+                            self._container_package)
+                        if hasattr(self._container_package, package_info[0]):
+                            package_group = getattr(self._container_package,
+                                                    package_info[0])
+                            package_group._append_package(pkg, pkg.filename,
+                                                          False)
                 if first_key is None:
                     first_key = key
                 nothing_found = False
@@ -795,11 +796,15 @@ class MFBlock(object):
                             VerbosityLevel.verbose.value:
                         print('        loading child package {}..'
                               '.'.format(package_info[0]))
-                    self._model_or_sim.load_package(package_info[0],
-                                                    package_info[1], None,
-                                                    True, package_info[2],
-                                                    package_info[3],
-                                                    self._container_package)
+                    pkg = self._model_or_sim.load_package(
+                        package_info[0], package_info[1], None, True,
+                        package_info[2], package_info[3],
+                        self._container_package)
+                    if hasattr(self._container_package, package_info[0]):
+                        package_group = getattr(self._container_package,
+                                                package_info[0])
+                        package_group._append_package(pkg, pkg.filename,
+                                                      False)
 
             return recarrays[0].keyword, ds_result
         else:
@@ -1884,20 +1889,21 @@ class MFChildPackages:
             new_file_record_data.append((new_fname,))
         self._filerecord.set_data(new_file_record_data)
 
-    def _append_package(self, package, fname):
+    def _append_package(self, package, fname, update_frecord=True):
         if fname is None:
             # build a file name
             fname = self._next_default_file_path()
             package._filename = fname
 
-        # set file record variable
-        file_record = self._filerecord.get_data()
-        file_record_data = file_record[0]
-        new_file_record_data = []
-        for item in file_record_data:
-            new_file_record_data.append((item,))
-        new_file_record_data.append((fname,))
-        self._filerecord.set_data(new_file_record_data)
+        if update_frecord:
+            # set file record variable
+            file_record = self._filerecord.get_data()
+            file_record_data = file_record[0]
+            new_file_record_data = []
+            for item in file_record_data:
+                new_file_record_data.append((item,))
+            new_file_record_data.append((fname,))
+            self._filerecord.set_data(new_file_record_data)
 
         # add the package to the list
         self._packages.append(package)

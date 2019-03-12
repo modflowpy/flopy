@@ -76,21 +76,3 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         self.nrow = self.build_mfdata("nrow",  nrow)
         self.ncol = self.build_mfdata("ncol",  ncol)
         self.table = self.build_mfdata("table",  table)
-
-
-class UtltabPackages(mfpackage.MFChildPackages):
-    package_abbr = "utltabpackages"
-
-    def initialize(self, nrow=None, ncol=None, table=None, filename=None,
-                   pname=None):
-        new_package = ModflowUtltab(self._model, nrow=nrow, ncol=ncol,
-                                    table=table, filename=filename,
-                                    pname=pname, parent_file=self._cpparent)
-        self._init_package(new_package, filename)
-
-    def append_package(self, nrow=None, ncol=None, table=None, filename=None,
-                   pname=None):
-        new_package = ModflowUtltab(self._model, nrow=nrow, ncol=ncol,
-                                    table=table, filename=filename,
-                                    pname=pname, parent_file=self._cpparent)
-        self._append_package(new_package, filename)
