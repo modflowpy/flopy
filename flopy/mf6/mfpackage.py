@@ -4,7 +4,6 @@ import errno
 import inspect
 import numpy as np
 from collections import OrderedDict
-from pathlib import Path
 
 from .mfbase import PackageContainer, ExtFileAction, PackageContainerType
 from .mfbase import MFFileMgmt, MFDataException, ReadAsArraysException, \
@@ -1836,7 +1835,7 @@ class MFChildPackages:
                 name != '_inattr' and name != '_filerecord' and \
                 name != '_package_class' and name != '_pkg_type':
             if len(self._packages) == 0:
-                fnm = self.__default_file_path_base(Path(self._cpparent.filename))
+                fnm = self.__default_file_path_base(self._cpparent.filename)
                 self._init_package(self._package_class(self._model), fnm)
             package = self._packages[0]
             setattr(package, name, value)
@@ -1844,8 +1843,17 @@ class MFChildPackages:
         super(MFChildPackages, self).__setattr__(name, value)
 
     def __default_file_path_base(self, file_path, suffix=''):
-        return '{}.{}{}.{}'.format(file_path.stem, file_path.suffix[1:],
-                                   suffix, self._pkg_type)
+        root, stem = os.path.split(file_path)
+        stem_lst = stem.split('.')
+        file_name = '.'.join(stem_lst[:-1])
+        if len(stem_lst) > 1:
+            file_ext = stem_lst[-1]
+            return '{}.{}{}.{}'.format(file_name, file_ext, suffix,
+                                     self._pkg_type)
+        elif suffix != '':
+            return '{}.{}'.format(stem, self._pkg_type)
+        else:
+            return '{}.{}.{}'.format(stem, suffix, self._pkg_type)
 
     def __file_path_taken(self, possible_path):
         for package in self._packages:
@@ -1855,11 +1863,11 @@ class MFChildPackages:
         return False
 
     def _next_default_file_path(self):
-        file_path = Path(self._cpparent.filename)
-        possible_path = self.__default_file_path_base(file_path)
+        possible_path = self.__default_file_path_base(self._cpparent.filename)
         suffix = 0
         while self.__file_path_taken(possible_path):
-            possible_path = self.__default_file_path_base(file_path, suffix)
+            possible_path = self.__default_file_path_base(
+                self._cpparent.filename, suffix)
             suffix += 1
         return possible_path
 
