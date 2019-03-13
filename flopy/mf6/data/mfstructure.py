@@ -235,7 +235,8 @@ class DfnPackage(Dfn):
 
             if new_data_item_struct.block_variable:
                 block_dataset_struct = MFDataStructure(
-                    new_data_item_struct, model_file, self.package_type)
+                    new_data_item_struct, model_file, self.package_type,
+                    self.dfn_list)
                 block_dataset_struct.parent_block = current_block
                 self._process_needed_data_items(block_dataset_struct,
                                                 dataset_items_in_block)
@@ -311,7 +312,7 @@ class DfnPackage(Dfn):
                             'solution group number'
                         block_dataset_struct = MFDataStructure(
                             block_data_item_struct, model_file,
-                            self.package_type)
+                            self.package_type, self.dfn_list)
                         block_dataset_struct.parent_block = current_block
                         block_dataset_struct.set_path(
                             path + (new_data_item_struct.block_name,))
@@ -324,7 +325,8 @@ class DfnPackage(Dfn):
                      dataset_items_in_block,
                      path, model_file, add_to_block=True):
         current_dataset_struct = MFDataStructure(new_data_item_struct,
-                                                 model_file, self.package_type)
+                                                 model_file, self.package_type,
+                                                 self.dfn_list)
         current_dataset_struct.set_path(
             path + (new_data_item_struct.block_name,))
         self._process_needed_data_items(current_dataset_struct,
@@ -474,13 +476,15 @@ class DfnFile(Dfn):
 
                 if new_data_item_struct.block_variable:
                     block_dataset_struct = MFDataStructure(
-                        new_data_item_struct, model_file, self.package_type)
+                        new_data_item_struct, model_file, self.package_type,
+                        self.dfn_list)
                     block_dataset_struct.parent_block = current_block
                     self._process_needed_data_items(block_dataset_struct,
                                                     dataset_items_in_block)
                     block_dataset_struct.set_path(
                         path + (new_data_item_struct.block_name,))
-                    block_dataset_struct.add_item(new_data_item_struct)
+                    block_dataset_struct.add_item(new_data_item_struct, False,
+                                                  self.dfn_list)
                     current_block.add_dataset(block_dataset_struct)
                 else:
                     new_data_item_struct.block_type = block_type
@@ -503,7 +507,7 @@ class DfnFile(Dfn):
                         for dataset in self.dataset_items_needed_dict[
                             new_data_item_struct.name]:
                             item_added = dataset.add_item(new_data_item_struct,
-                                                          record=True)
+                                                          True, self.dfn_list)
                             item_location_found = item_location_found or \
                                                   item_added
                     # if data item belongs to an existing keystring
@@ -550,12 +554,12 @@ class DfnFile(Dfn):
                                 'solution group number'
                             block_dataset_struct = MFDataStructure(
                                 block_data_item_struct, model_file,
-                                self.package_type)
+                                self.package_type, self.dfn_list)
                             block_dataset_struct.parent_block = current_block
                             block_dataset_struct.set_path(
                                 path + (new_data_item_struct.block_name,))
                             block_dataset_struct.add_item(
-                                block_data_item_struct)
+                                block_data_item_struct, False, self.dfn_list)
                             current_block.add_dataset(block_dataset_struct)
         dfn_fp.close()
         return block_dict
@@ -564,7 +568,8 @@ class DfnFile(Dfn):
                      dataset_items_in_block,
                      path, model_file, add_to_block=True):
         current_dataset_struct = MFDataStructure(new_data_item_struct,
-                                                 model_file, self.package_type)
+                                                 model_file, self.package_type,
+                                                 self.dfn_list)
         current_dataset_struct.set_path(
             path + (new_data_item_struct.block_name,))
         self._process_needed_data_items(current_dataset_struct,
@@ -573,7 +578,8 @@ class DfnFile(Dfn):
             # add dataset
             current_block.add_dataset(current_dataset_struct)
             current_dataset_struct.parent_block = current_block
-        current_dataset_struct.add_item(new_data_item_struct)
+        current_dataset_struct.add_item(new_data_item_struct, False,
+                                        self.dfn_list)
         return current_dataset_struct
 
     def _process_needed_data_items(self, current_dataset_struct,
@@ -583,7 +589,7 @@ class DfnFile(Dfn):
                 current_dataset_struct.expected_data_items.items():
             if item_name in dataset_items_in_block:
                 current_dataset_struct.add_item(
-                    dataset_items_in_block[item_name])
+                    dataset_items_in_block[item_name], False, self.dfn_list)
             else:
                 if item_name in self.dataset_items_needed_dict:
                     self.dataset_items_needed_dict[item_name].append(
@@ -774,10 +780,7 @@ class MFDataItemStructure(object):
         self.one_per_pkg = False
 
     def set_value(self, line, common):
-        if isinstance(line, list):
-            arr_line = line
-        else:
-            arr_line = line.strip().split()
+        arr_line = line.strip().split()
         if len(arr_line) > 1:
             if arr_line[0] == 'block':
                 self.block_name = ' '.join(arr_line[1:])
@@ -1191,7 +1194,7 @@ class MFDataStructure(object):
     --------
     """
 
-    def __init__(self, data_item, model_data, package_type):
+    def __init__(self, data_item, model_data, package_type, dfn_list):
         self.type = data_item.type
         self.package_type = package_type
         self.path = None
@@ -1218,7 +1221,7 @@ class MFDataStructure(object):
         self.model_data = model_data
         self.num_optional = 0
         self.parent_block = None
-        self._fpmerge_data_item(data_item)
+        self._fpmerge_data_item(data_item, dfn_list)
         self.construct_package = data_item.construct_package
         self.construct_data = data_item.construct_data
         self.parameter_name = data_item.parameter_name
@@ -1294,7 +1297,7 @@ class MFDataStructure(object):
                 return True
         return False
 
-    def add_item(self, item, record=False):
+    def add_item(self, item, record=False, dfn_list=None):
         item_added = False
         if item.type != DatumType.recarray and \
                 ((item.type != DatumType.record and
@@ -1340,10 +1343,10 @@ class MFDataStructure(object):
             if item.optional:
                 self.num_optional += 1
         if item_added:
-            self._fpmerge_data_item(item)
+            self._fpmerge_data_item(item, dfn_list)
         return item_added
 
-    def _fpmerge_data_item(self, item):
+    def _fpmerge_data_item(self, item, dfn_list):
         mfstruct = MFStructure()
         key = (self.package_type.lower(), self.block_name.lower(),
                item.name.lower())
@@ -1351,7 +1354,10 @@ class MFDataStructure(object):
         if key in mfstruct.flopy_dict:
             # read flopy-specific dfn data
             for name, value in mfstruct.flopy_dict[key].items():
-                item.set_value([name, value], None)
+                line = '{} {}'.format(name, value)
+                item.set_value(line, None)
+                if dfn_list is not None:
+                    dfn_list[-1].append(line)
 
     def set_path(self, path):
         self.path = path + (self.name,)
