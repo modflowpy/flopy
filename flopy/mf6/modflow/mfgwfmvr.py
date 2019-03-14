@@ -85,7 +85,7 @@ class ModflowGwfmvr(mfpackage.MFPackage):
           calculating the amount of water to move. For the "FACTOR" option,
           VALUE is the :math:`\\alpha` factor. For the remaining options, VALUE
           is the specified flow rate, :math:`Q_S`.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -161,8 +161,8 @@ class ModflowGwfmvr(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, print_input=None,
                  print_flows=None, modelnames=None, budget_filerecord=None,
                  maxmvr=None, maxpackages=None, packages=None, perioddata=None,
-                 fname=None, pname=None, parent_file=None):
-        super(ModflowGwfmvr, self).__init__(model, "mvr", fname, pname,
+                 filename=None, pname=None, parent_file=None):
+        super(ModflowGwfmvr, self).__init__(model, "mvr", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

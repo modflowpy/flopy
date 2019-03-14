@@ -565,7 +565,7 @@ tagged true
 in_record true
 reader urword
 longname head limit
-description is the limiting water level (head) in the well, which is the minimum of the well RATE or the well inflow rate from the aquifer. HEAD\_LIMIT is only applied to discharging wells (RATE $<$ 0). HEAD\_LIMIT can be deactivated by specifying the text string `OFF'. The HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality available in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The HEAD\_LIMIT option has been included to facilitate backward compatibility with previous versions of MODFLOW but use of the RATE\_SCALING option instead of the HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is `OFF'.
+description is the limiting water level (head) in the well, which is the minimum of the well RATE or the well inflow rate from the aquifer. HEAD\_LIMIT can be applied to extraction wells (RATE $<$ 0) or injection wells (RATE $>$ 0). HEAD\_LIMIT can be deactivated by specifying the text string `OFF'. The HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality available in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The HEAD\_LIMIT option has been included to facilitate backward compatibility with previous versions of MODFLOW but use of the RATE\_SCALING option instead of the HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is `OFF'.
 
 block period
 name shutoffrecord
@@ -584,7 +584,7 @@ shape
 in_record true
 reader urword
 longname shut off well
-description keyword for activating well shut off capability.  Subsequent values define the minimum and maximum pumping rate that a well must exceed to shutoff or reactivate a well, respectively, during a stress period. SHUT\_OFF is only applied to discharging wells (RATE$<0$) and if HEAD\_LIMIT is specified (not set to `OFF').  If HEAD\_LIMIT is specified, SHUT\_OFF can be deactivated by specifying a minimum value equal to zero. The SHUT\_OFF option is based on the SHUT\_OFF functionality available in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The SHUT\_OFF option has been included to facilitate backward compatibility with previous versions of MODFLOW but use of the RATE\_SCALING option instead of the SHUT\_OFF option is recommended. By default, SHUT\_OFF is not used.
+description keyword for activating well shut off capability.  Subsequent values define the minimum and maximum pumping rate that a well must exceed to shutoff or reactivate a well, respectively, during a stress period. SHUT\_OFF is only applied to injection wells (RATE$<0$) and if HEAD\_LIMIT is specified (not set to `OFF').  If HEAD\_LIMIT is specified, SHUT\_OFF can be deactivated by specifying a minimum value equal to zero. The SHUT\_OFF option is based on the SHUT\_OFF functionality available in the MNW2~\citep{konikow2009} package for MODFLOW-2005. The SHUT\_OFF option has been included to facilitate backward compatibility with previous versions of MODFLOW but use of the RATE\_SCALING option instead of the SHUT\_OFF option is recommended. By default, SHUT\_OFF is not used.
 
 block period
 name minrate
@@ -623,7 +623,7 @@ shape
 in_record true
 reader urword
 longname rate scaling
-description activate rate scaling.  If RATE\_SCALING is specified, both PUMP\_ELEVATION and SCALING\_LENGTH must be specified. RATE\_SCALING cannot be used with HEAD\_LIMIT.
+description activate rate scaling.  If RATE\_SCALING is specified, both PUMP\_ELEVATION and SCALING\_LENGTH must be specified. RATE\_SCALING cannot be used with HEAD\_LIMIT.  RATE\_SCALING can be used for extraction or injection wells.  For extraction wells, the extraction rate will start to decrease once the head in the well lowers to a level equal to the pump elevation plus the scaling length.  If the head in the well drops below the pump elevation, then the extraction rate is calculated to be zero.  For an injection well, the injection rate will begin to decrease once the head in the well rises above the specified pump elevation.  If the head in the well rises above the pump elevation plus the scaling length, then the injection rate will be set to zero.
 
 block period
 name pump_elevation
@@ -633,7 +633,7 @@ tagged false
 in_record true
 reader urword
 longname pump elevation
-description is the elevation of the multi-aquifer well pump (PUMP\_ELEVATION).  PUMP\_ELEVATION cannot be less than the bottom elevation (BOTTOM) of the multi-aquifer well. By default, PUMP\_ELEVATION is set equal to the bottom of the largest GWF node number connected to a MAW well.
+description is the elevation of the multi-aquifer well pump (PUMP\_ELEVATION).  PUMP\_ELEVATION should not be less than the bottom elevation (BOTTOM) of the multi-aquifer well.
 
 block period
 name scaling_length
@@ -643,7 +643,7 @@ tagged false
 in_record true
 reader urword
 longname
-description height above the pump elevation (SCALING\_LENGTH) below which the pumping rate is reduced.  The default value for SCALING\_LENGTH is the well radius.
+description height above the pump elevation (SCALING\_LENGTH).  If the simulated well head is below this elevation (pump elevation plus the scaling length), then the pumping rate is reduced.
 
 block period
 name auxiliaryrecord

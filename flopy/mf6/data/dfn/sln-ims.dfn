@@ -80,6 +80,14 @@ longname head change criterion
 description real value defining the head change criterion for convergence of the outer (nonlinear) iterations, in units of length. When the maximum absolute value of the head change at all nodes during an iteration is less than or equal to OUTER\_HCLOSE, iteration stops. Commonly, OUTER\_HCLOSE equals 0.01.
 
 block nonlinear
+name outer_rclosebnd
+type double precision
+reader urword
+optional true
+longname boundary package flow residual tolerance
+description real value defining the residual tolerance for convergence of model packages that solve a separate equation not solved by the IMS linear solver. This value represents the maximum allowable residual between successive outer iterations at any single model package element. An example of a model package that would use OUTER\_RCLOSEBND to evaluate convergence is the SFR package which solves a continuity equation for each reach.   
+
+block nonlinear
 name outer_maximum
 type integer
 reader urword

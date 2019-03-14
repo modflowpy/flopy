@@ -57,7 +57,10 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         * nvert (integer) is the total number of (x, y) vertex pairs used to
           define the plan-view shape of each cell in the model grid. If NVERT
           is not specified or is specified as zero, then the VERTICES and
-          CELL2D blocks below are not read.
+          CELL2D blocks below are not read. NVERT and the accompanying VERTICES
+          and CELL2D blocks should be specified for most simulations. If the
+          XT3D or SAVE_SPECIFIC_DISCHARGE options are specified in the NPF
+          Package, these this information is required.
     top : [double]
         * top (double) is the top elevation for each cell in the model grid.
     bot : [double]
@@ -112,15 +115,17 @@ class ModflowGwfdisu(mfpackage.MFPackage):
     angldegx : [double]
         * angldegx (double) is the angle (in degrees) between the horizontal
           x-axis and the outward normal to the face between a cell and its
-          connecting cells (see figure 8 in the MODFLOW-USG documentation). The
-          angle varies between zero and 360.0 degrees. ANGLDEGX is only needed
-          if horizontal anisotropy is specified in the NPF Package or if the
-          XT3D option is used in the NPF Package. ANGLDEGX does not need to be
-          specified if horizontal anisotropy or the XT3D option is not used.
-          ANGLDEGX is of size NJA; values specified for vertical connections
-          and for the diagonal position are not used. Note that ANGLDEGX is
-          read in degrees, which is different from MODFLOW-USG, which reads a
-          similar variable (ANGLEX) in radians.
+          connecting cells. The angle varies between zero and 360.0 degrees,
+          where zero degrees points in the positive x-axis direction, and 90
+          degrees points in the positive y-axis direction. ANGLDEGX is only
+          needed if horizontal anisotropy is specified in the NPF Package, if
+          the XT3D option is used in the NPF Package, or if the
+          SAVE_SPECIFIC_DISCHARGE option is specifed in the NPF Package.
+          ANGLDEGX does not need to be specified if these conditions are not
+          met. ANGLDEGX is of size NJA; values specified for vertical
+          connections and for the diagonal position are not used. Note that
+          ANGLDEGX is read in degrees, which is different from MODFLOW-USG,
+          which reads a similar variable (ANGLEX) in radians.
     vertices : [iv, xv, yv]
         * iv (integer) is the vertex number. Records in the VERTICES block must
           be listed in consecutive order from 1 to NVERT.
@@ -136,7 +141,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         * icvert (integer) is an array of integer values containing vertex
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -236,9 +241,9 @@ class ModflowGwfdisu(mfpackage.MFPackage):
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nodes=None, nja=None, nvert=None, top=None, bot=None,
                  area=None, iac=None, ja=None, ihc=None, cl12=None, hwva=None,
-                 angldegx=None, vertices=None, cell2d=None, fname=None,
+                 angldegx=None, vertices=None, cell2d=None, filename=None,
                  pname=None, parent_file=None):
-        super(ModflowGwfdisu, self).__init__(model, "disu", fname, pname,
+        super(ModflowGwfdisu, self).__init__(model, "disu", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables

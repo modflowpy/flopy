@@ -3,12 +3,14 @@ import os
 import shutil
 import numpy as np
 import flopy
+from nose.tools import assert_raises
 
 cpth = os.path.join('temp', 't017')
 # delete the directory if it exists
 if os.path.isdir(cpth):
     shutil.rmtree(cpth)
 os.makedirs(cpth)
+
 
 def test_formattedfile_read():
 
@@ -34,6 +36,14 @@ def test_formattedfile_read():
     ts = h.get_ts((0, 7, 5))
     assert np.isclose(ts[0, 1], 944.487, 1e-6), \
         'time series value ({}) != {}'.format(ts[0, 1], 944.487)
+
+    # Check error when reading empty file
+    fname = os.path.join(cpth, 'empty.githds')
+    with open(fname, 'w'):
+        pass
+    with assert_raises(IOError):
+        flopy.utils.FormattedHeadFile(fname)
+
     return
 
 
@@ -60,6 +70,16 @@ def test_binaryfile_read():
     ts = h.get_ts((0, 7, 5))
     assert np.isclose(ts[0, 1], 26.00697135925293), \
         'time series value ({}) != {}'.format(ts[0, 1], - 26.00697135925293)
+
+    # Check error when reading empty file
+    fname = os.path.join(cpth, 'empty.githds')
+    with open(fname, 'w'):
+        pass
+    with assert_raises(IOError):
+        flopy.utils.HeadFile(fname)
+    with assert_raises(IOError):
+        flopy.utils.HeadFile(fname, 'head', 'single')
+
     return
 
 
@@ -137,6 +157,13 @@ def test_cellbudgetfile_position():
     for i, (d1, d2) in enumerate(zip(cbcd, cbcd2)):
         msg = '{} data from slice is not identical'.format(names[i].rstrip())
         assert np.array_equal(d1, d2), msg
+
+    # Check error when reading empty file
+    fname = os.path.join(cpth, 'empty.gitcbc')
+    with open(fname, 'w'):
+        pass
+    with assert_raises(IOError):
+        flopy.utils.CellBudgetFile(fname)
 
     return
 

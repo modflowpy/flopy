@@ -235,6 +235,15 @@ def test005_advgw_tidal():
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
                             verbosity_level=2)
 
+    # test obs/ts package interface
+    model = sim.get_model(model_name)
+    ghb = model.get_package('ghb')
+    obs = ghb.obs
+    digits = obs.digits.get_data()
+    assert(digits == 10)
+    names = ghb.ts.time_series_namerecord.get_data()
+    assert(names[0][0] == 'tides')
+
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
@@ -435,7 +444,10 @@ def test045_lake1ss_table():
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, 'lakeex1b.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+        outfile = os.path.join(run_folder, 'headcompare_a.txt')
+        success = pymake.compare_heads(None, None, files1=head_file,
+                                       files2=head_new, outfile=outfile)
+        assert success
 
     # change some settings
     model = sim.get_model(model_name)
@@ -455,7 +467,10 @@ def test045_lake1ss_table():
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, 'lakeex1b.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+        outfile = os.path.join(run_folder, 'headcompare_b.txt')
+        success = pymake.compare_heads(None, None, files1=head_file,
+                                       files2=head_new, outfile=outfile)
+        assert success
 
         # clean up
         sim.delete_output_files()

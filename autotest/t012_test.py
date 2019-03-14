@@ -356,7 +356,7 @@ def test_mfnwt_LKT():
     return
 
 
-def test_mfnwt_keat_uzf():
+def deactivated_mfnwt_keat_uzf():
     pth = os.path.join(pthNWT, 'keat_uzf')
     namefile = 'Keat_UZF_mf.nam'
     mf = flopy.modflow.Modflow.load(namefile, model_ws=pth,
@@ -397,6 +397,6 @@ if __name__ == '__main__':
     #test_mf2000_SState()
     #test_mf2000_tob()
     #test_mf2000_zeroth()
-    test_mfnwt_CrnkNic()
+    #test_mfnwt_CrnkNic()
     #test_mfnwt_LKT()
-    #test_mfnwt_keat_uzf()
+    deactivated_mfnwt_keat_uzf()

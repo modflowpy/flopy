@@ -75,7 +75,7 @@ class ModflowGwfoc(mfpackage.MFPackage):
                 * first (keyword) keyword to indicate save for first step in
                   period. This keyword may be used in conjunction with other
                   keywords to print or save results for multiple time steps.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -172,8 +172,9 @@ class ModflowGwfoc(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False, budget_filerecord=None,
                  head_filerecord=None, headprintrecord=None, saverecord=None,
-                 printrecord=None, fname=None, pname=None, parent_file=None):
-        super(ModflowGwfoc, self).__init__(model, "oc", fname, pname,
+                 printrecord=None, filename=None, pname=None,
+                 parent_file=None):
+        super(ModflowGwfoc, self).__init__(model, "oc", filename, pname,
                                            loading_package, parent_file)        
 
         # set up variables

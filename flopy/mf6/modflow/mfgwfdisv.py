@@ -85,7 +85,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order. Cells that are connected must
           share vertices.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -161,9 +161,9 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nlay=None, ncpl=None, nvert=None, top=None, botm=None,
-                 idomain=None, vertices=None, cell2d=None, fname=None,
+                 idomain=None, vertices=None, cell2d=None, filename=None,
                  pname=None, parent_file=None):
-        super(ModflowGwfdisv, self).__init__(model, "disv", fname, pname,
+        super(ModflowGwfdisv, self).__init__(model, "disv", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables
