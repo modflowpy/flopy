@@ -47,6 +47,20 @@ def update_mt3dfiles(srcdir):
     shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
                 os.path.join(srcdir, 'mt3dms5.for'))
 
+    # Need to initialize the V array in SADV5B
+    # see here: https://github.com/MODFLOW-USGS/mt3d-usgs/pull/46
+    f1 = open(os.path.join(srcdir, 'mt_adv5.for'), 'r')
+    f2 = open(os.path.join(srcdir, 'mt_adv5.for.tmp'), 'w')
+    sfind = 'C--SET DT TO NEGATIVE FOR BACKWARD TRACKING'
+    sreplace = 'C--INITIALIZE\n      V(:)=0.\nC\n' + sfind
+    for line in f1:
+        f2.write(line.replace(sfind, sreplace))
+    f1.close()
+    f2.close()
+    os.remove(os.path.join(srcdir, 'mt_adv5.for'))
+    shutil.move(os.path.join(srcdir, 'mt_adv5.for.tmp'),
+                os.path.join(srcdir, 'mt_adv5.for'))
+
     # Replace filespec with standard fortran
     l = '''
           CHARACTER*20 ACCESS,FORM,ACTION(2)
@@ -138,7 +152,31 @@ def update_mp7files(srcdir):
     f.close()
 
 
-def test_build_modflow():
+def run_cmdlist(cmdlist, cwd='.'):
+    proc = subprocess.Popen(cmdlist, shell=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT,
+                            cwd=cwd)
+    stdout_data, stderr_data = proc.communicate()
+    if proc.returncode != 0:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+        if isinstance(stderr_data, bytes):
+            stderr_data = stderr_data.decode('utf-8')
+        msg = '{} failed\n'.format(cmdlist) + \
+              'status code:\n{}\n'.format(proc.returncode) + \
+              'stdout:\n{}\n'.format(stdout_data) + \
+              'stderr:\n{}\n'.format(stderr_data)
+        assert False, msg
+    else:
+        if isinstance(stdout_data, bytes):
+            stdout_data = stdout_data.decode('utf-8')
+        print(stdout_data)
+
+    return
+
+
+def test_build_mf2005():
     if pymake is None:
         return
     starget = 'MODFLOW-2005'
@@ -164,31 +202,7 @@ def test_build_mfnwt():
     return
 
 
-def run_cmdlist(cmdlist, cwd='.'):
-    proc = subprocess.Popen(cmdlist, shell=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            cwd=cwd)
-    stdout_data, stderr_data = proc.communicate()
-    if proc.returncode != 0:
-        if isinstance(stdout_data, bytes):
-            stdout_data = stdout_data.decode('utf-8')
-        if isinstance(stderr_data, bytes):
-            stderr_data = stderr_data.decode('utf-8')
-        msg = '{} failed\n'.format(cmdlist) + \
-              'status code:\n{}\n'.format(proc.returncode) + \
-              'stdout:\n{}\n'.format(stdout_data) + \
-              'stderr:\n{}\n'.format(stderr_data)
-        assert False, msg
-    else:
-        if isinstance(stdout_data, bytes):
-            stdout_data = stdout_data.decode('utf-8')
-        print(stdout_data)
-
-    return
-
-
-def test_build_usg():
+def test_build_mfusg():
     if pymake is None:
         return
     starget = 'MODFLOW-USG'
@@ -205,14 +219,14 @@ def test_build_mf6():
         return
     starget = 'MODFLOW6'
     exe_name = 'mf6'
-    dirname = 'mf6.0.3'
-    url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
+    dirname = 'mf6.0.4'
+    url = 'https://water.usgs.gov/water-resources/software/MODFLOW-6/{0}.zip'.format(dirname)
 
     build_target(starget, exe_name, url, dirname, include_subdirs=True)
     return
 
 
-def test_build_lgr():
+def test_build_mflgr():
     if pymake is None:
         return
     starget = 'MODFLOW-LGR'
@@ -242,8 +256,8 @@ def test_build_mt3dusgs():
         return
     starget = 'MT3D-USGS'
     exe_name = 'mt3dusgs'
-    dirname = 'mt3d-usgs_Distribution'
-    url = "https://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
+    dirname = 'mt3dusgs1.0.1'
+    url = 'https://water.usgs.gov/water-resources/software/MT3D-USGS/mt3dusgs1.0.1.zip'
 
     build_target(starget, exe_name, url, dirname)
     return
@@ -502,7 +516,9 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
         replace_function(srcdir)
 
     # compile code
-    print('compiling...{}'.format(os.path.relpath(target)))
+    print('compiling... {}'.format(target))
+    print('  relative path: {}'.format(os.path.relpath(target)))
+    print('  absolute path: {}'.format(os.path.abspath(target)))
     pymake.main(srcdir, target, fct, cct, makeclean=True,
                 expedite=False, dryrun=False, double=dble, debug=False,
                 include_subdirs=include_subdirs)
@@ -522,12 +538,15 @@ def build_target(starget, exe_name, url, dirname, srcname='src',
 
 
 if __name__ == '__main__':
-    # test_build_mf6()
-    # test_build_modflow()
-    # test_build_mfnwt()
-    # test_build_usg()
-    # test_build_mt3dms()
-    # test_build_seawat()
-    # test_build_gridgen()
-    # test_build_triangle()
+    test_build_mf6()
+    test_build_mf2005()
+    test_build_mfnwt()
+    test_build_mfusg()
+    test_build_mflgr()
+    test_build_mt3dms()
+    test_build_mt3dusgs()
+    test_build_seawat()
+    test_build_gridgen()
+    test_build_triangle()
+    test_build_modpath6()
     test_build_modpath7()
