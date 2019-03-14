@@ -81,7 +81,9 @@ script:
     - echo jupyter version; jupyter --version
     - echo jupyter runtime directory; jupyter --runtime-dir
     - echo pylint version; pylint --version
-    - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
+    - cd ./autotest
+    - python build_exes.py --travis --keep
+    - cd ../
     - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
         nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
       elif [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then

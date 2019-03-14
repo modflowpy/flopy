@@ -7,7 +7,7 @@ newpth = os.path.join('.', 'temp', 't028')
 # make the directory if it does not exist
 if not os.path.isdir(newpth):
     os.makedirs(newpth)
-swtv4_exe = 'swt_v4'
+swtv4_exe = 'swtv4'
 isswtv4 = flopy.which(swtv4_exe)
 runmodel = False
 verbose = False
