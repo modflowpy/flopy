@@ -28,8 +28,8 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gfortran-6
-      - g++-6
+      - gfortran-8
+      - g++-8
       - python-pip
       - libhdf5-serial-dev
       - netcdf-bin
@@ -47,12 +47,12 @@ install:
         mkdir "$HOME/.local/bin";
       fi
     - export PATH="$HOME/.local/bin:$PATH"
-    - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
-    - ls -l /usr/bin/gfortran-6
-    - ln -fs /usr/bin/gcc-6 "$HOME/.local/bin/gcc" && gcc --version
-    - ls -l /usr/bin/gcc-6
-    - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
-    - ls -l /usr/bin/g++-6
+    - ln -fs /usr/bin/gfortran-8 "$HOME/.local/bin/gfortran" && gfortran --version
+    - ls -l /usr/bin/gfortran-8
+    - ln -fs /usr/bin/gcc-8 "$HOME/.local/bin/gcc" && gcc --version
+    - ls -l /usr/bin/gcc-8
+    - ln -fs /usr/bin/g++-8 "$HOME/.local/bin/g++" && g++ --version
+    - ls -l /usr/bin/g++-8
     - export CXX="g++"
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
         pip install -r requirements27.travis.txt;
