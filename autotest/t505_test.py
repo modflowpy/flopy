@@ -226,27 +226,28 @@ def np001():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # get expected results
-    budget_file = os.path.join(os.getcwd(), expected_cbc_file)
-    budget_obj = bf.CellBudgetFile(budget_file, precision='double')
-    budget_frf_valid = np.array(
-        budget_obj.get_data(text='FLOW-JA-FACE', full3D=True))
+        # get expected results
+        budget_file = os.path.join(os.getcwd(), expected_cbc_file)
+        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_frf_valid = np.array(
+            budget_obj.get_data(text='FLOW-JA-FACE', full3D=True))
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'np001_mod.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'np001_mod.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    budget_frf = sim.simulation_data.mfdata[
-        (model_name, 'CBC', 'FLOW-JA-FACE')]
-    assert array_util.array_comp(budget_frf_valid, budget_frf)
+        budget_frf = sim.simulation_data.mfdata[
+            (model_name, 'CBC', 'FLOW-JA-FACE')]
+        assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -917,17 +918,18 @@ def test004_bcfss():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'bcf2ss.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'bcf2ss.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -1010,17 +1012,18 @@ def test035_fhb():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'fhb2015_fhb.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'fhb2015_fhb.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -1133,22 +1136,23 @@ def test006_gwf3_disv():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'flow.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'flow.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # export to netcdf - temporarily disabled
-    #model.export(os.path.join(run_folder, "test006_gwf3.nc"))
-    # export to shape file
-    model.export(os.path.join(run_folder, "test006_gwf3.shp"))
+        # export to netcdf - temporarily disabled
+        #model.export(os.path.join(run_folder, "test006_gwf3.nc"))
+        # export to shape file
+        model.export(os.path.join(run_folder, "test006_gwf3.shp"))
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -1288,24 +1292,25 @@ def test006_2models_gnc():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file_1)
-    head_new = os.path.join(run_folder, 'model1.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_1)
+        head_new = os.path.join(run_folder, 'model1.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file_2)
-    head_new = os.path.join(run_folder, 'model2.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file_2)
+        head_new = os.path.join(run_folder, 'model2.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -1372,17 +1377,18 @@ def test050_circle_island():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'ci.output.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'ci.output.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
@@ -1546,17 +1552,18 @@ def test028_sfr():
     sim.write_simulation()
 
     # run simulation
-    sim.run_simulation()
+    if run:
+        sim.run_simulation()
 
-    # compare output to expected results
-    head_file = os.path.join(os.getcwd(), expected_head_file)
-    head_new = os.path.join(run_folder, 'test1tr.hds')
-    outfile = os.path.join(run_folder, 'head_compare.dat')
-    assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
-                                outfile=outfile)
+        # compare output to expected results
+        head_file = os.path.join(os.getcwd(), expected_head_file)
+        head_new = os.path.join(run_folder, 'test1tr.hds')
+        outfile = os.path.join(run_folder, 'head_compare.dat')
+        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
+                                    outfile=outfile)
 
-    # clean up
-    sim.delete_output_files()
+        # clean up
+        sim.delete_output_files()
 
     return
 
