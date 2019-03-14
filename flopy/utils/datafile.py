@@ -87,12 +87,17 @@ class LayerFile(object):
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
-        assert os.path.exists(
-            filename), "datafile error: datafile not found:" + str(filename)
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
         self.file = open(self.filename, 'rb')
+        # Get filesize to ensure this is not an empty file
+        self.file.seek(0, 2)
+        totalbytes = self.file.tell()
+        self.file.seek(0, 0)  # reset to beginning
+        assert self.file.tell() == 0
+        if totalbytes == 0:
+            raise IOError('datafile error: file is empty: ' + str(filename))
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
