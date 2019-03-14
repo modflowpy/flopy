@@ -54,17 +54,16 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that recharge flow terms
           will be written to the file specified with "BUDGET FILEOUT" in Output
           Control.
-    tas_filerecord : [tas6_filename]
-        * tas6_filename (string) defines a time-array-series file defining a
-          time-array series that can be used to assign time-varying values. See
-          the Time-Variable Input section for instructions on using the time-
-          array series capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the Recharge package. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the Recharge
-          package.
+    timearrayseries : {varname:data} or tas_array data
+        * Contains data for the tas package. Data can be stored in a dictionary
+          containing data for the tas package with variable names as keys and
+          package data as values. Data just for the timearrayseries variable is
+          also acceptable. See tas package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can be stored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     irch : [integer]
         * irch (integer) IRCH is the layer number that defines the layer in
           each vertical column where recharge is applied. If IRCH is omitted,
@@ -86,7 +85,7 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           auxiliary variable, then a value of zero is assigned. If the value
           specified here for the auxiliary variable is the same as auxmultname,
           then the recharge array will be multiplied by this array.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -126,7 +125,8 @@ class ModflowGwfrcha(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name tas_filerecord", 
             "type record tas6 filein tas6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package tas", 
+            "construct_data tas_array", "parameter_name timearrayseries"],
            ["block options", "name tas6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -138,7 +138,8 @@ class ModflowGwfrcha(mfpackage.MFPackage):
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
             "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -159,10 +160,10 @@ class ModflowGwfrcha(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, readasarrays=True,
                  fixed_cell=None, auxiliary=None, auxmultname=None,
                  print_input=None, print_flows=None, save_flows=None,
-                 tas_filerecord=None, obs_filerecord=None, irch=None,
-                 recharge=1.e-3, aux=None, fname=None, pname=None,
+                 timearrayseries=None, observations=None, irch=None,
+                 recharge=1.e-3, aux=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfrcha, self).__init__(model, "rcha", fname, pname,
+        super(ModflowGwfrcha, self).__init__(model, "rcha", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables
@@ -173,10 +174,16 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.print_flows = self.build_mfdata("print_flows",  print_flows)
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
-        self.tas_filerecord = self.build_mfdata("tas_filerecord", 
-                                                tas_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._tas_filerecord = self.build_mfdata("tas_filerecord", 
+                                                 None)
+        self._tas_package = self.build_child_package("tas", timearrayseries,
+                                                     "tas_array", 
+                                                     self._tas_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.irch = self.build_mfdata("irch",  irch)
         self.recharge = self.build_mfdata("recharge",  recharge)
         self.aux = self.build_mfdata("aux",  aux)

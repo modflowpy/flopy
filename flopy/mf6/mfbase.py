@@ -477,8 +477,11 @@ class PackageContainer(object):
                     value = PackageContainer.get_module_val(module, item,
                                                             'package_abbr')
                     if value is not None:
+                        abbr = value.package_abbr
                         if package_type is None:
-                            package_list.append(value)
+                            # don't store packages "group" classes
+                            if len(abbr) <= 8 or abbr[-8:] != 'packages':
+                                package_list.append(value)
                         else:
                             # check package type
                             if value.package_abbr == package_abbr or \

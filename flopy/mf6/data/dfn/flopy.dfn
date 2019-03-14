@@ -1,0 +1,202 @@
+package chd
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package chd
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package evt
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package evt
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package uzf
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package uzf
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package sfr
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package sfr
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package riv
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package riv
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package drn
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package drn
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package chd
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package chd
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package gwfgwf
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package wel
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package wel
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package evta
+block options
+name tas_filerecord
+construct_package tas
+construct_data tas_array
+parameter_name timearrayseries
+
+package evta
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package rcha
+block options
+name tas_filerecord
+construct_package tas
+construct_data tas_array
+parameter_name timearrayseries
+
+package rcha
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package rch
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package rch
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package maw
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package maw
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package lak
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package lak
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+package ghb
+block options
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+package ghb
+block options
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations

@@ -89,17 +89,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           compatibility with previous versions of MODFLOW but use of the
           RATE_SCALING option instead of the HEAD_LIMIT option is recommended.
           By default, SHUTDOWN_KAPPA is 0.0001.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the MAW package. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the MAW
-          package.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can be stored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can be stored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     mover : boolean
         * mover (boolean) keyword to indicate that this instance of the MAW
           Package can be used with the Water Mover (MVR) Package. When the
@@ -254,26 +253,25 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   value.
             rate_scalingrecord : [pump_elevation, scaling_length]
                 * pump_elevation (double) is the elevation of the multi-aquifer
-                  well pump (PUMP_ELEVATION). PUMP_ELEVATION cannot be less
+                  well pump (PUMP_ELEVATION). PUMP_ELEVATION should not be less
                   than the bottom elevation (BOTTOM) of the multi-aquifer well.
-                  By default, PUMP_ELEVATION is set equal to the bottom of the
-                  largest GWF node number connected to a MAW well.
                 * scaling_length (double) height above the pump elevation
-                  (SCALING_LENGTH) below which the pumping rate is reduced. The
-                  default value for SCALING_LENGTH is the well radius.
+                  (SCALING_LENGTH). If the simulated well head is below this
+                  elevation (pump elevation plus the scaling length), then the
+                  pumping rate is reduced.
             head_limit : [string]
                 * head_limit (string) is the limiting water level (head) in the
                   well, which is the minimum of the well RATE or the well
-                  inflow rate from the aquifer. HEAD_LIMIT is only applied to
-                  discharging wells (RATE :math:`<` 0). HEAD\_LIMIT can be
-                  deactivated by specifying the text string `OFF'. The
-                  HEAD\_LIMIT option is based on the HEAD\_LIMIT functionality
-                  available in the MNW2~\citep{konikow2009} package for
-                  MODFLOW-2005. The HEAD\_LIMIT option has been included to
-                  facilitate backward compatibility with previous versions of
-                  MODFLOW but use of the RATE\_SCALING option instead of the
-                  HEAD\_LIMIT option is recommended. By default, HEAD\_LIMIT is
-                  `OFF'.
+                  inflow rate from the aquifer. HEAD_LIMIT can be applied to
+                  extraction wells (RATE :math:`<` 0) or injection wells (RATE
+                  :math:`>` 0). HEAD\_LIMIT can be deactivated by specifying
+                  the text string `OFF'. The HEAD\_LIMIT option is based on the
+                  HEAD\_LIMIT functionality available in the
+                  MNW2~\citep{konikow2009} package for MODFLOW-2005. The
+                  HEAD\_LIMIT option has been included to facilitate backward
+                  compatibility with previous versions of MODFLOW but use of
+                  the RATE\_SCALING option instead of the HEAD\_LIMIT option is
+                  recommended. By default, HEAD\_LIMIT is `OFF'.
             shutoffrecord : [minrate, maxrate]
                 * minrate (double) is the minimum rate that a well must exceed
                   to shutoff a well during a stress period. The well will shut
@@ -289,7 +287,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   aquifer exceeds maxrate. Reactivation of the well cannot
                   occur until the next time step if a well is shutdown to
                   reduce oscillations. maxrate must be greater than MINRATE.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -363,7 +361,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name ts_filerecord", 
             "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -375,7 +374,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
             "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -500,10 +500,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                  print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, no_well_storage=None,
                  flowing_wells=None, shutdown_theta=None, shutdown_kappa=None,
-                 ts_filerecord=None, obs_filerecord=None, mover=None,
+                 timeseries=None, observations=None, mover=None,
                  nmawwells=None, packagedata=None, connectiondata=None,
-                 perioddata=None, fname=None, pname=None, parent_file=None):
-        super(ModflowGwfmaw, self).__init__(model, "maw", fname, pname,
+                 perioddata=None, filename=None, pname=None, parent_file=None):
+        super(ModflowGwfmaw, self).__init__(model, "maw", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -524,9 +524,16 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                                 shutdown_theta)
         self.shutdown_kappa = self.build_mfdata("shutdown_kappa", 
                                                 shutdown_kappa)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.nmawwells = self.build_mfdata("nmawwells",  nmawwells)
         self.packagedata = self.build_mfdata("packagedata",  packagedata)

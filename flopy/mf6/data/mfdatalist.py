@@ -1211,7 +1211,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                 else:
                     key = 0
             self._set_data_prep(data, key)
-            super(MFTransientList, self).set_data(data)
+            super(MFTransientList, self).set_data(data, autofill)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):

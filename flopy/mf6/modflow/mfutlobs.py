@@ -48,7 +48,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
           flow observations of a GWF model, for three observation types of the
           LAK Package, for two observation types of the MAW Package, and one
           observation type of the UZF Package.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -95,12 +95,34 @@ class ModflowUtlobs(mfpackage.MFPackage):
             "optional true", "numeric_index true"]]
 
     def __init__(self, model, loading_package=False, digits=None,
-                 print_input=None, continuous=None, fname=None, pname=None,
+                 print_input=None, continuous=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowUtlobs, self).__init__(model, "obs", fname, pname,
+        super(ModflowUtlobs, self).__init__(model, "obs", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
         self.digits = self.build_mfdata("digits",  digits)
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.continuous = self.build_mfdata("continuous",  continuous)
+
+
+class UtlobsPackages(mfpackage.MFChildPackages):
+    """
+    UtlobsPackages is a container class for the ModflowUtlobs class.
+
+    Methods
+    ----------
+    initialize
+        Initializes a new ModflowUtlobs package removing any sibling child
+        packages attached to the same parent package. See ModflowUtlobs init
+        documentation for definition of parameters.
+    """
+    package_abbr = "utlobspackages"
+
+    def initialize(self, digits=None, print_input=None, continuous=None,
+                   filename=None, pname=None):
+        new_package = ModflowUtlobs(self._model, digits=digits,
+                                    print_input=print_input,
+                                    continuous=continuous, filename=filename,
+                                    pname=pname, parent_file=self._cpparent)
+        self._init_package(new_package, filename)

@@ -2201,8 +2201,8 @@ class DataStorage(object):
                 if isinstance(val, str):
                     return str(int(val) + 1)
                 else:
-                    return str(val+1)
-            return str(val)
+                    return str(int(val)+1)
+            return str(int(val))
         elif type == DatumType.string:
             try:
                 arr_val = val.split()
@@ -3205,6 +3205,13 @@ class MFData(DataInterface):
         model = self.model
         if model is not None:
             model._mg_resync = True
+
+    @staticmethod
+    def _tas_info(str):
+        lst_str = str.split(' ')
+        if len(lst_str) >= 2 and lst_str[0].lower() == 'timearrayseries':
+            return lst_str[1], lst_str[0]
+        return None, None
 
     def export(self, f, **kwargs):
         from flopy.export import utils

@@ -58,7 +58,7 @@ class ModflowNam(mfpackage.MFPackage):
         * slnmnames (string) is the array of model names to add to this
           solution. The number of model names is determined by the number of
           model names the user provides on this line.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -122,8 +122,8 @@ class ModflowNam(mfpackage.MFPackage):
     def __init__(self, simulation, loading_package=False, continue_=None,
                  nocheck=None, memory_print_option=None, tdis6=None,
                  models=None, exchanges=None, mxiter=None, solutiongroup=None,
-                 fname=None, pname=None, parent_file=None):
-        super(ModflowNam, self).__init__(simulation, "nam", fname, pname,
+                 filename=None, pname=None, parent_file=None):
+        super(ModflowNam, self).__init__(simulation, "nam", filename, pname,
                                          loading_package, parent_file)        
 
         # set up variables

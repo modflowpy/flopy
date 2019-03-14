@@ -49,11 +49,11 @@ def test_create_and_run_model():
                                          nrow=1, ncol=10, delr=500.0,
                                          delc=500.0,
                                          top=100.0, botm=50.0,
-                                         fname='{}.dis'.format(model_name))
+                                         filename='{}.dis'.format(model_name))
     ic_package = mfgwfic.ModflowGwfic(model,
                                       strt=[100.0, 100.0, 100.0, 100.0, 100.0,
                                             100.0, 100.0, 100.0, 100.0, 100.0],
-                                      fname='{}.ic'.format(model_name))
+                                      filename='{}.ic'.format(model_name))
     npf_package = mfgwfnpf.ModflowGwfnpf(model, save_flows=True, icelltype=1,
                                          k=100.0)
 
