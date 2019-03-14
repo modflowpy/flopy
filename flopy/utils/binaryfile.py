@@ -199,8 +199,16 @@ def get_headfile_precision(filename):
     for i in range(33, 127):
         asciiset += chr(i)
 
-    # first try single
+    # Open file, and check filesize to ensure this is not an empty file
     f = open(filename, 'rb')
+    f.seek(0, 2)
+    totalbytes = f.tell()
+    f.seek(0, 0)  # reset to beginning
+    assert f.tell() == 0
+    if totalbytes == 0:
+        raise IOError('datafile error: file is empty: ' + str(filename))
+
+    # first try single
     vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f4'),
                ('totim', '<f4'), ('text', 'S16')]
     hdr = binaryread(f, vartype)
@@ -548,6 +556,13 @@ class CellBudgetFile(object):
         self.precision = precision
         self.verbose = verbose
         self.file = open(self.filename, 'rb')
+        # Get filesize to ensure this is not an empty file
+        self.file.seek(0, 2)
+        totalbytes = self.file.tell()
+        self.file.seek(0, 0)  # reset to beginning
+        assert self.file.tell() == 0
+        if totalbytes == 0:
+            raise IOError('datafile error: file is empty: ' + str(filename))
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
