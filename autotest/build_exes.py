@@ -7,15 +7,28 @@ except:
     pymake = None
 
 
-def build_all_apps():
+def get_targets():
+    targets = pymake.usgs_prog_data().get_keys(current=True)
+    targets.sort()
+    targets.remove('vs2dt')
+    return targets
+
+
+def build_target(target):
     if pymake is not None:
-        targets = pymake.usgs_prog_data().get_keys(current=True)
-        targets.sort()
-        targets.remove('vs2dt')
-        pymake.build_apps(targets=targets)
+        pymake.build_apps(targets=target)
 
     return
 
 
+def test_build_all_apps():
+    targets = get_targets()
+    for target in targets:
+        yield build_target, target
+    return
+
+
 if __name__ == '__main__':
-    build_all_apps()
+    targets = get_targets()
+    for target in targets:
+        build_target(target)
