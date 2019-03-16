@@ -8,14 +8,21 @@ services:
 
 matrix:
   include:
-    - python: 2.7
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-    - python: "3.7-dev"
+    - env: TVER=PY27
+      python: 2.7
+    - env: TVER=PY35
+      python: 3.5
+    - env: TVER=PY36
+      python: 3.6
+    - env: TVER=PY37
+      python: 3.7
+    - env: TVER=PY37N
+      python: 3.7
+    - env: TVER=PY37D
+      python: "3.7-dev"
 
   allow_failures:
-    - python: "3.7-dev"
+    - env: TVER=PY37D
 
 cache:
   pip: true
@@ -82,15 +89,15 @@ script:
     - echo jupyter runtime directory; jupyter --runtime-dir
     - echo pylint version; pylint --version
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
+    - if [[ $TVER == PY37N ]]; then
         nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
-      elif [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then
         nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+      else
+        nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
       fi
-    - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
 
 after_success:
     - coveralls
     - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
-      pylint --errors-only ./flopy;
+        pylint --errors-only ./flopy;
       fi
