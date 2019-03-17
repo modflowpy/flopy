@@ -40,7 +40,7 @@ class Seawat(BaseModel):
         Version of SEAWAT to use (the default is 'seawat').
     exe_name : string, optional
         The name of the executable to use (the default is
-        'swt_v4.exe').
+        'swtv4.exe').
     listunit : integer, optional
         Unit number for the list file (the default is 2).
     model_ws : string, optional
@@ -77,7 +77,7 @@ class Seawat(BaseModel):
 
     def __init__(self, modelname='swttest', namefile_ext='nam',
                  modflowmodel=None, mt3dmodel=None,
-                 version='seawat', exe_name='swt_v4',
+                 version='seawat', exe_name='swtv4',
                  structured=True, listunit=2, model_ws='.', external_path=None,
                  verbose=False, load=True, silent=0):
 
@@ -366,7 +366,7 @@ class Seawat(BaseModel):
         return
 
     @staticmethod
-    def load(f, version='seawat', exe_name='swt_v4', verbose=False,
+    def load(f, version='seawat', exe_name='swtv4', verbose=False,
              model_ws='.', load_only=None):
         """
         Load an existing model.
@@ -382,7 +382,7 @@ class Seawat(BaseModel):
 
         exe_name : string
             The name of the executable to use if this loaded model is run.
-            (default is swt_v4.exe)
+            (default is swtv4.exe)
 
         verbose : bool
             Write information on the load process if True.

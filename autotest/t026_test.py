@@ -12,7 +12,7 @@ workspace = os.path.join('temp', 't026')
 if not os.path.isdir(workspace):
     os.makedirs(workspace)
 
-seawat_exe = 'swt_v4'
+seawat_exe = 'swtv4'
 isseawat = flopy.which(seawat_exe)
 
 # Setup problem parameters
@@ -48,7 +48,7 @@ ssm_data[0] = ssm_sp1
 def test_seawat_henry():
     # SEAWAT model from a modflow model and an mt3d model
     modelname = 'henry'
-    mf = flopy.modflow.Modflow(modelname, exe_name='swt_v4',
+    mf = flopy.modflow.Modflow(modelname, exe_name='swtv4',
                                model_ws=workspace)
     # shortened perlen to 0.1 to make this run faster -- should be about 0.5
     dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, nper=1, delr=delr,
@@ -74,7 +74,7 @@ def test_seawat_henry():
 
     # Create the SEAWAT model structure
     mswt = flopy.seawat.Seawat(modelname, 'nam_swt', mf, mt,
-                               model_ws=workspace, exe_name='swt_v4')
+                               model_ws=workspace, exe_name='swtv4')
     vdf = flopy.seawat.SeawatVdf(mswt, iwtable=0, densemin=0, densemax=0,
                                  denseref=1000., denseslp=0.7143, firstdt=1e-3)
 
@@ -94,7 +94,7 @@ def test_seawat2_henry():
     # SEAWAT model directly by adding packages
     modelname = 'henry2'
     m = flopy.seawat.swt.Seawat(modelname, 'nam', model_ws=workspace,
-                                exe_name='swt_v4')
+                                exe_name='swtv4')
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol, nper=1, delr=delr,
                                    delc=delc, laycbd=0, top=henry_top,
                                    botm=henry_botm, perlen=0.1, nstp=15)

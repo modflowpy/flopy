@@ -306,7 +306,7 @@ def run():
 
     # Define model name for SEAWAT model
     modelname = 'swi2ex5_swt'
-    swtexe_name = 'swt_v4'
+    swtexe_name = 'swtv4'
     # Create the MODFLOW model data
     if not skipRuns:
         m = flopy.seawat.Seawat(modelname, exe_name=swtexe_name,
