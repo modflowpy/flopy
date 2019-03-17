@@ -1,6 +1,8 @@
 # Build the executables that are used in the flopy autotests
 import os
 import sys
+import json
+import shutil
 
 try:
     import pymake
@@ -11,7 +13,7 @@ except:
 download_version = '1.0'
 
 # path where downloaded executables will be extracted
-exe_pth = 'temp/exe_download'
+exe_pth = 'exe_download'
 # make the directory if it does not exist
 if not os.path.isdir(exe_pth):
     os.makedirs(exe_pth)
@@ -137,12 +139,62 @@ def is_executable(f):
     return
 
 
+def get_code_json():
+    files = os.listdir(exe_pth)
+    jpth = 'code.json'
+    json_avail = jpth in files
+
+    json_dict = None
+    if json_avail:
+        fpth = os.path.join(exe_pth, jpth)
+        with open(fpth, 'r') as f:
+            json_dict = json.load(f)
+
+    return json_dict
+
+
+def evaluate_versions(target, src):
+    # get code.json dictionary
+    json_dict = get_code_json()
+
+    # get current modflow program dictionary
+    prog_dict = pymake.usgs_program_data().get_program_dict()
+
+    if json_dict is not None:
+        # extract the json keys
+        json_keys = list(json_dict.keys())
+        # evaluate if the target is in the json keys
+        if target in json_keys:
+            prog_version = prog_dict[target].version.split('.')
+            json_version = json_dict[target].version.split('.')
+
+            # evaluate major, minor, etc. version numbers
+            for sp, sj in zip(prog_version, json_version):
+                if int(sp) > int(sj):
+                    src = None
+                    break
+
+    return src
+
+
 def copy_target(src):
     srcpth = os.path.join(exe_pth, src)
     dstpth = os.path.join(bindir, src)
+
+    # write message showing copy src and dst
     msg = 'copying {} -> {}'.format(srcpth, dstpth)
     print(msg)
-    # add shutil copy
+
+    # copy the target
+    shutil.copy(srcpth, dstpth)
+
+    return
+
+
+def cleanup():
+    if os.path.isdir(exe_pth):
+        shutil.rmtree(exe_pth)
+
     return
 
 
@@ -160,17 +212,24 @@ def main():
         for etarget in etargets:
             if target in etarget:
                 src = etarget
+                break
+
+        # evaluate if the usgs source files and newer versions than
+        # downloaded executables...if so build the target from source code
+        if src is not None:
+            src = evaluate_versions(target, src)
+
         # copy the downloaded executable
         if src is not None:
             copy_target(src)
-        # build the target
+        # build the target from source code
         else:
-            msg = 'WILL BE building {}'.format(target)
+            msg = 'building {}'.format(target)
             print(msg)
-            # build_target(target)
+            build_target(target)
 
-        # for now build all targets (until github exes are updated)
-        # build_target(target)
+    # clean up the download directory
+    cleanup()
 
 
 def test_download_and_unzip():
@@ -191,19 +250,31 @@ def test_build_all_apps():
         for etarget in etargets:
             if target in etarget:
                 src = etarget
+                break
+
+        # evaluate if the usgs source files and newer versions than
+        # downloaded executables...if so build the target from source code
+        if src is not None:
+            src = evaluate_versions(target, src)
+
         # copy the downloaded executable
         if src is not None:
             pass
-            # yield copy_target, src
+            yield copy_target, src
         # build the target
         else:
-            msg = 'WILL BE building {}'.format(target)
+            msg = 'building {}'.format(target)
             print(msg)
-            # yield build_target, target
+            yield build_target, target
 
-        # for now build all targets (until github exes are updated)
-        yield build_target, target
+        # # for now build all targets (until github exes are updated)
+        # yield build_target, target
+
     return
+
+
+def test_cleanup():
+    cleanup()
 
 
 if __name__ == '__main__':
