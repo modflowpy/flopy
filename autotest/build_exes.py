@@ -221,12 +221,16 @@ def main():
 
         # copy the downloaded executable
         if src is not None:
-            copy_target(src)
+            pass
+            # copy_target(src)
         # build the target from source code
         else:
             msg = 'building {}'.format(target)
             print(msg)
-            build_target(target)
+            # build_target(target)
+
+        # build all targets (until github gfortran-8 exes are available)
+        build_target(target)
 
     # clean up the download directory
     cleanup()
@@ -260,15 +264,15 @@ def test_build_all_apps():
         # copy the downloaded executable
         if src is not None:
             pass
-            yield copy_target, src
+            # yield copy_target, src
         # build the target
         else:
             msg = 'building {}'.format(target)
             print(msg)
-            yield build_target, target
+            # yield build_target, target
 
-        # # for now build all targets (until github exes are updated)
-        # yield build_target, target
+        # build all targets (until github gfortran-8 exes are available)
+        yield build_target, target
 
     return
 
