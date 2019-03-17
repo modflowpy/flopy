@@ -40,7 +40,7 @@ print('modflow executables will be downloaded to:\n    "{}"'.format(bindir))
 
 
 def get_targets():
-    targets = pymake.usgs_program_data().get_keys(current=True)
+    targets = pymake.usgs_program_data.get_keys(current=True)
     targets.sort()
     targets.remove('vs2dt')
     return targets
@@ -154,7 +154,7 @@ def evaluate_versions(target, src):
     json_dict = get_code_json()
 
     # get current modflow program dictionary
-    prog_dict = pymake.usgs_program_data().get_program_dict()
+    prog_dict = pymake.usgs_program_data.get_program_dict()
 
     if json_dict is not None:
         # extract the json keys
