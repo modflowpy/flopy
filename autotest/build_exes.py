@@ -140,15 +140,11 @@ def is_executable(f):
 
 
 def get_code_json():
-    files = os.listdir(exe_pth)
     jpth = 'code.json'
-    json_avail = jpth in files
-
     json_dict = None
-    if json_avail:
+    if jpth in os.listdir(exe_pth):
         fpth = os.path.join(exe_pth, jpth)
-        with open(fpth, 'r') as f:
-            json_dict = json.load(f)
+        json_dict = pymake.usgs_program_data.load_json(fpth)
 
     return json_dict
 
@@ -165,8 +161,19 @@ def evaluate_versions(target, src):
         json_keys = list(json_dict.keys())
         # evaluate if the target is in the json keys
         if target in json_keys:
-            prog_version = prog_dict[target].version.split('.')
-            json_version = json_dict[target].version.split('.')
+            source_version = prog_dict[target].version
+            git_version = json_dict[target].version
+
+            # write a message
+            msg = 'Source code version of {} '.format(target) + \
+                  'is "{}"'.format(source_version)
+            print(4 * ' ' + msg)
+            msg = 'Download code version of {} '.format(target) + \
+                  'is "{}"\n'.format(git_version)
+            print(4 * ' ' + msg)
+
+            prog_version = source_version.split('.')
+            json_version = git_version.split('.')
 
             # evaluate major, minor, etc. version numbers
             for sp, sj in zip(prog_version, json_version):
@@ -261,15 +268,14 @@ def test_build_all_apps():
         if src is not None:
             src = evaluate_versions(target, src)
 
-        # copy the downloaded executable
-        if src is not None:
-            pass
-            # yield copy_target, src
-        # build the target
-        else:
-            msg = 'building {}'.format(target)
-            print(msg)
-            # yield build_target, target
+        # # copy the downloaded executable
+        # if src is not None:
+        #     yield copy_target, src
+        # # build the target
+        # else:
+        #     msg = 'building {}'.format(target)
+        #     print(msg)
+        #     yield build_target, target
 
         # build all targets (until github gfortran-8 exes are available)
         yield build_target, target
