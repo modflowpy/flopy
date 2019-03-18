@@ -197,6 +197,19 @@ def copy_target(src):
 
     return
 
+def list_json():
+    # build list_json command
+    fpth = os.path.join(bindir, 'code.json')
+    ljson = 'pymake.usgs_program_data.list_json(fpth="{}")'.format(fpth)
+
+    # build full command
+    cmd = "python -c 'from __future__ import print_function; " + \
+          "import pymake; {}'".format(ljson)
+
+    # run command
+    os.system(cmd)
+    return
+
 
 def cleanup():
     if os.path.isdir(exe_pth):
@@ -239,6 +252,9 @@ def main():
         # build all targets (until github gfortran-8 exes are available)
         build_target(target)
 
+    # list the created json file
+    list_json()
+
     # clean up the download directory
     cleanup()
 
@@ -280,6 +296,11 @@ def test_build_all_apps():
         # build all targets (until github gfortran-8 exes are available)
         yield build_target, target
 
+    return
+
+
+def test_list_json():
+    list_json()
     return
 
 
