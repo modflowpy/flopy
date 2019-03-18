@@ -1,6 +1,7 @@
 FloPy Changes
 -----------------------------------------------
 ### Version 3.2.11
+* Added support for the drain return package
 * Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
 * Added a new flopy3_MT3DMS_examples notebook, which uses Flopy to reproduce the example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
 * Pylint is now used on Travis for the Python 3.5 distribution to check for coding errors.
