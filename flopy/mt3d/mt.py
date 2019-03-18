@@ -323,7 +323,7 @@ class Mt3dms(BaseModel):
             'phc': Mt3dPhc,
             'lkt': Mt3dLkt,
             'sft': Mt3dSft,
-            'uzt': Mt3dUzt
+            'uzt2': Mt3dUzt
         }
         return
 

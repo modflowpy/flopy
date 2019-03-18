@@ -9,6 +9,7 @@ FloPy Changes
 
 * Bug fixes:
     * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
+    * Now account for UZT -> UZT2 changes with the release of MT3D-USGS 1.0.1
 
 ### Version 3.2.10
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
