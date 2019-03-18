@@ -32,19 +32,6 @@ class Mt3dUzt(Package):
                that user-supplied values for FINF are specified recharge and
                therefore transport through the unsaturated zone is not 
                simulated.
-    wc : array of floats
-        Starting water content.  For cells above the water tables, this value 
-        can range between residual and saturated water contents.  In cells 
-        below the water table, this value will be eqal to saturated water 
-        content (i.e., effective porosity).  For cells containing the water 
-        table, a volume average approach needs to be used to calculate an 
-        equivalent starting water content.
-    sdh : array of floats
-        Starting saturated thickness for each cell in the simulation.  For 
-        cells residing above the starting water table, SDH=0. In completely 
-        saturated cells, SDH is equal to total thickness.  For cells 
-        containing the water table, SDH equals the water table elevation minus 
-        the cell bottom elevation.
     incuzinf : int
         (This value is repeated for each stress period as explained next) A 
         flag indicating whether an array containing the concentration of 
@@ -146,7 +133,7 @@ class Mt3dUzt(Package):
     """
 
     def __init__(self, model, icbcuz=None, iet=0, iuzfbnd=None,
-                 wc=0., sdh=0., cuzinf=None, cuzet=None, cgwet=None,
+                 cuzinf=None, cuzet=None, cgwet=None,
                  extension='uzt', unitnumber=None, filenames=None, **kwargs):
 
         # set default unit number of one is not specified
@@ -209,12 +196,6 @@ class Mt3dUzt(Package):
             self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int32,
                                   arr, name='iuzfbnd',
                                   locat=self.unit_number[0])
-
-        self.wc = Util3d(model, (nlay, nrow, ncol), np.float32, wc, name='wc',
-                         locat=self.unit_number[0])
-
-        self.sdh = Util3d(model, (nlay, nrow, ncol), np.float32, sdh,
-                          name='sdh', locat=self.unit_number[0])
 
         # Note: list is used for multi-species, NOT for stress periods!
         if cuzinf is not None:
@@ -300,13 +281,7 @@ class Mt3dUzt(Package):
         # Item 3
         f_uzt.write(self.iuzfbnd.get_file_entry())
 
-        # Item 4
-        f_uzt.write(self.wc.get_file_entry())
-
-        # Item 5
-        f_uzt.write(self.sdh.get_file_entry())
-
-        # Items 6-11
+        # Items 4-9
         # (Loop through each stress period and write uzt information)
         nper = self.parent.nper
         for kper in range(nper):
@@ -449,18 +424,6 @@ class Mt3dUzt(Package):
         iuzfbnd = Util2d.load(f, model, (nrow, ncol), np.int32, 'iuzfbnd',
                               ext_unit_dict)
 
-        # Item 4 [WC(NROW,NCOL) (one array for each layer)]
-        if model.verbose:
-            print('   loading WC...')
-        wc = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'wc',
-                         ext_unit_dict)
-
-        # Item 5 [SDH(NROW,NCOL) (one array for each layer)]
-        if model.verbose:
-            print('   loading SDH...')
-        sdh = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'sdh',
-                          ext_unit_dict)
-
         # kwargs needed to construct cuzinf2, cuzinf3, etc. for multispecies
         kwargs = {}
 
@@ -512,12 +475,12 @@ class Mt3dUzt(Package):
             if model.verbose:
                 print('   loading UZT data for kper {0:5d}'.format(iper + 1))
 
-            # Item 6 (INCUZINF)
+            # Item 4 (INCUZINF)
             line = f.readline()
             m_arr = line.strip().split()
             incuzinf = int(m_arr[0])
 
-            # Item 7 (CUZINF)
+            # Item 5 (CUZINF)
             if incuzinf >= 0:
                 if model.verbose:
                     print('   Reading CUZINF array for kper ' \
@@ -554,12 +517,12 @@ class Mt3dUzt(Package):
                                                   '{0:5d}'.format(iper + 1))
 
             if iet != 0:
-                # Item 8 (INCUZET)
+                # Item 6 (INCUZET)
                 line = f.readline()
                 m_arr = line.strip().split()
                 incuzet = int(m_arr[0])
 
-                # Item 9 (CUZET)
+                # Item 7 (CUZET)
                 if incuzet >= 0:
                     if model.verbose:
                         print('   Reading CUZET array for kper ' \
@@ -596,12 +559,12 @@ class Mt3dUzt(Package):
                                                       '{0:5d}'.format(
                             iper + 1))
 
-                # Item 10 (INCGWET)
+                # Item 8 (INCGWET)
                 line = f.readline()
                 m_arr = line.strip().split()
                 incgwet = int(m_arr[0])
 
-                # Item 11 (CGWET)
+                # Item 9 (CGWET)
                 if model.verbose:
                     if incuzet >= 0:
                         print('   Reading CGWET array for kper ' \
@@ -653,7 +616,7 @@ class Mt3dUzt(Package):
 
         # Construct and return uzt package
         uzt = Mt3dUzt(model, icbcuz=icbcuz, iet=iet,
-                      iuzfbnd=iuzfbnd, wc=wc, sdh=sdh, cuzinf=cuzinf,
+                      iuzfbnd=iuzfbnd, cuzinf=cuzinf,
                       cuzet=cuzet, cgwet=cgwet, unitnumber=unitnumber,
                       filenames=filenames, **kwargs)
         return uzt
@@ -661,7 +624,7 @@ class Mt3dUzt(Package):
 
     @staticmethod
     def ftype():
-        return 'UZT'
+        return 'UZT2'
 
     @staticmethod
     def defaultunit():
