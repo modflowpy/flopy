@@ -6,6 +6,8 @@ FloPy Changes
 * Added a new flopy3_MT3DMS_examples notebook, which uses Flopy to reproduce the example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
 * Pylint is now used on Travis for the Python 3.5 distribution to check for coding errors.
 * Added a new htop argument to the vtk writer, which allows cell tops to be defined by the simulated head.
+* Generalized exporting and plotting to also work with MODFLOW 6. Added a new grid class and deprecated SpatialReference class. Simplified plotting interface.
+* Changed interface for creating and accessing MODFLOW 6 observation, time series, and time array series packages. These packages can now be created and accessed directly from the package that references them.
 
 * Bug fixes:
     * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
