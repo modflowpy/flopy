@@ -62,6 +62,10 @@ class Grid(object):
         spatial reference locates the grid in a coordinate system
     epsg : epsg SpatialReference
         spatial reference locates the grid in a coordinate system
+    lenuni : int
+        modflow lenuni parameter
+    units : str
+        string representation of the lenuni parameter
     origin_x : float
         x coordinate of the origin point in the spatial reference coordinate
         system
@@ -126,12 +130,21 @@ class Grid(object):
     def __init__(self, grid_type=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0, yoff=0.0,
                  angrot=0.0):
+        lenunits = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+        LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
         self.use_ref_coords = True
         self._grid_type = grid_type
         self._top = top
         self._botm = botm
         self._idomain = idomain
+
+        if lenuni is None:
+            lenuni = 0
+        elif isinstance(lenuni, str):
+            lenuni = LENUNI[lenuni.lower()[0]]
         self._lenuni = lenuni
+
+        self._units = lenunits[self._lenuni]
         self._epsg = epsg
         self._proj4 = proj4
         self._prj = prj
@@ -149,7 +162,7 @@ class Grid(object):
         s = "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; ". \
             format(self.xoffset, self.yoffset, self.angrot)
         s += "proj4_str:{0}; ".format(self.proj4)
-        s += "units:{0}; ".format("")
+        s += "units:{0}; ".format(self.units)
         s += "lenuni:{0}; ".format(self.lenuni)
         s += "length_multiplier:{}".format(1)
         return s
@@ -210,6 +223,10 @@ class Grid(object):
     def top_botm(self):
         new_top = np.expand_dims(self._top, 0)
         return np.concatenate((new_top, self._botm), axis=0)
+
+    @property
+    def units(self):
+        return self._units
 
     @property
     def lenuni(self):
