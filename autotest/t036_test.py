@@ -2,6 +2,8 @@
 Test loading and preserving existing unit numbers
 """
 import os
+import shutil
+
 import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -35,15 +37,29 @@ def test_uzf_unit_numbers():
         apth = cpth
         compth = cpth
 
-    m = flopy.modflow.Modflow.load(mfnam, verbose=True, model_ws=lpth, forgive=False,
-                                   exe_name=exe_name)
+    m = flopy.modflow.Modflow.load(mfnam, verbose=True, model_ws=lpth,
+                                   forgive=False, exe_name=exe_name)
     assert m.load_fail is False, 'failed to load all packages'
+
+    # reset the oc file
+    m.remove_package('OC')
+    output = ['save head', 'print budget']
+    spd = {}
+    for iper in range(1, m.dis.nper):
+        for istp in [0, 4, 9, 14]:
+            spd[(iper, istp)] = output
+    spd[(0, 0)] = output
+    spd[(1, 1)] = output
+    spd[(1, 2)] = output
+    spd[(1, 3)] = output
+    oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
+    oc.write_file()
 
     if run:
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
 
@@ -62,10 +78,11 @@ def test_uzf_unit_numbers():
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
-        assert success, 'base model run did not terminate successfully'
+            success = False
+        assert success, 'new model run did not terminate successfully'
         fn1 = os.path.join(apth, mfnam)
 
+    # compare budget terms
     if run:
         fsum = os.path.join(compth,
                             '{}.budget.out'.format(os.path.splitext(mfnam)[0]))
@@ -74,10 +91,14 @@ def test_uzf_unit_numbers():
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
+            success = False
             print('could not perform ls'
                   'budget comparison')
 
         assert success, 'budget comparison failure'
+
+    # clean up
+    shutil.rmtree(lpth)
 
     return
 
@@ -117,7 +138,7 @@ def test_unitnums_load_and_write():
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
 
@@ -128,7 +149,7 @@ def test_unitnums_load_and_write():
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn1 = os.path.join(apth, mfnam)
 
@@ -140,10 +161,14 @@ def test_unitnums_load_and_write():
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
+            success = False
             print('could not perform ls'
                   'budget comparison')
 
         assert success, 'budget comparison failure'
+
+    # clean up
+    shutil.rmtree(lpth)
 
     return
 

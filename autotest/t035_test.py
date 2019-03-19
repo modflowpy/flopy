@@ -80,24 +80,26 @@ def test_simplelgr_load_and_write():
         assert success, 'could not run new modflow-lgr model'
 
         # compare parent results
+        print('compare parent results')
         pth0 = os.path.join(opth, 'ex3_parent.nam')
         pth1 = os.path.join(npth, 'ex3_parent.nam')
-        try:
-            msg = 'parent heads do not match'
-            success = pymake.compare_heads(pth0, pth1)
-            assert success, msg
-        except:
-            pass
+
+        msg = 'parent heads do not match'
+        success = pymake.compare_heads(pth0, pth1)
+        assert success, msg
 
         # compare child results
+        print('compare child results')
         pth0 = os.path.join(opth, 'ex3_child.nam')
         pth1 = os.path.join(npth, 'ex3_child.nam')
-        try:
-            msg = 'child heads do not match'
-            success = pymake.compare_heads(pth0, pth1)
-            assert success, msg
-        except:
-            pass
+
+        msg = 'child heads do not match'
+        success = pymake.compare_heads(pth0, pth1)
+        assert success, msg
+
+    # clean up
+    shutil.rmtree(cpth)
+
 
 
 if __name__ == '__main__':
