@@ -545,6 +545,17 @@ class Mnw(object):
             nnodes *= -1
         return nnodes
 
+    @staticmethod
+    def sort_node_data(node_data):
+        # sort by layer (layer input option)
+        if np.any(np.diff(node_data['k']) < 0):
+            node_data.sort(order=['k'])
+
+        # reverse sort by ztop if it's specified and not sorted correctly
+        if np.any(np.diff(node_data['ztop']) > 0):
+            node_data = np.sort(node_data, order=['ztop'])[::-1]
+        return node_data
+
     def check(self, f=None, verbose=True, level=1):
         """
         Check mnw object for common errors.
@@ -607,6 +618,9 @@ class Mnw(object):
         None
 
         """
+        # enforce sorting of node data
+        self.node_data = Mnw.sort_node_data(self.node_data)
+
         # update object attributes with values from node_data
         self._set_attributes_from_node_data()
 
@@ -882,7 +896,9 @@ class ModflowMnw2(Package):
                 self.node_data[n] = node_data[
                     n]  # recarray of Mnw properties by node
             self.nodtot = len(self.node_data)
-            self.node_data.sort(order=['wellid', 'k'])
+            self._sort_node_data()
+            #self.node_data.sort(order=['wellid', 'k'])
+
             # Python 3.5.0 produces a segmentation fault when trying to sort BR MNW wells
             # self.node_data.sort(order='wellid', axis=0)
         self.mnw = mnw  # dict or list of Mnw objects
@@ -929,6 +945,18 @@ class ModflowMnw2(Package):
                 self.stress_period_data[per][d] = [
                     self.mnw[wellid].__dict__[d][0]
                     for wellid in self.stress_period_data[per].wellid]
+
+    def _sort_node_data(self):
+
+        node_data = self.node_data
+        node_data_list = []
+        wells = sorted(np.unique(node_data['wellid']).tolist())
+        for wellid in wells:
+            nd = node_data[node_data['wellid'] == wellid]
+            nd = Mnw.sort_node_data(nd)
+            node_data_list.append(nd)
+        node_data = np.concatenate(node_data_list, axis=0)
+        self.node_data = node_data.view(np.recarray)
 
     @staticmethod
     def get_empty_node_data(maxnodes=0, aux_names=None, structured=True,
@@ -1293,7 +1321,7 @@ class ModflowMnw2(Package):
         node_data = self.node_data
         stress_period_data = self.stress_period_data
         self.mnw = {}
-        mnws = np.unique(node_data.wellid)
+        mnws = np.unique(node_data['wellid'])
         for wellid in mnws:
             nd = node_data[node_data.wellid == wellid]
             nnodes = Mnw.get_nnodes(nd)
