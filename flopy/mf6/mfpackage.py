@@ -1836,7 +1836,8 @@ class MFChildPackages(object):
                 key != '_package_class' and key != '_pkg_type':
             if len(self._packages) == 0:
                 fnm = self.__default_file_path_base(self._cpparent.filename)
-                self._init_package(self._package_class(self._model), fnm)
+                self._init_package(self._package_class(self._model,
+                                                       filename=fnm), fnm)
             package = self._packages[0]
             setattr(package, key, value)
             return
