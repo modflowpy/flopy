@@ -64,8 +64,6 @@ class Grid(object):
         spatial reference locates the grid in a coordinate system
     lenuni : int
         modflow lenuni parameter
-    units : str
-        string representation of the lenuni parameter
     origin_x : float
         x coordinate of the origin point in the spatial reference coordinate
         system
