@@ -1,7 +1,6 @@
 # Build the executables that are used in the flopy autotests
 import os
 import sys
-import json
 import shutil
 
 try:
@@ -10,7 +9,9 @@ except:
     print('pymake is not installed...will not build executables')
     pymake = None
 
-download_version = '1.0'
+os.environ["TRAVIS"] = "1"
+
+download_version = '2.0'
 
 # path where downloaded executables will be extracted
 exe_pth = 'exe_download'
@@ -36,8 +37,18 @@ if dotlocal:
     bindir = os.path.abspath(bindir)
 
 # write where the executables will be downloaded
-print('modflow executables will be downloaded to:\n    "{}"'.format(bindir))
+print('modflow executables will be downloaded to:\n\n    "{}"'.format(bindir))
 
+build_from_source = False
+if not build_from_source:
+    for idx, arg in enumerate(sys.argv):
+        if '--build' in arg.lower():
+            build_from_source = True
+            break
+
+# write if the executables will be built from source
+msg = 'build all executables from source code: {}\n'.format(build_from_source)
+print(msg)
 
 def get_targets():
     targets = pymake.usgs_program_data.get_keys(current=True)
@@ -127,12 +138,29 @@ def get_modflow_exes(pth='.', version='', platform=None):
     return
 
 
+def get_exes_list():
+    temp = os.listdir(exe_pth)
+    avail_targets = pymake.usgs_program_data.get_keys(current=True)
+    targets = []
+    for target in avail_targets:
+        for tt in temp:
+            if target in tt:
+                targets.append(tt)
+
+    # write summary of available download executables
+    msg = 'executables that are available from the download:\n'
+    for idx, target in enumerate(targets):
+        msg += '    {:>2d}: {}\n'.format(idx + 1, target)
+    print('{}\n'.format(msg))
+
+    return targets
+
+
 def is_executable(f):
     # write message
     msg = 'testing if {} is executable.'.format(f)
     print(msg)
 
-    # test if file is executable
     fname = os.path.join(exe_pth, f)
     errmsg = '{} not executable'.format(fname)
     assert which(fname) is not None, errmsg
@@ -184,7 +212,7 @@ def evaluate_versions(target, src):
     return src
 
 
-def copy_target(src):
+def copy_target(target, src):
     srcpth = os.path.join(exe_pth, src)
     dstpth = os.path.join(bindir, src)
 
@@ -195,7 +223,33 @@ def copy_target(src):
     # copy the target
     shutil.copy(srcpth, dstpth)
 
+    # determine if json file in directory with downloaded files
+    json_file = None
+    for f in os.listdir(exe_pth):
+        if f.lower().endswith('.json'):
+            json_file = f
+            break
+
+    # update code.json with data from from the json file in exe_pth
+    if json_file is not None:
+        fpth = os.path.join(bindir, json_file)
+
+        # set default program dictionary
+        usgs_dict = pymake.usgs_program_data.get_program_dict()
+        target_dict = {target: usgs_dict[target]}
+
+        # process the json
+        download_dict = pymake.usgs_program_data.load_json(fpth)
+        if download_dict is not None:
+            if target in list(download_dict.keys()):
+                target_dict = {target: download_dict[target]}
+
+        # update the json
+        pymake.usgs_program_data.update_json(fpth=fpth,
+                                             temp_dict=target_dict)
+
     return
+
 
 def list_json():
     # build list_json command
@@ -221,7 +275,7 @@ def cleanup():
 def main():
     get_modflow_exes(exe_pth, download_version)
 
-    etargets = os.listdir(exe_pth)
+    etargets = get_exes_list()
     for f in etargets:
         is_executable(f)
 
@@ -239,18 +293,21 @@ def main():
         if src is not None:
             src = evaluate_versions(target, src)
 
+        # reset source if code should be rebuilt from source
+        if build_from_source:
+            src = None
+
         # copy the downloaded executable
         if src is not None:
-            pass
-            # copy_target(src)
+            copy_target(target, src)
         # build the target from source code
         else:
             msg = 'building {}'.format(target)
             print(msg)
-            # build_target(target)
+            build_target(target)
 
-        # build all targets (until github gfortran-8 exes are available)
-        build_target(target)
+        # # build all targets (until github gfortran-8 exes are available)
+        # build_target(target)
 
     # list the created json file
     list_json()
@@ -261,14 +318,16 @@ def main():
 
 def test_download_and_unzip():
     get_modflow_exes(exe_pth, download_version)
-    for f in os.listdir(exe_pth):
+
+    etargets = get_exes_list()
+    for f in etargets:
         yield is_executable, f
     return
 
 
 def test_build_all_apps():
     # get list of downloaded targets
-    etargets = os.listdir(exe_pth)
+    etargets = get_exes_list()
 
     # build each target
     targets = get_targets()
@@ -284,17 +343,21 @@ def test_build_all_apps():
         if src is not None:
             src = evaluate_versions(target, src)
 
-        # # copy the downloaded executable
-        # if src is not None:
-        #     yield copy_target, src
-        # # build the target
-        # else:
-        #     msg = 'building {}'.format(target)
-        #     print(msg)
-        #     yield build_target, target
+        # reset source if code should be rebuilt from source
+        if build_from_source:
+            src = None
 
-        # build all targets (until github gfortran-8 exes are available)
-        yield build_target, target
+        # copy the downloaded executable
+        if src is not None:
+            yield copy_target, target, src
+        # build the target
+        else:
+            msg = 'building {}'.format(target)
+            print(msg)
+            yield build_target, target
+
+        # # build all targets (until github gfortran-8 exes are available)
+        # yield build_target, target
 
     return
 
