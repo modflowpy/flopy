@@ -271,6 +271,11 @@ class ModflowUzf1(Package):
         name with the appropriate output file extensions. To define the names
         for all package files (input and output) the length of the list of
         strings should be 3 + len(uzgag). Default is None.
+    surfk : float
+        An optional array of positive real values used to define the hydraulic
+        conductivity (LT-1). SURFK is used for calculating the rejected
+        infiltration and/or surface leakage. IF SURFK is set greater than
+        VKS then it is set equal to VKS. Only used if SEEPSURFK is True.
 
     Attributes
     ----------
@@ -340,7 +345,7 @@ class ModflowUzf1(Package):
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
                  etsquare=None, netflux=None, nuzgag=None,
                  uzgag=None, extension='uzf', unitnumber=None,
-                 filenames=None, options=None):
+                 filenames=None, options=None, surfk=0.1):
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -497,6 +502,10 @@ class ModflowUzf1(Package):
         # [VKS (NCOL, NROW)] -- U2DREL
         if abs(iuzfopt) in [0, 1]:
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
+
+        if seepsurfk:
+            self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk, name='surfk')
+
         if iuzfopt > 0:
             # Data Set 5
             # EPS (NCOL, NROW) -- U2DREL
@@ -652,6 +661,11 @@ class ModflowUzf1(Package):
         # [VKS (NCOL, NROW)] -- U2DREL
         if abs(self.iuzfopt) in [0, 1]:
             f_uzf.write(self.vks.get_file_entry())
+
+        # Dataset 4b modflow 2005 v. 1.12 and modflow-nwt v. 1.1
+        if self.seepsurfk:
+            f_uzf.write(self.surfk.get_file_entry())
+
         if self.iuzfopt > 0:
             # Data Set 5
             # EPS (NCOL, NROW) -- U2DREL
@@ -810,6 +824,10 @@ class ModflowUzf1(Package):
         # dataset 4
         if iuzfopt in [0, 1]:
             load_util2d('vks', np.float32)
+
+        # dataset 4b
+        if seepsurfk:
+            load_util2d('surfk', np.float32)
 
         if iuzfopt > 0:
             # dataset 5
