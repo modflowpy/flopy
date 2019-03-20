@@ -281,9 +281,9 @@ def main():
 
     # build each target
     targets = get_targets()
-    for target in targets:
+    for etarget in etargets:
         src = None
-        for etarget in etargets:
+        for target in targets:
             if target in etarget:
                 src = etarget
                 break
@@ -317,7 +317,7 @@ def main():
 
 
 def test_download_and_unzip():
-    get_modflow_exes(exe_pth, download_version)
+    yield get_modflow_exes, exe_pth, download_version
 
     etargets = get_exes_list()
     for f in etargets:
@@ -331,9 +331,9 @@ def test_build_all_apps():
 
     # build each target
     targets = get_targets()
-    for target in targets:
+    for etarget in etargets:
         src = None
-        for etarget in etargets:
+        for target in targets:
             if target in etarget:
                 src = etarget
                 break
