@@ -1348,12 +1348,10 @@ class MFDataStructure(object):
 
     def _fpmerge_data_item(self, item, dfn_list):
         mfstruct = MFStructure()
-        key = (self.package_type.lower(), self.block_name.lower(),
-               item.name.lower())
         # check for flopy-specific dfn data
-        if key in mfstruct.flopy_dict:
+        if item.name.lower() in mfstruct.flopy_dict:
             # read flopy-specific dfn data
-            for name, value in mfstruct.flopy_dict[key].items():
+            for name, value in mfstruct.flopy_dict[item.name.lower()].items():
                 line = '{} {}'.format(name, value)
                 item.set_value(line, None)
                 if dfn_list is not None:
@@ -2168,8 +2166,6 @@ class MFStructure(object):
         return True
 
     def __load_flopy(self):
-        current_package = None
-        current_block = None
         current_variable = None
         var_info = {}
         dfn_path, tail = os.path.split(os.path.realpath(__file__))
@@ -2178,23 +2174,16 @@ class MFStructure(object):
         for line in dfn_fp:
             if self.__valid_line(line):
                 lst_line = line.strip().split()
-                if lst_line[0].lower() == 'package':
-                    if current_package is not None:
-                        # store current variable
-                        self.flopy_dict[(current_package, current_block,
-                                         current_variable)] = var_info
-                        # reset var_info dict
-                        var_info = {}
-                    current_package = lst_line[1].lower()
-                elif lst_line[0].lower() == 'block':
-                    current_block = lst_line[1].lower()
-                elif lst_line[0].lower() == 'name':
+                if lst_line[0].lower() == 'name':
+                    # store current variable
+                    self.flopy_dict[current_variable] = var_info
+                    # reset var_info dict
+                    var_info = {}
                     current_variable = lst_line[1].lower()
                 else:
                     var_info[lst_line[0].lower()] = lst_line[1].lower()
         # store last variable
-        self.flopy_dict[(current_package, current_block,
-                         current_variable)] = var_info
+        self.flopy_dict[current_variable] = var_info
 
     @staticmethod
     def __valid_line(line):
