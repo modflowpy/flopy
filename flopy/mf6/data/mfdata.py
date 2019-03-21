@@ -1063,6 +1063,16 @@ class DataStorage(object):
                                                                   tuple):
                             # convert to list of tuples
                             data = list(data)
+                        if isinstance(data, list) and \
+                                DatumUtil.is_basic_type(data[0]):
+                            # this is a simple list, turn it into a tuple
+                            # inside a list so that it is interpreted
+                            # correctly by numpy.recarray
+                            tupled_data = ()
+                            for data_item in data:
+                                tupled_data += (data_item,)
+                            data = [tupled_data]
+
                         if not isinstance(data, list):
                             # put data in a list format for recarray
                             data = [(data,)]

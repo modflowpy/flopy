@@ -184,9 +184,10 @@ def np001():
 
     drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=1,
-                                timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                #timeseries=[(0.0, 60.0), (100000.0, 60.0)],
                                 stress_period_data=[((0, 0, 0), 80, 'drn_1')])
     drn_package.ts.time_series_namerecord = 'drn_1'
+    drn_package.ts.timeseries = [(0.0, 60.0), (100000.0, 60.0)]
     drn_package.ts.interpolation_methodrecord = 'linearend'
 
     riv_package = ModflowGwfriv(model, print_input=True, print_flows=True,
