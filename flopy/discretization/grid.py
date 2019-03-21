@@ -438,7 +438,7 @@ class Grid(object):
                                 data = ' '.join(info[1:])
                                 if info[0] == 'xll':
                                     self._xoff = float(data)
-                                elif info[0] == 'yul':
+                                elif info[0] == 'yll':
                                     self._yoff = float(data)
                                 elif info[0] == 'xul':
                                     self._xoff = self._xul_to_xll(
@@ -458,7 +458,7 @@ class Grid(object):
                                     self._epsg = int(data)
                                 elif info[0] == 'proj4':
                                     self._proj4 = data
-                                elif info[0] == 'start_datetime':
+                                elif info[0] == 'start_date':
                                     start_datetime = data
             return True
         else:
