@@ -1835,8 +1835,12 @@ class MFChildPackages(object):
                 key != '_inattr' and key != '_filerecord' and \
                 key != '_package_class' and key != '_pkg_type':
             if len(self._packages) == 0:
-                fnm = self.__default_file_path_base(self._cpparent.filename)
-                self._init_package(self._package_class(self._model), fnm)
+                raise Exception('No {} package is currently attached to package'
+                                ' {}. Use the initialize method to create a(n) '
+                                '{} package before attempting to access its '
+                                'properties.'.format(self._pkg_type,
+                                                     self._cpparent.filename,
+                                                     self._pkg_type))
             package = self._packages[0]
             setattr(package, key, value)
             return

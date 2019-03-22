@@ -19,7 +19,7 @@ header-includes:
     - \fancyhead[CE, CO]{FloPy Release Notes}
     - \fancyfoot[LE, RO]{FloPy version 3.2.10 &mdash; refactor-buildexes}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{03/15/2019}
+    - \fancyfoot[RE, LO]{03/20/2019}
 geometry: margin=0.75in
 ---
 
@@ -52,7 +52,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.10 &mdash; develop: U.S. Geological Survey Software Release, 15 March 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.10 &mdash; develop: U.S. Geological Survey Software Release, 20 March 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer

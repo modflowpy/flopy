@@ -1544,7 +1544,7 @@ class PlotUtilities(object):
             nlay, nrow, ncol = head.shape
             ncpl = nrow * ncol
             head.shape = (nlay, ncpl)
-            top.shape = (nlay, ncpl)
+            top.shape = (ncpl,)
             botm.shape = (nlay, ncpl)
             if laytyp.ndim == 3:
                 laytyp.shape = (nlay, ncpl)

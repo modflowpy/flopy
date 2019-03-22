@@ -59,6 +59,12 @@ class DatumUtil(object):
         except ValueError:
             return False
 
+    @ staticmethod
+    def is_basic_type(obj):
+        if isinstance(obj, str) or isinstance(obj, int) or \
+                isinstance(obj, float):
+            return True
+        return False
 
 class PyListUtil(object):
     """

@@ -44,7 +44,7 @@ def load_swi(mfnam, pth):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
 
@@ -60,7 +60,7 @@ def load_swi(mfnam, pth):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn1 = os.path.join(apth, mfnam)
 
@@ -72,6 +72,7 @@ def load_swi(mfnam, pth):
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
+            success = False
             print('could not perform budget comparison')
 
         assert success, 'budget comparison failure'

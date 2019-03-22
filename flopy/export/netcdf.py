@@ -190,7 +190,7 @@ class NetCdf(object):
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
         self.proj4_str = proj4_str
-        self.grid_units = self.model_grid.lenuni
+        self.grid_units = self.model_grid.units
         self.z_positive = z_positive
         if self.grid_units is None:
             self.grid_units = "unspecified"
@@ -664,7 +664,7 @@ class NetCdf(object):
                                           str(nc_crs)))
 
         # get transformed bounds and record to check against ScienceBase later
-        xmin, ymin, xmax, ymax = self.model_grid.extent
+        xmin, xmax, ymin, ymax = self.model_grid.extent
         bbox = np.array([[xmin, ymin],
                          [xmin, ymax],
                          [xmax, ymax],
@@ -764,7 +764,7 @@ class NetCdf(object):
         time[:] = np.asarray(time_values)
 
         # Elevation
-        attribs = {"units": self.model_grid.lenuni,
+        attribs = {"units": self.model_grid.units,
                    "standard_name": "elevation",
                    "long_name": NC_LONG_NAMES.get("elevation", "elevation"),
                    "axis": "Z",
@@ -796,7 +796,7 @@ class NetCdf(object):
 
         # x
         self.log("creating x var")
-        attribs = {"units": self.model_grid.lenuni,
+        attribs = {"units": self.model_grid.units,
                    "standard_name": "projection_x_coordinate",
                    "long_name": NC_LONG_NAMES.get("x",
                                                   "x coordinate of projection"),
@@ -807,7 +807,7 @@ class NetCdf(object):
 
         # y
         self.log("creating y var")
-        attribs = {"units": self.model_grid.lenuni,
+        attribs = {"units": self.model_grid.units,
                    "standard_name": "projection_y_coordinate",
                    "long_name": NC_LONG_NAMES.get("y",
                                                   "y coordinate of projection"),
@@ -836,7 +836,7 @@ class NetCdf(object):
 
         if self.model_grid.grid_type == 'structured':
             # delc
-            attribs = {"units": self.model_grid.lenuni.strip('s'),
+            attribs = {"units": self.model_grid.units.strip('s'),
                        "long_name": NC_LONG_NAMES.get("delc",
                                                       "Model grid cell spacing along a column"),
                        }
@@ -848,7 +848,7 @@ class NetCdf(object):
                                 "To compute the unrotated grid, use the origin point and this array."
 
             # delr
-            attribs = {"units":self.model_grid.lenuni.strip('s'),
+            attribs = {"units":self.model_grid.units.strip('s'),
                        "long_name": NC_LONG_NAMES.get("delr",
                                                       "Model grid cell spacing along a row"),
                        }

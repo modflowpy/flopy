@@ -252,7 +252,7 @@ class Modflow(BaseModel):
         else:
             ibound = None
 
-        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
+
         if self.get_package('disu') is not None:
             raise NotImplementedError("Unstructured grid <model.modelgrid> generation"
                                       " not yet implemented for modflow-usg. Please create"
@@ -263,7 +263,7 @@ class Modflow(BaseModel):
                                          self.dis.delr.array,
                                          self.dis.top.array,
                                          self.dis.botm.array, ibound,
-                                         lenuni[self.dis.lenuni],
+                                         self.dis.lenuni,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,

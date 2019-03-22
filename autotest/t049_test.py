@@ -49,7 +49,7 @@ def test_modpath():
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'modflow model run did not terminate successfully'
 
     # create the forward modpath file
@@ -70,7 +70,7 @@ def test_modpath():
         try:
             success, buff = mp.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'forward modpath model run ' + \
                         'did not terminate successfully'
 
@@ -91,7 +91,7 @@ def test_modpath():
         try:
             success, buff = mpp.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'backward modpath model run ' + \
                         'did not terminate successfully'
 

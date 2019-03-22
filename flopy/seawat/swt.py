@@ -163,12 +163,11 @@ class Seawat(BaseModel):
         else:
             ibound = None
         # build grid
-        lenuni = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         self._modelgrid = StructuredGrid(self.dis.delc.array,
                                          self.dis.delr.array,
                                          self.dis.top.array,
                                          self.dis.botm.array, ibound,
-                                         lenuni=lenuni[self.dis.lenuni],
+                                         lenuni=self.dis.lenuni,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,

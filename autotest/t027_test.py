@@ -108,6 +108,11 @@ def test_make_package():
                                        )
     m4.write_input()
 
+    well1 = mnw2_4.node_data[mnw2_4.node_data['wellid'] == 'well1']
+    assert isinstance(well1, np.recarray)
+    assert np.all(np.diff(well1['ztop']) < 0)
+    assert np.all(np.diff(well1['zbotm']) < 0)
+
     # make the package from the tables (k, i, j format)
     node_data = np.array(
         [(0, 3, 1, 1, 'well1', 'skin', -1, 0, 0, 0, 1.0, 2.0, 5.0, 6.2),
@@ -136,6 +141,9 @@ def test_make_package():
                                        itmp=[2, 2, -1],
                                        # reuse second per pumping for last stress period
                                        )
+    well1 = mnw2_4.node_data[mnw2_4.node_data['wellid'] == 'well1']
+    assert isinstance(well1, np.recarray)
+    assert np.all(np.diff(well1['k']) > 0)
     spd = m4.mnw2.stress_period_data[0]
     inds = spd.k, spd.i, spd.j
     assert np.array_equal(np.array(inds).transpose(),
@@ -151,6 +159,13 @@ def test_make_package():
     # verify that the two input methods produce the same results
     assert np.array_equal(mnw2_4.stress_period_data[1],
                           mnw2fromobj.stress_period_data[1])
+    # verify that loaded package is the same
+    m5 = flopy.modflow.Modflow('mnw2example', model_ws=cpth)
+    dis = flopy.modflow.ModflowDis(nrow=5, ncol=5, nlay=3, nper=3, top=10,
+                                   botm=0, model=m5)
+    mnw2_5 = flopy.modflow.ModflowMnw2.load(mnw2_4.fn_path, m5)
+    assert np.array_equal(mnw2_4.stress_period_data[1],
+                          mnw2_5.stress_period_data[1])
 
 
 def test_export():

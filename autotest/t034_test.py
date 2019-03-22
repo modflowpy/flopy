@@ -140,7 +140,6 @@ def test_create():
                     # the created finf arrays all have a mult of 1
                     assert np.array_equal(a.array, l2[i].array)
 
-
 def test_load_and_write():
     # load in the test problem
     m = flopy.modflow.Modflow('UZFtest2', model_ws=cpth, verbose=True)
@@ -189,6 +188,34 @@ def test_load_and_write():
     uzf = flopy.modflow.ModflowUzf1.load(os.path.join(tpth, 'UZFtest3.uzf'), m3)
     assert np.sum(uzf.iuzfbnd.array) == 28800
     assert np.isclose(np.sum(uzf.finf.array) / uzf.finf[per].cnstnt, 13.7061, atol=1e-4)
+
+
+def test_uzf_surfk():
+    ws = os.path.join('..','examples', 'data', 'uzf_examples')
+    uzf_name = "UZFtest4.uzf"
+    dis_name = "UZFtest2.dis"
+    ml = flopy.modflow.Modflow(modelname='UZFtest4', version='mfnwt')
+    dis = flopy.modflow.ModflowDis.load(os.path.join(ws, dis_name), ml,
+                                        ext_unit_dict={})
+    uzf = flopy.modflow.ModflowUzf1.load(os.path.join(ws, uzf_name),
+                                         ml, ext_unit_dict={})
+
+    assert uzf.options.seepsurfk
+    assert abs(np.unique(uzf.surfk.array)[0] - 0.099) < 1e-06
+
+    ws2 = os.path.join('temp', 't034')
+    ml.change_model_ws(ws2)
+    dis.write_file()
+    uzf.write_file()
+
+    ml2 = flopy.modflow.Modflow(version="mfnwt")
+    dis2 = flopy.modflow.ModflowDis.load(os.path.join(ws2, "UZFtest4.dis"), ml2,
+                                         ext_unit_dict={})
+    uzf2 = flopy.modflow.ModflowUzf1.load(os.path.join(ws2, uzf_name),
+                                          ml2, ext_unit_dict={})
+
+    assert uzf2.options.seepsurfk
+    assert np.allclose(uzf.surfk.array, uzf2.surfk.array)
 
 
 def test_read_write_nwt_options():
@@ -472,3 +499,4 @@ if __name__ == '__main__':
     test_load_write_uzf_option_line()
     test_load_write_wel_option_block()
     test_load_write_wel_option_line()
+    test_uzf_surfk()
