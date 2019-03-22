@@ -25,7 +25,11 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities to create a MNW2 file and evaluate data contained in the file is given in the [flopy3_mnw2package_example](../examples/Notebooks/flopy3_mnw2package_example.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create a UZF file and evaluate data contained in the file and UZF output files is given in the [flopy3_uzf_example](../examples/Notebooks/flopy3_uzf_example) Notebook.
++ An overview of FloPy capabilities to create a UZF file and evaluate data contained in the file and UZF output files is given in the [flopy3_uzf_example](../examples/Notebooks/flopy3_uzf_example.ipynb) Notebook.
+
++ An overview of FloPy capabilities to create a DRT file is given in the [flopy3_drain_return](../examples/Notebooks/flopy3_drain_return.ipynb) Notebook.
+
++ An overview of FloPy capabilities to specify the option block for the WEL, UZF, and SFR packages for MODFLOW-NWT is given in the [flopy3_nwt_options](../examples/Notebooks/flopy3_nwt_options.ipynb) Notebook.
 
 + An overview of FloPy capabilities for exporting two-dimensional array data as a binary file is given in the [flopy3_save_binary_data_file](../examples/Notebooks/flopy3_save_binary_data_file.ipynb) Notebook.
 
@@ -67,6 +71,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + [Example 4](../examples/Notebooks/flopy3_swi2package_ex4.ipynb) of the SWI2 manual, upconing below a pumping well below a two-aquifer island system.
 
+
 ##### ***Model analysis and error checking examples***
 
 + An overview of the FloPy [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb).
@@ -84,11 +89,17 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of the FloPy [netCDF and shapefile export capabilities](../examples/Notebooks/flopy3_export.ipynb).
 
++ An overview of the FloPy model [shapefile export capabilities](../examples/Notebooks/flopy3_shapefile_export.ipynb).
+
 + [Exporting 2-D arrays as rasters or contour shapefiles](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
 
 #### ***Parameter Estimation examples***
 
 + An overview of the FloPy [parameter estimation capabilities](../examples/Notebooks/flopy3_PEST.ipynb).
+
+#### ***Other program examples***
+
++ An overview of [creating meshes with the Triangle class](../examples/Notebooks/flopy3_triangle.ipynb).
 
 #### MODFLOW 6
 
@@ -98,11 +109,27 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + A more complicated MODFLOW 6 example is given in the [flopy3_mf6_B_complex-model](../examples/Notebooks/flopy3_mf6_B_complex-model.ipynb) Notebook.
 
-#### Plotting examples ***(limited functionality for MODFLOW 6 models)***
++ A tutorial for creating, saving, running, loading, and modifying MODFLOW 6 simulations is given in the [flopy3_mf6_tutorial](../examples/Notebooks/flopy3_mf6_tutorial.ipynb) Notebook.
+
++ An overview of options for adding observations, time series, and time array series to MODFLOW 6 packages is given in the [flopy3_mf6_obs_ts_tas](../examples/Notebooks/flopy3_mf6_obs_ts_tas.ipynb) Notebook.
+
+#### Model grid examples 
+
++ An overview of the FloPy [model grid class capabilities](../examples/Notebooks/flopy3_demo_of_modelgrid_classes.ipynb).
+
+#### Plotting examples
 
 + An overview of the FloPy [map and cross-section plotting capabilities](../examples/Notebooks/flopy3_MapExample.ipynb).
 
++ An detailed overview of the updated FloPy [map plotting capabilities](../examples/Notebooks/flopy3_PlotMapView_demo.ipynb).
+
++ An detailed overview of the updated FloPy [cross-section plotting capabilities](../examples/Notebooks/flopy3_PlotCrossSection_demo.ipynb).
+
 + An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_PlotArrayExample.ipynb)
+
++ An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_mf6_plotting_freyberg.ipynb) for MODFLOW 6 models.
+
++ An overview of the FloPy  [vertex model grid (DISV) plotting method capabilities](../examples/Notebooks/flopy3_mf6_vertex_plotting.ipynb) for MODFLOW 6 models.
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
