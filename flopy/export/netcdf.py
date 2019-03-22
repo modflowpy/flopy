@@ -664,7 +664,7 @@ class NetCdf(object):
                                           str(nc_crs)))
 
         # get transformed bounds and record to check against ScienceBase later
-        xmin, ymin, xmax, ymax = self.model_grid.extent
+        xmin, xmax, ymin, ymax = self.model_grid.extent
         bbox = np.array([[xmin, ymin],
                          [xmin, ymax],
                          [xmax, ymax],
