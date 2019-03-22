@@ -35,7 +35,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_Modpath6_example](../examples/Notebooks/flopy3_Modpath6_example.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_Modpath7_create_simulation](../examples/Notebooks/flopy3_create_simulation.ipynb) Notebook.
++ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_Modpath7_create_simulation](../examples/Notebooks/flopy3_Modpath7_create_simulation.ipynb) Notebook.
 
 + An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_Modpath7_structured_example](../examples/Notebooks/flopy3_Modpath7_structured_example.ipynb) Notebook.
 
@@ -55,7 +55,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + The ['Crank-Nicolson' example distributed with MT3D-USGS](../examples/Notebooks/flopy3_MT3D-USGS_example.ipynb), a simple MT3D-USGS model that uses the SFT Package.
 
-+ A more in-depth MT3D-USGS example that uses 3 packages available with the first release of MT3D-USGS - SFT, LKT, and UZT - available in (../examples/Notebooks/flopy3_mt3d-usgs_example_with_sft_lkt_uzt.ipynb)
++ A more in-depth MT3D-USGS example that uses 3 packages available with the first release of MT3D-USGS - SFT, LKT, and UZT packages is given in the [flopy3_mt3d-usgs_example_with_sft_lkt_uzt](../examples/Notebooks/flopy3_mt3d-usgs_example_with_sft_lkt_uzt.ipynb) Notebook.
 
 + The [Henry Problem](../examples/Notebooks/flopy3_SEAWAT_henry_problem.ipynb), a simple saltwater intrusion model developed with FloPy and run using SEAWAT.
 
@@ -76,7 +76,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of the FloPy [model input data `check()` method capabilities](../examples/Notebooks/flopy3_ModelCheckerExample.ipynb).
 
-+ An overview of the FloPy [zone budget `ZoneBudget()` method capabilities](../examples/Notebooks/flopy3_ZoneBudget_example) Notebook. The `ZoneBudget()` method is a python implementation of USGS ZONEBUDGET executable for MODFLOW (Harbaugh, 1990).
++ An overview of the FloPy [zone budget `ZoneBudget()` method capabilities](../examples/Notebooks/flopy3_ZoneBudget_example.ipynb) Notebook. The `ZoneBudget()` method is a python implementation of USGS ZONEBUDGET executable for MODFLOW (Harbaugh, 1990).
 
 + An overview of the FloPy [`get_transmissivities()` method for computing open interval transmissivities (for weighted averages of heads or fluxes)](../examples/Notebooks/flopy3_get_transmissivities_example.ipynb) Notebook. This method can be used to:
 	* compute vertically-averaged head target values representative of observation wells of varying open intervals (including variability in saturated thickness due to the position of the water table). This may be especially important for reducing error in observations used for parameter estimation, in areas with appreciable vertical head gradients (due to aquitards, pumping, discharge to surface water, etc.)
