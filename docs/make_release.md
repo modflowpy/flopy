@@ -18,10 +18,10 @@ Instructions for making a FloPy release
 
 ## Build USGS release notes
 
-1.  Manually run update-version.py in the `release/` directory to update version information using:
+1.  Manually run `make-release.py` in the `release/` directory to update version information using:
 
     ```
-    python update-version.py
+    python make-release.py
     ```
 
 2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
@@ -111,6 +111,12 @@ Instructions for making a FloPy release
     git push origin master --force     
     ```
 
+4.  Rerender the repo using `conda-smithy` (make sure `conda-smithy` is installed using conda):
+
+    ```
+    conda smithy rerender
+    ```
+
 4.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
 
 5.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
@@ -124,10 +130,10 @@ Instructions for making a FloPy release
 
 2.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate.
 
-3.  Manually run update-version.py in the `release/` directory to update version information using:
+3.  Manually run `make-release.py` in the `release/` directory to update version information using:
 
     ```
-    python update-version.py
+    python make-release.py
     ```    
 4.  Commit and push the modified `develop` branch.
     
