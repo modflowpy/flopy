@@ -37,7 +37,8 @@ class LgrChild():
         self.npcend = npcend
         self.ncpp = ncpp
         if isinstance(ncppl, int):
-            self.ncppl = [ncppl]
+            nlaychild = nplend - nplbeg + 1
+            self.ncppl = nlaychild * [ncppl]
         else:
             self.ncppl = ncppl
 
@@ -134,9 +135,9 @@ class ModflowLgr(BaseModel):
         ibhsv = self.iupbhsv
         ibfsv = self.iupbhsv
         if ibhsv > 0:
-            self.parent.add_output_file(ibhsv)
+            self.parent.add_output_file(ibhsv, binflag=False)
         if ibfsv > 0:
-            self.parent.add_output_file(ibfsv)
+            self.parent.add_output_file(ibfsv, binflag=False)
         for child, child_data in zip(self.children_models, self.children_data):
             ibhsv = child_data.iucbhsv
             ibfsv = child_data.iucbfsv
