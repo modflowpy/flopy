@@ -425,7 +425,8 @@ def test_mg():
                                                        delr=ms.dis.delr.array,
                                                        xoff=xll, yoff=xll,
                                                        angrot=angrot,
-                                                       lenuni=2)
+                                                       lenuni=2,
+                                                       proj4='EPSG:4326')
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
@@ -1065,7 +1066,7 @@ if __name__ == '__main__':
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
-    #test_namfile_readwrite()
+    # test_namfile_readwrite()
     # test_free_format_flag()
     # test_get_vertices()
     #test_export_output()

@@ -119,7 +119,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=None, filenames=None,
-                 xul=None, yul=None, rotation=0.0,
+                 xul=None, yul=None, rotation=None,
                  proj4_str=None, start_datetime=None):
 
         # set default unit number of one is not specified
@@ -203,6 +203,18 @@ class ModflowDis(Package):
         if start_datetime is None:
             start_datetime = model._start_datetime
 
+        # set the model grid coordinate info
+        xll = None
+        yll = None
+        mg = model.modelgrid
+        if xul is not None:
+            xll = mg._xul_to_xll(xul)
+        if yul is not None:
+            yll = mg._yul_to_yll(yul)
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
+
+        if rotation is None:
+            rotation = 0.0
         self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
                                    xul=xul, yul=yul,
                                    rotation=rotation,
@@ -855,7 +867,7 @@ class ModflowDis(Package):
 
         header = header.replace('#', '')
         xul, yul = None, None
-        rotation = 0.0
+        rotation = None
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
         dep = False

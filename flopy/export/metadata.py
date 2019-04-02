@@ -37,6 +37,7 @@ class acdd:
         self.id = sciencebase_id
         self.model = model
         self.model_grid = model.modelgrid
+        self.model_time = model.modeltime
         self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(
             sciencebase_id)
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
@@ -175,12 +176,12 @@ class acdd:
         for t in ['start', 'end']:
             tc[t] = [d.get('dateString') for d in l
                      if t in d['type'].lower()][0]
-        if not np.all(self.model_grid.steady) and pd:
+        if not np.all(self.model_time.steady_state) and pd:
             # replace with times from model reference
-            tc['start'] = self.model_grid.sim_time.tr.start_datetime
-            strt = pd.Timestamp(self.model_grid.sim_time.tr.start_datetime)
-            mlen = self.model_grid.sim_time.perlen.sum()
-            tunits = self.model_grid.sim_time.time_units
+            tc['start'] = self.model_time.start_datetime
+            strt = pd.Timestamp(self.model_time.start_datetime)
+            mlen = self.model_time.perlen.sum()
+            tunits = self.model_time.time_units
             tc['duration'] = '{} {}'.format(mlen, tunits)
             end = strt + pd.Timedelta(mlen, unit='d')
             tc['end'] = str(end)

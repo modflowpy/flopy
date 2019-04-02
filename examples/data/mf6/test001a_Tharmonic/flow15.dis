@@ -2,6 +2,9 @@
 
 BEGIN Options
   LENGTH_UNITS  METERS
+  XORIGIN 10.0
+  YORIGIN 20.0
+  ANGROT 30.0
 END Options
 
 BEGIN Dimensions

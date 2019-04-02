@@ -293,6 +293,9 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
         package_names = [pak.name[0] for pak in ml.packagelist]
 
     grid = ml.modelgrid
+    if grid.grid_type == 'USG-Unstructured':
+        raise Exception('Flopy does not support exporting to shapefile from '
+                        'and MODFLOW-USG unstructured grid.')
     horz_shape = grid.shape[1:]
     for pname in package_names:
         pak = ml.get_package(pname)

@@ -3082,6 +3082,12 @@ class MFTransient(object):
     def get_active_key_list(self):
         return sorted(self._data_storage.items(), key=itemgetter(0))
 
+    def get_active_key_dict(self):
+        key_dict = {}
+        for key in self._data_storage.keys():
+            key_dict[key] = True
+        return key_dict
+
     def _verify_sp(self, sp_num):
         if self._path[0].lower() == 'nam':
             return True

@@ -481,6 +481,9 @@ def mflist_export(f, mfl, **kwargs):
 
         if model_grid is None:
             raise Exception("MfList.to_shapefile: ModelGrid is not set")
+        elif model_grid.grid_type == 'USG-Unstructured':
+            raise Exception('Flopy does not support exporting to shapefile '
+                            'from a MODFLOW-USG unstructured grid.')
         import flopy.utils.flopy_io as fio
         if kper is None:
             keys = mfl.data.keys()
@@ -600,7 +603,7 @@ def transient2d_export(f, t2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for kper in range(t2d.model.modelgrid.sim_time.nper):
+        for kper in range(t2d.model.modeltime.sim_time.nper):
             u2d = t2d[kper]
             name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)

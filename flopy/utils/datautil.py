@@ -110,7 +110,7 @@ class PyListUtil(object):
     numeric_chars = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0, '5': 0,
                      '6': 0, '7': 0, '8': 0, '9': 0, '.': 0, '-': 0}
     quote_list = {"'", '"'}
-    delimiter_list = {',': 0, '\t': 0, ' ': 0}
+    delimiter_list = {',': 1}
     delimiter_used = None
     line_num = 0
     consistent_delim = False
@@ -228,29 +228,50 @@ class PyListUtil(object):
                 PyListUtil.consistent_delim:
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
-            if PyListUtil.delimiter_used == None:
+            if PyListUtil.delimiter_used is None:
                 clean_line = line.strip().split()
             else:
-                clean_line = line.strip().split(PyListUtil.delimiter_used)
+                comment_split = line.strip().split('#', 1)
+                clean_line = comment_split[0].strip().split(
+                    PyListUtil.delimiter_used)
+                if len(comment_split) > 1:
+                    clean_line.append('#')
+                    clean_line.append(comment_split[1])
         else:
-            clean_line = line.strip().split()
-            if external_file:
-                # try lots of different delimitiers for external files and use the
-                # one the breaks the data apart the most
-                max_split_size = len(clean_line)
-                max_split_type = None
-                for delimiter in PyListUtil.delimiter_list:
-                    alt_split = line.strip().split(delimiter)
-                    if len(alt_split) > max_split_size:
+            # compare against the default split option without comments split
+            comment_split = line.strip().split('#', 1)
+            clean_line = comment_split[0].strip().split()
+            if len(comment_split) > 1:
+                clean_line.append('#')
+                clean_line.append(comment_split[1])
+            # try different delimiters and use the one the breaks the data
+            # apart the most
+            max_split_size = len(clean_line)
+            max_split_type = None
+            for delimiter in PyListUtil.delimiter_list:
+                comment_split = line.strip().split('#')
+                alt_split = comment_split[0].strip().split(delimiter)
+                if len(comment_split) > 1:
+                    alt_split.append('#')
+                    alt_split.append(comment_split[1])
+                alt_split_len = len(alt_split)
+                if alt_split_len > max_split_size:
+                    max_split_size = len(alt_split)
+                    max_split_type = delimiter
+                elif alt_split_len == max_split_size:
+                    if max_split_type not in PyListUtil.delimiter_list or \
+                            PyListUtil.delimiter_list[delimiter] < \
+                            PyListUtil.delimiter_list[max_split_type]:
                         max_split_size = len(alt_split)
                         max_split_type = delimiter
-                if max_split_type is not None:
-                    clean_line = line.strip().split(max_split_type)
-                    if PyListUtil.line_num == 0:
-                        PyListUtil.delimiter_used = max_split_type
-                    elif PyListUtil.delimiter_used != max_split_type:
-                        PyListUtil.consistent_delim = False
-                PyListUtil.line_num += 1
+
+            if max_split_type is not None:
+                clean_line = line.strip().split(max_split_type)
+                if PyListUtil.line_num == 0:
+                    PyListUtil.delimiter_used = max_split_type
+                elif PyListUtil.delimiter_used != max_split_type:
+                    PyListUtil.consistent_delim = False
+            PyListUtil.line_num += 1
 
         arr_fixed_line = []
         index = 0
