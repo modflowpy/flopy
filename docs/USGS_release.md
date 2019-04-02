@@ -8,6 +8,10 @@ author:
     - Jeremy T. White
     - Andrew T. Leaf
     - Scott R. Paulinski
+    - Joshua D. Larsen
+    - Michael W. Toews
+    - Eric D. Morway
+    - Jason C. Bellino
     - Jeffrey Starn
     - Michael N. Fienen
 header-includes:
@@ -17,16 +21,16 @@ header-includes:
     - \fancyhf{{}}
     - \fancyhead[LE, LO, RE, RO]{}
     - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.2.10 &mdash; refactor-buildexes}
+    - \fancyfoot[LE, RO]{FloPy version 3.2.12}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{03/20/2019}
+    - \fancyfoot[RE, LO]{03/22/2019}
 geometry: margin=0.75in
 ---
 
 Introduction
 -----------------------------------------------
 
-FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and ***7 (beta)***), MT3DMS, MT3D-USGS, and SEAWAT.
+FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, and MODFLOW-2000. Other supported MODFLOW-based models include MODPATH (version 6 and 7), MT3DMS, MT3D-USGS, and SEAWAT.
 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
@@ -52,7 +56,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.10 &mdash; develop: U.S. Geological Survey Software Release, 20 March 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.12 &mdash; release candidate: U.S. Geological Survey Software Release, 22 March 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -69,12 +73,12 @@ resulting from the authorized or unauthorized use of the software.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.10 &mdash; refactor-buildexes from the USGS FloPy website:
+To install FloPy version 3.2.12 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.10.zip
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.12.zip
 ```
 
-To update to FloPy version 3.2.10 &mdash; refactor-buildexes from the USGS FloPy website:
+To update to FloPy version 3.2.12 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.10.zip --upgrade
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.2.12.zip --upgrade
 ```
