@@ -176,8 +176,8 @@ class ModflowOc(Package):
 
         if stress_period_data is None:
             stress_period_data = {
-            (kper, dis.nstp.array[kper] - 1): ['save head'] for
-            kper in range(dis.nper)}
+                (kper, dis.nstp.array[kper] - 1): ['save head'] for
+                kper in range(dis.nper)}
 
         # process kwargs
         if 'save_every' in kwargs:
@@ -597,14 +597,14 @@ class ModflowOc(Package):
 
                 # dataset 1 values
                 elif ('HEAD' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'UNIT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                ):
                     ihedun = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'UNIT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                ):
                     iddnun = int(lnlst[3])
                 # dataset 2
                 elif 'PERIOD' in lnlst[0].upper():
@@ -641,10 +641,11 @@ class ModflowOc(Package):
         nper : int
             The number of stress periods.  If nper is None, then nper will be
             obtained from the model object. (default is None).
-        nstp : list
-            List containing the number of time steps in each stress period.  
-            If nstp is None, then nstp will be obtained from the DIS package 
-            attached to the model object. (default is None).
+        nstp : int or list of ints
+            Integer of list of integers containing the number of time steps
+            in each stress period. If nstp is None, then nstp will be obtained
+            from the DIS or DISU packages attached to the model object. The
+            length of nstp must be equal to nper. (default is None).
         nlay : int
             The number of model layers.  If nlay is None, then nnlay will be
             obtained from the model object. nlay only needs to be specified
@@ -674,14 +675,35 @@ class ModflowOc(Package):
         if model.verbose:
             sys.stdout.write('loading oc package file...\n')
 
-        if nper is None:
+        # set nper
+        if nper is None or nlay is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
+        if nper == 0 or nlay == 0:
+            msg = 'discretization package not defined for the model, ' + \
+                  'nper and nlay must be provided to the .load() method'
+            raise ValueError(msg)
+
+
+        # set nstp
         if nstp is None:
             dis = model.get_package('DIS')
             if dis is None:
                 dis = model.get_package('DISU')
-            nstp = dis.nstp
+            if dis is None:
+                msg = 'discretization package not defined for the model, ' + \
+                      'a nstp list must be provided to the .load() method'
+                raise ValueError(msg)
+            nstp = list(dis.nstp.array)
+        else:
+            if isinstance(nstp, (int, float)):
+                nstp = [int(nstp)]
+
+        # validate the size of nstp
+        if len(nstp) != nper:
+            msg = 'nstp must be a list with {} entries, '.format(nper) + \
+                  'provided nstp list has {} entries.'.format(len(nstp))
+            raise IOError(msg)
 
         # initialize
         ihedfm = 0
@@ -693,11 +715,8 @@ class ModflowOc(Package):
         chedfm = None
         cddnfm = None
         cboufm = None
-        words = []
-        wordrec = []
 
         numericformat = False
-        ihedfm, iddnfm = 0, 0
 
         stress_period_data = {}
 
@@ -705,6 +724,8 @@ class ModflowOc(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
+        else:
+            filename = os.path.basename(f.name)
 
         # read header
         ipos = f.tell()
@@ -809,44 +830,44 @@ class ModflowOc(Package):
 
                 # dataset 1 values
                 elif ('HEAD' in lnlst[0].upper() and
-                              'PRINT' in lnlst[1].upper() and
-                              'FORMAT' in lnlst[2].upper()
-                      ):
+                      'PRINT' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                ):
                     ihedfm = int(lnlst[3])
                 elif ('HEAD' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'FORMAT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                ):
                     chedfm = lnlst[3]
                 elif ('HEAD' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'UNIT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                ):
                     ihedun = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                              'PRINT' in lnlst[1].upper() and
-                              'FORMAT' in lnlst[2].upper()
-                      ):
+                      'PRINT' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                ):
                     iddnfm = int(lnlst[3])
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'FORMAT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                ):
                     cddnfm = lnlst[3]
                 elif ('DRAWDOWN' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'UNIT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                ):
                     iddnun = int(lnlst[3])
                 elif ('IBOUND' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'FORMAT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'FORMAT' in lnlst[2].upper()
+                ):
                     cboufm = lnlst[3]
                 elif ('IBOUND' in lnlst[0].upper() and
-                              'SAVE' in lnlst[1].upper() and
-                              'UNIT' in lnlst[2].upper()
-                      ):
+                      'SAVE' in lnlst[1].upper() and
+                      'UNIT' in lnlst[2].upper()
+                ):
                     ibouun = int(lnlst[3])
                 elif 'COMPACT' in lnlst[0].upper():
                     compact = True
@@ -923,6 +944,8 @@ class ModflowOc(Package):
                 if value.filetype == ModflowOc.ftype():
                     unitnumber[0] = key
                     fname = os.path.basename(value.filename)
+        else:
+            fname = os.path.basename(filename)
 
         # initialize filenames list
         filenames = [fname, None, None, None, None]
