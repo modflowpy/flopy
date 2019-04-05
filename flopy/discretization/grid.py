@@ -335,13 +335,18 @@ class Grid(object):
             return x, y
 
     def set_coord_info(self, xoff=0.0, yoff=0.0, angrot=0.0, epsg=None,
-                       proj4=None):
-        if xoff is None:
-            xoff = self._xoff
-        if yoff is None:
-            yoff = self._yoff
-        if angrot is None:
-            angrot = self._angrot
+                       proj4=None, merge_coord_info=True):
+        if merge_coord_info:
+            if xoff is None:
+                xoff = self._xoff
+            if yoff is None:
+                yoff = self._yoff
+            if angrot is None:
+                angrot = self._angrot
+            if epsg is None:
+                epsg = self._epsg
+            if proj4 is None:
+                proj4 = self._proj4
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot

@@ -216,19 +216,41 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def modeltime(self):
-        # build model time
         tdis = self.simulation.get_package('tdis')
+        period_data = tdis.perioddata.get_data()
+
+        # build steady state data
+        sto = self.get_package('sto')
+        if sto is None:
+            steady = np.full((len(period_data['perlen'])), True, dtype=bool)
+        else:
+            steady = np.full((len(period_data['perlen'])), False, dtype=bool)
+            ss_periods = sto.steady_state.get_active_key_dict()
+            tr_periods = sto.transient.get_active_key_dict()
+            if ss_periods:
+                last_ss_value = False
+                # loop through steady state array
+                for index, value in enumerate(steady):
+                    # resolve if current index is steady state or transient
+                    if index in ss_periods:
+                        last_ss_value = True
+                    elif index in tr_periods:
+                        last_ss_value = False
+                    if last_ss_value == True:
+                        steady[index] = True
+
+        # build model time
         itmuni = tdis.time_units.get_data()
         start_date_time = tdis.start_date_time.get_data()
         if itmuni is None:
             itmuni = 0
         if start_date_time is None:
             start_date_time = '01-01-1970'
-        period_data = tdis.perioddata.get_data()
         data_frame = {'perlen': period_data['perlen'],
                       'nstp': period_data['nstp'],
                       'tsmult': period_data['tsmult']}
-        self._model_time = ModelTime(data_frame, itmuni, start_date_time)
+        self._model_time = ModelTime(data_frame, itmuni, start_date_time,
+                                     steady)
         return self._model_time
 
     @property
@@ -248,27 +270,27 @@ class MFModel(PackageContainer, ModelInterface):
                                   yoff=self._modelgrid.yoffset,
                                   angrot=self._modelgrid.angrot)
         elif self.get_grid_type() == DiscretizationType.DISV:
-            disv = self.get_package('disv')
-            self._modelgrid = VertexGrid(vertices=disv.vertices.array,
-                                         cell2d=disv.cell2d.array,
-                                  top=disv.top.array, botm=disv.botm.array,
-                                  idomain=disv.idomain.array,
-                                  lenuni=disv.length_units.array,
+            dis = self.get_package('disv')
+            self._modelgrid = VertexGrid(vertices=dis.vertices.array,
+                                         cell2d=dis.cell2d.array,
+                                  top=dis.top.array, botm=dis.botm.array,
+                                  idomain=dis.idomain.array,
+                                  lenuni=dis.length_units.array,
                                   proj4=self._modelgrid.proj4,
                                   epsg=self._modelgrid.epsg,
                                   xoff=self._modelgrid.xoffset,
                                   yoff=self._modelgrid.yoffset,
                                   angrot=self._modelgrid.angrot)
         elif self.get_grid_type() == DiscretizationType.DISU:
-            disu = self.get_package('disu')
-            iverts = [list(i)[4:] for i in disu.cell2d.array]
-            self._modelgrid = UnstructuredGrid(vertices=np.array(disu.vertices.array),
+            dis = self.get_package('disu')
+            iverts = [list(i)[4:] for i in dis.cell2d.array]
+            self._modelgrid = UnstructuredGrid(vertices=np.array(dis.vertices.array),
                                                iverts=iverts,
-                                               xcenters = disu.cell2d.array['xc'],
-                                               ycenters = disu.cell2d.array['yc'],
-                                               top=disu.top.array, botm=disu.botm.array,
-                                               idomain=disu.idomain.array,
-                                               lenuni=disu.length_units.array,
+                                               xcenters = dis.cell2d.array['xc'],
+                                               ycenters = dis.cell2d.array['yc'],
+                                               top=dis.top.array, botm=dis.botm.array,
+                                               idomain=dis.idomain.array,
+                                               lenuni=dis.length_units.array,
                                                proj4=self._modelgrid.proj4,
                                                epsg=self._modelgrid.epsg,
                                                xoff=self._modelgrid.xoffset,
@@ -278,20 +300,34 @@ class MFModel(PackageContainer, ModelInterface):
         else:
             return self._modelgrid
 
+        if self.get_grid_type() != DiscretizationType.DISV:
+            # get coordinate data from dis file
+            xorig = dis.xorigin.get_data()
+            yorig = dis.yorigin.get_data()
+            angrot = dis.angrot.get_data()
+        else:
+            xorig = self._modelgrid.xoffset
+            yorig = self._modelgrid.yoffset
+            angrot = self._modelgrid.angrot
+
         # resolve offsets
-        xoff = self._modelgrid.xoffset
-        if xoff is None:
+        if xorig is None:
+            xorig = self._modelgrid.xoffset
+        if xorig is None:
             if self._xul is not None:
-                xoff = self._modelgrid._xul_to_xll(self._xul)
+                xorig = self._modelgrid._xul_to_xll(self._xul)
             else:
-                xoff = 0.0
-        yoff = self._modelgrid.yoffset
-        if yoff is None:
+                xorig = 0.0
+        if yorig is None:
+            yorig = self._modelgrid.yoffset
+        if yorig is None:
             if self._yul is not None:
-                yoff = self._modelgrid._yul_to_yll(self._yul)
+                yorig = self._modelgrid._yul_to_yll(self._yul)
             else:
-                yoff = 0.0
-        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
+                yorig = 0.0
+        if angrot is None:
+            angrot = self._modelgrid.angrot
+        self._modelgrid.set_coord_info(xorig, yorig, angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
 
