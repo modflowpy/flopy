@@ -133,7 +133,7 @@ class ModflowLgr(BaseModel):
         # convert iupbhsv, iupbhsv, iucbhsv, and iucbfsv units from
         # external_files to output_files
         ibhsv = self.iupbhsv
-        ibfsv = self.iupbhsv
+        ibfsv = self.iupbfsv
         if ibhsv > 0:
             self.parent.add_output_file(ibhsv, binflag=False)
         if ibfsv > 0:
@@ -142,9 +142,9 @@ class ModflowLgr(BaseModel):
             ibhsv = child_data.iucbhsv
             ibfsv = child_data.iucbfsv
             if ibhsv > 0:
-                child.add_output_file(ibhsv)
+                child.add_output_file(ibhsv, binflag=False)
             if ibfsv > 0:
-                child.add_output_file(ibfsv)
+                child.add_output_file(ibfsv, binflag=False)
 
         if external_path is not None:
             if os.path.exists(os.path.join(model_ws, external_path)):
