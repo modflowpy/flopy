@@ -727,9 +727,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         # loop until end of block
         line = ' '
         while line != '':
-            line = file_handle.readline()
-            arr_line = mfdatautil.ArrayUtil.\
-                split_data_line(line)
+            arr_line = self._get_next_data_line(file_handle)
             if arr_line and (len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
                 # end of block
