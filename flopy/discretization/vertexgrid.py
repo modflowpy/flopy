@@ -53,8 +53,10 @@ class VertexGrid(Grid):
 
     @property
     def extent(self):
+        self._copy_cache = False
         xvertices = np.hstack(self.xvertices)
         yvertices = np.hstack(self.yvertices)
+        self._copy_cache = True
         return (np.min(xvertices),
                 np.max(xvertices),
                 np.min(yvertices),
@@ -69,8 +71,10 @@ class VertexGrid(Grid):
         Returns:
             list: grid line vertices
         """
+        self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
+        self._copy_cache = True
 
         lines = []
         for ncell, verts in enumerate(xgrid):
@@ -88,7 +92,10 @@ class VertexGrid(Grid):
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             self._build_grid_geometry_info()
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyzvertices(self):
@@ -102,8 +109,10 @@ class VertexGrid(Grid):
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             self._build_grid_geometry_info()
-
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     def intersect(self, x, y, local=True):
         x, y = super(VertexGrid, self).intersect(x, y, local)
@@ -116,8 +125,11 @@ class VertexGrid(Grid):
         :param cellid: (int) cellid number
         :return: list of x,y cell vertices
         """
-        return list(zip(self.xvertices[cellid],
-                        self.yvertices[cellid]))
+        self._copy_cache = False
+        cell_verts = list(zip(self.xvertices[cellid],
+                              self.yvertices[cellid]))
+        self._copy_cache = True
+        return cell_verts
 
     def _build_grid_geometry_info(self):
         cache_index_cc = 'cellcenters'

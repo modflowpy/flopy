@@ -73,7 +73,9 @@ class StructuredGrid(Grid):
 
     @property
     def extent(self):
+        self._copy_cache = False
         xyzgrid = self.xyzvertices
+        self._copy_cache = True
         return (np.min(xyzgrid[0]), np.max(xyzgrid[0]),
                 np.min(xyzgrid[1]), np.max(xyzgrid[1]))
 
@@ -109,7 +111,10 @@ class StructuredGrid(Grid):
                 self._cache_dict[cache_index] = \
                     CachedData([xgrid, ygrid])
 
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyedges(self):
@@ -122,7 +127,10 @@ class StructuredGrid(Grid):
                                     np.add.accumulate(self.delc)))
             self._cache_dict[cache_index] = \
                 CachedData([xedge, yedge])
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyzcellcenters(self):
@@ -156,7 +164,10 @@ class StructuredGrid(Grid):
                 x_mesh, y_mesh = self.get_coords(x_mesh, y_mesh)
             # store in cache
             self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def grid_lines(self):
@@ -228,6 +239,7 @@ class StructuredGrid(Grid):
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
+        self._copy_cache = False
         pts = []
         xgrid, ygrid = self.xvertices, self.yvertices
         pts.append([xgrid[i, j], ygrid[i, j]])
@@ -235,6 +247,7 @@ class StructuredGrid(Grid):
         pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
         pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
+        self._copy_cache = True
         if np.isscalar(i):
             return pts
         else:
@@ -249,10 +262,13 @@ class StructuredGrid(Grid):
         :param j: (int) cell column number
         :return: list of x,y cell vertices
         """
-        return [(self.xvertices[i, j], self.yvertices[i, j]),
-                (self.xvertices[i, j+1], self.yvertices[i, j+1]),
-                (self.xvertices[i+1, j+1], self.yvertices[i+1, j+1]),
-                (self.xvertices[i+1, j], self.yvertices[i+1, j]),]
+        self._copy_cache = False
+        cell_verts = [(self.xvertices[i, j], self.yvertices[i, j]),
+                      (self.xvertices[i, j+1], self.yvertices[i, j+1]),
+                      (self.xvertices[i+1, j+1], self.yvertices[i+1, j+1]),
+                      (self.xvertices[i+1, j], self.yvertices[i+1, j]),]
+        self._copy_cache = True
+        return cell_verts
 
     def plot(self, **kwargs):
         """
