@@ -175,6 +175,7 @@ class _StructuredCrossSection(_CrossSection):
         for l in self.laycbd:
             if l > 0:
                 self.ncb += 1
+
         self.active = np.ones((self.mg.nlay + self.ncb), dtype=np.int)
         kon = 0
 
@@ -278,11 +279,12 @@ class _StructuredCrossSection(_CrossSection):
         for k in range(self.mg.nlay):
             vpts.append(plotutil.cell_value_points(self.xpts, xedge,
                                                    yedge, a[k, :, :]))
-            if self.laycbd[k] > 0:
-                ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
-                ta[:, :] = -1e9
-                vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       xedge, yedge, ta))
+            if len(self.laycbd) > 0:
+                if self.laycbd[k] > 0:
+                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
+                    ta[:, :] = -1e9
+                    vpts.append(plotutil.cell_value_points(self.xpts,
+                                                           xedge, yedge, ta))
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
@@ -395,12 +397,13 @@ class _StructuredCrossSection(_CrossSection):
             vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
                                                    self.mg.xyedges[1],
                                                    plotarray[k, :, :]))
-            if self.laycbd[k] > 0:
-                ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
-                ta[:, :] = self.mg.botm.array[k, :, :]
-                vpts.append(plotutil.cell_value_points(self.xpts,
-                                                       self.mg.xyedges[0],
-                                                       self.mg.xyedges[1], ta))
+            if len(self.laycbd) > 0:
+                if self.laycbd[k] > 0:
+                    ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
+                    ta[:, :] = self.mg.botm.array[k, :, :]
+                    vpts.append(plotutil.cell_value_points(self.xpts,
+                                                           self.mg.xyedges[0],
+                                                           self.mg.xyedges[1], ta))
 
         vpts = np.ma.array(vpts, mask=False)
 

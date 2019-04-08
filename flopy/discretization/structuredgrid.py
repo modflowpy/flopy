@@ -268,7 +268,7 @@ class StructuredGrid(Grid):
         lc : matplotlib.collections.LineCollection
 p
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)

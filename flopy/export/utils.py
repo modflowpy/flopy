@@ -1167,7 +1167,7 @@ def contour_array(modelgrid, ax, a, **kwargs):
     contour_set : ContourSet
 
     """
-    from flopy.plot import PlotMapView
+    from ..plot import PlotMapView
 
     kwargs['ax'] = ax
     map = PlotMapView(modelgrid=modelgrid)

@@ -9,8 +9,8 @@ import os
 import sys
 import math
 import numpy as np
-from flopy.utils import Util3d
-from flopy.datbase import DataType, DataInterface
+from ..utils import Util3d
+from ..datbase import DataType, DataInterface
 
 try:
     import shapefile
@@ -372,15 +372,17 @@ class PlotUtilities(object):
             if model.verbose:
                 print("   Plotting Model:   ", model_name)
 
-            caxs = model.plot(SelPackList=SelPackList,
-                              kper=defaults['kper'],
-                              mflay=defaults['mflay'],
-                              filename_base=model_filename_base,
-                              file_extension=defaults['file_extension'],
-                              key=defaults['key'],
-                              initial_fig=ifig,
-                              model_name=model_name,
-                              **kwargs)
+            caxs = PlotUtilities._plot_model_helper(
+                            model,
+                            SelPackList=SelPackList,
+                            kper=defaults['kper'],
+                            mflay=defaults['mflay'],
+                            filename_base=model_filename_base,
+                            file_extension=defaults['file_extension'],
+                            key=defaults['key'],
+                            initial_fig=ifig,
+                            model_name=model_name,
+                            **kwargs)
 
             if isinstance(caxs, list):
                 for c in caxs:
@@ -447,13 +449,15 @@ class PlotUtilities(object):
         ifig = defaults['initial_fig']
         if SelPackList is None:
             for p in model.packagelist:
-                caxs = p.plot(initial_fig=ifig,
-                              filename_base=defaults['filename_base'],
-                              file_extension=defaults['file_extension'],
-                              kper=defaults['kper'],
-                              mflay=defaults['mflay'],
-                              key=defaults['key'],
-                              model_name=defaults['model_name'])
+                caxs = PlotUtilities._plot_package_helper(
+                        p,
+                        initial_fig=ifig,
+                        filename_base=defaults['filename_base'],
+                        file_extension=defaults['file_extension'],
+                        kper=defaults['kper'],
+                        mflay=defaults['mflay'],
+                        key=defaults['key'],
+                        model_name=defaults['model_name'])
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
@@ -469,13 +473,16 @@ class PlotUtilities(object):
                     if pon in p.name:
                         if model.verbose:
                             print('   Plotting Package: ', p.name[0])
-                        caxs = p.plot(initial_fig=ifig,
-                                      filename_base=defaults['filename_base'],
-                                      file_extension=defaults['file_extension'],
-                                      kper=defaults['kper'],
-                                      mflay=defaults['mflay'],
-                                      key=defaults['key'],
-                                      model_name=defaults['model_name'])
+                        caxs = PlotUtilities._plot_package_helper(
+                                p,
+                                initial_fig=ifig,
+                                filename_base=defaults['filename_base'],
+                                file_extension=defaults['file_extension'],
+                                kper=defaults['kper'],
+                                mflay=defaults['mflay'],
+                                key=defaults['key'],
+                                model_name=defaults['model_name'])
+
                         # unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
                             for c in caxs:
@@ -562,11 +569,13 @@ class PlotUtilities(object):
                                             defaults['initial_fig'] + inc))
                         defaults['initial_fig'] = fignum[-1] + 1
                         caxs.append(
-                            v.plot(filename_base=defaults['filename_base'],
-                                   file_extension=defaults['file_extension'],
-                                   mflay=defaults['mflay'],
-                                   fignum=fignum, model_name=model_name,
-                                   colorbar=True))
+                            PlotUtilities._plot_util3d_helper(
+                                    v,
+                                    filename_base=defaults['filename_base'],
+                                    file_extension=defaults['file_extension'],
+                                    mflay=defaults['mflay'],
+                                    fignum=fignum, model_name=model_name,
+                                    colorbar=True))
 
             elif isinstance(value, DataInterface):
                 if value.data_type == DataType.transientlist: # isinstance(value, (MfList, MFTransientList)):
@@ -589,6 +598,7 @@ class PlotUtilities(object):
                     fignum = list(range(defaults['initial_fig'],
                                         defaults['initial_fig'] + inc))
                     defaults['initial_fig'] = fignum[-1] + 1
+                    # need to keep this as value.plot() because of mf6 datatype issues
                     ax = value.plot(defaults['key'],
                                     names,
                                     defaults['kper'],
@@ -610,13 +620,15 @@ class PlotUtilities(object):
                         fignum = list(range(defaults['initial_fig'],
                                             defaults['initial_fig'] + value.array.shape[0]))
                         defaults['initial_fig'] = fignum[-1] + 1
-                        caxs.append(
-                            value.plot(filename_base=defaults['filename_base'],
-                                       file_extension=defaults['file_extension'],
-                                       mflay=defaults['mflay'],
-                                       fignum=fignum,
-                                       model_name=model_name,
-                                       colorbar=True))
+
+                        caxs.append(PlotUtilities._plot_util3d_helper(
+                                    value,
+                                    filename_base=defaults['filename_base'],
+                                    file_extension=defaults['file_extension'],
+                                    mflay=defaults['mflay'],
+                                    fignum=fignum,
+                                    model_name=model_name,
+                                    colorbar=True))
 
                 elif value.data_type == DataType.array2d: # isinstance(value, Util2d):
                     if value.array is not None:
@@ -627,11 +639,14 @@ class PlotUtilities(object):
                             fignum = list(range(defaults['initial_fig'],
                                                 defaults['initial_fig'] + 1))
                             defaults['initial_fig'] = fignum[-1] + 1
-                            caxs.append(
-                                value.plot(filename_base=defaults['filename_base'],
-                                           file_extension=defaults['file_extension'],
-                                           fignum=fignum, model_name=model_name,
-                                           colorbar=True))
+
+                            caxs.append(PlotUtilities._plot_util2d_helper(
+                                        value,
+                                        filename_base=defaults['filename_base'],
+                                        file_extension=defaults['file_extension'],
+                                        fignum=fignum,
+                                        model_name=model_name,
+                                        colorbar=True))
 
                 elif value.data_type == DataType.transient2d: # isinstance(value, Transient2d):
                     if value.array is not None:
@@ -642,11 +657,14 @@ class PlotUtilities(object):
                         fignum = list(range(defaults['initial_fig'],
                                             defaults['initial_fig'] + inc))
                         defaults['initial_fig'] = fignum[-1] + 1
-                        caxs.append(
-                            value.plot(filename_base=defaults['filename_base'],
-                                       file_extension=defaults['file_extension'],
-                                       kper=defaults['kper'],
-                                       fignum=fignum, colorbar=True))
+
+                        caxs.append(PlotUtilities._plot_transient2d_helper(
+                                    value,
+                                    filename_base=defaults['filename_base'],
+                                    file_extension=defaults['file_extension'],
+                                    kper=defaults['kper'],
+                                    fignum=fignum,
+                                    colorbar=True))
 
                 else:
                     pass
@@ -1160,7 +1178,7 @@ class PlotUtilities(object):
          axes: list matplotlib.axes object
 
         """
-        from flopy.plot import PlotMapView
+        from .map import PlotMapView
 
         defaults = {'figsize': None, 'masked_values': None,
                     'pcolor': True, 'inactive': True,
@@ -1292,7 +1310,7 @@ class PlotUtilities(object):
         axes: list matplotlib.axes object
         """
 
-        from flopy.plot import PlotMapView
+        from .map import PlotMapView
 
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' +\
@@ -1309,6 +1327,10 @@ class PlotUtilities(object):
                 defaults[key] = kwargs.pop(key)
 
         ftype = package.name[0]
+
+        color = "black"
+        if "CHD" in ftype.upper():
+            color = bc_color_dict[ftype.upper()[:3]]
 
         # flopy-modflow vs. flopy-modflow6 trap
         try:
@@ -1330,7 +1352,7 @@ class PlotUtilities(object):
             pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
             qm = pmv.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
-                             color=package.bc_color)
+                             color=color)
 
             if defaults['grid']:
                 pmv.plot_grid(ax=axes[idx])
@@ -2620,7 +2642,7 @@ def _depreciated_dis_handler(modelgrid, dis):
 
     """
     # creates a new modelgrid instance with the dis information
-    from flopy.discretization import StructuredGrid, VertexGrid, UnstructuredGrid
+    from ..discretization import StructuredGrid, VertexGrid, UnstructuredGrid
     import warnings
     warnings.warn('the dis parameter has been depreciated.',
                   PendingDeprecationWarning)
