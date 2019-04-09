@@ -10,6 +10,10 @@ class CachedData(object):
         self.out_of_date = False
 
     @property
+    def data_nocopy(self):
+        return self._data
+
+    @property
     def data(self):
         return copy.deepcopy(self._data)
 
@@ -152,6 +156,7 @@ class Grid(object):
             angrot = 0.0
         self._angrot = angrot
         self._cache_dict = {}
+        self._copy_cache = True
 
     ###################################
     # access to basic grid properties
