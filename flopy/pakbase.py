@@ -121,7 +121,7 @@ class Package(PackageInterface):
         self.allowDuplicates = allowDuplicates
 
         self.acceptable_dtypes = [int, np.float32, str]
-        self.bc_color = "black"
+
         return
 
     def __repr__(self):
