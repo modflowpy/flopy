@@ -1,6 +1,8 @@
 import numpy as np
 import itertools
 from .grid import Grid, CachedData
+from matplotlib.path import Path
+from ..utils.geometry import is_clockwise
 
 
 class VertexGrid(Grid):
@@ -106,8 +108,45 @@ class VertexGrid(Grid):
         return self._cache_dict[cache_index].data
 
     def intersect(self, x, y, local=True):
+        """
+        Get the CELL2D number of a point with coordinates x and y
+        
+        When the point is on the edge of two cells, the cell with the lowest
+        CELL2D number is returned.
+        
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the requested point
+        y : float
+            The y-coordinate of the requested point
+        local: bool
+            If True, x and y are in real-world coordinates
+
+    
+        Returns
+        -------
+        icell2d : int
+            The CELL2D number
+        
+        """
         x, y = super(VertexGrid, self).intersect(x, y, local)
-        raise Exception('Not implemented yet')
+        xv, yv, zv = self.xyzvertices
+        for icell2d in range(self.ncpl):
+            xa = np.array(xv[icell2d])
+            ya = np.array(yv[icell2d])
+            # x and y at least have to be within the bounding box of the cell
+            if np.any(x <= xa) and np.any(x >= xa) and \
+                    np.any(y <= ya) and np.any(y >= ya):
+                path = Path(np.stack((xa, ya)).transpose())
+                # use a small radius, so that the edge of the cell is included
+                if is_clockwise(xa, ya):
+                    radius = -1e-9
+                else:
+                    radius = 1e-9
+                if path.contains_point((x, y), radius=radius):
+                    return icell2d
+        raise Exception('x, y point given is outside of the model area')
 
     def get_cell_vertices(self, cellid):
         """

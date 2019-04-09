@@ -436,3 +436,27 @@ def get_polygon_centroid(verts):
     cx = cx * 1./ 6. / a
     cy = cy * 1./ 6. / a
     return cx, cy
+
+
+def is_clockwise(x, y):
+    """
+    Determine if a ring is defined clockwise
+    
+    Parameters
+    ----------
+    x : numpy ndarray
+        The x-coordinates of the ring
+    y : numpy ndarray
+        The y-coordinate of the ring
+
+    Returns
+    -------
+    clockwise : bool
+        True when the ring is defined clockwise, False otherwise
+    
+    """
+    if not (x[0] == x[-1]) and (y[0] == y[-1]):
+        # close the ring if needed
+        x = np.append(x, x[-1])
+        y = np.append(y, y[-1])
+    return np.sum((np.diff(x)) * (y[1:] + y[:-1])) > 0
