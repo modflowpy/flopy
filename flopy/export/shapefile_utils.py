@@ -324,7 +324,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         continue
                     for ilay in range(a.array.shape[0]):
                         try:
-                            arr = a[ilay].array
+                            arr = a.array[ilay]
                         except:
                             arr = a[ilay]
 
