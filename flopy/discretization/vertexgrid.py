@@ -107,7 +107,7 @@ class VertexGrid(Grid):
 
         return self._cache_dict[cache_index].data
 
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
         """
         Get the CELL2D number of a point with coordinates x and y
         
@@ -120,8 +120,8 @@ class VertexGrid(Grid):
             The x-coordinate of the requested point
         y : float
             The y-coordinate of the requested point
-        local: bool
-            If True, x and y are in real-world coordinates
+        local: bool (optional)
+            If True, x and y are in local coordinates (defaults to False)
 
     
         Returns
@@ -130,7 +130,9 @@ class VertexGrid(Grid):
             The CELL2D number
         
         """
-        x, y = super(VertexGrid, self).intersect(x, y, local)
+        if local:
+            # transform x and y to real-world coordinates
+            x, y = super(VertexGrid, self).get_coords(x,y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])
@@ -157,6 +159,25 @@ class VertexGrid(Grid):
         """
         return list(zip(self.xvertices[cellid],
                         self.yvertices[cellid]))
+
+    def plot(self, **kwargs):
+        """
+        Plot the grid lines.
+
+        Parameters
+        ----------
+        kwargs : ax, colors.  The remaining kwargs are passed into the
+            the LineCollection constructor.
+
+        Returns
+        -------
+        lc : matplotlib.collections.LineCollection
+
+        """
+        from flopy.plot import PlotMapView
+
+        mm = PlotMapView(modelgrid=self)
+        return mm.plot_grid(**kwargs)
 
     def _build_grid_geometry_info(self):
         cache_index_cc = 'cellcenters'

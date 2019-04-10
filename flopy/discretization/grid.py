@@ -313,7 +313,7 @@ class Grid(object):
     def get_local_coords(self, x, y):
         """
         Given x and y array-like values, apply rotation, scale and offset,
-        to convert them from model coordinates to real-world coordinates.
+        to convert them from real-world coordinates to model coordinates.
         """
         if isinstance(x, list):
             x = np.array(x)
@@ -328,7 +328,7 @@ class Grid(object):
 
         return x, y
 
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
         if not local:
             return self.get_local_coords(x, y)
         else:

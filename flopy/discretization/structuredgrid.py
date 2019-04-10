@@ -202,28 +202,47 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
+        """
+        Get the row and column of a point with coordinates x and y
+
+        When the point is on the edge of two cells, the cell with the lowest
+        row or column is returned.
+
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the requested point
+        y : float
+            The y-coordinate of the requested point
+        local: bool (optional)
+            If True, x and y are in local coordinates (defaults to False)
+
+
+        Returns
+        -------
+        row : int
+            The row number
+        col : int
+            The column number
+
+        """
+        # transform x and y to local coordinates
         x, y = super(StructuredGrid, self).intersect(x, y, local)
 
-        if x < 0 or y < 0:
+        # get the cell edges in local coordinates
+        xe, ye = self.xyedges
+
+        xcomp = x > xe
+        if np.all(xcomp) or not np.any(xcomp):
             raise Exception('x, y point given is outside of the model area')
-        # find row
-        y_bound = 0
-        row = None
-        for index, row_width in enumerate(self.__delc):
-            y_bound += row_width
-            if y <= y_bound:
-                row = index
-        # find column
-        x_bound = 0
-        col = None
-        for index, col_width in enumerate(self.__delr):
-            x_bound += col_width
-            if x <= x_bound:
-                col = index
-        # determine success
-        if col is None or row is None:
+        col = np.where(xcomp)[0][-1]
+
+        ycomp = y < ye
+        if np.all(ycomp) or not np.any(ycomp):
             raise Exception('x, y point given is outside of the model area')
+        row = np.where(ycomp)[0][-1]
+
         return row, col
 
     def _cell_vert_list(self, i, j):
@@ -266,7 +285,7 @@ class StructuredGrid(Grid):
         Returns
         -------
         lc : matplotlib.collections.LineCollection
-p
+
         """
         from flopy.plot import PlotMapView
 
