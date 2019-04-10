@@ -59,7 +59,7 @@ def disv_model():
         cellxy[icpl, 1] = (yv[iv[1]] + yv[iv[2]]) / 2.
 
     # need to create cell2d, which is [[icpl, xc, yc, nv, iv1, iv2, iv3, iv4]]
-    cell2d = [[icpl, cellxy[icpl, 0], cellxy[icpl, 1], 4, *iverts[icpl]] for
+    cell2d = [[icpl, cellxy[icpl, 0], cellxy[icpl, 1], 4]  + iverts[icpl] for
               icpl in range(ncpl)]
     vertices = [[ivert, verts[ivert, 0], verts[ivert, 1]] for ivert in
                 range(nvert)]
