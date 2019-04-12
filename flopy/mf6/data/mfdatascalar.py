@@ -1,11 +1,13 @@
 import sys, inspect
 import numpy as np
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdata
-from ...utils import datautil
+from ..data import mfdata
 from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
 from ...datbase import DataType
+from .mfdatautil import convert_data, to_string
+from .mffileaccess import MFFileAccessScalar
+from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 
 
 class MFScalar(mfdata.MFData):
@@ -137,8 +139,8 @@ class MFScalar(mfdata.MFData):
         storage = self._get_storage_obj()
         data_struct = self.structure.data_item_structures[0]
         try:
-            converted_data = storage.convert_data(data, self._data_type,
-                                                  data_struct)
+            converted_data = convert_data(data, self._data_dimensions,
+                                          self._data_type, data_struct)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             comment = 'Could not convert data "{}" to type ' \
@@ -315,8 +317,10 @@ class MFScalar(mfdata.MFData):
                                 text_line.append(data_item.name.upper())
                         else:
                             try:
-                                text_line.append(storage.to_string(
+                                text_line.append(to_string(
                                     current_data, self._data_type,
+                                    self._simulation_data,
+                                    self._data_dimensions,
                                     data_item = data_item))
                             except Exception as ex:
                                 message = 'Could not convert "{}" of type ' \
@@ -371,10 +375,8 @@ class MFScalar(mfdata.MFData):
                                       self._simulation_data.debug)
             try:
                 # data
-                values = self._get_storage_obj().to_string(data,
-                                                           self._data_type,
-                                                           data_item=
-                                                           data_item)
+                values = to_string(data, self._data_type, self._simulation_data,
+                                   self._data_dimensions, data_item=data_item)
             except Exception as ex:
                 message = 'Could not convert "{}" of type "{}" ' \
                           'to a string.'.format(data,
@@ -403,152 +405,19 @@ class MFScalar(mfdata.MFData):
         super(MFScalar, self).load(first_line, file_handle, block_header,
                                    pre_data_comments=None)
         self._resync()
-        # read in any pre data comments
-        current_line = self._read_pre_data_comments(first_line, file_handle,
-                                                    pre_data_comments)
+        file_access = MFFileAccessScalar(
+            self.structure, self._data_dimensions, self._simulation_data,
+            self._path, self._current_key)
+        return file_access.load_from_package(
+            first_line, file_handle, self._get_storage_obj(), self._data_type,
+            self._keyword, pre_data_comments)
 
-        datautil.PyListUtil.reset_delimiter_used()
-        arr_line = datautil.PyListUtil.\
-            split_data_line(current_line)
-        # verify keyword
-        index_num, aux_var_index = self._load_keyword(arr_line, 0)
-
-        # store data
-        storage = self._get_storage_obj()
-        datatype = self.structure.get_datatype()
-        if self.structure.type == DatumType.record:
-            index = 0
-
-            for data_item_type in self.structure.get_data_item_types():
-                optional = self.structure.data_item_structures[index].optional
-                if len(arr_line) <= index + 1 or \
-                        data_item_type[0] != DatumType.keyword or (index > 0
-                        and optional == True):
-                    break
-                index += 1
-            first_type = self.structure.get_data_item_types()[0]
-            if first_type[0] == DatumType.keyword:
-                converted_data = [True]
-            else:
-                converted_data = []
-            if first_type[0] != DatumType.keyword or index == 1:
-                if self.structure.get_data_item_types()[1] != \
-                        DatumType.keyword or arr_line[index].lower == \
-                        self.structure.data_item_structures[index].name:
-                    try:
-                        converted_data.append(storage.convert_data(
-                            arr_line[index],
-                            self.structure.data_item_structures[index].type,
-                            self.structure.data_item_structures[0]))
-                    except Exception as ex:
-                        message = 'Could not convert "{}" of type "{}" ' \
-                                  'to a string.'.format(
-                                    arr_line[index],
-                                    self.structure.data_item_structures[index].
-                                        type)
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'converting data to string',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_, traceback_, message,
-                                              self._simulation_data.debug)
-            try:
-                storage.set_data(converted_data, key=self._current_key)
-                index_num += 1
-            except Exception as ex:
-                message = 'Could not set data "{}" with key ' \
-                          '"{}".'.format(converted_data, self._current_key)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'setting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-        elif datatype == mfstructure.DataType.scalar_keyword or \
-                datatype == mfstructure.DataType.scalar_keyword_transient:
-            # store as true
-            try:
-                storage.set_data(True, key=self._current_key)
-            except Exception as ex:
-                message = 'Could not set data "True" with key ' \
-                          '"{}".'.format(self._current_key)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'setting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-        else:
-            data_item_struct = self.structure.data_item_structures[0]
-            if len(arr_line) < 1 + index_num:
-                message = 'Error reading variable "{}".  Expected data ' \
-                             'after label "{}" not found at line ' \
-                             '"{}".'.format(self._data_name,
-                                            data_item_struct.name.lower(),
-                                            current_line)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'loading data from file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-            try:
-                converted_data = storage.convert_data(arr_line[index_num],
-                                                      self._data_type,
-                                                      data_item_struct)
-            except Exception as ex:
-                message = 'Could not convert "{}" of type "{}" ' \
-                          'to a string.'.format(arr_line[index_num],
-                                                self._data_typ)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'converting data to string',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-            try:
-                # read next word as data
-                storage.set_data(converted_data, key=self._current_key)
-            except Exception as ex:
-                message = 'Could not set data "{}" with key ' \
-                          '"{}".'.format(converted_data, self._current_key)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'setting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-            index_num += 1
-
-        if len(arr_line) > index_num:
-            # save remainder of line as comment
-            storage.add_data_line_comment(arr_line[index_num:], 0)
-        return [False, None]
-
-    def _new_storage(self):
-        return mfdata.DataStorage(self._simulation_data,
-                                  self._data_dimensions,
-                                  self.get_file_entry,
-                                  mfdata.DataStorageType.internal_array,
-                                  mfdata.DataStructureType.scalar)
+    def _new_storage(self, stress_period=1):
+        return DataStorage(self._simulation_data, self._model_or_sim,
+                           self._data_dimensions, self.get_file_entry,
+                           DataStorageType.internal_array,
+                           DataStructureType.scalar,
+                           stress_period=stress_period, data_path=self._path)
 
     def _get_storage_obj(self):
         return self._data_storage
@@ -660,7 +529,12 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
     def add_transient_key(self, key):
         super(MFScalarTransient, self).add_transient_key(key)
-        self._data_storage[key] = super(MFScalarTransient, self)._new_storage()
+        if isinstance(key, int):
+            stress_period = key
+        else:
+            stress_period = 1
+        self._data_storage[key] = \
+            super(MFScalarTransient, self)._new_storage(stress_period)
 
     def add_one(self, key=0):
         self._update_record_prep(key)

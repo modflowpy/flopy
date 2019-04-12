@@ -19,7 +19,8 @@ class Header(object):
         floattype = 'f4'
         if precision == 'double':
             floattype = 'f8'
-        self.header_types = ['head', 'drawdown', 'ucn']
+        self.header_types = ['head', 'drawdown', 'ucn', 'vardis', 'vardisv',
+                             'vardisu']
         if filetype is None:
             self.header_type = None
         else:
@@ -46,6 +47,26 @@ class Header(object):
                     [('ntrans', 'i4'), ('kstp', 'i4'), ('kper', 'i4'),
                      ('totim', floattype), ('text', 'a16'),
                      ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
+            elif self.header_type == 'vardis':
+                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
+                                       ('pertim', floattype),
+                                       ('totim', floattype),
+                                       ('text', 'a16'),
+                                       ('ncol', 'i4'), ('nrow', 'i4'),
+                                       ('ilay', 'i4')])
+            elif self.header_type == 'vardisv':
+                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
+                                       ('pertim', floattype),
+                                       ('totim', floattype),
+                                       ('text', 'a16'),
+                                       ('ncpl', 'i4'), ('ilay', 'i4')])
+            elif self.header_type == 'vardisu':
+                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
+                                       ('pertim', floattype),
+                                       ('totim', floattype),
+                                       ('text', 'a16'),
+                                       ('nodes', 'i4')])
+
             self.header = np.ones(1, self.dtype)
         else:
             self.dtype = None

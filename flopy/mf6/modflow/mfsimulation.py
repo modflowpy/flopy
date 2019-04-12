@@ -13,10 +13,11 @@ from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
 from ..mfmodel import MFModel
 from ..mfpackage import MFPackage
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdata
+from ..data import mfstructure
 from ..utils import binaryfile_utils
 from ..utils import mfobservation
 from ..modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
+from ..data.mfdatautil import MFComment
 
 
 class SimulationDict(collections.OrderedDict):
@@ -77,7 +78,7 @@ class SimulationDict(collections.OrderedDict):
                 if key[-1] == key_leaf:
                     # found key_leaf as a key in the dictionary
                     return item, None
-                if not isinstance(item, mfdata.MFComment):
+                if not isinstance(item, MFComment):
                     data_item_index = 0
                     data_item_structures = item.structure.data_item_structures
                     for data_item_struct in data_item_structures:

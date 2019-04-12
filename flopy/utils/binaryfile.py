@@ -37,7 +37,8 @@ class BinaryHeader(Header):
         """
         Set values using kwargs
         """
-        ikey = ['ntrans', 'kstp', 'kper', 'ncol', 'nrow', 'ilay']
+        ikey = ['ntrans', 'kstp', 'kper', 'ncol', 'nrow', 'ilay', 'ncpl',
+                'nodes']
         fkey = ['pertim', 'totim']
         ckey = ['text']
         for k in ikey:

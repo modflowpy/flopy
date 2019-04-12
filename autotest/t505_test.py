@@ -4,7 +4,7 @@ import numpy as np
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.mf6.data.mfdata import DataStorageType
+from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.utils.datautil import PyListUtil
 from flopy.mf6.mfbase import FlopyException
 from flopy.mf6.modflow.mfgwf import ModflowGwf

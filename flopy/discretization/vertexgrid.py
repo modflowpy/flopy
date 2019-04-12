@@ -74,13 +74,13 @@ class VertexGrid(Grid):
         self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
-        self._copy_cache = True
 
         lines = []
         for ncell, verts in enumerate(xgrid):
             for ix, vert in enumerate(verts):
                 lines.append([(xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
                               (xgrid[ncell][ix], ygrid[ncell][ix])])
+        self._copy_cache = True
         return lines
 
     @property

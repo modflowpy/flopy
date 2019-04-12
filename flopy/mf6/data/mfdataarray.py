@@ -2,15 +2,18 @@ import sys, inspect, copy
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
-from ..data import mfdatautil, mfdata
+from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 from ...utils import datautil
 from ...utils.datautil import MultiList
-from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
+from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
+from .mffileaccess import MFFileAccessArray
+from .mfdatautil import to_string
+from .mfdata import MFMultiDimVar, MFTransient
 
 
-class MFArray(mfdata.MFMultiDimVar):
+class MFArray(MFMultiDimVar):
     """
     Provides an interface for the user to access and update MODFLOW array data.
 
@@ -376,7 +379,7 @@ class MFArray(mfdata.MFMultiDimVar):
         try:
             # move data to file
             if storage.layer_storage[ds_index[0]].data_storage_type == \
-                    mfdata.DataStorageType.external_file:
+                    DataStorageType.external_file:
                 storage.external_to_external(external_file_path, multiplier,
                                              layer)
             else:
@@ -396,7 +399,7 @@ class MFArray(mfdata.MFMultiDimVar):
 
         # update data storage
         self._get_storage_obj().layer_storage[ds_index[0]].data_storage_type \
-            = mfdata.DataStorageType.external_file
+            = DataStorageType.external_file
         self._get_storage_obj().layer_storage[ds_index[0]].fname = \
             external_file_path
         if multiplier is not None:
@@ -458,7 +461,8 @@ class MFArray(mfdata.MFMultiDimVar):
             tas_name, tas_label = self._tas_info(data)
             if tas_name is not None:
                 # verify and save as time series array
-                self._set_tas(self._get_storage_obj(), tas_name, tas_label)
+                self._get_storage_obj().set_tas(tas_name, tas_label,
+                                                self._current_key)
                 return
         try:
             self._get_storage_obj().set_data(data, layer, multiplier,
@@ -474,31 +478,6 @@ class MFArray(mfdata.MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
         self._layer_shape = self._get_storage_obj().layer_storage.list_shape
-
-    def _set_tas(self, storage, tas_name, tas_label):
-        package_dim = self._data_dimensions.package_dim
-        tas_names = package_dim.get_tasnames()
-        if tas_name.lower() not in tas_names and \
-                self._simulation_data.verbosity_level.value >= \
-                VerbosityLevel.normal.value:
-            print('WARNING: Time array series name {} not found in any '
-                  'time series file'.format(tas_name))
-        # this is a time series array with a valid tas variable
-        storage.data_structure_type = \
-            mfdata.DataStructureType.scalar
-        try:
-            storage.set_data('{} {}'.format(tas_label, tas_name), 0,
-                             key=self._current_key)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'storing data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
 
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
@@ -528,232 +507,13 @@ class MFArray(mfdata.MFMultiDimVar):
                 shape_ml = MultiList(shape=self._layer_shape)
                 self._set_storage_obj(self._new_storage(
                     shape_ml.get_total_size() != 1, True))
-        storage = self._get_storage_obj()
-        # read in any pre data comments
-        current_line = self._read_pre_data_comments(first_line, file_handle,
-                                                    pre_data_comments)
-        datautil.PyListUtil.reset_delimiter_used()
-        arr_line = datautil.PyListUtil.\
-            split_data_line(current_line)
-        package_dim = self._data_dimensions.package_dim
-        if len(arr_line) > 2:
-            # check for time array series
-            if arr_line[1].upper() == 'TIMEARRAYSERIES':
-                self._set_tas(storage, arr_line[2], arr_line[1])
-                return [False, None]
-        if not self.structure.data_item_structures[0].just_data:
-            # verify keyword
-            index_num, aux_var_index = self._load_keyword(arr_line, 0)
-        else:
-            index_num = 0
-            aux_var_index = None
-
-        # TODO: Add species support
-        # if layered supported, look for layered flag
-        if self.structure.layered or aux_var_index is not None:
-            if (len(arr_line) > index_num and
-                    arr_line[index_num].lower() == 'layered'):
-                storage.layered = True
-                try:
-                    layers = self.layer_shape()
-                except Exception as ex:
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'resolving layer dimensions',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, None,
-                                          self._simulation_data.debug, ex)
-                if len(layers) > 0:
-                    storage.init_layers(layers)
-                self._layer_shape = layers
-            elif aux_var_index is not None:
-                # each layer stores a different aux variable
-                layers = len(package_dim.get_aux_variables()[0]) - 1
-                self._layer_shape = (layers,)
-                storage.layered = True
-                while storage.layer_storage.list_shape[0] < layers:
-                    storage.add_layer()
-            else:
-                storage.flatten()
-        try:
-            dimensions = self._get_storage_obj().get_data_dimensions(
-                self._layer_shape)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not get data shape for key "{}".'.format(
-                self._current_key)
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'getting data shape',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, comment,
-                                  self._simulation_data.debug, ex)
-        layer_size = 1
-        for dimension in dimensions:
-            layer_size *= dimension
-
-        if aux_var_index is None:
-            # loop through the number of layers
-            for layer in storage.layer_storage.indexes():
-                self._load_layer(layer, layer_size, storage, arr_line,
-                                 file_handle)
-        else:
-            # write the aux var to it's unique index
-            self._load_layer((aux_var_index,), layer_size, storage, arr_line,
-                             file_handle)
-        return [False, None]
-
-    def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
-        di_struct = self.structure.data_item_structures[0]
-        if not di_struct.just_data or datautil.max_tuple_abs_size(layer) > 0:
-            arr_line = self._get_next_data_line(file_handle)
-
-        layer_storage = storage.layer_storage[layer]
-        # if constant
-        if arr_line[0].upper() == 'CONSTANT':
-            if len(arr_line) < 2:
-                message = 'MFArray "{}" contains a CONSTANT that is not ' \
-                          'followed by a number.'.format(self._data_name)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'loading data layer from file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-            # store data
-            layer_storage.data_storage_type = \
-                    mfdata.DataStorageType.internal_constant
-            try:
-                storage.store_internal([storage.convert_data(arr_line[1],
-                                                             self._data_type,
-                                                             di_struct)],
-                                       layer, const=True, multiplier=[1.0])
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'storing data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug, ex)
-            # store anything else as a comment
-            if len(arr_line) > 2:
-                layer_storage.comments = \
-                        mfdata.MFComment(' '.join(arr_line[2:]),
-                                         self._path, self._simulation_data,
-                                         layer)
-        # if internal
-        elif arr_line[0].upper() == 'INTERNAL':
-            if len(arr_line) < 2:
-                message = 'Data array "{}" contains a INTERNAL that is not ' \
-                          'followed by a multiplier' \
-                          '.'.format(self.structure.name)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'loading data layer from file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-
-            try:
-                multiplier, print_format, flags_found = \
-                        storage.process_internal_line(arr_line)
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'processing line of data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug, ex)
-            storage.layer_storage[layer].data_storage_type = \
-                mfdata.DataStorageType.internal_array
-
-            # store anything else as a comment
-            if len(arr_line) > 5:
-                layer_storage.comments = \
-                        mfdata.MFComment(' '.join(arr_line[5:]), self._path,
-                                         self._simulation_data, layer)
-
-            try:
-                # load variable data from current file
-                data_from_file = storage.read_array_data_from_file(layer, file_handle,
-                                                                   multiplier,
-                                                                   print_format,
-                                                                   di_struct)
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'reading data from file '
-                                      '{}'.format(file_handle.name),
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, None,
-                                      self._simulation_data.debug, ex)
-            data_shaped = self._resolve_data_shape(data_from_file[0])
-            try:
-                storage.store_internal(data_shaped, layer, const=False,
-                                       multiplier=[multiplier],
-                                       print_format=print_format)
-            except Exception as ex:
-                comment = 'Could not store data: "{}"'.format(data_shaped)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'storing data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, comment,
-                                      self._simulation_data.debug, ex)
-            # verify correct size
-            if layer_size > 0 and layer_size != data_from_file[1]:
-                message = 'Data array "{}" does not contain the expected ' \
-                          'amount of INTERNAL data. expected {},' \
-                          ' found {}.'.format(self.structure.name,
-                                              layer_size,
-                                              data_from_file[1])
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'loading data layer from file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
-        elif arr_line[0].upper() == 'OPEN/CLOSE':
-            try:
-                storage.process_open_close_line(arr_line, layer)
-            except Exception as ex:
-                comment = 'Could not open open/close file specified by' \
-                          ' "{}".'.format(' '.join(arr_line))
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'storing data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, comment,
-                                      self._simulation_data.debug, ex)
+        file_access = MFFileAccessArray(self.structure, self._data_dimensions,
+                                        self._simulation_data, self._path,
+                                        self._current_key)
+        self._layer_shape, return_val = file_access.load_from_package(
+            first_line, file_handle, self._layer_shape, self._get_storage_obj(),
+            self._keyword, pre_data_comments=None)
+        return return_val
 
     def get_file_entry(self, layer=None,
                        ext_file_action=ExtFileAction.copy_relative_paths):
@@ -780,7 +540,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                         self._simulation_data.indent_string)
 
         file_entry_array = []
-        if data_storage.data_structure_type == mfdata.DataStructureType.scalar:
+        if data_storage.data_structure_type == DataStructureType.scalar:
             # scalar data, like in the case of a time array series gets written
             # on a single line
             try:
@@ -850,20 +610,22 @@ class MFArray(mfdata.MFMultiDimVar):
 
         return ''.join(file_entry_array)
 
-    def _new_storage(self, set_layers=True, base_storage=False):
+    def _new_storage(self, set_layers=True, base_storage=False,
+                     stress_period=1):
         if set_layers:
-            return mfdata.DataStorage(self._simulation_data,
-                                      self._data_dimensions,
-                                      self.get_file_entry,
-                                      mfdata.DataStorageType.internal_array,
-                                      mfdata.DataStructureType.ndarray,
-                                      self._layer_shape)
+            return DataStorage(self._simulation_data, self._model_or_sim,
+                               self._data_dimensions, self.get_file_entry,
+                               DataStorageType.internal_array,
+                               DataStructureType.ndarray, self._layer_shape,
+                               stress_period=stress_period,
+                               data_path=self._path)
         else:
-            return mfdata.DataStorage(self._simulation_data,
-                                      self._data_dimensions,
-                                      self.get_file_entry,
-                                      mfdata.DataStorageType.internal_array,
-                                      mfdata.DataStructureType.ndarray)
+            return DataStorage(self._simulation_data, self._model_or_sim,
+                               self._data_dimensions, self.get_file_entry,
+                               DataStorageType.internal_array,
+                               DataStructureType.ndarray,
+                               stress_period=stress_period,
+                               data_path=self._path)
 
     def _get_storage_obj(self):
         return self._data_storage
@@ -900,14 +662,14 @@ class MFArray(mfdata.MFMultiDimVar):
                                           self._simulation_data.indent_string)
 
         data_storage = self._get_storage_obj()
-        if storage_type == mfdata.DataStorageType.internal_array:
+        if storage_type == DataStorageType.internal_array:
             # internal data header + data
             format_str = self._get_internal_formatting_string(layer).upper()
             lay_str = self._get_data_layer_string(layer, data_indent).upper()
             file_entry = '{}{}{}\n{}{}'.format(file_entry, indent_string,
                                                format_str, indent_string,
                                                lay_str)
-        elif storage_type == mfdata.DataStorageType.internal_constant:
+        elif storage_type == DataStorageType.internal_constant:
             #  constant data
             try:
                 const_val = data_storage.get_const_val(layer)
@@ -974,7 +736,9 @@ class MFArray(mfdata.MFMultiDimVar):
             # increment data/layer counts
             line_data_count += 1
             try:
-                data_lyr = self._get_storage_obj().to_string(item, self._data_type)
+                data_lyr = to_string(item, self._data_type,
+                                     self._simulation_data,
+                                     self._data_dimensions)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 comment = 'Could not convert data "{}" of type "{}" to a ' \
@@ -1002,40 +766,6 @@ class MFArray(mfdata.MFMultiDimVar):
             return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
         else:
             return '\n'.join(layer_data_string)
-
-    def _resolve_data_shape(self, data):
-        try:
-            dimensions = self._get_storage_obj().get_data_dimensions(
-                self._layer_shape)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            comment = 'Could not get data shape for key "{}".'.format(
-                self._current_key)
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'getting data shape',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, comment,
-                                  self._simulation_data.debug, ex)
-        if isinstance(data, list) or isinstance(data, np.ndarray):
-            try:
-                return np.reshape(data, dimensions).tolist()
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                comment = 'Could not reshape data to dimensions ' \
-                          '"{}".'.format(dimensions)
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'reshaping data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, comment,
-                                      self._simulation_data.debug, ex)
-        else:
-            return data
 
     def _resolve_layer_index(self, layer, allow_multiple_layers=False):
         # handle layered vs non-layered data
@@ -1144,7 +874,7 @@ class MFArray(mfdata.MFMultiDimVar):
         return axes
 
 
-class MFTransientArray(MFArray, mfdata.MFTransient):
+class MFTransientArray(MFArray, MFTransient):
     """
     Provides an interface for the user to access and update MODFLOW transient
     array data.
@@ -1217,8 +947,9 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
 
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)
-        self._data_storage[transient_key] = super(MFTransientArray,
-                                                  self)._new_storage()
+        self._data_storage[transient_key] = \
+            super(MFTransientArray, self)._new_storage(stress_period=
+                                                       transient_key)
 
     def get_data(self, key=None, apply_mult=True, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
@@ -1289,10 +1020,14 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
         return super(MFTransientArray, self).load(first_line, file_handle,
                                                   pre_data_comments)
 
-    def _new_storage(self, set_layers=True, base_storage=False):
+    def _new_storage(self, set_layers=True, base_storage=False,
+                     stress_period=1):
         if base_storage:
+            if not isinstance(stress_period, int):
+                stress_period = 1
             return super(MFTransientArray, self)._new_storage(set_layers,
-                                                              base_storage)
+                                                              base_storage,
+                                                              stress_period)
         else:
             return OrderedDict()
 
