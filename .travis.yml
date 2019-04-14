@@ -1,22 +1,28 @@
 language: python
 os: linux
-dist: trusty
-sudo: required
+dist: xenial
 compiler: gcc
+
+services:
+  - xvfb
 
 matrix:
   include:
-    - python: 2.7
-    - python: 3.4
-    - python: 3.5
-    - python: 3.6
-    - python: "3.6-dev"
-    - python: "nightly"
+    - env: TVER=PY27
+      python: 2.7
+    - env: TVER=PY35
+      python: 3.5
+    - env: TVER=PY36
+      python: 3.6
+    - env: TVER=PY37
+      python: 3.7
+    - env: TVER=PY37N
+      python: 3.7
+    - env: TVER=PY37D
+      python: "3.7-dev"
 
   allow_failures:
-    - python: "3.6-dev"
-    - python: "3.7-dev"
-    - python: "nightly"
+    - env: TVER=PY37D
 
 cache:
   pip: true
@@ -29,8 +35,8 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gfortran-6
-      - g++-6
+      - gfortran-8
+      - g++-8
       - python-pip
       - libhdf5-serial-dev
       - netcdf-bin
@@ -42,34 +48,24 @@ env:
   global:
     - NO_NET=1
 
-# start Virtual X, so default matplotlib backend works
-before_install:
-    - "export DISPLAY=:99.0"
-    - "sh -e /etc/init.d/xvfb start"
-
 # command to install dependencies
 install:
     - if [[ ! -d "$HOME/.local/bin" ]]; then
         mkdir "$HOME/.local/bin";
       fi
     - export PATH="$HOME/.local/bin:$PATH"
-    - ln -fs /usr/bin/gfortran-6 "$HOME/.local/bin/gfortran" && gfortran --version
-    - ls -l /usr/bin/gfortran-6
-    - ln -fs /usr/bin/gcc-6 "$HOME/.local/bin/gcc" && gcc --version
-    - ls -l /usr/bin/gcc-6
-    - ln -fs /usr/bin/g++-6 "$HOME/.local/bin/g++" && g++ --version
-    - ls -l /usr/bin/g++-6
+    - ln -fs /usr/bin/gfortran-8 "$HOME/.local/bin/gfortran" && gfortran --version
+    - ls -l /usr/bin/gfortran-8
+    - ln -fs /usr/bin/gcc-8 "$HOME/.local/bin/gcc" && gcc --version
+    - ls -l /usr/bin/gcc-8
+    - ln -fs /usr/bin/g++-8 "$HOME/.local/bin/g++" && g++ --version
+    - ls -l /usr/bin/g++-8
     - export CXX="g++"
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
-      pip install -r requirements2-34.travis.txt;
-      pip install requests;
-      echo requests version1; python -c "import requests; print(requests.__version__)";
-      fi
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]];
-      then pip install -r requirements2-34.travis.txt;
-      fi
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.4 ]];
-      then pip install -r requirements.travis.txt;
+        pip install -r requirements27.travis.txt;
+        echo requests version1; python -c "import requests; print(requests.__version__)";
+      else
+        pip install -r requirements.travis.txt;
       fi
     - pip install https://github.com/modflowpy/pymake/zipball/master
     - pip install --upgrade jupyter
@@ -93,14 +89,15 @@ script:
     - echo jupyter runtime directory; jupyter --runtime-dir
     - echo pylint version; pylint --version
     - nosetests -v build_exes.py --with-id --with-timer -w ./autotest
-    - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then
-      nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
-      nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+    - if [[ $TVER == PY37N ]]; then
+        nosetests -v autotest_scripts.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+        nosetests -v autotest_notebooks.py --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
+      else
+        nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
       fi
-    - nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy
 
 after_success:
     - coveralls
     - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then
-      pylint --errors-only ./flopy;
+        pylint --errors-only ./flopy;
       fi

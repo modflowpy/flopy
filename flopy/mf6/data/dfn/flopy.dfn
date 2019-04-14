@@ -1,0 +1,14 @@
+name ts_filerecord
+construct_package ts
+construct_data timeseries
+parameter_name timeseries
+
+name obs_filerecord
+construct_package obs
+construct_data continuous
+parameter_name observations
+
+name tas_filerecord
+construct_package tas
+construct_data tas_array
+parameter_name timearrayseries

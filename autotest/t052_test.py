@@ -39,22 +39,22 @@ def test_binary_well():
     bas = flopy.modflow.ModflowBas(ml, ibound=ibound)
     lpf = flopy.modflow.ModflowLpf(ml, ipakcb=102)
     wd = flopy.modflow.ModflowWel.get_empty(ncells=2,
-                                            aux_names=['aux1', 'aux2'])
+                                            aux_names=['v1', 'v2'])
     wd['k'][0] = 2
     wd['i'][0] = 2
     wd['j'][0] = 2
     wd['flux'][0] = -1000.
-    wd['aux1'][0] = 1.
-    wd['aux2'][0] = 2.
+    wd['v1'][0] = 1.
+    wd['v2'][0] = 2.
     wd['k'][1] = 2
     wd['i'][1] = 1
     wd['j'][1] = 1
     wd['flux'][1] = -500.
-    wd['aux1'][1] = 200.
-    wd['aux2'][1] = 100.
+    wd['v1'][1] = 200.
+    wd['v2'][1] = 100.
     wel_data = {0: wd}
     wel = flopy.modflow.ModflowWel(ml, stress_period_data=wel_data,
-                                   binary=True, dtype=wd.dtype)
+                                   dtype=wd.dtype)
     oc = flopy.modflow.ModflowOc(ml)
     pcg = flopy.modflow.ModflowPcg(ml)
 
@@ -80,10 +80,14 @@ def test_binary_well():
     pth = os.path.join(cpth, 'flopy')
     m.change_model_ws(new_pth=pth)
 
-    # temporary fix to save wel data as binary file
-    m.wel.stress_period_data._MfList__binary = True
+    # remove the existing well package
+    m.remove_package('WEL')
 
-    # write the lgr model in to the new path
+    # recreate well package with binary output
+    wel = flopy.modflow.ModflowWel(m, stress_period_data=wel_data,
+                                   binary=True, dtype=wd.dtype)
+
+    # write the model to the new path
     m.write_input()
 
     # run the new modflow-2005 model
@@ -115,6 +119,9 @@ def test_binary_well():
             print('could not perform budget comparison')
 
         assert success, 'budget comparison failure'
+
+    # clean up
+    shutil.rmtree(cpth)
 
 if __name__ == '__main__':
     test_binary_well()

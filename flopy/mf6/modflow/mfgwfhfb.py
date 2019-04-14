@@ -46,7 +46,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
           cells specified as containing the barrier. For example, if the value
           for HYDCHR was specified as -1.5, the conductance calculated for the
           two cells would be multiplied by 1.5.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -59,7 +59,7 @@ class ModflowGwfhfb(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'hfb', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfhfb"
-    package_type = "hfb"
+    _package_type = "hfb"
     dfn_file_name = "gwf-hfb.dfn"
 
     dfn = [["block options", "name print_input", "type keyword", 
@@ -82,9 +82,9 @@ class ModflowGwfhfb(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword"]]
 
     def __init__(self, model, loading_package=False, print_input=None,
-                 maxhfb=None, stress_period_data=None, fname=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwfhfb, self).__init__(model, "hfb", fname, pname,
+                 maxhfb=None, stress_period_data=None, filename=None,
+                 pname=None, parent_file=None):
+        super(ModflowGwfhfb, self).__init__(model, "hfb", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

@@ -1,9 +1,11 @@
 import sys, inspect
 import numpy as np
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
+from ..data import mfstructure, mfdata
+from ...utils import datautil
 from collections import OrderedDict
 from ..mfbase import ExtFileAction, MFDataException
+from ...datbase import DataType
 
 
 class MFScalar(mfdata.MFData):
@@ -56,14 +58,38 @@ class MFScalar(mfdata.MFData):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFScalar, self).__init__(sim_data, structure, enable, path,
-                                       dimensions)
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFScalar, self).__init__(sim_data, model_or_sim, structure,
+                                       enable, path, dimensions)
         self._data_type = self.structure.data_item_structures[0].type
         self._data_storage = self._new_storage()
         if data is not None:
             self.set_data(data)
+
+    @property
+    def data_type(self):
+        return DataType.scalar
+
+    @property
+    def plotable(self):
+        return False
+
+    @property
+    def dtype(self):
+        if self.structure.type == DatumType.double_precision:
+            return np.float32
+        elif self.structure.type == DatumType.integer:
+            return np.int
+        elif self.structure.type == DatumType.recarray or \
+                self.structure.type == DatumType.record or \
+                self.structure.type == DatumType.repeating_record:
+            for data_item_struct in self.structure.data_item_structures:
+                if data_item_struct.type == DatumType.double_precision:
+                    return np.float32
+                elif data_item_struct.type == DatumType.integer:
+                    return np.int
+        return None
 
     def has_data(self):
         try:
@@ -94,6 +120,8 @@ class MFScalar(mfdata.MFData):
                                   self._simulation_data.debug, ex)
 
     def set_data(self, data):
+        self._resync()
+        storge = self._get_storage_obj()
         if self.structure.type == DatumType.record:
             if data is not None:
                 if not isinstance(data, list) or isinstance(data, np.ndarray) or \
@@ -374,13 +402,13 @@ class MFScalar(mfdata.MFData):
              pre_data_comments=None):
         super(MFScalar, self).load(first_line, file_handle, block_header,
                                    pre_data_comments=None)
-
+        self._resync()
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
 
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         # verify keyword
         index_num, aux_var_index = self._load_keyword(arr_line, 0)
@@ -512,7 +540,7 @@ class MFScalar(mfdata.MFData):
 
         if len(arr_line) > index_num:
             # save remainder of line as comment
-            self._add_data_line_comment(arr_line[index_num:], 0)
+            storage.add_data_line_comment(arr_line[index_num:], 0)
         return [False, None]
 
     def _new_storage(self):
@@ -524,6 +552,35 @@ class MFScalar(mfdata.MFData):
 
     def _get_storage_obj(self):
         return self._data_storage
+
+    def plot(self, filename_base=None,
+             file_extension=None, **kwargs):
+        """
+        Helper method to plot scalar objects
+
+        Parameters:
+            scalar : flopy.mf6.data.mfscalar object
+            filename_base : str
+                Base file name that will be used to automatically generate file
+                names for output image files. Plots will be exported as image
+                files if file_name_base is not None. (default is None)
+            file_extension : str
+                Valid matplotlib.pyplot file extension for savefig(). Only used
+                if filename_base is not None. (default is 'png')
+
+        Returns:
+             axes: list matplotlib.axes object
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Scalar values are not plotable")
+
+        axes = PlotUtilities._plot_scalar_helper(self,
+                                                 filename_base=filename_base,
+                                                 file_extension=file_extension,
+                                                 **kwargs)
+        return axes
 
 
 class MFScalarTransient(MFScalar, mfdata.MFTransient):
@@ -579,15 +636,27 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFScalarTransient, self).__init__(sim_data=sim_data,
+                                                model_or_sim=model_or_sim,
                                                 structure=structure,
                                                 enable=enable,
                                                 path=path,
                                                 dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transientscalar
+
+    @property
+    def plotable(self):
+        if self.model is None:
+            return False
+        else:
+            return True
 
     def add_transient_key(self, key):
         super(MFScalarTransient, self).add_transient_key(key)
@@ -662,3 +731,68 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                 self._current_key not in self._data_storage:
             return None
         return self._data_storage[self._current_key]
+
+    def plot(self, filename_base=None, file_extension=None,
+             kper=0, fignum=None, **kwargs):
+        """
+        Plot transient scalar model data
+
+        Parameters
+        ----------
+        transientscalar : flopy.mf6.data.mfdatascalar.MFScalarTransient object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
+        axes = PlotUtilities._plot_transient2d_helper(self,
+                                                      filename_base=filename_base,
+                                                      file_extension=file_extension,
+                                                      kper=kper,
+                                                      fignum=fignum,
+                                                      **kwargs)
+        return axes

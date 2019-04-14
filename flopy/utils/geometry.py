@@ -11,14 +11,12 @@ class Polygon:
     def __init__(self, exterior, interiors=None):
         """Container for housing and describing polygon geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         exterior : sequence
             Sequence of coordinates describing the outer ring of the polygon.
         interiors : sequence of sequences
             Describes one or more holes within the polygon
-
         Attributes
         ----------
         exterior : (x, y, z) coordinates of exterior
@@ -31,7 +29,6 @@ class Polygon:
         pyshp_parts : list of lists
             Returns a list of all parts (each an individual polygon).
             Can be used as input for the shapefile.Writer.poly method (pyshp package)
-
         Methods
         -------
         get_patch
@@ -42,7 +39,6 @@ class Polygon:
             Plots the feature using descartes (via get_patch) and matplotlib.pyplot.
             Accepts keyword arguments to descartes.PolygonPatch. Requires the
             descartes package (pip install descartes).
-
         Notes
         -----
         Multi-polygons not yet supported.
@@ -50,6 +46,15 @@ class Polygon:
         """
         self.exterior = tuple(map(tuple, exterior))
         self.interiors = tuple() if interiors is None else (map(tuple, i) for i in interiors)
+
+    def __eq__(self, other):
+        if not isinstance(other, Polygon):
+            return False
+        if other.exterior != self.exterior:
+            return False
+        if other.interiors != self.interiors:
+            return False
+        return True
 
     @property
     def _exterior_x(self):
@@ -89,11 +94,9 @@ class Polygon:
 
     def plot(self, ax=None, **kwargs):
         """Plot the feature.
-
         Parameters
         ----------
         ax : matplotlib.pyplot axes instance
-
         Accepts keyword arguments to descartes.PolygonPatch. Requires the
         descartes package (pip install descartes).
         """
@@ -123,12 +126,10 @@ class LineString:
     def __init__(self, coordinates):
         """Container for housing and describing linestring geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         coordinates : sequence
             Sequence of coordinates describing a line
-
         Attributes
         ----------
         coords : list of (x, y, z) coordinates
@@ -142,13 +143,11 @@ class LineString:
         pyshp_parts : list of lists
             Returns a list of all parts (each an individual linestring).
             Can be used as input for the shapefile.Writer.line method (pyshp package)
-
         Methods
         -------
         plot
             Plots the feature using matplotlib.pyplot.
             Accepts keyword arguments to pyplot.plot.
-
         Notes
         -----
         Multi-linestrings not yet supported.
@@ -157,6 +156,17 @@ class LineString:
         self.coords = list(map(tuple, coordinates))
         if len(self.coords[0]) == 3:
             self.has_z = True
+
+    def __eq__(self, other):
+        if not isinstance(other, LineString):
+            return False
+        if other.x != self.x:
+            return False
+        if other.y != self.y:
+            return False
+        if other.z != self.z:
+            return False
+        return True
 
     @property
     def x(self):
@@ -211,12 +221,10 @@ class Point:
     def __init__(self, *coordinates):
         """Container for housing and describing point geometries
         (e.g. to be read or written to shapefiles or other geographic data formats)
-
         Parameters
         ----------
         coordinates : tuple
             x, y or x, y, z
-
         Attributes
         ----------
         coords : x, y, z coordinates
@@ -229,13 +237,11 @@ class Point:
             Returns a geojson representation of the feature
         pyshp_parts : list of tuples
             Can be used as input for the shapefile.Writer.line method (pyshp package)
-
         Methods
         -------
         plot
             Plots the feature using matplotlib.pyplot.
             Accepts keyword arguments to pyplot.scatter.
-
         Notes
         -----
         z information is only stored if it was entered.
@@ -246,6 +252,17 @@ class Point:
         self.coords = coordinates
         if len(coordinates) == 3:
             self.has_z = True
+
+    def __eq__(self, other):
+        if not isinstance(other, Point):
+            return False
+        if other.x != self.x:
+            return False
+        if other.y != self.y:
+            return False
+        if other.z != self.z:
+            return False
+        return True
 
     @property
     def x(self):
@@ -290,24 +307,73 @@ class Point:
         ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
         ax.set_ylim(ymin-1, ymax+1)
 
+
+def rotate(x, y, xoff, yoff, angrot_radians):
+    """
+    Given x and y array-like values calculate the rotation about an
+    arbitrary origin and then return the rotated coordinates.
+
+    """
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
+
+    xrot = xoff + np.cos(angrot_radians) * \
+           (x - xoff) - np.sin(angrot_radians) * \
+           (y - yoff)
+    yrot = yoff + np.sin(angrot_radians) * \
+           (x - xoff) + np.cos(angrot_radians) * \
+           (y - yoff)
+
+    return xrot, yrot
+
+
+def transform(x, y, xoff, yoff, angrot_radians,
+              length_multiplier=1., inverse=False):
+    """
+    Given x and y array-like values calculate the translation about an
+    arbitrary origin and then return the rotated coordinates.
+
+    """
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
+
+    if not np.isscalar(x):
+        x, y = x.copy(), y.copy()
+
+    if not inverse:
+        x *= length_multiplier
+        y *= length_multiplier
+        x += xoff
+        y += yoff
+        xrot, yrot = rotate(x, y, xoff, yoff, angrot_radians)
+
+    else:
+        xrot, yrot = rotate(x, y, xoff, yoff, -angrot_radians)
+        xrot -= xoff
+        yrot -= yoff
+        xrot /= length_multiplier
+        yrot /= length_multiplier
+
+    return xrot, yrot
+
+
 def shape(pyshp_shpobj):
     """Convert a pyshp geometry object to a flopy geometry object.
-
     Parameters
     ----------
     pyshp_shpobj : shapefile._Shape instance
-
     Returns
     -------
     shape : flopy.utils.geometry Polygon, Linestring, or Point
-
     Notes
     -----
     Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
-
     Examples
     --------
-
     >>> import shapefile as sf
     >>> from flopy.utils.geometry import shape
     >>> sfobj = sf.Reader('shapefile.shp')
@@ -323,18 +389,14 @@ def shape(pyshp_shpobj):
 def get_polygon_area(verts):
     """
     Calculate the area of a closed polygon
-
     Parameters
     ----------
-
     verts : numpy.ndarray
         polygon vertices
-
     Returns
     -------
     area : float
         area of polygon centroid
-
     """
     nverts = verts.shape[0]
     a = 0.
@@ -351,18 +413,14 @@ def get_polygon_area(verts):
 def get_polygon_centroid(verts):
     """
     Calculate the centroid of a closed polygon
-
     Parameters
     ----------
-
     verts : numpy.ndarray
         polygon vertices
-
     Returns
     -------
     centroid : tuple
         (x, y) of polygon centroid
-
     """
     nverts = verts.shape[0]
     cx = 0.
@@ -378,3 +436,27 @@ def get_polygon_centroid(verts):
     cx = cx * 1./ 6. / a
     cy = cy * 1./ 6. / a
     return cx, cy
+
+
+def is_clockwise(x, y):
+    """
+    Determine if a ring is defined clockwise
+    
+    Parameters
+    ----------
+    x : numpy ndarray
+        The x-coordinates of the ring
+    y : numpy ndarray
+        The y-coordinate of the ring
+
+    Returns
+    -------
+    clockwise : bool
+        True when the ring is defined clockwise, False otherwise
+    
+    """
+    if not (x[0] == x[-1]) and (y[0] == y[-1]):
+        # close the ring if needed
+        x = np.append(x, x[-1])
+        y = np.append(y, y[-1])
+    return np.sum((np.diff(x)) * (y[1:] + y[:-1])) > 0

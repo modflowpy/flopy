@@ -4,20 +4,24 @@ Instructions for making a FloPy release
 ## Make a release branch from develop
 
 1.  Make a release branch from develop (*e.g.* `release3.2.10`)
-2.  Update MODFLOW 6 dfn files and MODFLOW 6 package classes by running the `update_flopy.py` script in the [MODFLOW 6 github repo](https://github.com/MODFLOW-USGS/modflow6). Make sure you have checked out the latest MODFLOW 6 release on `MASTER` or the soon to be released `DEVELOP` branch in SourceTree prior to running the `update_flopy.py` script. 
+2.  Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running: 
+
+    ```
+    python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
+    ```
 
 
 ## Update the release version number
 
-1.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate. The pre-commit hook will update the `build` variable to 0 since a `tag` has not been created for the release yet.
+1.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate.
 
 
 ## Build USGS release notes
 
-1.  Manually run pre-commit.py to update version information using:
+1.  Manually run `make-release.py` in the `release/` directory to update version information using:
 
     ```
-    python pre-commit.py
+    python make-release.py
     ```
 
 2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
@@ -102,9 +106,18 @@ Instructions for making a FloPy release
     ```
     cd /Users/jdhughes/Documents/Development/flopy-feedstock_git
     git fetch upstream
+    git checkout master
+    git reset --hard upstream/master  
+    git push origin master --force     
     ```
 
-3.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
+4.  Rerender the repo using `conda-smithy` (make sure `conda-smithy` is installed using conda):
+
+    ```
+    conda smithy rerender
+    ```
+
+4.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
 
 5.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
 
@@ -114,4 +127,15 @@ Instructions for making a FloPy release
 ## Sync develop and master branches
 
 1.  Merge the `master` branch into the `develop` branch.
-2.  Commit and push the modified `develop` branch.
+
+2.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate.
+
+3.  Manually run `make-release.py` in the `release/` directory to update version information using:
+
+    ```
+    python make-release.py
+    ```    
+4.  Commit and push the modified `develop` branch.
+    
+    
+    

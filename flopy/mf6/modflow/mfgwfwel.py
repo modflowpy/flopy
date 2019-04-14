@@ -59,17 +59,16 @@ class ModflowGwfwel(mfpackage.MFPackage):
           bottom. AUTO_FLOW_REDUCE is set to 0.1 if the specified value is less
           than or equal to zero. By default, negative pumping rates are not
           reduced during a simulation.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the Well package. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the Well
-          package.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can be stored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can be stored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     mover : boolean
         * mover (boolean) keyword to indicate that this instance of the Well
           Package can be used with the Water Mover (MVR) Package. When the
@@ -103,7 +102,7 @@ class ModflowGwfwel(mfpackage.MFPackage):
           character variable that can contain as many as 40 characters. If
           BOUNDNAME contains spaces in it, then the entire name must be
           enclosed within single quotes.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -122,7 +121,7 @@ class ModflowGwfwel(mfpackage.MFPackage):
     stress_period_data = ListTemplateGenerator(('gwf6', 'wel', 'period', 
                                                 'stress_period_data'))
     package_abbr = "gwfwel"
-    package_type = "wel"
+    _package_type = "wel"
     dfn_file_name = "gwf-wel.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 
@@ -141,7 +140,8 @@ class ModflowGwfwel(mfpackage.MFPackage):
             "type double precision", "reader urword", "optional true"],
            ["block options", "name ts_filerecord", 
             "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -153,7 +153,8 @@ class ModflowGwfwel(mfpackage.MFPackage):
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
             "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -186,10 +187,10 @@ class ModflowGwfwel(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, auto_flow_reduce=None,
-                 ts_filerecord=None, obs_filerecord=None, mover=None,
-                 maxbound=None, stress_period_data=None, fname=None,
-                 pname=None, parent_file=None):
-        super(ModflowGwfwel, self).__init__(model, "wel", fname, pname,
+                 timeseries=None, observations=None, mover=None, maxbound=None,
+                 stress_period_data=None, filename=None, pname=None,
+                 parent_file=None):
+        super(ModflowGwfwel, self).__init__(model, "wel", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -201,9 +202,16 @@ class ModflowGwfwel(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
         self.auto_flow_reduce = self.build_mfdata("auto_flow_reduce", 
                                                   auto_flow_reduce)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
         self.stress_period_data = self.build_mfdata("stress_period_data", 

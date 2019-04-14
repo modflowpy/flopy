@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import flopy.utils
+from ..discretization.structuredgrid import StructuredGrid
 
 
 class Header(object):
@@ -86,12 +87,17 @@ class LayerFile(object):
     """
 
     def __init__(self, filename, precision, verbose, kwargs):
-        assert os.path.exists(
-            filename), "datafile error: datafile not found:" + str(filename)
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
         self.file = open(self.filename, 'rb')
+        # Get filesize to ensure this is not an empty file
+        self.file.seek(0, 2)
+        totalbytes = self.file.tell()
+        self.file.seek(0, 0)  # reset to beginning
+        assert self.file.tell() == 0
+        if totalbytes == 0:
+            raise IOError('datafile error: file is empty: ' + str(filename))
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
@@ -109,16 +115,16 @@ class LayerFile(object):
 
         self.model = None
         self.dis = None
-        self.sr = None
+        self.mg = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
-            self.sr = self.model.sr
+            self.mg = self.model.modelgrid
             self.dis = self.model.dis
         if 'dis' in kwargs.keys():
             self.dis = kwargs.pop('dis')
-            self.sr = self.dis.parent.sr
-        if 'sr' in kwargs.keys():
-            self.sr = kwargs.pop('sr')
+            self.mg = self.dis.parent.modelgrid
+        if "modelgrid" in kwargs.keys():
+            self.mg = kwargs.pop('modelgrid')
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
             raise Exception('LayerFile error: unrecognized kwargs: ' + args)
@@ -128,9 +134,11 @@ class LayerFile(object):
 
         # now that we read the data and know nrow and ncol,
         # we can make a generic sr if needed
-        if self.sr is None:
-            self.sr = flopy.utils.SpatialReference(np.ones(self.ncol),
-                                                   np.ones(self.nrow), 0)
+        if self.mg is None:
+            self.mg = StructuredGrid(delc=np.ones((self.nrow,)),
+                                     delr=np.ones(self.ncol,),
+                                     xoff=0.0, yoff=0.0,
+                                     angrot=0.0)
         return
 
     def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None,
@@ -177,15 +185,15 @@ class LayerFile(object):
                                   .transpose()).transpose()
         if mflay != None:
             attrib_dict = {
-                attrib_name + '{0:03d}'.format(mflay): plotarray[0, :, :]}
+                attrib_name + '{}'.format(mflay): plotarray[0, :, :]}
         else:
             attrib_dict = {}
             for k in range(plotarray.shape[0]):
-                name = attrib_name + '{0:03d}'.format(k)
+                name = attrib_name + '{}'.format(k)
                 attrib_dict[name] = plotarray[k]
 
-        from ..export.shapefile_utils import write_grid_shapefile
-        write_grid_shapefile(filename, self.sr, attrib_dict)
+        from ..export.shapefile_utils import write_grid_shapefile2
+        write_grid_shapefile2(filename, self.mg, attrib_dict)
 
     def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
              filename_base=None, **kwargs):
@@ -284,11 +292,16 @@ class LayerFile(object):
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
                                                 totim=totim, mflay=mflay)
                                   .transpose()).transpose()
-        import flopy.plot.plotutil as pu
-        return pu._plot_array_helper(plotarray, model=self.model, sr=self.sr,
-                                     axes=axes,
-                                     filenames=filenames,
-                                     mflay=mflay, **kwargs)
+
+        from flopy.plot.plotutil import PlotUtilities
+
+        return PlotUtilities._plot_array_helper(plotarray,
+                                                model=self.model,
+                                                axes=axes,
+                                                filenames=filenames,
+                                                mflay=mflay,
+                                                modelgrid=self.mg,
+                                                **kwargs)
 
     def _build_index(self):
         """

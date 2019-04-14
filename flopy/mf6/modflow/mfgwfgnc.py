@@ -76,7 +76,7 @@ class ModflowGwfgnc(mfpackage.MFPackage):
           the sum of ALPHASJ is equal to the alpha term (alpha n in equation
           4-61 of the GWF Model report) that is multiplied by the head in cell
           n.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -89,7 +89,7 @@ class ModflowGwfgnc(mfpackage.MFPackage):
     gncdata = ListTemplateGenerator(('gwf6', 'gnc', 'gncdata', 
                                      'gncdata'))
     package_abbr = "gwfgnc"
-    package_type = "gnc"
+    _package_type = "gnc"
     dfn_file_name = "gwf-gnc.dfn"
 
     dfn = [["block options", "name print_input", "type keyword", 
@@ -120,8 +120,8 @@ class ModflowGwfgnc(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False, print_input=None,
                  print_flows=None, explicit=None, numgnc=None, numalphaj=None,
-                 gncdata=None, fname=None, pname=None, parent_file=None):
-        super(ModflowGwfgnc, self).__init__(model, "gnc", fname, pname,
+                 gncdata=None, filename=None, pname=None, parent_file=None):
+        super(ModflowGwfgnc, self).__init__(model, "gnc", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

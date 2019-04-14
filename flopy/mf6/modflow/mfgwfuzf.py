@@ -52,17 +52,16 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
-    ts_filerecord : [ts6_filename]
-        * ts6_filename (string) defines a time-series file defining time series
-          that can be used to assign time-varying values. See the "Time-
-          Variable Input" section for instructions on using the time-series
-          capability.
-    obs_filerecord : [obs6_filename]
-        * obs6_filename (string) name of input file to define observations for
-          the UZF package. See the "Observation utility" section for
-          instructions for preparing observation input files. Table
-          reftable:obstype lists observation type(s) supported by the UZF
-          package.
+    timeseries : {varname:data} or timeseries data
+        * Contains data for the ts package. Data can be stored in a dictionary
+          containing data for the ts package with variable names as keys and
+          package data as values. Data just for the timeseries variable is also
+          acceptable. See ts package documentation for more information.
+    observations : {varname:data} or continuous data
+        * Contains data for the obs package. Data can be stored in a dictionary
+          containing data for the obs package with variable names as keys and
+          package data as values. Data just for the observations variable is
+          also acceptable. See obs package documentation for more information.
     mover : boolean
         * mover (boolean) keyword to indicate that this instance of the UZF
           Package can be used with the Water Mover (MVR) Package. When the
@@ -71,7 +70,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     simulate_et : boolean
         * simulate_et (boolean) keyword specifying that ET in the unsaturated
           (UZF) and saturated zones (GWF) will be simulated. ET can be
-          simulated in the UZF cell and not the GWF cell by emitting keywords
+          simulated in the UZF cell and not the GWF cell by omitting keywords
           LINEAR_GWET and SQUARE_GWET.
     linear_gwet : boolean
         * linear_gwet (boolean) keyword specifying that groundwater ET will be
@@ -98,11 +97,11 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           formulation. Capillary pressure is calculated using the Brooks-Corey
           retention function.
     nuzfcells : integer
-        * nuzfcells (integer) is the number of UZF cells. More than 1 UZF cell
-          can be assigned to a GWF cell; however, only 1 GWF cell can be
-          assigned to a single UZF cell. If the MULTILAYER option is used then
-          UZF cells can be assigned to GWF cells below (in deeper layers than)
-          the upper most active GWF cells.
+        * nuzfcells (integer) is the number of UZF cells. More than one UZF
+          cell can be assigned to a GWF cell; however, only one GWF cell can be
+          assigned to a single UZF cell. If more than one UZF cell is assigned
+          to a GWF cell, then an auxiliary variable should be used to reduce
+          the surface area of the UZF cell with the AUXMULTNAME option.
     ntrailwaves : integer
         * ntrailwaves (integer) is the number of trailing waves. NTRAILWAVES
           has a default value of 7 and can be increased to lower mass balance
@@ -132,9 +131,10 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           surface cell.
         * ivertcon (integer) integer value set to specify underlying UZF cell
           that receives water flowing to bottom of cell. If unsaturated zone
-          flow reaches water table before the cell bottom then water is added
-          to GWF cell instead of flowing to underlying UZF cell. A value of 0
-          indicates the UZF cell is not connected to an underlying UZF cell.
+          flow reaches the water table before the cell bottom, then water is
+          added to the GWF cell instead of flowing to the underlying UZF cell.
+          A value of 0 indicates the UZF cell is not connected to an underlying
+          UZF cell.
         * surfdep (double) is the surface depression depth of the UZF cell.
         * vks (double) is the vertical saturated hydraulic conductivity of the
           UZF cell.
@@ -211,7 +211,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           (see the "Time-Variable Input" section), values can be obtained from
           a time series by entering the time-series name in place of a numeric
           value.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -234,7 +234,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     perioddata = ListTemplateGenerator(('gwf6', 'uzf', 'period', 
                                         'perioddata'))
     package_abbr = "gwfuzf"
-    package_type = "uzf"
+    _package_type = "uzf"
     dfn_file_name = "gwf-uzf.dfn"
 
     dfn = [["block options", "name auxiliary", "type string", 
@@ -263,7 +263,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
             "tagged false", "optional false"],
            ["block options", "name ts_filerecord", 
             "type record ts6 filein ts6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package ts", 
+            "construct_data timeseries", "parameter_name timeseries"],
            ["block options", "name ts6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -275,7 +276,8 @@ class ModflowGwfuzf(mfpackage.MFPackage):
             "optional false", "tagged false"],
            ["block options", "name obs_filerecord", 
             "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true"],
+            "tagged true", "optional true", "construct_package obs", 
+            "construct_data continuous", "parameter_name observations"],
            ["block options", "name obs6", "type keyword", "shape", 
             "in_record true", "reader urword", "tagged true", 
             "optional false"],
@@ -369,13 +371,13 @@ class ModflowGwfuzf(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, auxiliary=None,
                  auxmultname=None, boundnames=None, print_input=None,
                  print_flows=None, save_flows=None, budget_filerecord=None,
-                 ts_filerecord=None, obs_filerecord=None, mover=None,
+                 timeseries=None, observations=None, mover=None,
                  simulate_et=None, linear_gwet=None, square_gwet=None,
                  simulate_gwseep=None, unsat_etwc=None, unsat_etae=None,
                  nuzfcells=None, ntrailwaves=None, nwavesets=None,
-                 packagedata=None, perioddata=None, fname=None, pname=None,
+                 packagedata=None, perioddata=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfuzf, self).__init__(model, "uzf", fname, pname,
+        super(ModflowGwfuzf, self).__init__(model, "uzf", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables
@@ -387,9 +389,16 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
         self.budget_filerecord = self.build_mfdata("budget_filerecord", 
                                                    budget_filerecord)
-        self.ts_filerecord = self.build_mfdata("ts_filerecord",  ts_filerecord)
-        self.obs_filerecord = self.build_mfdata("obs_filerecord", 
-                                                obs_filerecord)
+        self._ts_filerecord = self.build_mfdata("ts_filerecord", 
+                                                None)
+        self._ts_package = self.build_child_package("ts", timeseries,
+                                                    "timeseries", 
+                                                    self._ts_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous", 
+                                                     self._obs_filerecord)
         self.mover = self.build_mfdata("mover",  mover)
         self.simulate_et = self.build_mfdata("simulate_et",  simulate_et)
         self.linear_gwet = self.build_mfdata("linear_gwet",  linear_gwet)

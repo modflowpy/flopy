@@ -53,7 +53,7 @@ def load_and_write(mfnam, pth):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'base model run did not terminate successfully'
         fn0 = os.path.join(lpth, mfnam)
 
@@ -77,7 +77,7 @@ def load_and_write(mfnam, pth):
         try:
             success, buff = m.run_model(silent=False)
         except:
-            pass
+            success = False
         assert success, 'new model run did not terminate successfully'
         fn1 = os.path.join(apth, mfnam)
 
@@ -89,6 +89,7 @@ def load_and_write(mfnam, pth):
         try:
             success = pymake.compare_heads(fn0, fn1, outfile=fsum)
         except:
+            success = False
             print('could not perform head comparison')
 
         assert success, 'head comparison failure'
@@ -101,6 +102,7 @@ def load_and_write(mfnam, pth):
             success = pymake.compare_heads(fn0, fn1, outfile=fsum,
                                            text='drawdown')
         except:
+            success = False
             print('could not perform drawdown comparison')
 
         assert success, 'head comparison failure'
@@ -114,6 +116,7 @@ def load_and_write(mfnam, pth):
                                             max_incpd=0.1, max_cumpd=0.1,
                                             outfile=fsum)
         except:
+            success = False
             print('could not perform budget comparison')
 
         assert success, 'budget comparison failure'

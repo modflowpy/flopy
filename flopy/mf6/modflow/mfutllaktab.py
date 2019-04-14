@@ -35,7 +35,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         * barea (double) real value that defines the lake-GWF exchange area
           corresponding to the stage specified on the line. BAREA is only
           specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -47,7 +47,7 @@ class ModflowUtllaktab(mfpackage.MFPackage):
     """
     table = ListTemplateGenerator(('tab', 'table', 'table'))
     package_abbr = "utltab"
-    package_type = "tab"
+    _package_type = "tab"
     dfn_file_name = "utl-lak-tab.dfn"
 
     dfn = [["block dimensions", "name nrow", "type integer", 
@@ -68,8 +68,8 @@ class ModflowUtllaktab(mfpackage.MFPackage):
             "optional true"]]
 
     def __init__(self, model, loading_package=False, nrow=None, ncol=None,
-                 table=None, fname=None, pname=None, parent_file=None):
-        super(ModflowUtllaktab, self).__init__(model, "tab", fname, pname,
+                 table=None, filename=None, pname=None, parent_file=None):
+        super(ModflowUtllaktab, self).__init__(model, "tab", filename, pname,
                                                loading_package, parent_file)        
 
         # set up variables

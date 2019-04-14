@@ -1,88 +1,73 @@
-import copy
-import sys
 import numpy as np
+import sys
+from ..discretization import StructuredGrid, UnstructuredGrid
+from ..utils import geometry
 
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
-except:
+    from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Polygon
+except ImportError:
     plt = None
+
 from . import plotutil
-from .plotutil import bc_color_dict
-from ..utils import SpatialReference, SpatialReferenceUnstructured
+import warnings
+warnings.simplefilter('always', PendingDeprecationWarning)
 
 
-class ModelMap(object):
+class PlotMapView(object):
     """
-    Class to create a map of the model.
+    Class to create a map of the model. Delegates plotting
+    functionality based on model grid type.
 
     Parameters
     ----------
-    sr : flopy.utils.reference.SpatialReference
-        The spatial reference class (Default is None)
+    modelgrid : flopy.discretiztion.Grid
+        The modelgrid class can be StructuredGrid, VertexGrid,
+        or UnstructuredGrid (Default is None)
     ax : matplotlib.pyplot axis
         The plot axis.  If not provided it, plt.gca() will be used.
         If there is not a current axis then a new one will be created.
     model : flopy.modflow object
         flopy model object. (Default is None)
-    dis : flopy.modflow.ModflowDis object
-        flopy discretization object. (Default is None)
     layer : int
         Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
-    xul : float
-        x coordinate for upper left corner
-    yul : float
-        y coordinate for upper left corner.  The default is the sum of the
-        delc array.
-    rotation : float
-        Angle of grid rotation around the upper left corner.  A positive value
-        indicates clockwise rotation.  Angles are in degrees.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
 
     Notes
     -----
-    ModelMap must know the position and rotation of the grid in order to make
-    the plot.  This information is contained in the SpatialReference class
-    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
-    If dis is None, then it looks for sr in model.dis.  If all of these
-    arguments are none, then it uses xul, yul, and rotation.  If none of these
-    arguments are provided, then it puts the lower-left-hand corner of the
-    grid at (0, 0).
+
 
     """
+    def __init__(self, model=None, modelgrid=None, ax=None,
+                 layer=0, extent=None):
 
-    def __init__(self, sr=None, ax=None, model=None, dis=None, layer=0,
-                 extent=None, xul=None, yul=None, xll=None, yll=None,
-                 rotation=0., length_multiplier=1.):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
-            raise Exception(s)
+            raise ImportError(s)
 
         self.model = model
         self.layer = layer
-        self.dis = dis
-        self.sr = None
-        if sr is not None:
-            self.sr = copy.deepcopy(sr)
-        elif dis is not None:
-            # print("warning: the dis arg to model map is deprecated")
-            self.sr = copy.deepcopy(dis.parent.sr)
-        elif model is not None:
-            # print("warning: the model arg to model map is deprecated")
-            self.sr = copy.deepcopy(model.sr)
-        else:
-            self.sr = SpatialReference(xll=xll, yll=yll, xul=xul, yul=yul,
-                                       rotation=rotation,
-                                       length_multiplier=length_multiplier)
+        self.mg = None
 
-        # model map override spatial reference settings
-        if any(elem is not None for elem in (xul, yul, xll, yll)) or \
-                rotation != 0 or length_multiplier != 1.:
-            self.sr.length_multiplier = length_multiplier
-            self.sr.set_spatialreference(xul, yul, xll, yll, rotation)
+        if model is not None:
+            self.mg = model.modelgrid
+
+        elif modelgrid is not None:
+            self.mg = modelgrid
+
+        else:
+            err_msg = "A model grid instance must be provided to PlotMapView"
+            raise AssertionError(err_msg)
+
+        if self.mg.grid_type not in ("structured", "vertex",
+                                     "unstructured"):
+            err_msg = "Unrecognized modelgrid type {}"
+            raise TypeError(err_msg.format(self.mg.grid_type))
 
         if ax is None:
             try:
@@ -92,17 +77,16 @@ class ModelMap(object):
                 self.ax = plt.subplot(1, 1, 1, aspect='equal', axisbg="white")
         else:
             self.ax = ax
+
         if extent is not None:
             self._extent = extent
         else:
             self._extent = None
 
-        return
-
     @property
     def extent(self):
         if self._extent is None:
-            self._extent = self.sr.get_extent()
+            self._extent = self.mg.extent
         return self._extent
 
     def plot_array(self, a, masked_values=None, **kwargs):
@@ -121,38 +105,75 @@ class ModelMap(object):
 
         Returns
         -------
-        quadmesh : matplotlib.collections.QuadMesh
+        quadmesh : matplotlib.collections.QuadMesh or
+            matplotlib.collections.PatchCollection
 
         """
-        if a.ndim == 3:
-            plotarray = a[self.layer, :, :]
-        elif a.ndim == 2:
+        if not isinstance(a, np.ndarray):
+            a = np.array(a)
+
+        if self.mg.grid_type == "structured":
+            if a.ndim == 3:
+                plotarray = a[self.layer, :, :]
+            elif a.ndim == 2:
+                plotarray = a
+            elif a.ndim == 1:
+                plotarray = a
+            else:
+                raise Exception('Array must be of dimension 1, 2, or 3')
+
+        elif self.mg.grid_type == "vertex":
+            if a.ndim == 2:
+                plotarray = a[self.layer, :]
+            elif a.ndim == 1:
+                plotarray = a
+            else:
+                raise Exception('Array must be of dimension 1 or 2')
+
+        elif self.mg.grid_type == "unstructured":
             plotarray = a
-        elif a.ndim == 1:
-            plotarray = a
+
         else:
-            raise Exception('Array must be of dimension 1, 2 or 3')
+            raise TypeError("Unrecognized grid type {}".format(self.mg.grid_type))
+
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
 
-        # quadmesh = ax.pcolormesh(self.sr.xgrid, self.sr.ygrid, plotarray,
-        #                          **kwargs)
-        quadmesh = self.sr.plot_array(plotarray, ax=ax)
+        if self.mg.grid_type in ("structured", "vertex"):
+            xgrid = np.array(self.mg.xvertices)
+            ygrid = np.array(self.mg.yvertices)
+
+            if self.mg.grid_type == "structured":
+                quadmesh = ax.pcolormesh(xgrid, ygrid, plotarray)
+
+            else:
+                patches = [Polygon(list(zip(xgrid[i], ygrid[i])), closed=True)
+                           for i in range(xgrid.shape[0])]
+
+                quadmesh = PatchCollection(patches)
+                quadmesh.set_array(plotarray)
+
+        else:
+            quadmesh = plotutil.plot_cvfd(self.mg._vertices, self.mg._iverts,
+                                          a=a, ax=ax)
 
         # set max and min
         if 'vmin' in kwargs:
             vmin = kwargs.pop('vmin')
         else:
             vmin = None
+
         if 'vmax' in kwargs:
             vmax = kwargs.pop('vmax')
         else:
             vmax = None
+
         quadmesh.set_clim(vmin=vmin, vmax=vmax)
 
         # send rest of kwargs to quadmesh
@@ -185,28 +206,89 @@ class ModelMap(object):
         contour_set : matplotlib.pyplot.contour
 
         """
-        if a.ndim == 3:
-            plotarray = a[self.layer, :, :]
-        elif a.ndim == 2:
-            plotarray = a
-        elif a.ndim == 1:
-            plotarray = a
+        try:
+            import matplotlib.tri as tri
+        except ImportError:
+            err_msg = "Matplotlib must be updated to use contour_array"
+            raise ImportError(err_msg)
+
+        if not isinstance(a, np.ndarray):
+            a = np.array(a)
+
+        xcentergrid = np.array(self.mg.xcellcenters)
+        ycentergrid = np.array(self.mg.ycellcenters)
+
+        if self.mg.grid_type == "structured":
+            if a.ndim == 3:
+                plotarray = a[self.layer, :, :]
+            elif a.ndim == 2:
+                plotarray = a
+            elif a.ndim == 1:
+                plotarray = a
+            else:
+                raise Exception('Array must be of dimension 1, 2 or 3')
+
+        elif self.mg.grid_type == "vertex":
+            if a.ndim == 2:
+                plotarray = a[self.layer, :]
+            elif a.ndim == 1:
+                plotarray = a
+            else:
+                raise Exception('Array must be of dimension 1, 2 or 3')
+
         else:
-            raise Exception('Array must be of dimension 1, 2 or 3')
+            plotarray = a
+
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         if 'colors' in kwargs.keys():
             if 'cmap' in kwargs.keys():
-                cmap = kwargs.pop('cmap')
-            cmap = None
-        # contour_set = ax.contour(self.sr.xcentergrid, self.sr.ycentergrid,
-        #                         plotarray, **kwargs)
-        contour_set = self.sr.contour_array(ax, plotarray, **kwargs)
+                kwargs.pop('cmap')
+
+        plot_triplot = False
+        if 'plot_triplot' in kwargs:
+            plot_triplot = kwargs.pop('plot_triplot')
+
+        if 'extent' in kwargs:
+            extent = kwargs.pop('extent')
+
+            if self.mg.grid_type in ('structured', 'vertex'):
+                idx = (xcentergrid >= extent[0]) & (
+                       xcentergrid <= extent[1]) & (
+                              ycentergrid >= extent[2]) & (
+                              ycentergrid <= extent[3])
+                plotarray = plotarray[idx]
+                xcentergrid = xcentergrid[idx]
+                ycentergrid = ycentergrid[idx]
+
+        plotarray = plotarray.flatten()
+        xcentergrid = xcentergrid.flatten()
+        ycentergrid = ycentergrid.flatten()
+        triang = tri.Triangulation(xcentergrid, ycentergrid)
+
+        mask = None
+        try:
+            amask = plotarray.mask
+            mask = [False for i in range(triang.triangles.shape[0])]
+            for ipos, (n0, n1, n2) in enumerate(triang.triangles):
+                if amask[n0] or amask[n1] or amask[n2]:
+                    mask[ipos] = True
+            triang.set_mask(mask)
+        except:
+            pass
+
+        contour_set = ax.tricontour(triang, plotarray, **kwargs)
+
+        if plot_triplot:
+            ax.triplot(triang, color='black', marker='o', lw=0.75)
+
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
 
@@ -230,14 +312,11 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            if self.mg.idomain is None:
+                raise AssertionError("Ibound/Idomain array must be provided")
+
+            ibound = self.mg.idomain
 
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
@@ -250,7 +329,7 @@ class ModelMap(object):
         return quadmesh
 
     def plot_ibound(self, ibound=None, color_noflow='black', color_ch='blue',
-                    **kwargs):
+                    color_vpt='red', **kwargs):
         """
         Make a plot of ibound.  If not specified, then pull ibound from the
         self.ml
@@ -258,25 +337,31 @@ class ModelMap(object):
         Parameters
         ----------
         ibound : numpy.ndarray
-            ibound array to plot.  (Default is ibound in 'BAS6' package.)
+            ibound array to plot.  (Default is ibound in the modelgrid)
         color_noflow : string
             (Default is 'black')
         color_ch : string
             Color for constant heads (Default is 'blue'.)
+        color_vpt: string
+            Color for vertical pass through cells (Default is 'red')
 
         Returns
         -------
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
+        import matplotlib.colors
 
         if ibound is None:
-            bas = self.model.get_package('BAS6')
-            ibound = bas.ibound.array
+            if self.model is not None:
+                if self.model.version == "mf6":
+                    color_ch = color_vpt
+
+            if self.mg.idomain is None:
+                raise AssertionError("Ibound/Idomain array must be provided")
+
+            ibound = self.mg.idomain
+
         plotarray = np.zeros(ibound.shape, dtype=np.int)
         idx1 = (ibound == 0)
         idx2 = (ibound < 0)
@@ -303,6 +388,8 @@ class ModelMap(object):
         lc : matplotlib.collections.LineCollection
 
         """
+        from matplotlib.collections import LineCollection
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -311,7 +398,8 @@ class ModelMap(object):
         if 'colors' not in kwargs:
             kwargs['colors'] = '0.5'
 
-        lc = self.sr.get_grid_line_collection(**kwargs)
+        lc = LineCollection(self.mg.grid_lines, **kwargs)
+
         ax.add_collection(lc)
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
@@ -346,62 +434,73 @@ class ModelMap(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
         # Find package to plot
         if package is not None:
             p = package
             ftype = p.name[0]
+
         elif self.model is not None:
             if ftype is None:
                 raise Exception('ftype not specified')
             ftype = ftype.upper()
             p = self.model.get_package(ftype)
+
         else:
             raise Exception('Cannot find package to plot')
 
-        # Get the list data
-        try:
-            mflist = p.stress_period_data[kper]
-        except Exception as e:
-            raise Exception('Not a list-style boundary package:' + str(e))
-
-        # Return if MfList is None
-        if mflist is None:
-            return None
-        nlay = self.model.nlay
-        # Plot the list locations
-        plotarray = np.zeros((nlay, self.sr.nrow, self.sr.ncol), dtype=np.int)
-        if plotAll:
-            idx = (mflist['i'], mflist['j'])
-            # plotarray[:, idx] = 1
-            pa = np.zeros((self.sr.nrow, self.sr.ncol), dtype=np.int)
-            pa[idx] = 1
-            for k in range(nlay):
-                plotarray[k, :, :] = pa.copy()
+        # trap for mf6 'cellid' vs mf2005 'k', 'i', 'j' convention
+        if p.parent.version == "mf6":
+            try:
+                mflist = p.stress_period_data.array[kper]
+            except Exception as e:
+                raise Exception("Not a list-style boundary package: " + str(e))
+            if mflist is None:
+                return
+            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
         else:
-            idx = (mflist['k'], mflist['i'], mflist['j'])
-            plotarray[idx] = 1
+            # modflow-2005 structured and unstructured grid
+            try:
+                mflist = p.stress_period_data[kper]
+            except Exception as e:
+                raise Exception("Not a list-style boundary package: " + str(e))
+            if mflist is None:
+                return
+            if len(self.mg.shape) == 3:
+                idx = [mflist['k'], mflist['i'], mflist['j']]
+            else:
+                idx = mflist['node']
+
+        nlay = self.mg.nlay
+
+        # Plot the list locations
+        plotarray = np.zeros(self.mg.shape, dtype=np.int)
+        if plotAll and self.mg.grid_type != "unstructured":
+            pa = np.zeros(self.mg.shape[1:], dtype=np.int)
+            pa[list(idx[1:])] = 1
+            for k in range(nlay):
+                plotarray[k] = pa.copy()
+        else:
+            plotarray[list(idx)] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
 
         # set the colormap
         if color is None:
-            if ftype in bc_color_dict:
-                c = bc_color_dict[ftype]
+            # modflow 6 ftype fix, since multiple packages append _0, _1, etc:
+            key = ftype[:3].upper()
+            if key in plotutil.bc_color_dict:
+                c = plotutil.bc_color_dict[key]
             else:
-                c = bc_color_dict['default']
+                c = plotutil.bc_color_dict['default']
         else:
             c = color
+
         cmap = matplotlib.colors.ListedColormap(['0', c])
         bounds = [0, 1, 2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        # create normalized quadmesh
+        # create normalized quadmesh or patch object depending on grid type
         quadmesh = self.plot_array(plotarray, cmap=cmap, norm=norm, **kwargs)
 
         return quadmesh
@@ -413,7 +512,7 @@ class ModelMap(object):
 
         Parameters
         ----------
-        shp : string
+        shp : string or pyshp shapefile object
             Name of the shapefile to plot
 
         kwargs : dictionary
@@ -425,6 +524,7 @@ class ModelMap(object):
         else:
             ax = self.ax
         patch_collection = plotutil.plot_shapefile(shp, ax, **kwargs)
+
         return patch_collection
 
     def plot_cvfd(self, verts, iverts, **kwargs):
@@ -453,8 +553,9 @@ class ModelMap(object):
 
     def contour_array_cvfd(self, vertc, a, masked_values=None, **kwargs):
         """
-        Contour an array.  If the array is three-dimensional, then the method
-        will contour the layer tied to this class (self.layer).
+        Contour a cvfd array.  If the array is three-dimensional, then the method
+        will contour the layer tied to this class (self.layer). The vertices
+        must be in the same coordinates as the rotated and offset grid.
 
         Parameters
         ----------
@@ -477,7 +578,7 @@ class ModelMap(object):
             ncpl = kwargs.pop('ncpl')
             if isinstance(ncpl, int):
                 i = int(ncpl)
-                ncpl = np.ones((nlay), dtype=np.int) * i
+                ncpl = np.ones((nlay,), dtype=np.int) * i
             elif isinstance(ncpl, list) or isinstance(ncpl, tuple):
                 ncpl = np.array(ncpl)
             i0 = 0
@@ -496,21 +597,113 @@ class ModelMap(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
             ax = self.ax
+
         if 'colors' in kwargs.keys():
             if 'cmap' in kwargs.keys():
-                cmap = kwargs.pop('cmap')
-            cmap = None
+                kwargs.pop('cmap')
+
         contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
                                     plotarray, **kwargs)
 
         return contour_set
 
-    def plot_discharge(self, frf, fff, dis=None, flf=None, head=None, istep=1,
-                       jstep=1, normalize=False, **kwargs):
+    def plot_specific_discharge(self, spdis, istep=1,
+                                jstep=1, normalize=False, **kwargs):
+        """
+        Method to plot specific discharge from discharge vectors
+        provided by the cell by cell flow output file. In MODFLOW-6
+        this option is controled in the NPF options block. This method
+        uses matplotlib quiver to create a matplotlib plot of the output.
+
+        Parameters
+        ----------
+        spdis : np.recarray
+            specific discharge recarray from cbc file
+        istep : int
+            row frequency to plot. (Default is 1.)
+        jstep : int
+            column frequency to plot. (Default is 1.)
+        kwargs : matplotlib.pyplot keyword arguments for the
+            plt.quiver method.
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            quiver plot of discharge vectors
+
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        if isinstance(spdis, list):
+            print("Warning: Selecting the final stress period from Specific"
+                  " Discharge list")
+            spdis = spdis[-1]
+
+        if self.mg.grid_type == "structured":
+            ncpl = self.mg.nrow * self.mg.ncol
+
+        else:
+            ncpl = self.mg.ncpl
+
+        nlay = self.mg.nlay
+
+        qx = np.zeros((nlay * ncpl))
+        qy = np.zeros((nlay * ncpl))
+
+        idx = np.array(spdis['node']) - 1
+        qx[idx] = spdis['qx']
+        qy[idx] = spdis["qy"]
+
+        if self.mg.grid_type == "structured":
+            qx.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            qy.shape = (self.mg.nlay, self.mg.nrow, self.mg.ncol)
+            x = self.mg.xcellcenters[::istep, ::jstep]
+            y = self.mg.ycellcenters[::istep, ::jstep]
+            u = qx[:, ::istep, ::jstep]
+            v = qy[:, ::istep, ::jstep]
+        else:
+            qx.shape = (self.mg.nlay, self.mg.ncpl)
+            qy.shape = (self.mg.nlay, self.mg.ncpl)
+            x = self.mg.xcellcenters[::istep]
+            y = self.mg.ycellcenters[::istep]
+            u = qx[:, ::istep]
+            v = qy[:, ::istep]
+
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        u[u == 0] = np.nan
+        v[v == 0] = np.nan
+
+        u = u[self.layer, :]
+        v = v[self.layer, :]
+        # Rotate and plot, offsets must be zero since
+        # these are vectors not locations
+        urot, vrot = geometry.rotate(u, v, 0., 0.,
+                                     self.mg.angrot_radians)
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+        return quiver
+
+    def plot_discharge(self, frf=None, fff=None,
+                       flf=None, head=None, istep=1, jstep=1,
+                       normalize=False, **kwargs):
         """
         Use quiver to plot vectors.
 
@@ -542,82 +735,72 @@ class ModelMap(object):
             Vectors of specific discharge.
 
         """
-        # remove 'pivot' keyword argument
-        # by default the center of the arrow is plotted in the center of a cell
-        if 'pivot' in kwargs:
-            pivot = kwargs.pop('pivot')
-        else:
-            pivot = 'middle'
+        if self.mg.grid_type != "structured":
+            err_msg = "Use plot_specific_discharge for " \
+                      "{} grids".format(self.mg.grid_type)
+            raise NotImplementedError(err_msg)
 
-        # Calculate specific discharge
-        # make sure dis is defined
-        if dis is None:
+        else:
+            if self.mg.top is None:
+                err = "StructuredModelGrid must have top and " \
+                      "botm defined to use plot_discharge()"
+                raise AssertionError(err)
+
+            ib = np.ones((self.mg.nlay, self.mg.nrow, self.mg.ncol))
+            if self.mg.idomain is not None:
+                ib = self.mg.idomain
+
+            delr = self.mg.delr
+            delc = self.mg.delc
+            top = np.copy(self.mg.top)
+            botm = np.copy(self.mg.botm)
+            nlay, nrow, ncol = botm.shape
+            laytyp = None
+            hnoflo = 999.
+            hdry = 999.
+
             if self.model is not None:
-                dis = self.model.dis
-            else:
-                print('ModelMap.plot_quiver() error: self.dis is None and dis '
-                      'arg is None.')
-                return
-        ib = self.model.bas6.ibound.array
-        delr = dis.delr.array
-        delc = dis.delc.array
-        top = dis.top.array
-        botm = dis.botm.array
-        nlay, nrow, ncol = botm.shape
-        laytyp = None
-        hnoflo = 999.
-        hdry = 999.
-        if self.model is not None:
-            lpf = self.model.get_package('LPF')
-            if lpf is not None:
-                laytyp = lpf.laytyp.array
-                hdry = lpf.hdry
-            bas = self.model.get_package('BAS6')
-            if bas is not None:
-                hnoflo = bas.hnoflo
+                if self.model.laytyp is not None:
+                    laytyp = self.model.laytyp
 
-        # If no access to head or laytyp, then calculate confined saturated
-        # thickness by setting laytyp to zeros
-        if head is None or laytyp is None:
-            head = np.zeros(botm.shape, np.float32)
-            laytyp = np.zeros((nlay), dtype=np.int)
-        sat_thk = plotutil.saturated_thickness(head, top, botm, laytyp,
-                                               [hnoflo, hdry])
+                if self.model.hnoflo is not None:
+                    hnoflo = self.model.hnoflo
 
-        # Calculate specific discharge
-        qx, qy, qz = plotutil.centered_specific_discharge(frf, fff, flf, delr,
-                                                          delc, sat_thk)
+                if self.model.hdry is not None:
+                    hdry = self.model.hdry
 
-        # Select correct slice
-        u = qx[self.layer, :, :]
-        v = qy[self.layer, :, :]
-        # apply step
-        x = self.sr.xcentergrid[::istep, ::jstep]
-        y = self.sr.ycentergrid[::istep, ::jstep]
-        u = u[::istep, ::jstep]
-        v = v[::istep, ::jstep]
-        # normalize
-        if normalize:
-            vmag = np.sqrt(u ** 2. + v ** 2.)
-            idx = vmag > 0.
-            u[idx] /= vmag[idx]
-            v[idx] /= vmag[idx]
+            # If no access to head or laytyp, then calculate confined saturated
+            # thickness by setting laytyp to zeros
+            if head is None or laytyp is None:
+                head = np.zeros(botm.shape, np.float32)
+                laytyp = np.zeros((nlay,), dtype=np.int)
 
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
+            # calculate the saturated thickness
+            sat_thk = plotutil.PlotUtilities. \
+                saturated_thickness(head, top, botm, laytyp,
+                                    [hnoflo, hdry])
 
-        # mask discharge in inactive cells
-        idx = (ib[self.layer, ::istep, ::jstep] == 0)
-        u[idx] = np.nan
-        v[idx] = np.nan
+            # Calculate specific discharge
+            qx, qy, qz = plotutil.PlotUtilities. \
+                centered_specific_discharge(frf, fff, flf, delr,
+                                            delc, sat_thk)
+            ib = ib.ravel()
+            qx = qx.ravel()
+            qy = qy.ravel()
 
-        # Rotate and plot
-        urot, vrot = self.sr.rotate(u, v, self.sr.rotation)
-        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+            temp = []
+            for ix, val in enumerate(ib):
+                if val != 0:
+                    temp.append((ix + 1, qx[ix], qy[ix]))
 
-        return quiver
+            spdis = np.recarray((len(temp),), dtype=[('node', np.int),
+                                                     ("qx", np.float),
+                                                     ("qy", np.float)])
+            for ix, tup in enumerate(temp):
+                spdis[ix] = tup
+
+            self.plot_specific_discharge(spdis, istep=istep, jstep=jstep,
+                                         normalize=normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
@@ -625,12 +808,12 @@ class ModelMap(object):
 
         Parameters
         ----------
-        pl : list of recarrays or a single recarray
-            recarray or list of recarrays is data returned from
+        pl : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
             modpathfile PathlineFile get_data() or get_alldata()
-            methods. Data in recarray is 'x', 'y', 'z', 'time',
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
             'k', and 'particleid'.
-        travel_time: float or str
+        travel_time : float or str
             travel_time is a travel time selection for the displayed
             pathlines. If a float is passed then pathlines with times
             less than or equal to the passed time are plotted. If a
@@ -650,7 +833,6 @@ class ModelMap(object):
 
         """
         from matplotlib.collections import LineCollection
-
         # make sure pathlines is a list
         if not isinstance(pl, list):
             pl = [pl]
@@ -733,19 +915,11 @@ class ModelMap(object):
                     idx = (p['time'] <= time)
                 tp = p[idx]
 
-            vlc = []
-            # rotate data
-            if isinstance(self.sr, SpatialReferenceUnstructured):
-                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
-                                          0., 0.)
-                x0r += self.sr.xul
-                y0r += self.sr.yul
-            elif isinstance(self.sr, SpatialReference):
-                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
-                                          0., self.sr.yedge[0])
-                x0r += self.sr.xul
-                y0r += self.sr.yul - self.sr.yedge[0]
-
+            # transform data!
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
             # build polyline array
             arr = np.vstack((x0r, y0r)).T
             # select based on layer
@@ -758,10 +932,12 @@ class ModelMap(object):
             # append line to linecol if there is some unmasked segment
             if not arr.mask.all():
                 linecol.append(arr)
-                if marker is not None:
-                    for xy in arr[::markerevery]:
-                        if not xy.mask:
-                            markers.append(xy)
+                if not arr.mask.all():
+                    linecol.append(arr)
+                    if marker is not None:
+                        for xy in arr[::markerevery]:
+                            if not xy.mask:
+                                markers.append(xy)
         # create line collection
         lc = None
         if len(linecol) > 0:
@@ -773,6 +949,128 @@ class ModelMap(object):
                         color=markercolor, ms=markersize)
         return lc
 
+    def plot_timeseries(self, ts, travel_time=None, **kwargs):
+        """
+        Plot the MODPATH timeseries.
+
+        Parameters
+        ----------
+        ts : list of rec arrays or a single rec array
+            rec array or list of rec arrays is data returned from
+            modpathfile TimeseriesFile get_data() or get_alldata()
+            methods. Data in rec array is 'x', 'y', 'z', 'time',
+            'k', and 'particleid'.
+        travel_time : float or str
+            travel_time is a travel time selection for the displayed
+            pathlines. If a float is passed then pathlines with times
+            less than or equal to the passed time are plotted. If a
+            string is passed a variety logical constraints can be added
+            in front of a time value to select pathlines for a select
+            period of time. Valid logical constraints are <=, <, >=, and
+            >. For example, to select all pathlines less than 10000 days
+            travel_time='< 10000' would be passed to plot_pathline.
+            (default is None)
+        kwargs : layer, ax, colors.  The remaining kwargs are passed
+            into the LineCollection constructor. If layer='all',
+            pathlines are output for all layers
+
+        Returns
+        -------
+            lo : list of Line2D objects
+        """
+
+        # make sure timeseries is a list
+        if not isinstance(ts, list):
+            ts = [ts]
+
+        if 'layer' in kwargs:
+            kon = kwargs.pop('layer')
+
+            if sys.version_info[0] > 2:
+                if isinstance(kon, bytes):
+                    kon = kon.decode()
+
+            if isinstance(kon, str):
+                if kon.lower() == 'all':
+                    kon = -1
+                else:
+                    kon = self.layer
+        else:
+            kon = self.layer
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+
+        else:
+            ax = self.ax
+
+        if 'color' not in kwargs:
+            kwargs['color'] = 'red'
+
+        linecol = []
+        for t in ts:
+            if travel_time is None:
+                tp = t.copy()
+
+            else:
+                if isinstance(travel_time, str):
+                    if '<=' in travel_time:
+                        time = float(travel_time.replace('<=', ''))
+                        idx = (t['time'] <= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('<', ''))
+                        idx = (t['time'] < time)
+                    elif '>=' in travel_time:
+                        time = float(travel_time.replace('>=', ''))
+                        idx = (t['time'] >= time)
+                    elif '<' in travel_time:
+                        time = float(travel_time.replace('>', ''))
+                        idx = (t['time'] > time)
+                    else:
+                        try:
+                            time = float(travel_time)
+                            idx = (t['time'] <= time)
+                        except:
+                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
+                                     'variable cannot be parsed. ' + \
+                                     'Acceptable logical variables are , ' + \
+                                     '<=, <, >=, and >. ' + \
+                                     'You passed {}'.format(travel_time)
+                            raise Exception(errmsg)
+                else:
+                    time = float(travel_time)
+                    idx = (t['time'] <= time)
+                tp = ts[idx]
+
+
+            x0r, y0r = geometry.transform(tp['x'], tp['y'],
+                                          self.mg.xoffset,
+                                          self.mg.yoffset,
+                                          self.mg.angrot_radians)
+
+            # build polyline array
+            arr = np.vstack((x0r, y0r)).T
+            # select based on layer
+            if kon >= 0:
+                kk = t['k'].copy().reshape(t.shape[0], 1)
+                kk = np.repeat(kk, 2, axis=1)
+                arr = np.ma.masked_where((kk != kon), arr)
+
+            else:
+                arr = np.ma.asarray(arr)
+
+            # append line to linecol if there is some unmasked segment
+            if not arr.mask.all():
+                linecol.append(arr)
+
+        # plot timeseries data
+        lo = []
+        for lc in linecol:
+            if not lc.mask.all():
+                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
+
+        return lo
+
     def plot_endpoint(self, ep, direction='ending',
                       selection=None, selection_direction=None, **kwargs):
         """
@@ -780,7 +1078,7 @@ class ModelMap(object):
 
         Parameters
         ----------
-        ep : recarray
+        ep : rec array
             A numpy recarray with the endpoint particle data from the
             MODPATH 6 endpoint file
         direction : str
@@ -791,7 +1089,7 @@ class ModelMap(object):
             (l, r, c) to use to make a selection of particle endpoints.
             The selection could be a well location to determine capture zone
             for the well. If selection is None, all particle endpoints for
-            the user-specified direction will be plotted. (default is None)
+            the user-sepcified direction will be plotted. (default is None)
         selection_direction : str
             String defining is a selection should be made on starting or
             ending particle locations. If selection is not None and
@@ -811,19 +1109,18 @@ class ModelMap(object):
         sp : matplotlib.pyplot.scatter
 
         """
-        if direction.lower() == 'ending':
-            direction = 'ending'
-        elif direction.lower() == 'starting':
-            direction = 'starting'
+        ep = ep.copy()
+        direction = direction.lower()
+        if direction == 'starting':
+            xp, yp = 'x0', 'y0'
+
+        elif direction == 'ending':
+            xp, yp = 'x', 'y'
+
         else:
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-
-        if direction == 'starting':
-            xp, yp = 'x0', 'y0'
-        elif direction == 'ending':
-            xp, yp = 'x', 'y'
 
         if selection_direction is not None:
             if selection_direction.lower() != 'starting' and \
@@ -907,18 +1204,11 @@ class ModelMap(object):
         if 'shrink' in kwargs:
             shrink = float(kwargs.pop('shrink'))
 
-        # rotate data
-        if isinstance(self.sr, SpatialReferenceUnstructured):
-            x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation,
-                                      0., 0.)
-            x0r += self.sr.xul
-            y0r += self.sr.yul
-        elif isinstance(self.sr, SpatialReference):
-            x0r, y0r = self.sr.rotate(tep[xp], tep[yp], self.sr.rotation,
-                                      0., self.sr.yedge[0])
-            x0r += self.sr.xul
-            y0r += self.sr.yul - self.sr.yedge[0]
-
+        # transform data!
+        x0r, y0r = geometry.transform(tep[xp], tep[yp],
+                                      self.mg.xoffset,
+                                      self.mg.yoffset,
+                                      self.mg.angrot_radians)
         # build array to plot
         arr = np.vstack((x0r, y0r)).T
 
@@ -931,125 +1221,176 @@ class ModelMap(object):
             cb.set_label(colorbar_label)
         return sp
 
-    def plot_timeseries(self, ts, travel_time=None, **kwargs):
+
+class DeprecatedMapView(PlotMapView):
+    """
+    Deprecation handler for the PlotMapView class
+
+    Parameters
+    ----------
+    model : flopy.modflow.Modflow object
+    modelgrid : flopy.discretization.Grid object
+    ax : matplotlib.pyplot.axes object
+    layer : int
+        model layer to plot, default is layer 1
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
+
+    """
+    def __init__(self, model=None, modelgrid=None, ax=None,
+                 layer=0, extent=None):
+        super(DeprecatedMapView, self).__init__(model=model,
+                                                modelgrid=modelgrid,
+                                                ax=ax,
+                                                layer=layer,
+                                                extent=extent)
+
+    def plot_discharge(self, frf, fff, dis=None,
+                       flf=None, head=None, istep=1, jstep=1,
+                       normalize=False, **kwargs):
         """
-        Plot the MODPATH timeseries.
+        Use quiver to plot vectors. Deprecated method that uses
+        the old function call to pass the method to PlotMapView
 
         Parameters
         ----------
-        ts : list of recarrays or a single recarray
-            recarray or list of recarrays is data returned from
-            modpathfile TimeseriesFile get_data() or get_alldata()
-            methods. Data in recarray is 'x', 'y', 'z', 'time',
-            'k', and 'particleid'.
-        travel_time: float or str
-            travel_time is a travel time selection for the displayed
-            pathlines. If a float is passed then pathlines with times
-            less than or equal to the passed time are plotted. If a
-            string is passed a variety logical constraints can be added
-            in front of a time value to select pathlines for a select
-            period of time. Valid logical constraints are <=, <, >=, and
-            >. For example, to select all pathlines less than 10000 days
-            travel_time='< 10000' would be passed to plot_pathline.
-            (default is None)
-        kwargs : layer, ax, colors.  The remaining kwargs are passed
-            into the LineCollection constructor. If layer='all',
-            pathlines are output for all layers
+        frf : numpy.ndarray
+            MODFLOW's 'flow right face'
+        fff : numpy.ndarray
+            MODFLOW's 'flow front face'
+        dis : flopy.modflow.ModflowDis package
+            Depricated parameter
+        flf : numpy.ndarray
+            MODFLOW's 'flow lower face' (Default is None.)
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then will assume confined
+            conditions in order to calculated saturated thickness.
+        istep : int
+            row frequency to plot. (Default is 1.)
+        jstep : int
+            column frequency to plot. (Default is 1.)
+        normalize : bool
+            boolean flag used to determine if discharge vectors should
+            be normalized using the magnitude of the specific discharge in each
+            cell. (default is False)
+        kwargs : dictionary
+            Keyword arguments passed to plt.quiver()
 
         Returns
         -------
-        lo : list of Line2D objects
+        quiver : matplotlib.pyplot.quiver
+            Vectors of specific discharge.
 
         """
-        from matplotlib.collections import LineCollection
-        # make sure timeseries is a list
-        if not isinstance(ts, list):
-            ts = [ts]
 
-        if 'layer' in kwargs:
-            kon = kwargs.pop('layer')
-            if sys.version_info[0] > 2:
-                if isinstance(kon, bytes):
-                    kon = kon.decode()
-            if isinstance(kon, str):
-                if kon.lower() == 'all':
-                    kon = -1
+        if dis is not None:
+            self.mg = plotutil._depreciated_dis_handler(modelgrid=self.mg,
+                                                        dis=dis)
+
+        super(DeprecatedMapView, self).plot_discharge(frf=frf, fff=fff,
+                                                      flf=flf, head=head,
+                                                      istep=1, jstep=1,
+                                                      normalize=normalize,
+                                                      **kwargs)
+
+
+class ModelMap(object):
+    """
+    Pending Depreciation: ModelMap acts as a PlotMapView factory
+    object. Please migrate to PlotMapView for plotting
+    functionality and future code compatibility
+
+    Parameters
+    ----------
+    sr : flopy.utils.reference.SpatialReference
+        The spatial reference class (Default is None)
+    ax : matplotlib.pyplot axis
+        The plot axis.  If not provided it, plt.gca() will be used.
+        If there is not a current axis then a new one will be created.
+    model : flopy.modflow object
+        flopy model object. (Default is None)
+    dis : flopy.modflow.ModflowDis object
+        flopy discretization object. (Default is None)
+    layer : int
+        Layer to plot.  Default is 0.  Must be between 0 and nlay - 1.
+    xul : float
+        x coordinate for upper left corner
+    yul : float
+        y coordinate for upper left corner.  The default is the sum of the
+        delc array.
+    rotation : float
+        Angle of grid rotation around the upper left corner.  A positive value
+        indicates clockwise rotation.  Angles are in degrees.
+    extent : tuple of floats
+        (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
+        then these will be calculated based on grid, coordinates, and rotation.
+    length_multiplier : float
+        scaling factor for conversion from model units to another unit
+        length base ex. ft to m.
+
+    Notes
+    -----
+    ModelMap must know the position and rotation of the grid in order to make
+    the plot.  This information is contained in the SpatialReference class
+    (sr), which can be passed.  If sr is None, then it looks for sr in dis.
+    If dis is None, then it looks for sr in model.dis.  If all of these
+    arguments are none, then it uses xul, yul, and rotation.  If none of these
+    arguments are provided, then it puts the lower-left-hand corner of the
+    grid at (0, 0).
+    """
+    def __new__(cls, sr=None, ax=None, model=None, dis=None, layer=0,
+                extent=None, xul=None, yul=None, xll=None, yll=None,
+                rotation=None, length_multiplier=None):
+
+        from ..utils.reference import SpatialReferenceUnstructured
+        # from ..plot.plotbase import DeprecatedMapView
+
+        err_msg = "ModelMap will be replaced by " \
+                  "PlotMapView(); Calling PlotMapView()"
+        warnings.warn(err_msg, PendingDeprecationWarning)
+
+        modelgrid = None
+        if model is not None:
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+                modelgrid = plotutil._set_coord_info(model.modelgrid,
+                                                     xul, yul, xll, yll,
+                                                     rotation)
+        elif sr is not None:
+            if length_multiplier is not None:
+                sr.length_multiplier = length_multiplier
+
+            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+                sr.set_spatialreference(xul, yul, xll, yll, rotation)
+
+            if isinstance(sr, SpatialReferenceUnstructured):
+                if dis is not None:
+                    modelgrid = UnstructuredGrid(vertices=sr.verts,
+                                                 iverts=sr.iverts,
+                                                 xcenters=sr.xc,
+                                                 ycenters=sr.yc,
+                                                 top=dis.top.array,
+                                                 botm=dis.botm.array,
+                                                 ncpl=sr.ncpl)
                 else:
-                    kon = self.layer
-        else:
-            kon = self.layer
+                    modelgrid = UnstructuredGrid(vertices=sr.verts,
+                                                 iverts=sr.iverts,
+                                                 xcenters=sr.xc,
+                                                 ycenters=sr.yc,
+                                                 ncpl=sr.ncpl)
 
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
-        else:
-            ax = self.ax
-
-        if 'color' not in kwargs:
-            kwargs['color'] = 'red'
-
-        linecol = []
-        for t in ts:
-            if travel_time is None:
-                tp = t.copy()
+            elif dis is not None:
+                modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                           top=dis.top.array, botm=dis.botm.array,
+                                           xoff=sr.xll, yoff=sr.yll,
+                                           angrot=sr.rotation)
             else:
-                if isinstance(travel_time, str):
-                    if '<=' in travel_time:
-                        time = float(travel_time.replace('<=', ''))
-                        idx = (ts['time'] <= time)
-                    elif '<' in travel_time:
-                        time = float(travel_time.replace('<', ''))
-                        idx = (ts['time'] < time)
-                    elif '>=' in travel_time:
-                        time = float(travel_time.replace('>=', ''))
-                        idx = (ts['time'] >= time)
-                    elif '<' in travel_time:
-                        time = float(travel_time.replace('>', ''))
-                        idx = (ts['time'] > time)
-                    else:
-                        try:
-                            time = float(travel_time)
-                            idx = (ts['time'] <= time)
-                        except:
-                            errmsg = 'flopy.map.plot_pathline travel_time ' + \
-                                     'variable cannot be parsed. ' + \
-                                     'Acceptable logical variables are , ' + \
-                                     '<=, <, >=, and >. ' + \
-                                     'You passed {}'.format(travel_time)
-                            raise Exception(errmsg)
-                else:
-                    time = float(travel_time)
-                    idx = (ts['time'] <= time)
-                tp = ts[idx]
+                modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                           xoff=sr.xll, yoff=sr.yll,
+                                           angrot=sr.rotation)
 
-            # rotate data
-            if isinstance(self.sr, SpatialReferenceUnstructured):
-                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
-                                          0., 0.)
-                x0r += self.sr.xul
-                y0r += self.sr.yul
-            elif isinstance(self.sr, SpatialReference):
-                x0r, y0r = self.sr.rotate(tp['x'], tp['y'], self.sr.rotation,
-                                          0., self.sr.yedge[0])
-                x0r += self.sr.xul
-                y0r += self.sr.yul - self.sr.yedge[0]
+        else:
+            pass
 
-            # build polyline array
-            arr = np.vstack((x0r, y0r)).T
-            # select based on layer
-            if kon >= 0:
-                kk = t['k'].copy().reshape(t.shape[0], 1)
-                kk = np.repeat(kk, 2, axis=1)
-                arr = np.ma.masked_where((kk != kon), arr)
-            else:
-                arr = np.ma.asarray(arr)
-            # append line to linecol if there is some unmasked segment
-            if not arr.mask.all():
-                linecol.append(arr)
-
-        # plot timeseries data
-        lo = []
-        for lc in linecol:
-            if not lc.mask.all():
-                lo += ax.plot(lc[:, 0], lc[:, 1], **kwargs)
-
-        return lo
+        return DeprecatedMapView(model=model, modelgrid=modelgrid, ax=ax,
+                                 layer=layer, extent=extent)

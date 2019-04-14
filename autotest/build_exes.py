@@ -2,9 +2,6 @@
 import os
 import sys
 import shutil
-import platform
-import subprocess
-import flopy
 
 try:
     import pymake
@@ -12,522 +9,367 @@ except:
     print('pymake is not installed...will not build executables')
     pymake = None
 
-fc = 'gfortran'
-cc = 'gcc'
-dbleprec = False
-# bindir should be in the user path to run flopy tests with appropriate
-# executables
-#
-# by default bindir will be in user directory
-# On windows will be C:\\Users\\username\\.local\\bin
-# On linux and osx will be /Users/username/.local/bin
-bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
-bindir = os.path.abspath(bindir)
-# pass --bindir path/to/directory to define a different bin dir
-for ipos, arg in enumerate(sys.argv):
-    if arg.lower() == '--bindir':
-        bindir = sys.argv[ipos + 1]
-    elif arg.lower() == '--dryrun':
-        print('will perform dryrun and not build executables')
-        pymake = None
-print(bindir)
-if not os.path.exists(bindir):
-    os.makedirs(bindir, exist_ok=True)
+os.environ["TRAVIS"] = "1"
 
+download_version = '2.0'
 
-def update_mt3dfiles(srcdir):
-    # Replace the getcl command with getarg
-    f1 = open(os.path.join(srcdir, 'mt3dms5.for'), 'r')
-    f2 = open(os.path.join(srcdir, 'mt3dms5.for.tmp'), 'w')
-    for line in f1:
-        f2.write(line.replace('CALL GETCL(FLNAME)', 'CALL GETARG(1,FLNAME)'))
-    f1.close()
-    f2.close()
-    os.remove(os.path.join(srcdir, 'mt3dms5.for'))
-    shutil.move(os.path.join(srcdir, 'mt3dms5.for.tmp'),
-                os.path.join(srcdir, 'mt3dms5.for'))
+# path where downloaded executables will be extracted
+exe_pth = 'exe_download'
+# make the directory if it does not exist
+if not os.path.isdir(exe_pth):
+    os.makedirs(exe_pth)
 
-    # Replace filespec with standard fortran
-    l = '''
-          CHARACTER*20 ACCESS,FORM,ACTION(2)
-          DATA ACCESS/'STREAM'/
-          DATA FORM/'UNFORMATTED'/
-          DATA (ACTION(I),I=1,2)/'READ','READWRITE'/
-    '''
-    fn = os.path.join(srcdir, 'FILESPEC.INC')
-    f = open(fn, 'w')
-    f.write(l)
-    f.close()
+# determine if running on Travis
+is_travis = 'TRAVIS' in os.environ
 
-    return
+bindir = '.'
+dotlocal = False
+if is_travis:
+    dotlocal = True
 
-
-def update_seawatfiles(srcdir):
-    # rename all source files to lower case so compilation doesn't
-    # bomb on case-sensitive operating systems
-    srcfiles = os.listdir(srcdir)
-    for filename in srcfiles:
-        src = os.path.join(srcdir, filename)
-        dst = os.path.join(srcdir, filename.lower())
-        os.rename(src, dst)
-    return
-
-
-def update_mf2000files(srcdir):
-    # Remove six src folders
-    dlist = ['beale2k', 'hydprgm', 'mf96to2k', 'mfpto2k', 'resan2k', 'ycint2k']
-    for d in dlist:
-        dname = os.path.join(srcdir, d)
-        if os.path.isdir(dname):
-            print('Removing ', dname)
-            shutil.rmtree(os.path.join(srcdir, d))
-
-    # Move src files and serial src file to src directory
-    tpth = os.path.join(srcdir, 'mf2k')
-    files = [f for f in os.listdir(tpth) if
-             os.path.isfile(os.path.join(tpth, f))]
-    for f in files:
-        shutil.move(os.path.join(tpth, f), srcdir)
-    tpth = os.path.join(srcdir, 'mf2k', 'serial')
-    files = [f for f in os.listdir(tpth) if
-             os.path.isfile(os.path.join(tpth, f))]
-    for f in files:
-        shutil.move(os.path.join(tpth, f), srcdir)
-
-    # Remove mf2k directory in source directory
-    tpth = os.path.join(srcdir, 'mf2k')
-    shutil.rmtree(tpth)
-
-
-def update_mp6files(srcdir):
-    fname1 = os.path.join(srcdir, 'MP6Flowdata.for')
-    f = open(fname1, 'r')
-
-    fname2 = os.path.join(srcdir, 'MP6Flowdata_mod.for')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('CD.QX2', 'CD%QX2')
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-
-    fname1 = os.path.join(srcdir, 'MP6MPBAS1.for')
-    f = open(fname1, 'r')
-
-    fname2 = os.path.join(srcdir, 'MP6MPBAS1_mod.for')
-    f2 = open(fname2, 'w')
-    for line in f:
-        line = line.replace('MPBASDAT(IGRID)%NCPPL=NCPPL',
-                            'MPBASDAT(IGRID)%NCPPL=>NCPPL')
-        f2.write(line)
-    f.close()
-    f2.close()
-    os.remove(fname1)
-
-
-def update_mp7files(srcdir):
-    fpth = os.path.join(srcdir, 'StartingLocationReader.f90')
-    with open(fpth) as f:
-        lines = f.readlines()
-    f = open(fpth, 'w')
-    for line in lines:
-        if 'pGroup%Particles(n)%InitialFace = 0' in line:
-            continue
-        f.write(line)
-    f.close()
-
-
-def test_build_modflow():
-    if pymake is None:
-        return
-    starget = 'MODFLOW-2005'
-    exe_name = 'mf2005'
-    dirname = 'MF2005.1_12u'
-    url = "https://water.usgs.gov/ogw/modflow/MODFLOW-2005_v1.12.00/MF2005.1_12u.zip"
-
-    build_target(starget, exe_name, url, dirname)
-
-    return
-
-
-def test_build_mfnwt():
-    if pymake is None:
-        return
-    starget = 'MODFLOW-NWT'
-    exe_name = 'mfnwt'
-    dirname = 'MODFLOW-NWT_1.1.4'
-    url = "http://water.usgs.gov/ogw/modflow-nwt/{0}.zip".format(dirname)
-
-    build_target(starget, exe_name, url, dirname)
-
-    return
-
-
-def run_cmdlist(cmdlist, cwd='.'):
-    proc = subprocess.Popen(cmdlist, shell=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            cwd=cwd)
-    stdout_data, stderr_data = proc.communicate()
-    if proc.returncode != 0:
-        if isinstance(stdout_data, bytes):
-            stdout_data = stdout_data.decode('utf-8')
-        if isinstance(stderr_data, bytes):
-            stderr_data = stderr_data.decode('utf-8')
-        msg = '{} failed\n'.format(cmdlist) + \
-              'status code:\n{}\n'.format(proc.returncode) + \
-              'stdout:\n{}\n'.format(stdout_data) + \
-              'stderr:\n{}\n'.format(stderr_data)
-        assert False, msg
-    else:
-        if isinstance(stdout_data, bytes):
-            stdout_data = stdout_data.decode('utf-8')
-        print(stdout_data)
-
-    return
-
-
-def test_build_usg():
-    if pymake is None:
-        return
-    starget = 'MODFLOW-USG'
-    exe_name = 'mfusg'
-    dirname = 'mfusg.1_3'
-    url = 'https://water.usgs.gov/ogw/mfusg/{0}.zip'.format(dirname)
-
-    build_target(starget, exe_name, url, dirname)
-    return
-
-
-def test_build_mf6():
-    if pymake is None:
-        return
-    starget = 'MODFLOW6'
-    exe_name = 'mf6'
-    dirname = 'mf6.0.3'
-    url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
-
-    build_target(starget, exe_name, url, dirname, include_subdirs=True)
-    return
-
-
-def test_build_lgr():
-    if pymake is None:
-        return
-    starget = 'MODFLOW-LGR'
-    exe_name = 'mflgr'
-    dirname = 'mflgr.2_0'
-    url = "https://water.usgs.gov/ogw/modflow-lgr/modflow-lgr-v2.0.0/mflgrv2_0_00.zip"
-
-    build_target(starget, exe_name, url, dirname)
-    return
-
-
-def test_build_mf2000():
-    if pymake is None:
-        return
-    starget = 'MODFLOW-2000'
-    exe_name = 'mf2000'
-    dirname = 'mf2k.1_19'
-    url = "https://water.usgs.gov/nrp/gwsoftware/modflow2000/mf2k1_19_01.tar.gz"
-
-    build_target(starget, exe_name, url, dirname,
-                 replace_function=update_mf2000files)
-    return
-
-
-def test_build_mt3dusgs():
-    if pymake is None:
-        return
-    starget = 'MT3D-USGS'
-    exe_name = 'mt3dusgs'
-    dirname = 'mt3d-usgs_Distribution'
-    url = "https://water.usgs.gov/ogw/mt3d-usgs/mt3d-usgs_1.0.zip"
-
-    build_target(starget, exe_name, url, dirname)
-    return
-
-
-def test_build_mt3dms():
-    if pymake is None:
-        return
-    starget = 'MT3DMS'
-    exe_name = 'mt3dms'
-    dirname = '.'
-    url = "http://hydro.geo.ua.edu/mt3d/mt3dms_530.exe"
-
-    build_target(starget, exe_name, url, dirname,
-                 srcname=os.path.join('src', 'standard'),
-                 verify=False,
-                 replace_function=update_mt3dfiles)
-    return
-
-
-def test_build_seawat():
-    if pymake is None:
-        return
-    starget = 'SEAWAT'
-    exe_name = 'swt_v4'
-    dirname = 'swt_v4_00_05'
-    url = "https://water.usgs.gov/ogw/seawat/{0}.zip".format(dirname)
-
-    build_target(starget, exe_name, url, dirname,
-                 srcname='source',
-                 replace_function=update_seawatfiles,
-                 dble=True, keep=True)
-    return
-
-
-def test_build_modpath6():
-    if pymake is None:
-        return
-    starget = 'MODPATH 6'
-    exe_name = 'mp6'
-    dirname = 'modpath.6_0'
-    url = "https://water.usgs.gov/ogw/modpath/archive/modpath_v6.0.01/modpath.6_0_01.zip"
-
-    build_target(starget, exe_name, url, dirname,
-                 replace_function=update_mp6files,
-                 keep=True)
-    return
-
-
-def test_build_modpath7():
-    if pymake is None:
-        return
-    starget = 'MODPATH 7'
-    exe_name = 'mp7'
-    dirname = 'modpath_7_2_001'
-    url = "https://water.usgs.gov/ogw/modpath/modpath_7_2_001.zip"
-
-    build_target(starget, exe_name, url, dirname, srcname='source',
-                 replace_function=update_mp7files,
-                 keep=True)
-    return
-
-
-def test_build_gridgen(keep=True):
-    if pymake is None:
-        return
-    starget = 'GRIDGEN'
-    exe_name = 'gridgen'
-    dirname = 'gridgen.1.0.02'
-    url = "https://water.usgs.gov/ogw/gridgen/{}.zip".format(dirname)
-
-    print('Determining if {} needs to be built'.format(starget))
-    if platform.system().lower() == 'windows':
-        exe_name += '.exe'
-
-    exe_exists = flopy.which(exe_name)
-    if exe_exists is not None and keep:
-        print('No need to build {}'.format(starget) +
-              ' since it exists in the current path')
-        return
-
-    # get current directory
-    cpth = os.getcwd()
-
-    # create temporary path
-    dstpth = os.path.join('tempbin')
-    print('create...{}'.format(dstpth))
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
-    os.chdir(dstpth)
-
-    pymake.download_and_unzip(url)
-
-    # clean
-    print('Cleaning...{}'.format(exe_name))
-    apth = os.path.join(dirname, 'src')
-    cmdlist = ['make', 'clean']
-    run_cmdlist(cmdlist, apth)
-
-    # build with make
-    print('Building...{}'.format(exe_name))
-    apth = os.path.join(dirname, 'src')
-    cmdlist = ['make', exe_name]
-    run_cmdlist(cmdlist, apth)
-
-    # move the file
-    src = os.path.join(apth, exe_name)
-    dst = os.path.join(bindir, exe_name)
-    try:
-        shutil.move(src, dst)
-    except:
-        print('could not move {}'.format(exe_name))
-
-    # change back to original path
-    os.chdir(cpth)
-
-    # Clean up downloaded directory
-    print('delete...{}'.format(dstpth))
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
-
-    # make sure the gridgen was built
-    msg = '{} does not exist.'.format(os.path.relpath(dst))
-    assert os.path.isfile(dst), msg
-
-    return
-
-
-def test_build_triangle(keep=True):
-    if pymake is None:
-        return
-    starget = 'TRIANGLE'
-    exe_name = 'triangle'
-    dirname = 'triangle'
-    url = "http://www.netlib.org/voronoi/{}.zip".format(dirname)
-
-    print('Determining if {} needs to be built'.format(starget))
-    if platform.system().lower() == 'windows':
-        exe_name += '.exe'
-
-    exe_exists = flopy.which(exe_name)
-    if exe_exists is not None and keep:
-        print('No need to build {}'.format(starget) +
-              ' since it exists in the current path')
-        return
-
-    # get current directory
-    cpth = os.getcwd()
-
-    # create temporary path
-    dstpth = os.path.join('tempbin', 'triangle')
-    print('create...{}'.format(dstpth))
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
-    os.chdir(dstpth)
-
-    pymake.download_and_unzip(url)
-
-    srcdir = 'src'
-    os.mkdir(srcdir)
-    shutil.move('triangle.c', 'src/triangle.c')
-    shutil.move('triangle.h', 'src/triangle.h')
-
-    fct, cct = set_compiler(starget)
-    pymake.main(srcdir, 'triangle', fct, cct)
-
-    # move the file
-    src = os.path.join('.', exe_name)
-    dst = os.path.join(bindir, exe_name)
-    try:
-        shutil.move(src, dst)
-    except:
-        print('could not move {}'.format(exe_name))
-
-    # change back to original path
-    os.chdir(cpth)
-
-    # Clean up downloaded directory
-    print('delete...{}'.format(dstpth))
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
-
-    # make sure the gridgen was built
-    msg = '{} does not exist.'.format(os.path.relpath(dst))
-    assert os.path.isfile(dst), msg
-
-    return
-
-
-def set_compiler(starget):
-    fct = fc
-    cct = cc
-    # parse command line arguments to see if user specified options
-    # relative to building the target
-    msg = ''
+if not dotlocal:
     for idx, arg in enumerate(sys.argv):
-        if arg.lower() == '--ifort':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with ifort.'.format(starget)
-            fct = 'ifort'
-        elif arg.lower() == '--cl':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with cl.'.format(starget)
-            cct = 'cl'
-        elif arg.lower() == '--clang':
-            if len(msg) > 0:
-                msg += '\n'
-            msg += '{} - '.format(arg.lower()) + \
-                   '{} will be built with clang.'.format(starget)
-            cct = 'clang'
-    if len(msg) > 0:
-        print(msg)
+        if '--travis' in arg.lower():
+            dotlocal = True
+            break
+if dotlocal:
+    bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
+    bindir = os.path.abspath(bindir)
 
-    return fct, cct
+# write where the executables will be downloaded
+print('modflow executables will be downloaded to:\n\n    "{}"'.format(bindir))
+
+build_from_source = False
+if not build_from_source:
+    for idx, arg in enumerate(sys.argv):
+        if '--build' in arg.lower():
+            build_from_source = True
+            break
+
+# write if the executables will be built from source
+msg = 'build all executables from source code: {}\n'.format(build_from_source)
+print(msg)
+
+def get_targets():
+    targets = pymake.usgs_program_data.get_keys(current=True)
+    targets.sort()
+    targets.remove('vs2dt')
+    return targets
 
 
-def build_target(starget, exe_name, url, dirname, srcname='src',
-                 replace_function=None, verify=True, keep=True,
-                 dble=dbleprec, include_subdirs=False):
-    print('Determining if {} needs to be built'.format(starget))
-    if platform.system().lower() == 'windows':
-        exe_name += '.exe'
-
-    exe_exists = flopy.which(exe_name)
-    if exe_exists is not None and keep:
-        print('No need to build {}'.format(starget) +
-              ' since it exists in the current path')
-        return
-
-    fct, cct = set_compiler(starget)
-
-    # set up target
-    target = os.path.abspath(os.path.join(bindir, exe_name))
-
-    # get current directory
-    cpth = os.getcwd()
-
-    # create temporary path
-    dstpth = os.path.join('tempbin')
-    print('create...{}'.format(dstpth))
-    if not os.path.exists(dstpth):
-        os.makedirs(dstpth)
-    os.chdir(dstpth)
-
-    # Download the distribution
-    pymake.download_and_unzip(url, verify=verify)
-
-    # Set srcdir name
-    srcdir = os.path.join(dirname, srcname)
-
-    if replace_function is not None:
-        replace_function(srcdir)
-
-    # compile code
-    print('compiling...{}'.format(os.path.relpath(target)))
-    pymake.main(srcdir, target, fct, cct, makeclean=True,
-                expedite=False, dryrun=False, double=dble, debug=False,
-                include_subdirs=include_subdirs)
-
-    # change back to original path
-    os.chdir(cpth)
-
-    msg = '{} does not exist.'.format(os.path.relpath(target))
-    assert os.path.isfile(target), msg
-
-    # Clean up downloaded directory
-    print('delete...{}'.format(dstpth))
-    if os.path.isdir(dstpth):
-        shutil.rmtree(dstpth)
+def build_target(target):
+    if pymake is not None:
+        pymake.build_apps(targets=target)
 
     return
+
+
+def which(program):
+    """
+    Test to make sure that the program is executable
+
+    """
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
+
+def get_modflow_exes(pth='.', version='', platform=None):
+    """
+    Get the latest MODFLOW binary executables from a github site
+    (https://github.com/MODFLOW-USGS/executables) for the specified
+    operating system and put them in the specified path.
+
+    Parameters
+    ----------
+    pth : str
+        Location to put the executables (default is current working directory)
+
+    version : str
+        Version of the MODFLOW-USGS/executables release to use.
+
+    platform : str
+        Platform that will run the executables.  Valid values include mac,
+        linux, win32 and win64.  If platform is None, then routine will
+        download the latest asset from the github reposity.
+
+    """
+
+    # Determine the platform in order to construct the zip file name
+    if platform is None:
+        if sys.platform.lower() == 'darwin':
+            platform = 'mac'
+        elif sys.platform.lower().startswith('linux'):
+            platform = 'linux'
+        elif 'win' in sys.platform.lower():
+            is_64bits = sys.maxsize > 2 ** 32
+            if is_64bits:
+                platform = 'win64'
+            else:
+                platform = 'win32'
+        else:
+            errmsg = ('Could not determine platform'
+                      '.  sys.platform is {}'.format(sys.platform))
+            raise Exception(errmsg)
+    else:
+        assert platform in ['mac', 'linux', 'win32', 'win64']
+    zipname = '{}.zip'.format(platform)
+
+    # Determine path for file download and then download and unzip
+    url = ('https://github.com/MODFLOW-USGS/executables/'
+           'releases/download/{}/'.format(version))
+    assets = {p: url + p for p in ['mac.zip', 'linux.zip',
+                                   'win32.zip', 'win64.zip']}
+    download_url = assets[zipname]
+    pymake.download_and_unzip(download_url, pth)
+
+    return
+
+
+def get_exes_list():
+    temp = os.listdir(exe_pth)
+    avail_targets = pymake.usgs_program_data.get_keys(current=True)
+    targets = []
+    for target in avail_targets:
+        for tt in temp:
+            if target in tt:
+                targets.append(tt)
+
+    # write summary of available download executables
+    msg = 'executables that are available from the download:\n'
+    for idx, target in enumerate(targets):
+        msg += '    {:>2d}: {}\n'.format(idx + 1, target)
+    print('{}\n'.format(msg))
+
+    return targets
+
+
+def is_executable(f):
+    # write message
+    msg = 'testing if {} is executable.'.format(f)
+    print(msg)
+
+    fname = os.path.join(exe_pth, f)
+    errmsg = '{} not executable'.format(fname)
+    assert which(fname) is not None, errmsg
+    return
+
+
+def get_code_json():
+    jpth = 'code.json'
+    json_dict = None
+    if jpth in os.listdir(exe_pth):
+        fpth = os.path.join(exe_pth, jpth)
+        json_dict = pymake.usgs_program_data.load_json(fpth)
+
+    return json_dict
+
+
+def evaluate_versions(target, src):
+    # get code.json dictionary
+    json_dict = get_code_json()
+
+    # get current modflow program dictionary
+    prog_dict = pymake.usgs_program_data.get_program_dict()
+
+    if json_dict is not None:
+        # extract the json keys
+        json_keys = list(json_dict.keys())
+        # evaluate if the target is in the json keys
+        if target in json_keys:
+            source_version = prog_dict[target].version
+            git_version = json_dict[target].version
+
+            # write a message
+            msg = 'Source code version of {} '.format(target) + \
+                  'is "{}"'.format(source_version)
+            print(4 * ' ' + msg)
+            msg = 'Download code version of {} '.format(target) + \
+                  'is "{}"\n'.format(git_version)
+            print(4 * ' ' + msg)
+
+            prog_version = source_version.split('.')
+            json_version = git_version.split('.')
+
+            # evaluate major, minor, etc. version numbers
+            for sp, sj in zip(prog_version, json_version):
+                if int(sp) > int(sj):
+                    src = None
+                    break
+
+    return src
+
+
+def copy_target(target, src):
+    srcpth = os.path.join(exe_pth, src)
+    dstpth = os.path.join(bindir, src)
+
+    # write message showing copy src and dst
+    msg = 'copying {} -> {}'.format(srcpth, dstpth)
+    print(msg)
+
+    # copy the target
+    shutil.copy(srcpth, dstpth)
+
+    # determine if json file in directory with downloaded files
+    json_file = None
+    for f in os.listdir(exe_pth):
+        if f.lower().endswith('.json'):
+            json_file = f
+            break
+
+    # update code.json with data from from the json file in exe_pth
+    if json_file is not None:
+        fpth = os.path.join(bindir, json_file)
+
+        # set default program dictionary
+        usgs_dict = pymake.usgs_program_data.get_program_dict()
+        target_dict = {target: usgs_dict[target]}
+
+        # process the json
+        download_dict = pymake.usgs_program_data.load_json(fpth)
+        if download_dict is not None:
+            if target in list(download_dict.keys()):
+                target_dict = {target: download_dict[target]}
+
+        # update the json
+        pymake.usgs_program_data.update_json(fpth=fpth,
+                                             temp_dict=target_dict)
+
+    return
+
+
+def list_json():
+    # build list_json command
+    fpth = os.path.join(bindir, 'code.json')
+    ljson = 'pymake.usgs_program_data.list_json(fpth="{}")'.format(fpth)
+
+    # build full command
+    cmd = "python -c 'from __future__ import print_function; " + \
+          "import pymake; {}'".format(ljson)
+
+    # run command
+    os.system(cmd)
+    return
+
+
+def cleanup():
+    if os.path.isdir(exe_pth):
+        shutil.rmtree(exe_pth)
+
+    return
+
+
+def main():
+    get_modflow_exes(exe_pth, download_version)
+
+    etargets = get_exes_list()
+    for f in etargets:
+        is_executable(f)
+
+    # build each target
+    targets = get_targets()
+    for etarget in etargets:
+        src = None
+        for target in targets:
+            if target in etarget:
+                src = etarget
+                break
+
+        # evaluate if the usgs source files and newer versions than
+        # downloaded executables...if so build the target from source code
+        if src is not None:
+            src = evaluate_versions(target, src)
+
+        # reset source if code should be rebuilt from source
+        if build_from_source:
+            src = None
+
+        # copy the downloaded executable
+        if src is not None:
+            copy_target(target, src)
+        # build the target from source code
+        else:
+            msg = 'building {}'.format(target)
+            print(msg)
+            build_target(target)
+
+        # # build all targets (until github gfortran-8 exes are available)
+        # build_target(target)
+
+    # list the created json file
+    list_json()
+
+    # clean up the download directory
+    cleanup()
+
+
+def test_download_and_unzip():
+    yield get_modflow_exes, exe_pth, download_version
+
+    etargets = get_exes_list()
+    for f in etargets:
+        yield is_executable, f
+    return
+
+
+def test_build_all_apps():
+    # get list of downloaded targets
+    etargets = get_exes_list()
+
+    # build each target
+    targets = get_targets()
+    for etarget in etargets:
+        src = None
+        for target in targets:
+            if target in etarget:
+                src = etarget
+                break
+
+        # evaluate if the usgs source files and newer versions than
+        # downloaded executables...if so build the target from source code
+        if src is not None:
+            src = evaluate_versions(target, src)
+
+        # reset source if code should be rebuilt from source
+        if build_from_source:
+            src = None
+
+        # copy the downloaded executable
+        if src is not None:
+            yield copy_target, target, src
+        # build the target
+        else:
+            msg = 'building {}'.format(target)
+            print(msg)
+            yield build_target, target
+
+        # # build all targets (until github gfortran-8 exes are available)
+        # yield build_target, target
+
+    return
+
+
+def test_list_json():
+    list_json()
+    return
+
+
+def test_cleanup():
+    cleanup()
 
 
 if __name__ == '__main__':
-    # test_build_mf6()
-    # test_build_modflow()
-    # test_build_mfnwt()
-    # test_build_usg()
-    # test_build_mt3dms()
-    # test_build_seawat()
-    # test_build_gridgen()
-    # test_build_triangle()
-    test_build_modpath7()
+    main()

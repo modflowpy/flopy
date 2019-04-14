@@ -45,7 +45,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         * transient (boolean) keyword to indicate that stress period IPER is
           transient. Transient conditions will apply until the STEADY-STATE
           keyword is specified in a subsequent BEGIN PERIOD block.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -60,7 +60,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
     ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
     sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
     package_abbr = "gwfsto"
-    package_type = "sto"
+    _package_type = "sto"
     dfn_file_name = "gwf-sto.dfn"
 
     dfn = [["block options", "name save_flows", "type keyword", 
@@ -86,9 +86,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False, save_flows=None,
                  storagecoefficient=None, iconvert=0, ss=1.e-5, sy=0.15,
-                 steady_state=None, transient=None, fname=None, pname=None,
+                 steady_state=None, transient=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfsto, self).__init__(model, "sto", fname, pname,
+        super(ModflowGwfsto, self).__init__(model, "sto", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

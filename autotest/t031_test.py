@@ -9,9 +9,10 @@ import shutil
 import os
 import flopy
 import numpy as np
-from flopy.utils.reference import SpatialReference
+from flopy.discretization import StructuredGrid
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
+from flopy.utils.reference import SpatialReference
 from flopy.modpath.mpsim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
@@ -96,11 +97,19 @@ def test_mpsim():
 def test_get_destination_data():
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
-    m.sr = SpatialReference(delr=m.dis.delr, delc=m.dis.delc, xul=0, yul=0,
-                            rotation=30)
-    sr = SpatialReference(delr=list(m.dis.delr), delc=list(m.dis.delc),
-                          xul=1000, yul=1000, rotation=30)
-    sr2 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30)
+    mg1 = m.modelgrid
+    mg1.set_coord_info(xoff=mg1._xul_to_xll(0.0, 30.0),
+                       yoff=mg1._yul_to_yll(0.0, 30.0),
+                       angrot=30.0)
+
+    mg = StructuredGrid(delc=m.dis.delc.array,
+                        delr=m.dis.delr.array)
+    mg.set_coord_info(xoff=mg._xul_to_xll(1000.0, 30.0),
+                      yoff=mg._yul_to_yll(1000.0, 30.0),
+                      angrot=30.0)
+
+    # test deprecation
+    sr2 = SpatialReference(xll=mg.xoffset, yll=mg.yoffset, rotation=-30)
     m.dis.export(path + '/dis.shp')
 
     pthld = PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
@@ -125,39 +134,39 @@ def test_get_destination_data():
     # test writing a shapefile of endpoints
     epd.write_shapefile(well_epd, direction='starting',
                         shpname=os.path.join(path, 'starting_locs.shp'),
-                        sr=m.sr)
+                        mg=m.modelgrid)
 
     # test writing shapefile of pathlines
     fpth = os.path.join(path, 'pathlines_1per.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=True,
-                          direction='starting', sr=m.sr,
+                          direction='starting', mg=m.modelgrid,
                           shpname=fpth)
     fpth = os.path.join(path, 'pathlines_1per_end.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=True,
-                          direction='ending', sr=m.sr,
+                          direction='ending', mg=m.modelgrid,
                           shpname=fpth)
     # test writing shapefile of pathlines
     fpth = os.path.join(path, 'pathlines_1per2.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=True,
-                          direction='starting', sr=sr,
+                          direction='starting', mg=mg,
                           shpname=fpth)
     # test writing shapefile of pathlines
     fpth = os.path.join(path, 'pathlines_1per2_ll.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=True,
-                          direction='starting', sr=sr2,
+                          direction='starting', mg=sr2,
                           shpname=fpth)
     fpth = os.path.join(path, 'pathlines.shp')
     pthld.write_shapefile(well_pthld, one_per_particle=False,
-                          sr=m.sr,
+                          mg=m.modelgrid,
                           shpname=fpth)
 
     # test that endpoints were rotated and written correctly
     from flopy.export.shapefile_utils import shp2recarray
     ra = shp2recarray(os.path.join(path, 'starting_locs.shp'))
     p3 = ra.geometry[ra.particleid == 4][0]
-    xorig, yorig = m.sr.transform(well_epd.x0[0], well_epd.y0[0])
+    xorig, yorig = m.modelgrid.get_coords(well_epd.x0[0], well_epd.y0[0])
     assert p3.x - xorig + p3.y - yorig < 1e-4
-    xorig, yorig = m.sr.xcentergrid[3, 4], m.sr.ycentergrid[3, 4]
+    xorig, yorig = mg1.xcellcenters[3, 4], mg1.ycellcenters[3, 4]
     assert np.abs(
         p3.x - xorig + p3.y - yorig) < 1e-4  # this also checks for 1-based
 
@@ -175,19 +184,24 @@ def test_get_destination_data():
     assert ra.i[0] == 13, ra.j[0] == 13
 
     # test use of arbitrary spatial reference and offset
+    mg1.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=mg.angrot,
+                       epsg=mg.epsg, proj4=mg.proj4)
     ra = shp2recarray(os.path.join(path, 'pathlines_1per2.shp'))
     p3_2 = ra.geometry[ra.particleid == 4][0]
+    test1 = mg1.xcellcenters[3, 4]
+    test2 = mg1.ycellcenters[3, 4]
     assert np.abs(
-        p3_2.x[0] - sr.xcentergrid[3, 4] + p3_2.y[0] - sr.ycentergrid[
+        p3_2.x[0] - mg1.xcellcenters[3, 4] + p3_2.y[0] - mg1.ycellcenters[
             3, 4]) < 1e-4
 
     # arbitrary spatial reference with ll specified instead of ul
     ra = shp2recarray(os.path.join(path, 'pathlines_1per2_ll.shp'))
     p3_2 = ra.geometry[ra.particleid == 4][0]
-    sr3 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30,
-                           delr=list(m.dis.delr), delc=list(m.dis.delc))
+    #sr3 = SpatialReference(xll=sr.xll, yll=sr.yll, rotation=-30,
+    #                       delc=list(m.dis.delc))
+    mg.set_coord_info(xoff=mg.xoffset, yoff=mg.yoffset, angrot=-30.0)
     assert np.abs(
-        p3_2.x[0] - sr3.xcentergrid[3, 4] + p3_2.y[0] - sr3.ycentergrid[
+        p3_2.x[0] - mg.xcellcenters[3, 4] + p3_2.y[0] - mg.ycellcenters[
             3, 4]) < 1e-4
 
     xul = 3628793
@@ -195,17 +209,18 @@ def test_get_destination_data():
 
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=path)
 
-    m.sr = flopy.utils.reference.SpatialReference(delr=m.dis.delr,
-                                                  delc=m.dis.delc, lenuni=1,
-                                                  xul=xul, yul=yul,
-                                                  rotation=0.0)
+    mg4 = m.modelgrid
+    mg4.set_coord_info(xoff=mg4._xul_to_xll(xul, 0.0),
+                       yoff=mg4._yul_to_yll(yul, 0.0),
+                       angrot=0.0, epsg=mg4.epsg, proj4=mg4.proj4)
+
     fpth = os.path.join(path, 'dis2.shp')
     m.dis.export(fpth)
     pthobj = flopy.utils.PathlineFile(os.path.join(path, 'EXAMPLE-3.pathline'))
     fpth = os.path.join(path, 'pathlines_1per3.shp')
     pthobj.write_shapefile(shpname=fpth,
                            direction='ending',
-                           sr=m.sr)
+                           mg=mg4)
 
 
 def test_loadtxt():
@@ -222,6 +237,6 @@ def test_loadtxt():
 
 
 if __name__ == '__main__':
-    test_mpsim()
+    # test_mpsim()
     test_get_destination_data()
-    test_loadtxt()
+    # test_loadtxt()

@@ -1,13 +1,27 @@
 FloPy Changes
 -----------------------------------------------
 ### Version 3.2.11
+* Added support for the drain return package.
 * Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
 * Added a new flopy3_MT3DMS_examples notebook, which uses Flopy to reproduce the example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
 * Pylint is now used on Travis for the Python 3.5 distribution to check for coding errors.
+* Added testing with Python 3.7 on Travis, dropped testing Python 3.4.
 * Added a new htop argument to the vtk writer, which allows cell tops to be defined by the simulated head.
+* Generalized exporting and plotting to also work with MODFLOW 6. Added a new grid class and deprecated SpatialReference class. Added new plotting interfaces, `PlotMapView` and `PlotCrossSection`. Began deprecation of `ModelMap` and `ModelCrossSection` classes.
+* Spatial reference system cache moved to epsgref.json in the user's data directory.
+* Attempts to read empty files from flopy.utils raise a IOError exception.
+* Changed interface for creating and accessing MODFLOW 6 observation, time series, and time array series packages. These packages can now be created and accessed directly from the package that references them.  These changes are not backward compatible, and will require existing scripts to be modified.  See the flopy3_mf6_obs_ts_tas.ipynb notebook for instructions.
+* Changed the MODFLOW 6 fname argument to be filename.  This change is not backward compatible, and will require existing scripts to be modified if the fname argument was used in the package constructor.
+* Added modflow-nwt options support for `ModflowWel`, `ModflowSfr2`, and `ModflowUzf1` via the `OptionBlock` class.
 
 * Bug fixes:
     * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
+    * Now account for UZT -> UZT2 changes with the release of MT3D-USGS 1.0.1.  Use of UZT is no longer supported.
+    * Fixed bug in `mfuzf1.py` when reading and writing `surfk` when `specifysurfk = True`.
+    * Fixed bug in `ModflowStr.load()`, utility would fail to load when comments were present.
+    * Fixed bug in MNW2 in which nodes were not sorted correctly.
+    * Ensure that external 1-D free arrays are written on one line.
+    * Typos corrected for various functions, keyword arguments, property names, input file options, and documentation.
 
 ### Version 3.2.10
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).

@@ -85,7 +85,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order. Cells that are connected must
           share vertices.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -103,7 +103,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
                                       'vertices'))
     cell2d = ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisv"
-    package_type = "disv"
+    _package_type = "disv"
     dfn_file_name = "gwf-disv.dfn"
 
     dfn = [["block options", "name length_units", "type string", 
@@ -123,7 +123,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
            ["block dimensions", "name nvert", "type integer", 
             "reader urword", "optional false"],
            ["block griddata", "name top", "type double precision", 
-            "shape (1, ncpl)", "reader readarray"],
+            "shape (ncpl)", "reader readarray"],
            ["block griddata", "name botm", "type double precision", 
             "shape (nlay, ncpl)", "reader readarray", "layered true"],
            ["block griddata", "name idomain", "type integer", 
@@ -161,9 +161,9 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None,
                  nlay=None, ncpl=None, nvert=None, top=None, botm=None,
-                 idomain=None, vertices=None, cell2d=None, fname=None,
+                 idomain=None, vertices=None, cell2d=None, filename=None,
                  pname=None, parent_file=None):
-        super(ModflowGwfdisv, self).__init__(model, "disv", fname, pname,
+        super(ModflowGwfdisv, self).__init__(model, "disv", filename, pname,
                                              loading_package, parent_file)        
 
         # set up variables

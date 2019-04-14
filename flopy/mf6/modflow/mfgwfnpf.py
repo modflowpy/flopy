@@ -68,7 +68,12 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         * save_specific_discharge (boolean) keyword to indicate that x, y, and
           z components of specific discharge will be calculated at cell centers
           and written to the cell-by-cell flow file, which is specified with
-          "BUDGET SAVE FILE" in Output Control.
+          "BUDGET SAVE FILE" in Output Control. If this option is activated,
+          then additional information may be required in the discretization
+          packages and the GWF Exchange package (if GWF models are coupled).
+          Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block
+          of the DISU Package; ANGLDEGX must also be specified for the GWF
+          Exchange as an auxiliary variable.
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
@@ -158,7 +163,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           "REWET" is specified in the OPTIONS block. If "REWET" is not
           specified in the options block, then WETDRY can be entered, and
           memory will be allocated for it, even though it is not used.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -184,7 +189,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     wetdry = ArrayTemplateGenerator(('gwf6', 'npf', 'griddata', 
                                      'wetdry'))
     package_abbr = "gwfnpf"
-    package_type = "npf"
+    _package_type = "npf"
     dfn_file_name = "gwf-npf.dfn"
 
     dfn = [["block options", "name save_flows", "type keyword", 
@@ -252,9 +257,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
                  cvoptions=None, perched=None, rewet_record=None,
                  xt3doptions=None, save_specific_discharge=None, icelltype=0,
                  k=1.0, k22=None, k33=None, angle1=None, angle2=None,
-                 angle3=None, wetdry=None, fname=None, pname=None,
+                 angle3=None, wetdry=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfnpf, self).__init__(model, "npf", fname, pname,
+        super(ModflowGwfnpf, self).__init__(model, "npf", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

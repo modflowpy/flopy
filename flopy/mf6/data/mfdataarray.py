@@ -2,10 +2,13 @@ import sys, inspect, copy
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdatautil, mfdata
-from ..data.mfdatautil import MultiList
-from ..mfbase import ExtFileAction, MFDataException
+from ..data import mfdatautil, mfdata
+from ...utils import datautil
+from ...utils.datautil import MultiList
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
+from ...datbase import DataType
+
 
 class MFArray(mfdata.MFMultiDimVar):
     """
@@ -88,9 +91,9 @@ class MFArray(mfdata.MFMultiDimVar):
 
 
     """
-    def __init__(self, sim_data, structure, data=None, enable=True, path=None,
-                 dimensions=None):
-        super(MFArray, self).__init__(sim_data, structure, enable, path,
+    def __init__(self, sim_data, model_or_sim, structure, data=None,
+                 enable=True, path=None, dimensions=None):
+        super(MFArray, self).__init__(sim_data, model_or_sim, structure, enable, path,
                                       dimensions)
         if self.structure.layered:
             try:
@@ -233,6 +236,7 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def __setitem__(self, k, value):
         storage = self._get_storage_obj()
+        self._resync()
         if storage.layered:
             if isinstance(k, int):
                 k = (k,)
@@ -269,6 +273,24 @@ class MFArray(mfdata.MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
+
+    @property
+    def data_type(self):
+        if self.structure.layered:
+            return DataType.array3d
+        else:
+            return DataType.array2d
+
+    @property
+    def dtype(self):
+        return self.get_data().dtype.type
+
+    @property
+    def plotable(self):
+        if self.model is None:
+            return False
+        else:
+            return True
 
     def new_simulation(self, sim_data):
         super(MFArray, self).new_simulation(sim_data)
@@ -426,10 +448,18 @@ class MFArray(mfdata.MFMultiDimVar):
         return None
 
     def set_data(self, data, multiplier=[1.0], layer=None):
+        self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
         if isinstance(layer, int):
             layer = (layer,)
+        if isinstance(data, str):
+            # check to see if this is a time series array
+            tas_name, tas_label = self._tas_info(data)
+            if tas_name is not None:
+                # verify and save as time series array
+                self._set_tas(self._get_storage_obj(), tas_name, tas_label)
+                return
         try:
             self._get_storage_obj().set_data(data, layer, multiplier,
                                              key=self._current_key)
@@ -445,11 +475,36 @@ class MFArray(mfdata.MFMultiDimVar):
                                   self._simulation_data.debug, ex)
         self._layer_shape = self._get_storage_obj().layer_storage.list_shape
 
+    def _set_tas(self, storage, tas_name, tas_label):
+        package_dim = self._data_dimensions.package_dim
+        tas_names = package_dim.get_tasnames()
+        if tas_name.lower() not in tas_names and \
+                self._simulation_data.verbosity_level.value >= \
+                VerbosityLevel.normal.value:
+            print('WARNING: Time array series name {} not found in any '
+                  'time series file'.format(tas_name))
+        # this is a time series array with a valid tas variable
+        storage.data_structure_type = \
+            mfdata.DataStructureType.scalar
+        try:
+            storage.set_data('{} {}'.format(tas_label, tas_name), 0,
+                             key=self._current_key)
+        except Exception as ex:
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(self.structure.get_model(),
+                                  self.structure.get_package(),
+                                  self._path,
+                                  'storing data',
+                                  self.structure.name,
+                                  inspect.stack()[0][3], type_,
+                                  value_, traceback_, None,
+                                  self._simulation_data.debug, ex)
+
     def load(self, first_line, file_handle, block_header,
              pre_data_comments=None):
         super(MFArray, self).load(first_line, file_handle, block_header,
                                   pre_data_comments=None)
-
+        self._resync()
         if self.structure.layered:
             try:
                 model_grid = self._data_dimensions.get_model_grid()
@@ -477,44 +532,15 @@ class MFArray(mfdata.MFMultiDimVar):
         # read in any pre data comments
         current_line = self._read_pre_data_comments(first_line, file_handle,
                                                     pre_data_comments)
-        mfdatautil.ArrayUtil.reset_delimiter_used()
-        arr_line = mfdatautil.ArrayUtil.\
+        datautil.PyListUtil.reset_delimiter_used()
+        arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         package_dim = self._data_dimensions.package_dim
         if len(arr_line) > 2:
             # check for time array series
             if arr_line[1].upper() == 'TIMEARRAYSERIES':
-                tas_names = package_dim.get_tasnames()
-                if arr_line[2].lower() in tas_names:
-                    # this is a time series array with a valid tas variable
-                    storage.data_structure_type = \
-                            mfdata.DataStructureType.scalar
-                    try:
-                        storage.set_data(' '.join(arr_line[1:3]), 0,
-                                         key=self._current_key)
-                    except Exception as ex:
-                        type_, value_, traceback_ = sys.exc_info()
-                        raise MFDataException(self.structure.get_model(),
-                                              self.structure.get_package(),
-                                              self._path,
-                                              'storing data',
-                                              self.structure.name,
-                                              inspect.stack()[0][3], type_,
-                                              value_, traceback_, None,
-                                              self._simulation_data.debug, ex)
-                    return [False, None]
-                else:
-                    message = 'TIMEARRAYSERIES keyword not ' \
-                              'followed by a valid TAS variable. '
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(self.structure.get_model(),
-                                          self.structure.get_package(),
-                                          self._path,
-                                          'loading data from file',
-                                          self.structure.name,
-                                          inspect.stack()[0][3], type_,
-                                          value_, traceback_, message,
-                                          self._simulation_data.debug)
+                self._set_tas(storage, arr_line[2], arr_line[1])
+                return [False, None]
         if not self.structure.data_item_structures[0].just_data:
             # verify keyword
             index_num, aux_var_index = self._load_keyword(arr_line, 0)
@@ -584,13 +610,9 @@ class MFArray(mfdata.MFMultiDimVar):
 
     def _load_layer(self, layer, layer_size, storage, arr_line, file_handle):
         di_struct = self.structure.data_item_structures[0]
-        if not di_struct.just_data or mfdatautil.max_tuple_abs_size(layer) > 0:
-            line = ' '
-            arr_line = []
-            while line != '' and len(arr_line) == 0:
-                line = file_handle.readline()
-                arr_line = mfdatautil.ArrayUtil.\
-                    split_data_line(line)
+        if not di_struct.just_data or datautil.max_tuple_abs_size(layer) > 0:
+            arr_line = self._get_next_data_line(file_handle)
+
         layer_storage = storage.layer_storage[layer]
         # if constant
         if arr_line[0].upper() == 'CONSTANT':
@@ -670,10 +692,10 @@ class MFArray(mfdata.MFMultiDimVar):
 
             try:
                 # load variable data from current file
-                data_from_file = storage.read_data_from_file(layer, file_handle,
-                                                             multiplier,
-                                                             print_format,
-                                                             di_struct)
+                data_from_file = storage.read_array_data_from_file(layer, file_handle,
+                                                                   multiplier,
+                                                                   print_format,
+                                                                   di_struct)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -946,7 +968,7 @@ class MFArray(mfdata.MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        data_iter = mfdatautil.ArrayUtil.next_item(data)
+        data_iter = datautil.PyListUtil.next_item(data)
         indent_str = self._simulation_data.indent_string
         for item, last_item, new_list, nesting_change in data_iter:
             # increment data/layer counts
@@ -1047,6 +1069,80 @@ class MFArray(mfdata.MFMultiDimVar):
         #size = self._data_dimensions.model_subspace_size(self.structure.shape)
         return True
 
+    def plot(self, filename_base=None, file_extension=None, mflay=None,
+             fignum=None, title=None, **kwargs):
+        """
+        Plot 3-D model input data
+
+        Parameters
+        ----------
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        mflay : int
+            MODFLOW zero-based layer number to return.  If None, then all
+            all layers will be included. (default is None)
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+
+        Returns
+        ----------
+        out : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        from flopy.plot import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
+        if len(self.array.shape) == 2:
+            axes = PlotUtilities._plot_util2d_helper(self,
+                                                     title=title,
+                                                     filename_base=filename_base,
+                                                     file_extension=file_extension,
+                                                     fignum=fignum,
+                                                     **kwargs)
+        elif len(self.array.shape) == 3:
+            axes = PlotUtilities._plot_util3d_helper(self,
+                                                     filename_base=filename_base,
+                                                     file_extension=file_extension,
+                                                     mflay=mflay,
+                                                     fignum=fignum,
+                                                     **kwargs)
+        else:
+            axes = None
+
+        return axes
+
 
 class MFTransientArray(MFArray, mfdata.MFTransient):
     """
@@ -1103,16 +1199,21 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
 
 
     """
-    def __init__(self, sim_data, structure, enable=True, path=None,
-                 dimensions=None):
+    def __init__(self, sim_data, model_or_sim, structure, enable=True,
+                 path=None, dimensions=None):
         super(MFTransientArray, self).__init__(sim_data=sim_data,
-                                              structure=structure,
-                                              data=None,
-                                              enable=enable,
-                                              path=path,
-                                              dimensions=dimensions)
+                                               model_or_sim=model_or_sim,
+                                               structure=structure,
+                                               data=None,
+                                               enable=enable,
+                                               path=path,
+                                               dimensions=dimensions)
         self._transient_setup(self._data_storage)
         self.repeating = True
+
+    @property
+    def data_type(self):
+        return DataType.transient2d
 
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)
@@ -1128,7 +1229,6 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
                 num_sp = sim_time.get_num_stress_periods()
                 data = None
                 for sp in range(0, num_sp):
-                #for key in self._data_storage.keys():
                     if sp in self._data_storage:
                         self.get_data_prep(sp)
                         data = super(MFTransientArray, self).get_data(
@@ -1204,3 +1304,68 @@ class MFTransientArray(MFArray, mfdata.MFTransient):
                 self._current_key not in self._data_storage:
             return None
         return self._data_storage[self._current_key]
+
+    def plot(self, kper=None, filename_base=None, file_extension=None,
+             mflay=None, fignum=None, **kwargs):
+        """
+        Plot transient array model input data
+
+        Parameters
+        ----------
+        transient2d : flopy.utils.util_array.Transient2D object
+        filename_base : str
+            Base file name that will be used to automatically generate file
+            names for output image files. Plots will be exported as image
+            files if file_name_base is not None. (default is None)
+        file_extension : str
+            Valid matplotlib.pyplot file extension for savefig(). Only used
+            if filename_base is not None. (default is 'png')
+        **kwargs : dict
+            axes : list of matplotlib.pyplot.axis
+                List of matplotlib.pyplot.axis that will be used to plot
+                data for each layer. If axes=None axes will be generated.
+                (default is None)
+            pcolor : bool
+                Boolean used to determine if matplotlib.pyplot.pcolormesh
+                plot will be plotted. (default is True)
+            colorbar : bool
+                Boolean used to determine if a color bar will be added to
+                the matplotlib.pyplot.pcolormesh. Only used if pcolor=True.
+                (default is False)
+            inactive : bool
+                Boolean used to determine if a black overlay in inactive
+                cells in a layer will be displayed. (default is True)
+            contour : bool
+                Boolean used to determine if matplotlib.pyplot.contour
+                plot will be plotted. (default is False)
+            clabel : bool
+                Boolean used to determine if matplotlib.pyplot.clabel
+                will be plotted. Only used if contour=True. (default is False)
+            grid : bool
+                Boolean used to determine if the model grid will be plotted
+                on the figure. (default is False)
+            masked_values : list
+                List of unique values to be excluded from the plot.
+            kper : str
+                MODFLOW zero-based stress period number to return. If
+                kper='all' then data for all stress period will be
+                extracted. (default is zero).
+
+        Returns
+        ----------
+        axes : list
+            Empty list is returned if filename_base is not None. Otherwise
+            a list of matplotlib.pyplot.axis is returned.
+        """
+        from flopy.plot.plotutil import PlotUtilities
+
+        if not self.plotable:
+            raise TypeError("Simulation level packages are not plotable")
+
+        axes = PlotUtilities._plot_transient2d_helper(self,
+                                                      filename_base=filename_base,
+                                                      file_extension=file_extension,
+                                                      kper=kper,
+                                                      fignum=fignum,
+                                                      **kwargs)
+        return axes

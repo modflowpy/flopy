@@ -14,7 +14,8 @@ import warnings
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, reference, check
+from ..utils import Util2d, Util3d, check
+from ..utils.reference import SpatialReference, TemporalReference
 from ..utils.flopy_io import line_parse
 
 ITMUNI = {"u": 0, "s": 1, "m": 2, "h": 3, "d": 4, "y": 5}
@@ -118,7 +119,7 @@ class ModflowDis(Package):
                  delc=1.0, laycbd=0, top=1, botm=0, perlen=1, nstp=1,
                  tsmult=1, steady=True, itmuni=4, lenuni=2, extension='dis',
                  unitnumber=None, filenames=None,
-                 xul=None, yul=None, rotation=0.0,
+                 xul=None, yul=None, rotation=None,
                  proj4_str=None, start_datetime=None):
 
         # set default unit number of one is not specified
@@ -202,15 +203,43 @@ class ModflowDis(Package):
         if start_datetime is None:
             start_datetime = model._start_datetime
 
-        self.sr = reference.SpatialReference(self.delr.array, self.delc.array,
-                                             self.lenuni, xul=xul, yul=yul,
-                                             rotation=rotation,
-                                             proj4_str=proj4_str)
-        self.tr = reference.TemporalReference(itmuni=self.itmuni,
-                                              start_datetime=start_datetime)
+        # set the model grid coordinate info
+        xll = None
+        yll = None
+        mg = model.modelgrid
+        if xul is not None:
+            xll = mg._xul_to_xll(xul)
+        if yul is not None:
+            yll = mg._yul_to_yll(yul)
+        mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
+
+        if rotation is None:
+            rotation = 0.0
+        self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
+                                   xul=xul, yul=yul,
+                                   rotation=rotation,
+                                   proj4_str=proj4_str)
+
+        self.tr = TemporalReference(itmuni=self.itmuni,
+                                    start_datetime=start_datetime)
+
         self.start_datetime = start_datetime
         # calculate layer thicknesses
         self.__calculate_thickness()
+
+    @property
+    def sr(self):
+        warnings.warn(
+            'SpatialReference has been deprecated. Use Grid instead.',
+            DeprecationWarning)
+        return self._sr
+
+    @sr.setter
+    def sr(self, sr):
+        warnings.warn(
+            'SpatialReference has been deprecated. Use Grid instead.',
+            DeprecationWarning)
+        self._sr = sr
 
     def checklayerthickness(self):
         """
@@ -838,7 +867,7 @@ class ModflowDis(Package):
 
         header = header.replace('#', '')
         xul, yul = None, None
-        rotation = 0.0
+        rotation = None
         proj4_str = "EPSG:4326"
         start_datetime = "1/1/1970"
         dep = False

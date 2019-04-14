@@ -10,7 +10,6 @@ from numpy.lib import recfunctions
 from ..pakbase import Package
 from ..utils import MfList
 from ..utils.flopy_io import line_parse
-from ..utils import SpatialReference
 from ..utils.recarray_utils import create_empty_recarray
 from ..utils.optionblock import OptionBlock
 from collections import OrderedDict
@@ -1693,7 +1692,7 @@ class ModflowSfr2(Package):
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
             from flopy import export
-            return export.utils.package_helper(f, self, **kwargs)
+            return export.utils.package_export(f, self, **kwargs)
 
     def export_linkages(self, f, **kwargs):
         """Export linework shapefile showing all routing connections between SFR reaches.
@@ -1707,8 +1706,9 @@ class ModflowSfr2(Package):
         rd.sort(order=['reachID'])
 
         # get the cell centers for each reach
-        x0 = m.sr.xcentergrid[rd.i, rd.j]
-        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        mg = m.modelgrid
+        x0 = mg.xcellcenters[rd.i, rd.j]
+        y0 = mg.ycellcenters[rd.i, rd.j]
         loc = dict(zip(rd.reachID, zip(x0, y0)))
 
         # make lines of the reach connections between cell centers
@@ -1748,8 +1748,9 @@ class ModflowSfr2(Package):
         rd.sort(order=['iseg', 'ireach'])
 
         # get the cell centers for each reach
-        x0 = m.sr.xcentergrid[rd.i, rd.j]
-        y0 = m.sr.ycentergrid[rd.i, rd.j]
+        mg = m.modelgrid
+        x0 = mg.xcellcenters[rd.i, rd.j]
+        y0 = mg.ycellcenters[rd.i, rd.j]
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(rd, geoms, f, **kwargs)
 
@@ -1779,8 +1780,9 @@ class ModflowSfr2(Package):
 
         # get the cell centers for each reach
         m = self.parent
-        x0 = m.sr.xcentergrid[ra.i, ra.j]
-        y0 = m.sr.ycentergrid[ra.i, ra.j]
+        mg = m.modelgrid
+        x0 = mg.xcellcenters[ra.i, ra.j]
+        y0 = mg.ycellcenters[ra.i, ra.j]
         geoms = [Point(x, y) for x, y in zip(x0, y0)]
         recarray2shp(ra, geoms, f, **kwargs)
 
@@ -1828,11 +1830,13 @@ class check:
 
     def __init__(self, sfrpackage, verbose=True, level=1):
         self.sfr = copy.copy(sfrpackage)
-        self.sr = self.sfr.parent.sr
 
-        if self.sr is None and self.sfr.parent.dis is not None:
-            self.sr = SpatialReference(delr=self.sfr.parent.dis.delr.array,
-                                       delc=self.sfr.parent.dis.delc.array)
+        try:
+            self.mg = self.sfr.parent.modelgrid
+            self.sr = self.sfr.parent.modelgrid.sr
+        except AttributeError:
+            self.sr = self.sfr.parent.sr
+
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
         self.verbose = verbose
@@ -2045,11 +2049,18 @@ class check:
         self._txt_footer(headertxt, txt, 'circular routing', warning=False)
 
         # check reach connections for proximity
-        if self.sr is not None:
+        if self.mg is not None or self.mg is not None:
             rd = self.sfr.reach_data
             rd.sort(order=['reachID'])
-            x0 = self.sr.xcentergrid[rd.i, rd.j]
-            y0 = self.sr.ycentergrid[rd.i, rd.j]
+            try:
+                xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
+                del zc
+            except AttributeError:
+                xcentergrid = self.mg.xcellcenters
+                ycentergrid = self.mg.ycellcenters
+
+            x0 = xcentergrid[rd.i, rd.j]
+            y0 = ycentergrid[rd.i, rd.j]
             loc = dict(zip(rd.reachID, zip(x0, y0)))
 
             # compute distances between node centers of connected reaches
@@ -2069,8 +2080,11 @@ class check:
             dist = np.array(dist)
 
             # compute max width of reach nodes (hypotenuse for rectangular nodes)
-            dx = (self.sr.delr * self.sr.length_multiplier)[rd.j]
-            dy = (self.sr.delc * self.sr.length_multiplier)[rd.i]
+            delr = self.mg.delr
+            delc = self.mg.delc
+
+            dx = delr[rd.j]  # (delr * self.sr.length_multiplier)[rd.j]
+            dy = delc[rd.i]  # (delc * self.sr.length_multiplier)[rd.i]
             hyp = np.sqrt(dx ** 2 + dy ** 2)
 
             # breaks are when the connection distance is greater than

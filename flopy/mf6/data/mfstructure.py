@@ -107,7 +107,7 @@ class Dfn(object):
         # construct list of dfn files to process in the order of file_order
         files = os.listdir(dfn_path)
         for f in files:
-            if 'common' in f:
+            if 'common' in f or 'flopy' in f:
                 continue
             package_abbr = os.path.splitext(f)[0]
             if package_abbr not in file_order:
@@ -179,7 +179,7 @@ class DfnPackage(Dfn):
     def __init__(self, package):
         super(DfnPackage, self).__init__()
         self.package = package
-        self.package_type = package.package_type
+        self.package_type = package._package_type
         self.dfn_file_name = package.dfn_file_name
         # the package type is always the text after the last -
         package_name = self.package_type.split('-')
@@ -235,7 +235,8 @@ class DfnPackage(Dfn):
 
             if new_data_item_struct.block_variable:
                 block_dataset_struct = MFDataStructure(
-                    new_data_item_struct, model_file)
+                    new_data_item_struct, model_file, self.package_type,
+                    self.dfn_list)
                 block_dataset_struct.parent_block = current_block
                 self._process_needed_data_items(block_dataset_struct,
                                                 dataset_items_in_block)
@@ -310,7 +311,8 @@ class DfnPackage(Dfn):
                             'internal variable to keep track of ' \
                             'solution group number'
                         block_dataset_struct = MFDataStructure(
-                            block_data_item_struct, model_file)
+                            block_data_item_struct, model_file,
+                            self.package_type, self.dfn_list)
                         block_dataset_struct.parent_block = current_block
                         block_dataset_struct.set_path(
                             path + (new_data_item_struct.block_name,))
@@ -323,7 +325,8 @@ class DfnPackage(Dfn):
                      dataset_items_in_block,
                      path, model_file, add_to_block=True):
         current_dataset_struct = MFDataStructure(new_data_item_struct,
-                                                 model_file)
+                                                 model_file, self.package_type,
+                                                 self.dfn_list)
         current_dataset_struct.set_path(
             path + (new_data_item_struct.block_name,))
         self._process_needed_data_items(current_dataset_struct,
@@ -473,13 +476,15 @@ class DfnFile(Dfn):
 
                 if new_data_item_struct.block_variable:
                     block_dataset_struct = MFDataStructure(
-                        new_data_item_struct, model_file)
+                        new_data_item_struct, model_file, self.package_type,
+                        self.dfn_list)
                     block_dataset_struct.parent_block = current_block
                     self._process_needed_data_items(block_dataset_struct,
                                                     dataset_items_in_block)
                     block_dataset_struct.set_path(
                         path + (new_data_item_struct.block_name,))
-                    block_dataset_struct.add_item(new_data_item_struct)
+                    block_dataset_struct.add_item(new_data_item_struct, False,
+                                                  self.dfn_list)
                     current_block.add_dataset(block_dataset_struct)
                 else:
                     new_data_item_struct.block_type = block_type
@@ -502,7 +507,7 @@ class DfnFile(Dfn):
                         for dataset in self.dataset_items_needed_dict[
                             new_data_item_struct.name]:
                             item_added = dataset.add_item(new_data_item_struct,
-                                                          record=True)
+                                                          True, self.dfn_list)
                             item_location_found = item_location_found or \
                                                   item_added
                     # if data item belongs to an existing keystring
@@ -548,12 +553,13 @@ class DfnFile(Dfn):
                                 'internal variable to keep track of ' \
                                 'solution group number'
                             block_dataset_struct = MFDataStructure(
-                                block_data_item_struct, model_file)
+                                block_data_item_struct, model_file,
+                                self.package_type, self.dfn_list)
                             block_dataset_struct.parent_block = current_block
                             block_dataset_struct.set_path(
                                 path + (new_data_item_struct.block_name,))
                             block_dataset_struct.add_item(
-                                block_data_item_struct)
+                                block_data_item_struct, False, self.dfn_list)
                             current_block.add_dataset(block_dataset_struct)
         dfn_fp.close()
         return block_dict
@@ -562,7 +568,8 @@ class DfnFile(Dfn):
                      dataset_items_in_block,
                      path, model_file, add_to_block=True):
         current_dataset_struct = MFDataStructure(new_data_item_struct,
-                                                 model_file)
+                                                 model_file, self.package_type,
+                                                 self.dfn_list)
         current_dataset_struct.set_path(
             path + (new_data_item_struct.block_name,))
         self._process_needed_data_items(current_dataset_struct,
@@ -571,7 +578,8 @@ class DfnFile(Dfn):
             # add dataset
             current_block.add_dataset(current_dataset_struct)
             current_dataset_struct.parent_block = current_block
-        current_dataset_struct.add_item(new_data_item_struct)
+        current_dataset_struct.add_item(new_data_item_struct, False,
+                                        self.dfn_list)
         return current_dataset_struct
 
     def _process_needed_data_items(self, current_dataset_struct,
@@ -581,7 +589,7 @@ class DfnFile(Dfn):
                 current_dataset_struct.expected_data_items.items():
             if item_name in dataset_items_in_block:
                 current_dataset_struct.add_item(
-                    dataset_items_in_block[item_name])
+                    dataset_items_in_block[item_name], False, self.dfn_list)
             else:
                 if item_name in self.dataset_items_needed_dict:
                     self.dataset_items_needed_dict[item_name].append(
@@ -766,6 +774,10 @@ class MFDataItemStructure(object):
         self.default_value = None
         self.numeric_index = False
         self.support_negative_index = False
+        self.construct_package = None
+        self.construct_data = None
+        self.parameter_name = None
+        self.one_per_pkg = False
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -900,6 +912,14 @@ class MFDataItemStructure(object):
                 self.type_string = 'double_precision'
                 self.type = self._str_to_enum_type(self.type_string)
                 self.type_obj = self._get_type()
+            elif arr_line[0] == 'construct_package':
+                self.construct_package = arr_line[1]
+            elif arr_line[0] == 'construct_data':
+                self.construct_data = arr_line[1]
+            elif arr_line[0] == 'parameter_name':
+                self.parameter_name = arr_line[1]
+            elif arr_line[0] == 'one_per_pkg':
+                self.one_per_pkg = bool(arr_line[1])
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1076,6 +1096,8 @@ class MFDataStructure(object):
         base data item associated with this data structure
     model_data : bool
         whether or not this is part of a model
+    package_type : str
+        abbreviated package type
 
     Attributes
     ----------
@@ -1172,11 +1194,13 @@ class MFDataStructure(object):
     --------
     """
 
-    def __init__(self, data_item, model_data):
+    def __init__(self, data_item, model_data, package_type, dfn_list):
         self.type = data_item.type
+        self.package_type = package_type
         self.path = None
         self.optional = data_item.optional
         self.name = data_item.name
+        self.block_name = data_item.block_name
         self.name_length = len(self.name)
         self.is_aux = data_item.is_aux
         self.is_boundname = data_item.is_boundname
@@ -1197,6 +1221,11 @@ class MFDataStructure(object):
         self.model_data = model_data
         self.num_optional = 0
         self.parent_block = None
+        self._fpmerge_data_item(data_item, dfn_list)
+        self.construct_package = data_item.construct_package
+        self.construct_data = data_item.construct_data
+        self.parameter_name = data_item.parameter_name
+        self.one_per_pkg = data_item.one_per_pkg
 
         # self.data_item_structures_dict = OrderedDict()
         self.data_item_structures = []
@@ -1268,7 +1297,7 @@ class MFDataStructure(object):
                 return True
         return False
 
-    def add_item(self, item, record=False):
+    def add_item(self, item, record=False, dfn_list=None):
         item_added = False
         if item.type != DatumType.recarray and \
                 ((item.type != DatumType.record and
@@ -1313,8 +1342,20 @@ class MFDataStructure(object):
             self.optional = self.optional and item.optional
             if item.optional:
                 self.num_optional += 1
-
+        if item_added:
+            self._fpmerge_data_item(item, dfn_list)
         return item_added
+
+    def _fpmerge_data_item(self, item, dfn_list):
+        mfstruct = MFStructure()
+        # check for flopy-specific dfn data
+        if item.name.lower() in mfstruct.flopy_dict:
+            # read flopy-specific dfn data
+            for name, value in mfstruct.flopy_dict[item.name.lower()].items():
+                line = '{} {}'.format(name, value)
+                item.set_value(line, None)
+                if dfn_list is not None:
+                    dfn_list[-1].append(line)
 
     def set_path(self, path):
         self.path = path + (self.name,)
@@ -1466,13 +1507,40 @@ class MFDataStructure(object):
                                                   keystr_desc)
         return description
 
+    def get_subpackage_description(self, line_size=79,
+                                   initial_indent='        ',
+                                   level_indent='    '):
+        item_desc = '* Contains data for the {} package. Data can be ' \
+                    'stored in a dictionary containing data for the {} ' \
+                    'package with variable names as keys and package data as ' \
+                    'values. Data just for the {} variable is also ' \
+                    'acceptable. See {} package documentation for more ' \
+                    'information' \
+                    '.'.format(self.construct_package,
+                               self.construct_package,
+                               self.parameter_name,
+                               self.construct_package)
+        twr = TextWrapper(width=line_size,
+                          initial_indent=initial_indent,
+                          subsequent_indent='  {}'.format(
+                              initial_indent))
+        return '\n'.join(twr.wrap(item_desc))
+
     def get_doc_string(self, line_size=79, initial_indent='    ',
                         level_indent='    '):
-        description = self.get_description(line_size,
-                                           initial_indent + level_indent,
-                                           level_indent)
-        param_doc_string = '{} : {}'.format(self.python_name,
-                                            self.get_type_string())
+        if self.parameter_name is not None:
+            description = self.get_subpackage_description(
+                line_size, initial_indent + level_indent, level_indent)
+            var_name = self.parameter_name
+            type_name = '{}varname:data{} or {} data'.format(
+                '{', '}', self.construct_data)
+        else:
+            description = self.get_description(line_size,
+                                               initial_indent + level_indent,
+                                               level_indent)
+            var_name = self.python_name
+            type_name = self.get_type_string()
+        param_doc_string = '{} : {}'.format(var_name, type_name)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
                           subsequent_indent='  {}'.format(initial_indent))
         param_doc_string = '\n'.join(twr.wrap(param_doc_string))
@@ -2057,6 +2125,7 @@ class MFStructure(object):
             cls._instance.sim_struct = None
             cls._instance.dimension_dict = {}
             cls._instance.load_from_dfn_files = load_from_dfn_files
+            cls._instance.flopy_dict = {}
 
             # Read metadata from file
             cls._instance.valid = cls._instance.__load_structure()
@@ -2077,6 +2146,9 @@ class MFStructure(object):
             mf_dfn = Dfn()
             dfn_files = mf_dfn.get_file_list()
 
+            # load flopy-specific settings
+            self.__load_flopy()
+
             # get common
             common_dfn = DfnFile('common.dfn')
             self.sim_struct.process_dfn(common_dfn)
@@ -2092,3 +2164,29 @@ class MFStructure(object):
             self.sim_struct.tag_read_as_arrays()
 
         return True
+
+    def __load_flopy(self):
+        current_variable = None
+        var_info = {}
+        dfn_path, tail = os.path.split(os.path.realpath(__file__))
+        flopy_path = os.path.join(dfn_path, 'dfn', 'flopy.dfn')
+        dfn_fp = open(flopy_path, 'r')
+        for line in dfn_fp:
+            if self.__valid_line(line):
+                lst_line = line.strip().split()
+                if lst_line[0].lower() == 'name':
+                    # store current variable
+                    self.flopy_dict[current_variable] = var_info
+                    # reset var_info dict
+                    var_info = {}
+                    current_variable = lst_line[1].lower()
+                else:
+                    var_info[lst_line[0].lower()] = lst_line[1].lower()
+        # store last variable
+        self.flopy_dict[current_variable] = var_info
+
+    @staticmethod
+    def __valid_line(line):
+        if len(line.strip()) > 1 and line[0] != '#':
+            return True
+        return False

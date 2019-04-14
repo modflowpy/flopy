@@ -11,10 +11,10 @@ from collections import OrderedDict
 # update files and paths so that there are the same number of
 # path and file entries in the paths and files list. Enter '.'
 # as the path if the file is in the root repository directory
-paths = ['flopy', '.', 
-         'docs', 'docs',
-         '.', '.']
-files = ['version.py', 'README.md', 
+paths = ['../flopy', '../',
+         '../docs', '../docs',
+         '../', '../']
+files = ['version.py', 'README.md',
          'USGS_release.md', 'PyPi_release.md',
          'code.json', 'DISCLAIMER.md']
 
@@ -54,40 +54,55 @@ neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
 '''
 
-def get_disclaimer(branch):
+
+def get_disclaimer():
+    # get current branch
+    branch = get_branch()
+
     if 'release' in branch.lower() or 'master' in branch.lower():
         disclaimer = approved
+        is_approved = True
     else:
         disclaimer = preliminary
-    return disclaimer
+        is_approved = False
+
+    return is_approved, disclaimer
+
 
 def get_branch():
-    try:
-        # determine current buildstat branch
-        b = subprocess.Popen(("git", "status"),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).communicate()[0]
-        if isinstance(b, bytes):
-            b = b.decode('utf-8')
+    branch = None
 
-        # determine current buildstat branch
-        for line in b.splitlines():
-            if 'On branch' in line:
-                branch = line.replace('On branch ', '').rstrip()
-                for t in ['-', ':']:
-                    if t in branch:
-                        branch = 'develop'
-    except:
-        branch = None
+    # determine if branch defined on command line
+    for argv in sys.argv:
+        if 'master' in argv:
+            branch = 'master'
+        elif 'develop' in argv.lower():
+            branch = 'develop'
+
+    if branch is None:
+        try:
+            # determine current branch
+            b = subprocess.Popen(("git", "status"),
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT).communicate()[0]
+            if isinstance(b, bytes):
+                b = b.decode('utf-8')
+
+            for line in b.splitlines():
+                if 'On branch' in line:
+                    branch = line.replace('On branch ', '').rstrip()
+
+        except:
+            msg = 'Could not determine current branch. Is git installed?'
+            raise ValueError(msg)
 
     return branch
 
 
-def get_version_str(v0, v1, v2, v3):
+def get_version_str(v0, v1, v2):
     version_type = ('{}'.format(v0),
                     '{}'.format(v1),
-                    '{}'.format(v2),
-                    '{}'.format(v3))
+                    '{}'.format(v2))
     version = '.'.join(version_type)
     return version
 
@@ -102,13 +117,12 @@ def get_tag(v0, v1, v2):
 
 def update_version():
     try:
-        pth = os.path.join(pak, files[0])
+        fpth = os.path.join(paths[0], files[0])
 
         vmajor = 0
         vminor = 0
         vmicro = 0
-        vbuild = 0
-        lines = [line.rstrip('\n') for line in open(pth, 'r')]
+        lines = [line.rstrip('\n') for line in open(fpth, 'r')]
         for line in lines:
             t = line.split()
             if 'major =' in line:
@@ -117,34 +131,13 @@ def update_version():
                 vminor = int(t[2])
             elif 'micro =' in line:
                 vmicro = int(t[2])
-            elif 'build =' in line:
-                vbuild = int(t[2])
+    except:
+        msg = 'There was a problem updating the version file'
+        raise IOError(msg)
 
-        v0 = get_version_str(vmajor, vminor, vmicro, vbuild)
-
-        # get latest build number
-        tag = get_tag(vmajor, vminor, vmicro)
-        print('determining version build from {}'.format(tag))
-        try:
-            b = subprocess.Popen(("git", "describe", "--match", tag),
-                                 stdout=subprocess.PIPE).communicate()[0]
-            vbuild = int(b.decode().strip().split('-')[1]) + 1
-        # assume if tag does not exist that it has not been added
-        except:
-            vbuild = 0
-
-        v1 = get_version_str(vmajor, vminor, vmicro, vbuild)
-
-        # get current build number
-        b = subprocess.Popen(("git", "describe", "--match", "build"),
-                             stdout=subprocess.PIPE).communicate()[0]
-        vcommit = int(b.decode().strip().split('-')[1]) + 2
-
-        print('Updating version:')
-        print('  ', v0, '->', v1)
-
+    try:
         # write new version file
-        f = open(pth, 'w')
+        f = open(fpth, 'w')
         f.write('# {} version file automatically '.format(pak) +
                 'created using...{0}\n'.format(os.path.basename(__file__)))
         f.write('# created on...' +
@@ -154,55 +147,29 @@ def update_version():
         f.write('major = {}\n'.format(vmajor))
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
-        f.write('build = {}\n'.format(vbuild))
-        f.write('commit = {}\n\n'.format(vcommit))
         f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
-        f.write(
-            "__build__ = '{:d}.{:d}.{:d}.{:d}'.format(major, minor, micro, build)\n")
-        f.write("__git_commit__ = '{:d}'.format(commit)\n")
         f.close()
         print('Successfully updated version.py')
     except:
-        print('There was a problem updating the version file')
-        sys.exit(1)
+        msg = 'There was a problem updating the version file'
+        raise IOError(msg)
 
     # update README.md with new version information
-    update_readme_markdown(vmajor, vminor, vmicro, vbuild)
-    
+    update_readme_markdown(vmajor, vminor, vmicro)
+
     # update code.json
-    update_codejson(vmajor, vminor, vmicro, vbuild)
+    update_codejson(vmajor, vminor, vmicro)
 
     # update docs/USGS_release.md with new version information
-    update_USGSmarkdown(vmajor, vminor, vmicro, vbuild)
+    update_USGSmarkdown(vmajor, vminor, vmicro)
 
 
-def add_updated_files():
-    cargs = ['git', 'add']
-    for (p, f) in zip(paths, files):
-        if p == '.':
-            fpth = f
-        else:
-            fpth = os.path.join(p, f)
-        cargs.append(fpth)
-    try:
-        # add modified version file
-        print('Adding updated files to repo')
-        b = subprocess.Popen(cargs,
-                             stdout=subprocess.PIPE).communicate()[0]
-    except:
-        print('Could not add updated files')
-        sys.exit(1)
+def update_codejson(vmajor, vminor, vmicro):
+    # define json filename
+    json_fname = os.path.join(paths[4], files[4])
 
-
-def update_codejson(vmajor, vminor, vmicro, vbuild):
-
-    json_fname = files[4]
     # get branch
     branch = get_branch()
-    if branch is None:
-        print('Cannot update {0} - could not determine current branch'
-              .format(json_fname))
-        return
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
@@ -219,7 +186,7 @@ def update_codejson(vmajor, vminor, vmicro, vbuild):
         data[0]['version'] = version
         data[0]['status'] = 'Production'
     else:
-        data[0]['version'] = version + '.{}'.format(vbuild)
+        data[0]['version'] = version
         data[0]['status'] = 'Release Candidate'
 
     # rewrite the json file
@@ -230,32 +197,32 @@ def update_codejson(vmajor, vminor, vmicro, vbuild):
     return
 
 
-def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
-    
-    # get branch
-    branch = get_branch()
-    if branch is None:
-        print('Cannot update README.md - could not determine current branch')
-        return
+def update_readme_markdown(vmajor, vminor, vmicro):
+    # create disclaimer text
+    is_approved, disclaimer = get_disclaimer()
+
+    # define branch
+    if is_approved:
+        branch = 'master'
+    else:
+        branch = 'develop'
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
-    
-    # create disclaimer text
-    disclaimer = get_disclaimer(branch)
 
     # read README.md into memory
-    with open(files[1], 'r') as file:
+    fpth = os.path.join(paths[1], files[1])
+    with open(fpth, 'r') as file:
         lines = [line.rstrip() for line in file]
 
     # rewrite README.md
     terminate = False
-    f = open(files[1], 'w')
+    f = open(fpth, 'w')
     for line in lines:
         if '### Version ' in line:
             line = '### Version {}'.format(version)
-            if vbuild > 0:
-                line += ' {} &mdash; build {}'.format(branch, vbuild)
+            if not is_approved:
+                line += ' &mdash; release candidate'
         elif '[Build Status]' in line:
             line = '[![Build Status](https://travis-ci.org/modflowpy/' + \
                    'flopy.svg?branch={})]'.format(branch) + \
@@ -268,8 +235,8 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
         elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
             now = datetime.datetime.now()
             sb = ''
-            if vbuild > 0:
-                sb = ' &mdash; {}'.format(branch)
+            if not is_approved:
+                sb = ' &mdash; release candidate'
             line = '[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., ' + \
                    'White, J.T., Starn, J.J., and Fienen, M.N., ' + \
                    '{}, '.format(now.year) + \
@@ -285,37 +252,29 @@ def update_readme_markdown(vmajor, vminor, vmicro, vbuild):
         if terminate:
             break
     f.close()
-    
+
     # write disclaimer markdown file
-    f = open('DISCLAIMER.md', 'w')
+    fpth = os.path.join(paths[0], 'DISCLAIMER.md')
+    f = open(fpth, 'w')
     f.write(disclaimer)
     f.close()
 
     return
 
 
-def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
-    try:
-        # determine current buildstat branch
-        b = subprocess.Popen(("git", "status"),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).communicate()[0]
-        if isinstance(b, bytes):
-            b = b.decode('utf-8')
+def update_USGSmarkdown(vmajor, vminor, vmicro):
+    # get branch
+    branch = get_branch()
 
-        # determine current buildstat branch
-        for line in b.splitlines():
-            if 'On branch' in line:
-                branch = line.replace('On branch ', '').rstrip()
-    except:
-        print('Cannot update README.md - could not determine current branch')
-        return
+    # create disclaimer text
+    is_approved, disclaimer = get_disclaimer()
 
     # create version
     version = get_tag(vmajor, vminor, vmicro)
 
     # read README.md into memory
-    with open(files[1], 'r') as file:
+    fpth = os.path.join(paths[1], files[1])
+    with open(fpth, 'r') as file:
         lines = [line.rstrip() for line in file]
 
     # write USGS_release.md
@@ -329,9 +288,6 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     # date and branch information
     now = datetime.datetime.now()
     sdate = now.strftime("%m/%d/%Y")
-    sb = ''
-    if vbuild > 0:
-        sb = ' &mdash; {}'.format(branch)
 
     # write header information
     f.write('---\n')
@@ -344,6 +300,10 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     f.write('    - Jeremy T. White\n')
     f.write('    - Andrew T. Leaf\n')
     f.write('    - Scott R. Paulinski\n')
+    f.write('    - Joshua D. Larsen\n')
+    f.write('    - Michael W. Toews\n')
+    f.write('    - Eric D. Morway\n')
+    f.write('    - Jason C. Bellino\n')
     f.write('    - Jeffrey Starn\n')
     f.write('    - Michael N. Fienen\n')
     f.write('header-includes:\n')
@@ -353,8 +313,7 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     f.write('    - \\fancyhf{{}}\n')
     f.write('    - \\fancyhead[LE, LO, RE, RO]{}\n')
     f.write('    - \\fancyhead[CE, CO]{FloPy Release Notes}\n')
-    f.write('    - \\fancyfoot[LE, RO]{{FloPy version {}{}}}\n'.format(version,
-                                                                       sb))
+    f.write('    - \\fancyfoot[LE, RO]{{FloPy version {}}}\n'.format(version))
     f.write('    - \\fancyfoot[CO, CE]{\\thepage\\ of \\pageref{LastPage}}\n')
     f.write('    - \\fancyfoot[RE, LO]{{{}}}\n'.format(sdate))
     f.write('geometry: margin=0.75in\n')
@@ -386,12 +345,12 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
     line = ''
     line += 'Installation\n'
     line += '-----------------------------------------------\n'
-    line += 'To install FloPy version {}{} '.format(version, sb)
+    line += 'To install FloPy version {} '.format(version)
     line += 'from the USGS FloPy website:\n'
     line += '```\n'
     line += 'pip install {}\n'.format(cweb)
     line += '```\n\n'
-    line += 'To update to FloPy version {}{} '.format(version, sb)
+    line += 'To update to FloPy version {} '.format(version)
     line += 'from the USGS FloPy website:\n'
     line += '```\n'
     line += 'pip install {} --upgrade\n'.format(cweb)
@@ -416,4 +375,3 @@ def update_USGSmarkdown(vmajor, vminor, vmicro, vbuild):
 
 if __name__ == "__main__":
     update_version()
-    add_updated_files()

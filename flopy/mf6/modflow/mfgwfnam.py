@@ -58,7 +58,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
           will be used in the flow budget table in the listing file; it will
           also be used for the text entry in the cell-by-cell budget file.
           PNAME is case insensitive and is stored in all upper case letters.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -71,7 +71,7 @@ class ModflowGwfnam(mfpackage.MFPackage):
     packages = ListTemplateGenerator(('gwf6', 'nam', 'packages', 
                                       'packages'))
     package_abbr = "gwfnam"
-    package_type = "nam"
+    _package_type = "nam"
     dfn_file_name = "gwf-nam.dfn"
 
     dfn = [["block options", "name list", "type string", "reader urword", 
@@ -101,9 +101,9 @@ class ModflowGwfnam(mfpackage.MFPackage):
 
     def __init__(self, model, loading_package=False, list=None,
                  print_input=None, print_flows=None, save_flows=None,
-                 newtonoptions=None, packages=None, fname=None, pname=None,
+                 newtonoptions=None, packages=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowGwfnam, self).__init__(model, "nam", fname, pname,
+        super(ModflowGwfnam, self).__init__(model, "nam", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

@@ -68,7 +68,7 @@ class ModflowGwfdis(mfpackage.MFPackage):
           simulation. Furthermore, the first existing cell above will be
           connected to the first existing cell below. This type of cell is
           referred to as a "vertical pass through" cell.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -85,7 +85,7 @@ class ModflowGwfdis(mfpackage.MFPackage):
     idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 
                                       'idomain'))
     package_abbr = "gwfdis"
-    package_type = "dis"
+    _package_type = "dis"
     dfn_file_name = "gwf-dis.dfn"
 
     dfn = [["block options", "name length_units", "type string", 
@@ -120,8 +120,8 @@ class ModflowGwfdis(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, length_units=None,
                  nogrb=None, xorigin=None, yorigin=None, angrot=None, nlay=1,
                  nrow=2, ncol=2, delr=1.0, delc=1.0, top=1.0, botm=0.,
-                 idomain=None, fname=None, pname=None, parent_file=None):
-        super(ModflowGwfdis, self).__init__(model, "dis", fname, pname,
+                 idomain=None, filename=None, pname=None, parent_file=None):
+        super(ModflowGwfdis, self).__init__(model, "dis", filename, pname,
                                             loading_package, parent_file)        
 
         # set up variables

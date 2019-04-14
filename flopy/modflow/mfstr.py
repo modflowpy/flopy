@@ -699,7 +699,7 @@ class ModflowStr(Package):
                             if len(aux_names) > 0:
                                 for idx, v in enumerate(t[10:]):
                                     t.append(v)
-                            if len(tt) != len(current.dtype.names) - 3:
+                            if len(tt) < len(current.dtype.names) - 3:
                                 raise Exception
                         else:
                             ipos = [5, 5, 5, 5, 5, 15, 10, 10, 10, 10]

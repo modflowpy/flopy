@@ -4,7 +4,7 @@ import numpy as np
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.mf6.data.mfdatautil import ArrayUtil
+from flopy.utils.datautil import PyListUtil
 from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.mfbase import VerbosityLevel
 
@@ -45,12 +45,19 @@ def test001a_tharmonic():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'flow15_flow_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'flow15_flow_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
                             verbosity_level=0)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
+
+    model = sim.get_model(model_name)
+    model.export('{}/tharmonic.nc'.format(model.model_ws))
+    model.export('{}/tharmonic.shp'.format(model.model_ws))
+    model.dis.botm.export('{}/botm.shp'.format(model.model_ws))
+
+    mg = model.modelgrid
 
     # write simulation to new location
     sim.write_simulation()
@@ -140,7 +147,7 @@ def test003_gwfs_disv():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'model_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'model_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
@@ -168,8 +175,10 @@ def test003_gwfs_disv():
         budget_frf = sim.simulation_data.mfdata[(model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
-    # change some settings
     model = sim.get_model(model_name)
+    model.export('{}/{}.shp'.format(pth, test_ex_name))
+
+    # change some settings
     chd_head_left = model.get_package('CHD_LEFT')
     chd_left_period = chd_head_left.stress_period_data.array
     chd_left_period[0][4][1] = 15.0
@@ -227,6 +236,18 @@ def test005_advgw_tidal():
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
                             verbosity_level=2)
+
+    # test obs/ts package interface
+    model = sim.get_model(model_name)
+    time = model.modeltime
+    assert (time.steady_state[0] == True and time.steady_state[1] == False
+            and time.steady_state[2] == False and time.steady_state[3] == False)
+    ghb = model.get_package('ghb')
+    obs = ghb.obs
+    digits = obs.digits.get_data()
+    assert(digits == 10)
+    names = ghb.ts.time_series_namerecord.get_data()
+    assert(names[0][0] == 'tides')
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -292,7 +313,7 @@ def test006_gwf3():
     expected_cbc_file_a = os.path.join(expected_output_folder, 'flow_unch.cbc')
     expected_cbc_file_b = os.path.join(expected_output_folder, 'flow_adj.cbc')
 
-    array_util = ArrayUtil()
+    array_util = PyListUtil()
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
@@ -428,7 +449,10 @@ def test045_lake1ss_table():
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
         head_new = os.path.join(run_folder, 'lakeex1b.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+        outfile = os.path.join(run_folder, 'headcompare_a.txt')
+        success = pymake.compare_heads(None, None, files1=head_file,
+                                       files2=head_new, outfile=outfile)
+        assert success
 
     # change some settings
     model = sim.get_model(model_name)
@@ -448,7 +472,10 @@ def test045_lake1ss_table():
         # compare output to expected results
         head_file = os.path.join(os.getcwd(), expected_head_file_b)
         head_new = os.path.join(save_folder, 'lakeex1b.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
+        outfile = os.path.join(run_folder, 'headcompare_b.txt')
+        success = pymake.compare_heads(None, None, files1=head_file,
+                                       files2=head_new, outfile=outfile)
+        assert success
 
         # clean up
         sim.delete_output_files()

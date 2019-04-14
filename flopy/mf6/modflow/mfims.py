@@ -77,6 +77,14 @@ class ModflowIms(mfpackage.MFPackage):
           length. When the maximum absolute value of the head change at all
           nodes during an iteration is less than or equal to OUTER_HCLOSE,
           iteration stops. Commonly, OUTER_HCLOSE equals 0.01.
+    outer_rclosebnd : double
+        * outer_rclosebnd (double) real value defining the residual tolerance
+          for convergence of model packages that solve a separate equation not
+          solved by the IMS linear solver. This value represents the maximum
+          allowable residual between successive outer iterations at any single
+          model package element. An example of a model package that would use
+          OUTER_RCLOSEBND to evaluate convergence is the SFR package which
+          solves a continuity equation for each reach.
     outer_maximum : integer
         * outer_maximum (integer) integer value defining the maximum number of
           outer (nonlinear) iterations -- that is, calls to the solution
@@ -266,7 +274,7 @@ class ModflowIms(mfpackage.MFPackage):
           matrix reordering approach used. By default, matrix reordering is not
           applied. NONE - original ordering. RCM - reverse Cuthill McKee
           ordering. MD - minimum degree ordering.
-    fname : String
+    filename : String
         File name for this package.
     pname : String
         Package name for this package.
@@ -281,7 +289,7 @@ class ModflowIms(mfpackage.MFPackage):
     rcloserecord = ListTemplateGenerator(('ims', 'linear', 
                                           'rcloserecord'))
     package_abbr = "ims"
-    package_type = "ims"
+    _package_type = "ims"
     dfn_file_name = "sln-ims.dfn"
 
     dfn = [["block options", "name print_option", "type string", 
@@ -304,6 +312,8 @@ class ModflowIms(mfpackage.MFPackage):
             "optional true"],
            ["block nonlinear", "name outer_hclose", "type double precision", 
             "reader urword", "optional false"],
+           ["block nonlinear", "name outer_rclosebnd", 
+            "type double precision", "reader urword", "optional true"],
            ["block nonlinear", "name outer_maximum", "type integer", 
             "reader urword", "optional false"],
            ["block nonlinear", "name under_relaxation", "type string", 
@@ -354,10 +364,11 @@ class ModflowIms(mfpackage.MFPackage):
 
     def __init__(self, simulation, loading_package=False, print_option=None,
                  complexity=None, csv_output_filerecord=None, no_ptc=None,
-                 outer_hclose=None, outer_maximum=None, under_relaxation=None,
-                 under_relaxation_theta=None, under_relaxation_kappa=None,
-                 under_relaxation_gamma=None, under_relaxation_momentum=None,
-                 backtracking_number=None, backtracking_tolerance=None,
+                 outer_hclose=None, outer_rclosebnd=None, outer_maximum=None,
+                 under_relaxation=None, under_relaxation_theta=None,
+                 under_relaxation_kappa=None, under_relaxation_gamma=None,
+                 under_relaxation_momentum=None, backtracking_number=None,
+                 backtracking_tolerance=None,
                  backtracking_reduction_factor=None,
                  backtracking_residual_limit=None, inner_maximum=None,
                  inner_hclose=None, rcloserecord=None,
@@ -365,9 +376,9 @@ class ModflowIms(mfpackage.MFPackage):
                  preconditioner_levels=None,
                  preconditioner_drop_tolerance=None,
                  number_orthogonalizations=None, scaling_method=None,
-                 reordering_method=None, fname=None, pname=None,
+                 reordering_method=None, filename=None, pname=None,
                  parent_file=None):
-        super(ModflowIms, self).__init__(simulation, "ims", fname, pname,
+        super(ModflowIms, self).__init__(simulation, "ims", filename, pname,
                                          loading_package, parent_file)        
 
         # set up variables
@@ -377,6 +388,8 @@ class ModflowIms(mfpackage.MFPackage):
                                                        csv_output_filerecord)
         self.no_ptc = self.build_mfdata("no_ptc",  no_ptc)
         self.outer_hclose = self.build_mfdata("outer_hclose",  outer_hclose)
+        self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd", 
+                                                 outer_rclosebnd)
         self.outer_maximum = self.build_mfdata("outer_maximum",  outer_maximum)
         self.under_relaxation = self.build_mfdata("under_relaxation", 
                                                   under_relaxation)

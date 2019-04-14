@@ -38,7 +38,7 @@ def run():
 
     # Create the basic MODFLOW model data
     modelname = 'henry'
-    m = flopy.seawat.Seawat(modelname, exe_name="swt_v4", model_ws=workspace)
+    m = flopy.seawat.Seawat(modelname, exe_name="swtv4", model_ws=workspace)
 
     # Add DIS package to the MODFLOW model
     dis = flopy.modflow.ModflowDis(m, nlay, nrow, ncol, nper=1, delr=delr,
