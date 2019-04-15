@@ -12,6 +12,7 @@ from ..pakbase import Package
 from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
 from ..discretization.unstructuredgrid import UnstructuredGrid
+from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
 
@@ -239,7 +240,7 @@ class Modflow(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime)
+                                     self.dis.start_datetime, self.dis.steady)
         return self._model_time
 
     @property
@@ -252,23 +253,28 @@ class Modflow(BaseModel):
         else:
             ibound = None
 
-
         if self.get_package('disu') is not None:
-            raise NotImplementedError("Unstructured grid <model.modelgrid> generation"
-                                      " not yet implemented for modflow-usg. Please create"
-                                      " modelgrid using flopy.discretization.UnstructuredGrid")
-            #self._modelgrid = UnstructuredGrid()
-        # build grid
-        self._modelgrid = StructuredGrid(self.dis.delc.array,
-                                         self.dis.delr.array,
-                                         self.dis.top.array,
-                                         self.dis.botm.array, ibound,
-                                         self.dis.lenuni,
-                                         proj4=self._modelgrid.proj4,
-                                         epsg=self._modelgrid.epsg,
-                                         xoff=self._modelgrid.xoffset,
-                                         yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+            self._modelgrid = Grid(grid_type='USG-Unstructured',
+                                   top=self.disu.top, botm=self.disu.bot,
+                                   idomain=ibound, proj4=self._modelgrid.proj4,
+                                   epsg=self._modelgrid.epsg,
+                                   xoff=self._modelgrid.xoffset,
+                                   yoff=self._modelgrid.yoffset,
+                                   angrot=self._modelgrid.angrot)
+            print('WARNING: Model grid functionality limited for unstructured '
+                  'grid.')
+        else:
+        # build structured grid
+            self._modelgrid = StructuredGrid(self.dis.delc.array,
+                                             self.dis.delr.array,
+                                             self.dis.top.array,
+                                             self.dis.botm.array, ibound,
+                                             self.dis.lenuni,
+                                             proj4=self._modelgrid.proj4,
+                                             epsg=self._modelgrid.epsg,
+                                             xoff=self._modelgrid.xoffset,
+                                             yoff=self._modelgrid.yoffset,
+                                             angrot=self._modelgrid.angrot)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset

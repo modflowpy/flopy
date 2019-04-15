@@ -150,7 +150,7 @@ class Seawat(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime)
+                                     self.dis.start_datetime, self.dis.steady)
         return self._model_time
 
     @property

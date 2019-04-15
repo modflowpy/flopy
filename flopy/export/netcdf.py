@@ -160,9 +160,6 @@ class NetCdf(object):
         self.model_time = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
-        assert(self.model_grid.grid_type == 'structured' or
-               self.model_grid.grid_type == 'vertex')
-        self.shape = self.model_grid.shape
         if self.model_grid.grid_type == 'structured':
             self.dimension_names = ('layer', 'y', 'x')
             STANDARD_VARS.extend(['delc', 'delr'])
@@ -171,6 +168,7 @@ class NetCdf(object):
         else:
             raise Exception('Grid type {} not supported.'.format(
                 self.model_grid.grid_type))
+        self.shape = self.model_grid.shape
 
         try:
             import dateutil.parser

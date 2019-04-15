@@ -10,6 +10,10 @@ class CachedData(object):
         self.out_of_date = False
 
     @property
+    def data_nocopy(self):
+        return self._data
+
+    @property
     def data(self):
         return copy.deepcopy(self._data)
 
@@ -152,6 +156,7 @@ class Grid(object):
             angrot = 0.0
         self._angrot = angrot
         self._cache_dict = {}
+        self._copy_cache = True
 
     ###################################
     # access to basic grid properties
@@ -313,7 +318,7 @@ class Grid(object):
     def get_local_coords(self, x, y):
         """
         Given x and y array-like values, apply rotation, scale and offset,
-        to convert them from model coordinates to real-world coordinates.
+        to convert them from real-world coordinates to model coordinates.
         """
         if isinstance(x, list):
             x = np.array(x)
@@ -328,20 +333,25 @@ class Grid(object):
 
         return x, y
 
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
         if not local:
             return self.get_local_coords(x, y)
         else:
             return x, y
 
     def set_coord_info(self, xoff=0.0, yoff=0.0, angrot=0.0, epsg=None,
-                       proj4=None):
-        if xoff is None:
-            xoff = self._xoff
-        if yoff is None:
-            yoff = self._yoff
-        if angrot is None:
-            angrot = self._angrot
+                       proj4=None, merge_coord_info=True):
+        if merge_coord_info:
+            if xoff is None:
+                xoff = self._xoff
+            if yoff is None:
+                yoff = self._yoff
+            if angrot is None:
+                angrot = self._angrot
+            if epsg is None:
+                epsg = self._epsg
+            if proj4 is None:
+                proj4 = self._proj4
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot

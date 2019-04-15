@@ -73,7 +73,9 @@ class StructuredGrid(Grid):
 
     @property
     def extent(self):
+        self._copy_cache = False
         xyzgrid = self.xyzvertices
+        self._copy_cache = True
         return (np.min(xyzgrid[0]), np.max(xyzgrid[0]),
                 np.min(xyzgrid[1]), np.max(xyzgrid[1]))
 
@@ -109,7 +111,10 @@ class StructuredGrid(Grid):
                 self._cache_dict[cache_index] = \
                     CachedData([xgrid, ygrid])
 
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyedges(self):
@@ -122,7 +127,10 @@ class StructuredGrid(Grid):
                                     np.add.accumulate(self.delc)))
             self._cache_dict[cache_index] = \
                 CachedData([xedge, yedge])
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyzcellcenters(self):
@@ -156,7 +164,10 @@ class StructuredGrid(Grid):
                 x_mesh, y_mesh = self.get_coords(x_mesh, y_mesh)
             # store in cache
             self._cache_dict[cache_index] = CachedData([x_mesh, y_mesh, z])
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def grid_lines(self):
@@ -202,32 +213,52 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
+        """
+        Get the row and column of a point with coordinates x and y
+
+        When the point is on the edge of two cells, the cell with the lowest
+        row or column is returned.
+
+        Parameters
+        ----------
+        x : float
+            The x-coordinate of the requested point
+        y : float
+            The y-coordinate of the requested point
+        local: bool (optional)
+            If True, x and y are in local coordinates (defaults to False)
+
+
+        Returns
+        -------
+        row : int
+            The row number
+        col : int
+            The column number
+
+        """
+        # transform x and y to local coordinates
         x, y = super(StructuredGrid, self).intersect(x, y, local)
 
-        if x < 0 or y < 0:
+        # get the cell edges in local coordinates
+        xe, ye = self.xyedges
+
+        xcomp = x > xe
+        if np.all(xcomp) or not np.any(xcomp):
             raise Exception('x, y point given is outside of the model area')
-        # find row
-        y_bound = 0
-        row = None
-        for index, row_width in enumerate(self.__delc):
-            y_bound += row_width
-            if y <= y_bound:
-                row = index
-        # find column
-        x_bound = 0
-        col = None
-        for index, col_width in enumerate(self.__delr):
-            x_bound += col_width
-            if x <= x_bound:
-                col = index
-        # determine success
-        if col is None or row is None:
+        col = np.where(xcomp)[0][-1]
+
+        ycomp = y < ye
+        if np.all(ycomp) or not np.any(ycomp):
             raise Exception('x, y point given is outside of the model area')
+        row = np.where(ycomp)[0][-1]
+
         return row, col
 
     def _cell_vert_list(self, i, j):
         """Get vertices for a single cell or sequence of i, j locations."""
+        self._copy_cache = False
         pts = []
         xgrid, ygrid = self.xvertices, self.yvertices
         pts.append([xgrid[i, j], ygrid[i, j]])
@@ -235,6 +266,7 @@ class StructuredGrid(Grid):
         pts.append([xgrid[i + 1, j + 1], ygrid[i + 1, j + 1]])
         pts.append([xgrid[i, j + 1], ygrid[i, j + 1]])
         pts.append([xgrid[i, j], ygrid[i, j]])
+        self._copy_cache = True
         if np.isscalar(i):
             return pts
         else:
@@ -249,10 +281,13 @@ class StructuredGrid(Grid):
         :param j: (int) cell column number
         :return: list of x,y cell vertices
         """
-        return [(self.xvertices[i, j], self.yvertices[i, j]),
-                (self.xvertices[i, j+1], self.yvertices[i, j+1]),
-                (self.xvertices[i+1, j+1], self.yvertices[i+1, j+1]),
-                (self.xvertices[i+1, j], self.yvertices[i+1, j]),]
+        self._copy_cache = False
+        cell_verts = [(self.xvertices[i, j], self.yvertices[i, j]),
+                      (self.xvertices[i, j+1], self.yvertices[i, j+1]),
+                      (self.xvertices[i+1, j+1], self.yvertices[i+1, j+1]),
+                      (self.xvertices[i+1, j], self.yvertices[i+1, j]),]
+        self._copy_cache = True
+        return cell_verts
 
     def plot(self, **kwargs):
         """
@@ -266,9 +301,9 @@ class StructuredGrid(Grid):
         Returns
         -------
         lc : matplotlib.collections.LineCollection
-p
+
         """
-        from flopy.plot import PlotMapView
+        from ..plot import PlotMapView
 
         mm = PlotMapView(modelgrid=self)
         return mm.plot_grid(**kwargs)

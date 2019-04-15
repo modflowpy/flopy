@@ -11,6 +11,7 @@ from ..mfbase import MFDataException, VerbosityLevel, \
                      MFInvalidTransientBlockHeaderException, FlopyException
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
+from ...utils import datautil
 from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
                               ConstIter, ArrayIndexIter, MultiList, find_keyword
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
@@ -3082,6 +3083,12 @@ class MFTransient(object):
     def get_active_key_list(self):
         return sorted(self._data_storage.items(), key=itemgetter(0))
 
+    def get_active_key_dict(self):
+        key_dict = {}
+        for key in self._data_storage.keys():
+            key_dict[key] = True
+        return key_dict
+
     def _verify_sp(self, sp_num):
         if self._path[0].lower() == 'nam':
             return True
@@ -3339,6 +3346,26 @@ class MFData(DataInterface):
                 if len(self.structure.data_item_structures) == 1:
                     # data item name is a keyword to look for
                     self._keyword = data_item_struct.name
+
+    def _get_next_data_line(self, file_handle):
+        end_of_file = False
+        while not end_of_file:
+            line = file_handle.readline()
+            if line == '':
+                message = 'More data expected when reading {} from file ' \
+                          '{}'.format(self.structure.name, file_handle.name)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self.structure.get_model(),
+                    self.structure.get_package(),
+                    self.structure.path, 'reading data from file',
+                    self.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    self._simulation_data.debug)
+            clean_line = line.strip()
+            # If comment or empty line
+            if not MFComment.is_comment(clean_line, True):
+                return datautil.PyListUtil.split_data_line(clean_line)
 
     def _get_constant_formatting_string(self, const_val, layer, data_type,
                                         suffix='\n'):

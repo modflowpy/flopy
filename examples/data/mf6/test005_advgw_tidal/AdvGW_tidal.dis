@@ -15,8 +15,12 @@ BEGIN GRIDDATA
   top
     CONSTANT  50.0
   botm  LAYERED
+  
     CONSTANT  5.0
+	
     CONSTANT  -10.0
+	
     CONSTANT  -100.0
+	
 END GRIDDATA
 

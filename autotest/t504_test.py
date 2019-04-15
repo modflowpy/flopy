@@ -57,6 +57,8 @@ def test001a_tharmonic():
     model.export('{}/tharmonic.shp'.format(model.model_ws))
     model.dis.botm.export('{}/botm.shp'.format(model.model_ws))
 
+    mg = model.modelgrid
+
     # write simulation to new location
     sim.write_simulation()
 
@@ -237,6 +239,9 @@ def test005_advgw_tidal():
 
     # test obs/ts package interface
     model = sim.get_model(model_name)
+    time = model.modeltime
+    assert (time.steady_state[0] == True and time.steady_state[1] == False
+            and time.steady_state[2] == False and time.steady_state[3] == False)
     ghb = model.get_package('ghb')
     obs = ghb.obs
     digits = obs.digits.get_data()

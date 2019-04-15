@@ -140,7 +140,7 @@ class UnstructuredGrid(Grid):
 
         return self._cache_dict[cache_index].data
 
-    def intersect(self, x, y, local=True):
+    def intersect(self, x, y, local=False):
         x, y = super(UnstructuredGrid, self).intersect(x, y, local)
         raise Exception('Not implemented yet')
 
