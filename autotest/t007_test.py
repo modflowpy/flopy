@@ -456,12 +456,34 @@ def test_mg():
 
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
-    print(ms.modelgrid.lenuni)
-    print(ms1.modelgrid.lenuni)
+
     assert str(ms1.modelgrid) == str(ms.modelgrid)
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
     #assert ms1.sr.lenuni != sr.lenuni
+
+    # test length_multiplier
+    lm = 0.3048
+    mg1 = flopy.discretization.StructuredGrid(delc=ms.dis.delc.array * lm,
+                                              delr=ms.dis.delr.array * lm,
+                                              length_multiplier=1.,
+                                              xoff=0,
+                                              yoff=0)
+
+    mg2 = flopy.discretization.StructuredGrid(delc=ms.dis.delc.array,
+                                              delr=ms.dis.delr.array,
+                                              length_multiplier=lm,
+                                              xoff=0,
+                                              yoff=0)
+
+    assert mg2.length_multiplier == lm
+
+    xc = mg1.xcellcenters
+    yc = mg1.ycellcenters
+
+    assert np.sum(mg2.xcellcenters - xc) < 1.06e-3
+    assert np.sum(mg2.ycellcenters - yc) < 1.06e-3
+
 
 def test_epsgs():
     import flopy.export.shapefile_utils as shp
@@ -472,11 +494,14 @@ def test_epsgs():
     sr = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
     sr.epsg = 102733
     assert sr.epsg == 102733
+    assert "proj4_str:+init=epsg:102733" in sr.__repr__()
+
 
     sr.epsg = 4326  # WGS 84
     crs = shp.CRS(epsg=4326)
     assert crs.crs['proj'] == 'longlat'
     assert crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
+    assert "proj4_str:+init=epsg:4326" in sr.__repr__()
 
 # scaling has not been implemented on the modelgrid class
 """

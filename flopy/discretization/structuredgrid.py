@@ -36,10 +36,10 @@ class StructuredGrid(Grid):
     """
     def __init__(self, delc, delr, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0):
+                 yoff=0.0, angrot=0.0, length_multiplier=1.):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
                                              lenuni, epsg, proj4, prj, xoff,
-                                             yoff, angrot)
+                                             yoff, angrot, length_multiplier)
         self.__delc = delc
         self.__delr = delr
         self.__nrow = len(delc)
@@ -81,11 +81,11 @@ class StructuredGrid(Grid):
 
     @property
     def delc(self):
-        return self.__delc
+        return self.__delc * self._length_multiplier
 
     @property
     def delr(self):
-        return self.__delr
+        return self.__delr * self._length_multiplier
 
     @property
     def xyzvertices(self):
@@ -94,8 +94,8 @@ class StructuredGrid(Grid):
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
-            xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
-            length_y = np.add.reduce(self.__delc)
+            xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
+            length_y = np.add.reduce(self.delc)
             yedge = np.concatenate(([length_y], length_y -
                                     np.add.accumulate(self.delc)))
             xgrid, ygrid = np.meshgrid(xedge, yedge)
@@ -121,8 +121,8 @@ class StructuredGrid(Grid):
         cache_index = 'xyedges'
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
-            xedge = np.concatenate(([0.], np.add.accumulate(self.__delr)))
-            length_y = np.add.reduce(self.__delc)
+            xedge = np.concatenate(([0.], np.add.accumulate(self.delr)))
+            length_y = np.add.reduce(self.delc)
             yedge = np.concatenate(([length_y], length_y -
                                     np.add.accumulate(self.delc)))
             self._cache_dict[cache_index] = \
@@ -144,11 +144,11 @@ class StructuredGrid(Grid):
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             # get x centers
-            x = np.add.accumulate(self.__delr) - 0.5 * self.delr
+            x = np.add.accumulate(self.delr) - 0.5 * self.delr
             # get y centers
-            Ly = np.add.reduce(self.__delc)
-            y = Ly - (np.add.accumulate(self.__delc) - 0.5 *
-                      self.__delc)
+            Ly = np.add.reduce(self.delc)
+            y = Ly - (np.add.accumulate(self.delc) - 0.5 *
+                      self.delc)
             x_mesh, y_mesh = np.meshgrid(x, y)
             if self.__nlay is not None:
                 # get z centers

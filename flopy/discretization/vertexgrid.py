@@ -31,9 +31,10 @@ class VertexGrid(Grid):
 
     def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, grid_type='vertex'):
+                 yoff=0.0, angrot=0.0, grid_type='vertex', length_multiplier=1.):
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
-                                         epsg, proj4, prj, xoff, yoff, angrot)
+                                         epsg, proj4, prj, xoff, yoff, angrot,
+                                         length_multiplier)
         self._vertices = vertices
         self._cell2d = cell2d
         self._top = top
@@ -195,7 +196,8 @@ class VertexGrid(Grid):
         cache_index_cc = 'cellcenters'
         cache_index_vert = 'xyzgrid'
 
-        vertexdict = {v[0]: [v[1], v[2]]
+        vertexdict = {v[0]: [v[1] * self._length_multiplier,
+                             v[2] * self._length_multiplier]
                       for v in self._vertices}
         xcenters = []
         ycenters = []
