@@ -552,7 +552,7 @@ class HeadObservation(object):
             tot = 0.
             for key, value in self.mlay.items():
                 tot += value
-            if not(tot > 0.99999 and tot < 1.00001).:
+            if not(np.isclose(tot, 1.0, rtol=0)):
                 msg = ('sum of dataset 4 proportions must equal 1.0 - ' + \
                        'sum of dataset 4 proportions = {tot} for ' + \
                        'observation name {obsname}.').format(tot=tot, obsname=self.obsname)
