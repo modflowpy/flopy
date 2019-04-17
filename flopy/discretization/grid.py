@@ -50,8 +50,6 @@ class Grid(object):
         in the spatial reference coordinate system
     rotation : float
         rotation angle of model grid, as it is rotated around the origin point
-    length_multiplier : float
-        conversion factor for the model grid spacing
 
     Properties
     ----------
