@@ -29,10 +29,10 @@ class UnstructuredGrid(Grid):
     def __init__(self, vertices, iverts, xcenters, ycenters,
                  top=None, botm=None, idomain=None, lenuni=None,
                  ncpl=None, epsg=None, proj4="EPSG:4326", prj=None,
-                 xoff=0., yoff=0., angrot=0., layered=True, length_multiplier=1.):
+                 xoff=0., yoff=0., angrot=0., layered=True):
         super(UnstructuredGrid, self).__init__(self.grid_type, top, botm, idomain,
                                                lenuni, epsg, proj4, prj,
-                                               xoff, yoff, angrot, length_multiplier)
+                                               xoff, yoff, angrot)
 
         self._vertices = vertices
         self._iverts = iverts
@@ -161,8 +161,8 @@ class UnstructuredGrid(Grid):
         vertexdict = {ix: list(v[-2:])
                       for ix, v in enumerate(self._vertices)}
 
-        xcenters = self._xc * self._length_multiplier
-        ycenters = self._yc * self._length_multiplier
+        xcenters = self._xc
+        ycenters = self._yc
         xvertices = []
         yvertices = []
 
@@ -172,10 +172,8 @@ class UnstructuredGrid(Grid):
             xcellvert = []
             ycellvert = []
             for ix in iverts:
-                xcellvert.append(vertexdict[ix][0] *
-                                 self._length_multiplier)
-                ycellvert.append(vertexdict[ix][1] *
-                                 self._length_multiplier)
+                xcellvert.append(vertexdict[ix][0])
+                ycellvert.append(vertexdict[ix][1])
 
             xvertices.append(xcellvert)
             yvertices.append(ycellvert)

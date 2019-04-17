@@ -133,7 +133,7 @@ class Grid(object):
     """
     def __init__(self, grid_type=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0, length_multiplier=1.):
+                 angrot=0.0):
         lenunits = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
         self.use_ref_coords = True
@@ -157,7 +157,6 @@ class Grid(object):
         if angrot is None:
             angrot = 0.0
         self._angrot = angrot
-        self._length_multiplier = length_multiplier
         self._cache_dict = {}
         self._copy_cache = True
 
@@ -170,7 +169,6 @@ class Grid(object):
         s += "proj4_str:{0}; ".format(self.proj4)
         s += "units:{0}; ".format(self.units)
         s += "lenuni:{0}; ".format(self.lenuni)
-        s += "length_multiplier:{}".format(self.length_multiplier)
         return s
 
     @property
@@ -192,10 +190,6 @@ class Grid(object):
     @property
     def angrot_radians(self):
         return self._angrot * np.pi / 180.
-
-    @property
-    def length_multiplier(self):
-        return self._length_multiplier
 
     @property
     def epsg(self):
@@ -362,7 +356,7 @@ class Grid(object):
             return x, y
 
     def set_coord_info(self, xoff=0.0, yoff=0.0, angrot=0.0, epsg=None,
-                       proj4=None, merge_coord_info=True, length_multiplier=None):
+                       proj4=None, merge_coord_info=True):
         if merge_coord_info:
             if xoff is None:
                 xoff = self._xoff
@@ -374,15 +368,12 @@ class Grid(object):
                 epsg = self._epsg
             if proj4 is None:
                 proj4 = self._proj4
-            if length_multiplier is None:
-                length_multiplier = self._length_multiplier
 
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot
         self._epsg = epsg
         self._proj4 = proj4
-        self._length_multiplier = length_multiplier
         self._require_cache_updates()
 
     def load_coord_info(self, namefile=None, reffile='usgs.model.reference'):
@@ -457,12 +448,6 @@ class Grid(object):
             elif "start" in item.lower():
                 try:
                     start_datetime = item.split(':')[1].strip()
-                except:
-                    pass
-
-            elif "length_multiplier" in item.lower():
-                try:
-                    self._length_multiplier = float(item.split(':')[1])
                 except:
                     pass
         return True
