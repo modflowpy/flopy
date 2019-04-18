@@ -11,7 +11,7 @@ from ..data import mfdatautil
 from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
                               ConstIter, ArrayIndexIter, MultiList
 from .mfdatautil import convert_data, MFComment
-from .mffileaccess import MFFileAccessArray
+from .mffileaccess import MFFileAccessArray, MFFileAccess
 
 
 class DataStorageType(Enum):
@@ -261,7 +261,7 @@ class DataStorage(object):
     def __init__(self, sim_data, model_or_sim, data_dimensions, get_file_entry,
                  data_storage_type=DataStorageType.internal_array,
                  data_structure_type=DataStructureType.ndarray,
-                 layer_shape=(1,), layered=False, stress_period=1,
+                 layer_shape=(1,), layered=False, stress_period=0,
                  data_path=()):
         self.data_dimensions = data_dimensions
         self._model_or_sim = model_or_sim
@@ -1009,7 +1009,7 @@ class DataStorage(object):
     def store_external(self, file_path, layer=None, multiplier=[1.0],
                        print_format=None, data=None, do_not_verify=False,
                        binary=False):
-        layer, multiplier = self._store_prep(layer, multiplier)
+        layer_new, multiplier = self._store_prep(layer, multiplier)
 
         if data is not None:
             if self.data_structure_type == DataStructureType.recarray:
@@ -1028,7 +1028,7 @@ class DataStorage(object):
                     file_access.write_binary_file(data, fp, text,
                                                   self._model_or_sim.modelgrid,
                                                   self._model_or_sim.modeltime,
-                                                  stress_period=1,
+                                                  stress_period=self._stress_period,
                                                   precision='double')
                 else:
                     try:
@@ -1048,7 +1048,7 @@ class DataStorage(object):
                             self._simulation_data.debug)
                     # store data internally first so that a file entry
                     # can be generated
-                    self.store_internal(data, layer, False, [multiplier], None,
+                    self.store_internal(data, layer_new, False, [multiplier], None,
                                         False, print_format)
                     ext_file_entry = self._get_file_entry()
                     fd.write(ext_file_entry)
@@ -1057,7 +1057,7 @@ class DataStorage(object):
                 self.layer_storage.first_item().internal_data = None
             else:
                 # store data externally in file
-                data_size = self.get_data_size(layer)
+                data_size = self.get_data_size(layer_new)
                 data_dim = self.data_dimensions
                 data_type = data_dim.structure.data_item_structures[0].type
                 model_name = data_dim.package_dim.model_dim[0].model_name
@@ -1066,11 +1066,12 @@ class DataStorage(object):
 
                 if self._calc_data_size(data, 2) == 1 and data_size > 1:
                     # constant data, need to expand
-                    self.layer_storage[layer].data_const_value = data
-                    self.layer_storage[layer].DataStorageType = \
+                    self.layer_storage[layer_new].data_const_value = data
+                    self.layer_storage[layer_new].DataStorageType = \
                         DataStorageType.internal_constant
-                    data = self._fill_const_layer(layer)
-
+                    data = self._fill_const_layer(layer_new)
+                elif isinstance(data, list):
+                    data = self._to_ndarray(data, layer_new)
                 if binary:
                     text = self.data_dimensions.structure.name
                     file_access = MFFileAccessArray(
@@ -1080,30 +1081,33 @@ class DataStorage(object):
                     file_access.write_binary_file(data, fp, text,
                                                   self._model_or_sim.modelgrid,
                                                   self._model_or_sim.modeltime,
-                                                  stress_period=1,
-                                                  precision='double')
+                                                  stress_period=
+                                                  self._stress_period,
+                                                  precision='double',
+                                                  write_multi_layer=
+                                                  (layer is None))
                 else:
                     file_access = MFFileAccessArray(
                         self.data_dimensions.structure, self.data_dimensions,
                         self._simulation_data, self._data_path,
                         self._stress_period)
                     file_access.write_text_file(data, fp, data_type, data_size)
-                self.layer_storage[layer].factor = multiplier
-                self.layer_storage[layer].internal_data = None
-                self.layer_storage[layer].data_const_value = None
+                self.layer_storage[layer_new].factor = multiplier
+                self.layer_storage[layer_new].internal_data = None
+                self.layer_storage[layer_new].data_const_value = None
 
         else:
             if self.data_structure_type == DataStructureType.recarray:
                 self.layer_storage.first_item().internal_data = None
             else:
-                self.layer_storage[layer].factor = multiplier
-                self.layer_storage[layer].internal_data = None
+                self.layer_storage[layer_new].factor = multiplier
+                self.layer_storage[layer_new].internal_data = None
 
         # point to the external file and set flags
-        self.layer_storage[layer].fname = file_path
-        self.layer_storage[layer].iprn = print_format
-        self.layer_storage[layer].binary = binary
-        self.layer_storage[layer].data_storage_type = \
+        self.layer_storage[layer_new].fname = file_path
+        self.layer_storage[layer_new].iprn = print_format
+        self.layer_storage[layer_new].binary = binary
+        self.layer_storage[layer_new].data_storage_type = \
                 DataStorageType.external_file
 
     def external_to_external(self, new_external_file, multiplier=None,
@@ -1593,7 +1597,8 @@ class DataStorage(object):
                     data_out = file_access.read_binary_data_from_file(
                         read_file, self.get_data_dimensions(layer),
                         self.get_data_size(layer), self._data_type,
-                        self._model_or_sim.modelgrid)[0] * mult
+                        self._model_or_sim.modelgrid,
+                        not self.layered)[0] * mult
                 else:
                     data_out = file_access.read_text_data_from_file(
                         self.get_data_size(layer), self._data_type,
@@ -1651,6 +1656,11 @@ class DataStorage(object):
                     return True
             return False
 
+    def _to_ndarray(self, data, layer):
+        data_dimensions = self.get_data_dimensions(layer)
+        data_iter = MultiListIter(data)
+        return self._fill_dimensions(data_iter, data_dimensions)
+
     def _fill_const_layer(self, layer):
         data_dimensions = self.get_data_dimensions(layer)
         if layer is None:
@@ -1660,7 +1670,7 @@ class DataStorage(object):
         if data_dimensions[0] < 0:
             return ls.data_const_value
         else:
-            data_iter = ConstIter(ls.data_const_value)
+            data_iter = ConstIter(ls.data_const_value[0])
             return self._fill_dimensions(data_iter, data_dimensions)
 
     def _is_type(self, data_item, data_type):
@@ -1684,11 +1694,12 @@ class DataStorage(object):
 
     def _fill_dimensions(self, data_iter, dimensions):
         if self.data_structure_type == DataStructureType.ndarray:
+            np_dtype = MFFileAccess.datum_to_numpy_type(self._data_type)
             # initialize array
-            data_array = np.ndarray(shape=dimensions, dtype=float)
+            data_array = np.ndarray(shape=dimensions, dtype=np_dtype)
             # fill array
             for index in ArrayIndexIter(dimensions):
-                data_array.itemset(index, data_iter.__next__()[0])
+                data_array.itemset(index, data_iter.__next__())
             return data_array
         elif self.data_structure_type == DataStructureType.scalar:
             return data_iter.__next__()

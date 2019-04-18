@@ -20,14 +20,26 @@ class MFFileAccess:
         self._current_key = current_key
 
     def write_binary_file(self, data, fname, text, modelgrid=None,
-                          modeltime=None, stress_period=1,
-                          precision='double'):
+                          modeltime=None, stress_period=0,
+                          precision='double', write_multi_layer=False):
         fd = self._open_ext_file(fname, binary=True, write=True)
-        header_data = self._get_header(modelgrid, modeltime, stress_period,
-                                       precision, text, fname)
-        header_data.tofile(fd)
+        if write_multi_layer:
+            for layer in range(0, len(data)):
+                self._write_layer(fd, data[layer], modelgrid, modeltime,
+                                  stress_period, precision, text, fname,
+                                  layer+1)
+        else:
+            self._write_layer(fd, data, modelgrid, modeltime, stress_period,
+                              precision, text, fname)
         data.tofile(fd)
         fd.close()
+
+    def _write_layer(self, fd, data, modelgrid, modeltime, stress_period,
+                     precision, text, fname, ilay=None):
+        header_data = self._get_header(modelgrid, modeltime, stress_period,
+                                       precision, text, fname, ilay)
+        header_data.tofile(fd)
+        data.tofile(fd)
 
     @staticmethod
     def _get_bintype(modelgrid):
@@ -39,21 +51,25 @@ class MFFileAccess:
             return 'vardis'
 
     def _get_header(self, modelgrid, modeltime, stress_period, precision, text,
-                    fname):
+                    fname, ilay=None):
         # handle dis (row, col, lay), disv (ncpl, lay), and disu (nodes) cases
         if modelgrid is not None and modeltime is not None:
-            pertim = np.float64(stress_period * modeltime.perlen)
-            totim = np.float64(modeltime.perlen * modeltime.nper)
+            pertim = modeltime.perlen[stress_period]
+            totim = modeltime.perlen.sum()
+            if ilay is None:
+                ilay = modelgrid.nlay
             if modelgrid.grid_type == 'structured':
                 return BinaryHeader.create(
                     bintype='vardis', precision=precision, text=text,
                     nrow=modelgrid.nrow, ncol=modelgrid.ncol,
-                    ilay=modelgrid.nlay, pertim=pertim,
-                    totim=totim, kstp=1, kper=stress_period)
+                    ilay=ilay, pertim=pertim,
+                    totim=totim, kstp=1, kper=stress_period+1)
             elif modelgrid.grid_type == 'vertex':
+                if ilay is None:
+                    ilay = modelgrid.nlay
                 return BinaryHeader.create(
                     bintype='vardisv', precision=precision, text=text,
-                    ncpl=modelgrid.ncpl, ilay=modelgrid.nlay, m3=1,
+                    ncpl=modelgrid.ncpl, ilay=ilay, m3=1,
                     pertim=pertim, totim=totim, kstp=1,
                     kper=stress_period)
             elif modelgrid.grid_type == 'unstructured':
@@ -62,9 +78,11 @@ class MFFileAccess:
                     nodes=modelgrid.idomain.size, m2=1, m3=1,
                     pertim=pertim, totim=totim, kstp=1, kper=stress_period)
             else:
+                if ilay is None:
+                    ilay = 1
                 header = BinaryHeader.create(
                     bintype='vardis', precision=precision, text=text,
-                    nrow=1, ncol=1, ilay=1, pertim=pertim,
+                    nrow=1, ncol=1, ilay=ilay, pertim=pertim,
                     totim=totim, kstp=1, kper=stress_period)
                 if self._simulation_data.verbosity_level.value >= \
                         VerbosityLevel.normal.value:
@@ -265,16 +283,36 @@ class MFFileAccessArray(MFFileAccess):
         fd.close()
 
     def read_binary_data_from_file(self, fname, data_shape, data_size,
-                                   data_type, modelgrid):
+                                   data_type, modelgrid,
+                                   read_multi_layer=False):
         import flopy.utils.binaryfile as bf
         fd = self._open_ext_file(fname, True)
         numpy_type, name = self.datum_to_numpy_type(data_type)
         header_dtype = bf.BinaryHeader.set_dtype(
             bintype=self._get_bintype(modelgrid),
             precision=name)
+        if read_multi_layer and len(data_shape) > 1:
+            all_data = np.empty(data_shape, numpy_type)
+            headers = []
+            layer_shape = data_shape[1:]
+            data_size = int(data_size / data_shape[0])
+            for index in range(0, data_shape[0]):
+                layer_data = self._read_binary_file_layer(
+                    fd, fname, header_dtype, numpy_type, data_size, layer_shape)
+                all_data[index, :] = layer_data[0]
+                headers.append(layer_data[1])
+            fd.close()
+            return all_data, headers
+        else:
+            bin_data = self._read_binary_file_layer(
+                fd, fname, header_dtype, numpy_type, data_size, data_shape)
+            fd.close()
+            return bin_data
+
+    def _read_binary_file_layer(self, fd, fname, header_dtype, numpy_type,
+                                data_size, data_shape):
         header_data = np.fromfile(fd, dtype=header_dtype, count=1)
         data = np.fromfile(fd, dtype=numpy_type, count=data_size)
-        fd.close()
         if data.size != data_size:
             message = 'Binary file {} does not contain expected data. ' \
                       'Expected array size {} but found size ' \

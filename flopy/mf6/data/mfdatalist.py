@@ -689,7 +689,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         return file_access.load_from_package(
             first_line, file_handle, self._get_storage_obj(), pre_data_comments)
 
-    def _new_storage(self, stress_period=1):
+    def _new_storage(self, stress_period=0):
         return DataStorage(self._simulation_data, self._model_or_sim,
                            self._data_dimensions, self.get_file_entry,
                            DataStorageType.internal_array,

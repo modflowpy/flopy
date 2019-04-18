@@ -612,7 +612,7 @@ class MFArray(MFMultiDimVar):
         return ''.join(file_entry_array)
 
     def _new_storage(self, set_layers=True, base_storage=False,
-                     stress_period=1):
+                     stress_period=0):
         if set_layers:
             return DataStorage(self._simulation_data, self._model_or_sim,
                                self._data_dimensions, self.get_file_entry,
@@ -1022,7 +1022,7 @@ class MFTransientArray(MFArray, MFTransient):
                                                   pre_data_comments)
 
     def _new_storage(self, set_layers=True, base_storage=False,
-                     stress_period=1):
+                     stress_period=0):
         if base_storage:
             if not isinstance(stress_period, int):
                 stress_period = 1
