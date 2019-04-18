@@ -283,20 +283,38 @@ class MFModel(PackageContainer, ModelInterface):
                                   angrot=self._modelgrid.angrot)
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package('disu')
-            iverts = [list(i)[4:] for i in dis.cell2d.array]
-            self._modelgrid = UnstructuredGrid(vertices=np.array(dis.vertices.array),
-                                               iverts=iverts,
-                                               xcenters = dis.cell2d.array['xc'],
-                                               ycenters = dis.cell2d.array['yc'],
-                                               top=dis.top.array, botm=dis.botm.array,
-                                               idomain=dis.idomain.array,
-                                               lenuni=dis.length_units.array,
-                                               proj4=self._modelgrid.proj4,
-                                               epsg=self._modelgrid.epsg,
-                                               xoff=self._modelgrid.xoffset,
-                                               yoff=self._modelgrid.yoffset,
-                                               angrot=self._modelgrid.angrot)
+            cell2d = dis.cell2d.array
+            idomain = np.ones(dis.nodes.array, np.int32)
+            if cell2d is None:
+                if self.simulation.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: cell2d information missing. Functionality of '
+                          'the UnstructuredGrid will be limited.')
+                iverts = None
+                xcenters = None
+                ycenters = None
+            else:
+                iverts = [list(i)[4:] for i in cell2d]
+                xcenters = dis.cell2d.array['xc']
+                ycenters = dis.cell2d.array['yc']
+            vertices = dis.vertices.array
+            if vertices is None:
+                if self.simulation.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: vertices information missing. Functionality '
+                          'of the UnstructuredGrid will be limited.')
+                vertices = None
+            else:
+                vertices = np.array(vertices)
 
+            self._modelgrid = UnstructuredGrid(
+                vertices=vertices, iverts=iverts,
+                xcenters=xcenters,
+                ycenters=ycenters, top=dis.top.array,
+                botm=dis.bot.array, idomain=idomain,
+                lenuni=dis.length_units.array, proj4=self._modelgrid.proj4,
+                epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
+                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot)
         else:
             return self._modelgrid
 

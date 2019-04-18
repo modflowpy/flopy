@@ -307,6 +307,7 @@ def np002():
                               filename='{}.ic'.format(model_name))
     ic_package.strt.store_as_external_file('initial_heads.txt')
     npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)
+    npf_package.k.store_as_external_file('k.bin', binary=True)
     oc_package = ModflowGwfoc(model, budget_filerecord=[('np002_mod.cbc',)],
                               head_filerecord=[('np002_mod.hds',)],
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
@@ -342,6 +343,11 @@ def np002():
         # run simulation
         sim.run_simulation()
 
+        sim2 = MFSimulation.load(sim_ws=run_folder)
+        model = sim2.get_model(model_name)
+        npf_package = model.get_package('npf')
+        k = npf_package.k.array
+
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file)
         budget_obj = bf.CellBudgetFile(budget_file, precision='double')
@@ -360,7 +366,7 @@ def np002():
             (model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-        # verify external file was written correctly
+        # verify external text file was written correctly
         ext_file_path = os.path.join(run_folder, 'initial_heads.txt')
         fd = open(ext_file_path, 'r')
         line = fd.readline()
@@ -410,7 +416,10 @@ def test021_twri():
                                           delr=5000.0, delc=5000.0,
                                           top=200.0, botm=[-200, -300, -450],
                                           filename='{}.dis'.format(model_name))
-    ic_package = ModflowGwfic(model, strt=0.0,
+    strt = [{'filename': 'strt.txt', 'factor': 1.0, 'data': 0.0},
+            {'filename': 'strt2.bin', 'factor': 1.0, 'data': 1.0,
+             'binary': 'True'}, 2.0]
+    ic_package = ModflowGwfic(model, strt=strt,
                               filename='{}.ic'.format(model_name))
     npf_package = ModflowGwfnpf(model, save_flows=True, perched=True,
                                 cvoptions='dewatered',
@@ -459,6 +468,14 @@ def test021_twri():
 
     # run simulation
     sim.run_simulation()
+
+    sim2 = MFSimulation.load(sim_ws=run_folder)
+    model2 = sim2.get_model()
+    ic2 = model2.get_package('ic')
+    strt2 = ic2.strt.get_data()
+    assert(strt2[0,0,0] == 0.0)
+    assert(strt2[1,0,0] == 1.0)
+    assert(strt2[2,0,0] == 2.0)
 
     # compare output to expected results
     head_file = os.path.join(os.getcwd(), expected_head_file)
@@ -1076,8 +1093,12 @@ def test006_gwf3_disv():
                  0]
     ic_package = ModflowGwfic(model, strt=strt_list,
                               filename='{}.ic'.format(model_name))
-    npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=0, k=1.0,
+    k = {'filename': 'k.bin', 'factor': 1.0, 'data': 1.0, 'binary': 'True'}
+    npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=0, k=k,
                                 k33=1.0)
+    k_data = npf_package.k.get_data()
+    assert(k_data[0,0] == 1.0)
+
     oc_package = ModflowGwfoc(model, budget_filerecord='flow.cbc',
                               head_filerecord='flow.hds',
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],

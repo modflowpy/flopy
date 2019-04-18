@@ -5,7 +5,8 @@ from ..mfbase import MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...utils.datautil import PyListUtil, find_keyword, DatumUtil, MultiListIter
 from .mfdatautil import convert_data, to_string, MFComment
-from ...utils import BinaryHeader, datautil
+from ...utils.binaryfile import BinaryHeader, binaryread, BinaryLayerFile
+from ...utils import datautil
 from ..data.mfstructure import DatumType, MFDataStructure, DataType
 
 
@@ -21,28 +22,47 @@ class MFFileAccess:
     def write_binary_file(self, data, fname, text, modelgrid=None,
                           modeltime=None, stress_period=1,
                           precision='double'):
+        fd = self._open_ext_file(fname, binary=True, write=True)
+        header_data = self._get_header(modelgrid, modeltime, stress_period,
+                                       precision, text, fname)
+        header_data.tofile(fd)
+        data.tofile(fd)
+        fd.close()
+
+    @staticmethod
+    def _get_bintype(modelgrid):
+        if modelgrid.grid_type == 'vertex':
+            return 'vardisv'
+        elif modelgrid.grid_type == 'unstructured':
+            return 'vardisu'
+        else:
+            return 'vardis'
+
+    def _get_header(self, modelgrid, modeltime, stress_period, precision, text,
+                    fname):
         # handle dis (row, col, lay), disv (ncpl, lay), and disu (nodes) cases
         if modelgrid is not None and modeltime is not None:
             pertim = np.float64(stress_period * modeltime.perlen)
             totim = np.float64(modeltime.perlen * modeltime.nper)
-            if modelgrid.grid_type == DiscretizationType.DIS:
-                header_data = BinaryHeader.create(
+            if modelgrid.grid_type == 'structured':
+                return BinaryHeader.create(
                     bintype='vardis', precision=precision, text=text,
                     nrow=modelgrid.nrow, ncol=modelgrid.ncol,
                     ilay=modelgrid.nlay, pertim=pertim,
                     totim=totim, kstp=1, kper=stress_period)
-            elif modelgrid.grid_type == DiscretizationType.DISV:
-                header_data = BinaryHeader.create(
+            elif modelgrid.grid_type == 'vertex':
+                return BinaryHeader.create(
                     bintype='vardisv', precision=precision, text=text,
-                    nrow=modelgrid.ncpl, ilay=modelgrid.nlay, pertim=pertim,
-                    totim=totim, kstp=1, kper=stress_period)
-            elif modelgrid.grid_type == DiscretizationType.DISU:
-                header_data = BinaryHeader.create(
+                    ncpl=modelgrid.ncpl, ilay=modelgrid.nlay, m3=1,
+                    pertim=pertim, totim=totim, kstp=1,
+                    kper=stress_period)
+            elif modelgrid.grid_type == 'unstructured':
+                return BinaryHeader.create(
                     bintype='vardisu', precision=precision, text=text,
-                    nodes=modelgrid.nodes, pertim=pertim,
-                    totim=totim, kstp=1, kper=stress_period)
+                    nodes=modelgrid.idomain.size, m2=1, m3=1,
+                    pertim=pertim, totim=totim, kstp=1, kper=stress_period)
             else:
-                header_data = BinaryHeader.create(
+                header = BinaryHeader.create(
                     bintype='vardis', precision=precision, text=text,
                     nrow=1, ncol=1, ilay=1, pertim=pertim,
                     totim=totim, kstp=1, kper=stress_period)
@@ -53,7 +73,7 @@ class MFFileAccess:
                           'binary file {}.'.format(fname))
         else:
             pertim = np.float64(1.0)
-            header_data = BinaryHeader.create(
+            header = BinaryHeader.create(
                 bintype='vardis', precision=precision, text=text,
                 nrow=1, ncol=1, ilay=1, pertim=pertim,
                 totim=pertim, kstp=1, kper=stress_period)
@@ -62,8 +82,7 @@ class MFFileAccess:
                 print('Binary file data not part of a model. Using default '
                       'spatial discretization header values for binary file '
                       '{}.'.format(fname))
-        header_data.tofile(fname)
-        data.tofile(fname)
+        return header
 
     def _get_next_data_line(self, file_handle):
         end_of_file = False
@@ -156,6 +175,45 @@ class MFFileAccess:
             return (index_num + 1, aux_var_index)
         return (index_num, aux_var_index)
 
+    def _open_ext_file(self, fname, binary=False, write=False):
+        model_dim = self._data_dimensions.package_dim.model_dim[0]
+        read_file = self._simulation_data.mfpath.resolve_path(
+            fname, model_dim.model_name)
+        if write:
+            options = 'w'
+        else:
+            options = 'r'
+        if binary:
+            options = '{}b'.format(options)
+        try:
+            fd = open(read_file, options)
+            return fd
+        except:
+            message = 'Unable to open file {} in mode {}.  Make sure the ' \
+                      'file is not locked and the folder exists' \
+                      '.'.format(read_file, options)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self._data_dimensions.structure.get_model(),
+                self._data_dimensions.structure.get_package(),
+                self._data_dimensions.structure.path,
+                'opening external file for writing',
+                self._data_dimensions.structure.name, inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+
+    @staticmethod
+    def datum_to_numpy_type(datum_type):
+        if datum_type == DatumType.integer:
+            return np.int32, 'int'
+        elif datum_type == DatumType.double_precision:
+            return np.float64, 'double'
+        elif datum_type == DatumType.string or \
+            datum_type == DatumType.keyword:
+            return np.str, 'str'
+        else:
+            return None, None
+
 
 class MFFileAccessArray(MFFileAccess):
     def __init__(self, structure, data_dimensions, simulation_data, path,
@@ -206,7 +264,33 @@ class MFFileAccessArray(MFFileAccess):
                 message, self._simulation_data.debug)
         fd.close()
 
-    def read_array_data_from_file(self, data_size, data_type, data_dim, layer,
+    def read_binary_data_from_file(self, fname, data_shape, data_size,
+                                   data_type, modelgrid):
+        import flopy.utils.binaryfile as bf
+        fd = self._open_ext_file(fname, True)
+        numpy_type, name = self.datum_to_numpy_type(data_type)
+        header_dtype = bf.BinaryHeader.set_dtype(
+            bintype=self._get_bintype(modelgrid),
+            precision=name)
+        header_data = np.fromfile(fd, dtype=header_dtype, count=1)
+        data = np.fromfile(fd, dtype=numpy_type, count=data_size)
+        fd.close()
+        if data.size != data_size:
+            message = 'Binary file {} does not contain expected data. ' \
+                      'Expected array size {} but found size ' \
+                      '{}.'.format(fname, data_size, data.size)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self._data_dimensions.structure.get_model(),
+                self._data_dimensions.structure.get_package(),
+                self._data_dimensions.structure.path,
+                'opening external file for writing',
+                self.structure.name, inspect.stack()[0][3], type_,
+                value_, traceback_, message,
+                self._simulation_data.debug)
+        return data.reshape(data_shape), header_data
+
+    def read_text_data_from_file(self, data_size, data_type, data_dim, layer,
                                   fname=None, fd=None, data_item=None):
         # load variable data from file
         current_size = 0
@@ -217,7 +301,6 @@ class MFFileAccessArray(MFFileAccess):
         if fd is None:
             close_file = True
             fd = self._open_ext_file(fname)
-
         line = ' '
         PyListUtil.reset_delimiter_used()
         while line != '':
@@ -240,6 +323,7 @@ class MFFileAccessArray(MFFileAccess):
                     current_size += 1
             if current_size == data_size:
                 break
+
         if current_size != data_size:
             message = 'Not enough data in file {} for data "{}".  ' \
                       'Expected data size {} but only found ' \
@@ -430,7 +514,7 @@ class MFFileAccessArray(MFFileAccess):
                     storage.layer_storage[layer].factor = multiplier
                 if print_format is not None:
                     storage.layer_storage[layer].iprn = print_format
-                data_from_file = self.read_array_data_from_file(
+                data_from_file = self.read_text_data_from_file(
                     storage.get_data_size(layer), storage._data_type,
                     storage.get_data_dimensions(layer), layer,
                     fd=file_handle)
@@ -526,27 +610,6 @@ class MFFileAccessArray(MFFileAccess):
                                       self._simulation_data.debug, ex)
         else:
             return data
-
-    def _open_ext_file(self, fname):
-        model_dim = self._data_dimensions.package_dim.model_dim[0]
-        read_file = self._simulation_data.mfpath.resolve_path(
-            fname, model_dim.model_name)
-        try:
-            fd = open(read_file, 'r')
-            return fd
-        except:
-            message = 'Unable to open file {}.  Make sure the file ' \
-                      'is not locked and the folder exists' \
-                      '.'.format(read_file)
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(
-                self._data_dimensions.structure.get_model(),
-                self._data_dimensions.structure.get_package(),
-                self._data_dimensions.structure.path,
-                'opening external file for writing',
-                self._data_dimensions.structure.name, inspect.stack()[0][3],
-                type_, value_, traceback_, message,
-                self._simulation_data.debug)
 
 
 class MFFileAccessList(MFFileAccess):

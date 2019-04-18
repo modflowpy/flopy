@@ -368,12 +368,13 @@ class MFArray(MFMultiDimVar):
                                   self._simulation_data.debug)
 
     def store_as_external_file(self, external_file_path, multiplier=[1.0],
-                               layer=None):
+                               layer=None, binary=False):
         if isinstance(layer, int):
             layer = (layer,)
         storage = self._get_storage_obj()
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
+            storage = self._get_storage_obj()
         ds_index = self._resolve_layer_index(layer)
 
         try:
@@ -384,7 +385,7 @@ class MFArray(MFMultiDimVar):
                                              layer)
             else:
                 storage.internal_to_external(external_file_path, multiplier,
-                                             layer)
+                                             layer, binary=binary)
         except Exception as ex:
             type_, value_, traceback_ = sys.exc_info()
             raise MFDataException(self.structure.get_model(),
@@ -398,10 +399,10 @@ class MFArray(MFMultiDimVar):
                                   self._simulation_data.debug, ex)
 
         # update data storage
-        self._get_storage_obj().layer_storage[ds_index[0]].data_storage_type \
+        storage.layer_storage[ds_index[0]].data_storage_type \
             = DataStorageType.external_file
-        self._get_storage_obj().layer_storage[ds_index[0]].fname = \
-            external_file_path
+        storage.layer_storage[ds_index[0]].fname = external_file_path
+        storage.layer_storage[ds_index[0]].binary = binary
         if multiplier is not None:
             self._get_storage_obj().layer_storage[ds_index[0]].multiplier = \
                     multiplier[0]
@@ -433,7 +434,7 @@ class MFArray(MFMultiDimVar):
         storage = self._get_storage_obj()
         if storage is not None:
             try:
-                data = self._get_storage_obj().get_data(layer, apply_mult)
+                data = storage.get_data(layer, apply_mult)
                 if 'array' in kwargs and kwargs['array'] \
                         and isinstance(self, MFTransientArray):
                     data = np.expand_dims(data, 0)

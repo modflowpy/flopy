@@ -233,7 +233,7 @@ class MFFileMgmt(object):
                     # supports model relative paths
                     path_new = self.resolve_path(mffile_path,
                                                  None)
-                    if not os.path.exists(path_new):
+                    if path_old != path_new:
                         new_folders, new_leaf = os.path.split(path_new)
                         if not os.path.exists(new_folders):
                             os.makedirs(new_folders)

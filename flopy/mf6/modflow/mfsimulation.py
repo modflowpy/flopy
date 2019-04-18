@@ -977,7 +977,7 @@ class MFSimulation(PackageContainer):
     def model_names(self):
         return list(self._models.keys())
 
-    def get_model(self, model_name=''):
+    def get_model(self, model_name=None):
         """
         Load an existing model.
 
@@ -993,6 +993,9 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
+        if model_name is None:
+            for model in self._models.values():
+                return model
         return self._models[model_name]
 
     def get_exchange_file(self, filename):

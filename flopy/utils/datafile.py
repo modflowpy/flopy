@@ -59,13 +59,15 @@ class Header(object):
                                        ('pertim', floattype),
                                        ('totim', floattype),
                                        ('text', 'a16'),
-                                       ('ncpl', 'i4'), ('ilay', 'i4')])
+                                       ('ncpl', 'i4'), ('ilay', 'i4'),
+                                       ('m3', 'i4')])
             elif self.header_type == 'vardisu':
                 self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
                                        ('pertim', floattype),
                                        ('totim', floattype),
                                        ('text', 'a16'),
-                                       ('nodes', 'i4')])
+                                       ('nodes', 'i4'), ('m2', 'i4'),
+                                       ('m3', 'i4')])
 
             self.header = np.ones(1, self.dtype)
         else:

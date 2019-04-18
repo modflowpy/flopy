@@ -43,16 +43,17 @@ class UnstructuredGrid(Grid):
         self._xc = xcenters
         self._yc = ycenters
 
-        if self.layered:
-            assert np.all([n == len(iverts) for n in ncpl])
-            assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
-            assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
-        else:
-            msg = ('Length of iverts must equal ncpl.sum '
-                   '({} {})'.format(len(iverts), ncpl))
-            assert len(iverts) == ncpl.sum(), msg
-            assert np.array(self.xcellcenters).shape[0] == self.ncpl
-            assert np.array(self.ycellcenters).shape[0] == self.ncpl
+        if iverts is not None:
+            if self.layered:
+                assert np.all([n == len(iverts) for n in ncpl])
+                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
+                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
+            else:
+                msg = ('Length of iverts must equal ncpl.sum '
+                       '({} {})'.format(len(iverts), ncpl))
+                assert len(iverts) == ncpl.sum(), msg
+                assert np.array(self.xcellcenters).shape[0] == self.ncpl
+                assert np.array(self.ycellcenters).shape[0] == self.ncpl
 
 
     @property
