@@ -1559,7 +1559,7 @@ class SpatialReferenceUnstructured(SpatialReference):
     """
 
     def __init__(self, xc, yc, verts, iverts, ncpl, layered=True, lenuni=1,
-                 proj4_str="EPSG:4326", epsg=None, units=None,
+                 proj4_str=None, epsg=None, units=None,
                  length_multiplier=1.):
         warnings.warn("SpatialReferenceUnstructured has been deprecated. "
                       "Use VertexGrid instead.",

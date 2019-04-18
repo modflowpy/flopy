@@ -86,9 +86,9 @@ class ModflowDis(Package):
         clockwise rotation (in degrees) of the grid about the upper left
         corner. default is 0.0
     proj4_str : str
-        PROJ4 string that defines the xul-yul coordinate system
-        (.e.g. '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs ').
-        Can be an EPSG code (e.g. 'EPSG:4326'). Default is 'EPSG:4326'
+        PROJ4 string that defines the projected coordinate system
+        (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
+        Can be an EPSG code (e.g. 'EPSG:32614'). Default is None.
     start_datetime : str
         starting datetime of the simulation. default is '1/1/1970'
 
@@ -868,7 +868,7 @@ class ModflowDis(Package):
         header = header.replace('#', '')
         xul, yul = None, None
         rotation = None
-        proj4_str = "EPSG:4326"
+        proj4_str = None
         start_datetime = "1/1/1970"
         dep = False
         for item in header.split(','):

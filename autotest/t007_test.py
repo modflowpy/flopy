@@ -343,12 +343,14 @@ def test_mbase_modelgrid():
 
     assert ml.modelgrid.xoffset == 500
     assert ml.modelgrid.yoffset == 0.0
+    assert ml.modelgrid.proj4 is None
     ml.model_ws = tpth
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
     assert str(ml1.modelgrid) == str(ml.modelgrid)
     assert ml1.start_datetime == ml.start_datetime
+    assert ml1.modelgrid.proj4 is None
 
 def test_free_format_flag():
     import flopy
@@ -425,8 +427,7 @@ def test_mg():
                                                        delr=ms.dis.delr.array,
                                                        xoff=xll, yoff=xll,
                                                        angrot=angrot,
-                                                       lenuni=2,
-                                                       proj4='EPSG:4326')
+                                                       lenuni=2)
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
