@@ -456,8 +456,7 @@ def test_mg():
 
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
-    print(ms.modelgrid.lenuni)
-    print(ms1.modelgrid.lenuni)
+
     assert str(ms1.modelgrid) == str(ms.modelgrid)
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
@@ -472,98 +471,16 @@ def test_epsgs():
     sr = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
     sr.epsg = 102733
     assert sr.epsg == 102733
+    if not "proj4_str:+init=epsg:102733" in sr.__repr__():
+        raise AssertionError()
+
 
     sr.epsg = 4326  # WGS 84
     crs = shp.CRS(epsg=4326)
     assert crs.crs['proj'] == 'longlat'
     assert crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
-
-# scaling has not been implemented on the modelgrid class
-"""
-def test_sr_scaling():
-    nlay, nrow, ncol = 1, 10, 5
-    delr, delc = 250, 500
-    top = 100
-    botm = 50
-    xll, yll = 286.80, 29.03
-
-    print(np.__version__)
-    # test scaling of length units
-    ms2 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc)
-    ms2.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
-                                                 delr=ms2.dis.delr.array,
-                                                 xoff=xll,
-                                                 yoff=yll, angrot=0)
-    ms2.modelgrid.epsg = 26715
-    ms2.dis.export(os.path.join(spth, 'dis2.shp'))
-    ms3 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc, top=top, botm=botm)
-    ms3.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
-                                                 delr=ms2.dis.delr.array,
-                                                 xoff=xll, yoff=yll,
-                                                 angrot=0)
-    ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
-
-    # check that the origin(s) are maintained
-    mg3 = ms3.modelgrid
-    assert np.array_equal(mg3.get_cell_vertices(nrow - 1, 0)[1],
-                          [ms3.modelgrid.xoffset, ms3.modelgrid.yoffset])
-    mg2 = ms2.modelgrid
-    assert np.allclose(mg3.get_cell_vertices(nrow - 1, 0)[1],
-                       mg2.get_cell_vertices(nrow - 1, 0)[1])
-
-    # check that the upper left corner is computed correctly
-    # in this case, length_multiplier overrides the given units
-    def check_size(mg):
-        xur, yur = mg.get_cell_vertices(0, ncol - 1)[3]
-        assert np.abs(xur - (xll + mg.sr.length_multiplier * delr * ncol)) < \
-               1e-4
-        assert np.abs(yur - (yll + mg.sr.length_multiplier * delc * nrow)) < \
-               1e-4
-    check_size(mg3)
-
-    # run the same tests but with units specified instead of a length multiplier
-    ms2 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr, delc=delc,
-                                   lenuni=1 # feet; should have no effect on SR
-                                   # (model not supplied to SR)
-                                   )
-    ms2.sr = flopy.discretization.reference.SpatialReference(delc=ms2.dis.delc.array,
-                                                             lenuni=2,  # meters
-                                                             epsg=26715,  # meters,
-                                                             # listed
-                                                             # on spatialreference.org
-                                                             xll=xll, yll=yll,
-                                                             rotation=0)
-    assert ms2.sr.model_length_units == 'meters'
-    assert ms2.sr.length_multiplier == 1.
-    ms2.sr.lenuni = 1 # feet; test dynamic setting
-    assert ms2.sr.model_length_units == 'feet'
-    check_size(mg2)
-    assert ms2.sr.length_multiplier == .3048
-    ms2.sr.lenuni = 3 # centimeters
-    assert ms2.sr.model_length_units == 'centimeters'
-    check_size(mg2)
-    assert ms2.sr.length_multiplier == 0.01
-    ms2.sr.lenuni = 2 # meters
-    check_size(mg2)
-    ms2.sr.units = 'meters'
-    ms2.sr.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
-    assert ms2.sr.proj4_str == '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
-    assert ms2.sr.units == 'feet'
-    assert ms2.sr.length_multiplier == 1/.3048
-    check_size(mg2)
-    ms2.sr.epsg = 6610 # meters, not listed on spatialreference.org but understood by pyproj
-    assert ms2.sr.units == 'meters'
-    assert ms2.sr.proj4_str is not None
-    check_size(mg2)
-"""
+    if not "proj4_str:+init=epsg:4326" in sr.__repr__():
+        raise AssertionError()
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
