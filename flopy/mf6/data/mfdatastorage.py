@@ -1694,7 +1694,7 @@ class DataStorage(object):
 
     def _fill_dimensions(self, data_iter, dimensions):
         if self.data_structure_type == DataStructureType.ndarray:
-            np_dtype = MFFileAccess.datum_to_numpy_type(self._data_type)
+            np_dtype, name = MFFileAccess.datum_to_numpy_type(self._data_type)
             # initialize array
             data_array = np.ndarray(shape=dimensions, dtype=np_dtype)
             # fill array
