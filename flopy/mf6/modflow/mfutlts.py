@@ -130,6 +130,7 @@ class ModflowUtlts(mfpackage.MFPackage):
         self.sfacrecord_single = self.build_mfdata("sfacrecord_single", 
                                                    sfacrecord_single)
         self.timeseries = self.build_mfdata("timeseries",  timeseries)
+        self._init_complete = True
 
 
 class UtltsPackages(mfpackage.MFChildPackages):

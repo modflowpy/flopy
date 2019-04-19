@@ -180,3 +180,4 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         self.idomain = self.build_mfdata("idomain",  idomain)
         self.vertices = self.build_mfdata("vertices",  vertices)
         self.cell2d = self.build_mfdata("cell2d",  cell2d)
+        self._init_complete = True

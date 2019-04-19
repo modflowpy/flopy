@@ -208,3 +208,4 @@ class ModflowGwfdrn(mfpackage.MFPackage):
         self.maxbound = self.build_mfdata("maxbound",  maxbound)
         self.stress_period_data = self.build_mfdata("stress_period_data", 
                                                     stress_period_data)
+        self._init_complete = True

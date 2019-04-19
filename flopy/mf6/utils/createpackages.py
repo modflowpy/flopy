@@ -416,6 +416,7 @@ def create_packages():
                                  'package parent_file.')
 
         # build package builder class string
+        init_vars.append('        self._init_complete = True')
         init_vars = '\n'.join(init_vars)
         package_short_name = clean_class_string(package[0].file_type).lower()
         class_def_string = 'class Modflow{}(mfpackage.MFPackage):\n'.format(

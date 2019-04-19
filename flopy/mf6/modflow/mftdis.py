@@ -85,3 +85,4 @@ class ModflowTdis(mfpackage.MFPackage):
                                                  start_date_time)
         self.nper = self.build_mfdata("nper",  nper)
         self.perioddata = self.build_mfdata("perioddata",  perioddata)
+        self._init_complete = True

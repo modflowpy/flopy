@@ -76,3 +76,4 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         self.nrow = self.build_mfdata("nrow",  nrow)
         self.ncol = self.build_mfdata("ncol",  ncol)
         self.table = self.build_mfdata("table",  table)
+        self._init_complete = True

@@ -53,3 +53,4 @@ class ModflowGwfic(mfpackage.MFPackage):
 
         # set up variables
         self.strt = self.build_mfdata("strt",  strt)
+        self._init_complete = True

@@ -1069,9 +1069,9 @@ class DataStorage(object):
                     self.layer_storage[layer_new].data_const_value = data
                     self.layer_storage[layer_new].DataStorageType = \
                         DataStorageType.internal_constant
-                    data = self._fill_const_layer(layer_new)
+                    data = self._fill_const_layer(layer)
                 elif isinstance(data, list):
-                    data = self._to_ndarray(data, layer_new)
+                    data = self._to_ndarray(data, layer)
                 if binary:
                     text = self.data_dimensions.structure.name
                     file_access = MFFileAccessArray(

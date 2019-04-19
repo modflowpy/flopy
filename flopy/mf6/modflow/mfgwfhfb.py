@@ -92,3 +92,4 @@ class ModflowGwfhfb(mfpackage.MFPackage):
         self.maxhfb = self.build_mfdata("maxhfb",  maxhfb)
         self.stress_period_data = self.build_mfdata("stress_period_data", 
                                                     stress_period_data)
+        self._init_complete = True

@@ -173,3 +173,4 @@ class ModflowMvr(mfpackage.MFPackage):
         self.maxpackages = self.build_mfdata("maxpackages",  maxpackages)
         self.packages = self.build_mfdata("packages",  packages)
         self.perioddata = self.build_mfdata("perioddata",  perioddata)
+        self._init_complete = True

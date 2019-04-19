@@ -100,3 +100,4 @@ class ModflowGwfsto(mfpackage.MFPackage):
         self.sy = self.build_mfdata("sy",  sy)
         self.steady_state = self.build_mfdata("steady-state",  steady_state)
         self.transient = self.build_mfdata("transient",  transient)
+        self._init_complete = True

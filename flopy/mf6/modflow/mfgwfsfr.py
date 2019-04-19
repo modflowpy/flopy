@@ -573,3 +573,4 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                                                 connectiondata)
         self.diversions = self.build_mfdata("diversions",  diversions)
         self.perioddata = self.build_mfdata("perioddata",  perioddata)
+        self._init_complete = True

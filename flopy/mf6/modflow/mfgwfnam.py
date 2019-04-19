@@ -113,3 +113,4 @@ class ModflowGwfnam(mfpackage.MFPackage):
         self.save_flows = self.build_mfdata("save_flows",  save_flows)
         self.newtonoptions = self.build_mfdata("newtonoptions",  newtonoptions)
         self.packages = self.build_mfdata("packages",  packages)
+        self._init_complete = True

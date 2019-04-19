@@ -96,6 +96,7 @@ class ModflowUtltas(mfpackage.MFPackage):
             "interpolation_methodrecord",  interpolation_methodrecord)
         self.sfacrecord = self.build_mfdata("sfacrecord",  sfacrecord)
         self.tas_array = self.build_mfdata("tas_array",  tas_array)
+        self._init_complete = True
 
 
 class UtltasPackages(mfpackage.MFChildPackages):

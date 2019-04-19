@@ -134,10 +134,12 @@ def np001():
                                           pname='mydispkg')
     # specifying dis package twice with the same name should automatically
     # remove the old dis package
+    top = {'filename': 'top.bin', 'data': 100.0, 'binary': True}
+    botm = {'filename': 'botm.bin', 'data': 50.0, 'binary': True}
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1,
                                           nrow=1, ncol=10, delr=500.0,
                                           delc=500.0,
-                                          top=100.0, botm=50.0,
+                                          top=top, botm=botm,
                                           filename='{}.dis'.format(model_name),
                                           pname='mydispkg')
     ic_package = flopy.mf6.ModflowGwfic(model, strt='initial_heads.txt',
