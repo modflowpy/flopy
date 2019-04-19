@@ -28,7 +28,7 @@ class UnstructuredGrid(Grid):
     """
     def __init__(self, vertices, iverts, xcenters, ycenters,
                  top=None, botm=None, idomain=None, lenuni=None,
-                 ncpl=None, epsg=None, proj4="EPSG:4326", prj=None,
+                 ncpl=None, epsg=None, proj4=None, prj=None,
                  xoff=0., yoff=0., angrot=0., layered=True):
         super(UnstructuredGrid, self).__init__(self.grid_type, top, botm, idomain,
                                                lenuni, epsg, proj4, prj,

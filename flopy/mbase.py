@@ -225,7 +225,7 @@ class BaseModel(ModelInterface):
                           DeprecationWarning)
 
         rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", "EPSG:4326")
+        proj4_str = kwargs.pop("proj4_str", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
