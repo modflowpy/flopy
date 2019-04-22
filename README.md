@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/app/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 
 Introduction
 -----------------------------------------------
@@ -141,6 +141,8 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 
 | Method                                                                               | Python Package                                     |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `.PlotMapView()` in `flopy.plot`                                                     | **matplotlib** >= 1.4                              |
+| `.PlotCrossSection()` in `flopy.plot`                                                | **matplotlib** >= 1.4                              |
 | `.plot()`                                                                            | **matplotlib** >= 1.4                              |
 | `.plot_shapefile()`                                                                  | **matplotlib** >= 1.4 and **Pyshp** >= 1.2         |
 | `.to_shapefile()`                                                                    | **Pyshp** >= 1.2                                   |
@@ -162,6 +164,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.time_coverage()` in `flopy.export.metadata` `acc` class - ***used if available***  | **pandas** >= 0.15                                 |
 | `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)  |
+| `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                              |
 
 
 How to Cite
