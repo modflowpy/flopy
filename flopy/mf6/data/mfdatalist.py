@@ -1006,7 +1006,7 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         self._update_record_prep(key)
         super(MFTransientList, self).update_record(record, key_index)
 
-    def _new_storage(self):
+    def _new_storage(self, stress_period=0):
         return OrderedDict()
 
     def _get_storage_obj(self):

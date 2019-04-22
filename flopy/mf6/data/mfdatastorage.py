@@ -486,7 +486,7 @@ class DataStorage(object):
             if not self.layer_storage[layer].data_storage_type == \
                    DataStorageType.internal_constant:
                 message = 'Can not get constant value. Storage type must be ' \
-                          'internal_constant.'.format(layer)
+                          'internal_constant.'
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     self.data_dimensions.structure.get_model(),
@@ -652,8 +652,11 @@ class DataStorage(object):
             if len(self.layer_storage.first_item().internal_data[0]) < \
                     len(data[0]):
                 # Rebuild recarray to fit larger size
-                for index in range(len(internal_data[0]), len(data[0])):
+                count = 0
+                last_count = len(data[0]) - len(internal_data[0])
+                while count < last_count:
                     self._duplicate_last_item()
+                    count += 1
                 internal_data_list = internal_data.tolist()
                 for data_item in data:
                     internal_data_list.append(data_item)
@@ -669,8 +672,10 @@ class DataStorage(object):
                     (internal_data, np.rec.array(data,
                                                  self._recarray_type_list))))
 
-    def set_data(self, data, layer=None, multiplier=[1.0], key=None,
+    def set_data(self, data, layer=None, multiplier=None, key=None,
                  autofill=False):
+        if multiplier is None:
+            multiplier = [1.0]
         if self.data_structure_type == DataStructureType.recarray or \
           self.data_structure_type == DataStructureType.scalar:
             self._set_list(data, layer, multiplier, key, autofill)
@@ -764,12 +769,12 @@ class DataStorage(object):
         # look for a single constant value
         data_type = self.data_dimensions.structure.\
             get_datum_type(return_enum_type=True)
-        if not isinstance(data, dict) and not isinstance(data, str) and \
-                self._calc_data_size(data, 2) == 1 and \
-                self._is_type(data[0], data_type):
-            # store data as const
-            self.store_internal(data, layer, True, multiplier, key=key)
-            return True
+        if not isinstance(data, dict) and not isinstance(data, str):
+            if self._calc_data_size(data, 2) == 1 and \
+                    self._is_type(data[0], data_type):
+                # store data as const
+                self.store_internal(data, layer, True, multiplier, key=key)
+                return True
 
         # look for internal and open/close data
         if isinstance(data, dict):
@@ -784,8 +789,7 @@ class DataStorage(object):
                 self.process_open_close_line(data, layer)
                 return True
             elif 'data' in data:
-                multiplier, iprn, flags_found = \
-                    self.process_internal_line(data)
+                multiplier, iprn = self.process_internal_line(data)
                 if len(data['data']) == 1:
                     # merge multiplier with single value and make constant
                     if DatumUtil.is_float(multiplier):
@@ -802,8 +806,7 @@ class DataStorage(object):
                 return True
         elif isinstance(data[0], str):
             if data[0].lower() == 'internal':
-                multiplier, iprn, \
-                        flags_found = self.process_internal_line(data)
+                multiplier, iprn = self.process_internal_line(data)
                 self.store_internal(data[-1], layer, False, [multiplier],
                                     key=key, print_format=iprn)
                 return True
@@ -862,9 +865,11 @@ class DataStorage(object):
                 type_, value_, traceback_, message,
                 self._simulation_data.debug)
 
-    def store_internal(self, data, layer=None, const=False, multiplier=[1.0],
+    def store_internal(self, data, layer=None, const=False, multiplier=None,
                        key=None, autofill=False,
                        print_format=None):
+        if multiplier is None:
+            multiplier = [1.0]
         if self.data_structure_type == DataStructureType.recarray:
             if self.layer_storage.first_item().data_storage_type == \
                     DataStorageType.internal_constant:
@@ -999,16 +1004,19 @@ class DataStorage(object):
             for index, data_val in enumerate(data_entry):
                 if index < itype_len and \
                         self._recarray_type_list[index][1] != object and \
-                        type(data_val) != self._recarray_type_list[index][1] \
-                        and (type(data_val) != int or
+                        not isinstance(data_val,
+                                   self._recarray_type_list[index][1]) \
+                        and (not isinstance(data_val, int) or
                         self._recarray_type_list[index][1] != float):
                     # for inconsistent types use generic object type
                     self._recarray_type_list[index] = \
                             (self._recarray_type_list[index][0], object)
 
-    def store_external(self, file_path, layer=None, multiplier=[1.0],
+    def store_external(self, file_path, layer=None, multiplier=None,
                        print_format=None, data=None, do_not_verify=False,
                        binary=False):
+        if multiplier is None:
+            multiplier = [1.0]
         layer_new, multiplier = self._store_prep(layer, multiplier)
 
         if data is not None:
@@ -1201,14 +1209,14 @@ class DataStorage(object):
         read_file = self._simulation_data.mfpath.resolve_path(
             self.layer_storage[layer].fname, model_name)
         if self.layer_storage[layer].binary:
-            data_out, header = file_access.read_binary_data_from_file(
+            data_out = file_access.read_binary_data_from_file(
                 read_file, self.get_data_dimensions(layer),
                 self.get_data_size(layer), self._data_type,
-                self._model_or_sim.modelgrid)
+                self._model_or_sim.modelgrid)[0]
         else:
-            data_out, current_size = file_access.read_text_data_from_file(
+            data_out = file_access.read_text_data_from_file(
                 self.get_data_size(layer), self._data_type,
-                self.get_data_dimensions(layer), layer, read_file)
+                self.get_data_dimensions(layer), layer, read_file)[0]
         if self.layer_storage[layer].factor is not None:
             data_out = data_out * self.layer_storage[layer].factor
 
@@ -1290,7 +1298,6 @@ class DataStorage(object):
                                                 line_num)
 
     def process_internal_line(self, arr_line):
-        internal_modifiers_found = False
         if self._data_type == DatumType.integer:
             multiplier = 1
         else:
@@ -1320,13 +1327,11 @@ class DataStorage(object):
                         multiplier = convert_data(arr_line[index+1],
                                                   self.data_dimensions,
                                                   self._data_type)
-                        internal_modifiers_found = True
                         index += 2
                     elif arr_line[index].lower() == 'iprn' and \
                             index + 1 < len(arr_line):
                         print_format = arr_line[index+1]
                         index += 2
-                        internal_modifiers_found = True
                     else:
                         break
                 else:
@@ -1336,11 +1341,9 @@ class DataStorage(object):
                 if key.lower() == 'factor':
                     multiplier = convert_data(value, self.data_dimensions,
                                               self._data_type)
-                    internal_modifiers_found = True
                 if key.lower() == 'iprn':
                     print_format = value
-                    internal_modifiers_found = True
-        return multiplier, print_format, internal_modifiers_found
+        return multiplier, print_format
 
     def process_open_close_line(self, arr_line, layer, store=True):
         # process open/close line
@@ -1472,10 +1475,11 @@ class DataStorage(object):
 
         return multiplier, print_format, binary
 
-    def _tupleize_data(self, data):
+    @staticmethod
+    def _tupleize_data(data):
         for index, data_line in enumerate(data):
-            if type(data_line) != tuple:
-                if type(data_line) == list:
+            if not isinstance(data_line, tuple):
+                if isinstance(data_line, list):
                     data[index] = tuple(data_line)
                 else:
                     data[index] = (data_line,)
@@ -1694,7 +1698,7 @@ class DataStorage(object):
 
     def _fill_dimensions(self, data_iter, dimensions):
         if self.data_structure_type == DataStructureType.ndarray:
-            np_dtype, name = MFFileAccess.datum_to_numpy_type(self._data_type)
+            np_dtype = MFFileAccess.datum_to_numpy_type(self._data_type)[0]
             # initialize array
             data_array = np.ndarray(shape=dimensions, dtype=np_dtype)
             # fill array
@@ -1944,7 +1948,7 @@ class DataStorage(object):
         if isinstance(data, np.ndarray):
             current_length[0] += data.size
             return data.size
-        if isinstance(data, str):
+        if isinstance(data, str) or isinstance(data, dict):
             return 1
         try:
             for index in range(0, len(data)):
@@ -1955,7 +1959,7 @@ class DataStorage(object):
                     current_length[0] += 1
                 if count_to is not None and current_length[0] >= count_to:
                     return current_length[0]
-        except:
+        except (ValueError, IndexError, TypeError):
             return 1
         return current_length[0]
 
@@ -1963,13 +1967,13 @@ class DataStorage(object):
     def _get_max_data_line_size(data):
         max_size = 0
         if data is not None:
-            for index in range(0, len(data)):
-                if len(data[index]) > max_size:
-                    max_size = len(data[index])
+            for value in data:
+                if len(value) > max_size:
+                    max_size = len(value)
         return max_size
 
     def get_data_dimensions(self, layer):
-        data_dimensions, shape_rule = self.data_dimensions.get_data_shape()
+        data_dimensions = self.data_dimensions.get_data_shape()[0]
         if layer is not None and self.layer_storage.get_total_size() > 1:
             # remove all "layer" dimensions from the list
             layer_dims = self.data_dimensions.structure.\

@@ -15,8 +15,8 @@ def get_first_val(arr):
 
 # convert_data(data, type) : type
 #    converts data "data" to type "type" and returns the converted data
-def convert_data(data, data_dimensions, type, data_item=None):
-    if type == DatumType.double_precision:
+def convert_data(data, data_dimensions, data_type, data_item=None):
+    if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
             val = int(PyListUtil.clean_numeric(data))
             if val == -1:
@@ -66,7 +66,7 @@ def convert_data(data, data_dimensions, type, data_item=None):
                         data_dimensions.structure.name,
                         inspect.stack()[0][3], type_, value_,
                         traceback_, message, False)
-    elif type == DatumType.integer:
+    elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
             return int(PyListUtil.clean_numeric(data)) - 1
         try:
@@ -87,16 +87,16 @@ def convert_data(data, data_dimensions, type, data_item=None):
                     data_dimensions.structure.name,
                     inspect.stack()[0][3], type_, value_, traceback_,
                     message, False)
-    elif type == DatumType.string and data is not None:
+    elif data_type == DatumType.string and data is not None:
         if data_item is None or not data_item.preserve_case:
             # keep strings lower case
             return data.lower()
     return data
 
 
-def to_string(val, type, sim_data, data_dim, is_cellid=False,
+def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
               possible_cellid=False, data_item=None):
-    if type == DatumType.double_precision:
+    if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
             if val > 0:
                 return (str(int(val + 1)))
@@ -149,14 +149,14 @@ def to_string(val, type, sim_data, data_dim, is_cellid=False,
         for item in val:
             string_val.append(str(item + 1))
         return ' '.join(string_val)
-    elif type == DatumType.integer:
+    elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
             if isinstance(val, str):
                 return str(int(val) + 1)
             else:
                 return str(int(val)+1)
         return str(int(val))
-    elif type == DatumType.string:
+    elif data_type == DatumType.string:
         try:
             arr_val = val.split()
         except AttributeError:

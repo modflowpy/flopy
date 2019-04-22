@@ -597,7 +597,7 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
         return super(MFScalarTransient, self).load(first_line, file_handle,
                                                    pre_data_comments)
 
-    def _new_storage(self):
+    def _new_storage(self, stress_period=0):
         return OrderedDict()
 
     def _get_storage_obj(self):

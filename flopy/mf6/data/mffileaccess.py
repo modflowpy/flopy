@@ -2,10 +2,9 @@ import sys, inspect
 from copy import deepcopy
 import numpy as np
 from ..mfbase import MFDataException, VerbosityLevel
-from ..utils.mfenums import DiscretizationType
 from ...utils.datautil import PyListUtil, find_keyword, DatumUtil, MultiListIter
 from .mfdatautil import convert_data, to_string, MFComment
-from ...utils.binaryfile import BinaryHeader, binaryread, BinaryLayerFile
+from ...utils.binaryfile import BinaryHeader
 from ...utils import datautil
 from ..data.mfstructure import DatumType, MFDataStructure, DataType
 
@@ -24,8 +23,8 @@ class MFFileAccess:
                           precision='double', write_multi_layer=False):
         fd = self._open_ext_file(fname, binary=True, write=True)
         if write_multi_layer:
-            for layer in range(0, len(data)):
-                self._write_layer(fd, data[layer], modelgrid, modeltime,
+            for layer, value in enumerate(data):
+                self._write_layer(fd, value, modelgrid, modeltime,
                                   stress_period, precision, text, fname,
                                   layer+1)
         else:
@@ -526,8 +525,8 @@ class MFFileAccessArray(MFFileAccess):
                                       self._simulation_data.debug)
 
             try:
-                multiplier, print_format, flags_found = \
-                        storage.process_internal_line(arr_line)
+                multiplier, print_format = \
+                    storage.process_internal_line(arr_line)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -673,9 +672,7 @@ class MFFileAccessList(MFFileAccess):
         if arr_line and (len(arr_line[0]) >= 2 and
                 arr_line[0][:3].upper() == 'END'):
             return [False, arr_line]
-        store_data = False
         if len(arr_line) >= 2 and arr_line[0].upper() == 'OPEN/CLOSE':
-            line_num = 0
             try:
                 storage.process_open_close_line(arr_line, 0)
             except Exception as ex:
@@ -724,9 +721,9 @@ class MFFileAccessList(MFFileAccess):
         line_num = 0
 
         try:
-            ln, simple_line, data_line = self._load_list_line(
+            simple_line, data_line = self._load_list_line(
                 storage, arr_line, line_num, data_loaded, True,
-                current_key=current_key, data_line=data_line)
+                current_key=current_key, data_line=data_line)[1:]
             line_num += 1
             store_data = True
         except MFDataException as err:
@@ -738,12 +735,12 @@ class MFFileAccessList(MFFileAccess):
                     struct.data_item_structures[0].name.upper() \
                     == 'CELLID':
                 # store first line as a comment
-                if self.pre_data_comments is None:
-                    self.pre_data_comments = \
+                if storage.pre_data_comments is None:
+                    storage.pre_data_comments = \
                             MFComment(current_line, struct.path,
                                       self._simulation_data, 0)
                 else:
-                    self.pre_data_comments.add_text(current_line)
+                    storage.pre_data_comments.add_text(current_line)
                 # store constant value for all cellids
                     storage.layer_storage.first_item().set_internal_constant()
                     if store_internal:
@@ -778,6 +775,8 @@ class MFFileAccessList(MFFileAccess):
 
         if struct.type == DatumType.record or struct.type == DatumType.string:
             # records only contain a single line
+            if data_loaded == [False]:
+                print('break')
             storage.append_data(data_loaded)
             storage.data_dimensions.unlock()
             return [False, None, data_line]
@@ -864,11 +863,9 @@ class MFFileAccessList(MFFileAccess):
 
             else:
                 try:
-                    idx, sl, data_line = \
-                        self._load_list_line(storage, arr_line, line_num,
-                                             data_loaded, False,
-                                             current_key=current_key,
-                                             data_line=data_line)
+                    data_line = self._load_list_line(
+                        storage, arr_line, line_num, data_loaded, False,
+                        current_key=current_key, data_line=data_line)[2]
                 except Exception as ex:
                     comment = 'Unable to process line {} of data list: ' \
                               '"{}"'.format(line_num + 1, line)
@@ -1057,7 +1054,7 @@ class MFFileAccessList(MFFileAccess):
                                             self._temp_dict[data_item.name] \
                                                 = keyword_data_item
                                         data_index, more_data_expected, \
-                                            unknown_repeats, data_line = \
+                                            data_line, unknown_repeats = \
                                             self._append_data_list(
                                                     storage,
                                                     keyword_data_item,
@@ -1079,8 +1076,8 @@ class MFFileAccessList(MFFileAccess):
                                                             arr_line_len:
                                                 # data item contains additional
                                                 # information
-                                                data_index, more_data_expected,\
-                                                unknown_repeats, data_line = \
+                                                data_index, more_data_expected, \
+                                                    data_line, unknown_repeats = \
                                                     self._append_data_list(
                                                         storage,
                                                         ks_data_item,
@@ -1096,7 +1093,7 @@ class MFFileAccessList(MFFileAccess):
                                                 # append remaining data
                                                 # (temporary fix)
                                                 data_index, more_data_expected, \
-                                                unknown_repeats, data_line = \
+                                                    data_line, unknown_repeats = \
                                                     self._append_data_list(
                                                         storage,
                                                         ks_data_item,
@@ -1113,7 +1110,7 @@ class MFFileAccessList(MFFileAccess):
                                         if data_item_ks.type != \
                                                 DatumType.keyword:
                                             data_index, more_data_expected, \
-                                            unknown_repeats, data_line = \
+                                                data_line, unknown_repeats = \
                                             self._append_data_list(
                                                 storage, data_item_ks, arr_line,
                                                 arr_line_len, data_index,
@@ -1133,7 +1130,7 @@ class MFFileAccessList(MFFileAccess):
                                         di_type = data_item.type
                                         data_item.type = DatumType.keyword
                                         data_index, more_data_expected, \
-                                            unknown_repeats, data_line = \
+                                            data_line, unknown_repeats = \
                                             self._append_data_list(
                                                 storage, data_item, arr_line,
                                                 arr_line_len, data_index,
@@ -1141,7 +1138,7 @@ class MFFileAccessList(MFFileAccess):
                                                 current_key, data_line)
                                         data_item.type = di_type
                                     data_index, more_data_expected, \
-                                        unknown_repeats, data_line = \
+                                        data_line, unknown_repeats = \
                                         self._append_data_list(
                                             storage, data_item, arr_line,
                                             arr_line_len, data_index, var_index,
@@ -1161,14 +1158,13 @@ class MFFileAccessList(MFFileAccess):
             for data_item in data_set.data_item_structures[var_index:]:
                 simple_line = False
                 if data_item.name == 'aux':
-                    idx, data_line = \
-                        self._process_aux(storage, arr_line, arr_line_len,
-                                          data_item, data_index, var_index,
-                                          current_key, data_line)
+                    data_line = self._process_aux(
+                        storage, arr_line, arr_line_len, data_item, data_index,
+                        var_index, current_key, data_line)[1]
                 elif data_item.name != 'boundname' or \
                         self._data_dimensions.package_dim.boundnames():
-                    data_index, more_data_expected, unknown_repeats, \
-                    data_line = self._append_data_list(
+                    data_index, more_data_expected, data_line, \
+                    unknown_repeats = self._append_data_list(
                         storage, data_item, None, 0, data_index, var_index, 1,
                         current_key, data_line)
 
@@ -1192,19 +1188,17 @@ class MFFileAccessList(MFFileAccess):
                 if var_name.lower() != 'auxiliary':
                     if data_index >= arr_line_len:
                         # store placeholder None
-                        data_index, more_data_expected, unknown_repeats, \
-                            data_line = \
+                        data_index, more_data_expected, data_line = \
                             self._append_data_list(
                                 storage, data_item, None, 0, data_index,
-                                var_index, 1, current_key, data_line)
+                                var_index, 1, current_key, data_line)[0:3]
                     else:
                         # read in aux variables
-                        data_index, more_data_expected, unknown_repeats,\
-                            data_line= \
+                        data_index, more_data_expected, data_line = \
                             self._append_data_list(
                                 storage, data_item, arr_line, arr_line_len,
                                 data_index, var_index, 0, current_key,
-                                data_line)
+                                data_line)[0:3]
         return data_index, data_line
 
     def _append_data_list(self, storage, data_item, arr_line, arr_line_len,
@@ -1299,7 +1293,7 @@ class MFFileAccessList(MFFileAccess):
                 more_data_expected, unknown_repeats = \
                     storage.resolve_shape_list(
                         data_item, repeat_count, current_key, data_line)
-            return new_index, more_data_expected, unknown_repeats, data_line
+            return new_index, more_data_expected, data_line, unknown_repeats
         else:
             if arr_line is None:
                 data_converted = None
@@ -1325,8 +1319,9 @@ class MFFileAccessList(MFFileAccess):
             more_data_expected, unknown_repeats = \
                 storage.resolve_shape_list(
                     data_item, repeat_count, current_key, data_line)
-            return data_index + 1, more_data_expected, unknown_repeats, \
-                   data_line
+            return data_index + 1, more_data_expected, data_line, \
+                   unknown_repeats
+
 
 
 class MFFileAccessScalar(MFFileAccess):
@@ -1345,13 +1340,12 @@ class MFFileAccessScalar(MFFileAccess):
         arr_line = datautil.PyListUtil.\
             split_data_line(current_line)
         # verify keyword
-        index_num, aux_var_index = self._load_keyword(arr_line, 0, keyword)
+        index_num = self._load_keyword(arr_line, 0, keyword)[0]
 
         # store data
         datatype = self.structure.get_datatype()
         if self.structure.type == DatumType.record:
             index = 0
-
             for data_item_type in self.structure.get_data_item_types():
                 optional = self.structure.data_item_structures[index].optional
                 if len(arr_line) <= index + 1 or \
@@ -1374,7 +1368,7 @@ class MFFileAccessScalar(MFFileAccess):
                             self._data_dimensions,
                             self.structure.data_item_structures[index].type,
                             self.structure.data_item_structures[0]))
-                    except Exception as ex:
+                    except Exception:
                         message = 'Could not convert "{}" of type "{}" ' \
                                   'to a string.'.format(
                                     arr_line[index],

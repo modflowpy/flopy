@@ -6,7 +6,6 @@ from ..mfbase import MFDataException, MFInvalidTransientBlockHeaderException, \
 from ..data.mfstructure import DatumType
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
-from .mfstructure import MFDataStructure
 from .mfdatastorage import DataStructureType
 from .mfdatautil import to_string
 
@@ -206,6 +205,7 @@ class MFData(DataInterface):
                  dimensions=None, *args, **kwargs):
         # initialize
         self._current_key = None
+        self._valid = True
         self._simulation_data = sim_data
         self._model_or_sim = model_or_sim
         self.structure = structure
@@ -279,8 +279,8 @@ class MFData(DataInterface):
             model._mg_resync = True
 
     @staticmethod
-    def _tas_info(str):
-        lst_str = str.split(' ')
+    def _tas_info(tas_str):
+        lst_str = tas_str.split(' ')
         if len(lst_str) >= 2 and lst_str[0].lower() == 'timearrayseries':
             return lst_str[1], lst_str[0]
         return None, None
@@ -368,7 +368,7 @@ class MFData(DataInterface):
     def get_description(self, description=None, data_set=None):
         if data_set is None:
             data_set = self.structure
-        for index, data_item in data_set.data_items.items():
+        for data_item in data_set.data_items.values():
             if data_item.type == DatumType.record:
                 # record within a record, recurse
                 description = self.get_description(description, data_item)
@@ -387,7 +387,7 @@ class MFData(DataInterface):
 
     def is_valid(self):
         # TODO: Implement for each data type
-        return True
+        return self._valid
 
     def _structure_init(self, data_set=None):
         if data_set is None:
