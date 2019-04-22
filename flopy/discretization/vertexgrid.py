@@ -1,7 +1,10 @@
 import numpy as np
-import itertools
+try:
+    from matplotlib.path import Path
+except ImportError:
+    Path = None
+
 from .grid import Grid, CachedData
-from matplotlib.path import Path
 from ..utils.geometry import is_clockwise
 
 
@@ -139,6 +142,11 @@ class VertexGrid(Grid):
             The CELL2D number
         
         """
+        if Path is None:
+            s = 'Could not import matplotlib.  Must install matplotlib ' + \
+                ' in order to use VertexGrid.intersect() method'
+            raise ImportError(s)
+
         if local:
             # transform x and y to real-world coordinates
             x, y = super(VertexGrid, self).get_coords(x,y)
