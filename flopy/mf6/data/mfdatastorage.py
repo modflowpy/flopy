@@ -1951,9 +1951,9 @@ class DataStorage(object):
         if isinstance(data, str) or isinstance(data, dict):
             return 1
         try:
-            for index in range(0, len(data)):
-                if hasattr(data[index], '__len__'):
-                    DataStorage._calc_data_size(data[index], count_to,
+            for data_item in data:
+                if hasattr(data_item, '__len__'):
+                    DataStorage._calc_data_size(data_item, count_to,
                                                 current_length)
                 else:
                     current_length[0] += 1

@@ -9,7 +9,7 @@ from ...utils import datautil
 from ..data.mfstructure import DatumType, MFDataStructure, DataType
 
 
-class MFFileAccess:
+class MFFileAccess(object):
     def __init__(self, structure, data_dimensions, simulation_data, path,
                  current_key):
         self.structure = structure
@@ -922,7 +922,7 @@ class MFFileAccessList(MFFileAccess):
                         data_index, data_line = \
                             self._process_aux(storage, arr_line, arr_line_len,
                                               data_item, data_index, var_index,
-                                              current_key, data_line)
+                                              current_key, data_line)[0:2]
                     # optional mname data items are only specified if the
                     # package is part of a model
                     elif not data_item.optional or \
@@ -934,10 +934,11 @@ class MFFileAccessList(MFFileAccess):
                         elif data_item.type == DatumType.record:
                             # this is a record within a record, recurse into
                             # _load_line to load it
-                            data_index, sl, data_line = self._load_list_line(
-                                storage, arr_line, line_num, data_loaded,
-                                build_type_list, current_key, data_index,
-                                data_item, False, data_line=data_line)
+                            data_index, simple_line, data_line = \
+                                self._load_list_line(
+                                    storage, arr_line, line_num, data_loaded,
+                                    build_type_list, current_key, data_index,
+                                    data_item, False, data_line=data_line)
                             simple_line = False
                         elif data_item.name != 'boundname' or \
                                 self._data_dimensions.package_dim.boundnames():
@@ -1183,6 +1184,7 @@ class MFFileAccessList(MFFileAccess):
     def _process_aux(self, storage, arr_line, arr_line_len, data_item, data_index,
                      var_index, current_key, data_line):
         aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
+        more_data_expected = False
         if aux_var_names is not None:
             for var_name in aux_var_names[0]:
                 if var_name.lower() != 'auxiliary':
@@ -1199,7 +1201,7 @@ class MFFileAccessList(MFFileAccess):
                                 storage, data_item, arr_line, arr_line_len,
                                 data_index, var_index, 0, current_key,
                                 data_line)[0:3]
-        return data_index, data_line
+        return data_index, data_line, more_data_expected
 
     def _append_data_list(self, storage, data_item, arr_line, arr_line_len,
                           data_index, var_index, repeat_count, current_key,
@@ -1323,7 +1325,6 @@ class MFFileAccessList(MFFileAccess):
                    unknown_repeats
 
 
-
 class MFFileAccessScalar(MFFileAccess):
     def __init__(self, structure, data_dimensions, simulation_data, path,
                  current_key):
@@ -1386,7 +1387,7 @@ class MFFileAccessScalar(MFFileAccess):
             try:
                 storage.set_data(converted_data, key=self._current_key)
                 index_num += 1
-            except Exception as ex:
+            except Exception:
                 message = 'Could not set data "{}" with key ' \
                           '"{}".'.format(converted_data, self._current_key)
                 type_, value_, traceback_ = sys.exc_info()
