@@ -1404,7 +1404,7 @@ class MFFileAccessScalar(MFFileAccess):
             # store as true
             try:
                 storage.set_data(True, key=self._current_key)
-            except Exception as ex:
+            except Exception:
                 message = 'Could not set data "True" with key ' \
                           '"{}".'.format(self._current_key)
                 type_, value_, traceback_ = sys.exc_info()
