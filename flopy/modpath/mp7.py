@@ -199,22 +199,6 @@ class Modpath7(BaseModel):
                     budgetfilename = \
                         oc.budget_filerecord.array['budgetfile'][0]
 
-            # set laytyp based on icelltype
-            npf = self.flowmodel.get_package('NPF')
-            if npf is None:
-                msg = 'NPF package must be ' + \
-                      'included in the passed MODFLOW 6 model'
-                raise Exception(msg)
-            icelltype = npf.icelltype.array.reshape(shape)
-            laytyp = []
-            for k in range(shape[0]):
-                laytyp.append(icelltype[k].max())
-            laytyp = np.array(laytyp, dtype=np.int32)
-
-            # set default hdry and hnoflo
-            hdry = None
-            hnoflo = None
-
         else:
             shape = None
             # extract data from DIS or DISU files and set shape
@@ -275,18 +259,8 @@ class Modpath7(BaseModel):
                 iu = p.ipakcb
                 budgetfilename = self.flowmodel.get_output(unit=iu)
 
-            # set laytyp
-            if p.name[0] == 'BCF6':
-                laytyp = p.laycon.array
-            else:
-                laytyp = p.laytyp.array
-
-            # set hdry from flow package
-            hdry = p.hdry
-
             # set hnoflo and ibound from BAS6 package
             bas = self.flowmodel.get_package('BAS6')
-            hnoflo = bas.hnoflo
             ib = bas.ibound.array
             # reset to constant values if possible
             ibound = []
@@ -329,13 +303,6 @@ class Modpath7(BaseModel):
                   'to __init__ cannot be None'
             raise ValueError(msg)
 
-        # set laytyp
-        # self.laytyp = laytyp
-
-        # set hnoflo and hdry
-        # self.hnoflo = hnoflo
-        # self.hdry = hdry
-
         # set ib and ibound
         self.ib = ib
         self.ibound = ibound
@@ -345,14 +312,6 @@ class Modpath7(BaseModel):
         self.array_format = 'modflow'
         self.external = False
 
-        # # set the rest of the attributes
-        # self.__sim = None
-        # self.external_path = external_path
-        # self.external = False
-        # self.external_fnames = []
-        # self.external_units = []
-        # self.external_binflag = []
-
         return
 
     def __repr__(self):
@@ -361,24 +320,30 @@ class Modpath7(BaseModel):
     @property
     def laytyp(self):
         if self.flowmodel.version == "mf6":
-            laytyp = []
-            for k in range(self.flowmodel.modelgrid.nlay):
-                laytyp.append(self.flowmodel.laytyp[k].max())
-            return np.array(laytyp, dtype=np.int32)
+            icelltype = self.flowmodel.npf.icelltype.array
+            laytyp = [icelltype[k].max() for k in
+                      range(self.flowmodel.modelgrid.nlay)]
         else:
-            return self.flowmodel.laytyp
+            p = self.flowmodel.get_package('BCF6')
+            if p is None:
+                laytyp = self.flowmodel.laytyp
+            else:
+                laytyp = p.laycon.array
+        return np.array(laytyp, dtype=np.int32)
 
     @property
     def hdry(self):
-        return self.flowmodel.hdry
+        if self.flowmodel.version == "mf6":
+            return None
+        else:
+            return self.flowmodel.hdry
 
     @property
     def hnoflo(self):
-        return self.flowmodel.hnoflo
-
-    @property
-    def laycbd(self):
-        return self.flowmodel.laycbd
+        if self.flowmodel.version == "mf6":
+            return None
+        else:
+            return self.flowmodel.hnoflo
 
     def write_name_file(self):
         """
