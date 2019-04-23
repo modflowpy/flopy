@@ -10,9 +10,36 @@ Additional information for this MODFLOW/MODPATH package can be found at the
 from enum import Enum
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, check
-from .mp7particlegroup import ParticleGroup, ParticleGroupLRCTemplate,\
+from ..utils import Util2d, Util3d
+from .mp7particlegroup import ParticleGroup, ParticleGroupLRCTemplate, \
     ParticleGroupNodeTemplate
+
+
+def sim_enum_error(v, s, e):
+    """
+    Standard enumeration error format error
+    Parameters
+    ----------
+    v : str
+        Enumeration value
+
+    s : str
+        User-defined value
+
+    e : Enum class
+        Enumeration class
+
+    Returns
+    -------
+
+    """
+    msg = 'Invalid {} ({})'.format(v, s) + \
+          '. Valid types are '
+    for i, c in enumerate(e):
+        if i > 0:
+            msg += ', '
+        msg += '"{}"'.format(c.name)
+    raise ValueError(msg)
 
 
 class simType(Enum):
@@ -256,28 +283,28 @@ class Modpath7Sim(Package):
         try:
             self.simulationtype = simType[simulationtype.lower()].value
         except:
-            self._enum_error('simulationtype', simulationtype, simType)
+            sim_enum_error('simulationtype', simulationtype, simType)
         try:
             self.trackingdirection = trackDir[trackingdirection.lower()].value
         except:
-            self._enum_error('trackingdirection', trackingdirection,
-                             trackDir)
+            sim_enum_error('trackingdirection', trackingdirection,
+                           trackDir)
         try:
             self.weaksinkoption = weakOpt[weaksinkoption.lower()].value
         except:
-            self._enum_error('weaksinkoption', weaksinkoption,
-                             weakOpt)
+            sim_enum_error('weaksinkoption', weaksinkoption,
+                           weakOpt)
         try:
             self.weaksourceoption = weakOpt[weaksourceoption.lower()].value
         except:
-            self._enum_error('weaksourceoption', weaksourceoption,
-                             weakOpt)
+            sim_enum_error('weaksourceoption', weaksourceoption,
+                           weakOpt)
         try:
             self.budgetoutputoption = \
                 budgetOpt[budgetoutputoption.lower()].value
         except:
-            self._enum_error('budgetoutputoption', budgetoutputoption,
-                             budgetOpt)
+            sim_enum_error('budgetoutputoption', budgetoutputoption,
+                           budgetOpt)
         # tracemode
         if traceparticledata is None:
             tracemode = 0
@@ -406,8 +433,8 @@ class Modpath7Sim(Package):
             self.stoptimeoption = \
                 stopOpt[stoptimeoption.lower()].value
         except:
-            self._enum_error('stoptimeoption', stoptimeoption,
-                             stopOpt)
+            sim_enum_error('stoptimeoption', stoptimeoption,
+                           stopOpt)
         # stoptime
         if self.stoptimeoption == 3:
             if stoptime is None:
@@ -453,7 +480,7 @@ class Modpath7Sim(Package):
         try:
             self.zonedataoption = onoffOpt[zonedataoption.lower()].value
         except:
-            self._enum_error('zonedataoption', zonedataoption, onoffOpt)
+            sim_enum_error('zonedataoption', zonedataoption, onoffOpt)
         if self.zonedataoption == 2:
             if stopzone is None:
                 stopzone = -1
@@ -473,8 +500,8 @@ class Modpath7Sim(Package):
             self.retardationfactoroption = \
                 onoffOpt[retardationfactoroption.lower()].value
         except:
-            self._enum_error('retardationfactoroption',
-                             retardationfactoroption, onoffOpt)
+            sim_enum_error('retardationfactoroption',
+                           retardationfactoroption, onoffOpt)
         if self.retardationfactoroption == 2:
             if retardation is None:
                 msg = "retardation must be specified if " + \
@@ -493,15 +520,6 @@ class Modpath7Sim(Package):
         self.particlegroups = particlegroups
 
         self.parent.add_package(self)
-
-    def _enum_error(self, v, s, e):
-        msg = 'Invalid {} ({})'.format(v, s) + \
-              '. Valid types are '
-        for i, c in enumerate(e):
-            if i > 0:
-                msg += ', '
-            msg += '"{}"'.format(c.name)
-        raise ValueError(msg)
 
     def write_file(self, check=False):
         """
