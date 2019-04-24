@@ -1,4 +1,3 @@
-# from numpy import empty, zeros, ones, where
 import os
 import sys
 import warnings
@@ -20,88 +19,113 @@ class Mnw(object):
     Parameters
     ----------
     wellid : int
-        is the name of the well. This is a unique alphanumeric identification label for each well.
-        The text string is limited to 20 alphanumeric characters. If the name of the well includes spaces,
-        then enclose the name in quotes.
+        is the name of the well. This is a unique alphanumeric identification
+        label for each well. The text string is limited to 20 alphanumeric
+        characters. If the name of the well includes spaces, then enclose the
+        name in quotes.
     nnodes : int
         is the number of cells (nodes) associated with this well.
         NNODES normally is > 0, but for the case of a vertical borehole,
-        setting NNODES < 0 will allow the user to specify the elevations of the tops and bottoms of well screens
-        or open intervals (rather than grid layer numbers), and the absolute value of NNODES
-        equals the number of open intervals (or well screens) to be specified in dataset 2d.
-        If this option is used, then the model will compute the layers in which the open intervals occur,
-        the lengths of the open intervals, and the relative vertical position of the open interval
-        within a model layer (for example, see figure 14 and related discussion).
+        setting NNODES < 0 will allow the user to specify the elevations of
+        the tops and bottoms of well screens or open intervals (rather than
+        grid layer numbers), and the absolute value of NNODES equals the
+        number of open intervals (or well screens) to be specified in dataset
+        2d. If this option is used, then the model will compute the layers in
+        which the open intervals occur, the lengths of the open intervals,
+        and the relative vertical position of the open interval within a model
+        layer (for example, see figure 14 and related discussion).
     losstype : str
-        is a character flag to determine the user-specified model for well loss (equation 2).
-        Available options (that is, place one of the following approved words in this field) are:
-        NONE    there are no well corrections and the head in the well is assumed to equal the head in the cell.
-                This option (hWELL = hn) is only valid for a single-node well (NNODES = 1).
-                (This is equivalent to using the original WEL Package of MODFLOW,
-                but specifying the single-node well within the MNW2 Package enables the use of constraints.)
-        THIEM   this option allows for only the cell-to-well correction at the well
-                based on the Thiem (1906) equation; head in the well is determined from equation 2
-                as (hWELL = hn + AQn), and the model computes A on the basis of the user-specified well radius (Rw)
-                and previously defined values of cell transmissivity and grid spacing.
-                Coefficients B and C in equation 2 are automatically set = 0.0.
-                User must define Rw in dataset 2c or 2d.
-        SKIN    this option allows for formation damage or skin corrections at the well:
-                hWELL = hn + AQn + BQn (from equation 2),
-                where A is determined by the model from the value of Rw, and B is determined by the model
-                from Rskin and Kskin. User must define Rw, Rskin, and Kskin in dataset 2c or 2d.
-        GENERAL head loss is defined with coefficients A, B, and C and power exponent P
-                (hWELL = hn + AQn + BQn + CQnP). A is determined by the model from the value of Rw.
-                User must define Rw, B, C, and P in dataset 2c or 2d. A value of P = 2.0 is suggested
-                if no other data are available (the model allows 1.0 <= P <= 3.5).
-                Entering a value of C = 0 will result in a "linear" model
-                in which the value of B is entered directly
-                (rather than entering properties of the skin, as with the SKIN option).
+        is a character flag to determine the user-specified model for well loss
+        (equation 2). Available options (that is, place one of the following
+        approved words in this field) are:
+        NONE    there are no well corrections and the head in the well is
+                assumed to equal the head in the cell. This option (hWELL = hn)
+                is only valid for a single-node well (NNODES = 1). (This is
+                equivalent to using the original WEL Package of MODFLOW,
+                but specifying the single-node well within the MNW2 Package
+                enables the use of constraints.)
+        THIEM   this option allows for only the cell-to-well correction at the
+                well based on the Thiem (1906) equation; head in the well is
+                determined from equation 2 as (hWELL = hn + AQn), and the model
+                computes A on the basis of the user-specified well radius (Rw)
+                and previously defined values of cell transmissivity and grid
+                spacing. Coefficients B and C in equation 2 are automatically
+                set = 0.0. User must define Rw in dataset 2c or 2d.
+        SKIN    this option allows for formation damage or skin corrections at
+                the well. hWELL = hn + AQn + BQn (from equation 2), where A is
+                determined by the model from the value of Rw, and B is
+                determined by the model from Rskin and Kskin. User must define
+                Rw, Rskin, and Kskin in dataset 2c or 2d.
+        GENERAL head loss is defined with coefficients A, B, and C and power
+                exponent P (hWELL = hn + AQn + BQn + CQnP). A is determined by
+                the model from the value of Rw. User must define Rw, B, C, and
+                P in dataset 2c or 2d. A value of P = 2.0 is suggested if no
+                other data are available (the model allows 1.0 <= P <= 3.5).
+                Entering a value of C = 0 will result in a "linear" model in
+                which the value of B is entered directly (rather than entering
+                properties of the skin, as with the SKIN option).
         SPECIFYcwc the user specifies an effective conductance value
-                (equivalent to the combined effects of the A, B, and C well-loss coefficients expressed in equation 15)
-                between the well and the cell representing the aquifer, CWC. User must define CWC in dataset 2c or 2d.
-                If there are multiple screens within the grid cell or if partial penetration corrections are to be made,
-                then the effective value of CWC for the node may be further adjusted automatically by MNW2.
+                (equivalent to the combined effects of the A, B, and C
+                well-loss coefficients expressed in equation 15) between the
+                well and the cell representing the aquifer, CWC. User must
+                define CWC in dataset 2c or 2d. If there are multiple screens
+                within the grid cell or if partial penetration corrections are
+                to be made, then the effective value of CWC for the node may
+                be further adjusted automatically by MNW2.
     pumploc : int
-        is an integer flag pertaining to the location along the borehole of the pump intake (if any).
-        If PUMPLOC = 0, then either there is no pump or the intake location (or discharge point for
-        an injection well) is assumed to occur above the first active node associated with the multi- node well
-        (that is, the node closest to the land surface or to the wellhead).
-        If PUMPLOC > 0, then the cell in which the intake (or outflow) is located
-        will be specified in dataset 2e as a LAY-ROW-COL grid location. For a vertical well only,
-        specifying PUMPLOC < 0, will enable the option to define the vertical position of the pump intake (or outflow)
-        as an elevation in dataset 2e (for the given spatial grid location [ROW-COL] defined for this well in 2d).
+        is an integer flag pertaining to the location along the borehole of
+        the pump intake (if any). If PUMPLOC = 0, then either there is no pump
+        or the intake location (or discharge point for an injection well) is
+        assumed to occur above the first active node associated with the multi-
+        node well (that is, the node closest to the land surface or to the
+        wellhead). If PUMPLOC > 0, then the cell in which the intake (or
+        outflow) is located will be specified in dataset 2e as a LAY-ROW-COL
+        grid location. For a vertical well only, specifying PUMPLOC < 0, will
+        enable the option to define the vertical position of the pump intake
+        (or outflow) as an elevation in dataset 2e (for the given spatial grid
+        location [ROW-COL] defined for this well in 2d).
     qlimit : int
-        is an integer flag that indicates whether the water level (head) in the well will be used to
-        constrain the pumping rate. If Qlimit = 0, then there are no constraints for this well.
-        If Qlimit > 0, then pumpage will be limited (constrained) by the water level in the well,
-        and relevant parameters are constant in time and defined below in dataset 2f.
-        If Qlimit < 0, then pumpage will be limited (constrained) by the water level in the well,
-        and relevant parameters can vary with time and are defined for every stress period in dataset 4b.
+        is an integer flag that indicates whether the water level (head) in
+        the well will be used to constrain the pumping rate. If Qlimit = 0,
+        then there are no constraints for this well. If Qlimit > 0, then
+        pumpage will be limited (constrained) by the water level in the well,
+        and relevant parameters are constant in time and defined below in
+        dataset 2f. If Qlimit < 0, then pumpage will be limited (constrained)
+        by the water level in the well, and relevant parameters can vary with
+        time and are defined for every stress period in dataset 4b.
     ppflag : int
-        is an integer flag that determines whether the calculated head in the well will be corrected
-        for the effect of partial penetration of the well screen in the cell.
-        If PPFLAG = 0, then the head in the well will not be adjusted for the effects of partial penetration.
-        If PPFLAG > 0, then the head in the well will be adjusted for the effects of partial penetration
-        if the section of well containing the well screen is vertical
-        (as indicated by identical row-column locations in the grid).
-        If NNODES < 0 (that is, the open intervals of the well are defined by top and bottom elevations),
-        then the model will automatically calculate the fraction of penetration for each node and the
-        relative vertical position of the well screen. If NNODES > 0, then the fraction of penetration
-        for each node must be defined in dataset 2d (see below) and the well screen will be assumed
-        to be centered vertically within the thickness of the cell
-        (except if the well is located in the uppermost model layer that is under unconfined conditions,
-        in which case the bottom of the well screen will be assumed to be aligned with the bottom boundary
-        of the cell and the assumed length of well screen will be based on the initial head in that cell).
+        is an integer flag that determines whether the calculated head in the
+        well will be corrected for the effect of partial penetration of the
+        well screen in the cell. If PPFLAG = 0, then the head in the well will
+        not be adjusted for the effects of partial penetration. If PPFLAG > 0,
+        then the head in the well will be adjusted for the effects of partial
+        penetration if the section of well containing the well screen is
+        vertical (as indicated by identical row-column locations in the grid).
+        If NNODES < 0 (that is, the open intervals of the well are defined by
+        top and bottom elevations), then the model will automatically calculate
+        the fraction of penetration for each node and the relative vertical
+        position of the well screen. If NNODES > 0, then the fraction of
+        penetration for each node must be defined in dataset 2d (see below)
+        and the well screen will be assumed to be centered vertically within
+        the thickness of the cell (except if the well is located in the
+        uppermost model layer that is under unconfined conditions, in which
+        case the bottom of the well screen will be assumed to be aligned with
+        the bottom boundary of the cell and the assumed length of well screen
+        will be based on the initial head in that cell).
     pumpcap : int
-        is an integer flag and value that determines whether the discharge of a pumping (withdrawal)
-        well (Q < 0.0) will be adjusted for changes in the lift (or total dynamic head) with time.
-        If PUMPCAP = 0, then the discharge from the well will not be adjusted on the basis of changes in lift.
-        If PUMPCAP > 0 for a withdrawal well, then the discharge from the well will be adjusted
-        on the basis of the lift, as calculated from the most recent water level in the well.
-        In this case, data describing the head-capacity relation for the pump must be listed in datasets 2g and 2h,
-        and the use of that relation can be switched on or off for each stress period using a flag in dataset 4a.
-        The number of entries (lines) in dataset 2h corresponds to the value of PUMPCAP.
-        If PUMPCAP does not equal 0, it must be set to an integer value of between 1 and 25, inclusive.
+        is an integer flag and value that determines whether the discharge of
+        a pumping (withdrawal) well (Q < 0.0) will be adjusted for changes in
+        the lift (or total dynamic head) with time. If PUMPCAP = 0, then the
+        discharge from the well will not be adjusted on the basis of changes
+        in lift. If PUMPCAP > 0 for a withdrawal well, then the discharge from
+        the well will be adjusted on the basis of the lift, as calculated from
+        the most recent water level in the well. In this case, data describing
+        the head-capacity relation for the pump must be listed in datasets 2g
+        and 2h, and the use of that relation can be switched on or off for
+        each stress period using a flag in dataset 4a. The number of entries
+        (lines) in dataset 2h corresponds to the value of PUMPCAP. If PUMPCAP
+        does not equal 0, it must be set to an integer value of between 1 and
+        25, inclusive.
     rw : float
         radius of the well (losstype == 'THIEM', 'SKIN', or 'GENERAL')
     rskin : float
@@ -121,7 +145,8 @@ class Mnw(object):
         cell-to-well conductance.
         (losstype == 'SPECIFYcwc')
     pp : float
-        fraction of partial penetration for the cell. Only specify if PPFLAG > 0 and NNODES > 0.
+        fraction of partial penetration for the cell. Only specify if
+        PFLAG > 0 and NNODES > 0.
     k : int
         layer index of well (zero-based)
     i : int
@@ -133,14 +158,16 @@ class Mnw(object):
     zbotm : float
         bottom elevation of open intervals of vertical well.
     node_data : numpy record array
-        table containing MNW data by node. A blank node_data template can be created
-        via the ModflowMnw2.get_empty_mnw_data() static method.
+        table containing MNW data by node. A blank node_data template can be
+        created via the ModflowMnw2.get_empty_mnw_data() static method.
 
-        Note: Variables in dataset 2d (e.g. rw) can be entered as a single value for the entire well (above),
-        or in node_data (or dataset 2d) by node. Variables not in dataset 2d (such as pumplay) can be
-        included in node data for convenience (to allow construction of MNW2 package from a table),
-        but are only written to MNW2 as a single variable. When writing non-dataset 2d variables to MNW2 input,
-        the first value for the well will be used.
+        Note: Variables in dataset 2d (e.g. rw) can be entered as a single
+        value for the entire well (above), or in node_data (or dataset 2d) by
+        node. Variables not in dataset 2d (such as pumplay) can be included
+        in node data for convenience (to allow construction of MNW2 package
+        from a table), but are only written to MNW2 as a single variable.
+        When writing non-dataset 2d variables to MNW2 input, the first value
+        for the well will be used.
 
         Other variables (e.g. hlim) can be entered here as
         constant for all stress periods, or by stress period below in stress_period_data.
@@ -187,91 +214,116 @@ class Mnw(object):
             qn : float
 
     stress_period_data : numpy record array
-        table containing MNW pumping data for all stress periods (dataset 4 in the MNW2 input instructions).
-        A blank stress_period_data template can be created via the Mnw.get_empty_stress_period_data() static method.
+        table containing MNW pumping data for all stress periods (dataset 4 in
+        the MNW2 input instructions). A blank stress_period_data template can
+        be created via the Mnw.get_empty_stress_period_data() static method.
         Columns are:
             per : int
                 stress period
             qdes : float
-                is the actual (or maximum desired, if constraints are to be applied) volumetric pumping rate
-                (negative for withdrawal or positive for injection) at the well (L3/T). Qdes should be
-                set to 0 for nonpumping wells. If constraints are applied, then the calculated volumetric withdrawal
-                or injection rate may be adjusted to range from 0 to Qdes and is not allowed
-                to switch directions between withdrawal and injection conditions during any stress period.
-                When PUMPCAP > 0, in the first stress period in which Qdes is specified with a negative value,
-                Qdes represents the maximum operating discharge for the pump; in subsequent stress periods,
-                any different negative values of Qdes are ignored, although values are subject to
-                adjustment for CapMult. If Qdes >= 0.0, then pump-capacity adjustments are not applied.
+                is the actual (or maximum desired, if constraints are to be
+                applied) volumetric pumping rate (negative for withdrawal or
+                positive for injection) at the well (L3/T). Qdes should be
+                set to 0 for nonpumping wells. If constraints are applied,
+                then the calculated volumetric withdrawal or injection rate
+                may be adjusted to range from 0 to Qdes and is not allowed
+                to switch directions between withdrawal and injection
+                conditions during any stress period. When PUMPCAP > 0, in the
+                first stress period in which Qdes is specified with a negative
+                value, Qdes represents the maximum operating discharge for the
+                pump; in subsequent stress periods, any different negative
+                values of Qdes are ignored, although values are subject to
+                adjustment for CapMult. If Qdes >= 0.0, then pump-capacity
+                adjustments are not applied.
             capmult : int
-                is a flag and multiplier for implementing head-capacity relations during a given stress period.
-                Only specify if PUMPCAP > 0 for this well. If CapMult <= 0, then head-capacity relations
-                are ignored for this stress period. If CapMult = 1.0, then head-capacity relations defined
-                in datasets 2g and 2h are used. If CapMult equals any other positive value (for example, 0.6 or 1.1),
-                then head-capacity relations are used but adjusted and shifted by multiplying
-                the discharge value indicated by the head-capacity curve by the value of CapMult.
+                is a flag and multiplier for implementing head-capacity
+                relations during a given stress period. Only specify if
+                PUMPCAP > 0 for this well. If CapMult <= 0, then
+                head-capacity relations are ignored for this stress period.
+                If CapMult = 1.0, then head-capacity relations defined
+                in datasets 2g and 2h are used. If CapMult equals any other
+                positive value (for example, 0.6 or 1.1), then head-capacity
+                relations are used but adjusted and shifted by multiplying
+                the discharge value indicated by the head-capacity curve by
+                the value of CapMult.
             cprime : float
-                is the concentration in the injected fluid. Only specify if Qdes > 0 and GWT process is active.
+                is the concentration in the injected fluid. Only specify if
+                Qdes > 0 and GWT process is active.
             hlim : float
             qcut : int
             qfrcmn : float
             qfrcmx : float
-        Note: If auxiliary variables are also being used, additional columns for these must be included.
+        Note: If auxiliary variables are also being used, additional columns
+        for these must be included.
     pumplay : int
     pumprow : int
     pumpcol : int
-        PUMPLAY, PUMPROW, and PUMPCOL are the layer, row, and column numbers, respectively, of the cell (node)
-        in this multi-node well where the pump intake (or outflow) is located. The location defined
-        in dataset 2e should correspond with one of the nodes listed in 2d for this multi-node well.
-        These variables are only read if PUMPLOC > 0 in 2b.
+        PUMPLAY, PUMPROW, and PUMPCOL are the layer, row, and column numbers,
+        respectively, of the cell (node) in this multi-node well where the
+        pump intake (or outflow) is located. The location defined in dataset
+        2e should correspond with one of the nodes listed in 2d for this
+        multi-node well. These variables are only read if PUMPLOC > 0 in 2b.
     zpump : float
-        is the elevation of the pump intake (or discharge pipe location for an injection well).
-        Zpump is read only if PUMPLOC < 0; in this case, the model assumes that the borehole is vertical
-        and will compute the layer of the grid in which the pump intake is located.
+        is the elevation of the pump intake (or discharge pipe location for an
+        injection well). Zpump is read only if PUMPLOC < 0; in this case,
+        the model assumes that the borehole is vertical and will compute the
+        layer of the grid in which the pump intake is located.
     hlim : float
-        is the limiting water level (head) in the well, which is a minimum for discharging wells
-        and a maximum for injection wells. For example, in a discharging well, when hWELL falls below hlim,
-        the flow from the well is constrained.
+        is the limiting water level (head) in the well, which is a minimum for
+        discharging wells and a maximum for injection wells. For example, in a
+        discharging well, when hWELL falls below hlim, the flow from the well
+        is constrained.
     qcut : int
-        is an integer flag that indicates how pumping limits Qfrcmn and Qfrcmx will be specified.
-        If pumping limits are to be specified as a rate (L3/T), then set QCUT > 0; if pumping limits are
-        52 Revised Multi-Node Well (MNW2) Package for MODFLOW Ground-Water Flow Model
-        to be specified as a fraction of the specified pumping rate (Qdes), then set QCUT < 0.
-        If there is not a minimum pumping rate below which the pump becomes inactive, then set QCUT = 0.
+        is an integer flag that indicates how pumping limits Qfrcmn and
+        Qfrcmx will be specified. If pumping limits are to be specified as a
+        rate (L3/T), then set QCUT > 0; if pumping limits are to be specified
+        as a fraction of the specified pumping rate (Qdes), then set QCUT < 0.
+        If there is not a minimum pumping rate below which the pump becomes
+        inactive, then set QCUT = 0.
     qfrcmn : float
-        is the minimum pumping rate or fraction of original pumping rate (a choice that depends on QCUT)
-        that a well must exceed to remain active during a stress period. The absolute value
-        of Qfrcmn must be less than the absolute value of Qfrcmx (defined next). Only specify if QCUT != 0.
+        is the minimum pumping rate or fraction of original pumping rate
+        (a choice that depends on QCUT) that a well must exceed to remain
+        active during a stress period. The absolute value of Qfrcmn must be
+        less than the absolute value of Qfrcmx (defined next). Only specify
+        if QCUT != 0.
     qfrcmx : float
-        is the minimum pumping rate or fraction of original pumping rate that must be exceeded to
-        reactivate a well that had been shut off based on Qfrcmn during a stress period. The absolute
-        value of Qfrcmx must be greater than the absolute value of Qfrcmn. Only specify if QCUT != 0.
+        is the minimum pumping rate or fraction of original pumping rate that
+        must be exceeded to reactivate a well that had been shut off based on
+        Qfrcmn during a stress period. The absolute value of Qfrcmx must be
+        greater than the absolute value of Qfrcmn. Only specify if QCUT != 0.
     hlift : float
-        is the reference head (or elevation) corresponding to the discharge point for the well.
-        This is typically at or above the land surface, and can be increased to account for additional head
-        loss due to friction in pipes.
+        is the reference head (or elevation) corresponding to the discharge
+        point for the well. This is typically at or above the land surface,
+        and can be increased to account for additional head loss due to
+        friction in pipes.
     liftq0 : float
-        is the value of lift (total dynamic head) that exceeds the capacity of the pump.
-        If the calculated lift equals or exceeds this value, then the pump is shut off and
-        discharge from the well ceases.
+        is the value of lift (total dynamic head) that exceeds the capacity of
+        the pump. If the calculated lift equals or exceeds this value, then
+        the pump is shut off and discharge from the well ceases.
     liftqmax : float
-        is the value of lift (total dynamic head) corresponding to the maximum pumping (discharge)
-        rate for the pump. If the calculated lift is less than or equal to LIFTqmax, then the pump will
-        operate at its design capacity, assumed to equal the user-specified value of Qdes (in dataset 4a).
-        LIFTqmax will be associated with the value of Qdes in the first stress period in which
-        Qdes for the well is less than 0.0.
+        is the value of lift (total dynamic head) corresponding to the maximum
+        pumping (discharge) rate for the pump. If the calculated lift is less
+        than or equal to LIFTqmax, then the pump will operate at its design
+        capacity, assumed to equal the user-specified value of Qdes
+        (in dataset 4a). LIFTqmax will be associated with the value of Qdes in
+        the first stress period in which Qdes for the well is less than 0.0.
     hwtol : float
-        is a minimum absolute value of change in the computed water level in the well allowed between
-        successive iterations; if the value of hWELL changes from one iteration to the next
-        by a value smaller than this tolerance, then the value of discharge computed from the head
-        capacity curves will be locked for the remainder of that time step. It is recommended that
-        HWtol be set equal to a value approximately one or two orders of magnitude larger than the value
-        of HCLOSE, but if the solution fails to converge, then this may have to be adjusted.
+        is a minimum absolute value of change in the computed water level in
+        the well allowed between successive iterations; if the value of hWELL
+        changes from one iteration to the next by a value smaller than this
+        tolerance, then the value of discharge computed from the head capacity
+        curves will be locked for the remainder of that time step. It is
+        recommended that HWtol be set equal to a value approximately one or
+        two orders of magnitude larger than the value of HCLOSE, but if the
+        solution fails to converge, then this may have to be adjusted.
     liftn : float
-        is a value of lift (total dynamic head) that corresponds to a known value of discharge (Qn)
-        for the given pump, specified as the second value in this line.
+        is a value of lift (total dynamic head) that corresponds to a known
+        value of discharge (Qn) for the given pump, specified as the second
+        value in this line.
     qn : float
-        is the value of discharge corresponding to the height of lift (total dynamic head)
-        specified previously on this line. Sign (positive or negative) is ignored.
+        is the value of discharge corresponding to the height of lift
+        (total dynamic head) specified previously on this line. Sign
+        (positive or negative) is ignored.
     mnwpackage : ModflowMnw2 instance
         package that mnw is attached to
 
@@ -727,65 +779,78 @@ class ModflowMnw2(Package):
         The model object (of type :class:'flopy.modflow.mf.Modflow') to which
         this package will be added.
     mnwmax : int
-        The absolute value of MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.
-        If MNWMAX is a negative number, NODTOT is read.
+        The absolute value of MNWMAX is the maximum number of multi-node wells
+        (MNW) to be simulated. If MNWMAX is a negative number, NODTOT is read.
     nodtot : int
         Maximum number of nodes.
         The code automatically estimates the maximum number of nodes (NODTOT)
-        as required for allocation of arrays. However, if a large number of horizontal wells
-        are being simulated, or possibly for other reasons, this default estimate proves to be inadequate,
-        a new input option has been added to allow the user to directly specify a value for NODTOT.
-        If this is a desired option, then it can be implemented by specifying a negative value for
-        "MNWMAX"--the first value listed in Record 1 (Line 1) of the MNW2 input data file.
-        If this is done, then the code will assume that the very next value on that line
-        will be the desired value of "NODTOT". The model will then reset "MNWMAX" to its absolute value.
-        The value of "ipakcb" will become the third value on that line, etc.
+        as required for allocation of arrays. However, if a large number of
+        horizontal wells are being simulated, or possibly for other reasons,
+        this default estimate proves to be inadequate, a new input option has
+        been added to allow the user to directly specify a value for NODTOT.
+        If this is a desired option, then it can be implemented by specifying
+        a negative value for "MNWMAX"--the first value listed in Record 1
+        (Line 1) of the MNW2 input data file. If this is done, then the code
+        will assume that the very next value on that line will be the desired
+        value of "NODTOT". The model will then reset "MNWMAX" to its absolute
+        value. The value of "ipakcb" will become the third value on that
+        line, etc.
     ipakcb : int
         is a flag and a unit number:
-            if ipakcb > 0, then it is the unit number to which MNW cell-by-cell flow terms
-                will be recorded whenever cell-by-cell budget data are written to a file
-                (as determined by the outputcontrol options of MODFLOW).
-            if ipakcb = 0, then MNW cell-by-cell flow terms will not be printed or recorded.
-            if ipakcb < 0, then well injection or withdrawal rates and water levels in the well
-                and its multiple cells will be printed in the main MODFLOW listing (output) file
-                whenever cell-by-cell budget data are written to a file
-                (as determined by the output control options of MODFLOW).
+            if ipakcb > 0, then it is the unit number to which MNW cell-by-cell
+            flow terms will be recorded whenever cell-by-cell budget data are
+            written to a file (as determined by the outputcontrol options of
+            MODFLOW).
+            if ipakcb = 0, then MNW cell-by-cell flow terms will not be printed
+                or recorded.
+            if ipakcb < 0, then well injection or withdrawal rates and water
+                levels in the well and its multiple cells will be printed in
+                the main MODFLOW listing (output) file whenever cell-by-cell
+                budget data are written to a file (as determined by the output
+                control options of MODFLOW).
     mnwprnt : integer
-        Flag controlling the level of detail of information about multi-node wells to be written to the
-        main MODFLOW listing (output) file. If MNWPRNT = 0, then only basic well information will be
-        printed in the main MODFLOW output file; increasing the value of MNWPRNT yields more information,
-        up to a maximum level of detail corresponding with MNWPRNT = 2.
-        (default is 0)
+        Flag controlling the level of detail of information about multi-node
+        wells to be written to the main MODFLOW listing (output) file.
+        If MNWPRNT = 0, then only basic well information will be printed in
+        the main MODFLOW output file; increasing the value of MNWPRNT yields
+        more information, up to a maximum level of detail corresponding
+        with MNWPRNT = 2. (default is 0)
     aux : list of strings
         (listed as "OPTION" in MNW2 input instructions)
-        is an optional list of character values in the style of "AUXILIARY abc" or "AUX abc"
-        where "abc" is the name of an auxiliary parameter to be read for each multi-node well
-        as part of dataset 4a. Up to 20 parameters can be specified,
-        each of which must be preceded by "AUXILIARY" or "AUX."
-        These parameters will not be used by the MNW2 Package,
-        but they will be available for use by other packages.
+        is an optional list of character values in the style of "AUXILIARY abc"
+        or "AUX abc" where "abc" is the name of an auxiliary parameter to be
+        read for each multi-node well as part of dataset 4a. Up to 20
+        parameters can be specified, each of which must be preceded by
+        "AUXILIARY" or "AUX." These parameters will not be used by the MNW2
+        Package, but they will be available for use by other packages.
         (default is None)
     node_data : numpy record array
-        master table describing multi-node wells in package. Same format as node_data tables for each
-        Mnw object. See Mnw class documentation for more information.
+        master table describing multi-node wells in package. Same format as
+        node_data tables for each Mnw object. See Mnw class documentation for
+        more information.
     mnw : list or dict of Mnw objects
-        Can be supplied instead of node_data and stress_period_data tables (in which case the tables
-        are constructed from the Mnw objects). Otherwise the a dict of Mnw objects (keyed by wellid)
-        is constructed from the tables.
+        Can be supplied instead of node_data and stress_period_data tables
+        (in which case the tables are constructed from the Mnw objects).
+        Otherwise the a dict of Mnw objects (keyed by wellid) is constructed
+        from the tables.
     stress_period_data : dict of numpy record arrays
-        master dictionary of record arrays (keyed by stress period) containing transient input
-        for multi-node wells. Format is the same as stress period data for individual Mnw objects,
-        except the 'per' column is replaced by 'wellid' (containing wellid for each MNW).
-        See Mnw class documentation for more information.
+        master dictionary of record arrays (keyed by stress period) containing
+        transient input for multi-node wells. Format is the same as stress
+        period data for individual Mnw objects, except the 'per' column is
+        replaced by 'wellid' (containing wellid for each MNW). See Mnw class
+        documentation for more information.
     itmp : list of ints
-        is an integer value for reusing or reading multi-node well data; it can change each stress period.
-        ITMP must be >= 0 for the first stress period of a simulation.
-        if ITMP > 0, then ITMP is the total number of active multi-node wells simulated during the stress period,
-            and only wells listed in dataset 4a will be active during the stress period. Characteristics of each well
-            are defined in datasets 2 and 4.
-        if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.
-        if ITMP < 0, then the same number of wells and well information will be reused from the
-        previous stress period and dataset 4 is skipped.
+        is an integer value for reusing or reading multi-node well data; it
+        can change each stress period. ITMP must be >= 0 for the first stress
+        period of a simulation.
+        if ITMP > 0, then ITMP is the total number of active multi-node wells
+            simulated during the stress period, and only wells listed in
+            dataset 4a will be active during the stress period. Characteristics
+            of each well are defined in datasets 2 and 4.
+        if ITMP = 0, then no multi-node wells are active for the stress period
+            and the following dataset is skipped.
+        if ITMP < 0, then the same number of wells and well information will
+            be reused from the previous stress period and dataset 4 is skipped.
     extension : string
         Filename extension (default is 'mnw2')
     unitnumber : int
@@ -897,7 +962,7 @@ class ModflowMnw2(Package):
                     n]  # recarray of Mnw properties by node
             self.nodtot = len(self.node_data)
             self._sort_node_data()
-            #self.node_data.sort(order=['wellid', 'k'])
+            # self.node_data.sort(order=['wellid', 'k'])
 
             # Python 3.5.0 produces a segmentation fault when trying to sort BR MNW wells
             # self.node_data.sort(order='wellid', axis=0)
@@ -934,7 +999,8 @@ class ModflowMnw2(Package):
             self.make_stress_period_data(self.mnw)
 
         if stress_period_data is not None:
-            if 'k' not in stress_period_data[list(stress_period_data.keys())[0]].dtype.names:
+            if 'k' not in stress_period_data[
+                list(stress_period_data.keys())[0]].dtype.names:
                 self._add_kij_to_stress_period_data()
 
         self.parent.add_package(self)
@@ -1198,7 +1264,7 @@ class ModflowMnw2(Package):
             else:
                 # copy pumping rates from previous stress period
                 mnw[wellid].stress_period_data[per] = \
-                mnw[wellid].stress_period_data[per - 1]
+                    mnw[wellid].stress_period_data[per - 1]
             itmp.append(itmp_per)
         f.close()
 
@@ -1409,7 +1475,7 @@ class ModflowMnw2(Package):
                         stress_period_data[per]['wellid'][i - 1] = mnw.wellid
                         for n in names:
                             stress_period_data[per][n][i - 1] = \
-                            mnw.stress_period_data[n][per]
+                                mnw.stress_period_data[n][per]
                 stress_period_data[per].sort(order='wellid')
                 if i < itmp:
                     raise ItmpError(itmp, i)
@@ -1452,7 +1518,7 @@ class ModflowMnw2(Package):
                     for col in todrop:
                         inds = self.stress_period_data[per].wellid == wellid
                         self.stress_period_data[per][col][inds] = \
-                        self.node_data[wellnd][col]
+                            self.node_data[wellnd][col]
         self.node_data_MfList = self.node_data_MfList.drop(todrop)
         '''
         todrop = {'qfrcmx', 'qfrcmn'}
@@ -1563,7 +1629,7 @@ class ModflowMnw2(Package):
                     f_mnw.write('\n')
                     if self.mnw[wellid].qlimit < 0:
                         hlim, qcut = \
-                        self.stress_period_data[per][['hlim', 'qcut']][n]
+                            self.stress_period_data[per][['hlim', 'qcut']][n]
                         fmt = float_format + ' {:.0f}'
                         f_mnw.write(fmt.format(hlim, qcut))
                         if qcut != 0:

@@ -12,6 +12,7 @@ import sys
 
 if sys.version_info < (3, 6):
     from collections import OrderedDict
+
     dict = OrderedDict
 
 
@@ -60,6 +61,7 @@ class NamData(object):
     --------
 
     """
+
     def __init__(self, pkgtype, name, handle, packages):
         self.filehandle = handle
         self.filename = name
@@ -68,9 +70,10 @@ class NamData(object):
         if self.filetype.lower() in packages:
             self.package = packages[self.filetype.lower()]
 
-
     def __repr__(self):
-        return "filename:{0}, filetype:{1}".format(self.filename,self.filetype)
+        return "filename:{0}, filetype:{1}".format(self.filename,
+                                                   self.filetype)
+
 
 def getfiletypeunit(nf, filetype):
     """
@@ -131,9 +134,9 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     if not os.path.isfile(namfilename):
         # help diagnose the namfile and directory
-        raise IOError(
-                'Could not find {} in directory {}'
-                .format(namfilename, os.path.dirname(namfilename)))
+        e = 'Could not find {} '.format(namfilename) + \
+            'in directory {}'.format(os.path.dirname(namfilename))
+        raise IOError(e)
     with open(namfilename, 'r') as fp:
         lines = fp.readlines()
 
@@ -145,8 +148,8 @@ def parsenamefile(namfilename, packages, verbose=True):
         items = line.split()
         # ensure we have at least three items
         if len(items) < 3:
-            raise ValueError('line number {} has fewer than 3 items: {}'
-                             .format(ln, line))
+            e = 'line number {} has fewer than 3 items: {}'.format(ln, line)
+            raise ValueError(e)
         ftype, key, fpath = items[0:3]
         ftype = ftype.upper()
 
@@ -203,6 +206,7 @@ def parsenamefile(namfilename, packages, verbose=True):
                 key = ftype
         ext_unit_dict[key] = NamData(ftype, fname, filehandle, packages)
     return ext_unit_dict
+
 
 def attribs_from_namfile_header(namefile):
     # check for reference info in the nam file header

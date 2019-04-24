@@ -11,6 +11,7 @@ from .mfzon import ModflowZon
 from .mfpval import ModflowPval
 from .mfmlt import ModflowMlt
 
+
 class ModflowPar(object):
     """
     Class for loading mult, zone, pval, and parameter data for MODFLOW packages
@@ -26,6 +27,7 @@ class ModflowPar(object):
 
 
     """
+
     def __init__(self):
         """
         Package constructor.
@@ -73,12 +75,14 @@ class ModflowPar(object):
                 self.zone = ModflowZon.load(zone.filename, model,
                                             ext_unit_dict=ext_unit_dict)
                 if model.verbose:
-                    sys.stdout.write('   {} package load...success\n'\
-                              .format(self.zone.name[0]))
+                    sys.stdout.write('   {} package load...success\n' \
+                                     .format(self.zone.name[0]))
                 ext_unit_dict.pop(zone_key)
                 model.remove_package("ZONE")
             except BaseException as o:
-                sys.stdout.write('   {} package load...failed\n      {!s}'.format('ZONE', o))
+                sys.stdout.write(
+                    '   {} package load...failed\n      {!s}'.format('ZONE',
+                                                                     o))
         return
 
     def set_mult(self, model, ext_unit_dict):
@@ -118,13 +122,14 @@ class ModflowPar(object):
                 self.mult = ModflowMlt.load(mult.filename, model,
                                             ext_unit_dict=ext_unit_dict)
                 if model.verbose:
-                    sys.stdout.write('   {} package load...success\n'\
-                              .format(self.mult.name[0]))
+                    sys.stdout.write('   {} package load...success\n' \
+                                     .format(self.mult.name[0]))
                 ext_unit_dict.pop(mult_key)
                 model.remove_package("MULT")
             except BaseException as o:
-                sys.stdout.write('   {} package load...failed\n      {!s}'.format('MULT', o))
-
+                sys.stdout.write(
+                    '   {} package load...failed\n      {!s}'.format('MULT',
+                                                                     o))
 
         return
 
@@ -165,15 +170,16 @@ class ModflowPar(object):
                 self.pval = ModflowPval.load(pval.filename, model,
                                              ext_unit_dict=ext_unit_dict)
                 if model.verbose:
-                    sys.stdout.write('   {} package load...success\n'\
-                              .format(self.pval.name[0]))
+                    sys.stdout.write('   {} package load...success\n' \
+                                     .format(self.pval.name[0]))
                 ext_unit_dict.pop(pval_key)
                 model.remove_package("PVAL")
             except BaseException as o:
-                sys.stdout.write('   {} package load...failed\n      {!s}'.format('PVAL', o))
+                sys.stdout.write(
+                    '   {} package load...failed\n      {!s}'.format('PVAL',
+                                                                     o))
 
         return
-
 
     @staticmethod
     def load(f, npar, verbose=False):
@@ -241,11 +247,10 @@ class ModflowPar(object):
 
                     clusters.append([lay, mltarr, zonarr, iarr])
                 # add parnam to parm_dict
-                parm_dict[parnam] = {'partyp':partyp, 'parval':parval,
-                                     'nclu':nclu, 'clusters':clusters}
+                parm_dict[parnam] = {'partyp': partyp, 'parval': parval,
+                                     'nclu': nclu, 'clusters': clusters}
 
         return par_types, parm_dict
-
 
     @staticmethod
     def parameter_fill(model, shape, findkey, parm_dict, findlayer=None):
@@ -298,10 +303,10 @@ class ModflowPar(object):
                     pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
                 except:
                     pv = np.float(parval)
-            #print partyp, parval, nclu, clusters
+            # print partyp, parval, nclu, clusters
             if partyp == findkey:
                 for [layer, mltarr, zonarr, izones] in clusters:
-                    #print layer, mltarr, zonarr, izones
+                    # print layer, mltarr, zonarr, izones
                     foundlayer = False
                     if findlayer == None:
                         foundlayer = True
@@ -314,12 +319,14 @@ class ModflowPar(object):
                         if mltarr.lower() == 'none':
                             mult = np.ones(shape, dtype=dtype)
                         else:
-                            mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
+                            mult = model.mfpar.mult.mult_dict[mltarr.lower()][
+                                   :, :]
                         if zonarr.lower() == 'all':
                             cluster_data = pv * mult
                         else:
                             mult_save = np.copy(mult)
-                            za = model.mfpar.zone.zone_dict[zonarr.lower()][:, :]
+                            za = model.mfpar.zone.zone_dict[zonarr.lower()][:,
+                                 :]
                             # build a multiplier for all of the izones
                             mult = np.zeros(shape, dtype=dtype)
                             for iz in izones:

@@ -308,9 +308,9 @@ class MtListBudget(object):
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 msg = "error parsing 'in' SW items on line {}: " + '{}'.format(
-                        self.lcountm, str(e))
+                    self.lcountm, str(e))
                 raise Exception(
-                    )
+                )
             item += '_{0}_{1}'.format(comp, 'in')
             for lab, val in zip(['_cum', '_flx'], [cval, fval]):
                 iitem = item + lab

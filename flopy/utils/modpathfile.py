@@ -37,6 +37,7 @@ class PathlineFile():
     >>> import flopy
     >>> pthobj = flopy.utils.PathlineFile('model.mppth')
     >>> p1 = pthobj.get_data(partid=1)
+
     """
     kijnames = ['k', 'i', 'j', 'node',
                 'particleid', 'particlegroup', 'linesegmentindex',
@@ -153,7 +154,6 @@ class PathlineFile():
         return outdtype
 
     def _get_mp7data(self):
-        data = None
         dtyper = np.dtype([("node", np.int32), ("x", np.float32),
                            ("y", np.float32), ("z", np.float32),
                            ("time", np.float32), ("xloc", np.float32),
@@ -473,9 +473,11 @@ class PathlineFile():
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
-        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
-            warnings.warn("Deprecation warning: SpatialReference is deprecated."
-                          "Use the Grid class instead.", DeprecationWarning)
+        if isinstance(mg, SpatialReference) or isinstance(sr,
+                                                          SpatialReference):
+            warnings.warn(
+                "Deprecation warning: SpatialReference is deprecated."
+                "Use the Grid class instead.", DeprecationWarning)
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
@@ -1001,9 +1003,11 @@ class EndpointFile():
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
-            warnings.warn("Deprecation warning: SpatialReference is deprecated."
-                          "Use the Grid class instead.", DeprecationWarning)
+        if isinstance(mg, SpatialReference) or isinstance(sr,
+                                                          SpatialReference):
+            warnings.warn(
+                "Deprecation warning: SpatialReference is deprecated."
+                "Use the Grid class instead.", DeprecationWarning)
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)

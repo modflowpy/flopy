@@ -134,16 +134,16 @@ class Package(PackageInterface):
                         s += ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
                     else:
                         s += ' {0:s} (list, items = {1:d}\n'.format(attr,
-                                                                       len(
-                                                                           value))
+                                                                    len(
+                                                                        value))
                 elif (isinstance(value, np.ndarray)):
                     s += ' {0:s} (array, shape = {1:s})\n'.format(attr,
-                                                                     value.shape.__str__()[
-                                                                     1:-1])
+                                                                  value.shape.__str__()[
+                                                                  1:-1])
                 else:
                     s += ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value),
-                                                              str(type(value))[
-                                                              7:-2])
+                                                           str(type(value))[
+                                                           7:-2])
         return s
 
     def __getitem__(self, item):
@@ -324,19 +324,21 @@ class Package(PackageInterface):
         chk = None
 
         if self.__dict__.get('stress_period_data', None) is not None and \
-                        self.name[0] != 'OC':
+                self.name[0] != 'OC':
             spd_inds_valid = True
             chk = check(self, f=f, verbose=verbose, level=level)
             spd = getattr(self, 'stress_period_data')
             for per in spd.data.keys():
                 if isinstance(spd.data[per], np.recarray):
                     spdata = self.stress_period_data.data[per]
-                    inds = (spdata.k, spdata.i, spdata.j) if self.parent.structured \
+                    inds = (
+                    spdata.k, spdata.i, spdata.j) if self.parent.structured \
                         else (spdata.node)
 
                     # General BC checks
                     # check for valid cell indices
-                    spd_inds_valid = chk._stress_period_data_valid_indices(spdata)
+                    spd_inds_valid = chk._stress_period_data_valid_indices(
+                        spdata)
 
                     # first check for and list nan values
                     chk._stress_period_data_nans(spdata)
@@ -353,7 +355,8 @@ class Package(PackageInterface):
                             elev_name = chk.bc_stage_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
                             chk.stress_period_data_values(spdata,
-                                                          spdata[elev_name] < botms,
+                                                          spdata[
+                                                              elev_name] < botms,
                                                           col=elev_name,
                                                           error_name='BC elevation below cell bottom',
                                                           error_type='Error')
@@ -597,14 +600,19 @@ class Package(PackageInterface):
 
     def webdoc(self):
         if self.parent.version == 'mf2k':
-            wb.open(
-                'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + self.url)
+            wa = 'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + \
+                 self.url
         elif self.parent.version == 'mf2005':
-            wb.open(
-                'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + self.url)
+            wa = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + \
+                 self.url
         elif self.parent.version == 'ModflowNwt':
-            wb.open(
-                'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + self.url)
+            wa = 'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + \
+                 self.url
+        else:
+            wa = None
+        # open the web address
+        if wa is not None:
+            wb.open(wa)
 
     def write_file(self, check=False):
         """
@@ -627,7 +635,7 @@ class Package(PackageInterface):
         if not hasattr(f, 'read'):
             filename = f
             if platform.system().lower() == 'windows' and \
-                            sys.version_info[0] < 3:
+                    sys.version_info[0] < 3:
                 import io
                 f = io.open(filename, 'r')
             else:
@@ -698,7 +706,8 @@ class Package(PackageInterface):
 
         # check for "standard" single line options from mfnwt
         if 'nwt' in model.version.lower() and \
-            'flopy.modflow.mfwel.modflowwel'.lower() in str(pack_type).lower():
+                'flopy.modflow.mfwel.modflowwel'.lower() in str(
+            pack_type).lower():
 
             ipos = f.tell()
             line = f.readline()
@@ -792,16 +801,18 @@ class Package(PackageInterface):
                                                 count=itmp)
                                 current = np.array(d, dtype=current.dtype)
                             else:
-                                #current = np.genfromtxt(oc_filename,
+                                # current = np.genfromtxt(oc_filename,
                                 #                         dtype=current.dtype)
-                                #if len(current.shape) == 1:
+                                # if len(current.shape) == 1:
                                 cd = current.dtype
                                 current = np.loadtxt(oc_filename).transpose()
                                 if current.ndim == 1:
-                                    current = np.atleast_2d(current).transpose()
-                                #current = np.atleast_2d(np.loadtxt(oc_filename,
+                                    current = np.atleast_2d(
+                                        current).transpose()
+                                # current = np.atleast_2d(np.loadtxt(oc_filename,
                                 #                                   dtype=current.dtype)).transpose()
-                                current = np.core.records.fromarrays(current, dtype=cd)
+                                current = np.core.records.fromarrays(current,
+                                                                     dtype=cd)
                             current = current.view(np.recarray)
                         except Exception as e:
                             raise Exception(
@@ -809,7 +820,8 @@ class Package(PackageInterface):
                                 " :" + str(e))
                         assert current.shape[
                                    0] == itmp, "Package.load() error: open/close recarray from file " + \
-                                               oc_filename + " shape (" + str(current.shape) + \
+                                               oc_filename + " shape (" + str(
+                            current.shape) + \
                                                ") does not match itmp: {0:d}".format(
                                                    itmp)
                         break

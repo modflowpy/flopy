@@ -7,7 +7,6 @@ MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/lak.htm>`_.
 
 """
-import os
 import sys
 import numpy as np
 from ..pakbase import Package
@@ -30,7 +29,7 @@ class ModflowLak(Package):
         input purposes. The variable NLAKES is used, with certain internal
         assumptions and approximations, to dimension arrays for the simulation.
     ipakcb : int
-        (ILKCB in MODFLOW documentation) 
+        (ILKCB in MODFLOW documentation)
         Whether or not to write cell-by-cell flows (yes if ILKCB> 0, no
         otherwise). If ILKCB< 0 and "Save Budget" is specified in the Output
         Control or ICBCFL is not equal to 0, the cell-by-cell flows will be
@@ -55,11 +54,11 @@ class ModflowLak(Package):
             for simulations that only include transient stress periods. If
             THETA is specified as a negative value, then it is converted to a
             positive value for calculations of lake stage.
-        *	In MODFLOW-2000 and later, ISS is not part of the input. Instead
+        *   In MODFLOW-2000 and later, ISS is not part of the input. Instead
             NSSITR or SSCNCR should be included if one or more stress periods
             is a steady state stress period as defined in Ss/tr in the
             Discretization file.
-        *	SSCNCR and NSSITR can be read for a transient only simulation by
+        *   SSCNCR and NSSITR can be read for a transient only simulation by
             placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
@@ -71,18 +70,18 @@ class ModflowLak(Package):
         aquifer head solution. Only read if ISS (option flag input to DIS
         Package of MODFLOW indicating steady-state solution) is not zero or
         if THETA is specified as a negative value.
-        *	NSSITR and SSCNCR may be omitted for transient solutions (ISS = 0).
-        *	In MODFLOW-2000 and later, ISS is not part of the input.  
+        *   NSSITR and SSCNCR may be omitted for transient solutions (ISS = 0).
+        *   In MODFLOW-2000 and later, ISS is not part of the input.
             Instead NSSITR or SSCNCR should be included if one or more stress
             periods is a steady state stress period as defined in Ss/tr in the
             Discretization file.
-        *	SSCNCR and NSSITR can be read for a transient only simulation by
+        *   SSCNCR and NSSITR can be read for a transient only simulation by
             placing a negative sign immediately in front of THETA. A negative
             THETA sets a flag which assumes input values for NSSITR and SSCNCR
             will follow THETA in the format as described by Merritt and Konikow
             (p. 52). A negative THETA is automatically reset to a positive
             value after values of NSSITR and SSCNCR are read.
-        *	If NSSITR = 0, a value of 100 will be used instead.
+        *   If NSSITR = 0, a value of 100 will be used instead.
     sscncr : float
         Convergence criterion for equilibrium lake stage solution by Newton's
         method. Only read if ISS is not zero or if THETA is specified as a
@@ -107,10 +106,10 @@ class ModflowLak(Package):
     stage_range : list of tuples (ssmn, ssmx) of length nlakes
         Where ssmn and ssmx are the minimum and maximum stages allowed for each
         lake in steady-state solution.
-        *	SSMN and SSMX are not needed for a transient run and must be omitted 
-            when the solution is transient.
-        *	When the first stress period is a steady-state stress period, 
-            SSMN is defined in record 3.  
+        *   SSMN and SSMX are not needed for a transient run and must be
+            omitted when the solution is transient.
+        *   When the first stress period is a steady-state stress period,
+            SSMN is defined in record 3.
 
         For subsequent steady-state stress periods, SSMN is defined in
         record 9a.
@@ -121,12 +120,12 @@ class ModflowLak(Package):
         occupying the grid cell. LKARR(I,J,K) must not exceed the value NLAKES.
         If it does, or if LKARR(I,J,K) < 0, LKARR(I,J,K) is set to zero.
         Lake cells cannot be overlain by non-lake cells in a higher layer.
-        Lake cells must be inactive cells (IBOUND = 0) and should not be 
+        Lake cells must be inactive cells (IBOUND = 0) and should not be
         convertible to active cells (WETDRY = 0).
 
-        The Lake package can be used when all or some of the model layers 
-        containing the lake are confined.  The authors recommend using the 
-        Layer-Property Flow Package (LPF) for this case, although the 
+        The Lake package can be used when all or some of the model layers
+        containing the lake are confined.  The authors recommend using the
+        Layer-Property Flow Package (LPF) for this case, although the
         BCF and HUF Packages will work too.  However, when using the BCF6
         package to define aquifer properties, lake/aquifer conductances in the
         lateral direction are based solely on the lakebed leakance (and not on
@@ -157,7 +156,7 @@ class ModflowLak(Package):
         conductivities are not used in this calculation. An appropriate
         informational message is now printed after the lakebed conductances
         are written to the main output file.
-    sill_data : dict 
+    sill_data : dict
         (dataset 8 in documentation)
         Dict of lists keyed by stress period. Each list has a tuple of dataset
         8a, 8b for every multi-lake system, where dataset 8a is another tuple of
@@ -167,13 +166,13 @@ class ModflowLak(Package):
                 The identification numbers of the sublakes in the sublake
                 system being described in this record. The center lake number
                 is listed first.
-        And dataset 8b contains 
+        And dataset 8b contains
             SILLVT : sequence of floats
                 A sequence of sill elevations for each sublakes that determines
                 whether the center lake is connected with a given sublake.
                 Values are entered for each sublake in the order the sublakes
                 are listed in the previous record.
-    flux_data : dict 
+    flux_data : dict
         (dataset 9 in documentation)
         Dict of lists keyed by stress period. The list for each stress period
         is a list of lists, with each list containing the variables
@@ -263,7 +262,7 @@ class ModflowLak(Package):
                  tab_files=None, tab_units=None, lakarr=None, bdlknc=None,
                  sill_data=None, flux_data=None,
                  extension='lak', unitnumber=None, filenames=None,
-                 options=None, lwrt=0,  **kwargs):
+                 options=None, lwrt=0, **kwargs):
         """
         Package constructor.
 

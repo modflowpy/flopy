@@ -120,7 +120,8 @@ class ModflowPcg(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -245,7 +246,7 @@ class ModflowPcg(Package):
         dampt = 0.
         if ifrfm:
             t = line_parse(line)
-            #t = line.strip().split()
+            # t = line.strip().split()
             mxiter = int(t[0])
             iter1 = int(t[1])
             npcond = int(t[2])
@@ -257,7 +258,7 @@ class ModflowPcg(Package):
             try:
                 line = f.readline()
                 t = line_parse(line)
-                #t = line.strip().split()
+                # t = line.strip().split()
                 hclose = float(t[0])
                 rclose = float(t[1])
                 relax = float(t[2])

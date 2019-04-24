@@ -10,7 +10,8 @@ class ModflowFlwob(Package):
     Parameters
     ----------
     nqfb : int
-        Number of cell groups for the head-dependent flow boundary observations
+        Number of cell groups for the head-dependent flow boundary
+        observations
     nqcfb : int
         Greater than or equal to the total number of cells in all cell groups
     nqtfb : int
@@ -21,9 +22,9 @@ class ModflowFlwob(Package):
     tomultfb : float
         Time-offset multiplier for head-dependent flow boundary observations.
         The product of tomultfb and toffset must produce a time value in units
-        consistent with other model input. tomultfb can be dimensionless or can
-        be used to convert the units of toffset to the time unit used in the
-        simulation.
+        consistent with other model input. tomultfb can be dimensionless or
+        can be used to convert the units of toffset to the time unit used in
+        the simulation.
     nqobfb : int list of length nqfb
         The number of times at which flows are observed for the group of cells
     nqclfb : int list of length nqfb
@@ -38,12 +39,12 @@ class ModflowFlwob(Package):
     toffset : float list of length nqtfb
         Is the time from the beginning of the stress period irefsp to the time
         of the observation.  toffset must be in units such that the product of
-        toffset and tomultfb are consistent with other model input.  For steady
-        state observations, specify irefsp as the steady state stress period
-        and toffset less than or equal to perlen of the stress period.  If
-        perlen is zero, set toffset to zero.  If the observation falls within
-        a time step, linearly interpolation is used between values at the
-        beginning and end of the time step.
+        toffset and tomultfb are consistent with other model input.  For
+        steady state observations, specify irefsp as the steady state stress
+        period and toffset less than or equal to perlen of the stress period.
+        If perlen is zero, set toffset to zero.  If the observation falls
+        within a time step, linearly interpolation is used between values at
+        the beginning and end of the time step.
     flwobs : float list of length nqtfb
         Observed flow value from the head-dependent flow boundary into the
         aquifer (+) or the flow from the aquifer into the boundary (-)

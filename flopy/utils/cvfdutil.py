@@ -44,12 +44,12 @@ class Point(object):
 
 def isBetween(a, b, c, epsilon=0.001):
     crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y)
-    if abs(crossproduct) > epsilon : return False   # (or != 0 if using integers)
+    if abs(crossproduct) > epsilon: return False  # (or != 0 if using integers)
 
-    dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y ) *(b.y - a.y)
-    if dotproduct < 0 : return False
+    dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y)
+    if dotproduct < 0: return False
 
-    squaredlengthba = (b.x - a.x ) *(b.x - a.x) + (b.y - a.y ) *(b.y - a.y)
+    squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)
     if dotproduct > squaredlengthba: return False
 
     return True
@@ -60,13 +60,12 @@ def shared_face(ivlist1, ivlist2):
         iv1 = ivlist1[i]
         iv2 = ivlist1[i + 1]
         for i2 in range(len(ivlist2) - 1):
-            if ivlist2[i2: i2 +1] == [iv2, iv1]:
+            if ivlist2[i2: i2 + 1] == [iv2, iv1]:
                 return True
     return False
 
 
 def segment_face(ivert, ivlist1, ivlist2, vertices):
-
     ic1pos = ivlist1.index(ivert)
     if ic1pos == 0:  # if ivert is first, then must also be last
         ic1pos = len(ivlist1) - 1
@@ -258,5 +257,3 @@ def shapefile_to_xcyc(shp):
         xcyc[icell, 0] = xc
         xcyc[icell, 1] = yc
     return xcyc
-
-

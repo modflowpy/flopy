@@ -200,8 +200,8 @@ class SwrFile(FlopyBinaryData):
             The zero-based record number.  The first record is record 0.
             (default is None)
         kswrkstpkper : tuple of ints
-            A tuple containing the swr time step, time step, and stress period 
-            (kswr, kstp, kper). These are zero-based kswr, kstp, and kper 
+            A tuple containing the swr time step, time step, and stress period
+            (kswr, kstp, kper). These are zero-based kswr, kstp, and kper
             values. (default is None)
         totim : float
             The simulation time. (default is None)
@@ -217,7 +217,7 @@ class SwrFile(FlopyBinaryData):
         Notes
         -----
         if both kswrkstpkper and totim are None, will return the last entry
-        
+
         Examples
         --------
 
@@ -228,9 +228,9 @@ class SwrFile(FlopyBinaryData):
             kper1 = kswrkstpkper[2]
 
             totim1 = self._recordarray[np.where(
-                    (self._recordarray['kswr'] == kswr1) &
-                    (self._recordarray['kstp'] == kstp1) &
-                    (self._recordarray['kper'] == kper1))]["totim"][0]
+                (self._recordarray['kswr'] == kswr1) &
+                (self._recordarray['kstp'] == kstp1) &
+                (self._recordarray['kper'] == kper1))]["totim"][0]
         elif totim is not None:
             totim1 = totim
         elif idx is not None:
@@ -804,5 +804,6 @@ class SwrStructure(SwrFile):
 
     def __init__(self, filename, precision='double', verbose=False):
         super(SwrStructure, self).__init__(filename, swrtype='structure',
-                                           precision=precision, verbose=verbose)
+                                           precision=precision,
+                                           verbose=verbose)
         return

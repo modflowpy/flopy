@@ -38,7 +38,7 @@ class ModflowSwi2(Package):
     iswiobs : int
         flag and unit number SWI2 observation output. (default is 0).
     options : list of strings
-        Package options. If 'adaptive' is one of the options adaptive SWI2 time 
+        Package options. If 'adaptive' is one of the options adaptive SWI2 time
         steps will be used. (default is None).
     nsolver : int
         DE4 solver is used if nsolver=1. PCG solver is used if nsolver=2.
@@ -94,28 +94,30 @@ class ModflowSwi2(Package):
     tipslope : float
         Maximum slope of tip cells. (default is 0.05)
     alpha : float
-        fraction of threshold used to move the tip and toe to adjacent empty cells
-        when the slope exceeds user-specified TOESLOPE and TIPSLOPE values. (default is None)
+        fraction of threshold used to move the tip and toe to adjacent empty
+        cells when the slope exceeds user-specified TOESLOPE and TIPSLOPE
+        values. (default is None)
     beta : float
-        Fraction of threshold used to move the toe to adjacent non-empty cells when the
-        surface is below a minimum value defined by the user-specified TOESLOPE value.
-        (default is 0.1).
+        Fraction of threshold used to move the toe to adjacent non-empty cells
+        when the surface is below a minimum value defined by the user-specified
+        TOESLOPE value. (default is 0.1).
     napptmx : int
-        only used if adaptive is True. Maximum number of SWI2 time steps per MODFLOW
-        time step. (default is 1).
+        only used if adaptive is True. Maximum number of SWI2 time steps per
+        MODFLOW time step. (default is 1).
     napptmn : int
-        only used if adaptive is True. Minimum number of SWI2 time steps per MODFLOW
-        time step. (default is 1).
+        only used if adaptive is True. Minimum number of SWI2 time steps per
+        MODFLOW time step. (default is 1).
     adptfct : float
-        is the factor used to evaluate tip and toe thicknesses and control the number
-        of SWI2 time steps per MODFLOW time step. When the maximum tip or toe thickness
-        exceeds the product of TOESLOPE or TIPSLOPE the cell size and ADPTFCT, the number
-        of SWI2 time steps are increased to a value less than or equal to NADPT.
-        When the maximum tip or toe thickness is less than the product of TOESLOPE or
-        TIPSLOPE the cell size and ADPTFCT, the number of SWI2 time steps is decreased
-        in the next MODFLOW time step to a value greater than or equal to 1. ADPTFCT
-        must be greater than 0.0 and is reset to 1.0 if NADPTMX is equal to NADPTMN.
-        (default is 1.0).
+        is the factor used to evaluate tip and toe thicknesses and control the
+        number of SWI2 time steps per MODFLOW time step. When the maximum tip
+        or toe thickness exceeds the product of TOESLOPE or TIPSLOPE the cell
+        size and ADPTFCT, the number of SWI2 time steps are increased to a
+        value less than or equal to NADPT. When the maximum tip or toe
+        thickness is less than the product of TOESLOPE or TIPSLOPE the cell
+        size and ADPTFCT, the number of SWI2 time steps is decreased in the
+        next MODFLOW time step to a value greater than or equal to 1. ADPTFCT
+        must be greater than 0.0 and is reset to 1.0 if NADPTMX is equal to
+        NADPTMN. (default is 1.0).
     nu : array of floats
         if istart = 1, density of each zone (nsrf + 1 values). if istrat = 0,
         density along top of layer, each surface, and bottom of layer
@@ -127,8 +129,10 @@ class ModflowSwi2(Package):
     ssz : float or array of floats (nlay, nrow, ncol)
         effective porosity. (default is 0.25)
     isource : integer or array of integers (nlay, nrow, ncol)
-        Source type of any external sources or sinks, specified with any outside package
-        (i.e. WEL Package, RCH Package, GHB Package). (default is 0).
+        Source type of any external sources or sinks, specified with any
+        outside package (i.e. WEL Package, RCH Package, GHB Package).
+        (default is 0).
+
         If ISOURCE > 0 sources and sinks have the same fluid density as the
         zone ISOURCE. If such a zone is not present in the cell, sources and
         sinks have the same fluid density as the active zone at the top of
@@ -282,7 +286,8 @@ class ModflowSwi2(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -310,8 +315,11 @@ class ModflowSwi2(Package):
             print('npln keyword is deprecated. use the nsrf keyword')
             nsrf = npln
 
-        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, istrat, nobs, \
-                                                                       iswizt, iswiobs
+        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, \
+                                                                       istrat, \
+                                                                       nobs, \
+                                                                       iswizt, \
+                                                                       iswiobs
         self.ipakcb = ipakcb
 
         #
@@ -319,7 +327,10 @@ class ModflowSwi2(Package):
         #
         self.solver2params = solver2params
         #
-        self.toeslope, self.tipslope, self.alpha, self.beta = toeslope, tipslope, alpha, beta
+        self.toeslope, self.tipslope, self.alpha, self.beta = toeslope, \
+                                                              tipslope, \
+                                                              alpha, \
+                                                              beta
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
         # Create arrays so that they have the correct size
         if self.istrat == 1:
@@ -344,7 +355,7 @@ class ModflowSwi2(Package):
         #
         self.parent.add_package(self)
 
-    def write_file(self, check=True,f=None):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -651,7 +662,6 @@ class ModflowSwi2(Package):
                 jj = int(t[3]) - 1
                 obslrc.append([kk, ii, jj])
                 nobs = len(obsname)
-
 
         # determine specified unit number
         unitnumber = None

@@ -2,9 +2,9 @@ from ..pakbase import Package
 
 
 class Mt3dTob(Package):
-    '''
+    """
     Transport Observation package class
-    '''
+    """
 
     def __init__(self, model, outnam='tob_output', CScale=1.0, FluxGroups=[],
                  FScale=1.0, iOutFlux=0, extension='tob', unitnumber=None,

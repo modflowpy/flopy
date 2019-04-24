@@ -198,7 +198,6 @@ class Modpath7(BaseModel):
                 if budgetfilename is None:
                     budgetfilename = \
                         oc.budget_filerecord.array['budgetfile'][0]
-
         else:
             shape = None
             # extract data from DIS or DISU files and set shape

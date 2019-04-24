@@ -11,7 +11,6 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
@@ -222,6 +221,7 @@ class Modflow(BaseModel):
                  '  periods = {}\n'
                  '  nodelay = {}\n'.format(nodes, nlay, nper, ncol))
         return s
+
     #
     # def next_ext_unit(self):
     #     """
@@ -264,7 +264,7 @@ class Modflow(BaseModel):
             print('WARNING: Model grid functionality limited for unstructured '
                   'grid.')
         else:
-        # build structured grid
+            # build structured grid
             self._modelgrid = StructuredGrid(self.dis.delc.array,
                                              self.dis.delr.array,
                                              self.dis.top.array,
@@ -410,7 +410,8 @@ class Modflow(BaseModel):
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
                 f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
-                                                        self.glo.unit_number[0],
+                                                        self.glo.unit_number[
+                                                            0],
                                                         self.glo.file_name[0]))
         f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
                                                 self.lst.unit_number[0],
@@ -488,7 +489,7 @@ class Modflow(BaseModel):
                 elif oc.iuddn == iu:
                     oc.iuddn = iu1
 
-         # replace value in ipakcb
+        # replace value in ipakcb
         for p in self.packagelist:
             try:
                 iu0 = p.ipakcb
@@ -647,7 +648,8 @@ class Modflow(BaseModel):
             print('\nCreating new model with name: {}\n{}\n'
                   .format(modelname, 50 * '-'))
 
-        attribs = mfreadnam.attribs_from_namfile_header(os.path.join(model_ws, f))
+        attribs = mfreadnam.attribs_from_namfile_header(
+            os.path.join(model_ws, f))
 
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws, **attribs)
@@ -657,7 +659,7 @@ class Modflow(BaseModel):
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
-                namefile_path, ml.mfnam_packages, verbose=verbose)
+            namefile_path, ml.mfnam_packages, verbose=verbose)
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'
                   .format(50 * '-', ext_unit_dict, 50 * '-'))
@@ -717,8 +719,8 @@ class Modflow(BaseModel):
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
         dis = disnamdata.package.load(
-                disnamdata.filename, ml,
-                ext_unit_dict=ext_unit_dict, check=False)
+            disnamdata.filename, ml,
+            ext_unit_dict=ext_unit_dict, check=False)
         files_successfully_loaded.append(disnamdata.filename)
         if ml.verbose:
             print('   {:4s} package load...success'.format(dis.name[0]))
@@ -764,12 +766,12 @@ class Modflow(BaseModel):
                                 list(inspect.getargspec(item.package.load))[0]
                             if "check" in package_load_args:
                                 pck = item.package.load(
-                                        item.filename, ml,
-                                        ext_unit_dict=ext_unit_dict, check=False)
+                                    item.filename, ml,
+                                    ext_unit_dict=ext_unit_dict, check=False)
                             else:
                                 pck = item.package.load(
-                                        item.filename, ml,
-                                        ext_unit_dict=ext_unit_dict)
+                                    item.filename, ml,
+                                    ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
                                 print('   {:4s} package load...success'

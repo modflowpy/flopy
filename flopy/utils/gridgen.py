@@ -6,7 +6,7 @@ import subprocess
 # flopy imports
 from ..modflow.mfdisu import ModflowDisU
 from ..mf6.modflow import ModflowGwfdis
-from .util_array import Util2d  #read1d,
+from .util_array import Util2d  # read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
 from ..export.shapefile_utils import import_shapefile, shapefile_version
@@ -101,7 +101,7 @@ def ndarray_to_asciigrid(fname, a, extent, nodata=1.e30):
     xmin, xmax, ymin, ymax = extent
     ncol, nrow = a.shape
     dx = (xmax - xmin) / ncol
-    assert  dx == (ymax - ymin) / nrow
+    assert dx == (ymax - ymin) / nrow
     # header
     header = 'ncols     {}\n'.format(ncol)
     header += 'nrows    {}\n'.format(nrow)
@@ -1100,7 +1100,8 @@ class Gridgen(object):
 
         """
         from .cvfdutil import to_cvfd
-        verts, iverts = to_cvfd(self._vertdict, nodestop=ncells, verbose=verbose)
+        verts, iverts = to_cvfd(self._vertdict, nodestop=ncells,
+                                verbose=verbose)
         return verts, iverts
 
     def get_cellxy(self, ncells):
@@ -1294,8 +1295,8 @@ class Gridgen(object):
 
         # dims
         f.write('BEGIN DIMENSIONS\n')
-        f.write('  NODES {}\n'.format(gridprops['nodes']) )
-        f.write('  NJA {}\n'.format(gridprops['nja']) )
+        f.write('  NODES {}\n'.format(gridprops['nodes']))
+        f.write('  NJA {}\n'.format(gridprops['nja']))
         if writevertices:
             f.write('  NVERT {}\n'.format(gridprops['nvert']))
         f.write('END DIMENSIONS\n\n')
@@ -1339,7 +1340,8 @@ class Gridgen(object):
             for n in range(nodes):
                 xc, yc = self.get_center(n)
                 s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
-                                                         iv+1, iv+2, iv+3)
+                                                         iv + 1, iv + 2,
+                                                         iv + 3)
                 f.write(s)
                 iv += 4
             f.write('END CELL2D\n\n')
@@ -1460,7 +1462,7 @@ class Gridgen(object):
             f.write('  {}\n'.format(prop.upper()))
             f.write('    INTERNAL\n')
             if prop == 'top':
-                a = a[0 : ncpl]
+                a = a[0: ncpl]
             for aval in a:
                 f.write('{} '.format(aval))
             f.write('\n')
@@ -1693,7 +1695,8 @@ class Gridgen(object):
             else:
                 grd = 'basename'
             s += '  TOP LAYER {} = {} {}\n'.format(k + 1,
-                                                   self.surface_interpolation[k],
+                                                   self.surface_interpolation[
+                                                       k],
                                                    grd)
 
         for k in range(self.nlay):
@@ -1702,7 +1705,8 @@ class Gridgen(object):
             else:
                 grd = 'basename'
             s += '  BOTTOM LAYER {} = {} {}\n'.format(k + 1,
-                                                      self.surface_interpolation[k + 1],
+                                                      self.surface_interpolation[
+                                                          k + 1],
                                                       grd)
 
         s += '  GRID_DEFINITION_FILE = quadtreegrid.dfn\n'

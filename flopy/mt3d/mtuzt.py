@@ -9,86 +9,86 @@ from ..utils import Util2d, Util3d, Transient2d
 class Mt3dUzt(Package):
     """
     MT3D-USGS Unsaturated-Zone Transport package class
-    
+
     Parameters
     ----------
     model : model object
         The model object (of type :class:`flopy.mt3dms.mt.Mt3dms`) to which
         this package will be added.
     icbcuz : int
-        Is the unit number to which unsaturated-zone concentration will be 
+        Is the unit number to which unsaturated-zone concentration will be
         written out.
     iet : int
-        Is a flag that indicates whether or not ET is being simulated in the 
-        UZF1 flow package (=0 indicates that ET is not being simulated).  
-        If ET is not being simulated, IET informs FMI package not to look 
+        Is a flag that indicates whether or not ET is being simulated in the
+        UZF1 flow package (=0 indicates that ET is not being simulated).
+        If ET is not being simulated, IET informs FMI package not to look
         for UZET and GWET arrays in the flow-transport link file.
     iuzfbnd : array of ints
-        Specifies which row/column indices variably-saturated transport will 
+        Specifies which row/column indices variably-saturated transport will
         be simulated in.
            >0  indicates variably-saturated transport will be simulated;
            =0  indicates variably-saturated transport will not be simulated;
-           <0  Corresponds to IUZFBND < 0 in the UZF1 input package, meaning 
+           <0  Corresponds to IUZFBND < 0 in the UZF1 input package, meaning
                that user-supplied values for FINF are specified recharge and
-               therefore transport through the unsaturated zone is not 
+               therefore transport through the unsaturated zone is not
                simulated.
     incuzinf : int
-        (This value is repeated for each stress period as explained next) A 
-        flag indicating whether an array containing the concentration of 
-        infiltrating water (FINF) for each simulated species (ncomp) will be 
-        read for the current stress period.  If INCUZINF >= 0, an array 
-        containing the concentration of infiltrating flux for each species 
-        will be read.  If INCUZINF < 0, the concentration of infiltrating flux 
-        will be reused from the previous stress period.  If INCUZINF < 0 is 
-        specified for the first stress period, then by default the 
-        concentration of positive infiltrating flux (source) is set equal to 
-        zero.  There is no possibility of a negative infiltration flux being 
-        specified.  If infiltrating water is rejected due to an infiltration 
-        rate exceeding the vertical hydraulic conductivity, or because 
-        saturation is reached in the unsaturated zone and the water table is 
-        therefore at land surface, the concentration of the runoff will be 
-        equal to CUZINF specified next.  The runoff is routed if IRNBND is 
+        (This value is repeated for each stress period as explained next) A
+        flag indicating whether an array containing the concentration of
+        infiltrating water (FINF) for each simulated species (ncomp) will be
+        read for the current stress period.  If INCUZINF >= 0, an array
+        containing the concentration of infiltrating flux for each species
+        will be read.  If INCUZINF < 0, the concentration of infiltrating flux
+        will be reused from the previous stress period.  If INCUZINF < 0 is
+        specified for the first stress period, then by default the
+        concentration of positive infiltrating flux (source) is set equal to
+        zero.  There is no possibility of a negative infiltration flux being
+        specified.  If infiltrating water is rejected due to an infiltration
+        rate exceeding the vertical hydraulic conductivity, or because
+        saturation is reached in the unsaturated zone and the water table is
+        therefore at land surface, the concentration of the runoff will be
+        equal to CUZINF specified next.  The runoff is routed if IRNBND is
         specified in the MODFLOW simulation.
     cuzinf : array of floats
         Is the concentration of the infiltrating flux for a particular species.
         An array for each species will be read.
     incuzet : int
-        (This value is repeated for each stress period as explained next) A 
-        flag indicating whether an array containing the concentration of 
-        evapotranspiration flux originating from the unsaturated zone will be 
-        read for the current stress period.  If INCUZET >= 0, an array 
-        containing the concentration of evapotranspiration flux originating 
-        from the unsaturated zone for each species will be read.  If 
-        INCUZET < 0, the concentration of evapotranspiration flux for each 
-        species will be reused from the last stress period.  If INCUZET < 0 
-        is specified for the first stress period, then by default, the 
-        concentration of negative evapotranspiration flux (sink) is set 
-        equal to the aquifer concentration, while the concentration of 
+        (This value is repeated for each stress period as explained next) A
+        flag indicating whether an array containing the concentration of
+        evapotranspiration flux originating from the unsaturated zone will be
+        read for the current stress period.  If INCUZET >= 0, an array
+        containing the concentration of evapotranspiration flux originating
+        from the unsaturated zone for each species will be read.  If
+        INCUZET < 0, the concentration of evapotranspiration flux for each
+        species will be reused from the last stress period.  If INCUZET < 0
+        is specified for the first stress period, then by default, the
+        concentration of negative evapotranspiration flux (sink) is set
+        equal to the aquifer concentration, while the concentration of
         positive evapotranspiration flux (source) is set to zero.
     cuzet : array of floats
-        Is the concentration of ET fluxes originating from the unsaturated 
-        zone.  As a default, this array is set equal to 0 and only overridden 
-        if the user specifies INCUZET > 1.  If empirical evidence suggest 
-        volatilization of simulated constituents from the unsaturated zone, 
-        this may be one mechanism for simulating this process, though it would 
-        depend on the amount of simulated ET originating from the unsaturated 
+        Is the concentration of ET fluxes originating from the unsaturated
+        zone.  As a default, this array is set equal to 0 and only overridden
+        if the user specifies INCUZET > 1.  If empirical evidence suggest
+        volatilization of simulated constituents from the unsaturated zone,
+        this may be one mechanism for simulating this process, though it would
+        depend on the amount of simulated ET originating from the unsaturated
         zone.  An array for each species will be read.
     incgwet : int
-        (This value is repeated for each stress period as explained next) Is 
-        a flag indicating whether an array containing the concentration of 
-        evapotranspiration flux originating from the saturated zone will be 
-        read for the current stress period.  If INCGWET >= 0, an array 
-        containing the concentration of evapotranspiration flux originating 
-        from the saturated zone for each species will be read.  If 
-        INCGWET < 0, the concentration of evapotranspiration flux for each 
-        species will be reused from the last stress period.  If INCUZET < 0 
-        is specified for the first stress period, then by default, the 
-        concentration of negative evapotranspiration flux (sink) is set to 
-        the aquifer concentration, while the concentration of positive 
+        (This value is repeated for each stress period as explained next) Is
+        a flag indicating whether an array containing the concentration of
+        evapotranspiration flux originating from the saturated zone will be
+        read for the current stress period.  If INCGWET >= 0, an array
+        containing the concentration of evapotranspiration flux originating
+        from the saturated zone for each species will be read.  If
+        INCGWET < 0, the concentration of evapotranspiration flux for each
+        species will be reused from the last stress period.  If INCUZET < 0
+        is specified for the first stress period, then by default, the
+        concentration of negative evapotranspiration flux (sink) is set to
+        the aquifer concentration, while the concentration of positive
         evapotranspiration flux (source) is set to zero.
     cgwet : array of floats
-        Is the concentration of ET fluxes originating from the saturated zone. 
-        As a default, this array is set equal to 0 and only overridden if the 
+        Is the concentration of ET fluxes originating from the saturated zone.
+        As a default, this array is set equal to 0 and only overridden if the
         user specifies INCUZET > 1.  An array for each species will be read.
     extension : string
         Filename extension (default is 'uzt')

@@ -13,11 +13,12 @@ class SeawatList(Package):
     """
     List Package class
     """
+
     def __init__(self, model, extension='list', listunit=7):
         Package.__init__(self, model, extension, 'LIST', listunit)
         return
 
-    def __repr__( self ):
+    def __repr__(self):
         return 'List package class'
 
     def write_file(self):
@@ -256,21 +257,22 @@ class Seawat(BaseModel):
         # Overrides BaseModel's setter for name property
         BaseModel._set_name(self, value)
 
-        #for i in range(len(self.lst.extension)):
+        # for i in range(len(self.lst.extension)):
         #    self.lst.file_name[i] = self.name + '.' + self.lst.extension[i]
-        #return
+        # return
 
     def change_model_ws(self, new_pth=None, reset_external=False):
-        #if hasattr(self,"_mf"):
+        # if hasattr(self,"_mf"):
         if self._mf is not None:
             self._mf.change_model_ws(new_pth=new_pth,
                                      reset_external=reset_external)
-        #if hasattr(self,"_mt"):
+        # if hasattr(self,"_mt"):
         if self._mt is not None:
             self._mt.change_model_ws(new_pth=new_pth,
                                      reset_external=reset_external)
-        super(Seawat,self).change_model_ws(new_pth=new_pth,
-                                           reset_external=reset_external)
+        super(Seawat, self).change_model_ws(new_pth=new_pth,
+                                            reset_external=reset_external)
+
     def write_name_file(self):
         """
         Write the name file
@@ -289,7 +291,8 @@ class Seawat(BaseModel):
         if self.glo is not None:
             if self.glo.unit_number[0] > 0:
                 f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
-                                                        self.glo.unit_number[0],
+                                                        self.glo.unit_number[
+                                                            0],
                                                         self.glo.file_name[0]))
         # Write list file entry
         f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
@@ -348,7 +351,6 @@ class Seawat(BaseModel):
             if b:
                 tag = "DATA(BINARY)"
             f_nam.write('{0:14s} {1:5d}  {2}\n'.format(tag, u, f))
-
 
         # write the output files
         for u, f, b in zip(self.output_units, self.output_fnames,

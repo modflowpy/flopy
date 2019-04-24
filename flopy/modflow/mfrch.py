@@ -8,13 +8,13 @@ MODFLOW Guide
 
 """
 
-import os
 import sys
 import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, Transient2d, check
-from ..modflow.mfparbc import  ModflowParBc as mfparbc
+from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import line_parse
+
 
 class ModflowRch(Package):
     """
@@ -30,7 +30,7 @@ class ModflowRch(Package):
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
         (default is 0).
     nrchop : int
-        is the recharge option code. 
+        is the recharge option code.
         1: Recharge to top grid layer only
         2: Recharge to layer defined in irch
         3: Recharge to highest active cell (default is 3).
@@ -116,7 +116,6 @@ class ModflowRch(Package):
         else:
             ipakcb = 0
 
-
         # Fill namefile items
         name = [ModflowRch.ftype()]
         units = [unitnumber]
@@ -125,7 +124,8 @@ class ModflowRch(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -141,7 +141,8 @@ class ModflowRch(Package):
                                 rech, name='rech_')
         if self.nrchop == 2:
             self.irch = Transient2d(model, (nrow, ncol), np.int32,
-                                    irch + 1, name='irch_')  # irch+1, as irch is zero based
+                                    irch + 1,
+                                    name='irch_')
         else:
             self.irch = None
         self.np = 0
@@ -164,6 +165,10 @@ class ModflowRch(Package):
         level : int
             Check method analysis level. If level=0, summary checks are
             performed. If level=1, full checks are performed.
+        RTmin : float
+            Minimum product of recharge and transmissivity. Default is 2e-8
+        RTmax : float
+            Maximum product of recharge and transmissivity. Default is 2e-4
 
         Returns
         -------
@@ -184,18 +189,22 @@ class ModflowRch(Package):
             active = np.ones(self.rech.array[0][0].shape, dtype=bool)
 
         # check for unusually high or low values of mean R/T
-        hk_package = {'UPW', 'LPF'}.intersection(set(self.parent.get_package_list()))
+        hk_package = {'UPW', 'LPF'}.intersection(
+            set(self.parent.get_package_list()))
         if len(hk_package) > 0:
             pkg = list(hk_package)[0]
 
             # handle quasi-3D layers
             # (ugly, would be nice to put this else where in a general function)
             if self.parent.dis.laycbd.sum() != 0:
-                thickness = np.empty((self.parent.dis.nlay, self.parent.dis.nrow, self.parent.dis.ncol),
+                thickness = np.empty((self.parent.dis.nlay,
+                                      self.parent.dis.nrow,
+                                      self.parent.dis.ncol),
                                      dtype=float)
                 l = 0
                 for i, cbd in enumerate(self.parent.dis.laycbd):
-                    thickness[i, :, :] = self.parent.dis.thickness.array[l, :, :]
+                    thickness[i, :, :] = self.parent.dis.thickness.array[l, :,
+                                         :]
                     if cbd > 0:
                         l += 1
                     l += 1
@@ -210,30 +219,36 @@ class ModflowRch(Package):
             period_means = self.rech.array.mean(axis=(1, 2, 3))
 
             if Tmean != 0:
-                R_T = period_means/Tmean
+                R_T = period_means / Tmean
                 lessthan = np.where(R_T < RTmin)[0]
                 greaterthan = np.where(R_T > RTmax)[0]
 
                 if len(lessthan) > 0:
-                    txt = '\r    Mean R/T ratio < checker warning threshold of {}'.format(RTmin)
+                    txt = '\r    Mean R/T ratio < checker warning ' + \
+                          'threshold of {}'.format(RTmin)
                     txt += ' for {} stress periods'.format(len(lessthan))
                     chk._add_to_summary(type='Warning', value=R_T.min(),
-                                         desc=txt)
-                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                                        desc=txt)
+                    chk.remove_passed(
+                        'Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
                 if len(greaterthan) > 0:
-                    txt = '\r    Mean R/T ratio > checker warning threshold of {}'.format(RTmax)
+                    txt = '\r    Mean R/T ratio > checker warning ' + \
+                          'threshold of {}'.format(RTmax)
                     txt += ' for {} stress periods'.format(len(greaterthan))
                     chk._add_to_summary(type='Warning', value=R_T.max(),
-                                         desc=txt)
-                    chk.remove_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                                        desc=txt)
+                    chk.remove_passed(
+                        'Mean R/T is between {} and {}'.format(RTmin, RTmax))
                 elif len(lessthan) == 0 and len(greaterthan) == 0:
-                    chk.append_passed('Mean R/T is between {} and {}'.format(RTmin, RTmax))
+                    chk.append_passed(
+                        'Mean R/T is between {} and {}'.format(RTmin, RTmax))
 
         # check for NRCHOP values != 3
         if self.nrchop != 3:
+            txt = '\r    Variable NRCHOP set to value other than 3'
             chk._add_to_summary(type='Warning', value=self.nrchop,
-                                 desc='\r    Variable NRCHOP set to value other than 3'.format(RTmin))
+                                desc=txt)
             chk.remove_passed('Variable NRCHOP set to 3.')
         else:
             chk.append_passed('Variable NRCHOP set to 3.')
@@ -241,11 +256,12 @@ class ModflowRch(Package):
         return chk
 
     def ncells(self):
-        # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
+        # Returns the  maximum number of cells that have recharge
+        # (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self, check=True,f=None):
+    def write_file(self, check=True, f=None):
         """
         Write the package file.
 
@@ -259,8 +275,10 @@ class ModflowRch(Package):
         None
 
         """
-        if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
+        # allows turning off package checks when writing files at model level
+        if check:
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         # Open file for writing
         if f is not None:
@@ -276,7 +294,9 @@ class ModflowRch(Package):
             else:
                 inirch = -1
             f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech,
-                                                          inirch, "Stress period " + str(kper + 1)))
+                                                          inirch,
+                                                          "Stress period " + str(
+                                                              kper + 1)))
             if (inrech >= 0):
                 f_rch.write(file_entry_rech)
             if self.nrchop == 2:
@@ -338,7 +358,9 @@ class ModflowRch(Package):
             npar = np.int(raw[1])
             if npar > 0:
                 if model.verbose:
-                    print('   Parameters detected. Number of parameters = ', npar)
+                    txt = 3 * ' ' + 'Parameters detected. Number of ' + \
+                          'parameters = '.format(npar)
+                    print(txt)
             line = f.readline()
         # dataset 2
         t = line_parse(line)
@@ -368,8 +390,11 @@ class ModflowRch(Package):
             if inrech >= 0:
                 if npar == 0:
                     if model.verbose:
-                        print('   loading rech stress period {0:3d}...'.format(iper + 1))
-                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'rech', ext_unit_dict)
+                        txt = 3 * ' ' + 'loading rech stress ' + \
+                              'period {0:3d}...'.format(iper + 1)
+                        print(txt)
+                    t = Util2d.load(f, model, (nrow, ncol), np.float32, 'rech',
+                                    ext_unit_dict)
                 else:
                     parm_dict = {}
                     for ipar in range(inrech):
@@ -386,15 +411,17 @@ class ModflowRch(Package):
                         except:
                             iname = 'static'
                         parm_dict[pname] = iname
-                    t = mfparbc.parameter_bcfill(model, (nrow, ncol), parm_dict, pak_parms)
+                    t = mfparbc.parameter_bcfill(model, (nrow, ncol),
+                                                 parm_dict, pak_parms)
 
                 current_rech = t
             rech[iper] = current_rech
             if nrchop == 2:
                 if inirch >= 0:
                     if model.verbose:
-                        print('   loading irch stress period {0:3d}...'.format(
-                            iper + 1))
+                        txt = 3 * ' ' + 'loading irch stress ' + \
+                              'period {0:3d}...'.format(iper + 1)
+                        print(txt)
                     t = Util2d.load(f, model, (nrow, ncol), np.int32, 'irch',
                                     ext_unit_dict)
                     current_irch = t
@@ -421,11 +448,9 @@ class ModflowRch(Package):
                       verbose=rch.parent.verbose, level=0)
         return rch
 
-
     @staticmethod
     def ftype():
         return 'RCH'
-
 
     @staticmethod
     def defaultunit():

@@ -14,6 +14,7 @@ from ..utils import MfList
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 
+
 class ModflowStr(Package):
     """
     MODFLOW Stream Package Class.
@@ -67,9 +68,9 @@ class ModflowStr(Package):
 
         The value for stress period data for a stress period can be an integer
         (-1 or 0), a list of lists, a numpy array, or a numpy recarray. If
-        stress period data for a stress period contains an integer, a -1 denotes
-        data from the previous stress period will be reused and a 0 indicates
-        there are no str reaches for this stress period.
+        stress period data for a stress period contains an integer, a -1
+        denotes data from the previous stress period will be reused and a 0
+        indicates there are no str reaches for this stress period.
 
         Otherwise stress period data for a stress period should contain mxacts
         or fewer rows of data containing data for each reach. Reach data are
@@ -83,9 +84,9 @@ class ModflowStr(Package):
 
         If icalc=0 is specified, stream width, stream slope, and roughness
         coefficients, are not used and can be any value for each stress period.
-        If data are specified for dataset 6 for a given stress period and icalc>0,
-        then stream width, stream slope, and roughness coefficients should be
-        appropriately set.
+        If data are specified for dataset 6 for a given stress period and
+        icalc>0, then stream width, stream slope, and roughness coefficients
+        should be appropriately set.
 
         The simplest form is a dictionary with a lists of boundaries for each
         stress period, where each list of boundaries itself is a list of
@@ -126,13 +127,13 @@ class ModflowStr(Package):
 
         Otherwise stress period data for a stress period should contain nss
         rows of data containing data for each segment. Segment data are
-        specified through definition of itrib (int) data for up to 10 tributaries
-        and iupseg (int) data.
+        specified through definition of itrib (int) data for up to 10
+        tributaries and iupseg (int) data.
 
         If ntrib=0 is specified, itrib values are not used and can be any value
         for each stress period. If data are specified for dataset 6 for a given
-        stress period and ntrib>0, then itrib data should be specified for columns
-        0:ntrib.
+        stress period and ntrib>0, then itrib data should be specified for
+        columns 0:ntrib.
 
         If ndiv=0 is specified, iupseg values are not used and can be any value
         for each stress period. If data are specified for dataset 6 for a given
@@ -170,12 +171,12 @@ class ModflowStr(Package):
     filenames : str or list of str
         Filenames to use for the package and the output files. If
         filenames=None the package name will be created using the model name
-        and package extension and the cbc output and sfr output name will be
+        and package extension and the cbc output and str output name will be
         created using the model name and .cbc the .sfr.bin/.sfr.out extensions
-        (for example, modflowtest.cbc, and modflowtest.sfr.bin), if ipakcbc and
+        (for example, modflowtest.cbc, and modflowtest.str.bin), if ipakcbc and
         istcb2 are numbers greater than zero. If a single string is passed
         the package will be set to the string and cbc and sf routput names
-        will be created using the model name and .cbc and .sfr.bin/.sfr.out
+        will be created using the model name and .cbc and .str.bin/.str.out
         extensions, if ipakcbc and istcb2 are numbers greater than zero. To
         define the names for all package files (input and output) the length
         of the list of strings should be 3. Default is None.
@@ -240,7 +241,6 @@ class ModflowStr(Package):
         else:
             ipakcb = 0
 
-
         # set filenames
         if filenames is None:
             filenames = [None]
@@ -255,7 +255,8 @@ class ModflowStr(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -307,33 +308,34 @@ class ModflowStr(Package):
             self.dtype = d.dtype
             self.dtype2 = d2.dtype
 
-        # convert stress_period_data for datasets 6 and 8 to a recarray if necessary
+        # convert stress_period_data for datasets 6 and 8 to a recarray if
+        # necessary
         if stress_period_data is not None:
             for key, d in stress_period_data.items():
                 if isinstance(d, list):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
-                    assert d.dtype == self.dtype, 'ModflowStr error: recarray dtype: ' + \
-                                                  str(
-                                                      d.dtype) + ' does not match ' + \
-                                                  'self dtype: ' + str(
-                        self.dtype)
+                    e = 'ModflowStr error: recarray dtype: ' + \
+                        str(d.dtype) + ' does not match ' + \
+                        'self dtype: ' + str(self.dtype)
+                    assert d.dtype == self.dtype, e
                 elif isinstance(d, np.ndarray):
                     d = np.core.records.fromarrays(d.transpose(),
                                                    dtype=self.dtype)
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
-                            print(
-                                '   reusing str data from previous stress period')
+                            msg = 3 * ' ' + \
+                                  'reusing str data from previous stress period'
+                            print(msg)
                         elif d == 0:
-                            print('   no str data for stress period {}'.format(
-                                key))
+                            msg = 3 * ' ' + 'no str data for stress ' + \
+                                  'period {}'.format(key)
+                            print(msg)
                 else:
-                    raise Exception(
-                        'ModflowStr error: unsupported data type: ' +
-                        str(type(d)) + ' at kper ' +
-                        '{0:d}'.format(key))
+                    e = 'ModflowStr error: unsupported data type: ' + \
+                        str(type(d)) + ' at kper ' + '{0:d}'.format(key)
+                    raise Exception(e)
         # add stress_period_data to package
         self.stress_period_data = MfList(self, stress_period_data)
 
@@ -343,28 +345,27 @@ class ModflowStr(Package):
                 if isinstance(d, list):
                     d = np.array(d)
                 if isinstance(d, np.recarray):
-                    assert d.dtype == self.dtype2, 'ModflowStr error: recarray dtype: ' + \
-                                                   str(
-                                                       d.dtype) + ' does not match ' + \
-                                                   'self dtype: ' + str(
-                        self.dtype2)
+                    e = 'ModflowStr error: recarray dtype: ' + \
+                        str(d.dtype) + ' does not match ' + \
+                        'self dtype: ' + str(self.dtype2)
+                    assert d.dtype == self.dtype2, e
                 elif isinstance(d, np.ndarray):
                     d = np.core.records.fromarrays(d.transpose(),
                                                    dtype=self.dtype2)
                 elif isinstance(d, int):
                     if model.verbose:
                         if d < 0:
-                            print(
-                                '   reusing str segment data from previous stress period')
+                            msg = 3 * ' ' + 'reusing str segment data ' + \
+                                  'from previous stress period'
+                            print(msg)
                         elif d == 0:
-                            print(
-                                '   no str segment data for stress period {}'.format(
-                                    key))
+                            msg = 3 * ' ' + 'no str segment data for ' + \
+                                  'stress period {}'.format(key)
+                            print(msg)
                 else:
-                    raise Exception(
-                        'ModflowStr error: unsupported data type: ' +
-                        str(type(d)) + ' at kper ' +
-                        '{0:d}'.format(key))
+                    e = 'ModflowStr error: unsupported data type: ' + \
+                        str(type(d)) + ' at kper ' + '{0:d}'.format(key)
+                    raise Exception(e)
         # add stress_period_data to package
         self.segment_data = segment_data
 
@@ -377,10 +378,9 @@ class ModflowStr(Package):
         dtype, dtype2 = ModflowStr.get_default_dtype(structured=structured)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
-        #return (create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
-        #        create_empty_recarray(nss, dtype=dtype, default_value=0))
-        return (create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
-                create_empty_recarray(nss, dtype=dtype2, default_value=0))
+        return (
+        create_empty_recarray(ncells, dtype=dtype, default_value=-1.0E+10),
+        create_empty_recarray(nss, dtype=dtype2, default_value=0))
 
     @staticmethod
     def get_default_dtype(structured=True):
@@ -475,7 +475,8 @@ class ModflowStr(Package):
                 else:
                     itmp = tdata.shape[0]
             line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0,
-                                                                     0, iper+1)
+                                                                     0,
+                                                                     iper + 1)
             f_str.write(line)
             if itmp > 0:
                 tdata = np.recarray.copy(tdata)
@@ -499,14 +500,14 @@ class ModflowStr(Package):
                 # dataset 9
                 if self.ntrib > 0:
                     for line in sdata:
-                        #for idx in range(3):
+                        # for idx in range(3):
                         for idx in range(self.ntrib):
                             f_str.write(fmt9.format(line[idx]))
                         f_str.write('\n')
                 # dataset 10
                 if self.ndiv > 0:
                     for line in sdata:
-                        #f_str.write('{:10d}\n'.format(line[3]))
+                        # f_str.write('{:10d}\n'.format(line[3]))
                         f_str.write('{:10d}\n'.format(line[self.ntrib]))
 
         # close the str file
@@ -691,7 +692,6 @@ class ModflowStr(Package):
                         t = []
                         if model.free_format_input:
                             tt = line.strip().split()
-                            # current[ibnd] = tuple(t[:len(current.dtype.names)])
                             for idx, v in enumerate(tt[:10]):
                                 t.append(v)
                             for ivar in range(3):
@@ -802,7 +802,6 @@ class ModflowStr(Package):
             else:
                 stress_period_data[iper] = bnd_output
                 segment_data[iper] = seg_output
-
 
         # determine specified unit number
         unitnumber = None

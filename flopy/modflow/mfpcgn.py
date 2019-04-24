@@ -97,8 +97,8 @@ class ModflowPcgn(Package):
     damp : float
         is the damping factor. (default is 1.)
     damp_lb : float
-        is the lower bound placed on the dampening; generally, 0 < damp_lb < damp.
-        (default is 0.001)
+        is the lower bound placed on the dampening; generally,
+        0 < damp_lb < damp. (default is 0.001)
     rate_d : float
         is a rate parameter; generally, 0 < rate_d < 1. (default is 0.1)
     chglimit : float
@@ -106,38 +106,40 @@ class ModflowPcgn(Package):
         hydraulic heads in a Picard iteration. If chglimit = 0.0, then adaptive
         damping proceeds without this feature. (default is 0.)
     acnvg : int
-        defines the mode of convergence applied to the PCG solver. (default is 0)
+        defines the mode of convergence applied to the PCG solver.
+        (default is 0)
     cnvg_lb : int
-        is the minimum value that the relative convergence is allowed to take under
-        the self-adjusting convergence option. cnvg_lb is used only in convergence
-        mode acnvg = 1. (default is 0.001)
+        is the minimum value that the relative convergence is allowed to take
+        under the self-adjusting convergence option. cnvg_lb is used only in
+        convergence mode acnvg = 1. (default is 0.001)
     mcnvg : float
-        increases the relative PCG convergence criteria by a power equal to MCNVG.
-        MCNVG is used only in convergence mode acnvg = 2. (default is 2)
+        increases the relative PCG convergence criteria by a power equal to
+        MCNVG. MCNVG is used only in convergence mode acnvg = 2. (default is 2)
     rate_c : float
-        this option results in variable enhancement of epsilon. If 0 < rate_c < 1,
-        then enhanced relative convergence is allowed to decrease by increasing
-        epsilon(j) = epsilon(j-1) + rate_c epsilon(j-1), where j is the Picard
-        iteration number; this change in epsilon occurs so long as the Picard
-        iteration is progressing satisfactorily. If rate_c <= 0, then the value
-        of epsilon set by mcnvg remains unchanged through the picard iteration.
-        It should be emphasized that rate_c must have a value greater than 0
-        for the variable enhancement to be effected; otherwise epsilon remains
-        constant. rate_c is used only in convergence mode acnvg = 2.
-        (default is -1.)
+        this option results in variable enhancement of epsilon.
+        If 0 < rate_c < 1, then enhanced relative convergence is allowed to
+        decrease by increasing epsilon(j) = epsilon(j-1) + rate_c epsilon(j-1),
+        where j is the Picarditeration number; this change in epsilon occurs
+        so long as the Picard iteration is progressing satisfactorily. If
+        rate_c <= 0, then the value of epsilon set by mcnvg remains unchanged
+        through the picard iteration. It should be emphasized that rate_c must
+        have a value greater than 0 for the variable enhancement to be
+        ffected; otherwise epsilon remains constant. rate_c is used only in
+        convergence mode acnvg = 2. (default is -1.)
     ipunit : int
         enables progress reporting for the picard iteration. If ipunit >= 0,
         then a record of progress made by the picard iteration for each time
-        step is printed in the MODFLOW Listing file (Harbaugh and others, 2000).
-        This record consists of the total number of dry cells at the end of each
-        time step as well as the total number of PCG iterations necessary to
-        obtain convergence. In addition, if ipunit > 0, then extensive
-        diagnostics for each Picard iteration is also written in comma-separated
-        format to a file whose unit number corresponds to ipunit; the name for
-        this file, along with its unit number and type 'data' should be entered
-        in the modflow Name file. If ipunit < 0 then printing of all progress
-        concerning the Picard iteration is suppressed, as well as information on
-        the nature of the convergence of the picard iteration. (default is 0)
+        step is printed in the MODFLOW Listing file
+        (Harbaugh and others, 2000). This record consists of the total number
+        of dry cells at the end of each time step as well as the total number
+        of PCG iterations necessary to obtain convergence. In addition, if
+        ipunit > 0, then extensive diagnostics for each Picard iteration is
+        also written in comma-separated format to a file whose unit number
+        corresponds to ipunit; the name for this file, along with its unit
+        number and type 'data' should be entered in the modflow Name file.
+        If ipunit < 0 then printing of all progress concerning the Picard
+        iteration is suppressed, as well as information on the nature of the
+        convergence of the picard iteration. (default is 0)
     extension : list string
         Filename extension (default is 'pcgn')
     unitnumber : int
@@ -149,8 +151,8 @@ class ModflowPcgn(Package):
         the model name and .pcgni, .pcgnt, and .pcgno extensions. If a single
         string is passed the package will be set to the string and pcgn output
         names will be created using the model name and pcgn output extensions.
-        To define the names for all package files (input and output) the length
-        of the list of strings should be 4. Default is None.
+        To define the names for all package files (input and output) the
+        length of the list of strings should be 4. Default is None.
 
     Attributes
     ----------
@@ -231,14 +233,15 @@ class ModflowPcgn(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
-            err = 'Error: cannot use {} package with model version {}'.format(
-                self.name, model.version)
+            err = 'Error: cannot use {} package '.format(self.name) + \
+                  'with model version {}'.format(model.version)
             raise Exception(err)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -265,7 +268,9 @@ class ModflowPcgn(Package):
         self.ipunit = ipunit
         # error trapping
         if self.ifill < 0 or self.ifill > 1:
-            raise TypeError('PCGN: ifill must be 0 or 1 - an ifill value of {0} was specified'.format(self.ifill))
+            e = 'PCGN: ifill must be 0 or 1 - an ifill value of ' + \
+                '{} was specified'.format(self.ifill)
+            raise TypeError(e)
         # add package
         self.parent.add_package(self)
 
@@ -511,11 +516,9 @@ class ModflowPcgn(Package):
                            filenames=filenames)
         return pcgn
 
-
     @staticmethod
     def ftype():
         return 'PCGN'
-
 
     @staticmethod
     def defaultunit():

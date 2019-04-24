@@ -5,6 +5,7 @@ from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
 from ..plot.plotutil import plot_cvfd
 
+
 class Triangle(object):
     """
     Class to work with the triangle program to unstructured triangular grids.
@@ -32,6 +33,7 @@ class Triangle(object):
     None
 
     """
+
     def __init__(self, model_ws='.', exe_name='triangle', maximum_area=None,
                  angle=20., additional_args=None):
         self.model_ws = model_ws
@@ -140,13 +142,13 @@ class Triangle(object):
             cmds.append('-q{}'.format(self.angle))
         if self.additional_args is not None:
             cmds += self.additional_args
-        cmds.append('-A') # assign attributes
-        cmds.append('-p') # triangulate .poly file
-        cmds.append('-V') # verbose
-        cmds.append('-D') # delaunay triangles for finite volume
-        cmds.append('-e') # edge file
-        cmds.append('-n') # neighbor file
-        cmds.append(self.file_prefix + '.0') # output file name
+        cmds.append('-A')  # assign attributes
+        cmds.append('-p')  # triangulate .poly file
+        cmds.append('-V')  # verbose
+        cmds.append('-D')  # delaunay triangles for finite volume
+        cmds.append('-e')  # edge file
+        cmds.append('-n')  # neighbor file
+        cmds.append(self.file_prefix + '.0')  # output file name
 
         # run Triangle
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -512,7 +514,7 @@ class Triangle(object):
                 if self.edgedict[ie] == ibm:
                     x1, y1 = self.verts[iv1]
                     x2, y2 = self.verts[iv2]
-                    d = ( (x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+                    d = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
                     return d
         return d
 

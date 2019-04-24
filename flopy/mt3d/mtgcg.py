@@ -1,6 +1,7 @@
 import sys
 from ..pakbase import Package
 
+
 class Mt3dGcg(Package):
     """
     MT3DMS Generalized Conjugate Gradient Package Class.
@@ -75,6 +76,7 @@ class Mt3dGcg(Package):
 
     """
     unitnumber = 35
+
     def __init__(self, model, mxiter=1, iter1=50, isolve=3, ncrs=0,
                  accl=1, cclose=1e-5, iprgcg=0, extension='gcg',
                  unitnumber=None, filenames=None):
@@ -111,7 +113,7 @@ class Mt3dGcg(Package):
         self.iprgcg = iprgcg
         self.parent.add_package(self)
         return
-        
+
     def write_file(self):
         """
         Write the package file

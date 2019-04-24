@@ -43,8 +43,8 @@ class ModflowSwr1(Package):
 
     Notes
     -----
-    SWR1 Class is only used to write SWR1 filename to name file. Full functionality still
-    needs to be implemented.
+    SWR1 Class is only used to write SWR1 filename to name file. Full
+    functionality still needs to be implemented.
 
     Examples
     --------
@@ -79,7 +79,8 @@ class ModflowSwr1(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -131,8 +132,8 @@ class ModflowSwr1(Package):
 
         Returns
         -------
-        hfb : ModflowHfb object
-            ModflowHfb object (of type :class:`flopy.modflow.mfbas.ModflowHfb`)
+        swr : ModflowSwr1 object
+            ModflowSwr1 object (of type :class:`flopy.modflow.mfbas.ModflowSwr1`)
 
         Notes
         -----
@@ -155,7 +156,8 @@ class ModflowSwr1(Package):
             filename = f
             f = open(filename, 'r')
 
-        print('Warning: load method not completed. default swr1 object created.')
+        print(
+            'Warning: load method not completed. default swr1 object created.')
 
         # close open file
         f.close()
@@ -174,11 +176,9 @@ class ModflowSwr1(Package):
         # return swr object
         return swr1
 
-
     @staticmethod
     def ftype():
         return 'SWR'
-
 
     @staticmethod
     def defaultunit():

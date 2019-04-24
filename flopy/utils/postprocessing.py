@@ -119,7 +119,7 @@ def get_water_table(heads, nodata, per_idx=None):
     """
     Get a 2D array representing the water table elevation for each
     stress period in heads array.
-    
+
     Parameters
     ----------
     heads : 3 or 4-D np.ndarray
@@ -129,10 +129,12 @@ def get_water_table(heads, nodata, per_idx=None):
     per_idx : int or sequence of ints
         stress periods to return. If None,
         returns all stress periods (default is None).
+
     Returns
     -------
     wt : 2 or 3-D np.ndarray of water table elevations
         for each stress period.
+
     """
     heads = np.array(heads, ndmin=4)
     nper, nlay, nrow, ncol = heads.shape
@@ -172,6 +174,7 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     per_idx : int or sequence of ints
         stress periods to return. If None,
         returns all stress periods (default).
+
     Returns
     -------
     sat_thickness : 3 or 4-D np.ndarray
@@ -214,6 +217,7 @@ def get_gradients(heads, m, nodata, per_idx=None):
     per_idx : int or sequence of ints
         stress periods to return. If None,
         returns all stress periods (default).
+
     Returns
     -------
     grad : 3 or 4-D np.ndarray

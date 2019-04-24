@@ -289,8 +289,10 @@ class Mt3dSsm(Package):
 
         self.cevt = None
         try:
-            if cevt is None and (model.mf.evt is not None or model.mf.ets is not None):
-                print("found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
+            if cevt is None and (
+                    model.mf.evt is not None or model.mf.ets is not None):
+                print(
+                    "found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
                 cevt = 0.0
         except:
             pass

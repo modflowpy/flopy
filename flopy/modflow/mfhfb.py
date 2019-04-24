@@ -19,32 +19,32 @@ from ..utils.recarray_utils import create_empty_recarray
 class ModflowHfb(Package):
     """
     MODFLOW HFB6 - Horizontal Flow Barrier Package
-    
+
     Parameters
     ----------
     model : model object
-        The model object (of type: class:`flopy.modflow.mf.Modflow`) to 
+        The model object (of type: class:`flopy.modflow.mf.Modflow`) to
         which this package will be added.
     nphfb : int
-        Number of horizontal-flow barrier parameters. Note that for an HFB 
-        parameter to have an effect in the simulation, it must be defined 
-        and made active using NACTHFB to have an effect in the simulation 
+        Number of horizontal-flow barrier parameters. Note that for an HFB
+        parameter to have an effect in the simulation, it must be defined
+        and made active using NACTHFB to have an effect in the simulation
         (default is 0).
     mxfb : int
-        Maximum number of horizontal-flow barrier barriers that will be 
+        Maximum number of horizontal-flow barrier barriers that will be
         defined using parameters (default is 0).
     nhfbnp: int
-        Number of horizontal-flow barriers not defined by parameters. This 
+        Number of horizontal-flow barriers not defined by parameters. This
         is calculated automatically by FloPy based on the information in
         layer_row_column_data (default is 0).
     hfb_data : list of records
 
         In its most general form, this is a list of horizontal-flow
-        barrier records. A barrier is conceptualized as being located on 
-        the boundary between two adjacent finite difference cells in the 
-        same layer. The innermost list is the layer, row1, column1, row2, 
+        barrier records. A barrier is conceptualized as being located on
+        the boundary between two adjacent finite difference cells in the
+        same layer. The innermost list is the layer, row1, column1, row2,
         column2, and hydrologic characteristics for a single hfb between
-        the cells. The hydraulic characteristic is the barrier hydraulic 
+        the cells. The hydraulic characteristic is the barrier hydraulic
         conductivity divided by the width of the horizontal-flow barrier.
         (default is None).
         This gives the form of::
@@ -56,10 +56,10 @@ class ModflowHfb(Package):
                        ].
 
     nacthfb : int
-        The number of active horizontal-flow barrier parameters 
+        The number of active horizontal-flow barrier parameters
         (default is 0).
     no_print : boolean
-        When True or 1, a list of horizontal flow barriers will not be 
+        When True or 1, a list of horizontal flow barriers will not be
         written to the Listing File (default is False)
     options : list of strings
         Package options (default is None).
@@ -182,13 +182,18 @@ class ModflowHfb(Package):
         """
         f_hfb = open(self.fn_path, 'w')
         f_hfb.write('{}\n'.format(self.heading))
-        f_hfb.write('{:10d}{:10d}{:10d}'.format(self.nphfb, self.mxfb, self.nhfbnp))
+        f_hfb.write(
+            '{:10d}{:10d}{:10d}'.format(self.nphfb, self.mxfb, self.nhfbnp))
         for option in self.options:
             f_hfb.write('  {}'.format(option))
         f_hfb.write('\n')
         for a in self.hfb_data:
             f_hfb.write(
-                '{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1, a[1] + 1, a[2] + 1, a[3] + 1, a[4] + 1,
+                '{:10d}{:10d}{:10d}{:10d}{:10d}{:13.6g}\n'.format(a[0] + 1,
+                                                                  a[1] + 1,
+                                                                  a[2] + 1,
+                                                                  a[3] + 1,
+                                                                  a[4] + 1,
                                                                   a[5]))
         f_hfb.write('{:10d}'.format(self.nacthfb))
         f_hfb.close()
@@ -221,7 +226,6 @@ class ModflowHfb(Package):
             assert not structured, 'is there an unstructured HFB???'
         return dtype
 
-
     @staticmethod
     def load(f, model, ext_unit_dict=None):
         """
@@ -232,7 +236,7 @@ class ModflowHfb(Package):
         f : filename or file handle
             File to load.
         model : model object
-            The model object (of type: class:`flopy.modflow.mf.Modflow`) 
+            The model object (of type: class:`flopy.modflow.mf.Modflow`)
             to which this package will be added.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
@@ -278,7 +282,7 @@ class ModflowHfb(Package):
             it = 2
             while it < len(t):
                 toption = t[it]
-                #print it, t[it]
+                # print it, t[it]
                 if toption.lower() is 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
@@ -297,7 +301,8 @@ class ModflowHfb(Package):
             for ibnd in range(nhfbnp):
                 line = f.readline()
                 if "open/close" in line.lower():
-                    raise NotImplementedError("load() method does not support \'open/close\'")
+                    raise NotImplementedError(
+                        "load() method does not support \'open/close\'")
                 t = line.strip().split()
                 specified[ibnd] = tuple(t[:len(specified.dtype.names)])
 
@@ -322,8 +327,8 @@ class ModflowHfb(Package):
                 iname = 'static'
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                #print par_dict
-                #print data_dict
+                # print par_dict
+                # print data_dict
 
                 par_current = ModflowHfb.get_empty(par_dict['nlst'])
 
@@ -369,11 +374,9 @@ class ModflowHfb(Package):
                          filenames=filenames)
         return hfb
 
-
     @staticmethod
     def ftype():
         return 'HFB6'
-
 
     @staticmethod
     def defaultunit():

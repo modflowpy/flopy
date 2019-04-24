@@ -16,7 +16,8 @@ class acdd:
     ----------
 
     sciencebase_id : str
-        Unique identifier for ScienceBase record (e.g. 582da7efe4b04d580bd37be8)
+        Unique identifier for ScienceBase record
+        (e.g. 582da7efe4b04d580bd37be8)
     model : flopy model object
         Model object
 
@@ -224,7 +225,7 @@ class acdd:
         Parameters
         ----------
         ID : str
-            ScienceBase ID string; 
+            ScienceBase ID string;
             e.g. 582da7efe4b04d580bd37be8 for Dane County Model
 
         Returns
@@ -250,7 +251,7 @@ class acdd:
         Parameters
         ----------
         ID : str
-            ScienceBase ID string; 
+            ScienceBase ID string;
             e.g. 582da7efe4b04d580bd37be8 for Dane County Model
 
         Returns

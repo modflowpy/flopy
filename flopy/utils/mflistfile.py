@@ -45,7 +45,8 @@ class ListBudget(object):
     def __init__(self, file_name, budgetkey=None, timeunit='days'):
 
         # Set up file reading
-        assert os.path.exists(file_name),"file_name {0} not found".format(file_name)
+        assert os.path.exists(file_name), "file_name {0} not found".format(
+            file_name)
         self.file_name = file_name
         if sys.version_info[0] == 2:
             self.f = open(file_name, 'r')
@@ -279,10 +280,13 @@ class ListBudget(object):
         if sys.version_info[0] == 2:
             self.f = open(self.file_name, 'r')
         elif sys.version_info[0] == 3:
-            self.f = open(self.file_name, 'r', encoding='ascii', errors='replace')
+            self.f = open(self.file_name, 'r', encoding='ascii',
+                          errors='replace')
         units = units.lower()
         if not units == 'seconds' and not units == 'minutes' and not units == 'hours':
-            raise('"units" input variable must be "minutes", "hours", or "seconds": {0} was specified'.format(units))
+            raise (
+                '"units" input variable must be "minutes", "hours", or "seconds": {0} was specified'.format(
+                    units))
         try:
             seekpoint = self._seek_to_string('Elapsed run time:')
         except:
@@ -296,7 +300,7 @@ class ListBudget(object):
         # yank out the floating point values from the Elapsed run time string
         times = list(map(float, re.findall(r'[+-]?[0-9.]+', line)))
         # pad an array with zeros and times with [days, hours, minutes, seconds]
-        times = np.array([0 for i in range(4-len(times))] + times)
+        times = np.array([0 for i in range(4 - len(times))] + times)
         # convert all to seconds
         time2sec = np.array([24 * 60 * 60, 60 * 60, 60, 1])
         times_sec = np.sum(times * time2sec)
@@ -306,8 +310,7 @@ class ListBudget(object):
         elif units == 'minutes':
             return times_sec / 60.0
         elif units == 'hours':
-            return times_sec/60.0 / 60.0
-
+            return times_sec / 60.0 / 60.0
 
     def get_budget(self, names=None):
         """
@@ -347,8 +350,6 @@ class ListBudget(object):
             names.insert(0, 'totim')
             return self.inc[names].view(np.recarray), \
                    self.cum[names].view(np.recarray)
-
-
 
     def get_data(self, kstpkper=None, idx=None, totim=None, incremental=False):
         """
@@ -426,7 +427,7 @@ class ListBudget(object):
             t = self.cum[ipos]
 
         dtype = np.dtype(
-                [('index', np.int32), ('value', np.float32), ('name', '|S25')])
+            [('index', np.int32), ('value', np.float32), ('name', '|S25')])
         v = np.recarray(shape=(len(self.inc.dtype.names[3:])), dtype=dtype)
         for i, name in enumerate(self.inc.dtype.names[3:]):
             mult = 1.
@@ -437,7 +438,7 @@ class ListBudget(object):
             v[i]['name'] = name
         return v
 
-    def get_dataframes(self, start_datetime='1-1-1970',diff=False):
+    def get_dataframes(self, start_datetime='1-1-1970', diff=False):
         """
         Get pandas dataframes with the incremental and cumulative water budget
         items in the list file.
@@ -484,26 +485,32 @@ class ListBudget(object):
 
         else:
             in_names = [col for col in df_flux.columns if col.endswith("_IN")]
-            out_names = [col for col in df_flux.columns if col.endswith("_OUT")]
-            #print(in_names,out_names)
-            #print(df_flux.columns)
-            base_names = [name.replace("_IN",'') for name in in_names]
+            out_names = [col for col in df_flux.columns if
+                         col.endswith("_OUT")]
+            # print(in_names,out_names)
+            # print(df_flux.columns)
+            base_names = [name.replace("_IN", '') for name in in_names]
             for name in base_names:
                 in_name = name + "_IN"
                 out_name = name + "_OUT"
-                df_flux.loc[:,name.lower()] = df_flux.loc[:,in_name] - df_flux.loc[:,out_name]
+                df_flux.loc[:, name.lower()] = df_flux.loc[:,
+                                               in_name] - df_flux.loc[:,
+                                                          out_name]
                 df_flux.pop(in_name)
                 df_flux.pop(out_name)
-                df_vol.loc[:,name.lower()] = df_vol.loc[:,in_name] - df_vol.loc[:,out_name]
+                df_vol.loc[:, name.lower()] = df_vol.loc[:,
+                                              in_name] - df_vol.loc[:,
+                                                         out_name]
                 df_vol.pop(in_name)
                 df_vol.pop(out_name)
             cols = list(df_flux.columns)
             cols = [col.lower() for col in cols]
             df_flux.columns = cols
             df_vol.columns = cols
-            df_flux.sort_index(axis=1,inplace=True)
-            df_vol.sort_index(axis=1,inplace=True)
+            df_flux.sort_index(axis=1, inplace=True)
+            df_vol.sort_index(axis=1, inplace=True)
             return df_flux, df_vol
+
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)
         return
@@ -664,8 +671,8 @@ class ListBudget(object):
             line = self.f.readline()
             if line == '':
                 print(
-                        'end of file found while seeking budget information for ts,sp',
-                        ts, sp)
+                    'end of file found while seeking budget information for ts,sp',
+                    ts, sp)
                 return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
@@ -680,8 +687,8 @@ class ListBudget(object):
             if line == '':
                 # raise Exception('end of file found while seeking budget information')
                 print(
-                        'end of file found while seeking budget information for ts,sp',
-                        ts, sp)
+                    'end of file found while seeking budget information for ts,sp',
+                    ts, sp)
                 return self.null_entries
             if len(re.findall('=', line)) == 2:
                 try:
@@ -691,15 +698,15 @@ class ListBudget(object):
                     return self.null_entries
                 if flux is None:
                     print(
-                            'error casting in flux for', entry,
-                            ' to float in ts,sp',
-                            ts, sp)
+                        'error casting in flux for', entry,
+                        ' to float in ts,sp',
+                        ts, sp)
                     return self.null_entries
                 if cumu is None:
                     print(
-                            'error casting in cumu for', entry,
-                            ' to float in ts,sp',
-                            ts, sp)
+                        'error casting in cumu for', entry,
+                        ' to float in ts,sp',
+                        ts, sp)
                     return self.null_entries
                 if entry.endswith(tag.upper()):
                     if ' - ' in entry.upper():
@@ -739,7 +746,6 @@ class ListBudget(object):
         # cu_str = line[self.cumu_idxs[0]:self.cumu_idxs[1]]
         # fx_str = line[self.flux_idxs[0]:self.flux_idxs[1]]
 
-
         flux, cumu = None, None
         try:
             cumu = float(cu_str)
@@ -762,8 +768,8 @@ class ListBudget(object):
             ihead += 1
             if line == '':
                 print(
-                        'end of file found while seeking time information for ts,sp',
-                        ts, sp)
+                    'end of file found while seeking time information for ts,sp',
+                    ts, sp)
                 return np.NaN, np.NaN, np.NaN
             elif ihead == 2 and 'SECONDS     MINUTES      HOURS       DAYS        YEARS' not in line:
                 break

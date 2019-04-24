@@ -39,6 +39,7 @@ class Params(object):
         applied as a multiplier.
     transform : Parameter transformation type.
     """
+
     def __init__(self, mfpackage, partype, parname,
                  startvalue, lbound, ubound, span, transform='log'):
         self.name = parname
@@ -71,5 +72,3 @@ def zonearray2params(mfpackage, partype, parzones, lbound, ubound,
                    ubound, span, transform)
         plist.append(p)
     return plist
-
-

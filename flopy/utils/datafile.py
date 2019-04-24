@@ -4,7 +4,6 @@ abstract classes that should not be directly accessed.
 
 """
 from __future__ import print_function
-import os
 import numpy as np
 import flopy.utils
 from ..discretization.structuredgrid import StructuredGrid
@@ -50,9 +49,9 @@ class Header(object):
         else:
             self.dtype = None
             self.header = None
-            print(
-                'Specified {0} type is not available. Available types are:'.format(
-                    self.header_type))
+            msg = 'Specified {} '.format(self.header_type) + \
+                  'type is not available. Available types are:'
+            print(msg)
             for idx, t in enumerate(self.header_types):
                 print('  {0} {1}'.format(idx + 1, t))
         return
@@ -82,7 +81,8 @@ class Header(object):
 class LayerFile(object):
     """
     The LayerFile class is the abstract base class from which specific derived
-    classes are formed.  LayerFile This class should not be instantiated directly.
+    classes are formed.  LayerFile This class should not be instantiated
+    directly.
 
     """
 
@@ -136,7 +136,7 @@ class LayerFile(object):
         # we can make a generic sr if needed
         if self.mg is None:
             self.mg = StructuredGrid(delc=np.ones((self.nrow,)),
-                                     delr=np.ones(self.ncol,),
+                                     delr=np.ones(self.ncol, ),
                                      xoff=0.0, yoff=0.0,
                                      angrot=0.0)
         return
@@ -197,14 +197,14 @@ class LayerFile(object):
 
     def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
              filename_base=None, **kwargs):
-        '''
+        """
         Plot 3-D model output data in a specific location
         in LayerFile instance
 
         Parameters
         ----------
         axes : list of matplotlib.pyplot.axis
-            List of matplotlib.pyplot.axis that will be used to plot 
+            List of matplotlib.pyplot.axis that will be used to plot
             data for each layer. If axes=None axes will be generated.
             (default is None)
         kstpkper : tuple of ints
@@ -258,8 +258,8 @@ class LayerFile(object):
         >>> hdobj = flopy.utils.HeadFile('test.hds')
         >>> times = hdobj.get_times()
         >>> hdobj.plot(totim=times[-1])
-        
-        '''
+
+        """
 
         if 'file_extension' in kwargs:
             fext = kwargs.pop('file_extension')
@@ -286,7 +286,7 @@ class LayerFile(object):
             filenames = []
             [filenames.append(
                 '{}_Layer{}.{}'.format(filename_base, k + 1, fext)) for k in
-             range(i0, i1)]
+                range(i0, i1)]
 
         # make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
@@ -308,8 +308,9 @@ class LayerFile(object):
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        raise Exception(
-            'Abstract method _build_index called in LayerFile.  This method needs to be overridden.')
+        e = 'Abstract method _build_index called in LayerFile.  ' + \
+            'This method needs to be overridden.'
+        raise Exception(e)
 
     def list_records(self):
         """
@@ -484,8 +485,9 @@ class LayerFile(object):
         Read data from file
 
         """
-        raise Exception(
-            'Abstract method _read_data called in LayerFile.  This method needs to be overridden.')
+        e = 'Abstract method _read_data called in LayerFile.  ' + \
+            'This method needs to be overridden.'
+        raise Exception(e)
 
     def _build_kijlist(self, idx):
         if isinstance(idx, list):

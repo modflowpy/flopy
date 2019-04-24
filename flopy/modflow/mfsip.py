@@ -107,14 +107,15 @@ class ModflowSip(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version == 'mfusg':
-            err = 'Error: cannot use {} package with model version {}'.format(
-                self.name, model.version)
+            err = 'Error: cannot use {} package '.format(self.name) + \
+                  'with model version {}'.format(model.version)
             raise Exception(err)
 
         self.heading = '# {} package for '.format(self.name[0]) + \

@@ -15,6 +15,7 @@ from flopy.discretization.unstructuredgrid import UnstructuredGrid
 from flopy.utils.reference import SpatialReferenceUnstructured
 from flopy.utils.reference import SpatialReference
 import warnings
+
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
@@ -216,7 +217,8 @@ class MfGrdFile(FlopyBinaryData):
                                 xoff=xorigin, yoff=yorigin, angrot=angrot)
 
             elif self._grid == 'DIS':
-                nlay, nrow, ncol = self._datadict["NLAY"], self._datadict["NROW"], self._datadict["NCOL"]
+                nlay, nrow, ncol = self._datadict["NLAY"], self._datadict[
+                    "NROW"], self._datadict["NCOL"]
                 delr, delc = self._datadict['DELR'], self._datadict['DELC']
 
                 top.shape = (nrow, ncol)
@@ -228,12 +230,14 @@ class MfGrdFile(FlopyBinaryData):
                 vertc = self.get_centroids()
                 xc = vertc[:, 0]
                 yc = vertc[:, 1]
-                mg = UnstructuredGrid(verts, iverts, xc, yc, top, botm, idomain,
-                                      xoff=xorigin, yoff=yorigin, angrot=angrot)
+                mg = UnstructuredGrid(verts, iverts, xc, yc, top, botm,
+                                      idomain,
+                                      xoff=xorigin, yoff=yorigin,
+                                      angrot=angrot)
 
         except:
             print('could not set model grid for {}'.format(
-                  self.file.name))
+                self.file.name))
 
         return mg
 
@@ -285,7 +289,6 @@ class MfGrdFile(FlopyBinaryData):
         cell2d = [[ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
                   for ix, i in enumerate(iverts)]
         return vertices, cell2d
-
 
     def get_verts(self):
         """

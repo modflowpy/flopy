@@ -24,13 +24,13 @@ def _fmt_string(array, float_format='{}'):
     fmt_string = ''
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
-        if (vtype == 'i'):
+        if vtype == 'i':
             fmt_string += '{:.0f} '
-        elif (vtype == 'f'):
+        elif vtype == 'f':
             fmt_string += '{} '.format(float_format)
-        elif (vtype == 'o'):
+        elif vtype == 'o':
             fmt_string += '{} '
-        elif (vtype == 's'):
+        elif vtype == 's':
             raise Exception("MfList error: '\str\' type found it dtype." + \
                             " This gives unpredictable results when " + \
                             "recarray to file - change to \'object\' type")
@@ -139,6 +139,7 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
     out += '\n'
     return out
 
+
 def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
     """
     Parse a fixed format line using user provided data
@@ -193,7 +194,8 @@ def read_fixed_var(line, ncol=1, length=10, ipos=None, free=False):
             istart = istop
     return out
 
-def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
+
+def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     """
     Convert flux in a binary cell budget file to a wel instance
 
@@ -214,30 +216,28 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
     from . import CellBudgetFile as CBF
     from .util_list import MfList
     from ..modflow import Modflow, ModflowWel
-    cbf = CBF(cbc_file,precision=precision,verbose=verbose)
+    cbf = CBF(cbc_file, precision=precision, verbose=verbose)
 
     # create a empty numpy array of shape (time,layer,row,col)
-    m4d = np.zeros((cbf.nper,cbf.nlay,cbf.nrow,cbf.ncol),dtype=np.float32)
+    m4d = np.zeros((cbf.nper, cbf.nlay, cbf.nrow, cbf.ncol), dtype=np.float32)
     m4d[:] = np.NaN
 
     # process the records in the cell budget file
     iper = -1
     for kstpkper in cbf.kstpkper:
 
-        kstpkper = (kstpkper[0]-1,kstpkper[1]-1)
+        kstpkper = (kstpkper[0] - 1, kstpkper[1] - 1)
         kper = kstpkper[1]
-        #if we haven't visited this kper yet
+        # if we haven't visited this kper yet
         if kper != iper:
-            arr = cbf.get_data(kstpkper=kstpkper,text=text,full3D=True)
+            arr = cbf.get_data(kstpkper=kstpkper, text=text, full3D=True)
             if len(arr) > 0:
                 arr = arr[0]
-                print(arr.max(),arr.min(),arr.sum())
+                print(arr.max(), arr.min(), arr.sum())
                 # masked where zero
-                arr[np.where(arr==0.0)] = np.NaN
-                m4d[iper+1] = arr
+                arr[np.where(arr == 0.0)] = np.NaN
+                m4d[iper + 1] = arr
             iper += 1
-
-
 
     # model wasn't passed, then create a generic model
     if model is None:
@@ -248,10 +248,11 @@ def flux_to_wel(cbc_file,text,precision="single",model=None,verbose=False):
         ModflowWel(model)
 
     # get the stress_period_data dict {kper:np recarray}
-    sp_data = MfList.from_4d(model,"WEL",{"flux":m4d})
+    sp_data = MfList.from_4d(model, "WEL", {"flux": m4d})
 
-    wel = ModflowWel(model,stress_period_data=sp_data)
+    wel = ModflowWel(model, stress_period_data=sp_data)
     return wel
+
 
 def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
             **kwargs):
@@ -299,8 +300,11 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
     else:
         return np.loadtxt(file, dtype=dtype, skiprows=skiprows, **kwargs)
 
+
 def get_url_text(url, error_msg=None):
-    """Get text from a url, using either python 3 or 2."""
+    """
+    Get text from a url, using either python 3 or 2.
+    """
     try:
         # For Python 3.0 and later
         from urllib.request import urlopen

@@ -99,6 +99,7 @@ class BinaryHeader(Header):
 def binaryread_struct(file, vartype, shape=(1,), charlen=16):
     """
     Read text, a scalar value, or an array of values from a binary file.
+
         file : file object
             is an open file object
         vartype : type
