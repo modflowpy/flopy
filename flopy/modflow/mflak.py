@@ -654,11 +654,14 @@ class ModflowLak(Package):
             try:
                 nssitr = int(t[1])
             except:
-                pass
+                if model.verbose:
+                    print('  implicit nssitr defined in file')
             try:
                 sscncr = float(t[2])
             except:
-                pass
+                if model.verbose:
+                    print('  implicit sscncr defined in file')
+
         surfdep = 0.
         if theta < 0.:
             surfdep = float(t[3])

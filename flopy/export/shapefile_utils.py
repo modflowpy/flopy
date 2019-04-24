@@ -967,7 +967,8 @@ class EpsgReference:
         try:  # get rid of pyc file
             os.remove(self.location + 'c')
         except:
-            pass
+            msg = 'could not remove {}'.format(self.location + 'c')
+            print(msg)
 
     def make(self):
         if not os.path.exists(self.location):

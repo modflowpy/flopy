@@ -220,23 +220,26 @@ def get_headfile_precision(filename):
             if t.upper() not in asciiset:
                 raise Exception()
         result = 'single'
+        success = True
     except:
-        pass
+        success = False
 
     # next try double
-    f.seek(0)
-    vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f8'),
-               ('totim', '<f8'), ('text', 'S16')]
-    hdr = binaryread(f, vartype)
-    text = hdr[0][4]
-    try:
-        text = text.decode()
-        for t in text:
-            if t.upper() not in asciiset:
-                raise Exception()
-        result = 'double'
-    except:
-        pass
+    if not success:
+        f.seek(0)
+        vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f8'),
+                   ('totim', '<f8'), ('text', 'S16')]
+        hdr = binaryread(f, vartype)
+        text = hdr[0][4]
+        try:
+            text = text.decode()
+            for t in text:
+                if t.upper() not in asciiset:
+                    raise Exception()
+            result = 'double'
+        except:
+            print('   Could not determine the precision of ' +
+                  'the headfile {}'.format(filename))
 
     # close and return result
     f.close()

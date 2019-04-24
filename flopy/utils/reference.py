@@ -279,7 +279,7 @@ class SpatialReference(object):
                 units = "feet"
             return units
         except:
-            pass
+            print('   could not parse units from {}'.format(self.proj4_str))
 
     @property
     def units(self):
@@ -372,31 +372,36 @@ class SpatialReference(object):
                 try:
                     d['xul'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse xul ' +
+                          'in {}'.format(namefile))
             elif "yul" in item.lower():
                 try:
                     d['yul'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse yul ' +
+                          'in {}'.format(namefile))
             elif "rotation" in item.lower():
                 try:
                     d['rotation'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse rotation ' +
+                          'in {}'.format(namefile))
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:]).strip()
                     if proj4_str.lower() == 'none':
                         proj4_str = None
                     d['proj4_str'] = proj4_str
-
                 except:
-                    pass
+                    print('   could not parse proj4_str ' +
+                          'in {}'.format(namefile))
             elif "start" in item.lower():
                 try:
                     d['start_datetime'] = item.split(':')[1].strip()
                 except:
-                    pass
+                    print('   could not parse start ' +
+                          'in {}'.format(namefile))
+
             # spatial reference length units
             elif "units" in item.lower():
                 d['units'] = item.split(':')[1].strip()
@@ -578,7 +583,8 @@ class SpatialReference(object):
         try:
             attribs.pop("start_datetime")
         except:
-            pass
+            print('   could not remove start_datetime')
+
         return SpatialReference(**attribs)
 
     @classmethod
@@ -1069,7 +1075,6 @@ class SpatialReference(object):
                     xll, yll = xmin, ymin
                 except ImportError:
                     print('scipy package required to export rotated grid.')
-                    pass
 
             filename = '.'.join(
                 filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
@@ -2093,7 +2098,7 @@ class crs(object):
             try:
                 return float(self.wktstr[strt:end].split(',')[1])
             except:
-                pass
+                print('   could not typecast wktstr to a float')
 
     def _getgcsparam(self, txt):
         nvalues = 3 if txt.lower() == 'spheroid' else 2

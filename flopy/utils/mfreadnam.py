@@ -228,31 +228,36 @@ def attribs_from_namfile_header(namefile):
                 xll = float(item.split(':')[1])
                 defaults["xll"] = xll
             except:
-                pass
+                print('   could not parse xll ' +
+                      'in {}'.format(namefile))
         elif "yll" in item.lower():
             try:
                 yll = float(item.split(':')[1])
                 defaults["yll"] = yll
             except:
-                pass
+                print('   could not parse yll ' +
+                      'in {}'.format(namefile))
         elif "xul" in item.lower():
             try:
                 xul = float(item.split(':')[1])
                 defaults["xul"] = xul
             except:
-                pass
+                print('   could not parse xul ' +
+                      'in {}'.format(namefile))
         elif "yul" in item.lower():
             try:
                 yul = float(item.split(':')[1])
                 defaults["yul"] = yul
             except:
-                pass
+                print('   could not parse yul ' +
+                      'in {}'.format(namefile))
         elif "rotation" in item.lower():
             try:
                 angrot = float(item.split(':')[1])
                 defaults["rotation"] = angrot
             except:
-                pass
+                print('   could not parse rotation ' +
+                      'in {}'.format(namefile))
         elif "proj4_str" in item.lower():
             try:
                 proj4 = ':'.join(item.split(':')[1:]).strip()
@@ -260,11 +265,13 @@ def attribs_from_namfile_header(namefile):
                     proj4 = None
                 defaults['proj4_str'] = proj4
             except:
-                pass
+                print('   could not parse proj4_str ' +
+                      'in {}'.format(namefile))
         elif "start" in item.lower():
             try:
                 start_datetime = item.split(':')[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
-                pass
+                print('   could not parse start ' +
+                      'in {}'.format(namefile))
     return defaults

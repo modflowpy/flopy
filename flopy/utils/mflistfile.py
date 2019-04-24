@@ -403,12 +403,14 @@ class ListBudget(object):
             try:
                 ipos = self.get_kstpkper().index(kstpkper)
             except:
-                pass
+                print('   could not retrieve kstpkper ' +
+                      '{} from the lst file'.format(kstpkper))
         elif totim is not None:
             try:
                 ipos = self.get_times().index(totim)
             except:
-                pass
+                print('   could not retrieve totime ' +
+                      '{} from the lst file'.format(totim))
         elif idx is not None:
             ipos = idx
         else:

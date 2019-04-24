@@ -392,7 +392,6 @@ class ModflowNwt(Package):
                 ("ibotav", int), ("options", str), ("Continue", str))
         vars = collections.OrderedDict(vars)
         kwargs = {}
-        ipos = 0
         if ifrfm:
             t = line.split()
         else:
@@ -401,12 +400,15 @@ class ModflowNwt(Package):
                 for idx, (k, c) in enumerate(vars.items()):
                     t.append(line[idx * 10:(idx + 1) * 10])
             except:
-                pass
+                if model.verbose:
+                    print('   did not parse fixed format dataset 1')
         try:
             for i, (v, c) in enumerate(vars.items()):
                 kwargs[v] = c(t[i].strip())
         except:
-            pass
+            if model.verbose:
+                print('   did not generate dataset 1 kwargs')
+
         if "Continue" in kwargs:
             if 'CONTINUE' in kwargs["Continue"].upper():
                 kwargs["Continue"] = True

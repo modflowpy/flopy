@@ -100,12 +100,11 @@ class Package(PackageInterface):
             self.extension.append(e)
             file_name = self.parent.name + '.' + e
             if filenames is not None:
-                try:
+                if idx < len(filenames):
                     if filenames[idx] is not None:
                         file_name = filenames[idx]
-                except:
-                    pass
             self.file_name.append(file_name)
+
         self.fn_path = os.path.join(self.parent.model_ws, self.file_name[0])
         if (not isinstance(name, list)):
             name = [name]
@@ -672,7 +671,9 @@ class Package(PackageInterface):
         try:
             ipakcb = int(t[1])
         except:
-            pass
+            if model.verbose:
+                print('   implicit ipakcb in {}'.format(filename))
+
         options = []
         aux_names = []
         if len(t) > 2:
@@ -760,7 +761,8 @@ class Package(PackageInterface):
             try:
                 itmpp = int(t[1])
             except:
-                pass
+                if model.verbose:
+                    print('   implicit itmpp in {}'.format(filename))
 
             if itmp == 0:
                 bnd_output = None
@@ -861,7 +863,10 @@ class Package(PackageInterface):
                     else:
                         iname = 'static'
                 except:
-                    pass
+                    if model.verbose:
+                        print('  implicit static instance for ' +
+                              'parameter {}'.format(pname))
+
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 

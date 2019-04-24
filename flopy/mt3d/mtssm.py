@@ -249,7 +249,9 @@ class Mt3dSsm(Package):
                 print("found 'rch' in modflow model, resetting crch to 0.0")
                 crch = 0.0
         except:
-            pass
+            if model.verbose:
+                print('   explicit crcg in file')
+
         if crch is not None:
 
             self.crch = []
@@ -295,7 +297,9 @@ class Mt3dSsm(Package):
                     "found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
                 cevt = 0.0
         except:
-            pass
+            if model.verbose:
+                print('   explicit cevt in file')
+
         if cevt is not None:
             self.cevt = []
             t2d = Transient2d(model, (nrow, ncol), np.float32,

@@ -2765,7 +2765,8 @@ class Util2d(DataInterface):
                         # td = ext_unit_dict[int(raw[1])]
                         fname = ext_unit_dict[int(raw[1])].filename.strip()
                     except:
-                        pass
+                        print('   could not determine filename ' +
+                              'for unit {}'.format(raw[1]))
 
                 nunit = int(raw[1])
                 if isfloat:

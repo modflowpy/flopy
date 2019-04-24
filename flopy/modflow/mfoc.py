@@ -574,7 +574,6 @@ class ModflowOc(Package):
                     numericformat = True
                 except:
                     f.seek(ipos)
-                    pass
                 # exit so the remaining data can be read
                 #  from the file based on numericformat
                 break
@@ -608,14 +607,10 @@ class ModflowOc(Package):
                     break
         #
         if ext_unit_dict is not None:
-            try:
+            if ihedun in ext_unit_dict:
                 fhead = ext_unit_dict[ihedun]
-            except:
-                pass
-            try:
+            if iddnun in ext_unit_dict:
                 fddn = ext_unit_dict[iddnun]
-            except:
-                pass
 
         # close the oc file
         f.close()

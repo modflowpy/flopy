@@ -244,6 +244,8 @@ class ModflowPcg(Package):
             ifrfm = True
         ihcofadd = 0
         dampt = 0.
+
+        # free format
         if ifrfm:
             t = line_parse(line)
             # t = line.strip().split()
@@ -253,7 +255,9 @@ class ModflowPcg(Package):
             try:
                 ihcofadd = int(t[3])
             except:
-                pass
+                if model.verbose:
+                    print('   explicit ihcofadd in file')
+
             # dataset 2
             try:
                 line = f.readline()
@@ -278,7 +282,7 @@ class ModflowPcg(Package):
                 damp = float(line[60:70].strip())
                 if damp < 0.:
                     dampt = float(line[70:80].strip())
-            pass
+        # fixed format
         else:
             mxiter = int(line[0:10].strip())
             iter1 = int(line[10:20].strip())
@@ -286,7 +290,9 @@ class ModflowPcg(Package):
             try:
                 ihcofadd = int(line[30:40].strip())
             except:
-                pass
+                if model.verbose:
+                    print('   explicit ihcofadd in file')
+
             # dataset 2
             line = f.readline()
             hclose = float(line[0:10].strip())

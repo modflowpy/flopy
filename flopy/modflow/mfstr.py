@@ -592,13 +592,15 @@ class ModflowStr(Package):
                 ipakcb = istcb1
                 model.add_pop_key_list(istcb1)
         except:
-            pass
+            if model.verbose:
+                print('  could not remove unit number {}'.format(istcb1))
         try:
             if istcb2 != 0:
                 ipakcb = 53
                 model.add_pop_key_list(istcb2)
         except:
-            pass
+            if model.verbose:
+                print('  could not remove unit number {}'.format(istcb2))
 
         options = []
         aux_names = []
@@ -661,7 +663,10 @@ class ModflowStr(Package):
                             else:
                                 iname = 'static'
                         except:
-                            pass
+                            if model.verbose:
+                                print('  implicit static instance for ' +
+                                      'parameter {}'.format(pname))
+
                         par_dict, current_dict = pak_parms.get(pname)
                         data_dict = current_dict[iname]
 

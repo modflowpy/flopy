@@ -568,7 +568,8 @@ class ModflowSwi2(Package):
                 alpha = float(t[2])
                 beta = float(t[3])
             except:
-                pass
+                if model.verbose:
+                    print('   explicit alpha and beta in file')
 
         # read dataset 3b
         nadptmx, nadptmn, adptfct = None, None, None

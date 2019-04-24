@@ -12,10 +12,8 @@ import collections
 import warnings
 import numpy as np
 
-try:
-    from numpy.lib.recfunctions import append_fields, stack_arrays
-except:
-    pass
+from numpy.lib.recfunctions import append_fields, stack_arrays
+
 from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
@@ -68,10 +66,8 @@ class PathlineFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid'])
@@ -607,10 +603,8 @@ class EndpointFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid']).shape[0]
@@ -1027,10 +1021,8 @@ class EndpointFile():
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
         # convert back to one-based
         for n in self.kijnames:
-            try:
+            if n in epd:
                 epd[n] += 1
-            except:
-                pass
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
@@ -1080,10 +1072,8 @@ class TimeseriesFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid'])

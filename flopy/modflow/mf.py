@@ -497,7 +497,8 @@ class Modflow(BaseModel):
                     j = output_units0.index(iu0)
                     p.ipakcb = self.output_units[j]
             except:
-                pass
+                if self.verbose:
+                    print('   could not replace value in ipakcb')
 
         return
 
@@ -539,9 +540,8 @@ class Modflow(BaseModel):
                     if v.lower() == 'save budget':
                         savebud = True
         except Exception as e:
-            print("error reading output filenames from OC package:{0}". \
-                  format(str(e)))
-            pass
+            print('error reading output filenames ' +
+                  'from OC package: {}'.format(str(e)))
 
         self.hpth = os.path.join(self.model_ws,
                                  '{}.{}'.format(self.name, self.hext))
