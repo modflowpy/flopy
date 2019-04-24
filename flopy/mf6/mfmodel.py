@@ -260,43 +260,91 @@ class MFModel(PackageContainer, ModelInterface):
 
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
-            self._modelgrid = StructuredGrid(delc=dis.delc.array, delr=dis.delr.array,
-                                  top=dis.top.array, botm=dis.botm.array,
-                                  idomain=dis.idomain.array,
-                                  lenuni=dis.length_units.array,
-                                  proj4=self._modelgrid.proj4,
-                                  epsg=self._modelgrid.epsg,
-                                  xoff=self._modelgrid.xoffset,
-                                  yoff=self._modelgrid.yoffset,
-                                  angrot=self._modelgrid.angrot)
+            if not hasattr(dis, '_init_complete'):
+                if not hasattr(dis, 'delr'):
+                    # dis package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # dis package has been partially initialized
+                    self._modelgrid = StructuredGrid(
+                        delc=dis.delc.array, delr=dis.delr.array,
+                        top=None, botm=None, idomain=None, lenuni=None,
+                        proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
+                        xoff=self._modelgrid.xoffset,
+                        yoff=self._modelgrid.yoffset,
+                        angrot=self._modelgrid.angrot)
+            else:
+                self._modelgrid = StructuredGrid(
+                    delc=dis.delc.array, delr=dis.delr.array,
+                    top=dis.top.array, botm=dis.botm.array,
+                    idomain=dis.idomain.array, lenuni=dis.length_units.array,
+                    proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
+                    xoff=self._modelgrid.xoffset, yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot)
         elif self.get_grid_type() == DiscretizationType.DISV:
             dis = self.get_package('disv')
-            self._modelgrid = VertexGrid(vertices=dis.vertices.array,
-                                         cell2d=dis.cell2d.array,
-                                  top=dis.top.array, botm=dis.botm.array,
-                                  idomain=dis.idomain.array,
-                                  lenuni=dis.length_units.array,
-                                  proj4=self._modelgrid.proj4,
-                                  epsg=self._modelgrid.epsg,
-                                  xoff=self._modelgrid.xoffset,
-                                  yoff=self._modelgrid.yoffset,
-                                  angrot=self._modelgrid.angrot)
+            if not hasattr(dis, '_init_complete'):
+                if not hasattr(dis, 'cell2d'):
+                    # disv package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # disv package has been partially initialized
+                    self._modelgrid = VertexGrid(vertices=dis.vertices.array,
+                                                 cell2d=dis.cell2d.array,
+                                                 top=None,
+                                                 botm=None,
+                                                 idomain=None,
+                                                 lenuni=None,
+                                                 proj4=self._modelgrid.proj4,
+                                                 epsg=self._modelgrid.epsg,
+                                                 xoff=self._modelgrid.xoffset,
+                                                 yoff=self._modelgrid.yoffset,
+                                                 angrot=self._modelgrid.angrot)
+            else:
+                self._modelgrid = VertexGrid(
+                    vertices=dis.vertices.array, cell2d=dis.cell2d.array,
+                    top=dis.top.array, botm=dis.botm.array,
+                    idomain=dis.idomain.array, lenuni=dis.length_units.array,
+                    proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
+                    xoff=self._modelgrid.xoffset, yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot)
         elif self.get_grid_type() == DiscretizationType.DISU:
             dis = self.get_package('disu')
-            iverts = [list(i)[4:] for i in dis.cell2d.array]
-            self._modelgrid = UnstructuredGrid(vertices=np.array(dis.vertices.array),
-                                               iverts=iverts,
-                                               xcenters = dis.cell2d.array['xc'],
-                                               ycenters = dis.cell2d.array['yc'],
-                                               top=dis.top.array, botm=dis.botm.array,
-                                               idomain=dis.idomain.array,
-                                               lenuni=dis.length_units.array,
-                                               proj4=self._modelgrid.proj4,
-                                               epsg=self._modelgrid.epsg,
-                                               xoff=self._modelgrid.xoffset,
-                                               yoff=self._modelgrid.yoffset,
-                                               angrot=self._modelgrid.angrot)
+            if not hasattr(dis, '_init_complete'):
+                # disu package has not yet been fully initialized
+                return self._modelgrid
+            cell2d = dis.cell2d.array
+            idomain = np.ones(dis.nodes.array, np.int32)
+            if cell2d is None:
+                if self.simulation.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: cell2d information missing. Functionality of '
+                          'the UnstructuredGrid will be limited.')
+                iverts = None
+                xcenters = None
+                ycenters = None
+            else:
+                iverts = [list(i)[4:] for i in cell2d]
+                xcenters = dis.cell2d.array['xc']
+                ycenters = dis.cell2d.array['yc']
+            vertices = dis.vertices.array
+            if vertices is None:
+                if self.simulation.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: vertices information missing. Functionality '
+                          'of the UnstructuredGrid will be limited.')
+                vertices = None
+            else:
+                vertices = np.array(vertices)
 
+            self._modelgrid = UnstructuredGrid(
+                vertices=vertices, iverts=iverts,
+                xcenters=xcenters,
+                ycenters=ycenters, top=dis.top.array,
+                botm=dis.bot.array, idomain=idomain,
+                lenuni=dis.length_units.array, proj4=self._modelgrid.proj4,
+                epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
+                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot)
         else:
             return self._modelgrid
 

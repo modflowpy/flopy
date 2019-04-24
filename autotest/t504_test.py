@@ -384,6 +384,15 @@ def test006_gwf3():
     # write with "copy_external_files" turned off so external files do not get copied to new location
     sim.write_simulation(ext_file_action=flopy.mf6.mfbase.ExtFileAction.copy_none)
 
+    # store strt in an external binary file
+    model = sim.get_model()
+    ic = model.get_package('ic')
+    ic.strt.store_as_external_file('initial_heads.bin', binary=True)
+
+    strt_data = ic.strt.array
+    # update packages
+    sim.write_simulation()
+
     if run:
         # run simulation
         sim.run_simulation()
@@ -409,6 +418,8 @@ def test006_gwf3():
         assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.cl12.dat'))
         assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.area.dat'))
         assert not os.path.isfile(os.path.join(save_folder, 'flow.disu.hwva.dat'))
+        # confirm external binary file was created
+        assert os.path.isfile(os.path.join(save_folder, 'initial_heads.bin'))
 
         # clean up
         sim.delete_output_files()

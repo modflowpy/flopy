@@ -540,3 +540,4 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         self.connectiondata = self.build_mfdata("connectiondata", 
                                                 connectiondata)
         self.perioddata = self.build_mfdata("perioddata",  perioddata)
+        self._init_complete = True

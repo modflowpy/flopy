@@ -412,3 +412,4 @@ class ModflowGwfuzf(mfpackage.MFPackage):
         self.nwavesets = self.build_mfdata("nwavesets",  nwavesets)
         self.packagedata = self.build_mfdata("packagedata",  packagedata)
         self.perioddata = self.build_mfdata("perioddata",  perioddata)
+        self._init_complete = True

@@ -43,16 +43,17 @@ class UnstructuredGrid(Grid):
         self._xc = xcenters
         self._yc = ycenters
 
-        if self.layered:
-            assert np.all([n == len(iverts) for n in ncpl])
-            assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
-            assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
-        else:
-            msg = ('Length of iverts must equal ncpl.sum '
-                   '({} {})'.format(len(iverts), ncpl))
-            assert len(iverts) == ncpl.sum(), msg
-            assert np.array(self.xcellcenters).shape[0] == self.ncpl
-            assert np.array(self.ycellcenters).shape[0] == self.ncpl
+        if iverts is not None:
+            if self.layered:
+                assert np.all([n == len(iverts) for n in ncpl])
+                assert np.array(self.xcellcenters).shape[0] == self.ncpl[0]
+                assert np.array(self.ycellcenters).shape[0] == self.ncpl[0]
+            else:
+                msg = ('Length of iverts must equal ncpl.sum '
+                       '({} {})'.format(len(iverts), ncpl))
+                assert len(iverts) == ncpl.sum(), msg
+                assert np.array(self.xcellcenters).shape[0] == self.ncpl
+                assert np.array(self.ycellcenters).shape[0] == self.ncpl
 
 
     @property
@@ -88,8 +89,10 @@ class UnstructuredGrid(Grid):
 
     @property
     def extent(self):
+        self._copy_cache = False
         xvertices = np.hstack(self.xvertices)
         yvertices = np.hstack(self.yvertices)
+        self._copy_cache = True
         return (np.min(xvertices),
                 np.max(xvertices),
                 np.min(yvertices),
@@ -104,6 +107,7 @@ class UnstructuredGrid(Grid):
         Returns:
             list: grid line vertices
         """
+        self._copy_cache = False
         xgrid = self.xvertices
         ygrid = self.yvertices
 
@@ -112,6 +116,7 @@ class UnstructuredGrid(Grid):
             for ix, vert in enumerate(verts):
                 lines.append([(xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
                               (xgrid[ncell][ix], ygrid[ncell][ix])])
+        self._copy_cache = True
         return lines
 
     @property
@@ -123,7 +128,10 @@ class UnstructuredGrid(Grid):
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             self._build_grid_geometry_info()
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     @property
     def xyzvertices(self):
@@ -137,8 +145,10 @@ class UnstructuredGrid(Grid):
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
             self._build_grid_geometry_info()
-
-        return self._cache_dict[cache_index].data
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
 
     def intersect(self, x, y, local=False):
         x, y = super(UnstructuredGrid, self).intersect(x, y, local)
@@ -151,8 +161,11 @@ class UnstructuredGrid(Grid):
         :param cellid: (int) cellid number
         :return: list of x,y cell vertices
         """
-        return list(zip(self.xvertices[cellid],
-                        self.yvertices[cellid]))
+        self._copy_cache = False
+        cell_vert = list(zip(self.xvertices[cellid],
+                             self.yvertices[cellid]))
+        self._copy_cache = True
+        return cell_vert
 
     def _build_grid_geometry_info(self):
         cache_index_cc = 'cellcenters'

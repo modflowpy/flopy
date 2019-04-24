@@ -186,3 +186,4 @@ class ModflowGwfoc(mfpackage.MFPackage):
                                                  headprintrecord)
         self.saverecord = self.build_mfdata("saverecord",  saverecord)
         self.printrecord = self.build_mfdata("printrecord",  printrecord)
+        self._init_complete = True

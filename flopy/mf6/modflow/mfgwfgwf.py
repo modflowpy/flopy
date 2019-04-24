@@ -269,3 +269,4 @@ class ModflowGwfgwf(mfpackage.MFPackage):
                                                      self._obs_filerecord)
         self.nexg = self.build_mfdata("nexg",  nexg)
         self.exchangedata = self.build_mfdata("exchangedata",  exchangedata)
+        self._init_complete = True

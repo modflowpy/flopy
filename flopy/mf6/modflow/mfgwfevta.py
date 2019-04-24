@@ -197,3 +197,4 @@ class ModflowGwfevta(mfpackage.MFPackage):
         self.rate = self.build_mfdata("rate",  rate)
         self.depth = self.build_mfdata("depth",  depth)
         self.aux = self.build_mfdata("aux(iaux)",  aux)
+        self._init_complete = True

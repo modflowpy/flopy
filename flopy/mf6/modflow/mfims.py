@@ -426,3 +426,4 @@ class ModflowIms(mfpackage.MFPackage):
                                                 scaling_method)
         self.reordering_method = self.build_mfdata("reordering_method", 
                                                    reordering_method)
+        self._init_complete = True

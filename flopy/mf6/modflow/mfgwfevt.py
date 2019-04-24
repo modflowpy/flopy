@@ -246,3 +246,4 @@ class ModflowGwfevt(mfpackage.MFPackage):
         self.nseg = self.build_mfdata("nseg",  nseg)
         self.stress_period_data = self.build_mfdata("stress_period_data", 
                                                     stress_period_data)
+        self._init_complete = True

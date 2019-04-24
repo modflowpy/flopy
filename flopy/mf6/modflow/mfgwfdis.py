@@ -138,3 +138,4 @@ class ModflowGwfdis(mfpackage.MFPackage):
         self.top = self.build_mfdata("top",  top)
         self.botm = self.build_mfdata("botm",  botm)
         self.idomain = self.build_mfdata("idomain",  idomain)
+        self._init_complete = True

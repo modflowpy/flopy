@@ -667,3 +667,4 @@ class ModflowGwflak(mfpackage.MFPackage):
                                                 lakeperioddata)
         self.outletperioddata = self.build_mfdata("outletperioddata", 
                                                   outletperioddata)
+        self._init_complete = True

@@ -15,6 +15,7 @@ from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
+from .data.mfdatautil import MFComment
 
 
 class MFBlockHeader(object):
@@ -240,9 +241,8 @@ class MFBlock(object):
         self._model_or_sim = model_or_sim
         self._container_package = container_package
         self.block_headers = [MFBlockHeader(structure.name, [],
-                                            mfdata.MFComment('', path,
-                                                             simulation_data,
-                                                             0),
+                                            MFComment('', path, simulation_data,
+                                                      0),
                                             simulation_data, path)]
         self.structure = structure
         self.path = path
@@ -252,10 +252,10 @@ class MFBlock(object):
         self.blk_post_comment_path = path + ('blk_post_comment',)
         if self.blk_trailing_comment_path not in simulation_data.mfdata:
             simulation_data.mfdata[self.blk_trailing_comment_path] = \
-              mfdata.MFComment('', '', simulation_data, 0)
+              MFComment('', '', simulation_data, 0)
         if self.blk_post_comment_path not in simulation_data.mfdata:
             simulation_data.mfdata[self.blk_post_comment_path] = \
-              mfdata.MFComment('\n', '', simulation_data, 0)
+              MFComment('\n', '', simulation_data, 0)
         # initially disable if optional
         self.enabled = structure.number_non_optional_data() > 0
         self.loaded = False
@@ -442,7 +442,7 @@ class MFBlock(object):
            self.block_headers[-1].data_items[0].get_data() is not None:
             block_header_path = self.path + (len(self.block_headers) + 1,)
             block_header = MFBlockHeader(self.structure.name, [],
-                                         mfdata.MFComment('', self.path,
+                                         MFComment('', self.path,
                                          self._simulation_data, 0),
                                          self._simulation_data,
                                          block_header_path)
@@ -581,12 +581,12 @@ class MFBlock(object):
         comments = []
 
         # capture any initial comments
-        initial_comment = mfdata.MFComment('', '', 0)
+        initial_comment = MFComment('', '', 0)
         fd_block = fd
         line = fd_block.readline()
         datautil.PyListUtil.reset_delimiter_used()
         arr_line = datautil.PyListUtil.split_data_line(line)
-        while mfdata.MFComment.is_comment(line, True):
+        while MFComment.is_comment(line, True):
             initial_comment.add_text(line)
             line = fd_block.readline()
             arr_line = datautil.PyListUtil.split_data_line(line)
@@ -664,7 +664,7 @@ class MFBlock(object):
                 else:
                     arr_line = ''
                 # capture any trailing comments
-                post_data_comments = mfdata.MFComment('', '',
+                post_data_comments = MFComment('', '',
                                                       self._simulation_data, 0)
                 dataset.post_data_comments = post_data_comments
                 while arr_line and (len(next_line[1]) <= 2 or
@@ -852,7 +852,7 @@ class MFBlock(object):
     def _save_comments(self, arr_line, line, key, comments):
         # FIX: Save these comments somewhere in the data set
         if not key in self.datasets_keyword:
-            if mfdata.MFComment.is_comment(key, True):
+            if MFComment.is_comment(key, True):
                 if comments:
                     comments.append('\n')
                 comments.append(arr_line)
@@ -1309,8 +1309,8 @@ class MFPackage(PackageContainer, PackageInterface):
         # init
         header_variable_strs = []
         arr_clean_line = line.strip().split()
-        header_comment = mfdata.MFComment('', path + (arr_clean_line[1],),
-                                          self._simulation_data, 0)
+        header_comment = MFComment('', path + (arr_clean_line[1],),
+                                   self._simulation_data, 0)
         # break header into components
         if len(arr_clean_line) < 2:
             message = 'Block header does not contain a name. Name ' \
@@ -1331,7 +1331,7 @@ class MFPackage(PackageContainer, PackageInterface):
             comment = False
             for entry in arr_clean_line[2:]:
                 # if start of comment
-                if mfdata.MFComment.is_comment(entry.strip()[0]):
+                if MFComment.is_comment(entry.strip()[0]):
                     comment = True
                 if comment:
                     header_comment.text = ' '.join([header_comment.text,
@@ -1542,9 +1542,9 @@ class MFPackage(PackageContainer, PackageInterface):
     def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
         # init
         self._simulation_data.mfdata[self.path + ('pkg_hdr_comments',)] = \
-          mfdata.MFComment('', self.path, self._simulation_data)
-        self.post_block_comments = mfdata.MFComment('', self.path,
-                                                    self._simulation_data)
+          MFComment('', self.path, self._simulation_data)
+        self.post_block_comments = MFComment('', self.path,
+                                             self._simulation_data)
 
         blocks_read = 0
         found_first_block = False
@@ -1553,7 +1553,7 @@ class MFPackage(PackageContainer, PackageInterface):
             line = fd_input_file.readline()
             clean_line = line.strip()
             # If comment or empty line
-            if mfdata.MFComment.is_comment(clean_line, True):
+            if MFComment.is_comment(clean_line, True):
                 self._store_comment(line, found_first_block)
             elif len(clean_line) > 4 and clean_line[:5].upper() == 'BEGIN':
                 # parse block header
@@ -1605,7 +1605,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 else:
                     found_first_block = True
                     self.post_block_comments = \
-                      mfdata.MFComment('', self.path, self._simulation_data)
+                      MFComment('', self.path, self._simulation_data)
                     skip_block = False
                     if self.blocks[block_key].loaded:
                         # Only blocks defined as repeating are allowed to have

@@ -104,6 +104,7 @@ class ModflowUtlobs(mfpackage.MFPackage):
         self.digits = self.build_mfdata("digits",  digits)
         self.print_input = self.build_mfdata("print_input",  print_input)
         self.continuous = self.build_mfdata("continuous",  continuous)
+        self._init_complete = True
 
 
 class UtlobsPackages(mfpackage.MFChildPackages):

@@ -187,3 +187,4 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         self.irch = self.build_mfdata("irch",  irch)
         self.recharge = self.build_mfdata("recharge",  recharge)
         self.aux = self.build_mfdata("aux",  aux)
+        self._init_complete = True

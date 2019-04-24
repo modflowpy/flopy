@@ -131,3 +131,4 @@ class ModflowGwfgnc(mfpackage.MFPackage):
         self.numgnc = self.build_mfdata("numgnc",  numgnc)
         self.numalphaj = self.build_mfdata("numalphaj",  numalphaj)
         self.gncdata = self.build_mfdata("gncdata",  gncdata)
+        self._init_complete = True

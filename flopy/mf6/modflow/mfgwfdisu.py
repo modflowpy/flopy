@@ -266,3 +266,4 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         self.angldegx = self.build_mfdata("angldegx",  angldegx)
         self.vertices = self.build_mfdata("vertices",  vertices)
         self.cell2d = self.build_mfdata("cell2d",  cell2d)
+        self._init_complete = True

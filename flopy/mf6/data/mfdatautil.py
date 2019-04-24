@@ -1,13 +1,366 @@
 import os, sys, inspect
 import numpy as np
 from copy import deepcopy
-from ..mfbase import MFDataException
+from ..mfbase import MFDataException, FlopyException
+from .mfstructure import DatumType
+from ...utils.datautil import PyListUtil
+import struct
 
 
 def get_first_val(arr):
     while isinstance(arr, list) or isinstance(arr, np.ndarray):
         arr = arr[0]
     return arr
+
+
+# convert_data(data, type) : type
+#    converts data "data" to type "type" and returns the converted data
+def convert_data(data, data_dimensions, data_type, data_item=None):
+    if data_type == DatumType.double_precision:
+        if data_item is not None and data_item.support_negative_index:
+            val = int(PyListUtil.clean_numeric(data))
+            if val == -1:
+                return -0.0
+            elif val == 1:
+                return 0.0
+            elif val < 0:
+                val += 1
+            else:
+                val -= 1
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                message = 'Data "{}" with value "{}" can ' \
+                          'not be converted to float' \
+                           '.'.format(data_dimensions.structure.name,
+                                      data)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    data_dimensions.structure.get_model(),
+                    data_dimensions.structure.get_package(),
+                    data_dimensions.structure.path, 'converting data',
+                    data_dimensions.structure.name,
+                    inspect.stack()[0][3], type_, value_, traceback_,
+                    message, False)
+        else:
+            try:
+                if isinstance(data, str):
+                    # fix any scientific formatting that python can't handle
+                    data = data.replace('d', 'e')
+                return float(data)
+            except (ValueError, TypeError):
+                try:
+                    return float(PyListUtil.clean_numeric(data))
+                except (ValueError, TypeError):
+                    message = 'Data "{}" with value "{}" can ' \
+                              'not be converted to float' \
+                               '.'.format(data_dimensions.structure.
+                                          name,
+                                          data)
+                    type_, value_, traceback_ = sys.exc_info()
+                    raise MFDataException(
+                        data_dimensions.structure.get_model(),
+                        data_dimensions.structure.get_package(),
+                        data_dimensions.structure.path,
+                        'converting data',
+                        data_dimensions.structure.name,
+                        inspect.stack()[0][3], type_, value_,
+                        traceback_, message, False)
+    elif data_type == DatumType.integer:
+        if data_item is not None and data_item.numeric_index:
+            return int(PyListUtil.clean_numeric(data)) - 1
+        try:
+            return int(data)
+        except (ValueError, TypeError):
+            try:
+                return int(PyListUtil.clean_numeric(data))
+            except (ValueError, TypeError):
+                message = 'Data "{}" with value "{}" can not be ' \
+                          'converted to int' \
+                          '.'.format(data_dimensions.structure.name,
+                                     data)
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    data_dimensions.structure.get_model(),
+                    data_dimensions.structure.get_package(),
+                    data_dimensions.structure.path, 'converting data',
+                    data_dimensions.structure.name,
+                    inspect.stack()[0][3], type_, value_, traceback_,
+                    message, False)
+    elif data_type == DatumType.string and data is not None:
+        if data_item is None or not data_item.preserve_case:
+            # keep strings lower case
+            return data.lower()
+    return data
+
+
+def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
+              possible_cellid=False, data_item=None):
+    if data_type == DatumType.double_precision:
+        if data_item is not None and data_item.support_negative_index:
+            if val > 0:
+                return (str(int(val + 1)))
+            elif val == 0.0:
+                if struct.pack('>d', val) == \
+                        b'\x80\x00\x00\x00\x00\x00\x00\x00':
+                    # value is negative zero
+                    return (str(int(val - 1)))
+                else:
+                    # value is positive zero
+                    return (str(int(val + 1)))
+            else:
+                return (str(int(val - 1)))
+        else:
+            try:
+                abs_val = abs(val)
+            except TypeError:
+                return str(val)
+            if (abs_val > sim_data._sci_note_upper_thres or
+                    abs_val < sim_data._sci_note_lower_thres) \
+                    and abs_val != 0:
+                return sim_data.reg_format_str.format(val)
+            else:
+                return sim_data.sci_format_str.format(val)
+    elif is_cellid or (possible_cellid and isinstance(val, tuple)):
+        if len(val) > 0 and val[0] == 'none':
+            # handle case that cellid is 'none'
+            return val[0]
+        if is_cellid and \
+                data_dim.get_model_dim(None).model_name is not \
+                None:
+            model_grid = data_dim.get_model_grid()
+            cellid_size = model_grid.get_num_spatial_coordinates()
+            if len(val) != cellid_size:
+                message = 'Cellid "{}" contains {} integer(s). Expected a' \
+                          ' cellid containing {} integer(s) for grid type' \
+                          ' {}.'.format(val, len(val), cellid_size,
+                                       str(model_grid.grid_type()))
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    data_dim.structure.get_model(),
+                    data_dim.structure.get_package(),
+                    data_dim.structure.path,
+                    'converting cellid to string',
+                    data_dim.structure.name, inspect.stack()[0][3],
+                    type_, value_, traceback_, message,
+                    sim_data.debug)
+
+        string_val = []
+        for item in val:
+            string_val.append(str(item + 1))
+        return ' '.join(string_val)
+    elif data_type == DatumType.integer:
+        if data_item is not None and data_item.numeric_index:
+            if isinstance(val, str):
+                return str(int(val) + 1)
+            else:
+                return str(int(val)+1)
+        return str(int(val))
+    elif data_type == DatumType.string:
+        try:
+            arr_val = val.split()
+        except AttributeError:
+            return str(val)
+        if len(arr_val) > 1:
+            # quote any string with spaces
+            string_val = "'{}'".format(val)
+            if data_item is not None and data_item.ucase:
+                return string_val.upper()
+            else:
+                return string_val
+    if data_item is not None and data_item.ucase:
+        return str(val).upper()
+    else:
+        return str(val)
+
+
+class MFComment(object):
+    """
+    Represents a variable in a MF6 input file
+
+
+    Parameters
+    ----------
+    comment : string or list
+        comment to be displayed in output file
+    path : string
+        tuple representing location in the output file
+    line_number : integer
+        line number to display comment in output file
+
+    Attributes
+    ----------
+    comment : string or list
+        comment to be displayed in output file
+    path : string
+        tuple representing location in the output file
+    line_number : integer
+        line number to display comment in output file
+
+    Methods
+    -------
+    write : (file)
+        writes the comment to file
+    add_text(additional_text)
+        adds text to the comment
+    get_file_entry(eoln_suffix=True)
+        returns the comment text in the format to write to package files
+    is_empty(include_whitespace=True)
+        checks to see if comment is just an empty string ''.  if
+        include_whitespace is set to false a string with only whitespace is
+        considered empty
+    is_comment(text, include_empty_line=False) : boolean
+        returns true if text is a comment.  an empty line is considered a
+        comment if include_empty_line is true.
+
+    See Also
+    --------
+
+    Notes
+    -----
+
+    Examples
+    --------
+
+
+    """
+    def __init__(self, comment, path, sim_data, line_number=0):
+        if not (isinstance(comment, str) or isinstance(comment, list) or
+                        comment is None):
+            raise FlopyException('Comment "{}" not valid.  Comment must be '
+                                 'of type str of list.'.format(comment))
+        self.text = comment
+        self.path = path
+        self.line_number = line_number
+        self.sim_data = sim_data
+
+    """
+    Add text to the comment string.
+
+    Parameters
+    ----------
+    additional_text: string
+        text to add
+    """
+    def add_text(self, additional_text):
+        if additional_text:
+            if isinstance(self.text, list):
+                self.text.append(additional_text)
+            else:
+                self.text = '{} {}'.format(self.text, additional_text)
+
+    """
+    Get the comment text in the format to write to package files.
+
+    Parameters
+    ----------
+    eoln_suffix: boolean
+        have comment text end with end of line character
+    Returns
+    -------
+    string : comment text
+    """
+    def get_file_entry(self, eoln_suffix=True):
+        file_entry = ''
+        if self.text and self.sim_data.comments_on:
+            if not isinstance(self.text, str) and isinstance(self.text, list):
+                file_entry = self._recursive_get(self.text)
+            else:
+                if self.text.strip():
+                    file_entry = self.text
+            if eoln_suffix:
+                file_entry = '{}\n'.format(file_entry)
+        return file_entry
+
+    def _recursive_get(self, base_list):
+        file_entry = ''
+        if base_list and self.sim_data.comments_on:
+            for item in base_list:
+                if not isinstance(item, str) and isinstance(item, list):
+                    file_entry = '{}{}'.format(file_entry,
+                                               self._recursive_get(item))
+                else:
+                    file_entry = '{} {}'.format(file_entry, item)
+        return file_entry
+
+    """
+    Write the comment text to a file.
+
+    Parameters
+    ----------
+    fd : file
+        file to write to
+    eoln_suffix: boolean
+        have comment text end with end of line character
+    """
+    def write(self, fd, eoln_suffix=True):
+        if self.text and self.sim_data.comments_on:
+            if not isinstance(self.text, str) and isinstance(self.text, list):
+                self._recursive_write(fd, self.text)
+            else:
+                if self.text.strip():
+                    fd.write(self.text)
+            if eoln_suffix:
+                fd.write('\n')
+
+    """
+    Check for comment text
+
+    Parameters
+    ----------
+    include_whitespace : boolean
+        include whitespace as text
+    Returns
+    -------
+    boolean : True if comment text exists
+    """
+    def is_empty(self, include_whitespace=True):
+        if include_whitespace:
+            if self.text():
+                return True
+            return False
+        else:
+            if self.text.strip():
+                return True
+            return False
+
+    """
+    Check text to see if it is valid comment text
+
+    Parameters
+    ----------
+    text : string
+        potential comment text
+    include_empty_line : boolean
+        allow empty line to be valid
+    Returns
+    -------
+    boolean : True if text is valid comment text
+    """
+    @staticmethod
+    def is_comment(text, include_empty_line=False):
+        if not text:
+            return include_empty_line
+        if text and isinstance(text, list):
+            # look for comment mark in first item of list
+            text_clean = text[0].strip()
+        else:
+            text_clean = text.strip()
+        if include_empty_line and not text_clean:
+            return True
+        if text_clean and (text_clean[0] == '#' or text_clean[0] == '!' or
+                           text_clean[0] == '//'):
+            return True
+        return False
+
+    # recursively writes a nested list to a file
+    def _recursive_write(self, fd, base_list):
+        if base_list:
+            for item in base_list:
+                if not isinstance(item, str) and isinstance(item, list):
+                    self._recursive_write(fd, item)
+                else:
+                    fd.write(' {}'.format(item))
 
 
 class TemplateGenerator(object):
@@ -42,7 +395,7 @@ class TemplateGenerator(object):
                                                            data_struct)
 
     def build_type_header(self, type, data=None):
-        from ..data.mfdata import DataStorageType
+        from ..data.mfdatastorage import DataStorageType
 
         if type == DataStorageType.internal_array:
             if isinstance(self, ArrayTemplateGenerator):
@@ -88,18 +441,18 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
     def empty(self, model=None, layered=False, data_storage_type_list=None,
               default_value=None):
-        from ..data import mfdata, mfstructure
-        from ..data.mfdata import DataStorageType
+        from ..data import mfdatastorage, mfstructure
+        from ..data.mfdatastorage import DataStorageType, DataStructureType
 
         # get the expected dimensions of the data
         data_struct, data_dimensions = self._get_data_dimensions(model)
         datum_type = data_struct.get_datum_type()
         data_type = data_struct.get_datatype()
         # build a temporary data storage object
-        data_storage = mfdata.DataStorage(
-                model.simulation_data, data_dimensions, None,
-                mfdata.DataStorageType.internal_array,
-                mfdata.DataStructureType.recarray)
+        data_storage = mfdatastorage.DataStorage(
+                model.simulation_data, model, data_dimensions, None,
+                DataStorageType.internal_array,
+                DataStructureType.recarray, data_path=self.path)
         dimension_list = data_storage.get_data_dimensions(None)
 
         # if layered data
@@ -156,7 +509,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
 
     def _build_layer(self, data_type, data_storage_type, default_value,
                      dimension_list, all_layers=False):
-        from ..data.mfdata import DataStorageType
+        from ..data.mfdatastorage import DataStorageType
 
         # build data
         if data_storage_type == DataStorageType.internal_array:
@@ -227,15 +580,15 @@ class ListTemplateGenerator(TemplateGenerator):
 
     def empty(self, model, maxbound=None, aux_vars=None, boundnames=False,
               nseg=None, timeseries=False, stress_periods=None):
-        from ..data import mfdata, mfstructure
+        from ..data import mfdatastorage, mfstructure
 
         data_struct, data_dimensions = self._get_data_dimensions(model)
         data_type = data_struct.get_datatype()
         # build a temporary data storage object
-        data_storage = mfdata.DataStorage(
-                model.simulation_data, data_dimensions, None,
-                mfdata.DataStorageType.internal_array,
-                mfdata.DataStructureType.recarray)
+        data_storage = mfdatastorage.DataStorage(
+                model.simulation_data, model, data_dimensions, None,
+                mfdatastorage.DataStorageType.internal_array,
+                mfdatastorage.DataStructureType.recarray)
 
         # build type list
         type_list = data_storage.build_type_list(nseg=nseg)

@@ -136,3 +136,4 @@ class ModflowNam(mfpackage.MFPackage):
         self.exchanges = self.build_mfdata("exchanges",  exchanges)
         self.mxiter = self.build_mfdata("mxiter",  mxiter)
         self.solutiongroup = self.build_mfdata("solutiongroup",  solutiongroup)
+        self._init_complete = True
