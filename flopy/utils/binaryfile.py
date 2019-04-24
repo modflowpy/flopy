@@ -238,8 +238,10 @@ def get_headfile_precision(filename):
                     raise Exception()
             result = 'double'
         except:
-            print('   Could not determine the precision of ' +
-                  'the headfile {}'.format(filename))
+            f.close()
+            e = 'Could not determine the precision of ' + \
+                'the headfile {}'.format(filename)
+            raise IOError(e)
 
     # close and return result
     f.close()
