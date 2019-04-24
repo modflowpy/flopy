@@ -485,10 +485,7 @@ class ListBudget(object):
 
         else:
             in_names = [col for col in df_flux.columns if col.endswith("_IN")]
-            out_names = [col for col in df_flux.columns if
-                         col.endswith("_OUT")]
-            # print(in_names,out_names)
-            # print(df_flux.columns)
+
             base_names = [name.replace("_IN", '') for name in in_names]
             for name in base_names:
                 in_name = name + "_IN"

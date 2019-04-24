@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import os
+import numpy as np
 from ..discretization import StructuredGrid
 
 
@@ -363,7 +364,6 @@ class Vtk(object):
 
 if __name__ == '__main__':
     import flopy
-    import numpy as np
 
     ml = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ml, nlay=3, nrow=3, ncol=3, top=0,

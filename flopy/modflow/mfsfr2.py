@@ -2361,8 +2361,8 @@ class check:
                 is_greater = self.reach_data.strtop > max_strtop
                 if np.any(is_greater):
                     above_max = self.reach_data[is_greater]
-                    txt += '{} instances of streambed top ' + \
-                           'above the maximum found.\n'.format(len(above_max))
+                    txt += '{} instances '.format(len(above_max)) + \
+                           'of streambed top above the maximum found.\n'
                     if self.level == 1:
                         txt += 'Reaches with high strtop:\n'
                         txt += _print_rec_array(above_max, delimiter='\t')

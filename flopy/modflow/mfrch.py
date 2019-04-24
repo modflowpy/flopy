@@ -359,7 +359,7 @@ class ModflowRch(Package):
             if npar > 0:
                 if model.verbose:
                     txt = 3 * ' ' + 'Parameters detected. Number of ' + \
-                          'parameters = '.format(npar)
+                          'parameters = {}'.format(npar)
                     print(txt)
             line = f.readline()
         # dataset 2
