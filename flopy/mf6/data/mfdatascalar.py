@@ -123,7 +123,6 @@ class MFScalar(mfdata.MFData):
 
     def set_data(self, data):
         self._resync()
-        storge = self._get_storage_obj()
         if self.structure.type == DatumType.record:
             if data is not None:
                 if not isinstance(data, list) or isinstance(data, np.ndarray) or \

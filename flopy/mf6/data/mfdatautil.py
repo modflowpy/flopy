@@ -1,4 +1,4 @@
-import os, sys, inspect
+import sys, inspect
 import numpy as np
 from copy import deepcopy
 from ..mfbase import MFDataException, FlopyException
@@ -394,17 +394,17 @@ class TemplateGenerator(object):
         return data_struct, modeldimensions.DataDimensions(package_dim,
                                                            data_struct)
 
-    def build_type_header(self, type, data=None):
+    def build_type_header(self, ds_type, data=None):
         from ..data.mfdatastorage import DataStorageType
 
-        if type == DataStorageType.internal_array:
+        if ds_type == DataStorageType.internal_array:
             if isinstance(self, ArrayTemplateGenerator):
                 return {'factor':1.0, 'iprn':1, 'data':data}
             else:
                 return None
-        elif type == DataStorageType.internal_constant:
+        elif ds_type == DataStorageType.internal_constant:
             return data
-        elif type == DataStorageType.external_file:
+        elif ds_type == DataStorageType.external_file:
             return {'filename':'', 'factor':1.0, 'iprn':1}
         return None
 
@@ -603,8 +603,8 @@ class ListTemplateGenerator(TemplateGenerator):
 
         if timeseries:
             # fix type list to make all types objects
-            for index in range(0, len(type_list)):
-                type_list[index] = (type_list[index][0], object)
+            for index, d_type in enumerate(type_list):
+                type_list[index] = (d_type[0], object)
 
         # build recarray
         template_data = self._build_template_data(type_list)

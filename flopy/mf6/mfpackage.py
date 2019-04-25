@@ -78,9 +78,9 @@ class MFBlockHeader(object):
                 DatumType.keyword:
             data_item = block_header_structure[0].data_item_structures[0]
             fixed_data.append(data_item.name)
-        if type(data) == tuple:
+        if isinstance(data, tuple):
             data = list(data)
-        if type(data) == list:
+        if isinstance(data, list):
             fixed_data = fixed_data + data
         else:
             fixed_data.append(data)
@@ -270,7 +270,7 @@ class MFBlock(object):
 
     def _get_data_str(self, formal):
         data_str = ''
-        for idx, dataset in self.datasets.items():
+        for dataset in self.datasets.values():
             if formal:
                 ds_repr = repr(dataset)
                 if len(ds_repr.strip()) > 0:
@@ -335,7 +335,7 @@ class MFBlock(object):
 
     def _structure_init(self):
         # load datasets keywords into dictionary
-        for key, dataset_struct in self.structure.data_structures.items():
+        for dataset_struct in self.structure.data_structures.values():
             for keyword in dataset_struct.get_keywords():
                 self.datasets_keyword[keyword] = dataset_struct
         # load block header data items into dictionary
@@ -361,8 +361,7 @@ class MFBlock(object):
                 if file_data:
                     # update file path location for all file paths
                     for file_line in file_data:
-                        old_file_path, old_file_name = \
-                                os.path.split(file_line[0])
+                        old_file_name = os.path.split(file_line[0])[1]
                         file_line[0] = os.path.join(model_ws, old_file_name)
         # update block headers
         for block_header in self.block_headers:
@@ -596,8 +595,7 @@ class MFBlock(object):
             if arr_line[0].lower() == 'open/close':
                 # open block contents from external file
                 fd_block.readline()
-                fd_path, filename = os.path.split(
-                  os.path.realpath(fd_block.name))
+                fd_path = os.path.split(os.path.realpath(fd_block.name))[0]
                 try:
                     if self._simulation_data.verbosity_level.value >= \
                             VerbosityLevel.verbose.value:
@@ -916,7 +914,7 @@ class MFBlock(object):
             fd.write('{}open/close {}\n'.format(indent_string,
                                                 self.external_file_name))
             fd_main = fd
-            fd_path, filename = os.path.split(os.path.realpath(fd.name))
+            fd_path = os.path.split(os.path.realpath(fd.name))[0]
             try:
                 fd = open(os.path.join(fd_path, self.external_file_name), 'w')
             except:
@@ -1030,7 +1028,7 @@ class MFBlock(object):
 
     def is_valid(self):
         # check data sets
-        for key, dataset in self.datasets.items():
+        for dataset in self.datasets.values():
             # Non-optional datasets must be enabled
             if not dataset.structure.optional and not dataset.enabled:
                 return False
@@ -1228,7 +1226,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 child_pkg_group = self.parent_file._child_package_groups[
                     self.structure.file_type]
                 child_pkg_group._update_filename(self._filename, fname)
-            except:
+            except Exception:
                 print('WARNING: Unable to update file name for parent'
                       'package of {}.'.format(self.name))
         self._filename = fname
@@ -1265,10 +1263,6 @@ class MFPackage(PackageContainer, PackageInterface):
         # return [data_object, data_object, ...]
         return self._data_list
 
-    def export(self, f, **kwargs):
-        from flopy import export
-        return export.utils.package_export(f, self, **kwargs)
-
     def _get_data_str(self, formal, show_data=True):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
                    '\nmodel_or_simulation_package = {}' \
@@ -1284,7 +1278,7 @@ class MFPackage(PackageContainer, PackageInterface):
         else:
             data_str = '{}\n'.format(data_str)
         if show_data:
-            for idx, block in self.blocks.items():
+            for block in self.blocks.values():
                 if formal:
                     bl_repr = repr(block)
                     if len(bl_repr.strip()) > 0:
@@ -1344,13 +1338,13 @@ class MFPackage(PackageContainer, PackageInterface):
     def _update_size_defs(self):
         # build temporary data lookup by name
         data_lookup = {}
-        for name, block in self.blocks.items():
-            for ds_index, dataset in block.datasets.items():
+        for block in self.blocks.values():
+            for dataset in block.datasets.values():
                 data_lookup[dataset.structure.name] = dataset
 
         # loop through all data
-        for name, block in self.blocks.items():
-            for ds_index, dataset in block.datasets.items():
+        for block in self.blocks.values():
+            for dataset in block.datasets.values():
                 # if data shape is 1-D
                 if dataset.structure.shape and \
                         len(dataset.structure.shape) == 1:
@@ -1524,7 +1518,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def is_valid(self):
         # Check blocks
-        for key, block in self.blocks.items():
+        for block in self.blocks.values():
             # Non-optional blocks must be enabled
             if block.structure.number_non_optional_data() > 0 and \
                not block.enabled and block.is_allowed():
@@ -1568,7 +1562,7 @@ class MFPackage(PackageContainer, PackageInterface):
                                           self.path, 'loading block header',
                                           None, inspect.stack()[0][3],
                                           type_, value_, traceback_, message,
-                                          self._simulation_data.debug)
+                                          self._simulation_data.debug, mfde)
 
                 # if there is more than one possible block with the same name,
                 # resolve the correct block to use
@@ -1729,7 +1723,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
         # loop through blocks
         block_num = 1
-        for index, block in self.blocks.items():
+        for block in self.blocks.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.verbose.value:
                 print('      writing block {}...'.format(block.structure.name))
@@ -1847,7 +1841,7 @@ class MFChildPackages(object):
         super(MFChildPackages, self).__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=''):
-        root, stem = os.path.split(file_path)
+        stem = os.path.split(file_path)[1]
         stem_lst = stem.split('.')
         file_name = '.'.join(stem_lst[:-1])
         if len(stem_lst) > 1:
