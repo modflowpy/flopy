@@ -231,8 +231,8 @@ class ModflowChd(Package):
         if model.verbose:
             sys.stdout.write('loading chd package file...\n')
 
-        return Package.std_load(f, model, ModflowChd, nper=nper,
-                                ext_unit_dict=ext_unit_dict)
+        return Package.load(f, model, ModflowChd, nper=nper,
+                            ext_unit_dict=ext_unit_dict)
 
     @staticmethod
     def ftype():

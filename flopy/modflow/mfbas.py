@@ -255,9 +255,6 @@ class ModflowBas(Package):
         model : model object
             The model object (of type :class:`flopy.modflow.mf.Modflow`) to
             which this package will be added.
-        nlay, nrow, ncol : int, optional
-            If not provided, then the model must contain a discretization
-            package with correct values for these parameters.
         ext_unit_dict : dictionary, optional
             If the arrays in the file are specified using EXTERNAL,
             or older style array control records, then `f` should be a file
@@ -269,6 +266,8 @@ class ModflowBas(Package):
         kwargs : dictionary
             Keyword arguments that are passed to load.
             Possible keyword arguments are nlay, nrow, and ncol.
+            If not provided, then the model must contain a discretization
+            package with correct values for these parameters.
 
         Returns
         -------

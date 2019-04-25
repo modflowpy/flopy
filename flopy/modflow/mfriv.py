@@ -334,8 +334,8 @@ class ModflowRiv(Package):
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.std_load(f, model, ModflowRiv, nper=nper, check=check,
-                                ext_unit_dict=ext_unit_dict)
+        return Package.load(f, model, ModflowRiv, nper=nper, check=check,
+                            ext_unit_dict=ext_unit_dict)
 
     @staticmethod
     def ftype():

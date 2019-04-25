@@ -91,7 +91,8 @@ class Package(PackageInterface):
         Package init
 
         """
-        self.parent = parent  # To be able to access the parent modflow object's attributes
+        # To be able to access the parent model object's attributes
+        self.parent = parent
         if not isinstance(extension, list):
             extension = [extension]
         self.extension = []
@@ -322,22 +323,22 @@ class Package(PackageInterface):
         """
         chk = None
 
-        if self.__dict__.get('stress_period_data', None) is not None and \
-                self.name[0] != 'OC':
+        if self.__dict__.get('stress_period_data', None) is not None \
+                and self.name[0] != 'OC':
             spd_inds_valid = True
             chk = check(self, f=f, verbose=verbose, level=level)
             spd = getattr(self, 'stress_period_data')
             for per in spd.data.keys():
                 if isinstance(spd.data[per], np.recarray):
                     spdata = self.stress_period_data.data[per]
-                    inds = (
-                        spdata.k, spdata.i, spdata.j) if self.parent.structured \
+                    inds = (spdata.k, spdata.i, spdata.j) \
+                        if self.parent.structured \
                         else (spdata.node)
 
                     # General BC checks
                     # check for valid cell indices
-                    spd_inds_valid = chk._stress_period_data_valid_indices(
-                        spdata)
+                    spd_inds_valid = \
+                        chk._stress_period_data_valid_indices(spdata)
 
                     # first check for and list nan values
                     chk._stress_period_data_nans(spdata)
@@ -349,15 +350,16 @@ class Package(PackageInterface):
                         # More specific BC checks
                         # check elevations in the ghb, drain, and riv packages
                         if self.name[0] in check.bc_stage_names.keys():
-                            # check that bc elevations are above model cell bottoms
-                            # also checks for nan values
+                            # check that bc elevations are above model
+                            # cell bottoms -- also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
                             botms = self.parent.dis.botm.array[inds]
+                            test = spdata[elev_name] < botms
+                            en = 'BC elevation below cell bottom'
                             chk.stress_period_data_values(spdata,
-                                                          spdata[
-                                                              elev_name] < botms,
+                                                          test,
                                                           col=elev_name,
-                                                          error_name='BC elevation below cell bottom',
+                                                          error_name=en,
                                                           error_type='Error')
 
             chk.summarize()
@@ -477,8 +479,8 @@ class Package(PackageInterface):
             chk.summarize()
 
         else:
-            txt = 'check method not implemented for {} Package.'.format(
-                self.name[0])
+            txt = 'check method not implemented for ' + \
+                  '{} Package.'.format(self.name[0])
             if f is not None:
                 if isinstance(f, str):
                     pth = os.path.join(self.parent.model_ws, f)
@@ -496,23 +498,23 @@ class Package(PackageInterface):
             for [k, i, j] in idx:
                 if k > kon:
                     kon = k
-                    txt += '    {:>10s}{:>10s}{:>10s}{:>15s}\n'.format('layer',
-                                                                       'row',
-                                                                       'column',
-                                                                       name[
-                                                                           k].lower().replace(
-                                                                           ' layer ',
-                                                                           ''))
-                txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k + 1, i + 1,
+                    tag = name[k].lower().replace(' layer ', '')
+                    txt += '    {:>10s}'.format('layer') + \
+                           '{:>10s}'.format('row') + \
+                           '{:>10s}'.format('column') + \
+                           '{:>15s}\n'.format(tag)
+                txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k + 1,
+                                                                 i + 1,
                                                                  j + 1,
                                                                  v[k, i, j])
         elif ndim == 2:
-            txt += '    {:>10s}{:>10s}{:>15s}\n'.format('row', 'column',
-                                                        name[
-                                                            0].lower().replace(
-                                                            ' layer ', ''))
+            tag = name[0].lower().replace(' layer ', '')
+            txt += '    {:>10s}'.format('row') + \
+                   '{:>10s}'.format('column') + \
+                   '{:>15s}\n'.format(tag)
             for [i, j] in idx:
-                txt += '    {:10d}{:10d}{:15.7g}\n'.format(i + 1, j + 1,
+                txt += '    {:10d}{:10d}{:15.7g}\n'.format(i + 1,
+                                                           j + 1,
                                                            v[i, j])
         elif ndim == 1:
             txt += '    {:>10s}{:>15s}\n'.format('number', name[0])
@@ -614,6 +616,7 @@ class Package(PackageInterface):
                  self.url
         else:
             wa = None
+
         # open the web address
         if wa is not None:
             wb.open(wa)
@@ -627,18 +630,7 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True, **kwargs):
-        """
-        The load method has not been implemented for this package.
-
-        """
-        msg = 'load method has not been implemented.'
-        raise NotImplementedError(msg)
-
-        return
-
-    @staticmethod
-    def std_load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
         """
         Default load method for standard boundary packages.
 
