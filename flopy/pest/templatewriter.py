@@ -1,7 +1,6 @@
 from __future__ import print_function
 from ..pest import tplarray as tplarray
-from ..utils.util_array import Util3d as Util3d
-from ..utils.util_array import Transient2d as Transient2d
+
 
 class TemplateWriter(object):
     """
@@ -13,7 +12,9 @@ class TemplateWriter(object):
         flopy model object.
     plist : list
         list of parameter objects of type flopy.pest.params.Params.
+
     """
+
     def __init__(self, model, plist):
         self.model = model
         self.plist = plist
@@ -85,10 +86,10 @@ class TemplateWriter(object):
             # Write the file
             paktpl.heading = 'ptf ~\n' + paktpl.heading
             paktpl.fn_path += '.tpl'
-            paktpl.write_file(check=False) # fot now, turn off checks for template files
+            paktpl.write_file(
+                check=False)  # fot now, turn off checks for template files
 
             # Destroy the template version of the package
             paktpl = None
-
 
         return

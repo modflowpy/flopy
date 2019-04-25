@@ -216,9 +216,9 @@ class ModflowDis(Package):
         if rotation is None:
             rotation = 0.0
         self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
-                                   xul=xul, yul=yul,
-                                   rotation=rotation,
-                                   proj4_str=proj4_str)
+                                    xul=xul, yul=yul,
+                                    rotation=rotation,
+                                    proj4_str=proj4_str)
 
         self.tr = TemporalReference(itmuni=self.itmuni,
                                     start_datetime=start_datetime)
@@ -268,7 +268,7 @@ class ModflowDis(Package):
             p = float(nstp[kper])
             dt = perlen[kper]
             if m > 1:
-                dt *= (m - 1.) / (m**p - 1.)
+                dt *= (m - 1.) / (m ** p - 1.)
             else:
                 dt = dt / p
             for kstp in range(nstp[kper]):
@@ -368,7 +368,7 @@ class ModflowDis(Package):
         ipos = 0
         t0 = 0.
         tp0 = 0.
-        for iper in range(kper+1):
+        for iper in range(kper + 1):
             tp0 = t0
             if iper == kper:
                 break
@@ -378,7 +378,6 @@ class ModflowDis(Package):
                 t0 = t1
         t = tp0 + toffset
         return t
-
 
     def get_cell_volumes(self):
         """
@@ -475,7 +474,7 @@ class ModflowDis(Package):
 
         Returns
         -------
-        v : list of tuples containing the layer (k), row (i), 
+        v : list of tuples containing the layer (k), row (i),
             and column (j) for each node in the input list
         """
         if not isinstance(nodes, list):
@@ -500,7 +499,7 @@ class ModflowDis(Package):
 
         Returns
         -------
-        v : list of MODFLOW nodes for each layer (k), row (i), 
+        v : list of MODFLOW nodes for each layer (k), row (i),
             and column (j) tuple in the input list
         """
         if not isinstance(lrc_list, list):
@@ -580,12 +579,13 @@ class ModflowDis(Package):
             cnf_dz = [float(s) for s in line.split()]
             cnf_dz = np.reshape(cnf_dz, (cnf_nlay, cnf_nrow, cnf_ncol))
 
-            # cinact, cdry, not used here so commented
-            '''line = f_cnf.readline()
-            s = line.split()
-            cinact = float(s[0])
-            cdry = float(s[1])'''
+            # # read cinact and cdry
+            # # values are not used by dis so are not read
+            # line = f_cnf.readline()
+            # s = line.split()
+            # cinact, cdry = float(s[0]), float(s[1])
 
+            # close the MT3D configuration file
             f_cnf.close()
         finally:
             self.nlay = cnf_nlay
@@ -658,13 +658,13 @@ class ModflowDis(Package):
         thickness : util3d array of floats (nlay, nrow, ncol)
 
         """
-        #return self.__thickness
+        # return self.__thickness
         thk = []
         thk.append(self.top - self.botm[0])
         for k in range(1, self.nlay + sum(self.laycbd)):
             thk.append(self.botm[k - 1] - self.botm[k])
         return Util3d(self.parent, (self.nlay + sum(self.laycbd),
-                      self.nrow, self.ncol), np.float32,
+                                    self.nrow, self.ncol), np.float32,
                       thk, name='thickness')
 
     def write_file(self, check=True):
@@ -686,7 +686,7 @@ class ModflowDis(Package):
                        verbose=self.parent.verbose, level=1)
         # Open file for writing
         f_dis = open(self.fn_path, 'w')
-        # Item 0: heading        
+        # Item 0: heading
         f_dis.write('{0:s}\n'.format(self.heading))
         # f_dis.write('#{0:s}'.format(str(self.sr)))
         # f_dis.write(" ,{0:s}:{1:s}\n".format("start_datetime",
@@ -701,11 +701,11 @@ class ModflowDis(Package):
         f_dis.write('\n')
         # Item 3: DELR
         f_dis.write(self.delr.get_file_entry())
-        # Item 4: DELC       
+        # Item 4: DELC
         f_dis.write(self.delc.get_file_entry())
         # Item 5: Top(NCOL, NROW)
         f_dis.write(self.top.get_file_entry())
-        # Item 5: BOTM(NCOL, NROW)        
+        # Item 5: BOTM(NCOL, NROW)
         f_dis.write(self.botm.get_file_entry())
 
         # Item 6: NPER, NSTP, TSMULT, Ss/tr
@@ -775,46 +775,44 @@ class ModflowDis(Package):
         chk.summarize()
         return chk
 
-        '''
-        if f is not None:
-            if isinstance(f, str):
-                pth = os.path.join(self.parent.model_ws, f)
-                f = open(pth, 'w', 0)
-
-        errors = False
-        txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
-        t = ''
-        t1 = ''
-        inactive = self.parent.bas6.ibound.array == 0
-        # thickness errors
-        d = self.thickness.array
-        d[inactive] = 1.
-        if d.min() <= 0:
-            errors = True
-            t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(t)
-            if level > 0:
-                idx = np.column_stack(np.where(d <= 0.))
-                t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
-        else:
-            t = '{}  Specified cell thickness is OK.\n'.format(t)
-
-        # add header to level 0 text
-        txt += t
-
-        if level > 0:
-            if errors:
-                txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
-                # add level 1 header to level 1 text
-                txt += t1
-
-        # write errors to summary file
-        if f is not None:
-            f.write('{}\n'.format(txt))
-
-        # write errors to stdout
-        if verbose:
-            print(txt)
-        '''
+        # if f is not None:
+        #     if isinstance(f, str):
+        #         pth = os.path.join(self.parent.model_ws, f)
+        #         f = open(pth, 'w', 0)
+        #
+        # errors = False
+        # txt = '\n{} PACKAGE DATA VALIDATION:\n'.format(self.name[0])
+        # t = ''
+        # t1 = ''
+        # inactive = self.parent.bas6.ibound.array == 0
+        # # thickness errors
+        # d = self.thickness.array
+        # d[inactive] = 1.
+        # if d.min() <= 0:
+        #     errors = True
+        #     t = '{}  ERROR: Negative or zero cell thickness specified.\n'.format(t)
+        #     if level > 0:
+        #         idx = np.column_stack(np.where(d <= 0.))
+        #         t1 = self.level1_arraylist(idx, d, self.thickness.name, t1)
+        # else:
+        #     t = '{}  Specified cell thickness is OK.\n'.format(t)
+        #
+        # # add header to level 0 text
+        # txt += t
+        #
+        # if level > 0:
+        #     if errors:
+        #         txt += '\n  DETAILED SUMMARY OF {} ERRORS:\n'.format(self.name[0])
+        #         # add level 1 header to level 1 text
+        #         txt += t1
+        #
+        # # write errors to summary file
+        # if f is not None:
+        #     f.write('{}\n'.format(txt))
+        #
+        # # write errors to stdout
+        # if verbose:
+        #     print(txt)
 
     @staticmethod
     def load(f, model, ext_unit_dict=None, check=True):
@@ -876,31 +874,41 @@ class ModflowDis(Package):
                 try:
                     xul = float(item.split(':')[1])
                 except:
-                    pass
+                    if model.verbose:
+                        print('   could not parse xul ' +
+                              'in {}'.format(filename))
                 dep = True
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
                 except:
-                    pass
+                    if model.verbose:
+                        print('   could not parse yul ' +
+                              'in {}'.format(filename))
                 dep = True
             elif "rotation" in item.lower():
                 try:
                     rotation = float(item.split(':')[1])
                 except:
-                    pass
+                    if model.verbose:
+                        print('   could not parse rotation ' +
+                              'in {}'.format(filename))
                 dep = True
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:]).strip()
                 except:
-                    pass
+                    if model.verbose:
+                        print('   could not parse proj4_str ' +
+                              'in {}'.format(filename))
                 dep = True
             elif "start" in item.lower():
                 try:
                     start_datetime = item.split(':')[1].strip()
                 except:
-                    pass
+                    if model.verbose:
+                        print('   could not parse start ' +
+                              'in {}'.format(filename))
                 dep = True
         if dep:
             warnings.warn("SpatialReference information found in DIS header,"
@@ -1035,6 +1043,7 @@ def get_layer(dis, i, j, elev):
     k : np.ndarray (1-D) or scalar
         zero-based layer index
     """
+
     def to_array(arg):
         if not isinstance(arg, np.ndarray):
             return np.array([arg])

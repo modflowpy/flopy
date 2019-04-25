@@ -154,6 +154,7 @@ class Mt3dRct(Package):
     >>> import flopy
     >>> mt = flopy.mt3dms.Mt3dms()
     >>> rct = flopy.mt3dms.Mt3dRct(mt)
+
     """
 
     def __init__(self, model, isothm=0, ireact=0, igetsc=1, rhob=None,

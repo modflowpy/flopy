@@ -3,7 +3,9 @@ from ..pakbase import Package
 
 
 class mfaddoutsidefile(Package):
-    '''Add a file for which you have a MODFLOW input file'''
+    """
+    Add a file for which you have a MODFLOW input file
+    """
 
     def __init__(self, model, name, extension, unitnumber):
         Package.__init__(self, model, extension, name, unitnumber,

@@ -156,7 +156,8 @@ class ModflowWel(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -271,7 +272,8 @@ class ModflowWel(Package):
                 self.options.write_options(f_wel)
 
         line = (
-        ' {0:9d} {1:9d} '.format(self.stress_period_data.mxact, self.ipakcb))
+            ' {0:9d} {1:9d} '.format(self.stress_period_data.mxact,
+                                     self.ipakcb))
 
         if isinstance(self.options, OptionBlock):
             if self.options.noprint:
@@ -364,7 +366,7 @@ class ModflowWel(Package):
         if model.verbose:
             sys.stdout.write('loading wel package file...\n')
 
-        return Package.load(model, ModflowWel, f, nper, check=check,
+        return Package.load(f, model, ModflowWel, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
 
     @staticmethod

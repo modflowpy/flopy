@@ -34,18 +34,19 @@ class ModflowUzf1(Package):
         1   Recharge to and discharge from only the top model layer. This
             option assumes land surface is defined as top of layer 1.
         2   Recharge to and discharge from the specified layer in variable
-            IUZFBND. This option assumes land surface is defined as top of layer
-            specified in IUZFBND.
+            IUZFBND. This option assumes land surface is defined as top of
+            layer specified in IUZFBND.
         3   Recharge to and discharge from the highest active cell in each
-            vertical column. Land surface is determined as top of layer specified
-            in IUZFBND. A constant head node intercepts any recharge and
-            prevents deeper percolation.
+            vertical column. Land surface is determined as top of layer
+            specified in IUZFBND. A constant head node intercepts any recharge
+            and prevents deeper percolation.
 
     iuzfopt : integer
-        equal to 1 or 2. A value of 1 indicates that the vertical hydraulic conductivity will be
-        specified within the UZF1 Package input file using array VKS. A value of 2 indicates that the vertical
-        hydraulic conductivity will be specified within either the BCF or LPF Package input file.
-        (default is 0)
+        equal to 1 or 2. A value of 1 indicates that the vertical hydraulic
+        conductivity will be specified within the UZF1 Package input file using
+        array VKS. A value of 2 indicates that the vertical hydraulic
+        conductivity will be specified within either the BCF or LPF Package
+        input file. (default is 0)
     irunflg : integer
         specifies whether ground water that discharges to land surface will
         be routed to stream segments or lakes as specified in the IRUNBND
@@ -141,12 +142,12 @@ class ModflowUzf1(Package):
 
     nwt_11_fmt : boolean
         flag indicating whether or not to utilize a newer (MODFLOW-NWT
-        version 1.1 or later) format style, i.e., uzf1 optional variables 
+        version 1.1 or later) format style, i.e., uzf1 optional variables
         appear line-by-line rather than in a specific order on a single
         line. True means that optional variables (e.g., SPECIFYTHTR,
-        SPECIFYTHTI, NOSURFLEAK) appear on new lines. True also supports 
+        SPECIFYTHTI, NOSURFLEAK) appear on new lines. True also supports
         a number of newer optional variables (e.g., SPECIFYSURFK,
-        REJECTSURFK, SEEPSURFK). False means that optional variables 
+        REJECTSURFK, SEEPSURFK). False means that optional variables
         appear on one line.  (default is False)
     specifythtr : boolean
         key word for specifying optional input variable THTR (default is 0)
@@ -156,32 +157,33 @@ class ModflowUzf1(Package):
         key word for inactivating calculation of surface leakage.
         (default is 0)
     specifysurfk : boolean
-        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
-        An optional character variable. When SPECIFYSURFK is specified, 
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
+        An optional character variable. When SPECIFYSURFK is specified,
         the variable SURFK is specified in Data Set 4b.
     rejectsurfk : boolean
-        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
-        An optional character variable. When REJECTSURFK is specified, 
-        SURFK instead of VKS is used for calculating rejected infiltration. 
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
+        An optional character variable. When REJECTSURFK is specified,
+        SURFK instead of VKS is used for calculating rejected infiltration.
         REJECTSURFK only is included if SPECIFYSURFK is included.
     seepsurfk : boolean
-        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
-        An optional character variable. When SEEPSURFK is specified, 
-        SURFK instead of VKS is used for calculating surface leakage. 
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
+        An optional character variable. When SEEPSURFK is specified,
+        SURFK instead of VKS is used for calculating surface leakage.
         SEEPSURFK only is included if SPECIFYSURFK is included.
     etsquare : float (smoothfact)
         (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
-        An optional character variable. When ETSQUARE is specified, 
-        groundwater ET is simulated using a constant potential ET rate, 
-        and is smoothed over a specified smoothing interval. 
+        An optional character variable. When ETSQUARE is specified,
+        groundwater ET is simulated using a constant potential ET rate,
+        and is smoothed over a specified smoothing interval.
         This option is recommended only when using the NWT solver.
 
         etsquare is activated in flopy by specifying a real value
         for smoothfact (default is None).
-        For example, if the interval factor (smoothfact) 
-        is specified as smoothfact=0.1 (recommended), 
-        then the smoothing interval will be calculated as: 
-        SMOOTHINT = 0.1*EXTDP and  is applied over the range for groundwater head (h):
+        For example, if the interval factor (smoothfact)
+        is specified as smoothfact=0.1 (recommended),
+        then the smoothing interval will be calculated as:
+        SMOOTHINT = 0.1*EXTDP and  is applied over the range for groundwater
+        head (h):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
         CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
@@ -194,20 +196,20 @@ class ModflowUzf1(Package):
             Lists follow the format described in the documentation:
             [[IUZROW, IUZCOL, IFTUNIT, IUZOPT]] or [[-IFTUNIT]]
     netflux : list of [Unitrech (int), Unitdis (int)]
-        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later) 
-        An optional character variable. When NETFLUX is specified, 
-        the sum of recharge (L3/T) and the sum of discharge (L3/T) is written 
-        to separate unformatted files using module UBDSV3. 
-        
-        netflux is activated in flopy by specifying a list for 
-        Unitrech and Unitdis (default is None). 
-        Unitrech and Unitdis are the unit numbers to which these values 
-        are written when “SAVE BUDGET” is specified in Output Control. 
-        Values written to Unitrech are the sum of recharge values 
-        for the UZF, SFR2, and LAK packages, and values written to Unitdis 
-        are the sum of discharge values for the UZF, SFR2, and LAK packages. 
+        (MODFLOW-NWT version 1.1 and MODFLOW-2005 1.12 or later)
+        An optional character variable. When NETFLUX is specified,
+        the sum of recharge (L3/T) and the sum of discharge (L3/T) is written
+        to separate unformatted files using module UBDSV3.
+
+        netflux is activated in flopy by specifying a list for
+        Unitrech and Unitdis (default is None).
+        Unitrech and Unitdis are the unit numbers to which these values
+        are written when “SAVE BUDGET” is specified in Output Control.
+        Values written to Unitrech are the sum of recharge values
+        for the UZF, SFR2, and LAK packages, and values written to Unitdis
+        are the sum of discharge values for the UZF, SFR2, and LAK packages.
         Values are averaged over the period between output times.
-        
+
         [NETFLUX unitrech unitdis]
     finf : float, 2-D array, or dict of {kper:value}
         where kper is the zero-based stress period
@@ -316,21 +318,21 @@ class ModflowUzf1(Package):
                             ("seepsurfk",
                              OptionBlock.simple_flag),
                             ("etsquare",
-                                {OptionBlock.dtype: np.bool_,
-                                 OptionBlock.nested: True,
-                                 OptionBlock.n_nested: 1,
-                                 OptionBlock.vars:
-                                     {"smoothfact":
-                                      OptionBlock.simple_float}}),
+                             {OptionBlock.dtype: np.bool_,
+                              OptionBlock.nested: True,
+                              OptionBlock.n_nested: 1,
+                              OptionBlock.vars:
+                                  {"smoothfact":
+                                       OptionBlock.simple_float}}),
                             ("netflux",
-                                {OptionBlock.dtype: np.bool_,
-                                 OptionBlock.nested: True,
-                                 OptionBlock.n_nested: 2,
-                                 OptionBlock.vars:
-                                     OrderedDict([("unitrech",
-                                                   OptionBlock.simple_int),
-                                                  ("unitdis",
-                                                   OptionBlock.simple_int)])}),
+                             {OptionBlock.dtype: np.bool_,
+                              OptionBlock.nested: True,
+                              OptionBlock.n_nested: 2,
+                              OptionBlock.vars:
+                                  OrderedDict([("unitrech",
+                                                OptionBlock.simple_int),
+                                               ("unitdis",
+                                                OptionBlock.simple_int)])}),
                             ("savefinf", OptionBlock.simple_flag)])
 
     def __init__(self, model,
@@ -361,7 +363,7 @@ class ModflowUzf1(Package):
             filenames = [filenames] + [None for x in range(nlen)]
         elif isinstance(filenames, list):
             if len(filenames) < nlen:
-                for idx in range(len(filenames), nlen+1):
+                for idx in range(len(filenames), nlen + 1):
                     filenames.append(None)
 
         # update external file information with cbc output, if necessary
@@ -415,17 +417,20 @@ class ModflowUzf1(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
-        if self.parent.get_package('RCH') != None or self.parent.get_package(
-                'EVT') != None:
-            print(
-                'WARNING!\n The RCH and EVT packages should not be active when the UZF1 package is active!')
+        if self.parent.get_package('RCH') != None or \
+                self.parent.get_package('EVT') != None:
+            msg = 'WARNING!\n The RCH and EVT packages should not be ' + \
+                  'active when the UZF1 package is active!'
+            print(msg)
         if self.parent.version == 'mf2000':
-            print(
-                'WARNING!\nThe UZF1 package is only compatible with MODFLOW-2005 and MODFLOW-NWT!')
+            msg = 'WARNING!\nThe UZF1 package is only compatible ' + \
+                  'with MODFLOW-2005 and MODFLOW-NWT!'
+            print(msg)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -452,22 +457,26 @@ class ModflowUzf1(Package):
             try:
                 float(etsquare)
             except:
-                print('etsquare must be specified by entering a real number for smoothfact.')
+                msg = 'etsquare must be specified by entering a real ' + \
+                      'number for smoothfact.'
+                print(msg)
             self.etsquare = True
             self.smoothfact = etsquare
         self.netflux = False
         self.unitrech = None
         self.unitdis = None
         if netflux is not None:
-            assert len(netflux) == 2, 'netflux must be a length=2 sequence of unitrech, unitdis'
+            e = 'netflux must be a length=2 sequence of unitrech, unitdis'
+            assert len(netflux) == 2, e
             self.netflux = True
             self.unitrech, self.unitdis = netflux
 
         if options is None:
-            if (specifythti, specifythtr, nosurfleak, specifysurfk, rejectsurfk,
-                seepsurfk, self.etsquare, self.netflux) != (False, False, False,
-                                                            False, False, False,
-                                                            False, False):
+            if (
+            specifythti, specifythtr, nosurfleak, specifysurfk, rejectsurfk,
+            seepsurfk, self.etsquare, self.netflux) != (False, False, False,
+                                                        False, False, False,
+                                                        False, False):
                 options = OptionBlock("", ModflowUzf1, block=False)
 
         self.options = options
@@ -476,7 +485,9 @@ class ModflowUzf1(Package):
         # NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
         self.nuztop = nuztop
         self.iuzfopt = iuzfopt
-        self.irunflg = irunflg  # The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages must be active if IRUNFLG is not zero.
+        # The Streamflow-Routing (SFR2) and(or) the Lake (LAK3) Packages
+        # must be active if IRUNFLG is not zero.
+        self.irunflg = irunflg
         self.ietflg = ietflg
         self.ipakcb = ipakcb
         self.iuzfcb2 = iuzfcb2
@@ -504,7 +515,8 @@ class ModflowUzf1(Package):
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
 
         if seepsurfk:
-            self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk, name='surfk')
+            self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk,
+                                name='surfk')
 
         if iuzfopt > 0:
             # Data Set 5
@@ -528,7 +540,8 @@ class ModflowUzf1(Package):
         # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
         self._uzgag = uzgag
 
-        # Dataset 9, 11, 13 and 15 will be written automatically in the write_file function
+        # Dataset 9, 11, 13 and 15 will be written automatically in the
+        # write_file function
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
 
@@ -538,15 +551,17 @@ class ModflowUzf1(Package):
             self.pet = Transient2d(model, (nrow, ncol), np.float32,
                                    pet, name='pet')
             self.extdp = Transient2d(model, (nrow, ncol), np.float32,
-                                    extdp, name='extdp')
+                                     extdp, name='extdp')
             self.extwc = Transient2d(model, (nrow, ncol), np.float32,
-                                    extwc, name='extwc')
+                                     extwc, name='extwc')
         self.parent.add_package(self)
 
     def __setattr__(self, key, value):
         if key == "uzgag":
-            print('Uzgag must be set by the constructor; \
-            modifying this attribute requires creating a new ModflowUzf1 instance')
+            msg = 'Uzgag must be set by the constructor' + \
+                  'modifying this attribute requires creating a ' + \
+                  'new ModflowUzf1 instance'
+            print(msg)
         else:
             super(ModflowUzf1, self).__setattr__(key, value)
 
@@ -575,7 +590,8 @@ class ModflowUzf1(Package):
         return lst
 
     def ncells(self):
-        # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
+        # Returns the  maximum number of cells that have recharge
+        # (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
@@ -591,7 +607,7 @@ class ModflowUzf1(Package):
             if self.nosurfleak > 0:
                 specify_temp += 'NOSURFLEAK'
             if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-                f_uzf.write('%s\n' % specify_temp)
+                f_uzf.write('{}\n'.format(specify_temp))
             del specify_temp
         else:
             txt = 'options\n'
@@ -628,7 +644,8 @@ class ModflowUzf1(Package):
         f_uzf.write('{}\n'.format(self.heading))
 
         # Dataset 1a
-        if isinstance(self.options, OptionBlock) and self.parent.version == "mfnwt":
+        if isinstance(self.options,
+                      OptionBlock) and self.parent.version == "mfnwt":
             self.options.update_from_package(self)
             self.options.write_options(f_uzf)
 
@@ -757,12 +774,14 @@ class ModflowUzf1(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
         while True:
-            line = f.readline()  # can't use next() because util2d uses readline()
+            # can't use next() because util2d uses readline()
+            line = f.readline()
             # (can't mix iteration types in python 2)
             if line[0] != '#':
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+
         # dataset 1a
         specifythtr, specifythti, nosurfleak = False, False, False
         etsquare, netflux, rejectsurfk, seepsurfk = None, None, False, False
@@ -807,7 +826,7 @@ class ModflowUzf1(Package):
         def load_util2d(name, dtype, per=None):
             print('   loading {} array...'.format(name))
             if per is not None:
-                arrays[name][per] =\
+                arrays[name][per] = \
                     Util2d.load(f, model, (nrow, ncol), dtype, name,
                                 ext_unit_dict)
             else:
@@ -841,7 +860,8 @@ class ModflowUzf1(Package):
                 load_util2d('thtr', np.float32)
 
             if specifythti or np.all(~model.dis.steady.array):
-                # dataset 7 (initial water content; only read if not steady-state)
+                # dataset 7 (initial water content;
+                #            only read if not steady-state)
                 load_util2d('thti', np.float32)
 
         # dataset 8
@@ -890,7 +910,7 @@ class ModflowUzf1(Package):
 
         # determine specified unit number
         unitnumber = None
-        filenames = [None for x in range(3+nuzgag)]
+        filenames = [None for x in range(3 + nuzgag)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,

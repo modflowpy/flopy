@@ -59,8 +59,8 @@ class ModpathSim(Package):
                  time_ct=1, release_time_incr=1, time_pts=[1],
                  particle_cell_cnt=[[2, 2, 2]],
                  cell_bd_ct=1, bud_loc=[[1, 1, 1, 1]], trace_id=1, stop_zone=1,
-                 zone=1,
-                 retard_fac=1.0, retard_fcCB=1.0, strt_file=None,extension='mpsim'):
+                 zone=1, retard_fac=1.0, retard_fcCB=1.0, strt_file=None,
+                 extension='mpsim'):
 
         # Call ancestor's init to set self.parent, extension, name and unit number
         Package.__init__(self, model, extension, 'MPSIM', 32)
@@ -110,8 +110,8 @@ class ModpathSim(Package):
         self.trace_file = '{}.{}'.format(model.name, 'trace_file.txt')
         self.trace_id = trace_id
         self.stop_zone = stop_zone
-        self.zone = Util3d(model, (nlay,nrow,ncol), np.int32, \
-                    zone, name='zone', locat=self.unit_number[0]) 
+        self.zone = Util3d(model, (nlay, nrow, ncol), np.int32, \
+                           zone, name='zone', locat=self.unit_number[0])
         self.retard_fac = retard_fac
         self.retard_fcCB = retard_fcCB
 
@@ -156,7 +156,8 @@ class ModpathSim(Package):
         chk = check(self, f=f, verbose=verbose, level=level)
 
         # MODPATH apparently produces no output if stoptime > last timepoint
-        if self.options_dict['StopOption'] == 3 and self.options_dict['TimePointOption'] == 3:
+        if self.options_dict['StopOption'] == 3 and self.options_dict[
+            'TimePointOption'] == 3:
             if self.time_pts[-1] < self.stop_time:
                 chk._add_to_summary(type='Error', value=self.stop_time,
                                     desc='Stop time greater than last TimePoint')
@@ -199,7 +200,7 @@ class ModpathSim(Package):
             f_sim.write('{0:s}\n'.format(self.time_ser_file))
         # item 7
         if self.options_dict['AdvectiveObservationsOption'] == 2 and \
-                        self.option_dict['SimulationType'] == 3:
+                self.option_dict['SimulationType'] == 3:
             f_sim.write('{0:s}\n'.format(self.advobs_file))
 
         # item 8
@@ -209,7 +210,8 @@ class ModpathSim(Package):
         if self.options_dict['ReferenceTimeOption'] == 2:
             Period, Step, TimeFraction = self.ref_time_per_stp
             f_sim.write(
-                '{0:d} {1:d} {2:f}\n'.format(Period+1, Step+1, TimeFraction))
+                '{0:d} {1:d} {2:f}\n'.format(Period + 1, Step + 1,
+                                             TimeFraction))
 
         # item 10
         if self.options_dict['StopOption'] == 3:
@@ -223,7 +225,7 @@ class ModpathSim(Package):
                 f_sim.write('{0:s}\n'.format(self.group_name[i]))
                 # item 13
                 Grid, GridCellRegionOption, PlacementOption, ReleaseStartTime, ReleaseOption, CHeadOption = \
-                self.group_placement[i]
+                    self.group_placement[i]
                 f_sim.write(
                     '{0:d} {1:d} {2:d} {3:f} {4:d} {5:d}\n'.format(Grid,
                                                                    GridCellRegionOption,
@@ -234,13 +236,13 @@ class ModpathSim(Package):
                 # item 14
                 if ReleaseOption == 2:
                     ReleasePeriodLength, ReleaseEventCount = \
-                    self.release_times[i]
+                        self.release_times[i]
                     f_sim.write('{0:f} {1:d}\n'.format(ReleasePeriodLength,
                                                        ReleaseEventCount))
                 # item 15
                 if GridCellRegionOption == 1:
                     MinLayer, MinRow, MinColumn, MaxLayer, MaxRow, MaxColumn = \
-                    self.group_region[i]
+                        self.group_region[i]
                     f_sim.write('{0:d} {1:d} {2:d} {3:d} {4:d} {5:d}\n'.format(
                         MinLayer + 1, MinRow + 1, MinColumn + 1,
                         MaxLayer + 1, MaxRow + 1, MaxColumn + 1))
@@ -258,14 +260,14 @@ class ModpathSim(Package):
                     # item 20
                     for j in range(self.face_ct[i]):
                         IFace, ParticleRowCount, ParticleColumnCount = \
-                        self.ifaces[i][j]
+                            self.ifaces[i][j]
                         f_sim.write('{0:d} {1:d} {2:d} \n'.format(IFace,
                                                                   ParticleRowCount,
                                                                   ParticleColumnCount))
                 # item 21
                 elif PlacementOption == 2:
                     ParticleLayerCount, ParticleRowCount, ParticleColumnCount = \
-                    self.particle_cell_cnt[i]
+                        self.particle_cell_cnt[i]
                     f_sim.write(
                         '{0:d} {1:d} {2:d} \n'.format(ParticleLayerCount,
                                                       ParticleRowCount,
@@ -278,7 +280,7 @@ class ModpathSim(Package):
         if self.options_dict['TimePointOption'] != 1:
             # item 23
             if self.options_dict['TimePointOption'] == 2 or \
-                            self.options_dict['TimePointOption'] == 3:
+                    self.options_dict['TimePointOption'] == 3:
                 f_sim.write('{0:d}\n'.format(self.time_ct))
             # item 24
             if self.options_dict['TimePointOption'] == 2:
@@ -289,7 +291,7 @@ class ModpathSim(Package):
                     f_sim.write('{0:f}\n'.format(self.time_pts[r]))
 
         if self.options_dict['BudgetOutputOption'] != 1 or \
-                        self.options_dict['BudgetOutputOption'] != 2:
+                self.options_dict['BudgetOutputOption'] != 2:
             # item 26
             if self.options_dict['BudgetOutputOption'] == 3:
                 f_sim.write('{0:d}\n'.format(self.cell_bd_ct))
@@ -320,8 +322,10 @@ class ModpathSim(Package):
 
         f_sim.close()
 
+
 class StartingLocationsFile(Package):
-    """Class for working with MODPATH Starting Locations file for particles.
+    """
+    Class for working with MODPATH Starting Locations file for particles.
 
     Parameters
     ----------
@@ -333,6 +337,7 @@ class StartingLocationsFile(Package):
     extension : string
         Filename extension (default is 'loc')
     """
+
     def __init__(self, model,
                  inputstyle=1,
                  extension='loc',
@@ -348,7 +353,8 @@ class StartingLocationsFile(Package):
         self.data = self.get_empty_starting_locations_data(0)
         self.extension = extension
 
-        self.parent.add_package(self) # add to package list so location are written with other ModPath files
+        self.parent.add_package(
+            self)  # add to package list so location are written with other ModPath files
 
     @staticmethod
     def get_dtypes():
@@ -366,7 +372,8 @@ class StartingLocationsFile(Package):
 
     @staticmethod
     def get_empty_starting_locations_data(npt=0,
-                                          default_xloc0=0.5, default_yloc0=0.5, default_zloc0=0.):
+                                          default_xloc0=0.5, default_yloc0=0.5,
+                                          default_zloc0=0.):
         """get an empty recarray for particle starting location info.
 
         Parameters
@@ -378,7 +385,7 @@ class StartingLocationsFile(Package):
         dtype = StartingLocationsFile.get_dtypes()
         d = np.zeros(npt, dtype=dtype)
         d = d.view(np.recarray)
-        d['particleid'] = np.arange(1, npt+1)
+        d['particleid'] = np.arange(1, npt + 1)
         d['particlegroup'] = 1
         d['initialgrid'] = 1
         d['xloc0'] = default_xloc0
@@ -407,11 +414,10 @@ class StartingLocationsFile(Package):
             for g in groups:
                 npt = len(data[data.groupname == g])
                 output.write('{}\n{:d}\n'.format(g.decode(), npt))
-            txt =''
+            txt = ''
             for p in data:
                 txt += '{:d} {:d} {:d} {:d} {:d} {:d}'.format(*list(p)[:6])
                 fmtstr = ' {0} {0} {0} {0} '.format(float_format)
                 txt += fmtstr.format(*list(p)[6:10])
                 txt += '{}\n'.format(p[10].decode())
             output.write(txt)
-

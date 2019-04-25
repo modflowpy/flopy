@@ -95,7 +95,7 @@ class SpatialReference(object):
     xul and yul can be explicitly (re)set after SpatialReference
     instantiation, but only before any of the other attributes and methods are
     accessed
-        
+
     """
 
     xul, yul = None, None
@@ -120,9 +120,10 @@ class SpatialReference(object):
                  xul=None, yul=None, xll=None, yll=None, rotation=0.0,
                  proj4_str=None, epsg=None, prj=None, units=None,
                  length_multiplier=None):
-        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
-                      " instead.",
-                      category=DeprecationWarning)
+        warnings.warn(
+            "SpatialReference has been deprecated. Use StructuredGrid"
+            " instead.",
+            category=DeprecationWarning)
 
         for delrc in [delr, delc]:
             if isinstance(delrc, float) or isinstance(delrc, int):
@@ -278,7 +279,7 @@ class SpatialReference(object):
                 units = "feet"
             return units
         except:
-            pass
+            print('   could not parse units from {}'.format(self.proj4_str))
 
     @property
     def units(self):
@@ -294,8 +295,10 @@ class SpatialReference(object):
 
     @property
     def length_multiplier(self):
-        """Attempt to identify multiplier for converting from
-        model units to sr units, defaulting to 1."""
+        """
+        Attempt to identify multiplier for converting from
+        model units to sr units, defaulting to 1.
+        """
         lm = None
         if self._length_multiplier is not None:
             lm = self._length_multiplier
@@ -325,13 +328,16 @@ class SpatialReference(object):
 
     @property
     def bounds(self):
-        """Return bounding box in shapely order."""
+        """
+        Return bounding box in shapely order.
+        """
         xmin, xmax, ymin, ymax = self.get_extent()
         return xmin, ymin, xmax, ymax
 
     @staticmethod
     def load(namefile=None, reffile='usgs.model.reference'):
-        """Attempts to load spatial reference information from
+        """
+        Attempts to load spatial reference information from
         the following files (in order):
         1) usgs.model.reference
         2) NAM file (header comment)
@@ -366,31 +372,36 @@ class SpatialReference(object):
                 try:
                     d['xul'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse xul ' +
+                          'in {}'.format(namefile))
             elif "yul" in item.lower():
                 try:
                     d['yul'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse yul ' +
+                          'in {}'.format(namefile))
             elif "rotation" in item.lower():
                 try:
                     d['rotation'] = float(item.split(':')[1])
                 except:
-                    pass
+                    print('   could not parse rotation ' +
+                          'in {}'.format(namefile))
             elif "proj4_str" in item.lower():
                 try:
                     proj4_str = ':'.join(item.split(':')[1:]).strip()
                     if proj4_str.lower() == 'none':
                         proj4_str = None
                     d['proj4_str'] = proj4_str
-
                 except:
-                    pass
+                    print('   could not parse proj4_str ' +
+                          'in {}'.format(namefile))
             elif "start" in item.lower():
                 try:
                     d['start_datetime'] = item.split(':')[1].strip()
                 except:
-                    pass
+                    print('   could not parse start ' +
+                          'in {}'.format(namefile))
+
             # spatial reference length units
             elif "units" in item.lower():
                 d['units'] = item.split(':')[1].strip()
@@ -404,8 +415,10 @@ class SpatialReference(object):
 
     @staticmethod
     def read_usgs_model_reference_file(reffile='usgs.model.reference'):
-        """read spatial reference info from the usgs.model.reference file
-        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+        """
+        read spatial reference info from the usgs.model.reference file
+        https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html
+        """
 
         ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours",
                   4: "days",
@@ -414,11 +427,11 @@ class SpatialReference(object):
 
         d = SpatialReference.defaults.copy()
         d['source'] = 'usgs.model.reference'
-        d.pop(
-            'proj4_str')  # discard default to avoid confusion with epsg code if entered
+        # discard default to avoid confusion with epsg code if entered
+        d.pop('proj4_str')
         if os.path.exists(reffile):
-            with open(reffile) as input:
-                for line in input:
+            with open(reffile) as fref:
+                for line in fref:
                     if len(line) > 1:
                         if line.strip()[0] != '#':
                             info = line.strip().split('#')[0].split()
@@ -570,7 +583,8 @@ class SpatialReference(object):
         try:
             attribs.pop("start_datetime")
         except:
-            pass
+            print('   could not remove start_datetime')
+
         return SpatialReference(**attribs)
 
     @classmethod
@@ -619,7 +633,7 @@ class SpatialReference(object):
     def set_spatialreference(self, xul=None, yul=None, xll=None, yll=None,
                              rotation=0.0):
         """
-            set spatial reference - can be called from model instance
+        set spatial reference - can be called from model instance
 
         """
         if xul is not None and xll is not None:
@@ -1000,8 +1014,9 @@ class SpatialReference(object):
     def export_array(self, filename, a, nodata=-9999,
                      fieldname='value',
                      **kwargs):
-        """Write a numpy array to Arc Ascii grid
-        or shapefile with the model reference.
+        """
+        Write a numpy array to Arc Ascii grid or shapefile with the
+        model reference.
 
         Parameters
         ----------
@@ -1018,11 +1033,11 @@ class SpatialReference(object):
         fieldname : str
             Attribute field name for array values (shapefile export only).
             (default 'values')
-        kwargs: 
-            keyword arguments to np.savetxt (ascii) 
+        kwargs:
+            keyword arguments to np.savetxt (ascii)
             rasterio.open (GeoTIFF)
             or flopy.export.shapefile_utils.write_grid_shapefile2
-            
+
         Notes
         -----
         Rotated grids will be either be unrotated prior to export,
@@ -1034,6 +1049,7 @@ class SpatialReference(object):
         Arc Ascii and GeoTiff (besides disk usage) is that the
         unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
         will have the same number of rows and pixels as the original.
+
         """
 
         if filename.lower().endswith(".asc"):
@@ -1059,7 +1075,6 @@ class SpatialReference(object):
                     xll, yll = xmin, ymin
                 except ImportError:
                     print('scipy package required to export rotated grid.')
-                    pass
 
             filename = '.'.join(
                 filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
@@ -1137,7 +1152,8 @@ class SpatialReference(object):
     def export_contours(self, filename, contours,
                         fieldname='level', epsg=None, prj=None,
                         **kwargs):
-        """Convert matplotlib contour plot object to shapefile.
+        """
+        Convert matplotlib contour plot object to shapefile.
 
         Parameters
         ----------
@@ -1154,6 +1170,7 @@ class SpatialReference(object):
         Returns
         -------
         df : dataframe of shapefile contents
+
         """
         from flopy.utils.geometry import LineString
         from flopy.export.shapefile_utils import recarray2shp
@@ -1189,7 +1206,8 @@ class SpatialReference(object):
                               epsg=None,
                               prj=None,
                               **kwargs):
-        """Contour an array using matplotlib; write shapefile of contours.
+        """
+        Contour an array using matplotlib; write shapefile of contours.
 
         Parameters
         ----------
@@ -1202,6 +1220,7 @@ class SpatialReference(object):
         prj : str
             Existing projection file to be used with new shapefile.
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+
         """
         import matplotlib.pyplot as plt
 
@@ -1211,15 +1230,14 @@ class SpatialReference(object):
             prj = self.proj4_str
 
         if interval is not None:
-            min = np.nanmin(a)
-            max = np.nanmax(a)
-            nlevels = np.round(np.abs(max - min) / interval, 2)
-            msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
-                nlevels,
-                interval,
-                maxlevels)
+            vmin = np.nanmin(a)
+            vmax = np.nanmax(a)
+            nlevels = np.round(np.abs(vmax - vmin) / interval, 2)
+            msg = '{:.0f} levels '.format(nlevels) + \
+                  'at interval of {} > '.format(interval) + \
+                  'maxlevels = {}'.format(maxlevels)
             assert nlevels < maxlevels, msg
-            levels = np.arange(min, max, interval)
+            levels = np.arange(vmin, vmax, interval)
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
         self.export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
@@ -1245,35 +1263,27 @@ class SpatialReference(object):
         from flopy.plot import ModelMap
 
         kwargs['ax'] = ax
-        map = ModelMap(sr=self)
-        contour_set = map.contour_array(a=a, **kwargs)
+        mm = ModelMap(sr=self)
+        contour_set = mm.contour_array(a=a, **kwargs)
 
         return contour_set
 
     @property
     def vertices(self):
-        """Returns a list of vertices for"""
+        """
+        Returns a list of vertices for
+        """
         if self._vertices is None:
             self._set_vertices()
         return self._vertices
 
     def _set_vertices(self):
-        """populate vertices for the whole grid"""
+        """
+        Populate vertices for the whole grid
+        """
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
         self._vertices = self.get_vertices(ii, jj)
-        # vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        # self._vertices = [v.tolist() for v in vrts]  # conversion to lists
-
-        """
-        code above is 3x faster
-        xgrid, ygrid = self.xgrid, self.ygrid
-        ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
-        i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
-        i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
-        ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
-        self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
-        """
 
     def interpolate(self, a, xi, method='nearest'):
         """
@@ -1799,8 +1809,10 @@ class SpatialReferenceUnstructured(SpatialReference):
 
 
 class TemporalReference(object):
-    """For now, just a container to hold start time and time units files
-    outside of DIS package."""
+    """
+    For now, just a container to hold start time and time units files
+    outside of DIS package.
+    """
 
     defaults = {'itmuni': 4,
                 'start_datetime': '01-01-1970'}
@@ -1824,7 +1836,8 @@ class TemporalReference(object):
 
 
 class epsgRef:
-    """Sets up a local database of text representations of coordinate reference
+    """
+    Sets up a local database of text representations of coordinate reference
     systems, keyed by EPSG code.
 
     The database is epsgref.json, located in the user's data directory. If
@@ -1850,7 +1863,9 @@ class epsgRef:
         self.location = os.path.join(datadir, dbname)
 
     def to_dict(self):
-        """Returns dict with EPSG code integer key, and WKT CRS text"""
+        """
+        Returns dict with EPSG code integer key, and WKT CRS text
+        """
         data = OrderedDict()
         if os.path.exists(self.location):
             with open(self.location, 'r') as f:
@@ -1875,18 +1890,24 @@ class epsgRef:
             print('Resetting {}'.format(self.location))
 
     def add(self, epsg, prj):
-        """add an epsg code to epsgref.json"""
+        """
+        add an epsg code to epsgref.json
+        """
         data = self.to_dict()
         data[epsg] = prj
         self._write(data)
 
     def get(self, epsg):
-        """returns prj from a epsg code, otherwise None if not found"""
+        """
+        returns prj from a epsg code, otherwise None if not found
+        """
         data = self.to_dict()
         return data.get(epsg)
 
     def remove(self, epsg):
-        """removes an epsg entry from epsgref.json"""
+        """
+        removes an epsg entry from epsgref.json
+        """
         data = self.to_dict()
         if epsg in data:
             del data[epsg]
@@ -1901,14 +1922,16 @@ class epsgRef:
 
 
 class crs(object):
-    """Container to parse and store coordinate reference system parameters,
-    and translate between different formats."""
+    """
+    Container to parse and store coordinate reference system parameters,
+    and translate between different formats.
+    """
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
         self.wktstr = None
         if prj is not None:
-            with open(prj) as input:
-                self.wktstr = input.read()
+            with open(prj) as fprj:
+                self.wktstr = fprj.read()
         elif esri_wkt is not None:
             self.wktstr = esri_wkt
         elif epsg is not None:
@@ -1920,7 +1943,9 @@ class crs(object):
 
     @property
     def crs(self):
-        """Dict mapping crs attributes to proj4 parameters"""
+        """
+        Dict mapping crs attributes to proj4 parameters
+        """
         proj = None
         if self.projcs is not None:
             # projection
@@ -1982,7 +2007,8 @@ class crs(object):
 
     @property
     def grid_mapping_attribs(self):
-        """Map parameters for CF Grid Mappings
+        """
+        Map parameters for CF Grid Mappings
         http://http://cfconventions.org/cf-conventions/cf-conventions.html,
         Appendix F: Grid Mappings
         """
@@ -2013,7 +2039,9 @@ class crs(object):
 
     @property
     def proj4(self):
-        """Not implemented yet"""
+        """
+        Not implemented yet
+        """
         return None
 
     def parse_wkt(self):
@@ -2057,7 +2085,7 @@ class crs(object):
             try:
                 return float(self.wktstr[strt:end].split(',')[1])
             except:
-                pass
+                print('   could not typecast wktstr to a float')
 
     def _getgcsparam(self, txt):
         nvalues = 3 if txt.lower() == 'spheroid' else 2
@@ -2100,6 +2128,7 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
     -------
     prj : str
         text for a projection (*.prj) file.
+
     """
     warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
                   "instead.", category=DeprecationWarning)
@@ -2113,7 +2142,9 @@ def getprj(epsg, addlocalreference=True, text='esriwkt'):
 
 
 def get_spatialreference(epsg, text='esriwkt'):
-    """Gets text for given epsg code and text format from spatialreference.org
+    """
+    Gets text for given epsg code and text format from spatialreference.org
+
     Fetches the reference text using the url:
         http://spatialreference.org/ref/epsg/<epsg code>/<text>/
 
@@ -2159,7 +2190,8 @@ def get_spatialreference(epsg, text='esriwkt'):
 
 
 def getproj4(epsg):
-    """Gets projection file (.prj) text for given epsg code from
+    """
+    Get projection file (.prj) text for given epsg code from
     spatialreference.org. See: https://www.epsg-registry.org/
 
     Parameters
@@ -2171,6 +2203,7 @@ def getproj4(epsg):
     -------
     prj : str
         text for a projection (*.prj) file.
+
     """
     warnings.warn("SpatialReference has been deprecated. Use StructuredGrid "
                   "instead.", category=DeprecationWarning)

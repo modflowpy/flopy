@@ -47,47 +47,51 @@ class ModflowSub(Package):
         is defined by a combination of vertical hydraulic conductivity, elastic
         specific storage, and inelastic specific storage. (default is 1).
     nn : int
-        nn is the number of nodes used to discretize the half space to approximate
-        the head distributions in systems of delay interbeds. (default is 20).
+        nn is the number of nodes used to discretize the half space to
+        approximate the head distributions in systems of delay interbeds.
+        (default is 20).
     ac1 : float
-        ac1 is an acceleration parameter.  This parameter is used to predict the
-        aquifer head at the interbed boundaries on the basis of the head change
-        computed for the previous iteration. A value of 0.0 results in the use
-        of the aquifer head at the previous iteration. Limited experience indicates
-        that optimum values may range from 0.0 to 0.6. (default is 0).
+        ac1 is an acceleration parameter.  This parameter is used to predict
+        the aquifer head at the interbed boundaries on the basis of the head
+        change computed for the previous iteration. A value of 0.0 results in
+        the use of the aquifer head at the previous iteration. Limited
+        experience indicates that optimum values may range from 0.0 to 0.6.
+        (default is 0).
     ac2 : float
-        ac2 is an acceleration parameter. This acceleration parameter is a multiplier
-        for the head changes to compute the head at the new iteration. Values
-        are normally between 1.0 and 2.0, but the optimum is probably closer to 1.0
-        than to 2.0. However this parameter also can be used to help convergence of
-        the iterative solution by using values between 0 and 1. (default is 1.0).
+        ac2 is an acceleration parameter. This acceleration parameter is a
+        multiplier for the head changes to compute the head at the new
+        iteration. Values are normally between 1.0 and 2.0, but the optimum is
+        probably closer to 1.0 than to 2.0. However this parameter also can be
+        used to help convergence of the iterative solution by using values
+        between 0 and 1. (default is 1.0).
     itmin : int
-        ITMIN is the minimum number of iterations for which one-dimensional equations
-        will be solved for flow in interbeds when the Strongly Implicit Procedure (SIP)
-        is used to solve the ground-water flow equations. If the current iteration
-        level is greater than ITMIN and the SIP convergence criterion for head
-        closure (HCLOSE) is met at a particular cell, the one-dimensional equations
-        for that cell will not be solved. The previous solution will be used. The value
-        of ITMIN is not used if a solver other than SIP is used to solve the
-        ground-water flow equations. (default is 5).
+        ITMIN is the minimum number of iterations for which one-dimensional
+        equations will be solved for flow in interbeds when the Strongly
+        Implicit Procedure (SIP) is used to solve the ground-water flow
+        equations. If the current iteration level is greater than ITMIN and
+        the SIP convergence criterion for head closure (HCLOSE) is met at a
+        particular cell, the one-dimensional equations for that cell will not
+        be solved. The previous solution will be used. The value of ITMIN is
+        not used if a solver other than SIP is used to solve the ground-water
+        flow equations. (default is 5).
     ln : int or array of ints (nndb)
-        ln is a one-dimensional array specifying the model layer assignments for each
-        system of no-delay interbeds. (default is 0).
+        ln is a one-dimensional array specifying the model layer assignments
+        for each system of no-delay interbeds. (default is 0).
     ldn : int or array of ints (ndb)
-        ldn is a one-dimensional array specifying the model layer assignments for each
-        system of delay interbeds.(default is 0).
+        ldn is a one-dimensional array specifying the model layer assignments
+        for each system of delay interbeds.(default is 0).
     rnb : float or array of floats (ndb, nrow, ncol)
-        rnb is an array specifying the factor nequiv at each cell for each system of
-        delay interbeds. The array also is used to define the areal extent of each
-        system of interbeds. For cells beyond the areal extent of the system of
-        interbeds, enter a number less than 1.0 in the corresponding element of
-        this array. (default is 1).
+        rnb is an array specifying the factor nequiv at each cell for each
+        system of delay interbeds. The array also is used to define the areal
+        extent of each system of interbeds. For cells beyond the areal extent
+        of the system of interbeds, enter a number less than 1.0 in the
+        corresponding element of this array. (default is 1).
     hc : float or array of floats (nndb, nrow, ncol)
-        hc is an array specifying the preconsolidation head or preconsolidation stress
-        in terms of head in the aquifer for systems of no-delay interbeds. For any
-        model cells in which specified HC is greater than the corresponding value of
-        starting head, the value of HC will be set to that of starting head.
-        (default is 100000).
+        hc is an array specifying the preconsolidation head or preconsolidation
+        stress in terms of head in the aquifer for systems of no-delay
+        interbeds. For any model cells in which specified HC is greater than
+        the corresponding value of starting head, the value of HC will be set
+        to that of starting head. (default is 100000).
     sfe : float or array of floats (nndb, nrow, ncol)
         sfe is an array specifying the dimensionless elastic skeletal storage
         coefficient for systems of no-delay interbeds. (default is 1.e-4).
@@ -96,66 +100,74 @@ class ModflowSub(Package):
         coefficient for systems of no-delay interbeds. (default is 1.e-3).
     com : float or array of floats (nndb, nrow, ncol)
         com is an array specifying the starting compaction in each system of
-        no-delay interbeds. Compaction values computed by the package are added to
-        values in this array so that printed or stored values of compaction and land
-        subsidence may include previous components. Values in this array do not
-        affect calculations of storage changes or resulting compaction. For simulations
-        in which output values are to reflect compaction and subsidence since the start
-        of the simulation, enter zero values for all elements of this array. (default is 0).
+        no-delay interbeds. Compaction values computed by the package are added
+        to values in this array so that printed or stored values of compaction
+        and land subsidence may include previous components. Values in this
+        array do not affect calculations of storage changes or resulting
+        compaction. For simulations in which output values are to reflect
+        compaction and subsidence since the start of the simulation, enter zero
+        values for all elements of this array. (default is 0).
     dp : list or array of floats (nmz, 3)
         Data item includes nmz records, each with a value of vertical hydraulic
         conductivity, elastic specific storage, and inelastic specific storage.
         (default is [1.e-6, 6.e-6, 6.e-4]).
     dstart : float or array of floats (ndb, nrow, ncol)
-        dstart is an array specifying starting head in interbeds for systems of delay
-        interbeds. For a particular location in a system of interbeds, the starting head
-        is applied to every node in the string of nodes that approximates flow in half
-        of a doubly draining interbed. (default is 1).
+        dstart is an array specifying starting head in interbeds for systems of
+        delay interbeds. For a particular location in a system of interbeds,
+        the starting head is applied to every node in the string of nodes that
+        approximates flow in half of a doubly draining interbed.
+        (default is 1).
     dhc : float or array of floats (ndb, nrow, ncol)
-        dhc is an array specifying the starting preconsolidation head in interbeds for
-        systems of delay interbeds. For a particular location in a system of interbeds,
-        the starting preconsolidation head is applied to every node in the string of
-        nodes that approximates flow in half of a doubly draining interbed. For any
-        location at which specified starting preconsolidation head is greater than the
-        corresponding value of the starting head, Dstart, the value of the starting
-        preconsolidation head will be set to that of the starting head. (default is 100000).
+        dhc is an array specifying the starting preconsolidation head in
+        interbeds for systems of delay interbeds. For a particular location in
+        a system of interbeds, the starting preconsolidation head is applied to
+        every node in the string of nodes that approximates flow in half of a
+        doubly draining interbed. For any location at which specified starting
+        preconsolidation head is greater than the corresponding value of the
+        starting head, Dstart, the value of the starting preconsolidation head
+        will be set to that of the starting head. (default is 100000).
     dcom : float or array of floats (ndb, nrow, ncol)
-        dcom is an array specifying the starting compaction in each system of delay interbeds.
-        Compaction values computed by the package are added to values in this array so that
-        printed or stored values of compaction and land subsidence may include previous
-        components. Values in this array do not affect calculations of storage changes or
-        resulting compaction. For simulations in which output values are to reflect compaction
-        and subsidence since the start of the simulation, enter zero values for all elements
-        of this array. (default is 0).
+        dcom is an array specifying the starting compaction in each system of
+        delay interbeds. Compaction values computed by the package are added to
+        values in this array so that printed or stored values of compaction and
+        land subsidence may include previous components. Values in this array
+        do not affect calculations of storage changes or resulting compaction.
+        For simulations in which output values are to reflect compaction
+        and subsidence since the start of the simulation, enter zero values
+        for all elements of this array. (default is 0).
     dz : float or array of floats (ndb, nrow, ncol)
-        dz is an array specifying the equivalent thickness for a system of delay interbeds.
-        (default is 1).
+        dz is an array specifying the equivalent thickness for a system of
+        delay interbeds. (default is 1).
     nz : int or array of ints (ndb, nrow, ncol)
-        nz is an array specifying the material zone numbers for systems of delay interbeds.
-        The zone number for each location in the model grid selects the hydraulic conductivity,
-        elastic specific storage, and inelastic specific storage of the interbeds.
-        (default is 1).
+        nz is an array specifying the material zone numbers for systems of
+        delay interbeds. The zone number for each location in the model grid
+        selects the hydraulic conductivity, elastic specific storage, and
+        inelastic specific storage of the interbeds. (default is 1).
     ids15 : list or array of ints (12)
-        Format codes and unit numbers for subsidence, compaction by model layer, compaction
-        by interbed system, vertical displacement, no-delay preconsolidation, and delay
-        preconsolidation will be printed. If ids15 is None and isuboc>0 then print code 0
-        will be used for all data which is output to the binary subsidence output file
-        (unit=1051). The 12 entries in ids15 correspond to ifm1, iun1, ifm2, iun2, ifm3,
-        iun3, ifm4, iun4, ifm5, iun5, ifm6, and iun6 variables. (default is None).
+        Format codes and unit numbers for subsidence, compaction by model
+        layer, compaction by interbed system, vertical displacement, no-delay
+        preconsolidation, and delay preconsolidation will be printed. If ids15
+        is None and isuboc>0 then print code 0 will be used for all data which
+        is output to the binary subsidence output file (unit=1051). The 12
+        entries in ids15 correspond to ifm1, iun1, ifm2, iun2, ifm3, iun3,
+        ifm4, iun4, ifm5, iun5, ifm6, and iun6 variables. (default is None).
     ids16 : list or array of ints (isuboc, 17)
-        Stress period and time step range and print and save flags used to control printing
-        and saving of information generated by the SUB Package during program execution. Each
-        row of ids16 corresponds to isp1, isp2, its1, its2, ifl1, ifl2, ifl3, ifl4, ifl5,
-        ifl6, ifl7, ifl8, ifl9, ifl10, ifl11, ifl12, and ifl13 variables for isuboc entries.
-        isp1, isp2, its1, and its2 are stress period and time step ranges. ifl1 and ifl2
-        control subsidence printing and saving. ifl3 and ifl4 control compaction by model
-        layer printing and saving. ifl5 and ifl6 control compaction by interbed system
-        printing and saving. ifl7 and ifl8 control vertical displacement printing and
-        saving. ifl9 and ifl10 control critical head for no-delay interbeds printing and saving.
-        ifl11 and ifl12 control critical head for delay interbeds printing and saving. ifl13
-        controls volumetric budget for delay interbeds printing. If ids16 is None and isuboc>0
-        then all available subsidence output will be printed and saved to the binary
-        subsidence output file (unit=1051). (default is None).
+        Stress period and time step range and print and save flags used to
+        control printing and saving of information generated by the SUB Package
+        during program execution. Each row of ids16 corresponds to isp1, isp2,
+        its1, its2, ifl1, ifl2, ifl3, ifl4, ifl5, ifl6, ifl7, ifl8, ifl9,
+        ifl10, ifl11, ifl12, and ifl13 variables for isuboc entries. isp1,
+        isp2, its1, and its2 are stress period and time step ranges. ifl1 and
+        ifl2 control subsidence printing and saving. ifl3 and ifl4 control
+        compaction by model layer printing and saving. ifl5 and ifl6 control
+        compaction by interbed system printing and saving. ifl7 and ifl8
+        control vertical displacement printing and saving. ifl9 and ifl10
+        control critical head for no-delay interbeds printing and saving.
+        ifl11 and ifl12 control critical head for delay interbeds printing
+        and saving. ifl13 controls volumetric budget for delay interbeds
+        printing. If ids16 is None and isuboc>0 then all available subsidence
+        output will be printed and saved to the binary subsidence output file
+        (unit=1051). (default is None).
     unitnumber : int
         File unit number (default is None).
     filenames : str or list of str
@@ -184,7 +196,8 @@ class ModflowSub(Package):
     -----
     Parameters are supported in Flopy only when reading in existing models.
     Parameter values are converted to native values in Flopy and the
-    connection to "parameters" is thus nonexistent. Parameters are not supported in the SUB Package.
+    connection to "parameters" is thus nonexistent. Parameters are not
+    supported in the SUB Package.
 
     Examples
     --------
@@ -266,7 +279,8 @@ class ModflowSub(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extensions, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -422,10 +436,11 @@ class ModflowSub(Package):
         # write dataset 9
         if self.ndb > 0:
             for k in range(self.nmz):
-                f.write(
-                    '{:15.6g} {:15.6g} {:15.6g}    #material zone {} data\n'.format(
-                        self.dp[k, 0], self.dp[k, 1],
-                        self.dp[k, 2], k + 1))
+                line = '{:15.6g} {:15.6g} {:15.6g}'.format(self.dp[k, 0],
+                                                           self.dp[k, 1],
+                                                           self.dp[k, 2]) + \
+                       '    #material zone {} data\n'.format(k + 1)
+                f.write(line)
         # write dataset 10 to 14
         if self.ndb > 0:
             for k in range(self.ndb):
@@ -554,32 +569,28 @@ class ModflowSub(Package):
                     sys.stdout.write(
                         '  loading sub dataset 5 for layer {}\n'.format(kk))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'hc layer {}'.format(kk),
-                                ext_unit_dict)
+                                'hc layer {}'.format(kk), ext_unit_dict)
                 hc[k] = t
                 # sfe
                 if model.verbose:
                     sys.stdout.write(
                         '  loading sub dataset 6 for layer {}\n'.format(kk))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'sfe layer {}'.format(kk),
-                                ext_unit_dict)
+                                'sfe layer {}'.format(kk), ext_unit_dict)
                 sfe[k] = t
                 # sfv
                 if model.verbose:
                     sys.stdout.write(
                         '  loading sub dataset 7 for layer {}\n'.format(kk))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'sfv layer {}'.format(kk),
-                                ext_unit_dict)
+                                'sfv layer {}'.format(kk), ext_unit_dict)
                 sfv[k] = t
                 # com
                 if model.verbose:
                     sys.stdout.write(
                         '  loading sub dataset 8 for layer {}\n'.format(kk))
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
-                                'com layer {}'.format(kk),
-                                ext_unit_dict)
+                                'com layer {}'.format(kk), ext_unit_dict)
                 com[k] = t
 
         # dp
@@ -588,9 +599,9 @@ class ModflowSub(Package):
             dp = np.zeros((nmz, 3), dtype=np.float32)
             for k in range(nmz):
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 9 for material zone {}\n'.format(
-                            k + 1))
+                    msg = 2 * ' ' + 'loading sub dataset 9 for material ' + \
+                          'zone {}\n'.format(k + 1)
+                    sys.stdout.write(msg)
                 line = f.readline()
                 t = line.strip().split()
                 dp[k, :] = float(t[0]), float(t[1]), float(t[2])
@@ -610,40 +621,45 @@ class ModflowSub(Package):
                 kk = ldn[k] + 1
                 # dstart
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 10 for layer {}\n'.format(kk))
+                    msg = 2 * ' ' + 'loading sub dataset 10 for ' + \
+                          'layer {}\n'.format(kk)
+                    sys.stdout.write(msg)
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
                                 'dstart layer {}'.format(kk),
                                 ext_unit_dict)
                 dstart[k] = t
                 # dhc
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 11 for layer {}\n'.format(kk))
+                    msg = 2 * ' ' + 'loading sub dataset 11 for ' + \
+                          'layer {}\n'.format(kk)
+                    sys.stdout.write(msg)
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
                                 'dhc layer {}'.format(kk),
                                 ext_unit_dict)
                 dhc[k] = t
                 # dcom
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 12 for layer {}\n'.format(kk))
+                    msg = 2 * ' ' + 'loading sub dataset 12 for ' + \
+                          'layer {}\n'.format(kk)
+                    sys.stdout.write(msg)
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
                                 'dcom layer {}'.format(kk),
                                 ext_unit_dict)
                 dcom[k] = t
                 # dz
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 13 for layer {}\n'.format(kk))
+                    msg = 2 * ' ' + 'loading sub dataset 13 for ' + \
+                          'layer {}\n'.format(kk)
+                    sys.stdout.write(msg)
                 t = Util2d.load(f, model, (nrow, ncol), np.float32,
                                 'dz layer {}'.format(kk),
                                 ext_unit_dict)
                 dz[k] = t
                 # nz
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 14 for layer {}\n'.format(kk))
+                    msg = 2 * ' ' + 'loading sub dataset 14 for ' + \
+                          'layer {}\n'.format(kk)
+                    sys.stdout.write(msg)
                 t = Util2d.load(f, model, (nrow, ncol), np.int32,
                                 'nz layer {}'.format(kk),
                                 ext_unit_dict)
@@ -654,8 +670,9 @@ class ModflowSub(Package):
         if isuboc > 0:
             # dataset 15
             if model.verbose:
-                sys.stdout.write(
-                    '  loading sub dataset 15 for layer {}\n'.format(kk))
+                msg = 2 * ' ' + 'loading sub dataset 15 for ' + \
+                      'layer {}\n'.format(kk)
+                sys.stdout.write(msg)
             ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
             #iu = 1
@@ -667,9 +684,9 @@ class ModflowSub(Package):
             ids16 = [0] * isuboc
             for k in range(isuboc):
                 if model.verbose:
-                    sys.stdout.write(
-                        '  loading sub dataset 16 for isuboc {}\n'.format(
-                            k + 1))
+                    msg = 2 * ' ' + 'loading sub dataset 16 for ' + \
+                          'isuboc {}\n'.format(k + 1)
+                    sys.stdout.write(msg)
                 t = np.empty(17, dtype=np.int32)
                 t = read1d(f, t)
                 t[0:4] -= 1

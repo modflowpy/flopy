@@ -16,6 +16,7 @@ from ..pakbase import Package
 from ..utils import read_fixed_var, write_fixed_var
 from ..utils.recarray_utils import create_empty_recarray
 
+
 class ModflowGage(Package):
     """
     MODFLOW Gage Package Class.
@@ -90,12 +91,12 @@ class ModflowGage(Package):
 
         # set filenames
         if filenames is None:
-            filenames = [None for x in range(numgage+1)]
+            filenames = [None for x in range(numgage + 1)]
         elif isinstance(filenames, str):
             filenames = [filenames] + [None for x in range(numgage)]
         elif isinstance(filenames, list):
-            if len(filenames) < numgage+1:
-                for idx in range(len(filenames), numgage+2):
+            if len(filenames) < numgage + 1:
+                for idx in range(len(filenames), numgage + 2):
                     filenames.append(None)
 
         # process gage output files
@@ -106,7 +107,8 @@ class ModflowGage(Package):
                 if files is None:
                     files = []
                     for idx in range(numgage):
-                        files.append('{}.gage{}.go'.format(model.name, idx+1))
+                        files.append(
+                            '{}.gage{}.go'.format(model.name, idx + 1))
                 if isinstance(files, np.ndarray):
                     files = files.flatten().tolist()
                 elif isinstance(files, str):
@@ -121,13 +123,13 @@ class ModflowGage(Package):
             else:
                 if len(filenames) < numgage + 1:
                     err = "filenames must have a " + \
-                          "length of {} ".format(numgage+1) + \
+                          "length of {} ".format(numgage + 1) + \
                           "the length provided is {}".format(len(filenames))
                     raise Exception(err)
                 else:
                     files = []
                     for n in range(numgage):
-                        files.append(filenames[n+1])
+                        files.append(filenames[n + 1])
 
             # convert gage_data to a recarray, if necessary
             if isinstance(gage_data, np.ndarray):

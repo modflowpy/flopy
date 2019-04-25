@@ -216,7 +216,6 @@ class ModflowLmt(Package):
                     for i in range(1, len(t)):
                         package_flows.append(t[i])
 
-
         # determine specified unit number
         unitnumber = None
         filenames = [None]

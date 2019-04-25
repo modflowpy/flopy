@@ -4,6 +4,7 @@ from ..pakbase import Package
 from ..utils import Util2d, Util3d
 from ..utils.util_array import Transient3d
 
+
 class SeawatVdf(Package):
     """
     SEAWAT Variable-Density Flow Package Class.
@@ -180,6 +181,7 @@ class SeawatVdf(Package):
 
     """
     unitnumber = 37
+
     def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
                  densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
                  denseslp=.025, crhoref=0, firstdt=0.001, indense=1,

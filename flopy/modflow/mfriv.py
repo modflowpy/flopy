@@ -69,7 +69,7 @@ class ModflowRiv(Package):
     extension : string
         Filename extension (default is 'riv')
     options : list of strings
-        Package options. (default is None).        
+        Package options. (default is None).
     unitnumber : int
         File unit number (default is None).
     filenames : str or list of str
@@ -149,7 +149,8 @@ class ModflowRiv(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -167,8 +168,8 @@ class ModflowRiv(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
-        # self.stress_period_data = MfList(model, self.dtype, stress_period_data)
+            self.dtype = self.get_default_dtype(
+                structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
@@ -209,22 +210,25 @@ class ModflowRiv(Package):
         for per in self.stress_period_data.data.keys():
             if isinstance(self.stress_period_data.data[per], np.recarray):
                 spd = self.stress_period_data.data[per]
-                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (spd.node)
+                inds = (spd.k, spd.i, spd.j) if self.parent.structured else (
+                    spd.node)
 
-                # check that river stage and bottom are above model cell bottoms
-                # also checks for nan values
+                # check that river stage and bottom are above model cell
+                # bottoms also checks for nan values
                 botms = self.parent.dis.botm.array[inds]
 
                 for elev in ['stage', 'rbot']:
+                    txt = '{} below cell bottom'.format(elev)
                     chk.stress_period_data_values(spd, spd[elev] < botms,
                                                   col=elev,
-                                                  error_name='{} below cell bottom'.format(elev),
+                                                  error_name=txt,
                                                   error_type='Error')
 
                 # check that river stage is above the rbot
+                txt = 'RIV stage below rbots'
                 chk.stress_period_data_values(spd, spd['rbot'] > spd['stage'],
                                               col='stage',
-                                              error_name='RIV stage below rbots',
+                                              error_name=txt,
                                               error_type='Error')
         chk.summarize()
         return chk
@@ -268,11 +272,14 @@ class ModflowRiv(Package):
         None
 
         """
-        if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
+        # allows turning off package checks when writing files at model level
+        if check:
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
         f_riv = open(self.fn_path, 'w')
         f_riv.write('{0}\n'.format(self.heading))
-        line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact, self.ipakcb)
+        line = '{0:10d}{1:10d}'.format(self.stress_period_data.mxact,
+                                       self.ipakcb)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
@@ -327,14 +334,12 @@ class ModflowRiv(Package):
         if model.verbose:
             sys.stdout.write('loading riv package file...\n')
 
-        return Package.load(model, ModflowRiv, f, nper, check=check,
+        return Package.load(f, model, ModflowRiv, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
-
 
     @staticmethod
     def ftype():
         return 'RIV'
-
 
     @staticmethod
     def defaultunit():

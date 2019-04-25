@@ -16,6 +16,7 @@ from ..datbase import DataInterface, DataListInterface, DataType
 
 try:
     from numpy.lib import NumpyVersion
+
     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
 except ImportError:
     numpy114 = False
@@ -162,8 +163,8 @@ class MfList(DataInterface, DataListInterface):
             other_len = other_data.shape[0]
             self_len = self_data.shape[0]
 
-            if (other_len == 0 and self_len == 0) or\
-               (kper not in self_kpers and kper not in other_kpers):
+            if (other_len == 0 and self_len == 0) or \
+                    (kper not in self_kpers and kper not in other_kpers):
                 continue
             elif self_len == 0:
                 new_dict[kper] = other_data
@@ -173,9 +174,8 @@ class MfList(DataInterface, DataListInterface):
                 new_len = other_data.shape[0] + self_data.shape[0]
                 new_data = np.recarray(new_len, dtype=self.dtype)
                 new_data[:self_len] = self_data
-                new_data[self_len:self_len+other_len] = other_data
+                new_data[self_len:self_len + other_len] = other_data
                 new_dict[kper] = new_data
-
 
         return new_dict
 
@@ -193,12 +193,14 @@ class MfList(DataInterface, DataListInterface):
         if not isinstance(fields, list):
             fields = [fields]
         names = [n for n in self.dtype.names if n not in fields]
-        dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
+        dtype = np.dtype(
+            [(k, d) for k, d in self.dtype.descr if k not in fields])
         spd = {}
         for k, v in self.data.items():
             # because np 1.9 doesn't support indexing by list of columns
             newarr = np.array([self.data[k][n] for n in names]).transpose()
-            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(np.recarray)
+            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(
+                np.recarray)
             for n in dtype.names:
                 newarr[n] = self.data[k][n]
             spd[k] = newarr
@@ -324,8 +326,8 @@ class MfList(DataInterface, DataListInterface):
                         raise Exception("MfList error: casting list " + \
                                         "to ndarray: " + str(e))
 
-                #super hack - sick of recarrays already
-                #if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
+                # super hack - sick of recarrays already
+                # if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
                 #    d = d.view(np.recarray)
 
                 if isinstance(d, np.recarray):
@@ -470,7 +472,8 @@ class MfList(DataInterface, DataListInterface):
             for var in varnames:
                 diffcols = list([n for n in df.columns if var in n])
                 diff = df[diffcols].diff(axis=1)
-                diff['{}0'.format(var)] = 1  # always return the first stress period
+                diff['{}0'.format(
+                    var)] = 1  # always return the first stress period
                 changed = diff.sum(axis=0) != 0
                 keep.append(df.loc[:, changed.index[changed]])
             df = pd.concat(keep, axis=1)
@@ -595,14 +598,13 @@ class MfList(DataInterface, DataListInterface):
             elif (kper in kpers):
                 kper_vtype = self.__vtype[kper]
 
-            if self._model.array_free_format and self._model.external_path is\
+            if self._model.array_free_format and self._model.external_path is \
                     not None:
-
                 # py_filepath = ''
                 # py_filepath = os.path.join(py_filepath,
                 #                            self._model.external_path)
                 filename = self.package.name[0] + \
-                            "_{0:04d}.dat".format(kper)
+                           "_{0:04d}.dat".format(kper)
                 filenames.append(filename)
         return filenames
 
@@ -656,12 +658,12 @@ class MfList(DataInterface, DataListInterface):
                 kper_vtype = int
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                    .format(itmp, 0, kper+1))
+                    .format(itmp, 0, kper + 1))
 
             isExternal = False
             if self._model.array_free_format and \
-                            self._model.external_path is not None and \
-                            forceInternal is False:
+                    self._model.external_path is not None and \
+                    forceInternal is False:
                 isExternal = True
             if self.__binary:
                 isExternal = True
@@ -679,7 +681,7 @@ class MfList(DataInterface, DataListInterface):
                     if self._model.external_path is not None:
                         model_filepath = os.path.join(
                             self._model.external_path,
-                                                      filename)
+                            filename)
                     self.__tofile(py_filepath, kper_data)
                     kper_vtype = str
                     kper_data = model_filepath
@@ -895,9 +897,11 @@ class MfList(DataInterface, DataListInterface):
         """
 
         from flopy.plot import PlotUtilities
-        axes = PlotUtilities._plot_mflist_helper(self, key=key,names=names,
-                                                 kper=kper, filename_base=filename_base,
-                                                 file_extension=file_extension, mflay=mflay,
+        axes = PlotUtilities._plot_mflist_helper(self, key=key, names=names,
+                                                 kper=kper,
+                                                 filename_base=filename_base,
+                                                 file_extension=file_extension,
+                                                 mflay=mflay,
                                                  **kwargs)
 
         return axes
@@ -991,7 +995,7 @@ class MfList(DataInterface, DataListInterface):
             raise NotImplementedError()
 
         if 'node' in self.dtype.names:
-            if 'i' not in self.dtype.names and\
+            if 'i' not in self.dtype.names and \
                     "j" not in self.dtype.names:
                 i0 = 1
                 unstructured = True
@@ -1040,8 +1044,8 @@ class MfList(DataInterface, DataListInterface):
             else:
                 cnt = np.zeros((self._model.nlay, self._model.nrow,
                                 self._model.ncol),
-                                dtype=np.float)
-            #print(name,kper)
+                               dtype=np.float)
+            # print(name,kper)
             for rec in sarr:
                 if unstructured:
                     arr[rec['node']] += rec[name]

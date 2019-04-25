@@ -3,6 +3,7 @@ import numpy as np
 from ..utils.util_array import Util3d as Util3d
 from ..utils.util_array import Transient2d as Transient2d
 
+
 def get_template_array(pakarray):
     """
     Convert the package array into the appropriate template array
@@ -14,6 +15,7 @@ def get_template_array(pakarray):
     elif isinstance(pakarray, Transient2d):
         tpla = Transient2dTpl(pakarray)
     return tpla
+
 
 class Transient2dTpl:
     def __init__(self, transient2d):
@@ -29,9 +31,11 @@ class Transient2dTpl:
         """
         # Verify parameter span contents
         if 'kpers' not in p.span:
-            raise Exception('Parameter {} span does not contain kper.'.format(p.name))
+            raise Exception(
+                'Parameter {} span does not contain kper.'.format(p.name))
         if 'idx' not in p.span:
-            raise Exception('Parameter {} span does not contain idx.'.format(p.name))
+            raise Exception(
+                'Parameter {} span does not contain idx.'.format(p.name))
 
         if p.span['idx'] is None:
             # Multiplier parameter is when p.span['idx'] is None
@@ -87,6 +91,7 @@ class Util3dTpl(object):
     u3d : Util3d object
 
     """
+
     def __init__(self, u3d):
         self.u3d = u3d
         self.chararray = np.array(u3d.array, dtype='str')
@@ -115,7 +120,9 @@ class Util3dTpl(object):
 
         if 'layers' in p.span and 'idx' in p.span:
             if p.span['idx'] is not None:
-                raise Exception('For a Util3d object, cannot have layers and idx in parameter.span')
+                e = 'For a Util3d object, cannot have layers and ' + \
+                    'idx in parameter.span'
+                raise Exception(e)
 
         if 'layers' in p.span:
             for l in p.span['layers']:
@@ -144,6 +151,7 @@ class Util2dTpl(object):
         within the array itself.
 
     """
+
     def __init__(self, chararray, name, multiplier, indexed_param):
         self.chararray = chararray
         self.name = name
@@ -180,4 +188,3 @@ class Util2dTpl(object):
                         icount = 0
             file_entry = cr + astring
         return file_entry
-

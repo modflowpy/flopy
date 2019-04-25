@@ -9,7 +9,6 @@ import sys
 
 from ..mbase import BaseModel
 from ..modflow import Modflow
-from ..version import __version__
 
 
 class LgrChild():
@@ -217,13 +216,13 @@ class ModflowLgr(BaseModel):
         return rpth
 
     def get_namefiles(self):
-        '''
+        """
         Get the namefiles (with path) of the parent and children models
-        
+
         Returns
         -------
         namefiles : list
-        
+
 
         Examples
         --------
@@ -232,7 +231,7 @@ class ModflowLgr(BaseModel):
         >>> lgr = flopy.modflowlgr.ModflowLgr.load(f)
         >>> namefiles = lgr.get_namefiles()
 
-        '''
+        """
         pth = os.path.join(self.parent._model_ws, self.parent.namefile)
         namefiles = [pth]
         for child in self.children_models:
@@ -423,7 +422,7 @@ class ModflowLgr(BaseModel):
         ----------
         f : MODFLOW name file
             File to load.
-        
+
         model_ws : model workspace path
 
         load_only : (optional) filetype(s) to load (e.g. ["bas6", "lpf"])

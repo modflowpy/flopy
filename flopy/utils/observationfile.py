@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from ..utils.utils_def import FlopyBinaryData
@@ -234,7 +233,7 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-                'Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden.')
+            'Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden.')
 
     def _build_index(self):
         """
@@ -242,7 +241,7 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-                'Abstract method _build_index called in BinaryFiles.  This method needs to be overridden.')
+            'Abstract method _build_index called in BinaryFiles.  This method needs to be overridden.')
 
 
 class Mf6Obs(ObsFiles):
@@ -321,7 +320,7 @@ class Mf6Obs(ObsFiles):
 
             # set obsnames
             obsnames = []
-            for idx in range(1, self.nobs+1):
+            for idx in range(1, self.nobs + 1):
                 obsnames.append(t[idx])
             self.obsnames = np.array(obsnames)
 
@@ -334,8 +333,6 @@ class Mf6Obs(ObsFiles):
             # read ascii data
             self.data = np.loadtxt(self.file, dtype=self.dtype, delimiter=',')
         return
-
-
 
     def _build_dtype(self):
 
@@ -352,6 +349,7 @@ class Mf6Obs(ObsFiles):
 
     def _build_index(self):
         return
+
 
 class HydmodObs(ObsFiles):
     """

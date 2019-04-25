@@ -37,16 +37,17 @@ class ModflowLpf(Package):
         calculations, it is useful as an indicator when looking at the
         resulting heads that are output from the model. HDRY is thus similar
         to HNOFLO in the Basic Package, which is the value assigned to cells
-        that are no-flow cells at the start of a model simulation. 
+        that are no-flow cells at the start of a model simulation.
         (default is -1.e30).
     laytyp : int or array of ints (nlay)
-        Layer type, contains a flag for each layer that specifies the layer type.
+        Layer type, contains a flag for each layer that specifies the layer
+        type.
         0 confined
         >0 convertible
         <0 convertible unless the THICKSTRT option is in effect.
         (default is 0).
     layavg : int or array of ints (nlay)
-        Layer average 
+        Layer average
         0 is harmonic mean
         1 is logarithmic mean
         2 is arithmetic mean of saturated thickness and logarithmic mean of
@@ -87,12 +88,12 @@ class ModflowLpf(Package):
         (default is 1).
     ihdwet : int
         is a flag that determines which equation is used to define the
-        initial head at cells that become wet. 
+        initial head at cells that become wet.
         (default is 0)
     hk : float or array of floats (nlay, nrow, ncol)
         is the hydraulic conductivity along rows. HK is multiplied by
         horizontal anisotropy (see CHANI and HANI) to obtain hydraulic
-        conductivity along columns. 
+        conductivity along columns.
         (default is 1.0).
     hani : float or array of floats (nlay, nrow, ncol)
         is the ratio of hydraulic conductivity along columns to hydraulic
@@ -109,7 +110,7 @@ class ModflowLpf(Package):
         When STORAGECOEFFICIENT is used, Ss is confined storage coefficient.
         (default is 1.e-5).
     sy : float or array of floats (nlay, nrow, ncol)
-        is specific yield. 
+        is specific yield.
         (default is 0.15).
     vkcb : float or array of floats (nlay, nrow, ncol)
         is the vertical hydraulic conductivity of a Quasi-three-dimensional
@@ -122,7 +123,7 @@ class ModflowLpf(Package):
         (default is -0.01).
     storagecoefficient : boolean
         indicates that variable Ss and SS parameters are read as storage
-        coefficient rather than specific storage. 
+        coefficient rather than specific storage.
         (default is False).
     constantcv : boolean
          indicates that vertical conductance for an unconfined cell is
@@ -238,9 +239,14 @@ class ModflowLpf(Package):
         self.chani = Util2d(model, (nlay,), np.float32, chani, name='chani')
         self.layvka = Util2d(model, (nlay,), np.int32, layvka, name='layvka')
         self.laywet = Util2d(model, (nlay,), np.int32, laywet, name='laywet')
-        self.wetfct = wetfct  # Factor that is included in the calculation of the head when a cell is converted from dry to wet
-        self.iwetit = iwetit  # Iteration interval for attempting to wet cells
-        self.ihdwet = ihdwet  # Flag that determines which equation is used to define the initial head at cells that become wet
+        # Factor that is included in the calculation of the head when a cell is
+        # converted from dry to wet
+        self.wetfct = wetfct
+        # Iteration interval for attempting to wet cells
+        self.iwetit = iwetit
+        # Flag that determines which equation is used to define the initial
+        # head at cells that become wet
+        self.ihdwet = ihdwet
         self.options = ' '
         if storagecoefficient:
             self.options = self.options + 'STORAGECOEFFICIENT '
@@ -288,7 +294,8 @@ class ModflowLpf(Package):
         None
 
         """
-        if check:  # allows turning off package checks when writing files at model level
+        # allows turning off package checks when writing files at model level
+        if check:
             self.check(f='{}.chk'.format(self.name[0]),
                        verbose=self.parent.verbose, level=1)
 
@@ -343,7 +350,6 @@ class ModflowLpf(Package):
         f.close()
         return
 
-
     @staticmethod
     def load(f, model, ext_unit_dict=None, check=True):
         """
@@ -397,13 +403,12 @@ class ModflowLpf(Package):
         if dis is None:
             dis = model.get_package('DISU')
 
-
         # Item 1: IBCFCB, HDRY, NPLPF - line already read above
         if model.verbose:
             print('   loading IBCFCB, HDRY, NPLPF...')
         t = line_parse(line)
         ipakcb, hdry, nplpf = int(t[0]), float(t[1]), int(t[2])
-        #if ipakcb != 0:
+        # if ipakcb != 0:
         #    model.add_pop_key_list(ipakcb)
         #    ipakcb = 53
         # options
@@ -600,7 +605,7 @@ class ModflowLpf(Package):
         # create instance of lpf class
         lpf = ModflowLpf(model, ipakcb=ipakcb, laytyp=laytyp, layavg=layavg,
                          chani=chani, layvka=layvka, laywet=laywet, hdry=hdry,
-                         iwdflg=iwetdry,  wetfct=wetfct, iwetit=iwetit,
+                         iwdflg=iwetdry, wetfct=wetfct, iwetit=iwetit,
                          ihdwet=ihdwet, hk=hk, hani=hani, vka=vka, ss=ss,
                          sy=sy, vkcb=vkcb, wetdry=wetdry,
                          storagecoefficient=storagecoefficient,

@@ -514,7 +514,8 @@ class Modpath7Sim(Package):
         if particlegroups is None:
             particlegroups = [ParticleGroup()]
         elif isinstance(particlegroups,
-                        (ParticleGroup, ParticleGroupLRCTemplate,
+                        (ParticleGroup,
+                         ParticleGroupLRCTemplate,
                          ParticleGroupNodeTemplate)):
             particlegroups = [particlegroups]
         self.particlegroups = particlegroups

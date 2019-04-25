@@ -124,6 +124,7 @@ class SeawatVsc(Package):
 
     """
     unitnumber = 38
+
     def __init__(self, model, mt3dmuflg=-1, viscmin=0., viscmax=0.,
                  viscref=8.904e-4, nsmueos=0, mutempopt=2, mtmuspec=1,
                  dmudc=1.923e-06, cmuref=0., mtmutempspec=1,
@@ -459,7 +460,6 @@ class SeawatVsc(Package):
                         amucoeff=amucoeff, invisc=invisc, visc=visc,
                         unitnumber=unitnumber, filenames=filenames)
         return vsc
-
 
     @staticmethod
     def ftype():

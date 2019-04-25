@@ -33,8 +33,9 @@ class FormattedHeader(Header):
 
     Parameters
     ----------
-        text_ident is the text string in the header that identifies the type of data (eg. 'head')
-        precision is the precision of the floating point data in the file
+        text_ident is the text string in the header that identifies the type
+        of data (eg. 'head') precision is the precision of the floating point
+        data in the file
     """
 
     def __init__(self, text_ident, precision='single'):
@@ -48,12 +49,14 @@ class FormattedHeader(Header):
 
         Parameters
         ----------
-            text_file is an open file object currently at the beginning of the header
+            text_file is an open file object currently at the beginning of
+            the header
 
         Returns
         ----------
         out : numpy array of header information
         also stores the header's format string as self.format_string
+
         """
 
         header_text = text_file.readline().decode('ascii')
@@ -265,11 +268,10 @@ class FormattedLayerFile(LayerFile):
 
         istat = 1
         for k, i, j in kijlist:
-            recordlist = []
             ioffset_col = (i * self._col_data_size)
             for irec, header in enumerate(self.recordarray):
-                ilay = header[
-                           'ilay'] - 1  # change ilay from header to zero-based
+                # change ilay from header to zero-based
+                ilay = header['ilay'] - 1
                 if ilay != k:
                     continue
                 ipos = self.iposarray[irec]
@@ -373,9 +375,10 @@ class FormattedHeadFile(FormattedLayerFile):
             data_count += len(arr_column_data)
 
         if data_count != header['ncol']:
-            raise Exception(
-                'Unexpected data formatting in head file.  Expected %d columns, but found %d.' %
-                header['ncol'], data_count)
+            e = 'Unexpected data formatting in head file.  Expected ' + \
+                '{:d} columns, '.format(header['ncol']) + \
+                'but found {:d}.'.format(data_count)
+            raise Exception(e)
 
         # Calculate seek distance based on data size
         stop_pos = self.file.tell()

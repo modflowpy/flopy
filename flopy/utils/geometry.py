@@ -3,14 +3,16 @@ Container objects for working with geometric information
 """
 import numpy as np
 
-class Polygon:
 
+class Polygon:
     type = 'Polygon'
-    shapeType = 5 # pyshp
+    shapeType = 5  # pyshp
 
     def __init__(self, exterior, interiors=None):
-        """Container for housing and describing polygon geometries
-        (e.g. to be read or written to shapefiles or other geographic data formats)
+        """
+        Container for housing and describing polygon geometries (e.g. to be
+        read or written to shapefiles or other geographic data formats)
+
         Parameters
         ----------
         exterior : sequence
@@ -28,24 +30,27 @@ class Polygon:
             Returns a geojson representation of the feature
         pyshp_parts : list of lists
             Returns a list of all parts (each an individual polygon).
-            Can be used as input for the shapefile.Writer.poly method (pyshp package)
+            Can be used as input for the shapefile.Writer.poly method
+            (pyshp package)
         Methods
         -------
         get_patch
-            Returns a descartes PolygonPatch object representation of the polygon.
-            Accepts keyword arguments to descartes.PolygonPatch. Requires the
-            descartes package (pip install descartes).
+            Returns a descartes PolygonPatch object representation of the
+            polygon. Accepts keyword arguments to descartes.PolygonPatch.
+            Requires the descartes package (pip install descartes).
         plot
-            Plots the feature using descartes (via get_patch) and matplotlib.pyplot.
-            Accepts keyword arguments to descartes.PolygonPatch. Requires the
-            descartes package (pip install descartes).
+            Plots the feature using descartes (via get_patch) and
+            matplotlib.pyplot. Accepts keyword arguments to
+            descartes.PolygonPatch. Requires the descartes package
+            (pip install descartes).
         Notes
         -----
         Multi-polygons not yet supported.
         z information is only stored if it was entered.
         """
         self.exterior = tuple(map(tuple, exterior))
-        self.interiors = tuple() if interiors is None else (map(tuple, i) for i in interiors)
+        self.interiors = tuple() if interiors is None else (map(tuple, i) for i
+                                                            in interiors)
 
     def __eq__(self, other):
         if not isinstance(other, Polygon):
@@ -74,7 +79,8 @@ class Polygon:
 
     @property
     def geojson(self):
-        return {'coordinates': tuple([self.exterior] + [i for i in self.interiors]),
+        return {'coordinates': tuple(
+            [self.exterior] + [i for i in self.interiors]),
                 'type': self.type}
 
     @property
@@ -89,11 +95,13 @@ class Polygon:
         try:
             from descartes import PolygonPatch
         except ImportError:
-            print('This feature requires descartes.\nTry "pip install descartes"')
+            print(
+                'This feature requires descartes.\nTry "pip install descartes"')
         return PolygonPatch(self.geojson, **kwargs)
 
     def plot(self, ax=None, **kwargs):
-        """Plot the feature.
+        """
+        Plot the feature.
         Parameters
         ----------
         ax : matplotlib.pyplot axes instance
@@ -117,15 +125,17 @@ class Polygon:
         except:
             print('could not plot polygon feature')
 
-class LineString:
 
+class LineString:
     type = 'LineString'
     shapeType = 3
     has_z = False
 
     def __init__(self, coordinates):
-        """Container for housing and describing linestring geometries
-        (e.g. to be read or written to shapefiles or other geographic data formats)
+        """
+        Container for housing and describing linestring geometries (e.g. to be
+        read or written to shapefiles or other geographic data formats)
+
         Parameters
         ----------
         coordinates : sequence
@@ -152,6 +162,7 @@ class LineString:
         -----
         Multi-linestrings not yet supported.
         z information is only stored if it was entered.
+
         """
         self.coords = list(map(tuple, coordinates))
         if len(self.coords[0]) == 3:
@@ -170,7 +181,7 @@ class LineString:
 
     @property
     def x(self):
-        return[c[0] for c in self.coords]
+        return [c[0] for c in self.coords]
 
     @property
     def y(self):
@@ -210,38 +221,50 @@ class LineString:
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        #plt.show()
+        # plt.show()
+
 
 class Point:
-
     type = 'Point'
     shapeType = 1
     has_z = False
 
     def __init__(self, *coordinates):
-        """Container for housing and describing point geometries
-        (e.g. to be read or written to shapefiles or other geographic data formats)
+        """
+        Container for housing and describing point geometries (e.g. to be read
+        or written to shapefiles or other geographic data formats)
+
         Parameters
         ----------
         coordinates : tuple
             x, y or x, y, z
+
         Attributes
         ----------
         coords : x, y, z coordinates
+
         x : x coordinate
+
         y : y coordinate
+
         z : z coordinate
+
         bounds : (xmin, ymin, xmax, ymax)
             Tuple describing bounding box
+
         geojson : dict
             Returns a geojson representation of the feature
+
         pyshp_parts : list of tuples
-            Can be used as input for the shapefile.Writer.line method (pyshp package)
+            Can be used as input for the shapefile.Writer.line method
+            (pyshp package)
+
         Methods
         -------
         plot
             Plots the feature using matplotlib.pyplot.
             Accepts keyword arguments to pyplot.scatter.
+
         Notes
         -----
         z information is only stored if it was entered.
@@ -304,8 +327,8 @@ class Point:
             fig = ax.figure
         plt.scatter(self.x, self.y, **kwargs)
         xmin, ymin, xmax, ymax = self.bounds
-        ax.set_xlim(xmin-1, xmax+1) # singular bounds otherwise
-        ax.set_ylim(ymin-1, ymax+1)
+        ax.set_xlim(xmin - 1, xmax + 1)  # singular bounds otherwise
+        ax.set_ylim(ymin - 1, ymax + 1)
 
 
 def rotate(x, y, xoff, yoff, angrot_radians):
@@ -362,22 +385,28 @@ def transform(x, y, xoff, yoff, angrot_radians,
 
 
 def shape(pyshp_shpobj):
-    """Convert a pyshp geometry object to a flopy geometry object.
+    """
+    Convert a pyshp geometry object to a flopy geometry object.
+
     Parameters
     ----------
     pyshp_shpobj : shapefile._Shape instance
+
     Returns
     -------
     shape : flopy.utils.geometry Polygon, Linestring, or Point
+
     Notes
     -----
     Currently only regular Polygons, LineStrings and Points (pyshp types 5, 3, 1) supported.
+
     Examples
     --------
     >>> import shapefile as sf
     >>> from flopy.utils.geometry import shape
     >>> sfobj = sf.Reader('shapefile.shp')
     >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
+
     """
     types = {5: Polygon,
              3: LineString,
@@ -389,14 +418,17 @@ def shape(pyshp_shpobj):
 def get_polygon_area(verts):
     """
     Calculate the area of a closed polygon
+
     Parameters
     ----------
     verts : numpy.ndarray
         polygon vertices
+
     Returns
     -------
     area : float
         area of polygon centroid
+
     """
     nverts = verts.shape[0]
     a = 0.
@@ -413,14 +445,17 @@ def get_polygon_area(verts):
 def get_polygon_centroid(verts):
     """
     Calculate the centroid of a closed polygon
+
     Parameters
     ----------
     verts : numpy.ndarray
         polygon vertices
+
     Returns
     -------
     centroid : tuple
         (x, y) of polygon centroid
+
     """
     nverts = verts.shape[0]
     cx = 0.
@@ -433,15 +468,15 @@ def get_polygon_centroid(verts):
         cx += (x + xp1) * (x * yp1 - xp1 * y)
         cy += (y + yp1) * (x * yp1 - xp1 * y)
     a = get_polygon_area(verts)
-    cx = cx * 1./ 6. / a
-    cy = cy * 1./ 6. / a
+    cx = cx * 1. / 6. / a
+    cy = cy * 1. / 6. / a
     return cx, cy
 
 
 def is_clockwise(x, y):
     """
     Determine if a ring is defined clockwise
-    
+
     Parameters
     ----------
     x : numpy ndarray
@@ -453,7 +488,7 @@ def is_clockwise(x, y):
     -------
     clockwise : bool
         True when the ring is defined clockwise, False otherwise
-    
+
     """
     if not (x[0] == x[-1]) and (y[0] == y[-1]):
         # close the ring if needed

@@ -34,10 +34,11 @@ def get_var_array_dict(m):
 
 def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
                     **kwargs):
-    """ helper to export an ensemble of model instances.  Assumes
+    """
+    Helper to export an ensemble of model instances.  Assumes
     all models have same dis and reference information, only difference is
-    properties and boundary conditions.  Assumes model.nam.split('_')[-1] is the
-    realization suffix to use in the netcdf variable names
+    properties and boundary conditions.  Assumes model.nam.split('_')[-1] is
+    the realization suffix to use in the netcdf variable names
     """
     f_in, f_out = None, None
     for m in models[1:]:
@@ -217,13 +218,15 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
 
 
 def output_helper(f, ml, oudic, **kwargs):
-    """export model outputs using the model spatial reference
-    info.
+    """
+    Export model outputs using the model spatial reference info.
+
     Parameters
     ----------
         f : filename for output - must have .shp or .nc extension
         ml : BaseModel derived type
         oudic : dict {output_filename,flopy datafile/cellbudgetfile instance}
+
     Returns
     -------
         None
@@ -241,7 +244,7 @@ def output_helper(f, ml, oudic, **kwargs):
     if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
-    # this sucks!  need to round the totims in each output file instance so
+    # ISSUE - need to round the totims in each output file instance so
     # that they will line up
     for key, out in oudic.items():
         times = [float("{0:15.6f}".format(t)) for t in
@@ -457,11 +460,13 @@ def generic_array_export(f, array, var_name="generic_array",
 
 
 def mflist_export(f, mfl, **kwargs):
-    """ export helper for MfList instances
+    """
+    export helper for MfList instances
 
     Parameters
     -----------
-        f : string (filename) or existing export instance type (NetCdf only for now)
+        f : string (filename) or existing export instance type
+        (NetCdf only for now)
         mfl : MfList instance
 
     """
@@ -580,7 +585,8 @@ def mflist_export(f, mfl, **kwargs):
 
 
 def transient2d_export(f, t2d, **kwargs):
-    """ export helper for Transient2d instances
+    """
+    export helper for Transient2d instances
 
     Parameters
     -----------
@@ -689,7 +695,8 @@ def transient2d_export(f, t2d, **kwargs):
 
 
 def array3d_export(f, u3d, **kwargs):
-    """ export helper for Transient2d instances
+    """
+    export helper for Transient2d instances
 
     Parameters
     -----------
@@ -820,7 +827,8 @@ def array3d_export(f, u3d, **kwargs):
 
 
 def array2d_export(f, u2d, **kwargs):
-    """ export helper for Util2d instances
+    """
+    export helper for Util2d instances
 
     Parameters
     ----------
@@ -923,8 +931,10 @@ def array2d_export(f, u2d, **kwargs):
 def export_array(modelgrid, filename, a, nodata=-9999,
                  fieldname='value',
                  **kwargs):
-    """Write a numpy array to Arc Ascii grid
-    or shapefile with the model reference.
+    """
+    Write a numpy array to Arc Ascii grid or shapefile with the model
+    reference.
+
     Parameters
     ----------
     filename : str
@@ -950,12 +960,13 @@ def export_array(modelgrid, filename, a, nodata=-9999,
     Rotated grids will be either be unrotated prior to export,
     using scipy.ndimage.rotate (Arc Ascii format) or rotation will be
     included in their transform property (GeoTiff format). In either case
-    the pixels will be displayed in the (unrotated) projected geographic coordinate system,
-    so the pixels will no longer align exactly with the model grid
-    (as displayed from a shapefile, for example). A key difference between
-    Arc Ascii and GeoTiff (besides disk usage) is that the
+    the pixels will be displayed in the (unrotated) projected geographic
+    coordinate system, so the pixels will no longer align exactly with the
+    model grid (as displayed from a shapefile, for example). A key difference
+    between Arc Ascii and GeoTiff (besides disk usage) is that the
     unrotated Arc Ascii will have a different grid size, whereas the GeoTiff
     will have the same number of rows and pixels as the original.
+
     """
 
     if filename.lower().endswith(".asc"):
@@ -1060,7 +1071,8 @@ def export_array(modelgrid, filename, a, nodata=-9999,
 def export_contours(modelgrid, filename, contours,
                     fieldname='level', epsg=None, prj=None,
                     **kwargs):
-    """Convert matplotlib contour plot object to shapefile.
+    """
+    Convert matplotlib contour plot object to shapefile.
 
     Parameters
     ----------
@@ -1077,6 +1089,7 @@ def export_contours(modelgrid, filename, contours,
     Returns
     -------
     df : dataframe of shapefile contents
+
     """
     from flopy.utils.geometry import LineString
     from flopy.export.shapefile_utils import recarray2shp
@@ -1113,7 +1126,8 @@ def export_array_contours(modelgrid, filename, a,
                           epsg=None,
                           prj=None,
                           **kwargs):
-    """Contour an array using matplotlib; write shapefile of contours.
+    """
+    Contour an array using matplotlib; write shapefile of contours.
 
     Parameters
     ----------
@@ -1125,7 +1139,8 @@ def export_array_contours(modelgrid, filename, a,
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
     prj : str
         Existing projection file to be used with new shapefile.
-    **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
+    **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
     """
     import matplotlib.pyplot as plt
 

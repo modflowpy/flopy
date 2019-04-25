@@ -61,15 +61,15 @@ class Modpath7Bas(Package):
 
         if model.flowmodel.version == 'mf6':
             self.laytyp = Util2d(self.parent, (shape[0],), np.int32,
-                                  model.laytyp, name='bas - laytype',
-                                  locat=self.unit_number[0])
+                                 model.laytyp, name='bas - laytype',
+                                 locat=self.unit_number[0])
         else:
             self.laytyp = Util2d(self.parent, (shape[0],), np.int32,
-                                  model.laytyp, name='bas - laytype',
-                                  locat=self.unit_number[0])
+                                 model.laytyp, name='bas - laytype',
+                                 locat=self.unit_number[0])
         if model.flowmodel.version != 'mf6':
             self.ibound = Util3d(model, shape3d, np.int32, model.ibound,
-                                  name='IBOUND', locat=self.unit_number[0])
+                                 name='IBOUND', locat=self.unit_number[0])
 
         self.porosity = Util3d(model, shape3d, np.float32, porosity,
                                name='POROSITY', locat=self.unit_number[0])

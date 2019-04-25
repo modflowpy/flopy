@@ -36,7 +36,6 @@ iconst = 1  # Multiplier for individual array elements in integer and real array
 iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
 
 
-
 class FileDataEntry(object):
     def __init__(self, fname, unit, binflag=False, output=False, package=None):
         self.fname = fname
@@ -1050,14 +1049,18 @@ class BaseModel(ModelInterface):
             new_pth = os.getcwd()
         if not os.path.exists(new_pth):
             try:
-                sys.stdout.write(
-                    '\ncreating model workspace...\n   {}\n'.format(new_pth))
+                line = '\ncreating model workspace...\n' + \
+                       '   {}'.format(new_pth)
+                print(line)
                 os.makedirs(new_pth)
             except:
-                line = '\n{} not valid, workspace-folder '.format(new_pth) + \
-                       'was changed to {}\n'.format(os.getcwd())
-                print(line)
-                new_pth = os.getcwd()
+                line = '\n{} not valid, workspace-folder '.format(new_pth)
+                raise OSError(line)
+                # line = '\n{} not valid, workspace-folder '.format(new_pth) + \
+                #        'was changed to {}\n'.format(os.getcwd())
+                # print(line)
+                # new_pth = os.getcwd()
+
         # --reset the model workspace
         old_pth = self._model_ws
         self._model_ws = new_pth
@@ -1146,7 +1149,8 @@ class BaseModel(ModelInterface):
                 raise Exception("cannot set SpatialReference -"
                                 "ModflowDis not found")
         elif key == "tr":
-            assert isinstance(value, discretization.reference.TemporalReference)
+            assert isinstance(value,
+                              discretization.reference.TemporalReference)
             if self.dis is not None:
                 self.dis.tr = value
             else:
@@ -1437,7 +1441,8 @@ class BaseModel(ModelInterface):
         """
         from flopy.plot import PlotUtilities
 
-        axes = PlotUtilities._plot_model_helper(self, SelPackList=SelPackList, **kwargs)
+        axes = PlotUtilities._plot_model_helper(self, SelPackList=SelPackList,
+                                                **kwargs)
         return axes
 
     def to_shapefile(self, filename, package_names=None, **kwargs):

@@ -38,7 +38,8 @@ class OptionBlock(object):
                                   (nested, True),
                                   (n_nested, 2),
                                   (vars, OrderedDict([('numtab', simple_int),
-                                                      ('maxval', simple_int)]))])
+                                                      ('maxval',
+                                                       simple_int)]))])
 
     def __init__(self, options_line, package, block=True):
         self._context = package._options
@@ -152,13 +153,13 @@ class OptionBlock(object):
                 if self._attr_types[name] == np.bool_:
                     if not isinstance(value, (bool, np.bool_, np.bool)):
                         raise TypeError(err_msg.format(
-                                        self._attr_types[name]))
+                            self._attr_types[name]))
                 else:
                     try:
                         value = self._attr_types[name](value)
                     except ValueError:
                         raise TypeError(err_msg.format(
-                                        self._attr_types[name]))
+                            self._attr_types[name]))
 
                 self.__dict__[name] = value[name][0]
 
@@ -166,13 +167,13 @@ class OptionBlock(object):
             if self._attr_types[key] == np.bool_:
                 if not isinstance(value, (bool, np.bool_, np.bool)):
                     raise TypeError(err_msg.format(
-                                    self._attr_types[key]))
+                        self._attr_types[key]))
             else:
                 try:
                     value = self._attr_types[key](value)
                 except ValueError:
                     raise TypeError(err_msg.format(
-                                    self._attr_types[key]))
+                        self._attr_types[key]))
 
             self.__dict__[key] = value
 

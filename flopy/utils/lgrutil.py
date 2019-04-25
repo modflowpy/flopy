@@ -99,6 +99,7 @@ class Lgr(object):
         -------
         (nlay, nrow, ncol) : tuple
             shape of the child grid
+
         """
         return self.nlay, self.nrow, self.ncol
 
@@ -110,6 +111,7 @@ class Lgr(object):
         -------
         (xll, yll) : tuple
             location of lower left corner of the child grid
+
         """
         return self.xll, self.yll
 
@@ -170,6 +172,7 @@ class Lgr(object):
         -------
             idomain : ndarray
                 idomain array for the child model
+
         """
         idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=np.int)
         for kc in range(self.nlay):

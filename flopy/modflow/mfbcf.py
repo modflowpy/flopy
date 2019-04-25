@@ -1,4 +1,3 @@
-import os
 import sys
 
 import numpy as np
@@ -170,7 +169,7 @@ class ModflowBcf(Package):
         self.parent.add_package(self)
         return
 
-    def write_file(self,f=None):
+    def write_file(self, f=None):
         """
         Write the package file.
 
@@ -215,10 +214,10 @@ class ModflowBcf(Package):
             if k < nlay - 1:
                 f_bcf.write(self.vcont[k].get_file_entry())
             if ((transient == True) and (
-                (self.laycon[k] == 2) or (self.laycon[k] == 3))):
+                    (self.laycon[k] == 2) or (self.laycon[k] == 3))):
                 f_bcf.write(self.sf2[k].get_file_entry())
             if ((self.iwdflg != 0) and (
-                (self.laycon[k] == 1) or (self.laycon[k] == 3))):
+                    (self.laycon[k] == 1) or (self.laycon[k] == 3))):
                 f_bcf.write(self.wetdry[k].get_file_entry())
         f_bcf.close()
 
@@ -277,7 +276,6 @@ class ModflowBcf(Package):
         if dis is None:
             dis = model.get_package('DISU')
 
-
         # Item 1: ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET - line already read above
         if model.verbose:
             print('   loading ipakcb, HDRY, IWDFLG, WETFCT, IWETIT, IHDWET...')
@@ -312,7 +310,7 @@ class ModflowBcf(Package):
             t = []
             istart = 0
             for k in range(nlay):
-                lcode = line[istart:istart+2]
+                lcode = line[istart:istart + 2]
                 lcode = lcode.replace(' ', '0')
                 t.append(lcode)
                 istart += 2
@@ -342,8 +340,6 @@ class ModflowBcf(Package):
             vcont = [0] * nlay
         sf2 = [0] * nlay
         wetdry = [0] * nlay
-
-
 
         for k in range(nlay):
 
@@ -412,7 +408,6 @@ class ModflowBcf(Package):
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
-
 
         # create instance of bcf object
         bcf = ModflowBcf(model, ipakcb=ipakcb, intercellt=intercellt,

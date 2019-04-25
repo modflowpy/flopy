@@ -12,6 +12,7 @@ import sys
 
 if sys.version_info < (3, 6):
     from collections import OrderedDict
+
     dict = OrderedDict
 
 
@@ -60,6 +61,7 @@ class NamData(object):
     --------
 
     """
+
     def __init__(self, pkgtype, name, handle, packages):
         self.filehandle = handle
         self.filename = name
@@ -68,9 +70,10 @@ class NamData(object):
         if self.filetype.lower() in packages:
             self.package = packages[self.filetype.lower()]
 
-
     def __repr__(self):
-        return "filename:{0}, filetype:{1}".format(self.filename,self.filetype)
+        return "filename:{0}, filetype:{1}".format(self.filename,
+                                                   self.filetype)
+
 
 def getfiletypeunit(nf, filetype):
     """
@@ -131,9 +134,9 @@ def parsenamefile(namfilename, packages, verbose=True):
 
     if not os.path.isfile(namfilename):
         # help diagnose the namfile and directory
-        raise IOError(
-                'Could not find {} in directory {}'
-                .format(namfilename, os.path.dirname(namfilename)))
+        e = 'Could not find {} '.format(namfilename) + \
+            'in directory {}'.format(os.path.dirname(namfilename))
+        raise IOError(e)
     with open(namfilename, 'r') as fp:
         lines = fp.readlines()
 
@@ -145,8 +148,8 @@ def parsenamefile(namfilename, packages, verbose=True):
         items = line.split()
         # ensure we have at least three items
         if len(items) < 3:
-            raise ValueError('line number {} has fewer than 3 items: {}'
-                             .format(ln, line))
+            e = 'line number {} has fewer than 3 items: {}'.format(ln, line)
+            raise ValueError(e)
         ftype, key, fpath = items[0:3]
         ftype = ftype.upper()
 
@@ -204,6 +207,7 @@ def parsenamefile(namfilename, packages, verbose=True):
         ext_unit_dict[key] = NamData(ftype, fname, filehandle, packages)
     return ext_unit_dict
 
+
 def attribs_from_namfile_header(namefile):
     # check for reference info in the nam file header
     defaults = {"xll": None, "yll": None,
@@ -224,31 +228,36 @@ def attribs_from_namfile_header(namefile):
                 xll = float(item.split(':')[1])
                 defaults["xll"] = xll
             except:
-                pass
+                print('   could not parse xll ' +
+                      'in {}'.format(namefile))
         elif "yll" in item.lower():
             try:
                 yll = float(item.split(':')[1])
                 defaults["yll"] = yll
             except:
-                pass
+                print('   could not parse yll ' +
+                      'in {}'.format(namefile))
         elif "xul" in item.lower():
             try:
                 xul = float(item.split(':')[1])
                 defaults["xul"] = xul
             except:
-                pass
+                print('   could not parse xul ' +
+                      'in {}'.format(namefile))
         elif "yul" in item.lower():
             try:
                 yul = float(item.split(':')[1])
                 defaults["yul"] = yul
             except:
-                pass
+                print('   could not parse yul ' +
+                      'in {}'.format(namefile))
         elif "rotation" in item.lower():
             try:
                 angrot = float(item.split(':')[1])
                 defaults["rotation"] = angrot
             except:
-                pass
+                print('   could not parse rotation ' +
+                      'in {}'.format(namefile))
         elif "proj4_str" in item.lower():
             try:
                 proj4 = ':'.join(item.split(':')[1:]).strip()
@@ -256,11 +265,13 @@ def attribs_from_namfile_header(namefile):
                     proj4 = None
                 defaults['proj4_str'] = proj4
             except:
-                pass
+                print('   could not parse proj4_str ' +
+                      'in {}'.format(namefile))
         elif "start" in item.lower():
             try:
                 start_datetime = item.split(':')[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
-                pass
+                print('   could not parse start ' +
+                      'in {}'.format(namefile))
     return defaults
