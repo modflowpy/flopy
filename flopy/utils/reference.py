@@ -430,8 +430,8 @@ class SpatialReference(object):
         # discard default to avoid confusion with epsg code if entered
         d.pop('proj4_str')
         if os.path.exists(reffile):
-            with open(reffile) as input:
-                for line in input:
+            with open(reffile) as fref:
+                for line in fref:
                     if len(line) > 1:
                         if line.strip()[0] != '#':
                             info = line.strip().split('#')[0].split()
@@ -1230,15 +1230,14 @@ class SpatialReference(object):
             prj = self.proj4_str
 
         if interval is not None:
-            min = np.nanmin(a)
-            max = np.nanmax(a)
-            nlevels = np.round(np.abs(max - min) / interval, 2)
-            msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
-                nlevels,
-                interval,
-                maxlevels)
+            vmin = np.nanmin(a)
+            vmax = np.nanmax(a)
+            nlevels = np.round(np.abs(vmax - vmin) / interval, 2)
+            msg = '{:.0f} levels '.format(nlevels) + \
+                  'at interval of {} > '.format(interval) + \
+                  'maxlevels = {}'.format(maxlevels)
             assert nlevels < maxlevels, msg
-            levels = np.arange(min, max, interval)
+            levels = np.arange(vmin, vmax, interval)
         fig, ax = plt.subplots()
         ctr = self.contour_array(ax, a, levels=levels)
         self.export_contours(filename, ctr, fieldname, epsg, prj, **kwargs)
@@ -1264,8 +1263,8 @@ class SpatialReference(object):
         from flopy.plot import ModelMap
 
         kwargs['ax'] = ax
-        map = ModelMap(sr=self)
-        contour_set = map.contour_array(a=a, **kwargs)
+        mm = ModelMap(sr=self)
+        contour_set = mm.contour_array(a=a, **kwargs)
 
         return contour_set
 
@@ -1280,23 +1279,11 @@ class SpatialReference(object):
 
     def _set_vertices(self):
         """
-        populate vertices for the whole grid
+        Populate vertices for the whole grid
         """
         jj, ii = np.meshgrid(range(self.ncol), range(self.nrow))
         jj, ii = jj.ravel(), ii.ravel()
         self._vertices = self.get_vertices(ii, jj)
-        # vrts = np.array(self.get_vertices(ii, jj)).transpose([2, 0, 1])
-        # self._vertices = [v.tolist() for v in vrts]  # conversion to lists
-
-        """
-        code above is 3x faster
-        xgrid, ygrid = self.xgrid, self.ygrid
-        ij = list(map(list, zip(xgrid[:-1, :-1].ravel(), ygrid[:-1, :-1].ravel())))
-        i1j = map(list, zip(xgrid[1:, :-1].ravel(), ygrid[1:, :-1].ravel()))
-        i1j1 = map(list, zip(xgrid[1:, 1:].ravel(), ygrid[1:, 1:].ravel()))
-        ij1 = map(list, zip(xgrid[:-1, 1:].ravel(), ygrid[:-1, 1:].ravel()))
-        self._vertices = np.array(map(list, zip(ij, i1j, i1j1, ij1, ij)))
-        """
 
     def interpolate(self, a, xi, method='nearest'):
         """
@@ -1943,8 +1930,8 @@ class crs(object):
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
         self.wktstr = None
         if prj is not None:
-            with open(prj) as input:
-                self.wktstr = input.read()
+            with open(prj) as fprj:
+                self.wktstr = fprj.read()
         elif esri_wkt is not None:
             self.wktstr = esri_wkt
         elif epsg is not None:

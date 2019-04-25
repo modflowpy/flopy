@@ -53,8 +53,8 @@ class BinaryHeader(Header):
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    msg = '{0} key not available in {1} header '
-                    'dtype'.format(k, self.header_type)
+                    msg = '{} key not available '.format(k) + \
+                          'in {} header dtype'.format(self.header_type)
                     print(msg)
         for k in ckey:
             if k in kwargs.keys():

@@ -1022,7 +1022,7 @@ class EndpointFile():
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
         # convert back to one-based
         for n in self.kijnames:
-            if n in epd:
+            if n in epd.dtype.names:
                 epd[n] += 1
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
 

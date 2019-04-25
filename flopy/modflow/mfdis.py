@@ -579,12 +579,13 @@ class ModflowDis(Package):
             cnf_dz = [float(s) for s in line.split()]
             cnf_dz = np.reshape(cnf_dz, (cnf_nlay, cnf_nrow, cnf_ncol))
 
-            # cinact, cdry, not used here so commented
-            '''line = f_cnf.readline()
-            s = line.split()
-            cinact = float(s[0])
-            cdry = float(s[1])'''
+            # # read cinact and cdry
+            # # values are not used by dis so are not read
+            # line = f_cnf.readline()
+            # s = line.split()
+            # cinact, cdry = float(s[0]), float(s[1])
 
+            # close the MT3D configuration file
             f_cnf.close()
         finally:
             self.nlay = cnf_nlay

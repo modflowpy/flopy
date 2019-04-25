@@ -283,10 +283,8 @@ class LayerFile(object):
             else:
                 i0 = 0
                 i1 = self.nlay
-            filenames = []
-            [filenames.append(
-                '{}_Layer{}.{}'.format(filename_base, k + 1, fext)) for k in
-                range(i0, i1)]
+            filenames = ['{}_Layer{}.{}'.format(filename_base, k + 1, fext)
+                         for k in range(i0, i1)]
 
         # make sure we have a (lay,row,col) shape plotarray
         plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
