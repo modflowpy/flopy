@@ -208,7 +208,8 @@ class ModflowBas(Package):
         None
 
         """
-        if check:  # allows turning off package checks when writing files at model level
+        # allows turning off package checks when writing files at model level
+        if check:
             self.check(f='{}.chk'.format(self.name[0]),
                        verbose=self.parent.verbose, level=1)
         # Open file for writing
@@ -243,8 +244,7 @@ class ModflowBas(Package):
         f_bas.close()
 
     @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None,
-             check=True):
+    def load(f, model, ext_unit_dict=None, check=True, **kwargs):
         """
         Load an existing package.
 
@@ -266,6 +266,10 @@ class ModflowBas(Package):
             :class:`flopy.utils.mfreadnam.parsenamefile`.
         check : boolean
             Check package data for common errors. (default True)
+        kwargs : dictionary
+            Keyword arguments that are passed to load.
+            Possible keyword arguments are nlay, nrow, and ncol.
+
         Returns
         -------
         bas : ModflowBas object
@@ -277,13 +281,28 @@ class ModflowBas(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> bas = flopy.modflow.ModflowBas.load('test.bas', m, nlay=1, nrow=10,
-        >>>                                      ncol=10)
+        >>>                                     ncol=10)
 
         """
 
         if model.verbose:
             sys.stdout.write('loading bas6 package file...\n')
 
+        # parse keywords
+        if 'nlay' in kwargs:
+            nlay = kwargs.pop('nlay')
+        else:
+            nlay = None
+        if 'nrow' in kwargs:
+            nrow = kwargs.pop('nrow')
+        else:
+            nrow = None
+        if 'ncol' in kwargs:
+            ncol = kwargs.pop('ncol')
+        else:
+            ncol = None
+
+        # open the file if not already open
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
@@ -309,13 +328,15 @@ class ModflowBas(Package):
         # get nlay,nrow,ncol if not passed
         if nlay is None and nrow is None and ncol is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+
         # dataset 2 -- ibound
         ibound = Util3d.load(f, model, (nlay, nrow, ncol), np.int32, 'ibound',
                              ext_unit_dict)
-        # print ibound.array
+
         # dataset 3 -- hnoflo
         line = f.readline()
         hnoflo = np.float32(line.strip().split()[0])
+
         # dataset 4 -- strt
         strt = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'strt',
                            ext_unit_dict)

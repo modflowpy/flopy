@@ -128,21 +128,19 @@ class Package(PackageInterface):
         exclude_attributes = ['extension', 'heading', 'name', 'parent', 'url']
         for attr, value in sorted(self.__dict__.items()):
             if not (attr in exclude_attributes):
-                if (isinstance(value, list)):
-                    if (len(value) == 1):
-                        s += ' {0:s} = {1:s}\n'.format(attr, str(value[0]))
+                if isinstance(value, list):
+                    if len(value) == 1:
+                        s += ' {:s} = {:s}\n'.format(attr, str(value[0]))
                     else:
-                        s += ' {0:s} (list, items = {1:d}\n'.format(attr,
-                                                                    len(
-                                                                        value))
-                elif (isinstance(value, np.ndarray)):
-                    s += ' {0:s} (array, shape = {1:s})\n'.format(attr,
-                                                                  value.shape.__str__()[
-                                                                  1:-1])
+                        s += ' {:s} '.format(attr) + \
+                             '(list, items = {:d})\n'.format(len(value))
+                elif isinstance(value, np.ndarray):
+                    s += ' {:s} (array, shape = '.format(attr) + \
+                         '{:s})\n'.format(value.shape.__str__()[1:-1])
                 else:
-                    s += ' {0:s} = {1:s} ({2:s})\n'.format(attr, str(value),
-                                                           str(type(value))[
-                                                           7:-2])
+                    s += ' {:s} = '.format(attr) + \
+                         '{:s} '.format(str(value)) + \
+                         '({:s})\n'.format(str(type(value))[7:-2])
         return s
 
     def __getitem__(self, item):
@@ -152,18 +150,20 @@ class Package(PackageInterface):
             spd = getattr(self, 'stress_period_data')
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
-                    assert item in list(
-                        spd.data.keys()), "package.__getitem__() kper " + str(
-                        item) + " not in data.keys()"
+                    msg = 'package.__getitem__() kper ' + \
+                          str(item) + ' not in data.keys()'
+                    assert item in list(spd.data.keys()), msg
                     return spd[item]
 
                 if item[1] not in self.dtype.names:
-                    raise Exception(
-                        "package.__getitem(): item \'" + str(item) +
-                        "\' not in dtype names " + str(self.dtype.names))
-                assert item[0] in list(
-                    spd.data.keys()), "package.__getitem__() kper " + str(
-                    item[0]) + " not in data.keys()"
+                    msg = 'package.__getitem(): item ' + str(item) + \
+                          ' not in dtype names ' + str(self.dtype.names)
+                    raise Exception(msg)
+
+                msg = 'package.__getitem__() kper ' + str(item[0]) + \
+                      ' not in data.keys()'
+                assert item[0] in list(spd.data.keys()), msg
+
                 if spd.vtype[item[0]] == np.recarray:
                     return spd[item[0]][item[1]]
 
@@ -331,7 +331,7 @@ class Package(PackageInterface):
                 if isinstance(spd.data[per], np.recarray):
                     spdata = self.stress_period_data.data[per]
                     inds = (
-                    spdata.k, spdata.i, spdata.j) if self.parent.structured \
+                        spdata.k, spdata.i, spdata.j) if self.parent.structured \
                         else (spdata.node)
 
                     # General BC checks
@@ -379,12 +379,12 @@ class Package(PackageInterface):
                     confined = True
                     continue
                 if confined and l > 0:
-                    chk._add_to_summary(type='Warning',
-                                        desc='\r    LAYTYP: unconfined (convertible) ' + \
-                                             'layer below confined layer')
+                    desc = '\r    LAYTYP: unconfined (convertible) ' + \
+                           'layer below confined layer'
+                    chk._add_to_summary(type='Warning', desc=desc)
 
-            # check for zero or negative values of hydraulic conductivity, anisotropy,
-            # and quasi-3D confining beds
+            # check for zero or negative values of hydraulic conductivity,
+            # anisotropy, and quasi-3D confining beds
             kparams = {'hk': 'horizontal hydraulic conductivity',
                        'vka': 'vertical hydraulic conductivity'}
             for kp, name in kparams.items():
@@ -408,7 +408,8 @@ class Package(PackageInterface):
                            .format(name, mx), 'Warning')
 
             # check for unusually high or low values of hydraulic conductivity
-            if self.layvka.sum() > 0:  # convert vertical anisotropy to Kv for checking
+            # convert vertical anisotropy to Kv for checking
+            if self.layvka.sum() > 0:
                 vka = self.vka.array.copy()
                 for l in range(vka.shape[0]):
                     vka[l] *= self.hk.array[l] if self.layvka.array[
@@ -424,11 +425,13 @@ class Package(PackageInterface):
 
             # check vkcb if there are any quasi-3D layers
             if self.parent.dis.laycbd.sum() > 0:
-                # pad non-quasi-3D layers in vkcb array with ones so they won't fail checker
+                # pad non-quasi-3D layers in vkcb array with ones so
+                # they won't fail checker
                 vkcb = self.vkcb.array.copy()
                 for l in range(self.vkcb.shape[0]):
                     if self.parent.dis.laycbd[l] == 0:
-                        # assign 1 instead of zero as default value that won't violate checker
+                        # assign 1 instead of zero as default value that
+                        # won't violate checker
                         # (allows for same structure as other checks)
                         vkcb[l, :, :] = 1
                 chk.values(vkcb, active & (vkcb <= 0),
@@ -443,10 +446,12 @@ class Package(PackageInterface):
 
                 # do the same for storage if the model is transient
                 sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
-                if 'STORAGECOEFFICIENT' in self.options:  # convert to specific for checking
-                    chk._add_to_summary(type='Warning',
-                                        desc='\r    STORAGECOEFFICIENT option is activated, \
-                                              storage values are read storage coefficients')
+                # convert to specific for checking
+                if 'STORAGECOEFFICIENT' in self.options:
+                    desc = '\r    STORAGECOEFFICIENT option is ' + \
+                           'activated, storage values are read ' + \
+                           'storage coefficients'
+                    chk._add_to_summary(type='Warning', desc=desc)
                     tshape = (self.parent.nlay, self.parent.nrow,
                               self.parent.ncol)
                     sarrays['ss'].shape != tshape
@@ -623,7 +628,7 @@ class Package(PackageInterface):
 
     @staticmethod
     def load(model, pack_type, f, nper=None, pop_key_list=None, check=True,
-             unitnumber=None, ext_unit_dict=None):
+             unitnumber=None, ext_unit_dict=None, **kwargs):
         """
         The load method has not been implemented for this package.
 
@@ -631,6 +636,7 @@ class Package(PackageInterface):
 
         bc_pack_types = []
 
+        # open the file if not already open
         if not hasattr(f, 'read'):
             filename = f
             if platform.system().lower() == 'windows' and \
@@ -639,6 +645,7 @@ class Package(PackageInterface):
                 f = io.open(filename, 'r')
             else:
                 f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -789,9 +796,9 @@ class Package(PackageInterface):
                             raw = [fname]
                         fname = os.path.join(*raw)
                         oc_filename = os.path.join(model.model_ws, fname)
-                        assert os.path.exists(
-                            oc_filename), "Package.load() error: open/close filename " + \
-                                          oc_filename + " not found"
+                        msg = 'Package.load() error: open/close filename ' + \
+                              oc_filename + ' not found'
+                        assert os.path.exists(oc_filename), msg
                         try:
                             if binary:
                                 dtype2 = []
@@ -803,29 +810,24 @@ class Package(PackageInterface):
                                                 count=itmp)
                                 current = np.array(d, dtype=current.dtype)
                             else:
-                                # current = np.genfromtxt(oc_filename,
-                                #                         dtype=current.dtype)
-                                # if len(current.shape) == 1:
                                 cd = current.dtype
                                 current = np.loadtxt(oc_filename).transpose()
                                 if current.ndim == 1:
                                     current = np.atleast_2d(
                                         current).transpose()
-                                # current = np.atleast_2d(np.loadtxt(oc_filename,
-                                #                                   dtype=current.dtype)).transpose()
                                 current = np.core.records.fromarrays(current,
                                                                      dtype=cd)
                             current = current.view(np.recarray)
                         except Exception as e:
-                            raise Exception(
-                                "Package.load() error loading open/close file " + oc_filename + \
-                                " :" + str(e))
-                        assert current.shape[
-                                   0] == itmp, "Package.load() error: open/close recarray from file " + \
-                                               oc_filename + " shape (" + str(
-                            current.shape) + \
-                                               ") does not match itmp: {0:d}".format(
-                                                   itmp)
+                            msg = 'Package.load() error loading ' + \
+                                  'open/close file ' + oc_filename + \
+                                  ': ' + str(e)
+                            raise Exception(msg)
+                        msg = 'Package.load() error: open/close ' + \
+                              'recarray from file ' + oc_filename + \
+                              ' shape (' + str(current.shape) + \
+                              ') does not match itmp: {:d}'.format(itmp)
+                        assert current.shape[0] == itmp, msg
                         break
                     try:
                         t = line.strip().split()
