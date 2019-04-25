@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator
 
 
 class ModflowGwfsto(mfpackage.MFPackage):
@@ -55,7 +55,7 @@ class ModflowGwfsto(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 
+    iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata',
                                        'iconvert'))
     ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
     sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
@@ -63,25 +63,25 @@ class ModflowGwfsto(mfpackage.MFPackage):
     _package_type = "sto"
     dfn_file_name = "gwf-sto.dfn"
 
-    dfn = [["block options", "name save_flows", "type keyword", 
+    dfn = [["block options", "name save_flows", "type keyword",
             "reader urword", "optional true"],
-           ["block options", "name storagecoefficient", "type keyword", 
+           ["block options", "name storagecoefficient", "type keyword",
             "reader urword", "optional true"],
-           ["block griddata", "name iconvert", "type integer", 
-            "shape (nodes)", "valid", "reader readarray", "layered true", 
+           ["block griddata", "name iconvert", "type integer",
+            "shape (nodes)", "valid", "reader readarray", "layered true",
             "optional false", "default_value 0"],
-           ["block griddata", "name ss", "type double precision", 
-            "shape (nodes)", "valid", "reader readarray", "layered true", 
+           ["block griddata", "name ss", "type double precision",
+            "shape (nodes)", "valid", "reader readarray", "layered true",
             "optional false", "default_value 1.e-5"],
-           ["block griddata", "name sy", "type double precision", 
-            "shape (nodes)", "valid", "reader readarray", "layered true", 
+           ["block griddata", "name sy", "type double precision",
+            "shape (nodes)", "valid", "reader readarray", "layered true",
             "optional false", "default_value 0.15"],
-           ["block period", "name iper", "type integer", 
-            "block_variable True", "in_record true", "tagged false", "shape", 
+           ["block period", "name iper", "type integer",
+            "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
-           ["block period", "name steady-state", "type keyword", "shape", 
+           ["block period", "name steady-state", "type keyword", "shape",
             "valid", "reader urword", "optional true"],
-           ["block period", "name transient", "type keyword", "shape", 
+           ["block period", "name transient", "type keyword", "shape",
             "valid", "reader urword", "optional true"]]
 
     def __init__(self, model, loading_package=False, save_flows=None,
@@ -89,15 +89,15 @@ class ModflowGwfsto(mfpackage.MFPackage):
                  steady_state=None, transient=None, filename=None, pname=None,
                  parent_file=None):
         super(ModflowGwfsto, self).__init__(model, "sto", filename, pname,
-                                            loading_package, parent_file)        
+                                            loading_package, parent_file)
 
         # set up variables
-        self.save_flows = self.build_mfdata("save_flows",  save_flows)
-        self.storagecoefficient = self.build_mfdata("storagecoefficient", 
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.storagecoefficient = self.build_mfdata("storagecoefficient",
                                                     storagecoefficient)
-        self.iconvert = self.build_mfdata("iconvert",  iconvert)
-        self.ss = self.build_mfdata("ss",  ss)
-        self.sy = self.build_mfdata("sy",  sy)
-        self.steady_state = self.build_mfdata("steady-state",  steady_state)
-        self.transient = self.build_mfdata("transient",  transient)
+        self.iconvert = self.build_mfdata("iconvert", iconvert)
+        self.ss = self.build_mfdata("ss", ss)
+        self.sy = self.build_mfdata("sy", sy)
+        self.steady_state = self.build_mfdata("steady-state", steady_state)
+        self.transient = self.build_mfdata("transient", transient)
         self._init_complete = True

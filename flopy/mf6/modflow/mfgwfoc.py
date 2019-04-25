@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ListTemplateGenerator
 
 
 class ModflowGwfoc(mfpackage.MFPackage):
@@ -85,89 +85,89 @@ class ModflowGwfoc(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 
+    budget_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options',
                                                'budget_filerecord'))
-    head_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 
+    head_filerecord = ListTemplateGenerator(('gwf6', 'oc', 'options',
                                              'head_filerecord'))
-    headprintrecord = ListTemplateGenerator(('gwf6', 'oc', 'options', 
+    headprintrecord = ListTemplateGenerator(('gwf6', 'oc', 'options',
                                              'headprintrecord'))
-    saverecord = ListTemplateGenerator(('gwf6', 'oc', 'period', 
+    saverecord = ListTemplateGenerator(('gwf6', 'oc', 'period',
                                         'saverecord'))
-    printrecord = ListTemplateGenerator(('gwf6', 'oc', 'period', 
+    printrecord = ListTemplateGenerator(('gwf6', 'oc', 'period',
                                          'printrecord'))
     package_abbr = "gwfoc"
     _package_type = "oc"
     dfn_file_name = "gwf-oc.dfn"
 
-    dfn = [["block options", "name budget_filerecord", 
-            "type record budget fileout budgetfile", "shape", "reader urword", 
+    dfn = [["block options", "name budget_filerecord",
+            "type record budget fileout budgetfile", "shape", "reader urword",
             "tagged true", "optional true"],
-           ["block options", "name budget", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name budget", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name fileout", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name budgetfile", "type string", 
-            "preserve_case true", "shape", "in_record true", "reader urword", 
+           ["block options", "name budgetfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
             "tagged false", "optional false"],
-           ["block options", "name head_filerecord", 
-            "type record head fileout headfile", "shape", "reader urword", 
+           ["block options", "name head_filerecord",
+            "type record head fileout headfile", "shape", "reader urword",
             "tagged true", "optional true"],
-           ["block options", "name head", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name head", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name headfile", "type string", 
-            "preserve_case true", "shape", "in_record true", "reader urword", 
+           ["block options", "name headfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
             "tagged false", "optional false"],
-           ["block options", "name headprintrecord", 
-            "type record head print_format formatrecord", "shape", 
+           ["block options", "name headprintrecord",
+            "type record head print_format formatrecord", "shape",
             "reader urword", "optional true"],
-           ["block options", "name print_format", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name print_format", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name formatrecord", 
-            "type record columns width digits format", "shape", 
+           ["block options", "name formatrecord",
+            "type record columns width digits format", "shape",
             "in_record true", "reader urword", "tagged", "optional false"],
-           ["block options", "name columns", "type integer", "shape", 
+           ["block options", "name columns", "type integer", "shape",
             "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name width", "type integer", "shape", 
+           ["block options", "name width", "type integer", "shape",
             "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name digits", "type integer", "shape", 
+           ["block options", "name digits", "type integer", "shape",
             "in_record true", "reader urword", "tagged true", "optional"],
-           ["block options", "name format", "type string", "shape", 
-            "in_record true", "reader urword", "tagged false", 
+           ["block options", "name format", "type string", "shape",
+            "in_record true", "reader urword", "tagged false",
             "optional false"],
-           ["block period", "name iper", "type integer", 
-            "block_variable True", "in_record true", "tagged false", "shape", 
+           ["block period", "name iper", "type integer",
+            "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
-           ["block period", "name saverecord", 
-            "type record save rtype ocsetting", "shape", "reader urword", 
+           ["block period", "name saverecord",
+            "type record save rtype ocsetting", "shape", "reader urword",
             "tagged false", "optional true"],
-           ["block period", "name save", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block period", "name save", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block period", "name printrecord", 
-            "type record print rtype ocsetting", "shape", "reader urword", 
+           ["block period", "name printrecord",
+            "type record print rtype ocsetting", "shape", "reader urword",
             "tagged false", "optional true"],
-           ["block period", "name print", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block period", "name print", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block period", "name rtype", "type string", "shape", 
-            "in_record true", "reader urword", "tagged false", 
+           ["block period", "name rtype", "type string", "shape",
+            "in_record true", "reader urword", "tagged false",
             "optional false"],
-           ["block period", "name ocsetting", 
-            "type keystring all first last frequency steps", "shape", 
+           ["block period", "name ocsetting",
+            "type keystring all first last frequency steps", "shape",
             "tagged false", "in_record true", "reader urword"],
-           ["block period", "name all", "type keyword", "shape", 
+           ["block period", "name all", "type keyword", "shape",
             "in_record true", "reader urword"],
-           ["block period", "name first", "type keyword", "shape", 
+           ["block period", "name first", "type keyword", "shape",
             "in_record true", "reader urword"],
-           ["block period", "name last", "type keyword", "shape", 
+           ["block period", "name last", "type keyword", "shape",
             "in_record true", "reader urword"],
-           ["block period", "name frequency", "type integer", "shape", 
+           ["block period", "name frequency", "type integer", "shape",
             "tagged true", "in_record true", "reader urword"],
-           ["block period", "name steps", "type integer", "shape (<nstp)", 
+           ["block period", "name steps", "type integer", "shape (<nstp)",
             "tagged true", "in_record true", "reader urword"]]
 
     def __init__(self, model, loading_package=False, budget_filerecord=None,
@@ -175,15 +175,15 @@ class ModflowGwfoc(mfpackage.MFPackage):
                  printrecord=None, filename=None, pname=None,
                  parent_file=None):
         super(ModflowGwfoc, self).__init__(model, "oc", filename, pname,
-                                           loading_package, parent_file)        
+                                           loading_package, parent_file)
 
         # set up variables
-        self.budget_filerecord = self.build_mfdata("budget_filerecord", 
+        self.budget_filerecord = self.build_mfdata("budget_filerecord",
                                                    budget_filerecord)
-        self.head_filerecord = self.build_mfdata("head_filerecord", 
+        self.head_filerecord = self.build_mfdata("head_filerecord",
                                                  head_filerecord)
-        self.headprintrecord = self.build_mfdata("headprintrecord", 
+        self.headprintrecord = self.build_mfdata("headprintrecord",
                                                  headprintrecord)
-        self.saverecord = self.build_mfdata("saverecord",  saverecord)
-        self.printrecord = self.build_mfdata("printrecord",  printrecord)
+        self.saverecord = self.build_mfdata("saverecord", saverecord)
+        self.printrecord = self.build_mfdata("printrecord", printrecord)
         self._init_complete = True

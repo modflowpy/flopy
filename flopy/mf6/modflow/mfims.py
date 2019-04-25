@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ListTemplateGenerator
 
 
 class ModflowIms(mfpackage.MFPackage):
@@ -284,82 +284,82 @@ class ModflowIms(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    csv_output_filerecord = ListTemplateGenerator(('ims', 'options', 
+    csv_output_filerecord = ListTemplateGenerator(('ims', 'options',
                                                    'csv_output_filerecord'))
-    rcloserecord = ListTemplateGenerator(('ims', 'linear', 
+    rcloserecord = ListTemplateGenerator(('ims', 'linear',
                                           'rcloserecord'))
     package_abbr = "ims"
     _package_type = "ims"
     dfn_file_name = "sln-ims.dfn"
 
-    dfn = [["block options", "name print_option", "type string", 
+    dfn = [["block options", "name print_option", "type string",
             "reader urword", "optional true"],
-           ["block options", "name complexity", "type string", 
+           ["block options", "name complexity", "type string",
             "reader urword", "optional true"],
-           ["block options", "name csv_output_filerecord", 
-            "type record csv_output fileout csvfile", "shape", 
+           ["block options", "name csv_output_filerecord",
+            "type record csv_output fileout csvfile", "shape",
             "reader urword", "tagged true", "optional true"],
-           ["block options", "name csv_output", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name csv_output", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name fileout", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name fileout", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name csvfile", "type string", 
-            "preserve_case true", "shape", "in_record true", "reader urword", 
+           ["block options", "name csvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
             "tagged false", "optional false"],
-           ["block options", "name no_ptc", "type keyword", "reader urword", 
+           ["block options", "name no_ptc", "type keyword", "reader urword",
             "optional true"],
-           ["block nonlinear", "name outer_hclose", "type double precision", 
+           ["block nonlinear", "name outer_hclose", "type double precision",
             "reader urword", "optional false"],
-           ["block nonlinear", "name outer_rclosebnd", 
+           ["block nonlinear", "name outer_rclosebnd",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name outer_maximum", "type integer", 
+           ["block nonlinear", "name outer_maximum", "type integer",
             "reader urword", "optional false"],
-           ["block nonlinear", "name under_relaxation", "type string", 
+           ["block nonlinear", "name under_relaxation", "type string",
             "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_theta", 
+           ["block nonlinear", "name under_relaxation_theta",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_kappa", 
+           ["block nonlinear", "name under_relaxation_kappa",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_gamma", 
+           ["block nonlinear", "name under_relaxation_gamma",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name under_relaxation_momentum", 
+           ["block nonlinear", "name under_relaxation_momentum",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_number", "type integer", 
+           ["block nonlinear", "name backtracking_number", "type integer",
             "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_tolerance", 
+           ["block nonlinear", "name backtracking_tolerance",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_reduction_factor", 
+           ["block nonlinear", "name backtracking_reduction_factor",
             "type double precision", "reader urword", "optional true"],
-           ["block nonlinear", "name backtracking_residual_limit", 
+           ["block nonlinear", "name backtracking_residual_limit",
             "type double precision", "reader urword", "optional true"],
-           ["block linear", "name inner_maximum", "type integer", 
+           ["block linear", "name inner_maximum", "type integer",
             "reader urword", "optional false"],
-           ["block linear", "name inner_hclose", "type double precision", 
+           ["block linear", "name inner_hclose", "type double precision",
             "reader urword", "optional false"],
-           ["block linear", "name rcloserecord", 
-            "type record inner_rclose rclose_option", "reader urword", 
+           ["block linear", "name rcloserecord",
+            "type record inner_rclose rclose_option", "reader urword",
             "optional false"],
-           ["block linear", "name inner_rclose", "type double precision", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block linear", "name inner_rclose", "type double precision",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block linear", "name rclose_option", "type string", 
-            "tagged false", "in_record true", "reader urword", 
+           ["block linear", "name rclose_option", "type string",
+            "tagged false", "in_record true", "reader urword",
             "optional true"],
-           ["block linear", "name linear_acceleration", "type string", 
+           ["block linear", "name linear_acceleration", "type string",
             "reader urword", "optional false"],
-           ["block linear", "name relaxation_factor", 
+           ["block linear", "name relaxation_factor",
             "type double precision", "reader urword", "optional true"],
-           ["block linear", "name preconditioner_levels", "type integer", 
+           ["block linear", "name preconditioner_levels", "type integer",
             "reader urword", "optional true"],
-           ["block linear", "name preconditioner_drop_tolerance", 
+           ["block linear", "name preconditioner_drop_tolerance",
             "type double precision", "reader urword", "optional true"],
-           ["block linear", "name number_orthogonalizations", 
+           ["block linear", "name number_orthogonalizations",
             "type integer", "reader urword", "optional true"],
-           ["block linear", "name scaling_method", "type string", 
+           ["block linear", "name scaling_method", "type string",
             "reader urword", "optional true"],
-           ["block linear", "name reordering_method", "type string", 
+           ["block linear", "name reordering_method", "type string",
             "reader urword", "optional true"]]
 
     def __init__(self, simulation, loading_package=False, print_option=None,
@@ -379,51 +379,51 @@ class ModflowIms(mfpackage.MFPackage):
                  reordering_method=None, filename=None, pname=None,
                  parent_file=None):
         super(ModflowIms, self).__init__(simulation, "ims", filename, pname,
-                                         loading_package, parent_file)        
+                                         loading_package, parent_file)
 
         # set up variables
-        self.print_option = self.build_mfdata("print_option",  print_option)
-        self.complexity = self.build_mfdata("complexity",  complexity)
-        self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord", 
+        self.print_option = self.build_mfdata("print_option", print_option)
+        self.complexity = self.build_mfdata("complexity", complexity)
+        self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord",
                                                        csv_output_filerecord)
-        self.no_ptc = self.build_mfdata("no_ptc",  no_ptc)
-        self.outer_hclose = self.build_mfdata("outer_hclose",  outer_hclose)
-        self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd", 
+        self.no_ptc = self.build_mfdata("no_ptc", no_ptc)
+        self.outer_hclose = self.build_mfdata("outer_hclose", outer_hclose)
+        self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd",
                                                  outer_rclosebnd)
-        self.outer_maximum = self.build_mfdata("outer_maximum",  outer_maximum)
-        self.under_relaxation = self.build_mfdata("under_relaxation", 
+        self.outer_maximum = self.build_mfdata("outer_maximum", outer_maximum)
+        self.under_relaxation = self.build_mfdata("under_relaxation",
                                                   under_relaxation)
         self.under_relaxation_theta = self.build_mfdata(
-            "under_relaxation_theta",  under_relaxation_theta)
+            "under_relaxation_theta", under_relaxation_theta)
         self.under_relaxation_kappa = self.build_mfdata(
-            "under_relaxation_kappa",  under_relaxation_kappa)
+            "under_relaxation_kappa", under_relaxation_kappa)
         self.under_relaxation_gamma = self.build_mfdata(
-            "under_relaxation_gamma",  under_relaxation_gamma)
+            "under_relaxation_gamma", under_relaxation_gamma)
         self.under_relaxation_momentum = self.build_mfdata(
-            "under_relaxation_momentum",  under_relaxation_momentum)
-        self.backtracking_number = self.build_mfdata("backtracking_number", 
+            "under_relaxation_momentum", under_relaxation_momentum)
+        self.backtracking_number = self.build_mfdata("backtracking_number",
                                                      backtracking_number)
         self.backtracking_tolerance = self.build_mfdata(
-            "backtracking_tolerance",  backtracking_tolerance)
+            "backtracking_tolerance", backtracking_tolerance)
         self.backtracking_reduction_factor = self.build_mfdata(
-            "backtracking_reduction_factor",  backtracking_reduction_factor)
+            "backtracking_reduction_factor", backtracking_reduction_factor)
         self.backtracking_residual_limit = self.build_mfdata(
-            "backtracking_residual_limit",  backtracking_residual_limit)
-        self.inner_maximum = self.build_mfdata("inner_maximum",  inner_maximum)
-        self.inner_hclose = self.build_mfdata("inner_hclose",  inner_hclose)
-        self.rcloserecord = self.build_mfdata("rcloserecord",  rcloserecord)
-        self.linear_acceleration = self.build_mfdata("linear_acceleration", 
+            "backtracking_residual_limit", backtracking_residual_limit)
+        self.inner_maximum = self.build_mfdata("inner_maximum", inner_maximum)
+        self.inner_hclose = self.build_mfdata("inner_hclose", inner_hclose)
+        self.rcloserecord = self.build_mfdata("rcloserecord", rcloserecord)
+        self.linear_acceleration = self.build_mfdata("linear_acceleration",
                                                      linear_acceleration)
-        self.relaxation_factor = self.build_mfdata("relaxation_factor", 
+        self.relaxation_factor = self.build_mfdata("relaxation_factor",
                                                    relaxation_factor)
-        self.preconditioner_levels = self.build_mfdata("preconditioner_levels", 
+        self.preconditioner_levels = self.build_mfdata("preconditioner_levels",
                                                        preconditioner_levels)
         self.preconditioner_drop_tolerance = self.build_mfdata(
-            "preconditioner_drop_tolerance",  preconditioner_drop_tolerance)
+            "preconditioner_drop_tolerance", preconditioner_drop_tolerance)
         self.number_orthogonalizations = self.build_mfdata(
-            "number_orthogonalizations",  number_orthogonalizations)
-        self.scaling_method = self.build_mfdata("scaling_method", 
+            "number_orthogonalizations", number_orthogonalizations)
+        self.scaling_method = self.build_mfdata("scaling_method",
                                                 scaling_method)
-        self.reordering_method = self.build_mfdata("reordering_method", 
+        self.reordering_method = self.build_mfdata("reordering_method",
                                                    reordering_method)
         self._init_complete = True

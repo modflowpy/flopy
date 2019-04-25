@@ -10,7 +10,6 @@ from ...mbase import run_model
 from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                      PackageContainerType, MFDataException, FlopyException, \
                      VerbosityLevel
-from ..mfmodel import MFModel
 from ..mfpackage import MFPackage
 from ..data.mfstructure import DatumType
 from ..data import mfstructure
@@ -407,7 +406,7 @@ class MFSimulation(PackageContainer):
                                '###################\n\n' \
                                '{}\n'.format(data_str, package._get_pname(),
                                              pk_str)
-        for idx, model in self._models.items():
+        for model in self._models.values():
             if formal:
                 mod_repr = repr(model)
                 if len(mod_repr.strip()) > 0:
@@ -722,7 +721,7 @@ class MFSimulation(PackageContainer):
 
         in_simulation = False
         pkg_with_same_name = None
-        for index, file in self._ims_files.items():
+        for file in self._ims_files.values():
             if file is ims_file:
                 in_simulation = True
             if file.package_name == ims_file.package_name and \
@@ -822,7 +821,7 @@ class MFSimulation(PackageContainer):
         self._tdis_file.write(ext_file_action=ext_file_action)
 
         # write ims files
-        for index, ims_file in self._ims_files.items():
+        for ims_file in self._ims_files.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing ims package {}...'.format(
@@ -830,7 +829,7 @@ class MFSimulation(PackageContainer):
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
-        for key, exchange_file in self._exchange_files.items():
+        for exchange_file in self._exchange_files.values():
             exchange_file.write()
             if hasattr(exchange_file, 'gnc_filerecord') and \
                     exchange_file.gnc_filerecord.has_data():
@@ -883,7 +882,7 @@ class MFSimulation(PackageContainer):
                               'written.'.format(mvr_file))
 
         # write other packages
-        for index, pp in self._other_files.items():
+        for pp in self._other_files.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing package {}...'.format(pp._get_pname()))
@@ -892,7 +891,7 @@ class MFSimulation(PackageContainer):
         # FIX: model working folder should be model name file folder
 
         # write models
-        for key, model in self._models.items():
+        for model in self._models.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing model {}...'.format(model.name))
@@ -941,7 +940,7 @@ class MFSimulation(PackageContainer):
         output_file_keys = output_req.getkeys(self.simulation_data.mfdata,
                                               self.simulation_data.mfpath,
                                               False)
-        for key, path in output_file_keys.binarypathdict.items():
+        for path in output_file_keys.binarypathdict.values():
             if os.path.isfile(path):
                 os.remove(path)
 
@@ -972,10 +971,6 @@ class MFSimulation(PackageContainer):
     @property
     def model_dict(self):
         return self._models.copy()
-
-    @property
-    def model_names(self):
-        return list(self._models.keys())
 
     def get_model(self, model_name=None):
         """
@@ -1383,7 +1378,7 @@ class MFSimulation(PackageContainer):
                 return False
 
         # ims files valid
-        for index, imsfile in self._ims_files.items():
+        for imsfile in self._ims_files.values():
             if not imsfile.is_valid():
                 return False
 
@@ -1411,7 +1406,8 @@ class MFSimulation(PackageContainer):
         else:
             return verbosity_level
 
-    def _get_package_path(self, package):
+    @staticmethod
+    def _get_package_path(package):
         if package.parent_file is not None:
             return (package.parent_file.path) + (package.package_type,)
         else:

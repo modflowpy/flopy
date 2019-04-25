@@ -5,10 +5,11 @@ from flopy.mf6.data import mfstructure, mfdatautil
 from flopy.utils import datautil
 
 """
-createpackages.py is a utility script that reads in the file definition 
+createpackages.py is a utility script that reads in the file definition
 metadata in the .dfn files to create the package classes in the modflow folder.
 Run this script any time changes are made to the .dfn files.
 """
+
 
 class PackageLevel(Enum):
     sim_level = 0
@@ -80,12 +81,13 @@ def build_dfn_string(dfn_list):
                 line = line.replace('"', "'")
                 line_length += len(line) + 4
                 if not first_line:
-                    dfn_string = '{}, '.format(dfn_string)
-                else:
-                    first_line = False
+                    dfn_string = '{},'.format(dfn_string)
                 if line_length < 77:
                     # added text fits on the current line
-                    dfn_string = '{}"{}"'.format(dfn_string, line)
+                    if first_line:
+                        dfn_string = '{}"{}"'.format(dfn_string, line)
+                    else:
+                        dfn_string = '{} "{}"'.format(dfn_string, line)
                 else:
                     # added text does not fit on the current line
                     line_length = len(line) + len(leading_spaces) + 2
@@ -93,14 +95,17 @@ def build_dfn_string(dfn_list):
                         # added text too long to fit on a single line, wrap
                         # text as needed
                         line = '"{}"'.format(line)
-                        lines = textwrap.wrap(line, 75 - len(leading_spaces))
+                        lines = textwrap.wrap(line, 75 - len(leading_spaces),
+                                              drop_whitespace = True)
                         lines[0] = '{} {}'.format(leading_spaces, lines[0])
-                        line_join = ' " \n{} "'.format(leading_spaces)
+                        line_join = ' "\n{} "'.format(leading_spaces)
                         dfn_string = '{}\n{}'.format(dfn_string,
                                                      line_join.join(lines))
                     else:
                         dfn_string = '{}\n{} "{}"'.format(dfn_string,
                                                           leading_spaces, line)
+            first_line = False
+
         dfn_string = '{}{}'.format(dfn_string, ']')
     dfn_string = '{}{}'.format(dfn_string, ']')
     return dfn_string
@@ -113,14 +118,14 @@ def create_init_var(clean_ds_name, data_structure_name, init_val=None):
     init_var = '        self.{} = self.build_mfdata('.format(clean_ds_name)
     leading_spaces = ' ' * len(init_var)
     if len(init_var) + len(data_structure_name) + 2 > 79:
-        second_line = '\n            "{}", '.format(data_structure_name)
+        second_line = '\n            "{}",'.format(data_structure_name)
         if len(second_line) + len(clean_ds_name) + 2 > 79:
             init_var = '{}{}\n            {})'.format(init_var, second_line,
                                                       init_val)
         else:
             init_var = '{}{} {})'.format(init_var, second_line, init_val)
     else:
-        init_var = '{}"{}", '.format(init_var, data_structure_name)
+        init_var = '{}"{}",'.format(init_var, data_structure_name)
         if len(init_var) + len(clean_ds_name) + 2 > 79:
             init_var = '{}\n{}{})'.format(init_var, leading_spaces,
                                           init_val)
@@ -162,12 +167,14 @@ def format_var_list(base_string, var_list, is_tuple=False):
         if index == len(var_list) - 1:
             next_var_str = item
         else:
-            next_var_str = '{}, '.format(item)
+            next_var_str = '{},'.format(item)
         line_length += len(item) + extra_chars
         if line_length > 80:
             base_string = '{}\n{}{}'.format(base_string, leading_spaces,
                                             next_var_str)
         else:
+            if base_string[-1] == ',':
+                base_string = '{} '.format(base_string)
             base_string = '{}{}'.format(base_string, next_var_str)
     if is_tuple:
         return '{}))'.format(base_string)
@@ -180,7 +187,7 @@ def create_package_init_var(parameter_name, package_abbr, data_name):
         .format(package_abbr)
     one_line_b = '"{}", {},'.format(package_abbr, parameter_name)
     leading_spaces = ' ' * len(one_line)
-    two_line = '\n{}"{}", '.format(leading_spaces, data_name)
+    two_line = '\n{}"{}",'.format(leading_spaces, data_name)
     three_line = '\n{}self._{}_filerecord)'.format(leading_spaces, package_abbr)
     return '{}{}{}{}'.format(one_line, one_line_b, two_line, three_line)
 
@@ -189,7 +196,9 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
             doc_string, data_structure_dict, default_value, name,
             python_name, description, path, data_type,
             basic_init=False, construct_package=None, construct_data=None,
-            parameter_name=None, set_param_list=[]):
+            parameter_name=None, set_param_list=None):
+    if set_param_list is None:
+        set_param_list = []
     clean_ds_name = datautil.clean_name(python_name)
     if construct_package is None:
         # add variable initialization lines
@@ -228,6 +237,8 @@ def add_var(init_vars, class_vars, init_param_list, package_properties,
             new_class_var = '    {} = {}('.format(clean_ds_name,
                                                   gen_type)
             class_vars.append(format_var_list(new_class_var, path, True))
+            return gen_type
+    return None
 
 
 def build_init_string(init_string, init_param_list,
@@ -301,11 +312,11 @@ def create_packages():
         (sim_struct.name_file_struct_obj, PackageLevel.sim_level, '',
          sim_struct.name_file_struct_obj.dfn_list,
          sim_struct.name_file_struct_obj.file_type))
-    for key, package in sim_struct.package_struct_objs.items():
+    for package in sim_struct.package_struct_objs.values():
         # add simulation level package to list
         package_list.append((package, PackageLevel.sim_level, '',
                              package.dfn_list, package.file_type))
-    for key, package in sim_struct.utl_struct_objs.items():
+    for package in sim_struct.utl_struct_objs.values():
         # add utility packages to list
         package_list.append((package, PackageLevel.model_level, 'utl',
                              package.dfn_list, package.file_type))
@@ -314,7 +325,7 @@ def create_packages():
             (model.name_file_struct_obj, PackageLevel.model_level, model_key,
              model.name_file_struct_obj.dfn_list,
              model.name_file_struct_obj.file_type))
-        for key, package in model.package_struct_objs.items():
+        for package in model.package_struct_objs.values():
             package_list.append((package, PackageLevel.model_level,
                                  model_key, package.dfn_list,
                                  package.file_type))
@@ -336,6 +347,7 @@ def create_packages():
         init_param_list = []
         set_param_list = []
         class_vars = []
+        template_gens = []
         dfn_string = build_dfn_string(package[3])
         package_abbr = clean_class_string(
             '{}{}'.format(clean_class_string(package[2]),
@@ -357,8 +369,6 @@ def create_packages():
                 '{}.'.format(package_name.title(),
                              package[0].file_type,
                              package_container_text))
-        import_string = 'from .. import mfpackage\nfrom ..data.mfdatautil ' \
-                        'import ListTemplateGenerator, ArrayTemplateGenerator'
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties,
@@ -385,24 +395,34 @@ def create_packages():
                 '        simulation.register_exchange_file(self)\n')
 
         # loop through all blocks
-        for bl_key, block in package[0].blocks.items():
-            for ds_key, data_structure in block.data_structures.items():
+        for block in package[0].blocks.values():
+            for data_structure in block.data_structures.values():
                 # only create one property for each unique data structure name
                 if data_structure.name not in data_structure_dict:
-                    add_var(init_vars, class_vars, init_param_list,
-                            package_properties, doc_string,
-                            data_structure_dict, data_structure.default_value,
-                            data_structure.name, data_structure.python_name,
-                            data_structure.get_doc_string(79, indent, indent),
-                            data_structure.path,
-                            data_structure.get_datatype(),
-                            False,
-                            data_structure.construct_package,
-                            data_structure.construct_data,
-                            data_structure.parameter_name,
-                            set_param_list)
+                    tg = add_var(
+                        init_vars, class_vars, init_param_list,
+                        package_properties, doc_string, data_structure_dict,
+                        data_structure.default_value, data_structure.name,
+                        data_structure.python_name,
+                        data_structure.get_doc_string(79, indent, indent),
+                        data_structure.path, data_structure.get_datatype(),
+                        False, data_structure.construct_package,
+                        data_structure.construct_data,
+                        data_structure.parameter_name, set_param_list)
+                    if tg is not None and tg not in template_gens:
+                        template_gens.append(tg)
 
-
+        import_string = 'from .. import mfpackage'
+        if template_gens:
+            import_string = '{}\nfrom ..data.mfdatautil import' \
+                            ' '.format(import_string)
+            first_string = True
+            for template in template_gens:
+                if first_string:
+                    import_string = '{}{}'.format(import_string, template)
+                    first_string = False
+                else:
+                    import_string = '{}, {}'.format(import_string, template)
         # add extra docstrings for additional variables
         doc_string.add_parameter('    filename : String\n        '
                                  'File name for this package.')
@@ -464,7 +484,7 @@ def create_packages():
                              '.__init__('.format(package_name.title())
         spaces = ' ' * len(parent_init_string)
         parent_init_string = '{}{}, "{}", filename, pname,\n{}' \
-                             'loading_package, parent_file)        \n\n' \
+                             'loading_package, parent_file)\n\n' \
                              '        # set up variables'.format(
             parent_init_string, init_var, package_short_name, spaces)
         comment_string = '# DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE ' \

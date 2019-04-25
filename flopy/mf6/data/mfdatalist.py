@@ -589,7 +589,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                         self.structure.name,
                                                         data_item.name,
                                                         self._crnt_line_num,
-                                                        self._path, ex)
+                                                        self._path)
                                             type_, value_, \
                                             traceback_ = sys.exc_info()
                                             raise MFDataException(
@@ -605,7 +605,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                 message,
                                                 self.
                                                 _simulation_data.
-                                                debug)
+                                                debug, ex)
                                         if ks_struct_index < max_index:
                                             # increment until last record
                                             # entry then repeat last entry
@@ -762,10 +762,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         if 'cellid' not in self.dtype.names:
             return
 
-        axes = PlotUtilities._plot_mflist_helper(mflist=self, key=key, kper=None,
-                                                 names=names, filename_base=None,
-                                                 file_extension=None,
-                                                 mflay=None, **kwargs )
+        PlotUtilities._plot_mflist_helper(mflist=self, key=key, kper=None,
+                                          names=names, filename_base=None,
+                                          file_extension=None, mflay=None,
+                                          **kwargs )
 
 
 class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
@@ -929,14 +929,6 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             stress_period = 1
         self._data_storage[transient_key] = \
             super(MFTransientList, self)._new_storage(stress_period)
-
-    def get_key_list(self, sorted=False):
-        if self._data_storage is None:
-            return []
-        keys = list(self._data_storage.keys())
-        if sorted:
-            keys.sort()
-        return keys
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:

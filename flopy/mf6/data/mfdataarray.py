@@ -367,8 +367,10 @@ class MFArray(MFMultiDimVar):
                                   traceback_, comment,
                                   self._simulation_data.debug)
 
-    def store_as_external_file(self, external_file_path, multiplier=[1.0],
+    def store_as_external_file(self, external_file_path, multiplier=None,
                                layer=None, binary=False):
+        if multiplier is None:
+            multiplier = [1.0]
         if isinstance(layer, int):
             layer = (layer,)
         storage = self._get_storage_obj()
@@ -451,7 +453,9 @@ class MFArray(MFMultiDimVar):
                                       self._simulation_data.debug, ex)
         return None
 
-    def set_data(self, data, multiplier=[1.0], layer=None):
+    def set_data(self, data, multiplier=None, layer=None):
+        if multiplier is None:
+            multiplier = [1.0]
         self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
@@ -797,7 +801,6 @@ class MFArray(MFMultiDimVar):
 
     def _verify_data(self, data_iter, layer_num):
         # TODO: Implement
-        #size = self._data_dimensions.model_subspace_size(self.structure.shape)
         return True
 
     def plot(self, filename_base=None, file_extension=None, mflay=None,
@@ -952,9 +955,9 @@ class MFTransientArray(MFArray, MFTransient):
             super(MFTransientArray, self)._new_storage(stress_period=
                                                        transient_key)
 
-    def get_data(self, key=None, apply_mult=True, **kwargs):
+    def get_data(self, layer=None, apply_mult=True, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
-            if key is None:
+            if layer is None:
                 output = None
                 sim_time = self._data_dimensions.package_dim.model_dim[
                     0].simulation_time
@@ -983,13 +986,15 @@ class MFTransientArray(MFArray, MFTransient):
                         output = np.concatenate((output, data))
                 return output
             else:
-                self.get_data_prep(key)
+                self.get_data_prep(layer)
                 return super(MFTransientArray, self).get_data(
                     apply_mult=apply_mult)
         else:
             return None
 
-    def set_data(self, data, multiplier=[1.0], layer=None, key=None):
+    def set_data(self, data, multiplier=None, layer=None, key=None):
+        if multiplier is None:
+            multiplier = [1.0]
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for

@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
 class ModflowGwfdisv(mfpackage.MFPackage):
@@ -97,65 +97,65 @@ class ModflowGwfdisv(mfpackage.MFPackage):
     """
     top = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'top'))
     botm = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 'botm'))
-    idomain = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata', 
+    idomain = ArrayTemplateGenerator(('gwf6', 'disv', 'griddata',
                                       'idomain'))
-    vertices = ListTemplateGenerator(('gwf6', 'disv', 'vertices', 
+    vertices = ListTemplateGenerator(('gwf6', 'disv', 'vertices',
                                       'vertices'))
     cell2d = ListTemplateGenerator(('gwf6', 'disv', 'cell2d', 'cell2d'))
     package_abbr = "gwfdisv"
     _package_type = "disv"
     dfn_file_name = "gwf-disv.dfn"
 
-    dfn = [["block options", "name length_units", "type string", 
+    dfn = [["block options", "name length_units", "type string",
             "reader urword", "optional true"],
-           ["block options", "name nogrb", "type keyword", "reader urword", 
+           ["block options", "name nogrb", "type keyword", "reader urword",
             "optional true"],
-           ["block options", "name xorigin", "type double precision", 
+           ["block options", "name xorigin", "type double precision",
             "reader urword", "optional true"],
-           ["block options", "name yorigin", "type double precision", 
+           ["block options", "name yorigin", "type double precision",
             "reader urword", "optional true"],
-           ["block options", "name angrot", "type double precision", 
+           ["block options", "name angrot", "type double precision",
             "reader urword", "optional true"],
-           ["block dimensions", "name nlay", "type integer", 
+           ["block dimensions", "name nlay", "type integer",
             "reader urword", "optional false"],
-           ["block dimensions", "name ncpl", "type integer", 
+           ["block dimensions", "name ncpl", "type integer",
             "reader urword", "optional false"],
-           ["block dimensions", "name nvert", "type integer", 
+           ["block dimensions", "name nvert", "type integer",
             "reader urword", "optional false"],
-           ["block griddata", "name top", "type double precision", 
+           ["block griddata", "name top", "type double precision",
             "shape (ncpl)", "reader readarray"],
-           ["block griddata", "name botm", "type double precision", 
+           ["block griddata", "name botm", "type double precision",
             "shape (nlay, ncpl)", "reader readarray", "layered true"],
-           ["block griddata", "name idomain", "type integer", 
-            "shape (nlay, ncpl)", "reader readarray", "layered true", 
+           ["block griddata", "name idomain", "type integer",
+            "shape (nlay, ncpl)", "reader readarray", "layered true",
             "optional true"],
-           ["block vertices", "name vertices", "type recarray iv xv yv", 
+           ["block vertices", "name vertices", "type recarray iv xv yv",
             "reader urword", "optional false"],
-           ["block vertices", "name iv", "type integer", "in_record true", 
-            "tagged false", "reader urword", "optional false", 
+           ["block vertices", "name iv", "type integer", "in_record true",
+            "tagged false", "reader urword", "optional false",
             "numeric_index true"],
-           ["block vertices", "name xv", "type double precision", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block vertices", "name xv", "type double precision",
+            "in_record true", "tagged false", "reader urword",
             "optional false"],
-           ["block vertices", "name yv", "type double precision", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block vertices", "name yv", "type double precision",
+            "in_record true", "tagged false", "reader urword",
             "optional false"],
-           ["block cell2d", "name cell2d", 
-            "type recarray icell2d xc yc ncvert icvert", "reader urword", 
+           ["block cell2d", "name cell2d",
+            "type recarray icell2d xc yc ncvert icvert", "reader urword",
             "optional false"],
-           ["block cell2d", "name icell2d", "type integer", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block cell2d", "name icell2d", "type integer",
+            "in_record true", "tagged false", "reader urword",
             "optional false", "numeric_index true"],
-           ["block cell2d", "name xc", "type double precision", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block cell2d", "name xc", "type double precision",
+            "in_record true", "tagged false", "reader urword",
             "optional false"],
-           ["block cell2d", "name yc", "type double precision", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block cell2d", "name yc", "type double precision",
+            "in_record true", "tagged false", "reader urword",
             "optional false"],
-           ["block cell2d", "name ncvert", "type integer", "in_record true", 
+           ["block cell2d", "name ncvert", "type integer", "in_record true",
             "tagged false", "reader urword", "optional false"],
-           ["block cell2d", "name icvert", "type integer", "shape (ncvert)", 
-            "in_record true", "tagged false", "reader urword", 
+           ["block cell2d", "name icvert", "type integer", "shape (ncvert)",
+            "in_record true", "tagged false", "reader urword",
             "optional false", "numeric_index true"]]
 
     def __init__(self, model, loading_package=False, length_units=None,
@@ -164,20 +164,20 @@ class ModflowGwfdisv(mfpackage.MFPackage):
                  idomain=None, vertices=None, cell2d=None, filename=None,
                  pname=None, parent_file=None):
         super(ModflowGwfdisv, self).__init__(model, "disv", filename, pname,
-                                             loading_package, parent_file)        
+                                             loading_package, parent_file)
 
         # set up variables
-        self.length_units = self.build_mfdata("length_units",  length_units)
-        self.nogrb = self.build_mfdata("nogrb",  nogrb)
-        self.xorigin = self.build_mfdata("xorigin",  xorigin)
-        self.yorigin = self.build_mfdata("yorigin",  yorigin)
-        self.angrot = self.build_mfdata("angrot",  angrot)
-        self.nlay = self.build_mfdata("nlay",  nlay)
-        self.ncpl = self.build_mfdata("ncpl",  ncpl)
-        self.nvert = self.build_mfdata("nvert",  nvert)
-        self.top = self.build_mfdata("top",  top)
-        self.botm = self.build_mfdata("botm",  botm)
-        self.idomain = self.build_mfdata("idomain",  idomain)
-        self.vertices = self.build_mfdata("vertices",  vertices)
-        self.cell2d = self.build_mfdata("cell2d",  cell2d)
+        self.length_units = self.build_mfdata("length_units", length_units)
+        self.nogrb = self.build_mfdata("nogrb", nogrb)
+        self.xorigin = self.build_mfdata("xorigin", xorigin)
+        self.yorigin = self.build_mfdata("yorigin", yorigin)
+        self.angrot = self.build_mfdata("angrot", angrot)
+        self.nlay = self.build_mfdata("nlay", nlay)
+        self.ncpl = self.build_mfdata("ncpl", ncpl)
+        self.nvert = self.build_mfdata("nvert", nvert)
+        self.top = self.build_mfdata("top", top)
+        self.botm = self.build_mfdata("botm", botm)
+        self.idomain = self.build_mfdata("idomain", idomain)
+        self.vertices = self.build_mfdata("vertices", vertices)
+        self.cell2d = self.build_mfdata("cell2d", cell2d)
         self._init_complete = True

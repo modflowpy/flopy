@@ -685,7 +685,7 @@ class MFFileAccessList(MFFileAccess):
                                       self.structure.name,
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
-                                      self._simulation_data.debug)
+                                      self._simulation_data.debug, ex)
         else:
             have_newrec_line, newrec_line, self._data_line =\
                 self.read_list_data_from_file(file_handle, storage,
@@ -1369,7 +1369,7 @@ class MFFileAccessScalar(MFFileAccess):
                             self._data_dimensions,
                             self.structure.data_item_structures[index].type,
                             self.structure.data_item_structures[0]))
-                    except Exception:
+                    except Exception as ex:
                         message = 'Could not convert "{}" of type "{}" ' \
                                   'to a string.'.format(
                                     arr_line[index],
@@ -1383,11 +1383,11 @@ class MFFileAccessScalar(MFFileAccess):
                                               self.structure.name,
                                               inspect.stack()[0][3], type_,
                                               value_, traceback_, message,
-                                              self._simulation_data.debug)
+                                              self._simulation_data.debug, ex)
             try:
                 storage.set_data(converted_data, key=self._current_key)
                 index_num += 1
-            except Exception:
+            except Exception as ex:
                 message = 'Could not set data "{}" with key ' \
                           '"{}".'.format(converted_data, self._current_key)
                 type_, value_, traceback_ = sys.exc_info()
@@ -1398,13 +1398,13 @@ class MFFileAccessScalar(MFFileAccess):
                                       self.structure.name,
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
-                                      self._simulation_data.debug)
+                                      self._simulation_data.debug, ex)
         elif datatype == DataType.scalar_keyword or \
                 datatype == DataType.scalar_keyword_transient:
             # store as true
             try:
                 storage.set_data(True, key=self._current_key)
-            except Exception:
+            except Exception as ex:
                 message = 'Could not set data "True" with key ' \
                           '"{}".'.format(self._current_key)
                 type_, value_, traceback_ = sys.exc_info()
@@ -1415,7 +1415,7 @@ class MFFileAccessScalar(MFFileAccess):
                                       self.structure.name,
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
-                                      self._simulation_data.debug)
+                                      self._simulation_data.debug, ex)
         else:
             data_item_struct = self.structure.data_item_structures[0]
             if len(arr_line) < 1 + index_num:
@@ -1449,7 +1449,7 @@ class MFFileAccessScalar(MFFileAccess):
                                       self.structure.name,
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
-                                      self._simulation_data.debug)
+                                      self._simulation_data.debug, ex)
             try:
                 # read next word as data
                 storage.set_data(converted_data, key=self._current_key)
@@ -1464,7 +1464,7 @@ class MFFileAccessScalar(MFFileAccess):
                                       self.structure.name,
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
-                                      self._simulation_data.debug)
+                                      self._simulation_data.debug, ex)
             index_num += 1
 
         if len(arr_line) > index_num:
