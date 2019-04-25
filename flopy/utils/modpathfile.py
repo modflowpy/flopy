@@ -66,7 +66,7 @@ class PathlineFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            if n in self._data:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
 
         # set number of particle ids
@@ -108,6 +108,7 @@ class PathlineFile():
             elif self.version == 3 or self.version == 5:
                 break
         self.file.seek(0)
+        return
 
     def _get_dtypes(self):
         """
@@ -603,7 +604,7 @@ class EndpointFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            if n in self._data:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
 
         # set number of particle ids
@@ -1072,7 +1073,7 @@ class TimeseriesFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            if n in self._data:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
 
         # set number of particle ids

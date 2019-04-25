@@ -4,6 +4,11 @@ Module for input/output utilities
 import sys
 import numpy as np
 
+try:
+    import pandas as pd
+except:
+    pd = False
+
 
 def _fmt_string(array, float_format='{}'):
     """
@@ -281,22 +286,19 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
     ra : np.recarray
         Numpy record array of file contents.
     """
-    try:
-        if use_pandas:
-            import pandas as pd
+    # test if pandas should be used, if available
+    if use_pandas:
+        if pd:
             if delimiter.isspace():
                 kwargs['delim_whitespace'] = True
             if isinstance(dtype, np.dtype) and 'names' not in kwargs:
                 kwargs['names'] = dtype.names
-    except:
-        if use_pandas:
-            msg = 'loadtxt: pandas is not available'
-            raise ImportError(msg)
-        pd = False
 
+    # if use_pandas and pd then use pandas
     if use_pandas and pd:
         df = pd.read_csv(file, dtype=dtype, skiprows=skiprows, **kwargs)
         return df.to_records(index=False)
+    # default use of numpy
     else:
         return np.loadtxt(file, dtype=dtype, skiprows=skiprows, **kwargs)
 
