@@ -411,7 +411,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
            ["block dimensions", "name nreaches", "type integer",
             "reader urword", "optional false"],
            ["block packagedata", "name packagedata",
-            "type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon " 
+            "type recarray rno cellid rlen rwid rgrd rtp rbth rhk man ncon "
             "ustrf ndv aux boundname",
             "shape (maxbound)", "reader urword"],
            ["block packagedata", "name rno", "type integer", "shape",
@@ -479,7 +479,7 @@ class ModflowGwfsfr(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
            ["block period", "name sfrsetting",
-            "type keystring status manning stage inflow rainfall evaporation " 
+            "type keystring status manning stage inflow rainfall evaporation "
             "runoff diversionrecord upstream_fraction auxiliaryrecord",
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block period", "name status", "type string", "shape",

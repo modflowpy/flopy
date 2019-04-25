@@ -182,7 +182,7 @@ class ModflowGwfevt(mfpackage.MFPackage):
             "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
            ["block period", "name stress_period_data",
-            "type recarray cellid surface rate depth pxdp petm petm0 aux " 
+            "type recarray cellid surface rate depth pxdp petm petm0 aux "
             "boundname",
             "shape (maxbound)", "reader urword"],
            ["block period", "name cellid", "type integer",

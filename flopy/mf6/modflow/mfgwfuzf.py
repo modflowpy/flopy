@@ -305,7 +305,7 @@ class ModflowGwfuzf(mfpackage.MFPackage):
            ["block dimensions", "name nwavesets", "type integer",
             "reader urword", "optional false"],
            ["block packagedata", "name packagedata",
-            "type recarray iuzno cellid landflag ivertcon surfdep vks thtr " 
+            "type recarray iuzno cellid landflag ivertcon surfdep vks thtr "
             "thts thti eps boundname",
             "shape (nuzfcells)", "reader urword"],
            ["block packagedata", "name iuzno", "type integer", "shape",

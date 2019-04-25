@@ -485,7 +485,7 @@ class ModflowGwflak(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "optional true"],
            ["block connectiondata", "name connectiondata",
-            "type recarray lakeno iconn cellid claktype bedleak belev telev " 
+            "type recarray lakeno iconn cellid claktype bedleak belev telev "
             "connlen connwidth",
             "shape (sum(nlakeconn))", "reader urword"],
            ["block connectiondata", "name lakeno", "type integer", "shape",
@@ -526,7 +526,7 @@ class ModflowGwflak(mfpackage.MFPackage):
             "preserve_case true", "in_record true", "reader urword",
             "optional false", "tagged false"],
            ["block outlets", "name outlets",
-            "type recarray outletno lakein lakeout couttype invert width " 
+            "type recarray outletno lakein lakeout couttype invert width "
             "rough slope",
             "shape (noutlets)", "reader urword"],
            ["block outlets", "name outletno", "type integer", "shape",
@@ -561,7 +561,7 @@ class ModflowGwflak(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
            ["block period", "name laksetting",
-            "type keystring status stage rainfall evaporation runoff " 
+            "type keystring status stage rainfall evaporation runoff "
             "withdrawal auxiliaryrecord",
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block period", "name status", "type string", "shape",

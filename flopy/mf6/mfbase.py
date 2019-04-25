@@ -563,7 +563,7 @@ class PackageContainer(object):
 
         # collect keys of items to be removed from main dictionary
         items_to_remove = []
-        for key, item in self.simulation_data.mfdata.items():
+        for key in self.simulation_data.mfdata:
             is_subkey = True
             for pitem, ditem in zip(package.path, key):
                 if pitem != ditem:

@@ -882,7 +882,7 @@ class MFSimulation(PackageContainer):
                               'written.'.format(mvr_file))
 
         # write other packages
-        for index, pp in self._other_files.items():
+        for pp in self._other_files.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing package {}...'.format(pp._get_pname()))
@@ -891,7 +891,7 @@ class MFSimulation(PackageContainer):
         # FIX: model working folder should be model name file folder
 
         # write models
-        for key, model in self._models.items():
+        for model in self._models.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing model {}...'.format(model.name))

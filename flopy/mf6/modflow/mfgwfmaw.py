@@ -387,7 +387,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
            ["block dimensions", "name nmawwells", "type integer",
             "reader urword", "optional false"],
            ["block packagedata", "name packagedata",
-            "type recarray wellno radius bottom strt condeqn ngwfnodes aux " 
+            "type recarray wellno radius bottom strt condeqn ngwfnodes aux "
             "boundname",
             "shape (nmawwells)", "reader urword"],
            ["block packagedata", "name wellno", "type integer", "shape",
@@ -410,7 +410,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "optional true"],
            ["block connectiondata", "name connectiondata",
-            "type recarray wellno icon cellid scrn_top scrn_bot hk_skin " 
+            "type recarray wellno icon cellid scrn_top scrn_bot hk_skin "
             "radius_skin",
             "reader urword"],
            ["block connectiondata", "name wellno", "type integer", "shape",
@@ -442,7 +442,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
            ["block period", "name mawsetting",
-            "type keystring status flowing_wellrecord rate well_head " 
+            "type keystring status flowing_wellrecord rate well_head "
             "head_limit shutoffrecord rate_scalingrecord auxiliaryrecord",
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block period", "name status", "type string", "shape",

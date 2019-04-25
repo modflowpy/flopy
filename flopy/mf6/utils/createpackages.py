@@ -98,7 +98,7 @@ def build_dfn_string(dfn_list):
                         lines = textwrap.wrap(line, 75 - len(leading_spaces),
                                               drop_whitespace = True)
                         lines[0] = '{} {}'.format(leading_spaces, lines[0])
-                        line_join = ' " \n{} "'.format(leading_spaces)
+                        line_join = ' "\n{} "'.format(leading_spaces)
                         dfn_string = '{}\n{}'.format(dfn_string,
                                                      line_join.join(lines))
                     else:
@@ -325,7 +325,7 @@ def create_packages():
             (model.name_file_struct_obj, PackageLevel.model_level, model_key,
              model.name_file_struct_obj.dfn_list,
              model.name_file_struct_obj.file_type))
-        for key, package in model.package_struct_objs.items():
+        for package in model.package_struct_objs.values():
             package_list.append((package, PackageLevel.model_level,
                                  model_key, package.dfn_list,
                                  package.file_type))
