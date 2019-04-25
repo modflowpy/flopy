@@ -627,14 +627,25 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(model, pack_type, f, nper=None, pop_key_list=None, check=True,
-             unitnumber=None, ext_unit_dict=None, **kwargs):
+    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
         """
         The load method has not been implemented for this package.
 
         """
 
-        bc_pack_types = []
+        # parse keywords
+        if 'nper' in kwargs:
+            nper = kwargs.pop('nper')
+        else:
+            nper = None
+        if 'unitnumber' in kwargs:
+            unitnumber = kwargs.pop('unitnumber')
+        else:
+            unitnumber = None
+        if 'check' in kwargs:
+            check = kwargs.pop('check')
+        else:
+            check = True
 
         # open the file if not already open
         if not hasattr(f, 'read'):
@@ -646,6 +657,9 @@ class Package(PackageInterface):
             else:
                 f = open(filename, 'r')
 
+        # set string from pak_type
+        pak_type_str = str(pak_type).lower()
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -655,36 +669,53 @@ class Package(PackageInterface):
         # check for mfnwt version 11 option block
         nwt_options = None
         if model.version == "mfnwt" and "options" in line.lower():
-            nwt_options = OptionBlock.load_options(f, pack_type)
+            nwt_options = OptionBlock.load_options(f, pak_type)
             line = f.readline()
 
         # check for parameters
         nppak = 0
         if "parameter" in line.lower():
             t = line.strip().split()
-            # assert int(t[1]) == 0,"Parameters are not supported"
             nppak = np.int(t[1])
             mxl = 0
             if nppak > 0:
                 mxl = np.int(t[2])
                 if model.verbose:
-                    print('   Parameters detected. Number of parameters = ',
-                          nppak)
+                    msg = 3 * ' ' + 'Parameters detected. Number of ' + \
+                          'parameters = {}'.format(nppak)
+                    print(msg)
             line = f.readline()
 
         # dataset 2a
         t = line.strip().split()
+        imax = 2
         ipakcb = 0
         try:
             ipakcb = int(t[1])
         except:
             if model.verbose:
-                print('   implicit ipakcb in {}'.format(filename))
+                msg = 3 * ' ' + 'implicit ipakcb in {}'.format(filename)
+                print(msg)
+        if 'modflowdrt' in pak_type_str:
+            try:
+                nppak = int(t[2])
+                imax += 1
+            except:
+                if model.verbose:
+                    msg = 3 * ' ' + 'implicit nppak in '.format(filename)
+                    print(msg)
+            if nppak > 0:
+                mxl = np.int(t[3])
+                imax += 1
+                if model.verbose:
+                    msg = 3 * ' ' + 'Parameters detected. Number of ' + \
+                          'parameters = {}'.format(nppak)
+                    print(msg)
 
         options = []
         aux_names = []
-        if len(t) > 2:
-            it = 2
+        if len(t) > imax:
+            it = imax
             while it < len(t):
                 toption = t[it]
                 if toption.lower() == 'noprint':
@@ -709,41 +740,36 @@ class Package(PackageInterface):
         # set partype
         #  and read phiramp for modflow-nwt well package
         partype = ['cond']
-        if 'modflowwel' in str(pack_type).lower():
+        if 'modflowwel' in pak_type_str:
             partype = ['flux']
 
         # check for "standard" single line options from mfnwt
-        if 'nwt' in model.version.lower() and \
-                'flopy.modflow.mfwel.modflowwel'.lower() in str(
-            pack_type).lower():
+        if 'nwt' in model.version.lower():
+            if 'flopy.modflow.mfwel.modflowwel'.lower() in pak_type_str:
+                ipos = f.tell()
+                line = f.readline()
+                # test for specify keyword if a NWT well file
+                if 'specify' in line.lower():
+                    nwt_options = OptionBlock(line.lower().strip(),
+                                              pak_type, block=False)
+                    if options:
+                        if options[0] == "noprint":
+                            nwt_options.noprint = True
+                            if len(options) > 1:
+                                nwt_options.auxillary = options[1:]
+                        else:
+                            nwt_options.auxillary = options
 
-            ipos = f.tell()
-            line = f.readline()
-            # test for specify keyword if a NWT well file
-            if 'specify' in line.lower():
-                nwt_options = OptionBlock(line.lower().strip(),
-                                          pack_type, block=False)
-                if options:
-                    if options[0] == "noprint":
-                        nwt_options.noprint = True
-                        if len(options) > 1:
-                            nwt_options.auxillary = options[1:]
-
-                    else:
-                        nwt_options.auxillary = options
-
-                options = nwt_options
-            else:
-                f.seek(ipos)
-
-        elif 'flopy.modflow.mfchd.modflowchd'.lower() in str(
-                pack_type).lower():
+                    options = nwt_options
+                else:
+                    f.seek(ipos)
+        elif 'flopy.modflow.mfchd.modflowchd'.lower() in pak_type_str:
             partype = ['shead', 'ehead']
 
         # read parameter data
         if nppak > 0:
-            dt = pack_type.get_empty(1, aux_names=aux_names,
-                                     structured=model.structured).dtype
+            dt = pak_type.get_empty(1, aux_names=aux_names,
+                                    structured=model.structured).dtype
             pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
             # pak_parms = mfparbc.load(f, nppak, len(dt.names))
 
@@ -755,10 +781,9 @@ class Package(PackageInterface):
         stress_period_data = {}
         for iper in range(nper):
             if model.verbose:
-                print(
-                    "   loading " + str(
-                        pack_type) + " for kper {0:5d}".format(
-                        iper + 1))
+                msg = '   loading ' + str(pak_type) + \
+                      ' for kper {:5d}'.format(iper + 1)
+                print(msg)
             line = f.readline()
             if line == '':
                 break
@@ -773,11 +798,11 @@ class Package(PackageInterface):
 
             if itmp == 0:
                 bnd_output = None
-                current = pack_type.get_empty(itmp, aux_names=aux_names,
-                                              structured=model.structured)
+                current = pak_type.get_empty(itmp, aux_names=aux_names,
+                                             structured=model.structured)
             elif itmp > 0:
-                current = pack_type.get_empty(itmp, aux_names=aux_names,
-                                              structured=model.structured)
+                current = pak_type.get_empty(itmp, aux_names=aux_names,
+                                             structured=model.structured)
                 for ibnd in range(itmp):
                     line = f.readline()
                     if "open/close" in line.lower():
@@ -872,7 +897,7 @@ class Package(PackageInterface):
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pack_type.get_empty(par_dict['nlst'],
+                par_current = pak_type.get_empty(par_dict['nlst'],
                                                   aux_names=aux_names)
 
                 #  get appropriate parval
@@ -909,25 +934,24 @@ class Package(PackageInterface):
             else:
                 stress_period_data[iper] = bnd_output
 
-        dtype = pack_type.get_empty(0, aux_names=aux_names,
-                                    structured=model.structured).dtype
+        dtype = pak_type.get_empty(0, aux_names=aux_names,
+                                   structured=model.structured).dtype
 
         # set package unit number
-        unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=pack_type.ftype())
+                                        filetype=pak_type.ftype())
             if ipakcb > 0:
                 iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
                 model.add_pop_key_list(ipakcb)
 
-        pak = pack_type(model, ipakcb=ipakcb,
-                        stress_period_data=stress_period_data,
-                        dtype=dtype, options=options,
-                        unitnumber=unitnumber, filenames=filenames)
+        pak = pak_type(model, ipakcb=ipakcb,
+                       stress_period_data=stress_period_data,
+                       dtype=dtype, options=options,
+                       unitnumber=unitnumber, filenames=filenames)
         if check:
             pak.check(f='{}.chk'.format(pak.name[0]),
                       verbose=pak.parent.verbose, level=0)

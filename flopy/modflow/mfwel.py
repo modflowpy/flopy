@@ -366,7 +366,7 @@ class ModflowWel(Package):
         if model.verbose:
             sys.stdout.write('loading wel package file...\n')
 
-        return Package.load(model, ModflowWel, f, nper, check=check,
+        return Package.load(f, model, ModflowWel, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
 
     @staticmethod

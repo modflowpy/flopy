@@ -765,13 +765,12 @@ class Modflow(BaseModel):
                             package_load_args = \
                                 list(inspect.getargspec(item.package.load))[0]
                             if "check" in package_load_args:
-                                pck = item.package.load(
-                                    item.filename, ml,
-                                    ext_unit_dict=ext_unit_dict, check=False)
+                                pck = item.package.load(item.filename, ml,
+                                                        ext_unit_dict=ext_unit_dict,
+                                                        check=False)
                             else:
-                                pck = item.package.load(
-                                    item.filename, ml,
-                                    ext_unit_dict=ext_unit_dict)
+                                pck = item.package.load(item.filename, ml,
+                                                        ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
                                 print('   {:4s} package load...success'
@@ -779,39 +778,45 @@ class Modflow(BaseModel):
                         except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
-                                print('   {:4s} package load...failed\n   {!s}'
-                                      .format(item.filetype, e))
+                                msg = 3 * ' ' + \
+                                      '{:4s} '.format(item.filetype) + \
+                                      'package load...failed\n' + \
+                                      3 * ' ' + '{:s}'.format(e)
+                                print(msg)
                             files_not_loaded.append(item.filename)
                     else:
                         package_load_args = \
                             list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
-                            pck = item.package.load(
-                                item.filename, ml,
-                                ext_unit_dict=ext_unit_dict, check=False)
+                            pck = item.package.load(item.filename, ml,
+                                                    ext_unit_dict=ext_unit_dict,
+                                                    check=False)
                         else:
-                            pck = item.package.load(
-                                item.filename, ml,
-                                ext_unit_dict=ext_unit_dict)
+                            pck = item.package.load(item.filename, ml,
+                                                    ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            print('   {:4s} package load...success'
-                                  .format(item.filetype))
+                            msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                                  'package load...success'
+                            print(msg)
                 else:
                     if ml.verbose:
-                        print('   {:4s} package load...skipped'
-                              .format(item.filetype))
+                        msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                              'package load...skipped'
+                        print(msg)
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
-                    print('   {:4s} package load...skipped'
-                          .format(item.filetype))
+                    msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                              'package load...skipped'
+                    print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
-                    print('   {} file load...skipped\n      {}'
-                          .format(item.filetype,
-                                  os.path.basename(item.filename)))
+                    msg = 3 * ' ' + '{:s} '.format(item.filetype) + \
+                          'file load...skipped\n' + 6 * ' ' + \
+                          '{}'.format(os.path.basename(item.filename))
+                    print(msg)
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
@@ -831,19 +836,24 @@ class Modflow(BaseModel):
                 ext_unit_dict.pop(key)
             except KeyError:
                 if ml.verbose:
-                    print('Warning: external file unit {} does not exist in '
-                          'ext_unit_dict.'.format(key))
+                    msg = 'Warning: external file unit {} '.format(key) + \
+                          'does not exist in ext_unit_dict.'
+                    print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
+            msg =  3 * ' ' + 'The following ' + \
+                   '{} '.format(len(files_successfully_loaded)) + \
+                   'packages were successfully loaded.'
             print('')
-            print('   The following {0} packages were successfully loaded.'
-                  .format(len(files_successfully_loaded)))
+            print(msg)
             for fname in files_successfully_loaded:
                 print('      ' + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                print('   The following {0} packages were not loaded.'
-                      .format(len(files_not_loaded)))
+                msg = 3 * ' ' + 'The following ' + \
+                      '{} '.format(len(files_not_loaded)) + \
+                      'packages were not loaded.'
+                print(msg)
                 for fname in files_not_loaded:
                     print('      ' + os.path.basename(fname))
         if check:
