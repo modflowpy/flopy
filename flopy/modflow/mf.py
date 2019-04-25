@@ -718,9 +718,9 @@ class Modflow(BaseModel):
         if dis_key is None:
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
-        dis = disnamdata.package.load(
-            disnamdata.filename, ml,
-            ext_unit_dict=ext_unit_dict, check=False)
+        dis = disnamdata.package.load(disnamdata.filename, ml,
+                                      ext_unit_dict=ext_unit_dict,
+                                      check=False)
         files_successfully_loaded.append(disnamdata.filename)
         if ml.verbose:
             print('   {:4s} package load...success'.format(dis.name[0]))
@@ -765,12 +765,12 @@ class Modflow(BaseModel):
                             package_load_args = \
                                 list(inspect.getargspec(item.package.load))[0]
                             if "check" in package_load_args:
-                                pck = item.package.load(item.filename, ml,
-                                                        ext_unit_dict=ext_unit_dict,
-                                                        check=False)
+                                item.package.load(item.filename, ml,
+                                                  ext_unit_dict=ext_unit_dict,
+                                                  check=False)
                             else:
-                                pck = item.package.load(item.filename, ml,
-                                                        ext_unit_dict=ext_unit_dict)
+                                item.package.load(item.filename, ml,
+                                                  ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
                                 print('   {:4s} package load...success'
@@ -781,19 +781,19 @@ class Modflow(BaseModel):
                                 msg = 3 * ' ' + \
                                       '{:4s} '.format(item.filetype) + \
                                       'package load...failed\n' + \
-                                      3 * ' ' + '{:s}'.format(e)
+                                      3 * ' ' + '{!s}'.format(e)
                                 print(msg)
                             files_not_loaded.append(item.filename)
                     else:
                         package_load_args = \
                             list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
-                            pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict,
-                                                    check=False)
+                            item.package.load(item.filename, ml,
+                                              ext_unit_dict=ext_unit_dict,
+                                              check=False)
                         else:
-                            pck = item.package.load(item.filename, ml,
-                                                    ext_unit_dict=ext_unit_dict)
+                            item.package.load(item.filename, ml,
+                                              ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
                             msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \

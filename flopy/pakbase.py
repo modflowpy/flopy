@@ -627,9 +627,20 @@ class Package(PackageInterface):
         return
 
     @staticmethod
-    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+    def load(f, model, ext_unit_dict=None, check=True, **kwargs):
         """
         The load method has not been implemented for this package.
+
+        """
+        msg = 'load method has not been implemented.'
+        raise NotImplementedError(msg)
+
+        return
+
+    @staticmethod
+    def std_load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+        """
+        Default load method for standard boundary packages.
 
         """
 
@@ -702,7 +713,7 @@ class Package(PackageInterface):
                 imax += 1
             except:
                 if model.verbose:
-                    msg = 3 * ' ' + 'implicit nppak in '.format(filename)
+                    msg = 3 * ' ' + 'implicit nppak in {}'.format(filename)
                     print(msg)
             if nppak > 0:
                 mxl = np.int(t[3])
@@ -898,7 +909,7 @@ class Package(PackageInterface):
                 data_dict = current_dict[iname]
 
                 par_current = pak_type.get_empty(par_dict['nlst'],
-                                                  aux_names=aux_names)
+                                                 aux_names=aux_names)
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:

@@ -279,8 +279,8 @@ class ModflowDrn(Package):
         if model.verbose:
             sys.stdout.write('loading drn package file...\n')
 
-        return Package.load(f, model, ModflowDrn, nper=nper, check=check,
-                            ext_unit_dict=ext_unit_dict)
+        return Package.std_load(f, model, ModflowDrn, nper=nper, check=check,
+                                ext_unit_dict=ext_unit_dict)
 
     @staticmethod
     def ftype():
