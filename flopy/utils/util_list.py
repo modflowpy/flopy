@@ -461,7 +461,14 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfi = dfi.set_index(names)
+                # dfi = dfi.set_index(names)
+                dfg = dfi.groupby(names)
+                count = dfg[varnames[0]].count().rename('n')
+                if (count > 1).values.any():
+                    print("Duplicated list entry locations aggregated for kper {}".format(per))
+                    for kij in count[count > 1].index.values:
+                        print("    (k,i,j) {}".format(kij))
+                dfi = dfg.sum()  # aggregate
                 dfi.columns = list(['{}{}'.format(c, per) for c in varnames])
             dfs.append(dfi)
         df = pd.concat(dfs, axis=1)
@@ -469,7 +476,7 @@ class MfList(DataInterface, DataListInterface):
             keep = []
             for var in varnames:
                 diffcols = list([n for n in df.columns if var in n])
-                diff = df[diffcols].diff(axis=1)
+                diff = df[diffcols].fillna(0).diff(axis=1)
                 diff['{}0'.format(var)] = 1  # always return the first stress period
                 changed = diff.sum(axis=0) != 0
                 keep.append(df.loc[:, changed.index[changed]])
