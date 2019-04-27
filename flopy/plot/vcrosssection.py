@@ -465,7 +465,7 @@ class _VertexCrossSection(_CrossSection):
                 if amask[n0] or amask[n1] or amask[n2]:
                     mask[ipos] = True
             triang.set_mask(mask)
-        except:
+        except (AttributeError, IndexError):
             pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
@@ -480,7 +480,6 @@ class _VertexCrossSection(_CrossSection):
 
     def plot_inactive(self):
         raise NotImplementedError("Function must be called in PlotCrossSection")
-
 
     def plot_ibound(self):
         raise NotImplementedError("Function must be called in PlotCrossSection")
