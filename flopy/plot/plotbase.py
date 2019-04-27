@@ -6,8 +6,6 @@ from ..plot import plotutil
 try:
     import matplotlib.pyplot as plt
     import matplotlib.colors
-    from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Polygon
 except ImportError:
     plt = None
 
@@ -339,20 +337,6 @@ class PlotCrossSection(object):
         else:
             raise Exception('Cannot find package to plot')
 
-        # Get the list data
-        """
-        try:
-            arr_dict = p.stress_period_data.to_array(kper)
-        except:
-            raise Exception('Not a list-style boundary package')
-
-        if not arr_dict:
-            return None
-
-        for key in arr_dict:
-            fluxes = arr_dict[key]
-            break
-        """
         # trap for mf6 'cellid' vs mf2005 'k', 'i', 'j' convention
         if p.parent.version == "mf6":
             try:
@@ -631,7 +615,7 @@ class PlotCrossSection(object):
             delc = self.mg.delc
             top = self.mg.top
             botm = self.mg.botm
-            nlay, nrow, ncol = botm.shape
+            nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.
             hdry = 999.
