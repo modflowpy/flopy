@@ -2567,7 +2567,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
         vdata = np.array(vdata)
 
     vcell = []
-    for idx, [xt, yt, _] in enumerate(pts):
+    for (xt, yt, _) in pts:
         # find the modflow cell containing point
         irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
         if irow >= 0 and jcol >= 0:
