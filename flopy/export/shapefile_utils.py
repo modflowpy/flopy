@@ -6,10 +6,9 @@ import shutil
 import json
 import numpy as np
 import os
-import sys
 import warnings
-from ..datbase import DataType, DataInterface, DataListInterface
-from ..utils import Util2d, Util3d, Transient2d, MfList, SpatialReference
+from ..datbase import DataType, DataInterface
+from ..utils import Util3d, SpatialReference
 
 
 def import_shapefile():
@@ -512,7 +511,7 @@ def shp2recarray(shpname):
     """
     try:
         import shapefile as sf
-    except Exception as e:
+    except Exception:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
     from ..utils.geometry import shape
@@ -525,8 +524,6 @@ def shp2recarray(shpname):
     records = [tuple(r) + (geoms[i],) for i, r in
                enumerate(sfobj.iterRecords())]
     dtype += [('geometry', np.object)]
-    # recfunctions.append_fields(array, names='tmp1', data=col1,
-    #                                           asrecarray=True)
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
@@ -575,7 +572,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     for g in geoms:
         try:
             geomtype = g.shapeType
-        except:
+        except AttributeError:
             continue
 
     # set up for pyshp 1 or 2
@@ -671,8 +668,8 @@ class CRS(object):
 
         self.wktstr = None
         if prj is not None:
-            with open(prj) as input:
-                self.wktstr = input.read()
+            with open(prj) as prj_input:
+                self.wktstr = prj_input.read()
         elif esri_wkt is not None:
             self.wktstr = esri_wkt
         elif epsg is not None:
@@ -727,9 +724,6 @@ class CRS(object):
             ellps = 'grs80'
         elif 'wgs' in self.spheriod_name.lower():
             ellps = 'wgs84'
-
-        # prime meridian
-        pm = self.primem[0].lower()
 
         return {'proj': proj,
                 'datum': datum,
@@ -826,7 +820,7 @@ class CRS(object):
             end = s[strt:].find(']') + strt
             try:
                 return float(self.wktstr[strt:end].split(',')[1])
-            except:
+            except (IndexError, TypeError, ValueError, AttributeError):
                 pass
 
     def _getgcsparam(self, txt):
@@ -1007,7 +1001,7 @@ class EpsgReference:
     def show():
         try:
             from importlib import reload
-        except:
+        except ImportError:
             from imp import reload
         import epsgref
         from epsgref import prj
