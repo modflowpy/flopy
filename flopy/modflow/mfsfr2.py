@@ -1593,7 +1593,7 @@ class ModflowSfr2(Package):
                 d[idx] += 1
         d = d[columns]
         formats = _fmt_string(d)[:-1] + '\n'
-        for i, rec in enumerate(d):
+        for rec in d:
             f_sfr.write(formats.format(*rec))
 
     def _write_segment_data(self, i, j, f_sfr):
