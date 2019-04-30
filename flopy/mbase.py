@@ -189,7 +189,7 @@ class BaseModel(ModelInterface):
         """
         ModelInterface.__init__(self)
         self.__name = modelname
-        self.namefile_ext = namefile_ext
+        self.namefile_ext = namefile_ext or ''
         self._namefile = self.__name + '.' + self.namefile_ext
         self._packagelist = []
         self.heading = ''

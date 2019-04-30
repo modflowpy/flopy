@@ -544,13 +544,8 @@ class Mt3dms(BaseModel):
         >>> mt.ftlfilename = 'example.ftl'
 
         """
-        # test if name file is passed with extension (i.e., is a valid file)
-        modelname_extension = None
-        if os.path.isfile(os.path.join(model_ws, f)):
-            modelname = f.rpartition('.')[0]
-            modelname_extension = f.rpartition('.')[2]
-        else:
-            modelname = f
+        modelname, ext = os.path.splitext(f)
+        modelname_extension = ext[1:]  # without '.'
 
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
