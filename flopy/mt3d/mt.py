@@ -559,13 +559,12 @@ class Mt3dms(BaseModel):
         files_not_loaded = []
 
         # read name file
+        namefile_path = os.path.join(mt.model_ws, f)
+        if not os.path.isfile(namefile_path):
+            raise IOError('cannot find name file: ' + str(namefile_path))
         try:
-            # namefile_path = os.path.join(mt.model_ws, mt.namefile)
-            # namefile_path = f
-            namefile_path = os.path.join(mt.model_ws, f)
-            ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
-                                                    mt.mfnam_packages,
-                                                    verbose=verbose)
+            ext_unit_dict = mfreadnam.parsenamefile(
+                namefile_path, mt.mfnam_packages, verbose=verbose)
         except Exception as e:
             # print("error loading name file entries from file")
             # print(str(e))
