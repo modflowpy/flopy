@@ -2,8 +2,7 @@ from __future__ import print_function
 import json
 import os
 import numpy as np
-from ..utils import Util2d, Util3d, Transient2d, MfList, \
-    HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
+from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
 from ..mbase import BaseModel, ModelInterface
 from ..pakbase import PackageInterface
 from ..datbase import DataType, DataInterface, DataListInterface
@@ -19,17 +18,6 @@ with open(path + '/longnames.json') as f:
     NC_LONG_NAMES = json.load(f)
 with open(path + '/unitsformat.json') as f:
     NC_UNITS_FORMAT = json.load(f)
-
-
-def get_var_array_dict(m):
-    vdict = {}
-    # for vname in f.var_attr_dict.keys():
-    #    vdict[vname] = f.nc.variables[vname][:]
-    for attr in m:
-        if hasattr(attr, "stress_period_data"):
-            array_dict = attr.stress_period_data.array
-
-    return vdict
 
 
 def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
@@ -126,7 +114,7 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
 
 
 def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
-                            text='', mask_vals=[], mask_array3d=None):
+                            text='', mask_vals=(), mask_array3d=None):
     if logger:
         logger.log("creating array for {0}".format(
             var_name))
@@ -239,21 +227,24 @@ def output_helper(f, ml, oudic, **kwargs):
     assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger", None)
     stride = kwargs.pop("stride", 1)
-    suffix = kwargs.pop("suffix", None)
     forgive = kwargs.pop("forgive", False)
+    kwargs.pop("suffix", None)
     if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
     # ISSUE - need to round the totims in each output file instance so
     # that they will line up
-    for key, out in oudic.items():
+    for key in oudic.keys():
+        out = oudic[key]
         times = [float("{0:15.6f}".format(t)) for t in
                  out.recordarray["totim"]]
         out.recordarray["totim"] = times
 
     times = []
     for filename, df in oudic.items():
-        [times.append(t) for t in df.recordarray["totim"] if t not in times]
+        for t in df.recordarray["totim"]:
+            if t not in times:
+                times.append(t)
     assert len(times) > 0
     times.sort()
 
@@ -489,7 +480,7 @@ def mflist_export(f, mfl, **kwargs):
         elif model_grid.grid_type == 'USG-Unstructured':
             raise Exception('Flopy does not support exporting to shapefile '
                             'from a MODFLOW-USG unstructured grid.')
-        import flopy.utils.flopy_io as fio
+
         if kper is None:
             keys = mfl.data.keys()
             keys.sort()
@@ -988,11 +979,9 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                 dx = (xmax - xmin) / width_rot
                 dy = (ymax - ymin) / height_rot
                 cellsize = np.max((dx, dy))
-                # cellsize = np.cos(np.radians(self.rotation)) * cellsize
                 xoffset, yoffset = xmin, ymin
             except ImportError:
                 print('scipy package required to export rotated grid.')
-                pass
 
         filename = '.'.join(
             filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
@@ -1018,7 +1007,7 @@ def export_array(modelgrid, filename, a, nodata=-9999,
         try:
             import rasterio
             from rasterio import Affine
-        except:
+        except ImportError:
             print('GeoTIFF export requires the rasterio package.')
             return
         dxdy = modelgrid.delc[0] # * self.length_multiplier
@@ -1150,16 +1139,16 @@ def export_array_contours(modelgrid, filename, a,
         prj = modelgrid.proj4
 
     if interval is not None:
-        min = np.nanmin(a)
-        max = np.nanmax(a)
-        nlevels = np.round(np.abs(max - min) / interval, 2)
+        imin = np.nanmin(a)
+        imax = np.nanmax(a)
+        nlevels = np.round(np.abs(imax - imin) / interval, 2)
         msg = '{:.0f} levels at interval of {} > maxlevels={}'.format(
             nlevels,
             interval,
             maxlevels)
         assert nlevels < maxlevels, msg
-        levels = np.arange(min, max, interval)
-    fig, ax = plt.subplots()
+        levels = np.arange(imin, imax, interval)
+    ax = plt.subplots()[-1]
     ctr = contour_array(modelgrid, ax, a, levels=levels)
     export_contours(modelgrid, filename, ctr, fieldname, epsg, prj, **kwargs)
     plt.close()
@@ -1185,7 +1174,7 @@ def contour_array(modelgrid, ax, a, **kwargs):
     from ..plot import PlotMapView
 
     kwargs['ax'] = ax
-    map = PlotMapView(modelgrid=modelgrid)
-    contour_set = map.contour_array(a=a, **kwargs)
+    pmv = PlotMapView(modelgrid=modelgrid)
+    contour_set = pmv.contour_array(a=a, **kwargs)
 
     return contour_set

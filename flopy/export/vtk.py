@@ -245,7 +245,7 @@ class Vtk(object):
     def get_3d_shared_vertex_connectivity(mg):
 
         # get the x and y points for the grid
-        x, y, z = mg.xyzvertices
+        x, y = mg.xyzvertices[0:2]
         x = x.flatten()
         y = y.flatten()
 

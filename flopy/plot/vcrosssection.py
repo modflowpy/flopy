@@ -2,7 +2,6 @@ import numpy as np
 
 try:
     import matplotlib.pyplot as plt
-    import matplotlib.colors
 except:
     plt = None
 from flopy.plot import plotutil
@@ -310,7 +309,7 @@ class _VertexCrossSection(_CrossSection):
         for k in range(data.shape[0]):
             if ax is None:
                 ax = plt.gca()
-            for ix, val in enumerate(data[k]):
+            for ix, _ in enumerate(data[k]):
                 ax.plot(d[k, ix], data[k, ix], color=color, **kwargs)
 
             ax.set_xlim(self.extent[0], self.extent[1])
@@ -465,7 +464,7 @@ class _VertexCrossSection(_CrossSection):
                 if amask[n0] or amask[n1] or amask[n2]:
                     mask[ipos] = True
             triang.set_mask(mask)
-        except:
+        except (AttributeError, IndexError):
             pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
@@ -480,7 +479,6 @@ class _VertexCrossSection(_CrossSection):
 
     def plot_inactive(self):
         raise NotImplementedError("Function must be called in PlotCrossSection")
-
 
     def plot_ibound(self):
         raise NotImplementedError("Function must be called in PlotCrossSection")
@@ -498,7 +496,8 @@ class _VertexCrossSection(_CrossSection):
         raise NotImplementedError("plot_specific_discharge must be "
                                   "used for VertexGrid models")
 
-    def get_grid_patch_collection(self, projpts, plotarray, **kwargs):
+    @classmethod
+    def get_grid_patch_collection(cls, projpts, plotarray, **kwargs):
         """
         Get a PatchCollection of plotarray in unmasked cells
 
@@ -575,7 +574,7 @@ class _VertexCrossSection(_CrossSection):
             color = kwargs.pop('color')
 
         rectcol = []
-        for cell, verts in sorted(self.projpts.items()):
+        for _, verts in sorted(self.projpts.items()):
             verts = plotutil.UnstructuredPlotUtilities\
                 .arctan2(np.array(verts))
 
@@ -664,7 +663,7 @@ class _VertexCrossSection(_CrossSection):
                 for v in verts:
                     xpts.append(v[0])
         else:
-            for nn, verts in self.xypts.items():
+            for _, verts in self.xypts.items():
                 for v in verts:
                     xpts.append(v[1])
 

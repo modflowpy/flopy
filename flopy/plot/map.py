@@ -284,7 +284,7 @@ class PlotMapView(object):
                 if amask[n0] or amask[n1] or amask[n2]:
                     mask[ipos] = True
             triang.set_mask(mask)
-        except:
+        except (AttributeError, IndexError):
             pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
@@ -757,7 +757,7 @@ class PlotMapView(object):
             delc = self.mg.delc
             top = np.copy(self.mg.top)
             botm = np.copy(self.mg.botm)
-            nlay, nrow, ncol = botm.shape
+            nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.
             hdry = 999.
@@ -790,6 +790,7 @@ class PlotMapView(object):
             ib = ib.ravel()
             qx = qx.ravel()
             qy = qy.ravel()
+            del qz
 
             temp = []
             for ix, val in enumerate(ib):

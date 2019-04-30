@@ -557,7 +557,7 @@ class NetCdf(object):
             try:
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k, v)
-            except Exception as e:
+            except Exception:
                 self.logger.warn(
                     'error setting global attribute {0}'.format(k))
 
@@ -666,7 +666,6 @@ class NetCdf(object):
                          [xmin, ymax],
                          [xmax, ymax],
                          [xmax, ymin]])
-        tp = bbox.transpose()
         x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
         self.bounds = x.min(), y.min(), x.max(), y.max()
         self.vbounds = vmin, vmax
@@ -819,8 +818,8 @@ class NetCdf(object):
         attribs = crs.grid_mapping_attribs
         if attribs is not None:
             self.log("creating grid mapping variable")
-            gmv = self.create_variable(attribs['grid_mapping_name'], attribs,
-                                       precision_str="f8")
+            self.create_variable(attribs['grid_mapping_name'], attribs,
+                                 precision_str="f8")
 
         # layer
         self.log("creating layer var")
@@ -1029,7 +1028,6 @@ class NetCdf(object):
         assert md.geospatial_lat_max - ymax < tol
         assert md.geospatial_vertical_min - self.vbounds[0] < tol
         assert md.geospatial_vertical_max - self.vbounds[1] < tol
-        pass
 
     def get_longnames_from_docstrings(self, outfile='longnames.json'):
         """
@@ -1043,8 +1041,6 @@ class NetCdf(object):
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        import inspect
-        path = ''
         try:
             from numpydoc.docscrape import NumpyDocString
         except Exception as e:
@@ -1087,8 +1083,9 @@ class NetCdf(object):
 
         # parse docstrings to get long names
         longnames = {}
-        for cname, obj in packages:
+        for pkg in packages:
             # parse the docstring
+            obj = pkg[-1]
             ds = obj.__doc__.split('\n')
             start, stop = startstop(ds)
             txt = ds[start:stop]
