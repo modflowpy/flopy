@@ -544,13 +544,8 @@ class Mt3dms(BaseModel):
         >>> mt.ftlfilename = 'example.ftl'
 
         """
-        # test if name file is passed with extension (i.e., is a valid file)
-        modelname_extension = None
-        if os.path.isfile(os.path.join(model_ws, f)):
-            modelname = f.rpartition('.')[0]
-            modelname_extension = f.rpartition('.')[2]
-        else:
-            modelname = f
+        modelname, ext = os.path.splitext(f)
+        modelname_extension = ext[1:]  # without '.'
 
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
@@ -564,13 +559,12 @@ class Mt3dms(BaseModel):
         files_not_loaded = []
 
         # read name file
+        namefile_path = os.path.join(mt.model_ws, f)
+        if not os.path.isfile(namefile_path):
+            raise IOError('cannot find name file: ' + str(namefile_path))
         try:
-            # namefile_path = os.path.join(mt.model_ws, mt.namefile)
-            # namefile_path = f
-            namefile_path = os.path.join(mt.model_ws, f)
-            ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
-                                                    mt.mfnam_packages,
-                                                    verbose=verbose)
+            ext_unit_dict = mfreadnam.parsenamefile(
+                namefile_path, mt.mfnam_packages, verbose=verbose)
         except Exception as e:
             # print("error loading name file entries from file")
             # print(str(e))
