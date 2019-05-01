@@ -383,6 +383,39 @@ def test_example():
     for i in range(1, nper):
         assert sfr2.dataset_5[i][0] == -1
 
+def test_ds_6d_6e_disordered():
+    path = os.path.join("..", "examples", "data", "hydmod_test")
+    path2 = os.path.join(".", "temp", "t009")
+    m = flopy.modflow.Modflow.load("test1tr2.nam",
+                                   model_ws=path)
+
+    m.change_model_ws(path2)
+    m.write_input()
+
+    m2 = flopy.modflow.Modflow.load("test1tr2.nam",
+                                    model_ws=path2)
+
+    sfr = m.get_package("SFR")
+    sfr2 = m2.get_package("SFR")
+
+
+    if len(sfr.all_segments) != len(sfr2.all_segments):
+        raise AssertionError
+
+    if len(sfr.segment_data[0]) != len(sfr2.segment_data[0]):
+        raise AssertionError
+
+    for kper, d in sfr.channel_flow_data.items():
+        for seg, value in d.items():
+            if not np.allclose(value, sfr2.channel_flow_data[kper][seg]):
+                raise AssertionError
+
+    for kper, d in sfr.channel_geometry_data.items():
+        for seg, value in d.items():
+            if not np.allclose(value, sfr2.channel_geometry_data[kper][seg]):
+                raise AssertionError
+
+
 def test_transient_example():
     path = os.path.join('temp', 't009')
     gpth = os.path.join('..', 'examples', 'data', 'mf2005_test', 'testsfr2.*')
@@ -429,7 +462,7 @@ def test_assign_layers():
     l = m.dis.get_layer(0, [0, 1], 0.)
     assert np.array_equal(l, np.array([1, 1]))
 
-    
+
 def test_SfrFile():
     sfrout = SfrFile('../examples/data/sfr_examples/sfroutput2.txt')
     # will be None if pandas is not installed
@@ -456,9 +489,10 @@ def test_sfr_plot():
     pass
 
 if __name__ == '__main__':
-    #test_sfr()
+    # test_sfr()
+    # test_ds_6d_6e_disordered()
     # test_sfr_renumbering()
-    #test_example()
+    # test_example()
     # test_export()
     #test_transient_example()
     #test_sfr_plot()

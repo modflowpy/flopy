@@ -329,7 +329,7 @@ class ModflowSfr2(Package):
             filenames = [filenames, None, None]
         elif isinstance(filenames, list):
             if len(filenames) < 3:
-                for idx in range(len(filenames), 3):
+                for _ in range(len(filenames), 3):
                     filenames.append(None)
 
         # update external file information with cbc output, if necessary
@@ -392,8 +392,10 @@ class ModflowSfr2(Package):
         self.options = options
 
         # Dataset 1c.
+        # number of reaches, negative value is flag for unsat.
+        # flow beneath streams and/or transient routing
         self._nstrm = np.sign(nstrm) * len(
-            reach_data) if reach_data is not None else nstrm  # number of reaches, negative value is flag for unsat. flow beneath streams and/or transient routing
+            reach_data) if reach_data is not None else nstrm
         if segment_data is not None:
             # segment_data is a zero-d array
             if not isinstance(segment_data, dict):
@@ -401,7 +403,7 @@ class ModflowSfr2(Package):
                     segment_data = np.atleast_1d(segment_data)
                 nss = len(segment_data)
                 segment_data = {0: segment_data}
-            nss = len(segment_data[0])
+            nss = len(set(reach_data["iseg"]))
         else:
             pass
         # use atleast_1d for length since segment_data might be a 0D array
@@ -470,6 +472,7 @@ class ModflowSfr2(Package):
         # (depending on how SFR package was constructed)
         self.not_a_segment_values = [999999]
 
+        self._segments = None
         self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
@@ -480,14 +483,14 @@ class ModflowSfr2(Package):
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if np.diff(self.reach_data.iseg).max() != 0 and \
-                np.diff(self.segment_data[0].nseg).max() != 0 \
-                and np.diff(self.segment_data[0].outseg).max() != 0:
-            if len(self.segment_data[0]) == 1:
+                np.diff(self.all_segments.nseg).max() != 0 \
+                and np.diff(self.all_segments.outseg).max() != 0:
+            if len(self.all_segments) == 1:
                 self.segment_data[0]['nseg'] = 1
                 self.reach_data['iseg'] = 1
 
             consistent_seg_numbers = len(set(self.reach_data.iseg).difference(
-                set(self.segment_data[0].nseg))) == 0
+                set(self.all_segments.nseg))) == 0
             if not consistent_seg_numbers:
                 warnings.warn(
                     "Inconsistent segment numbers of reach_data and segment_data")
@@ -548,7 +551,7 @@ class ModflowSfr2(Package):
     @property
     def nss(self):
         # number of stream segments
-        return len(np.atleast_1d(self.segment_data[0]))
+        return len(set(self.reach_data["iseg"]))
 
     @property
     def nstrm(self):
@@ -580,9 +583,39 @@ class ModflowSfr2(Package):
         return ds5
 
     @property
+    def all_segments(self):
+        """
+        Method to get a list of all segments in the simulation,
+        since all segments do not have to be active in a given stress
+        period
+
+        returns:
+        -------
+        ra : (np.recarray)
+            recarray contains a single entry of segment data for each stream segment
+        """
+
+        ra = self.get_empty_segment_data(self.nss)
+        i = 0
+        for _, recarray in sorted(self.segment_data.items()):
+            if i == self.nss:
+                break
+            else:
+                for rec in recarray:
+                    if rec.nseg in ra.nseg:
+                        pass
+                    else:
+                        ra[i] = rec
+                        i += 1
+
+                    if i == self.nss:
+                        break
+        return ra
+
+    @property
     def graph(self):
         graph = dict(
-            zip(self.segment_data[0].nseg, self.segment_data[0].outseg))
+            zip(self.all_segments.nseg, self.all_segments.outseg))
         outlets = set(graph.values()).difference(
             set(graph.keys()))  # including lakes
         graph.update({o: 0 for o in outlets})
@@ -597,7 +630,7 @@ class ModflowSfr2(Package):
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
         nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
-        sd = self.segment_data[0]
+        sd = self.all_segments
         if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg,
                                                                    sd.outseg):
             self._set_paths()
@@ -732,7 +765,7 @@ class ModflowSfr2(Package):
         reachinput = False
         structured = model.structured
         if nper is None:
-            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = model.nper
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
         if not hasattr(f, 'read'):
@@ -770,12 +803,8 @@ class ModflowSfr2(Package):
             # set varibles to be passed to class args
             transroute = options.transroute
             reachinput = options.reachinput
-            if isinstance(options.tabfiles, np.ndarray):
-                tabfiles = True
-            else:
-                tabfiles = False
+            tabfiles = isinstance(options.tabfiles, np.ndarray)
             numtab = options.numtab if tabfiles else 0
-            maxval = options.maxval if tabfiles else 0
 
         # item 1c
         nstrm, nss, nsfrpar, nparseg, const, dleak, ipakcb, istcb2, \
@@ -834,6 +863,8 @@ class ModflowSfr2(Package):
                     current_aux[j] = dataset_6a[-1]
                     dataset_6a = dataset_6a[:-1]  # drop xyz
                     icalc = dataset_6a[1]
+                    # link dataset 6d, 6e by nseg of dataset_6a
+                    temp_nseg = dataset_6a[0]
                     dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
                                             isfropt,
                                             reachinput, per=i)
@@ -849,18 +880,18 @@ class ModflowSfr2(Package):
                         # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
                         if i == 0 or nstrm > 0 and not reachinput:  # or isfropt <= 1:
                             dataset_6d = []
-                            for k in range(2):
+                            for _ in range(2):
                                 dataset_6d.append(
                                     _get_dataset(f.readline(), [0.0] * 8))
                                 # dataset_6d.append(list(map(float, f.readline().strip().split())))
-                            current_6d[j + 1] = dataset_6d
+                            current_6d[temp_nseg] = dataset_6d
                     if icalc == 4:
                         nstrpts = dataset_6a[5]
                         dataset_6e = []
-                        for k in range(3):
+                        for _ in range(3):
                             dataset_6e.append(
                                 _get_dataset(f.readline(), [0.0] * nstrpts))
-                        current_6e[j + 1] = dataset_6e
+                        current_6e[temp_nseg] = dataset_6e
 
                 segment_data[i] = current
                 aux_variables[j + 1] = current_aux
@@ -990,7 +1021,6 @@ class ModflowSfr2(Package):
 
         # check against model bottom
         logfile = 'sfr_botm_conflicts.chk'
-        logtxt = ''
         mbotms = self.parent.dis.botm.array[-1, i, j]
         below = streambotms <= mbotms
         below_i = self.reach_data.i[below]
@@ -1063,8 +1093,8 @@ class ModflowSfr2(Package):
             if per > 0 > self.dataset_5[per][
                 0]:  # skip stress periods where seg data not defined
                 continue
-            segments = self.segment_data[per].nseg
-            outsegs = self.segment_data[per].outseg
+            # segments = self.segment_data[per].nseg
+            # outsegs = self.segment_data[per].outseg
             #
             # all_outsegs = np.vstack([segments, outsegs])
             # max_outseg = all_outsegs[-1].max()
@@ -1145,7 +1175,7 @@ class ModflowSfr2(Package):
     def reset_reaches(self):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
-        segment_data = self.segment_data[0]
+        segment_data = list(set(self.reach_data.iseg))# self.segment_data[0]
         # ireach = []
         # for iseg in segment_data.nseg:
         #    nreaches = np.sum(reach_data.iseg == iseg)
@@ -1154,7 +1184,7 @@ class ModflowSfr2(Package):
         reach_counts = dict(zip(range(1, len(reach_counts) + 1),
                                 reach_counts))
         ireach = [list(range(1, reach_counts[s] + 1))
-                  for s in segment_data.nseg]
+                  for s in segment_data]
         ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
@@ -1283,7 +1313,6 @@ class ModflowSfr2(Package):
 
     def get_variable_by_stress_period(self, varname):
 
-        import numpy.lib.recfunctions as rfn
         dtype = []
         all_data = np.zeros((self.nss, self.nper), dtype=float)
         for per in range(self.nper):
@@ -1299,7 +1328,7 @@ class ModflowSfr2(Package):
         isinlet = isseg & (self.reach_data.ireach == 1)
         rd = np.array(self.reach_data[isinlet])[
             ['k', 'i', 'j', 'iseg', 'ireach']]
-        ra = rfn.merge_arrays([rd, ra], flatten=True, usemask=False)
+        ra = recfunctions.merge_arrays([rd, ra], flatten=True, usemask=False)
         return ra.view(np.recarray)
 
     def repair_outsegs(self):
@@ -1315,12 +1344,11 @@ class ModflowSfr2(Package):
         the NWT solver in some situations.
 
         """
-
-        self.segment_data[0].sort(order='nseg')
-
+        segments = self.all_segments
+        segments.sort(order="nseg")
         # get renumbering info from per=0
-        nseg = self.segment_data[0].nseg
-        outseg = self.segment_data[0].outseg
+        nseg = segments.nseg
+        outseg = segments.outseg
 
         # explicitly fix any gaps in the numbering
         # (i.e. from removing segments)
@@ -1348,7 +1376,7 @@ class ModflowSfr2(Package):
         nexts = ns
         r2 = {0: 0}
         nextupsegs = nseg2[outseg2 == 0]
-        for i in range(ns):
+        for _ in range(ns):
             r2, nexts, nextupsegs = reassign_upsegs(r2, nexts, nextupsegs)
             if len(nextupsegs) == 0:
                 break
@@ -1362,6 +1390,8 @@ class ModflowSfr2(Package):
             self.segment_data[per]['outseg'] = [r.get(s, s) for s in
                                                 self.segment_data[per].outseg]
             self.segment_data[per].sort(order='nseg')
+            nseg = self.segment_data[per].nseg
+            outseg = self.segment_data[per].outseg
             inds = (outseg > 0) & (nseg > outseg)
             assert not np.any(inds)
             assert len(self.segment_data[per]['nseg']) == \
@@ -1435,7 +1465,7 @@ class ModflowSfr2(Package):
         # segment starts
         starts = dist[np.where(tmp.ireach.values == 1)[0]]
 
-        fig, ax = plt.subplots(figsize=(11, 8.5))
+        ax = plt.subplots(figsize=(11, 8.5))[-1]
         ax.plot(dist, tops, label='Model top')
         ax.plot(dist, tmp.strtop, label='Streambed top')
         ax.set_xlabel('Distance along path, in miles')
@@ -1595,8 +1625,8 @@ class ModflowSfr2(Package):
                 d[idx] += 1
         d = d[columns]
         formats = _fmt_string(d)[:-1] + '\n'
-        for i in range(len(d)):
-            f_sfr.write(formats.format(*d[i]))
+        for rec in d:
+            f_sfr.write(formats.format(*rec))
 
     def _write_segment_data(self, i, j, f_sfr):
         cols = ['nseg', 'icalc', 'outseg', 'iupseg', 'iprior', 'nstrpts',
@@ -1640,8 +1670,8 @@ class ModflowSfr2(Package):
                               'depth2', 'thts2', 'thti2',
                               'eps2', 'uhc2'])
 
-    def _write_6bc(self, i, j, f_sfr, cols=[]):
-
+    def _write_6bc(self, i, j, f_sfr, cols=()):
+        cols = list(cols)
         icalc = self.segment_data[i][j][1]
         seg_dat = np.array(self.segment_data[i])[cols][j]
         fmts = _fmt_string_list(seg_dat)
@@ -1701,9 +1731,6 @@ class ModflowSfr2(Package):
             pass
         f_sfr.write('\n')
 
-        # def plot(self,  **kwargs):
-        # return super(ModflowSfr2, self).plot(**kwargs)
-
     def write_file(self, filename=None):
         """
         Write the package file.
@@ -1759,11 +1786,12 @@ class ModflowSfr2(Package):
                     self._write_segment_data(i, j, f_sfr)
 
                     icalc = self.segment_data[i].icalc[j]
+                    nseg = self.segment_data[i].nseg[j]
                     if icalc == 2:
                         # or isfropt <= 1:
                         if i == 0 or self.nstrm > 0 and not self.reachinput:
                             for k in range(2):
-                                for d in self.channel_geometry_data[i][j + 1][
+                                for d in self.channel_geometry_data[i][nseg][
                                     k]:
                                     f_sfr.write('{:.2f} '.format(d))
                                 f_sfr.write('\n')
@@ -1771,7 +1799,7 @@ class ModflowSfr2(Package):
                     if icalc == 4:
                         # nstrpts = self.segment_data[i][j][5]
                         for k in range(3):
-                            for d in self.channel_flow_data[i][j + 1][k]:
+                            for d in self.channel_flow_data[i][nseg][k]:
                                 f_sfr.write('{:.2f} '.format(d))
                             f_sfr.write('\n')
             if self.tabfiles and i == 0:
@@ -1789,7 +1817,7 @@ class ModflowSfr2(Package):
 
     def export(self, f, **kwargs):
         if isinstance(f, str) and f.lower().endswith(".shp"):
-            from flopy.utils.geometry import Polygon, LineString
+            from flopy.utils.geometry import Polygon
             from flopy.export.shapefile_utils import recarray2shp
             verts = self.parent.sr.get_vertices(self.reach_data.i,
                                                 self.reach_data.j)
@@ -1948,6 +1976,7 @@ class check:
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
+        self.all_segments = sfrpackage.all_segments
         self.verbose = verbose
         self.level = level
         self.passed = []
@@ -2124,7 +2153,7 @@ class check:
 
         if len(txt) == 0 and np.any(inds):
             decreases = np.array(sd[inds])[['nseg', 'outseg']]
-            txt += 'Found segment numbers decreasing in the downstream direction.\n'.format(
+            txt += 'Found {} segment numbers decreasing in the downstream direction.\n'.format(
                 len(decreases))
             txt += 'MODFLOW will run but convergence may be slowed:\n'
             if self.level == 1:
@@ -2706,9 +2735,9 @@ def _check_numbers(n, numbers, level=1, datatype='reach'):
     return txt
 
 
-def _isnumeric(str):
+def _isnumeric(s):
     try:
-        float(str)
+        float(s)
         return True
     except:
         return False
@@ -2734,7 +2763,6 @@ def _pop_item(line):
 
 
 def _get_dataset(line, dataset):
-    tmp = []
     # interpret number supplied with decimal points as floats, rest as ints
     # this could be a bad idea (vs. explicitly formatting values for each dataset)
     for i, s in enumerate(line_parse(line)):
@@ -2952,13 +2980,11 @@ def _parse_6a(line, option):
 
     xyz = []
     # handle any aux variables at end of line
-    for i, s in enumerate(line):
+    for s in line:
         if s.lower() in option:
             xyz.append(s.lower())
 
     na = 0
-    nvalues = sum([_isnumeric(s) for s in line])
-    # line = _get_dataset(line, [0] * nvalues)
     nseg = int(_pop_item(line))
     icalc = int(_pop_item(line))
     outseg = int(_pop_item(line))
@@ -3005,8 +3031,6 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         a list of length 9 containing all variables for Data Set 6b
 
     """
-    na = 0
-    # line = [s for s in line.strip().split() if s.isnumeric()]
     nvalues = sum([_isnumeric(s) for s in line_parse(line)])
     line = _get_dataset(line, [0] * nvalues)
 
@@ -3065,8 +3089,9 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
 
 
-def find_path(graph, start, end=0, path=[]):
-    path = path + [start]
+def find_path(graph, start, end=0, path=()):
+
+    path = list(path) + [start]
     if start == end:
         return path
     if start not in graph:
