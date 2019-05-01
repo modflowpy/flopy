@@ -934,24 +934,24 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         if self._data_storage is not None and len(self._data_storage) > 0:
             if key is None:
                 if 'array' in kwargs:
-                    output = []
+                    output = {}
                     sim_time = self._data_dimensions.package_dim.model_dim[
                         0].simulation_time
                     num_sp = sim_time.get_num_stress_periods()
                     for sp in range(0, num_sp):
                         if sp in self._data_storage:
                             self.get_data_prep(sp)
-                            output.append(super(MFTransientList, self).get_data(
-                                apply_mult=apply_mult))
+                            output[sp] = super(MFTransientList, self).get_data(
+                                apply_mult=apply_mult)
                         else:
-                            output.append(None)
+                            output[sp] = None
                     return output
                 else:
-                    output = []
+                    output = {}
                     for key in self._data_storage.keys():
                         self.get_data_prep(key)
-                        output.append(super(MFTransientList, self).get_data(
-                            apply_mult=apply_mult))
+                        output[key] = super(MFTransientList, self).get_data(
+                            apply_mult=apply_mult)
                     return output
             self.get_data_prep(key)
             return super(MFTransientList, self).get_data(apply_mult=apply_mult)
