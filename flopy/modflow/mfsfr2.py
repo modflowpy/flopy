@@ -472,6 +472,7 @@ class ModflowSfr2(Package):
         # (depending on how SFR package was constructed)
         self.not_a_segment_values = [999999]
 
+        self._segments = None
         self.segment_data = {0: self.get_empty_segment_data(nss)}
         if segment_data is not None:
             for i in segment_data.keys():
@@ -482,14 +483,14 @@ class ModflowSfr2(Package):
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if np.diff(self.reach_data.iseg).max() != 0 and \
-                np.diff(self.segment_data[0].nseg).max() != 0 \
-                and np.diff(self.segment_data[0].outseg).max() != 0:
-            if len(self.segment_data[0]) == 1:
+                np.diff(self.all_segments.nseg).max() != 0 \
+                and np.diff(self.all_segments.outseg).max() != 0:
+            if len(self.all_segments) == 1:
                 self.segment_data[0]['nseg'] = 1
                 self.reach_data['iseg'] = 1
 
             consistent_seg_numbers = len(set(self.reach_data.iseg).difference(
-                set(self.segment_data[0].nseg))) == 0
+                set(self.all_segments.nseg))) == 0
             if not consistent_seg_numbers:
                 warnings.warn(
                     "Inconsistent segment numbers of reach_data and segment_data")
@@ -582,9 +583,39 @@ class ModflowSfr2(Package):
         return ds5
 
     @property
+    def all_segments(self):
+        """
+        Method to get a list of all segments in the simulation,
+        since all segments do not have to be active in a given stress
+        period
+
+        returns:
+        -------
+        ra : (np.recarray)
+            recarray contains a single entry of segment data for each stream segment
+        """
+
+        ra = self.get_empty_segment_data(self.nss)
+        i = 0
+        for _, recarray in sorted(self.segment_data.items()):
+            if i == self.nss:
+                break
+            else:
+                for rec in recarray:
+                    if rec.nseg in ra.nseg:
+                        pass
+                    else:
+                        ra[i] = rec
+                        i += 1
+
+                    if i == self.nss:
+                        break
+        return ra
+
+    @property
     def graph(self):
         graph = dict(
-            zip(self.segment_data[0].nseg, self.segment_data[0].outseg))
+            zip(self.all_segments.nseg, self.all_segments.outseg))
         outlets = set(graph.values()).difference(
             set(graph.keys()))  # including lakes
         graph.update({o: 0 for o in outlets})
@@ -599,7 +630,7 @@ class ModflowSfr2(Package):
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
         nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
-        sd = self.segment_data[0]
+        sd = self.all_segments
         if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg,
                                                                    sd.outseg):
             self._set_paths()
@@ -1144,7 +1175,7 @@ class ModflowSfr2(Package):
     def reset_reaches(self):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
-        segment_data = self.segment_data[0]
+        segment_data = list(set(self.reach_data.iseg))# self.segment_data[0]
         # ireach = []
         # for iseg in segment_data.nseg:
         #    nreaches = np.sum(reach_data.iseg == iseg)
@@ -1153,7 +1184,7 @@ class ModflowSfr2(Package):
         reach_counts = dict(zip(range(1, len(reach_counts) + 1),
                                 reach_counts))
         ireach = [list(range(1, reach_counts[s] + 1))
-                  for s in segment_data.nseg]
+                  for s in segment_data]
         ireach = np.concatenate(ireach)
         self.reach_data['ireach'] = ireach
 
@@ -1313,12 +1344,11 @@ class ModflowSfr2(Package):
         the NWT solver in some situations.
 
         """
-
-        self.segment_data[0].sort(order='nseg')
-
+        segments = self.all_segments
+        segments.sort(order="nseg")
         # get renumbering info from per=0
-        nseg = self.segment_data[0].nseg
-        outseg = self.segment_data[0].outseg
+        nseg = segments.nseg
+        outseg = segments.outseg
 
         # explicitly fix any gaps in the numbering
         # (i.e. from removing segments)
@@ -1360,6 +1390,8 @@ class ModflowSfr2(Package):
             self.segment_data[per]['outseg'] = [r.get(s, s) for s in
                                                 self.segment_data[per].outseg]
             self.segment_data[per].sort(order='nseg')
+            nseg = self.segment_data[per].nseg
+            outseg = self.segment_data[per].outseg
             inds = (outseg > 0) & (nseg > outseg)
             assert not np.any(inds)
             assert len(self.segment_data[per]['nseg']) == \
@@ -1944,6 +1976,7 @@ class check:
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
+        self.all_segments = sfrpackage.all_segments
         self.verbose = verbose
         self.level = level
         self.passed = []
