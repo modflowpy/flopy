@@ -442,6 +442,9 @@ def test021_twri():
                                 stress_period_data=stress_period_data)
 
     # build stress_period_data for drn package
+    conc = np.ones((15, 15), dtype=np.float) * 35.
+    auxdata = {0: [6, conc]}
+
     stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1, 10), drn_heads):
@@ -450,7 +453,11 @@ def test021_twri():
                                 save_flows=True, maxbound=9,
                                 stress_period_data=stress_period_data)
     rch_package = ModflowGwfrcha(model, readasarrays=True, fixed_cell=True,
-                                 recharge={0: 0.00000003})
+                                 recharge={0: 0.00000003},
+                                 auxiliary=[('iface', 'conc')], aux=auxdata)
+
+    aux = rch_package.aux.get_data()
+
 
     stress_period_data = []
     layers = [2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -906,11 +913,18 @@ def test004_bcfss():
                                                 'DIGITS', 2, 'GENERAL')],
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
                               printrecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
-
+    aux = {0: [[50.0], [1.3]], 1: [[200.0], [1.5]]}
+    # aux = {0: [[100.0], [2.3]]}
     rch_package = ModflowGwfrcha(model, readasarrays=True, save_flows=True,
                                  auxiliary=[('var1', 'var2')],
-                                 recharge={0: 0.004}, aux={
-            0: [[100.0], [2.3]]})  # *** test if aux works ***
+                                 recharge={0: 0.004}, aux=aux)  # *** test if aux works ***
+
+    # aux tests
+    aux_out = rch_package.aux.get_data()
+    assert(aux_out[0][0][0,0] == 50.)
+    assert(aux_out[0][1][0,0] == 1.3)
+    assert(aux_out[1][0][0,0] == 200.0)
+    assert(aux_out[1][1][0,0] == 1.5)
 
     riv_period = {}
     riv_period_array = []

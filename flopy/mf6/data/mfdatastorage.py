@@ -690,9 +690,10 @@ class DataStorage(object):
                 # handle special case of aux variables in an array
                 self.layered = True
                 aux_var_names = data_dim.package_dim.get_aux_variables()
-                if self._calc_data_size(data) == len(aux_var_names[0]) - 1:
+                if len(data) == len(aux_var_names[0]) - 1:
                     for layer, aux_var_data in enumerate(data):
-                        if layer > 0:
+                        if layer > 0 and \
+                                layer >= self.layer_storage.get_total_size():
                             self.add_layer()
                         self._set_array(aux_var_data, [layer], multiplier, key,
                                         autofill)
@@ -1552,10 +1553,12 @@ class DataStorage(object):
         dimensions = self.get_data_dimensions(None)
         if dimensions[0] < 0:
             return None
+        all_none = True
         full_data = np.full(dimensions, np.nan,
-                            self.data_dimensions.structure.get_datum_type(True)
-                            )
-
+                            self.data_dimensions.structure.get_datum_type(True))
+        is_aux = self.data_dimensions.structure.name == 'aux'
+        if is_aux:
+            aux_data = []
         if not self.layered:
             layers_to_process = [0]
         else:
@@ -1571,11 +1574,15 @@ class DataStorage(object):
 
             if self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_array:
-                if len(self.layer_storage[layer].internal_data) > 0 and \
-                       self.layer_storage[layer].internal_data[0] is None:
-                    return None
-                if self.layer_storage.get_total_size() == 1 or \
-                        not self.layered:
+                if self.layer_storage[layer].internal_data is None or \
+                        len(self.layer_storage[layer].internal_data) > 0 and \
+                        self.layer_storage[layer].internal_data[0] is None:
+                    if is_aux:
+                        full_data = None
+                    else:
+                        return None
+                elif self.layer_storage.get_total_size() == 1 or \
+                        not self.layered or not self._has_layer_dim():
                     full_data = self.layer_storage[layer].internal_data * mult
                 else:
                     full_data[layer] = \
@@ -1583,7 +1590,7 @@ class DataStorage(object):
             elif self.layer_storage[layer].data_storage_type == \
                     DataStorageType.internal_constant:
                 if self.layer_storage.get_total_size() == 1 or \
-                        not self.layered:
+                        not self.layered or not self._has_layer_dim():
                     full_data = self._fill_const_layer(layer) * mult
                 else:
                     full_data[layer] = self._fill_const_layer(layer) * mult
@@ -1613,7 +1620,20 @@ class DataStorage(object):
                     full_data = data_out
                 else:
                     full_data[layer] = data_out
-        return full_data
+            if is_aux:
+                if full_data is not None:
+                    all_none = False
+                aux_data.append(full_data)
+                full_data = np.full(dimensions, np.nan,
+                                    self.data_dimensions.structure.get_datum_type(
+                                        True))
+        if is_aux:
+            if all_none:
+                return None
+            else:
+                return aux_data
+        else:
+            return full_data
 
     def _resolve_layer(self, layer):
         if layer is None:
@@ -1974,12 +1994,17 @@ class DataStorage(object):
 
     def get_data_dimensions(self, layer):
         data_dimensions = self.data_dimensions.get_data_shape()[0]
-        if layer is not None and self.layer_storage.get_total_size() > 1:
+        if layer is not None and self.layer_storage.get_total_size() > 1 and \
+                self._has_layer_dim():
             # remove all "layer" dimensions from the list
             layer_dims = self.data_dimensions.structure.\
                 data_item_structures[0].layer_dims
             data_dimensions = data_dimensions[len(layer_dims):]
         return data_dimensions
+
+    def _has_layer_dim(self):
+        return ('nlay' in self.data_dimensions.structure.shape or 'nodes'
+                 in self.data_dimensions.structure.shape)
 
     def _store_prep(self, layer, multiplier):
         if not (layer is None or self.layer_storage.in_shape(layer)):

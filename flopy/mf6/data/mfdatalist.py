@@ -947,11 +947,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                             output.append(None)
                     return output
                 else:
-                    output = []
+                    output = {}
                     for key in self._data_storage.keys():
                         self.get_data_prep(key)
-                        output.append(super(MFTransientList, self).get_data(
-                            apply_mult=apply_mult))
+                        output[key] = super(MFTransientList, self).get_data(
+                            apply_mult=apply_mult)
                     return output
             self.get_data_prep(key)
             return super(MFTransientList, self).get_data(apply_mult=apply_mult)

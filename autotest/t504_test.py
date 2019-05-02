@@ -783,7 +783,7 @@ def test036_twrihfb():
 
     rch = sim.simulation_data.mfdata[(model_name, 'rcha', 'period', 'recharge')]
     rch_data = rch.get_data()
-    assert(rch_data[0][5][1] == 0.00000003)
+    assert(rch_data[0][5, 1] == 0.00000003)
 
     # write simulation again
     sim.simulation_data.mfpath.set_sim_path(save_folder)

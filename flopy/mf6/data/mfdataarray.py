@@ -520,6 +520,14 @@ class MFArray(MFMultiDimVar):
             self._keyword, pre_data_comments=None)
         return return_val
 
+    def _is_layered_aux(self):
+        # determine if this is the special aux variable case
+        if self.structure.name.lower() == 'aux' and \
+                self._get_storage_obj().layered:
+            return True
+        else:
+            return False
+
     def get_file_entry(self, layer=None,
                        ext_file_action=ExtFileAction.copy_relative_paths):
         if isinstance(layer, int):
@@ -530,11 +538,8 @@ class MFArray(MFMultiDimVar):
                 or not data_storage.has_data():
             return ''
 
-        # determine if this is the special aux variable case
-        if self.structure.name.lower() == 'aux' and data_storage.layered:
-            layered_aux = True
-        else:
-            layered_aux = False
+        layered_aux = self._is_layered_aux()
+
         # prepare indent
         indent = self._simulation_data.indent_string
         shape_ml = MultiList(shape=self._layer_shape)
@@ -962,29 +967,48 @@ class MFTransientArray(MFArray, MFTransient):
                 sim_time = self._data_dimensions.package_dim.model_dim[
                     0].simulation_time
                 num_sp = sim_time.get_num_stress_periods()
-                data = None
-                for sp in range(0, num_sp):
-                    if sp in self._data_storage:
-                        self.get_data_prep(sp)
-                        data = super(MFTransientArray, self).get_data(
-                            apply_mult=apply_mult, **kwargs)
-                        data = np.expand_dims(data, 0)
-                    else:
-                        if data is None:
-                            # get any data
-                            self.get_data_prep(self._data_storage.key()[0])
+                if 'array' in kwargs:
+                    data = None
+                    for sp in range(0, num_sp):
+                        if sp in self._data_storage:
+                            self.get_data_prep(sp)
                             data = super(MFTransientArray, self).get_data(
                                 apply_mult=apply_mult, **kwargs)
                             data = np.expand_dims(data, 0)
-                        if self.structure.type == DatumType.integer:
-                            data = np.full_like(data, 0)
                         else:
-                            data = np.full_like(data, 0.0)
-                    if output is None:
-                        output = data
-                    else:
-                        output = np.concatenate((output, data))
-                return output
+                            if data is None:
+                                # get any data
+                                self.get_data_prep(self._data_storage.key()[0])
+                                data = super(MFTransientArray, self).get_data(
+                                    apply_mult=apply_mult, **kwargs)
+                                data = np.expand_dims(data, 0)
+                            if self.structure.type == DatumType.integer:
+                                data = np.full_like(data, 0)
+                            else:
+                                data = np.full_like(data, 0.0)
+                        if output is None:
+                            output = data
+                        else:
+                            output = np.concatenate((output, data))
+                    return output
+                else:
+                    for sp in range(0, num_sp):
+                        data = None
+                        if sp in self._data_storage:
+                            self.get_data_prep(sp)
+                            data = super(MFTransientArray, self).get_data(
+                                apply_mult=apply_mult, **kwargs)
+                        if output is None:
+                            if 'array' in kwargs:
+                                output = [data]
+                            else:
+                                output = {sp: data}
+                        else:
+                            if 'array' in kwargs:
+                                output.append(data)
+                            else:
+                                output[sp] = data
+                    return output
             else:
                 self.get_data_prep(layer)
                 return super(MFTransientArray, self).get_data(
