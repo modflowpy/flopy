@@ -162,8 +162,8 @@ class MfList(DataInterface, DataListInterface):
             other_len = other_data.shape[0]
             self_len = self_data.shape[0]
 
-            if (other_len == 0 and self_len == 0) or\
-               (kper not in self_kpers and kper not in other_kpers):
+            if (other_len == 0 and self_len == 0) or \
+                    (kper not in self_kpers and kper not in other_kpers):
                 continue
             elif self_len == 0:
                 new_dict[kper] = other_data
@@ -173,7 +173,7 @@ class MfList(DataInterface, DataListInterface):
                 new_len = other_data.shape[0] + self_data.shape[0]
                 new_data = np.recarray(new_len, dtype=self.dtype)
                 new_data[:self_len] = self_data
-                new_data[self_len:self_len+other_len] = other_data
+                new_data[self_len:self_len + other_len] = other_data
                 new_dict[kper] = new_data
 
 
@@ -324,8 +324,8 @@ class MfList(DataInterface, DataListInterface):
                         raise Exception("MfList error: casting list " + \
                                         "to ndarray: " + str(e))
 
-                #super hack - sick of recarrays already
-                #if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
+                # super hack - sick of recarrays already
+                # if (isinstance(d,np.ndarray) and len(d.dtype.fields) > 1):
                 #    d = d.view(np.recarray)
 
                 if isinstance(d, np.recarray):
@@ -602,14 +602,11 @@ class MfList(DataInterface, DataListInterface):
             elif (kper in kpers):
                 kper_vtype = self.__vtype[kper]
 
-            if self._model.array_free_format and self._model.external_path is\
-                    not None:
-
+            if self._model.array_free_format and self._model.external_path is not None:
                 # py_filepath = ''
                 # py_filepath = os.path.join(py_filepath,
                 #                            self._model.external_path)
-                filename = self.package.name[0] + \
-                            "_{0:04d}.dat".format(kper)
+                filename = self.package.name[0] + "_{0:04d}.dat".format(kper)
                 filenames.append(filename)
         return filenames
 
@@ -663,12 +660,12 @@ class MfList(DataInterface, DataListInterface):
                 kper_vtype = int
 
             f.write(" {0:9d} {1:9d} # stress period {2:d}\n"
-                    .format(itmp, 0, kper+1))
+                    .format(itmp, 0, kper + 1))
 
             isExternal = False
             if self._model.array_free_format and \
-                            self._model.external_path is not None and \
-                            forceInternal is False:
+                    self._model.external_path is not None and \
+                    forceInternal is False:
                 isExternal = True
             if self.__binary:
                 isExternal = True
@@ -686,7 +683,7 @@ class MfList(DataInterface, DataListInterface):
                     if self._model.external_path is not None:
                         model_filepath = os.path.join(
                             self._model.external_path,
-                                                      filename)
+                            filename)
                     self.__tofile(py_filepath, kper_data)
                     kper_vtype = str
                     kper_data = model_filepath
@@ -902,7 +899,7 @@ class MfList(DataInterface, DataListInterface):
         """
 
         from flopy.plot import PlotUtilities
-        axes = PlotUtilities._plot_mflist_helper(self, key=key,names=names,
+        axes = PlotUtilities._plot_mflist_helper(self, key=key, names=names,
                                                  kper=kper, filename_base=filename_base,
                                                  file_extension=file_extension, mflay=mflay,
                                                  **kwargs)
@@ -1042,12 +1039,9 @@ class MfList(DataInterface, DataListInterface):
 
         for name, arr in arrays.items():
             if unstructured:
-                cnt = np.zeros((self._model.nlay * self._model.ncpl,),
-                               dtype=np.float)
+                cnt = np.zeros((self._model.nlay * self._model.ncpl,), dtype=np.float)
             else:
-                cnt = np.zeros((self._model.nlay, self._model.nrow,
-                                self._model.ncol),
-                                dtype=np.float)
+                cnt = np.zeros((self._model.nlay, self._model.nrow, self._model.ncol), dtype=np.float)
             #print(name,kper)
             for rec in sarr:
                 if unstructured:
