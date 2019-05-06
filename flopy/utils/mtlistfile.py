@@ -45,7 +45,9 @@ class MtListBudget(object):
             self.f = open(file_name, 'r', encoding='ascii', errors='replace')
 
         self.tssp_lines = 0
-        self.tkstp_overflow = 100000  # in case transport step number goes above 99999 which might be outputted as *****
+        # in case transport step number goes above 99999
+        # which might be outputted as *****
+        self.tkstp_overflow = 100000
 
         # Assign the budgetkey, which should have been overridden
         self.gw_budget_key = ">>>for component no."
@@ -194,9 +196,12 @@ class MtListBudget(object):
             msg = 'MtListBudget._diff: pandas not available'
             raise ImportError(msg)
 
-        out_cols = [c for c in df.columns if "_out" in c and not c.startswith("net_")]
-        in_cols = [c for c in df.columns if "_in" in c and not c.startswith("net_")]
-        add_cols = [c for c in df.columns if c not in out_cols + in_cols + ["totim"]]
+        out_cols = [c for c in df.columns
+                    if "_out" in c and not c.startswith("net_")]
+        in_cols = [c for c in df.columns
+                   if "_in" in c and not c.startswith("net_")]
+        add_cols = [c for c in df.columns
+                    if c not in out_cols + in_cols + ["totim"]]
         out_base = [c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
@@ -218,7 +223,8 @@ class MtListBudget(object):
                 idata = 0.0
             new[col] = idata - odata
 
-        new_df = pd.concat([pd.DataFrame(new, index=df.index), df.loc[:, add_cols]], axis=1)
+        new_df = pd.concat([pd.DataFrame(new, index=df.index),
+                            df.loc[:, add_cols]], axis=1)
         return new_df
 
 
@@ -303,7 +309,8 @@ class MtListBudget(object):
             try:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
-                raise Exception("error parsing GW items on line {0}: {1}".format(self.lcount, str(e)))
+                raise Exception("error parsing GW items "
+                                "on line {0}: {1}".format(self.lcount, str(e)))
             self._add_to_gw_data(item, ival, oval, comp)
 
     def _parse_gw_line(self, line):
@@ -313,7 +320,8 @@ class MtListBudget(object):
         idx_oval = 1
         if "TOTAL" in item.upper():
             idx_oval += 1  # to deal with the units in the total string
-        if len(raw[1].split()) < 2:  # net (in-out) and discrepancy will only have 1 entry
+        # net (in-out) and discrepancy will only have 1 entry
+        if len(raw[1].split()) < 2:
             ival = float(raw[1])
             oval = None
         else:
