@@ -193,12 +193,14 @@ class MfList(DataInterface, DataListInterface):
         if not isinstance(fields, list):
             fields = [fields]
         names = [n for n in self.dtype.names if n not in fields]
-        dtype = np.dtype([(k, d) for k, d in self.dtype.descr if k not in fields])
+        dtype = np.dtype(
+            [(k, d) for k, d in self.dtype.descr if k not in fields])
         spd = {}
         for k, v in self.data.items():
             # because np 1.9 doesn't support indexing by list of columns
             newarr = np.array([self.data[k][n] for n in names]).transpose()
-            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(np.recarray)
+            newarr = np.array(list(map(tuple, newarr)), dtype=dtype).view(
+                np.recarray)
             for n in dtype.names:
                 newarr[n] = self.data[k][n]
             spd[k] = newarr
@@ -465,7 +467,8 @@ class MfList(DataInterface, DataListInterface):
                 dfg = dfi.groupby(names)
                 count = dfg[varnames[0]].count().rename('n')
                 if (count > 1).values.any():
-                    print("Duplicated list entry locations aggregated for kper {}".format(per))
+                    print("Duplicated list entry locations aggregated "
+                          "for kper {}".format(per))
                     for kij in count[count > 1].index.values:
                         print("    (k,i,j) {}".format(kij))
                 dfi = dfg.sum()  # aggregate
@@ -477,7 +480,8 @@ class MfList(DataInterface, DataListInterface):
             for var in varnames:
                 diffcols = list([n for n in df.columns if var in n])
                 diff = df[diffcols].fillna(0).diff(axis=1)
-                diff['{}0'.format(var)] = 1  # always return the first stress period
+                diff['{}0'.format(
+                    var)] = 1  # always return the first stress period
                 changed = diff.sum(axis=0) != 0
                 keep.append(df.loc[:, changed.index[changed]])
             df = pd.concat(keep, axis=1)
@@ -602,7 +606,8 @@ class MfList(DataInterface, DataListInterface):
             elif (kper in kpers):
                 kper_vtype = self.__vtype[kper]
 
-            if self._model.array_free_format and self._model.external_path is not None:
+            if self._model.array_free_format and self._model.external_path is\
+                    not None:
                 # py_filepath = ''
                 # py_filepath = os.path.join(py_filepath,
                 #                            self._model.external_path)
@@ -759,11 +764,8 @@ class MfList(DataInterface, DataListInterface):
                                str(kper) + ':\n'
                     for idx in out_idx:
                         d = data[idx]
-                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(d['k']
-                                                                     + 1, d[
-                                                                         'i'] + 1,
-                                                                     d[
-                                                                         'j'] + 1)
+                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(
+                            d['k'] + 1, d['i'] + 1, d['j'] + 1)
                     warnings.warn(warn_str)
 
     def __find_last_kper(self, kper):
@@ -900,8 +902,10 @@ class MfList(DataInterface, DataListInterface):
 
         from flopy.plot import PlotUtilities
         axes = PlotUtilities._plot_mflist_helper(self, key=key, names=names,
-                                                 kper=kper, filename_base=filename_base,
-                                                 file_extension=file_extension, mflay=mflay,
+                                                 kper=kper,
+                                                 filename_base=filename_base,
+                                                 file_extension=file_extension,
+                                                 mflay=mflay,
                                                  **kwargs)
 
         return axes
@@ -1039,9 +1043,12 @@ class MfList(DataInterface, DataListInterface):
 
         for name, arr in arrays.items():
             if unstructured:
-                cnt = np.zeros((self._model.nlay * self._model.ncpl,), dtype=np.float)
+                cnt = np.zeros((self._model.nlay * self._model.ncpl,),
+                               dtype=np.float)
             else:
-                cnt = np.zeros((self._model.nlay, self._model.nrow, self._model.ncol), dtype=np.float)
+                cnt = np.zeros(
+                    (self._model.nlay, self._model.nrow, self._model.ncol),
+                    dtype=np.float)
             #print(name,kper)
             for rec in sarr:
                 if unstructured:

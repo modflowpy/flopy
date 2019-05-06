@@ -716,7 +716,8 @@ def test_mflist():
     # test get_dataframe() on mflist obj
     sp_data3 = {0: [1, 1, 1, 1.0],
                 1: [[1, 1, 3, 3.0], [1, 1, 2, 6.0]],
-                2: [[1, 2, 4, 8.0], [1, 2, 3, 4.0], [1, 2, 2, 4.0], [1, 1, 3, 3.0], [1, 1, 2, 6.0]]}
+                2: [[1, 2, 4, 8.0], [1, 2, 3, 4.0], [1, 2, 2, 4.0], 
+                    [1, 1, 3, 3.0], [1, 1, 2, 6.0]]}
     wel4 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data3)
     df = wel4.stress_period_data.get_dataframe()
     assert df['flux0'].sum() == 1.
@@ -724,13 +725,18 @@ def test_mflist():
     assert df['flux2'].sum() == 25.
     sp_data4 = {0: [1, 1, 1, 1.0],
                 1: [[1, 1, 3, 3.0], [1, 1, 3, 6.0]],
-                2: [[1, 2, 4, 8.0], [1, 2, 4, 4.0], [1, 2, 4, 4.0], [1, 1, 3, 3.0], [1, 1, 3, 6.0]]}
+                2: [[1, 2, 4, 8.0], [1, 2, 4, 4.0], [1, 2, 4, 4.0], 
+                    [1, 1, 3, 3.0], [1, 1, 3, 6.0]]}
     wel5 = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data4)
     df = wel5.stress_period_data.get_dataframe()
     assert df['flux0'].sum() == 1.
     assert df['flux1'].sum() == 9.
-    assert df.loc[df.apply(lambda x: x.k == 1 and x.i == 1 and x.j == 3, axis=1), 'flux2'].values == 9.0
-    assert df.loc[df.apply(lambda x: x.k == 1 and x.i == 2 and x.j == 4, axis=1), 'flux2'].values == 16.0
+    assert df.loc[
+               df.apply(lambda x: x.k == 1 and x.i == 1 and x.j == 3, axis=1),
+               'flux2'].values == 9.0
+    assert df.loc[
+               df.apply(lambda x: x.k == 1 and x.i == 2 and x.j == 4, axis=1), 
+               'flux2'].values == 16.0
 
 
 
