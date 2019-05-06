@@ -79,8 +79,9 @@ class MtListBudget(object):
         Returns
         -------
         df_gw,df_sw : pandas.DataFrame
-            a dataframe for the groundwater mass and (optionally) surface-water mass budget.
-            if the SFT process is not used, only one dataframe is returned.
+            a dataframe for the groundwater mass and
+            (optionally) surface-water mass budget.
+            If the SFT process is not used, only one dataframe is returned.
         """
         try:
             import pandas as pd
@@ -102,8 +103,9 @@ class MtListBudget(object):
                             self._parse_gw(f, line)
                         except Exception as e:
                             warnings.warn(
-                                "error parsing GW mass budget starting on line {0}: {1} ".
-                                    format(self.lcount, str(e)))
+                                "error parsing GW mass budget "
+                                "starting on line {0}: {1} ".format(
+                                    self.lcount, str(e)))
                             break
                     else:
                         self._parse_gw(f, line)
@@ -113,8 +115,9 @@ class MtListBudget(object):
                             self._parse_sw(f, line)
                         except Exception as e:
                             warnings.warn(
-                                "error parsing SW mass budget starting on line {0}: {1} ".
-                                    format(self.lcount, str(e)))
+                                "error parsing SW mass budget"
+                                " starting on line {0}: {1} ".format(
+                                    self.lcount, str(e)))
                             break
                     else:
                         self._parse_sw(f, line)
@@ -145,8 +148,8 @@ class MtListBudget(object):
             df_gw = self._diff(df_gw)
 
         if start_datetime is not None:
-            dts = pd.to_datetime(start_datetime) + pd.to_timedelta(df_gw.totim,
-                                                                   unit=time_unit)
+            dts = pd.to_datetime(start_datetime) +\
+                  pd.to_timedelta(df_gw.totim, unit=time_unit)
             df_gw.index = dts
         else:
             df_gw.index = df_gw.totim
