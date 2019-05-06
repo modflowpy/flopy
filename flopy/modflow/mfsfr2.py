@@ -1343,7 +1343,11 @@ class ModflowSfr2(Package):
         increases in the downstream direction. This may speed convergence of
         the NWT solver in some situations.
 
+        Returns
+        -------
+        r : dictionary mapping old segment numbers to new
         """
+
         segments = self.all_segments
         segments.sort(order="nseg")
         # get renumbering info from per=0
@@ -1418,6 +1422,7 @@ class ModflowSfr2(Package):
         self.channel_geometry_data = renumber_channel_data(
             self.channel_geometry_data)
         self.channel_flow_data = renumber_channel_data(self.channel_flow_data)
+        return r
 
     def plot_path(self, start_seg=None, end_seg=0, plot_segment_lines=True):
         """
