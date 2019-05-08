@@ -213,7 +213,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -246,13 +246,29 @@ class StructuredGrid(Grid):
 
         xcomp = x > xe
         if np.all(xcomp) or not np.any(xcomp):
-            raise Exception('x, y point given is outside of the model area')
-        col = np.where(xcomp)[0][-1]
+            if forgive:
+                if np.all(xcomp):
+                    col = self.ncol - 1
+                elif not np.any(xcomp):
+                    col = 0
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            col = np.where(xcomp)[0][-1]
 
         ycomp = y < ye
         if np.all(ycomp) or not np.any(ycomp):
-            raise Exception('x, y point given is outside of the model area')
-        row = np.where(ycomp)[0][-1]
+            if forgive:
+                if np.all(ycomp):
+                    row = self.nrow - 1
+                elif not np.any(ycomp):
+                    row = 0
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            row = np.where(ycomp)[0][-1]
 
         return row, col
 
