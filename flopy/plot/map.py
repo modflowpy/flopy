@@ -483,7 +483,7 @@ class PlotMapView(object):
             for k in range(nlay):
                 plotarray[k] = pa.copy()
         else:
-            plotarray[list(idx)] = 1
+            plotarray[tuple(idx)] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
