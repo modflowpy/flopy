@@ -16,7 +16,6 @@ from ..datbase import DataInterface, DataListInterface, DataType
 
 try:
     from numpy.lib import NumpyVersion
-
     numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
 except ImportError:
     numpy114 = False
@@ -176,6 +175,7 @@ class MfList(DataInterface, DataListInterface):
                 new_data[:self_len] = self_data
                 new_data[self_len:self_len + other_len] = other_data
                 new_dict[kper] = new_data
+
 
         return new_dict
 
@@ -463,7 +463,15 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                dfi = dfi.set_index(names)
+                # dfi = dfi.set_index(names)
+                dfg = dfi.groupby(names)
+                count = dfg[varnames[0]].count().rename('n')
+                if (count > 1).values.any():
+                    print("Duplicated list entry locations aggregated "
+                          "for kper {}".format(per))
+                    for kij in count[count > 1].index.values:
+                        print("    (k,i,j) {}".format(kij))
+                dfi = dfg.sum()  # aggregate
                 dfi.columns = list(['{}{}'.format(c, per) for c in varnames])
             dfs.append(dfi)
         df = pd.concat(dfs, axis=1)
@@ -471,7 +479,7 @@ class MfList(DataInterface, DataListInterface):
             keep = []
             for var in varnames:
                 diffcols = list([n for n in df.columns if var in n])
-                diff = df[diffcols].diff(axis=1)
+                diff = df[diffcols].fillna(0).diff(axis=1)
                 diff['{}0'.format(
                     var)] = 1  # always return the first stress period
                 changed = diff.sum(axis=0) != 0
@@ -598,13 +606,12 @@ class MfList(DataInterface, DataListInterface):
             elif (kper in kpers):
                 kper_vtype = self.__vtype[kper]
 
-            if self._model.array_free_format and self._model.external_path is \
+            if self._model.array_free_format and self._model.external_path is\
                     not None:
                 # py_filepath = ''
                 # py_filepath = os.path.join(py_filepath,
                 #                            self._model.external_path)
-                filename = self.package.name[0] + \
-                           "_{0:04d}.dat".format(kper)
+                filename = self.package.name[0] + "_{0:04d}.dat".format(kper)
                 filenames.append(filename)
         return filenames
 
@@ -757,11 +764,8 @@ class MfList(DataInterface, DataListInterface):
                                str(kper) + ':\n'
                     for idx in out_idx:
                         d = data[idx]
-                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(d['k']
-                                                                     + 1, d[
-                                                                         'i'] + 1,
-                                                                     d[
-                                                                         'j'] + 1)
+                        warn_str += " {0:9d} {1:9d} {2:9d}\n".format(
+                            d['k'] + 1, d['i'] + 1, d['j'] + 1)
                     warnings.warn(warn_str)
 
     def __find_last_kper(self, kper):
@@ -995,7 +999,7 @@ class MfList(DataInterface, DataListInterface):
             raise NotImplementedError()
 
         if 'node' in self.dtype.names:
-            if 'i' not in self.dtype.names and \
+            if 'i' not in self.dtype.names and\
                     "j" not in self.dtype.names:
                 i0 = 1
                 unstructured = True
@@ -1042,10 +1046,10 @@ class MfList(DataInterface, DataListInterface):
                 cnt = np.zeros((self._model.nlay * self._model.ncpl,),
                                dtype=np.float)
             else:
-                cnt = np.zeros((self._model.nlay, self._model.nrow,
-                                self._model.ncol),
-                               dtype=np.float)
-            # print(name,kper)
+                cnt = np.zeros(
+                    (self._model.nlay, self._model.nrow, self._model.ncol),
+                    dtype=np.float)
+            #print(name,kper)
             for rec in sarr:
                 if unstructured:
                     arr[rec['node']] += rec[name]
