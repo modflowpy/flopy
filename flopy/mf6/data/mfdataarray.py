@@ -782,7 +782,9 @@ class MFArray(MFMultiDimVar):
         storage = self._get_storage_obj()
         if storage.layered:
             if layer is None:
-                if allow_multiple_layers:
+                if storage.layer_storage.get_total_size() == 1:
+                    layer_index = [0]
+                elif allow_multiple_layers:
                     layer_index = storage.get_active_layer_indices()
                 else:
                     comment = 'Data "{}" is layered but no ' \

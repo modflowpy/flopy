@@ -168,7 +168,7 @@ class MFSimulationData(object):
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
         self.fast_write = True
-        self.verify_external_data = True
+        self.verify_external_data = False
         self.comments_on = False
         self.auto_set_sizes = True
         self.debug = False
@@ -792,7 +792,8 @@ class MFSimulation(PackageContainer):
                                           message=message)
 
     def write_simulation(self,
-                         ext_file_action=ExtFileAction.copy_relative_paths):
+                         ext_file_action=ExtFileAction.copy_relative_paths,
+                         silent=False):
         """
         writes the simulation to files
 
@@ -803,10 +804,15 @@ class MFSimulation(PackageContainer):
             has changed.  defaults to copy_relative_paths which copies only
             files with relative paths, leaving files defined by absolute
             paths fixed.
-
+        silent : bool
+            writes out the simulation in silent mode (verbosity_level = 0)
         Examples
         --------
         """
+        saved_verb_lvl = self.simulation_data.verbosity_level
+        if silent:
+            self.simulation_data.verbosity_level = VerbosityLevel.quiet
+
         # write simulation name file
         if self.simulation_data.verbosity_level.value >= \
                 VerbosityLevel.normal.value:
@@ -911,6 +917,9 @@ class MFSimulation(PackageContainer):
             print('INFORMATION: {} external files copied'.format(
                 num_files_copied))
         self.simulation_data.mfpath.set_last_accessed_path()
+
+        if silent:
+            self.simulation_data.verbosity_level = saved_verb_lvl
 
     def set_sim_path(self, path):
         self.simulation_data.mfpath.set_sim_path(path)

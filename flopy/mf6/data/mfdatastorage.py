@@ -728,43 +728,45 @@ class DataStorage(object):
         if isinstance(data, int) or isinstance(data, float) or isinstance(data, str):
             data = [data]
 
-        # try to set as a single layer
-        if not self._set_array_layer(data, layer, multiplier, key):
-            # check for possibility of multi-layered data
-            success = False
-            layer_num = 0
-            if layer is None and self.data_structure_type == \
-                    DataStructureType.ndarray and len(data) ==\
-                    self.layer_storage.get_total_size():
-                self.layered = True
-                # loop through list and try to store each list entry as a layer
-                success = True
-                for layer_num, layer_data in enumerate(data):
-                    if not isinstance(layer_data, list) and \
-                            not isinstance(layer_data, dict) and \
-                            not isinstance(layer_data, np.ndarray):
-                        layer_data = [layer_data]
-                    layer_index = self.layer_storage.nth_index(layer_num)
-                    success = success and self._set_array_layer(layer_data,
-                                                                layer_index,
-                                                                multiplier,
-                                                                key)
-            if not success:
-                message = 'Unable to set data "{}" layer {}.  Data is not ' \
-                          'in a valid format' \
-                          '.'.format(self.data_dimensions.structure.name,
-                                     layer_num)
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.data_dimensions.structure.get_model(),
-                    self.data_dimensions.structure.get_package(),
-                    self.data_dimensions.structure.path, 'setting array data',
-                    self.data_dimensions.structure.name, inspect.stack()[0][3],
-                    type_, value_, traceback_, message,
-                    self._simulation_data.debug)
-        elif layer is None:
+        # check for possibility of multi-layered data
+        success = False
+        layer_num = 0
+        if layer is None and self.data_structure_type == \
+                DataStructureType.ndarray and len(data) ==\
+                self.layer_storage.get_total_size() and not \
+                isinstance(data, dict):
+            # loop through list and try to store each list entry as a layer
+            success = True
+            for layer_num, layer_data in enumerate(data):
+                if not isinstance(layer_data, list) and \
+                        not isinstance(layer_data, dict) and \
+                        not isinstance(layer_data, np.ndarray):
+                    layer_data = [layer_data]
+                layer_index = self.layer_storage.nth_index(layer_num)
+                success = success and self._set_array_layer(layer_data,
+                                                            layer_index,
+                                                            multiplier,
+                                                            key)
+        if not success:
+            # try to store as a single layer
+            success = self._set_array_layer(data, layer, multiplier, key)
+        if self.layer_storage.get_total_size() > 1:
+            self.layered = True
+        else:
             self.layered = False
-            self.layer_storage.list_shape = (1,)
+        if not success:
+            message = 'Unable to set data "{}" layer {}.  Data is not ' \
+                      'in a valid format' \
+                      '.'.format(self.data_dimensions.structure.name,
+                                 layer_num)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.data_dimensions.structure.get_model(),
+                self.data_dimensions.structure.get_package(),
+                self.data_dimensions.structure.path, 'setting array data',
+                self.data_dimensions.structure.name, inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                        self._simulation_data.debug)
 
     def _set_array_layer(self, data, layer, multiplier, key):
         # look for a single constant value
@@ -826,7 +828,8 @@ class DataStorage(object):
             resolved_path = \
                     self._simulation_data.mfpath.resolve_path(new_data[1],
                                                               model_name)
-            if self._verify_data(FileIter(resolved_path), layer):
+            if self._simulation_data.verify_external_data == False or \
+                    self._verify_data(FileIter(resolved_path), layer):
                 # store location to file
                 self.store_external(new_data[1], layer, [multiplier],
                                     print_format=iprn, binary=binary,
@@ -836,10 +839,12 @@ class DataStorage(object):
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
         if not (layer_storage.data_storage_type ==
                 DataStorageType.internal_constant and
-                    PyListUtil.has_one_item(data)) and \
-                self._verify_data(MultiListIter(data), layer):
+                    PyListUtil.has_one_item(data)):
             # store data as is
-            self.store_internal(data, layer, False, multiplier, key=key)
+            try:
+                self.store_internal(data, layer, False, multiplier, key=key)
+            except MFDataException:
+                return False
             return True
         return False
 
@@ -1554,6 +1559,7 @@ class DataStorage(object):
         if dimensions[0] < 0:
             return None
         all_none = True
+        np_data_type =  self.data_dimensions.structure.get_datum_type()
         full_data = np.full(dimensions, np.nan,
                             self.data_dimensions.structure.get_datum_type(True))
         is_aux = self.data_dimensions.structure.name == 'aux'
@@ -1612,7 +1618,7 @@ class DataStorage(object):
                         not self.layered)[0] * mult
                 else:
                     data_out = file_access.read_text_data_from_file(
-                        self.get_data_size(layer), self._data_type,
+                        self.get_data_size(layer), np_data_type,
                         self.get_data_dimensions(layer), layer,
                         read_file)[0] * mult
                 if self.layer_storage.get_total_size() == 1 or \
@@ -1624,9 +1630,9 @@ class DataStorage(object):
                 if full_data is not None:
                     all_none = False
                 aux_data.append(full_data)
-                full_data = np.full(dimensions, np.nan,
-                                    self.data_dimensions.structure.get_datum_type(
-                                        True))
+                full_data = np.full(
+                    dimensions, np.nan,
+                    self.data_dimensions.structure.get_datum_type(True))
         if is_aux:
             if all_none:
                 return None
@@ -1653,15 +1659,18 @@ class DataStorage(object):
             # correct size
             record_loc = 0
             actual_data_size = 0
-            rows_of_data = 0
-            for data_item in data_iter:
-                if self._is_type(data_item, data_types[2][record_loc]):
-                    actual_data_size += 1
-                if record_loc == len(data_types[0]) - 1:
-                    record_loc = 0
-                    rows_of_data += 1
-                else:
-                    record_loc += 1
+            if isinstance(data_iter.multi_list, np.recarray):
+                rows_of_data = len(data_iter.multi_list.shape)
+            else:
+                rows_of_data = 0
+                for data_item in data_iter:
+                    if self._is_type(data_item, data_types[2][record_loc]):
+                        actual_data_size += 1
+                    if record_loc == len(data_types[0]) - 1:
+                        record_loc = 0
+                        rows_of_data += 1
+                    else:
+                        record_loc += 1
             return rows_of_data > 0 and (rows_of_data < data_dimensions[0] or
                                          data_dimensions[0] == -1)
         else:
@@ -1672,6 +1681,9 @@ class DataStorage(object):
             data_type = self.data_dimensions.structure.\
                 get_datum_type(return_enum_type=True)
             # check to see if data can fit dimensions
+            if isinstance(data_iter.multi_list, np.ndarray):
+                # use more efficient method to check ndarrays
+                return data_iter.multi_list.size >= expected_data_size
             actual_data_size = 0
             for data_item in data_iter:
                 if self._is_type(data_item, data_type):
@@ -1694,8 +1706,7 @@ class DataStorage(object):
         if data_dimensions[0] < 0:
             return ls.data_const_value
         else:
-            data_iter = ConstIter(ls.data_const_value[0])
-            return self._fill_dimensions(data_iter, data_dimensions)
+            return np.full(data_dimensions, ls.data_const_value[0])
 
     def _is_type(self, data_item, data_type):
         if data_type == DatumType.string or data_type == DatumType.keyword:
