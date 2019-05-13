@@ -103,9 +103,38 @@ def test_properties_check():
     assert 'vertical hydraulic conductivity values above checker threshold of 100000.0' in ind3_errors
 
 
+def test_oc_check():
+    m = flopy.modflow.Modflow()
+    oc = flopy.modflow.mfoc.ModflowOc(m)
+    chk = oc.check()
+    assert len(chk.summary_array) == 1, len(chk.summary_array)
+    assert 'DIS package not available' in chk.summary_array[0]['desc']
+
+    flopy.modflow.ModflowDis(m)
+    oc.stress_period_data = {(0, 0): ['save head', 'save budget']}
+    chk = oc.check()  # check passsed
+    assert len(chk.summary_array) == 0, len(chk.summary_array)
+
+    oc.stress_period_data = {(0, 0): ['save']}
+    chk = oc.check()
+    assert len(chk.summary_array) == 1, len(chk.summary_array)
+    assert 'too few words' in chk.summary_array[0]['desc']
+
+    oc.stress_period_data = {(0, 0): ['save it']}
+    chk = oc.check()
+    assert len(chk.summary_array) == 1, len(chk.summary_array)
+    assert "action 'save it' ignored" in chk.summary_array[0]['desc']
+
+    oc.stress_period_data = {(1, 1): ['save head', 'save budget']}
+    chk = oc.check()
+    assert len(chk.summary_array) == 1, len(chk.summary_array)
+    assert 'OC stress_period_data ignored' in chk.summary_array[0]['desc']
+
+
 if __name__ == '__main__':
     print('numpy version: {}'.format(np.__version__))
     for mfnam in testmodels:
         checker_on_load(mfnam)
     test_bcs_check()
     test_properties_check()
+    test_oc_check()
