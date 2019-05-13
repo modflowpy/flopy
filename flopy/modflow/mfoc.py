@@ -11,6 +11,7 @@ import os
 import sys
 
 from ..pakbase import Package
+from ..utils import check
 
 
 class ModflowOc(Package):
@@ -311,6 +312,81 @@ class ModflowOc(Package):
         self.stress_period_data = stress_period_data
 
         self.parent.add_package(self)
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen.
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.oc.check()
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+        if dis is None:
+            chk._add_to_summary('Error', package='OC',
+                                desc='DIS package not available')
+        else:
+            # generate possible actions expected
+            expected_actions = []
+            for first in ['PRINT', 'SAVE']:
+                for second in ['HEAD', 'DRAWDOWN', 'BUDGET', 'IBOUND']:
+                    expected_actions.append([first, second])
+            # remove exception
+            del expected_actions[expected_actions.index(['PRINT', 'IBOUND'])]
+            keys = list(self.stress_period_data.keys())
+            for kper in range(dis.nper):
+                for kstp in range(dis.nstp[kper]):
+                    kperkstp = (kper, kstp)
+                    if kperkstp in keys:
+                        del keys[keys.index(kperkstp)]
+                        data = self.stress_period_data[kperkstp]
+                        if not isinstance(data, list):
+                            data = [data]
+                        for action in data:
+                            words = action.upper().split()
+                            if len(words) < 2:
+                                chk._add_to_summary(
+                                    'Warning', package='OC',  # value=kperkstp,
+                                    desc='action {!r} ignored; too few words'
+                                    .format(action))
+                            elif words[0:2] not in expected_actions:
+                                chk._add_to_summary(
+                                    'Warning', package='OC',  # value=kperkstp,
+                                    desc='action {!r} ignored'.format(action))
+                            # TODO: check data list of layers for some actions
+            for kperkstp in keys:
+                # repeat as many times as remaining keys not used
+                chk._add_to_summary(
+                    'Warning', package='OC',  # value=kperkstp,
+                    desc='action(s) defined in OC stress_period_data ignored '
+                    'as they are not part the stress periods defined by DIS')
+        chk.summarize()
+        return chk
 
     def write_file(self):
         """
