@@ -9,7 +9,7 @@ from ..mfbase import MFDataException, VerbosityLevel
 from ..data.mfstructure import DatumType, MFDataItemStructure
 from ..data import mfdatautil
 from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
-                              ConstIter, ArrayIndexIter, MultiList
+                              ArrayIndexIter, MultiList
 from .mfdatautil import convert_data, MFComment
 from .mffileaccess import MFFileAccessArray, MFFileAccess
 
@@ -750,10 +750,7 @@ class DataStorage(object):
         if not success:
             # try to store as a single layer
             success = self._set_array_layer(data, layer, multiplier, key)
-        if self.layer_storage.get_total_size() > 1:
-            self.layered = True
-        else:
-            self.layered = False
+        self.layered = bool(self.layer_storage.get_total_size() > 1)
         if not success:
             message = 'Unable to set data "{}" layer {}.  Data is not ' \
                       'in a valid format' \
