@@ -886,6 +886,23 @@ def test_get_rc_from_node_coordinates():
     assert np.array_equal(r, np.array([9, 7]))
     assert np.array_equal(c, np.array([0, 1]))
 
+    # test variable delr and delc spacing
+    mf = flopy.modflow.Modflow()
+    delc = [0.5] * 5 + [2.0] * 5
+    delr = [0.5] * 5 + [2.0] * 5
+    nrow = 10
+    ncol = 10
+    mfdis=flopy.modflow.ModflowDis(mf, nrow=nrow, ncol=ncol, delr=delr, delc=delc) #, xul=50, yul=1000)
+    ygrid, xgrid, zgrid = mfdis.get_node_coordinates()
+    for i in range(nrow):
+        for j in range(ncol):
+            x = xgrid[j]
+            y = ygrid[i]
+            r, c = mfdis.get_rc_from_node_coordinates(x, y)
+            assert r == i, 'row {} not equal {} for xy ({}, {})'.format(r, i, x, y)
+            assert c == j, 'col {} not equal {} for xy ({}, {})'.format(c, j, x, y)
+
+
 def test_netcdf_classmethods():
     import os
     import flopy
