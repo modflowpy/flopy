@@ -609,7 +609,11 @@ class MFArray(MFMultiDimVar):
         else:
             # data is not layered
             if not self.structure.data_item_structures[0].just_data:
-                file_entry_array.append('{}{}\n'.format(indent,
+                if self._data_name == 'aux':
+                    file_entry_array.append('{}{}\n'.format(
+                        indent, self._get_aux_var_name([0])))
+                else:
+                    file_entry_array.append('{}{}\n'.format(indent,
                                                         self.structure.name))
 
             data_storage_type = data_storage.layer_storage[0].data_storage_type
