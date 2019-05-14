@@ -825,13 +825,11 @@ class DataStorage(object):
             resolved_path = \
                     self._simulation_data.mfpath.resolve_path(new_data[1],
                                                               model_name)
-            if self._simulation_data.verify_external_data == False or \
-                    self._verify_data(FileIter(resolved_path), layer):
-                # store location to file
-                self.store_external(new_data[1], layer, [multiplier],
-                                    print_format=iprn, binary=binary,
-                                    do_not_verify=True)
-                return True
+            # store location to file
+            self.store_external(new_data[1], layer, [multiplier],
+                                print_format=iprn, binary=binary,
+                                do_not_verify=True)
+            return True
         # try to resolve as internal array
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
         if not (layer_storage.data_storage_type ==
@@ -1643,51 +1641,6 @@ class DataStorage(object):
             return self.layer_storage.first_index()
         else:
             return layer
-
-    def _verify_data(self, data_iter, layer):
-        # get expected size
-        data_dimensions = self.get_data_dimensions(layer)
-        # get expected data types
-        if self.data_dimensions.structure.type == DatumType.recarray or \
-                self.data_dimensions.structure.type == DatumType.record:
-            data_types = self.data_dimensions.structure.\
-                get_data_item_types(return_enum_type=True)
-            # check to see if data contains the correct types and is a possibly
-            # correct size
-            record_loc = 0
-            actual_data_size = 0
-            if isinstance(data_iter.multi_list, np.recarray):
-                rows_of_data = len(data_iter.multi_list.shape)
-            else:
-                rows_of_data = 0
-                for data_item in data_iter:
-                    if self._is_type(data_item, data_types[2][record_loc]):
-                        actual_data_size += 1
-                    if record_loc == len(data_types[0]) - 1:
-                        record_loc = 0
-                        rows_of_data += 1
-                    else:
-                        record_loc += 1
-            return rows_of_data > 0 and (rows_of_data < data_dimensions[0] or
-                                         data_dimensions[0] == -1)
-        else:
-            expected_data_size = 1
-            for dimension in data_dimensions:
-                if dimension > 0:
-                    expected_data_size = expected_data_size * dimension
-            data_type = self.data_dimensions.structure.\
-                get_datum_type(return_enum_type=True)
-            # check to see if data can fit dimensions
-            if isinstance(data_iter.multi_list, np.ndarray):
-                # use more efficient method to check ndarrays
-                return data_iter.multi_list.size >= expected_data_size
-            actual_data_size = 0
-            for data_item in data_iter:
-                if self._is_type(data_item, data_type):
-                    actual_data_size += 1
-                if actual_data_size >= expected_data_size:
-                    return True
-            return False
 
     def _to_ndarray(self, data, layer):
         data_dimensions = self.get_data_dimensions(layer)

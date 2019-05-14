@@ -168,7 +168,6 @@ class MFSimulationData(object):
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
         self.fast_write = True
-        self.verify_external_data = False
         self.comments_on = False
         self.auto_set_sizes = True
         self.debug = False
