@@ -63,7 +63,7 @@ pmv.plot_grid(colors='white')
 pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
 pmv.plot_specific_discharge(spdis, color='white')
 ```
-<img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/quickstart.png" alt="plot" style="width:30;height:30">
+<img src="examples/images/quickstart.png" alt="plot" style="width:30;height:30">
 
 ### [Frequently asked questions](docs/flopyFAQ.md)
 
