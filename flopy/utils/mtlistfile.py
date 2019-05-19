@@ -204,6 +204,19 @@ class MtListBudget(object):
                     if c not in out_cols + in_cols + ["totim"]]
         out_base = [c.replace("_out", '') for c in out_cols]
         in_base = [c.replace("_in", '') for c in in_cols]
+        map_names = {"stream_accumulation": "stream_depletion",
+                     "stream outflow": "inflow_to_stream",
+                     "stream_to_gw": "gw_to_stream",
+                     "mass_loss": "mass_gain"}
+        out_base_mapped = []
+        for base in out_base:
+            if np.any(key in base for key in map_names.keys()):
+                for key, new in map_names.items():
+                    if key in base:
+                        out_base_mapped.append(base.replace(key, new))
+            else:
+                out_base_mapped.append(base)
+        out_base = out_base_mapped
         in_dict = {ib: ic for ib, ic in zip(in_base, in_cols)}
         out_dict = {ib: ic for ib, ic in zip(out_base, out_cols)}
         in_base = set(in_base)
@@ -318,6 +331,7 @@ class MtListBudget(object):
         item = raw[0].strip().strip('[\|]').replace(' ', '_')
         idx_ival = 0
         idx_oval = 1
+
         if "TOTAL" in item.upper():
             idx_oval += 1  # to deal with the units in the total string
         # net (in-out) and discrepancy will only have 1 entry
@@ -332,11 +346,11 @@ class MtListBudget(object):
     def _add_to_gw_data(self, item, ival, oval, comp):
         item += "_{0}".format(comp)
         if oval is None:
-            lab_val = zip([""], [ival])
+            lab_val = zip([""], [ival], [''])
         else:
-            lab_val = zip(["_in", "_out"], [ival, oval])
-        for lab, val in lab_val:
-            iitem = item + lab + "_cum"
+            lab_val = zip(["_in", "_out"], [ival, oval], ["_cum", "_cum"])
+        for lab, val, suf in lab_val:
+            iitem = item + lab + suf
             if iitem not in self.gw_data.keys():
                 self.gw_data[iitem] = []
             self.gw_data[iitem].append(val)
@@ -356,7 +370,7 @@ class MtListBudget(object):
                             format(self.lcount, str(e)))
         for lab, val in zip(["kper", "kstp", "tkstp"], [kper, kstp, tkstp]):
             lab += '_{0}'.format(comp)
-            if lab not in self.gw_data.keys():
+            if lab not in self.sw_data.keys():
                 self.sw_data[lab] = []
             self.sw_data[lab].append(val)
         for _ in range(4):
@@ -376,11 +390,12 @@ class MtListBudget(object):
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 msg = "error parsing 'in' SW items on line {}: " + '{}'.format(
-                    self.lcountm, str(e))
+                    self.lcount, str(e))
                 raise Exception(msg)
             self._add_to_sw_data('in', item, cval, fval, comp)
             if break_next:
                 break
+        # read net in-out and percent discrep for cumulative and flux for sw
         line = self._readline(f)  # blank line read
         if line is None:
             raise Exception("EOF while reading 'in' SW budget")
@@ -401,25 +416,53 @@ class MtListBudget(object):
             self._add_to_sw_data('out', item, cval, fval, comp)
             if break_next:
                 break
-        line = self._readline(f)
-        if line is None:
-            raise Exception("EOF while reading 'out' SW budget")
-        # TODO: SW net in out and  discrepancy
+        # read extras (in-out and percent discrep.)
+        blank_count = 0
+        while True:
+            line = self._readline(f)
+            if line is None:
+                raise Exception("EOF while reading 'out' SW budget")
+            elif line.strip() == '':
+                blank_count += 1
+                if blank_count == 2:
+                    break  # two consecutive blank line is end of block
+                else:
+                    continue
+            else:
+                blank_count = 0
+            try:
+                item, cval, fval = self._parse_sw_line(line)
+            except Exception as e:
+                raise Exception(
+                    "error parsing 'out' SW items on line {0}: {1}".format(
+                        self.lcount, str(e)))
+            self._add_to_sw_data('net', item, cval, fval, comp)
+        # TODO: SW net in out and discrepancy
         # out_tots = self._parse_sw_line(line)
 
     def _parse_sw_line(self, line):
         # print(line)
         raw = line.strip().split('=')
-        citem = raw[0].strip().replace(" ", "_")
+        citem = raw[0].strip().strip('[\|]').replace(" ", "_")
         cval = float(raw[1].split()[0])
-        fitem = raw[1].split()[-1].replace(" ", "_")
-        fval = float(raw[2])
+        if len(raw) < 3:  # deal with flow error if written
+            fval = None
+            citem += raw[1].split()[-1]
+        else:
+            fitem = raw[1].split()[-1].replace(" ", "_")
+            fval = float(raw[2])
         # assert citem == fitem,"{0}, {1}".format(citem,fitem)
         return citem, cval, fval
 
-    def _add_to_sw_data(self,inout, item, cval, fval, comp):
-        item += '_{0}_{1}'.format(comp, inout)
-        for lab, val in zip(['_cum', '_flx'], [cval, fval]):
+    def _add_to_sw_data(self, inout, item, cval, fval, comp):
+        item += '_{0}'.format(comp)
+        if inout.lower() in set(['in', 'out']):
+            item += '_{0}'.format(inout)
+        if fval is None:
+            lab_val = zip([""], [cval])
+        else:
+            lab_val = zip(['_cum', '_flx'], [cval, fval])
+        for lab, val in lab_val:
             iitem = item + lab
             if iitem not in self.sw_data.keys():
                 self.sw_data[iitem] = []
