@@ -230,7 +230,8 @@ class PyListUtil(object):
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
             if PyListUtil.delimiter_used is None:
-                clean_line = line.strip().split()
+                comment_split = line.strip().split('#', 1)
+                clean_line = comment_split[0].strip().split()
             else:
                 comment_split = line.strip().split('#', 1)
                 clean_line = comment_split[0].strip().split(

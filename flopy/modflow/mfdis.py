@@ -408,7 +408,7 @@ class ModflowDis(Package):
 
     def get_node_coordinates(self):
         """
-        Get y, x, and z cell centroids.
+        Get y, x, and z cell centroids in local model coordinates.
 
         Returns
         -------
@@ -417,55 +417,55 @@ class ModflowDis(Package):
         x : list of cell x-centroids
 
         z : array of floats (nlay, nrow, ncol)
+
         """
+
+        delr = self.delr.array
+        delc = self.delc.array
+
         # In row direction
-        y = np.empty((self.nrow))
-        for r in range(self.nrow):
-            if (r == 0):
-                y[r] = self.delc[r] / 2.
-            else:
-                y[r] = y[r - 1] + (self.delc[r] + self.delc[r - 1]) / 2.
-        # Invert y to convert to a Cartesian coordinate system
-        y = y[::-1]
+        Ly = np.add.reduce(delc)
+        y = Ly - (np.add.accumulate(self.delc) - 0.5 * delc)
+
         # In column direction
-        x = np.empty((self.ncol))
-        for c in range(self.ncol):
-            if (c == 0):
-                x[c] = self.delr[c] / 2.
-            else:
-                x[c] = x[c - 1] + (self.delr[c] + self.delr[c - 1]) / 2.
+        x = np.add.accumulate(self.delr) - 0.5 * delr
+
         # In layer direction
-        z = np.empty((self.nlay, self.nrow, self.ncol))
-        for l in range(self.nlay):
-            if (l == 0):
-                z[l, :, :] = (self.top[:, :] + self.botm[l, :, :]) / 2.
-            else:
-                z[l, :, :] = (self.botm[l - 1, :, :] + self.botm[l, :, :]) / 2.
+        z = self.zcentroids
+
         return y, x, z
 
-    def get_rc_from_node_coordinates(self, x, y):
-        """Return the row and column of a point or sequence of points
+    def get_rc_from_node_coordinates(self, x, y, local=True):
+        """
+        Get the row and column of a point or sequence of points
         in model coordinates.
 
         Parameters
         ----------
-        x : scalar or sequence of x coordinates
-        y : scalar or sequence of y coordinates
+        x : float or sequence of floats
+            x coordinate(s) of points to find in model grid
+        y : float or sequence floats
+            y coordinate(s) of points to find in model grid
+        local : bool
+          x and y coordinates are in model local coordinates.  If false, then
+          x and y are in world coordinates. (default is True)
 
         Returns
         -------
         r : row or sequence of rows (zero-based)
         c : column or sequence of columns (zero-based)
+
         """
-        yn, xn, zn = self.get_node_coordinates()
+        mg = self.parent.modelgrid
         if np.isscalar(x):
-            c = (np.abs(xn - x)).argmin()
-            r = (np.abs(yn - y)).argmin()
+            r, c = mg.intersect(x, y, local=local)
         else:
-            xcp = np.array([xn] * (len(x)))
-            ycp = np.array([yn] * (len(x)))
-            c = (np.abs(xcp.transpose() - x)).argmin(axis=0)
-            r = (np.abs(ycp.transpose() - y)).argmin(axis=0)
+            r = []
+            c = []
+            for xx, yy in zip(x, y):
+                rr, cc = mg.intersect(xx, yy, local=local)
+                r.append(rr)
+                c.append(cc)
         return r, c
 
     def get_lrc(self, nodes):
