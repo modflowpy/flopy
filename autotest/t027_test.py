@@ -168,6 +168,56 @@ def test_make_package():
                           mnw2_5.stress_period_data[1])
 
 
+def test_mnw2_create_file():
+    """
+    Test for issue #556, Mnw2 crashed if wells have
+    multiple node lengths
+    """
+    import pandas as pd
+    mf = flopy.modflow.Modflow('test_mfmnw2', exe_name='mf2005')
+    wellids = [1, 2]
+    nlayers = [2, 4]
+    stress_period_data = pd.DataFrame([[0, 1]], columns=['per', 'qdes'])
+    wells = []
+    for i in range(len(wellids)):
+        node_data = pd.DataFrame(columns=['k', 'i', 'j', 'ztop',
+                                          'zbotm', 'wellid', 'losstype',
+                                          'ppflag', 'pumploc', 'qlimit',
+                                          'pumpcap', 'qcut'])
+        for j in range(nlayers[i]):
+            node_data.loc[j, 'k'] = j
+            node_data.loc[j, 'i'] = 1
+            node_data.loc[j, 'j'] = 1
+            node_data.loc[j, 'ztop'] = 0
+            node_data.loc[j, 'zbotm'] = 0
+            node_data.loc[j, 'wellid'] = wellids[i]
+            node_data.loc[j, 'losstype'] = "SKIN"
+            node_data.loc[j, 'ppflag'] = 0
+            node_data.loc[j, 'pumploc'] = 0
+            node_data.loc[j, 'qlimit'] = 0
+            node_data.loc[j, 'pumpcap'] = 0
+            node_data.loc[j, 'qcut'] = 0
+
+        wl = flopy.modflow.mfmnw2.Mnw(wellids[i],
+                  nnodes=nlayers[i],
+                  nper=len(stress_period_data.index),
+                  node_data=node_data.to_records(index=False),
+                  stress_period_data=stress_period_data.to_records(index=False))
+
+        wells.append(wl)
+
+    mnw2 = flopy.modflow.ModflowMnw2(model=mf,
+                                     mnwmax=len(wells),
+                                     mnw=wells,
+                                     itmp=list((np.ones((len(stress_period_data.index)))
+                                                * len(wellids)).astype(int)))
+
+    if len(mnw2.node_data) != 6:
+        raise AssertionError("Node data not properly set")
+
+    mnw2.write_file("./temp/t027/ndata.mnw2")
+
+
 def test_export():
     """t027 test export of MNW2 Package to netcdf files"""
     try:
@@ -209,4 +259,5 @@ if __name__ == '__main__':
     #test_export()
     #test_checks()
     test_mnw1_load_write()
+    test_mnw2_create_file()
     pass

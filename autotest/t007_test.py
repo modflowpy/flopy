@@ -6,6 +6,7 @@ import glob
 import os
 import shutil
 import numpy as np
+import warnings
 import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -671,6 +672,7 @@ def test_rotation():
     assert np.abs(mg4.yvertices[0, 0] - yul) < 1e-4
 
 def test_sr_with_Map():
+    # Note that most of this is either deprecated, or has pending deprecation
     import matplotlib.pyplot as plt
     m = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
@@ -678,8 +680,17 @@ def test_sr_with_Map():
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
     xul, yul, rotation = 500000., 2934000., 45.
-    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
-                                   rotation=rotation)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
+                                       rotation=rotation)
+        assert len(w) == 2, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+        assert w[1].category == DeprecationWarning, w[1]
+        assert 'xul/yul have been deprecated' in str(w[1].message)
+
     lc = modelmap.plot_grid()
     xll, yll = modelmap.mg.xoffset, modelmap.mg.yoffset
     plt.close()
@@ -694,8 +705,15 @@ def test_sr_with_Map():
 
     check_vertices()
 
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
-                                   rotation=rotation)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
+                                       rotation=rotation)
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -705,7 +723,15 @@ def test_sr_with_Map():
                                       delc=m.dis.delc.array,
                                       xll=xll, yll=yll, rotation=rotation)
     m.sr = copy.deepcopy(sr)
-    modelmap = flopy.plot.ModelMap(model=m)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m)
+
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -713,7 +739,15 @@ def test_sr_with_Map():
     # transformation assign from sr instance
     m.sr._reset()
     m.sr.set_spatialreference()
-    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -725,8 +759,29 @@ def test_sr_with_Map():
     dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=10, ncol=20, delr=1., delc=1., xul=100, yul=210)
     #fig, ax = plt.subplots()
     verts = [[101., 201.], [119., 209.]]
-    modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
-                                              xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelxsect = flopy.plot.ModelCrossSection(
+            model=mf, line={'line': verts},
+            xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+
+        # for wn in w:
+        #    print(str(wn))
+        assert len(w) in (3, 5), len(w)
+        if len(w) == 5:
+            assert w[0].category == DeprecationWarning, w[0]
+            assert 'SpatialReference has been deprecated' in str(w[0].message)
+            assert w[1].category == DeprecationWarning, w[1]
+            assert 'SpatialReference has been deprecated' in str(w[1].message)
+        assert w[-3].category == PendingDeprecationWarning, w[-3]
+        assert 'ModelCrossSection will be replaced by' in str(w[-3].message)
+        assert w[-2].category == DeprecationWarning, w[-2]
+        assert 'xul/yul have been deprecated' in str(w[-2].message)
+        assert w[-1].category == DeprecationWarning, w[-1]
+        assert 'xul/yul have been deprecated' in str(w[-1].message)
+
     linecollection = modelxsect.plot_grid()
     plt.close()
 
@@ -830,6 +885,23 @@ def test_get_rc_from_node_coordinates():
     r, c = m.dis.get_rc_from_node_coordinates([50., 110.], [50., 220.])
     assert np.array_equal(r, np.array([9, 7]))
     assert np.array_equal(c, np.array([0, 1]))
+
+    # test variable delr and delc spacing
+    mf = flopy.modflow.Modflow()
+    delc = [0.5] * 5 + [2.0] * 5
+    delr = [0.5] * 5 + [2.0] * 5
+    nrow = 10
+    ncol = 10
+    mfdis=flopy.modflow.ModflowDis(mf, nrow=nrow, ncol=ncol, delr=delr, delc=delc) #, xul=50, yul=1000)
+    ygrid, xgrid, zgrid = mfdis.get_node_coordinates()
+    for i in range(nrow):
+        for j in range(ncol):
+            x = xgrid[j]
+            y = ygrid[i]
+            r, c = mfdis.get_rc_from_node_coordinates(x, y)
+            assert r == i, 'row {} not equal {} for xy ({}, {})'.format(r, i, x, y)
+            assert c == j, 'col {} not equal {} for xy ({}, {})'.format(c, j, x, y)
+
 
 def test_netcdf_classmethods():
     import os
@@ -978,7 +1050,7 @@ if __name__ == '__main__':
     # test_rotation()
     # test_model_dot_plot()
     # test_vertex_model_dot_plot()
-    #test_sr_with_Map()
+    test_sr_with_Map()
     #test_modelgrid_with_PlotMapView()
     # test_epsgs()
     # test_sr_scaling()
@@ -991,7 +1063,7 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     #test_freyberg_export()
     #test_export_array()
-    test_write_shapefile()
+    #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

@@ -1435,10 +1435,16 @@ class ModflowMnw2(Package):
             mnwobjs = list(mnwobjs.values())
         elif isinstance(mnwobjs, Mnw):
             mnwobjs = [mnwobjs]
-        node_data = ModflowMnw2.get_empty_node_data(0)
-        mnwobj_node_data = [mnwobj.node_data for mnwobj in mnwobjs]
-        node_data = np.append(node_data, mnwobj_node_data).view(np.recarray)
-        # node_data.sort(order='wellid')
+
+        mnwobj_node_data = []
+        for mnwobj in mnwobjs:
+            for rec in mnwobj.node_data:
+                mnwobj_node_data.append(rec)
+        node_data = ModflowMnw2.get_empty_node_data(len(mnwobj_node_data))
+
+        for ix, node in enumerate(mnwobj_node_data):
+            node_data[ix] = node
+
         self.node_data = node_data
 
     def make_stress_period_data(self, mnwobjs):

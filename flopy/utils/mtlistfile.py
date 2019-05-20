@@ -35,15 +35,7 @@ class MtListBudget(object):
         Class constructor
         """
 
-        # Set up file reading
-        assert os.path.exists(file_name), "file_name {0} not found".format(
-            file_name)
         self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-
         self.tssp_lines = 0
         # in case transport step number goes above 99999
         # which might be outputted as *****

@@ -2605,7 +2605,7 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     import warnings
     if xul is not None and yul is not None:
         warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                      PendingDeprecationWarning)
+                      DeprecationWarning)
         if rotation is not None:
             mg._angrot = rotation
 

@@ -3,7 +3,9 @@ Test MT3D model creation and file writing
 """
 
 import os
+import warnings
 import flopy
+
 
 def test_mt3d_create_withmfmodel():
     model_ws = os.path.join('.', 'temp', 't013')
@@ -47,7 +49,16 @@ def test_mt3d_create_woutmfmodel():
                              nstp=1, tsmult=1.)
     adv = flopy.mt3d.Mt3dAdv(mt)
     dsp = flopy.mt3d.Mt3dDsp(mt)
-    ssm = flopy.mt3d.Mt3dSsm(mt)
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        ssm = flopy.mt3d.Mt3dSsm(mt)
+
+        assert len(w) == 1, len(w)
+        assert w[0].category == UserWarning, w[0]
+        assert 'mxss is None and modflowmodel is None' in str(w[0].message)
+
     gcg = flopy.mt3d.Mt3dRct(mt)
     rct = flopy.mt3d.Mt3dGcg(mt)
     tob = flopy.mt3d.Mt3dTob(mt)
