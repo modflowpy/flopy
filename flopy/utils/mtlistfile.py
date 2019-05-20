@@ -207,7 +207,8 @@ class MtListBudget(object):
         map_names = {"stream_accumulation": "stream_depletion",
                      "stream_outflow": "inflow_to_stream",
                      "stream_to_gw": "gw_to_stream",
-                     "mass_loss": "mass_gain"}
+                     "mass_loss": "mass_gain",
+                     "evaporation": "precipitation"}
         out_base_mapped = []
         for base in out_base:
             if np.any([key in base for key in map_names.keys()]):
@@ -313,8 +314,10 @@ class MtListBudget(object):
                 break
             elif line.strip() == '':
                 blank_count += 1
+                # two consecutive blank line is end of block
+                # sadly this is not always the case
                 if blank_count == 2:
-                    break  # two consecutive blank line is end of block
+                    break
                 else:
                     continue
             else:
@@ -325,7 +328,9 @@ class MtListBudget(object):
                 raise Exception("error parsing GW items "
                                 "on line {0}: {1}".format(self.lcount, str(e)))
             self._add_to_gw_data(item, ival, oval, comp)
-
+            if 'discrepancy' in item:
+                # can't rely on blank lines following block
+                break
     def _parse_gw_line(self, line):
         raw = line.lower().split(':')
         item = raw[0].strip().strip('[\|]').replace(' ', '_')
