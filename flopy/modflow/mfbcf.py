@@ -195,6 +195,7 @@ class ModflowBcf(Package):
         f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
             self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit,
             self.ihdwet))
+
         # LAYCON array
         for k in range(nlay):
             if ifrefm:
