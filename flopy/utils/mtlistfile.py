@@ -202,15 +202,15 @@ class MtListBudget(object):
                    if "_in" in c and not c.startswith("net_")]
         add_cols = [c for c in df.columns
                     if c not in out_cols + in_cols + ["totim"]]
-        out_base = [c.replace("_out", '') for c in out_cols]
-        in_base = [c.replace("_in", '') for c in in_cols]
+        out_base = [c.replace("_out_", '_') for c in out_cols]
+        in_base = [c.replace("_in_", '_') for c in in_cols]
         map_names = {"stream_accumulation": "stream_depletion",
-                     "stream outflow": "inflow_to_stream",
+                     "stream_outflow": "inflow_to_stream",
                      "stream_to_gw": "gw_to_stream",
                      "mass_loss": "mass_gain"}
         out_base_mapped = []
         for base in out_base:
-            if np.any(key in base for key in map_names.keys()):
+            if np.any([key in base for key in map_names.keys()]):
                 for key, new in map_names.items():
                     if key in base:
                         out_base_mapped.append(base.replace(key, new))
@@ -437,7 +437,6 @@ class MtListBudget(object):
                     "error parsing 'out' SW items on line {0}: {1}".format(
                         self.lcount, str(e)))
             self._add_to_sw_data('net', item, cval, fval, comp)
-        # TODO: SW net in out and discrepancy
         # out_tots = self._parse_sw_line(line)
 
     def _parse_sw_line(self, line):
