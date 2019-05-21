@@ -34,23 +34,29 @@ class StructuredGrid(Grid):
     get_cell_vertices(i, j)
         returns vertices for a single cell at row, column i, j.
     """
-    def __init__(self, delc, delr, top=None, botm=None, idomain=None,
+    def __init__(self, delc=None, delr=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0):
+                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
                                              lenuni, epsg, proj4, prj, xoff,
                                              yoff, angrot)
         self.__delc = delc
         self.__delr = delr
-        self.__nrow = len(delc)
-        self.__ncol = len(delr)
+        if delc is not None:
+            self.__nrow = len(delc)
+        else:
+            self.__nrow = nrow
+        if delr is not None:
+            self.__ncol = len(delr)
+        else:
+            self.__ncol = ncol
         if top is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
             self.__nlay = len(botm)
         else:
-            self.__nlay = None
+            self.__nlay = nlay
 
     ####################
     # Properties

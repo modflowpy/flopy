@@ -18,28 +18,6 @@ class MFFileAccess(object):
         self._path = path
         self._current_key = current_key
 
-    def write_binary_file(self, data, fname, text, modelgrid=None,
-                          modeltime=None, stress_period=0,
-                          precision='double', write_multi_layer=False):
-        fd = self._open_ext_file(fname, binary=True, write=True)
-        if write_multi_layer:
-            for layer, value in enumerate(data):
-                self._write_layer(fd, value, modelgrid, modeltime,
-                                  stress_period, precision, text, fname,
-                                  layer+1)
-        else:
-            self._write_layer(fd, data, modelgrid, modeltime, stress_period,
-                              precision, text, fname)
-        data.tofile(fd)
-        fd.close()
-
-    def _write_layer(self, fd, data, modelgrid, modeltime, stress_period,
-                     precision, text, fname, ilay=None):
-        header_data = self._get_header(modelgrid, modeltime, stress_period,
-                                       precision, text, fname, ilay)
-        header_data.tofile(fd)
-        data.tofile(fd)
-
     @staticmethod
     def _get_bintype(modelgrid):
         if modelgrid.grid_type == 'vertex':
@@ -48,58 +26,6 @@ class MFFileAccess(object):
             return 'vardisu'
         else:
             return 'vardis'
-
-    def _get_header(self, modelgrid, modeltime, stress_period, precision, text,
-                    fname, ilay=None):
-        # handle dis (row, col, lay), disv (ncpl, lay), and disu (nodes) cases
-        if modelgrid is not None and modeltime is not None:
-            pertim = modeltime.perlen[stress_period]
-            totim = modeltime.perlen.sum()
-            if ilay is None:
-                ilay = modelgrid.nlay
-            if modelgrid.grid_type == 'structured':
-                return BinaryHeader.create(
-                    bintype='vardis', precision=precision, text=text,
-                    nrow=modelgrid.nrow, ncol=modelgrid.ncol,
-                    ilay=ilay, pertim=pertim,
-                    totim=totim, kstp=1, kper=stress_period+1)
-            elif modelgrid.grid_type == 'vertex':
-                if ilay is None:
-                    ilay = modelgrid.nlay
-                return BinaryHeader.create(
-                    bintype='vardisv', precision=precision, text=text,
-                    ncpl=modelgrid.ncpl, ilay=ilay, m3=1,
-                    pertim=pertim, totim=totim, kstp=1,
-                    kper=stress_period)
-            elif modelgrid.grid_type == 'unstructured':
-                return BinaryHeader.create(
-                    bintype='vardisu', precision=precision, text=text,
-                    nodes=modelgrid.idomain.size, m2=1, m3=1,
-                    pertim=pertim, totim=totim, kstp=1, kper=stress_period)
-            else:
-                if ilay is None:
-                    ilay = 1
-                header = BinaryHeader.create(
-                    bintype='vardis', precision=precision, text=text,
-                    nrow=1, ncol=1, ilay=ilay, pertim=pertim,
-                    totim=totim, kstp=1, kper=stress_period)
-                if self._simulation_data.verbosity_level.value >= \
-                        VerbosityLevel.normal.value:
-                    print('Model grid does not have a valid type. Using '
-                          'default spatial discretization header values for '
-                          'binary file {}.'.format(fname))
-        else:
-            pertim = np.float64(1.0)
-            header = BinaryHeader.create(
-                bintype='vardis', precision=precision, text=text,
-                nrow=1, ncol=1, ilay=1, pertim=pertim,
-                totim=pertim, kstp=1, kper=stress_period)
-            if self._simulation_data.verbosity_level.value >= \
-                    VerbosityLevel.normal.value:
-                print('Binary file data not part of a model. Using default '
-                      'spatial discretization header values for binary file '
-                      '{}.'.format(fname))
-        return header
 
     def _get_next_data_line(self, file_handle):
         end_of_file = False
@@ -238,6 +164,80 @@ class MFFileAccessArray(MFFileAccess):
         super(MFFileAccessArray, self).__init__(
             structure, data_dimensions, simulation_data, path, current_key)
 
+    def write_binary_file(self, data, fname, text, modelgrid=None,
+                          modeltime=None, stress_period=0,
+                          precision='double', write_multi_layer=False):
+        fd = self._open_ext_file(fname, binary=True, write=True)
+        if write_multi_layer:
+            for layer, value in enumerate(data):
+                self._write_layer(fd, value, modelgrid, modeltime,
+                                  stress_period, precision, text, fname,
+                                  layer+1)
+        else:
+            self._write_layer(fd, data, modelgrid, modeltime, stress_period,
+                              precision, text, fname)
+        data.tofile(fd)
+        fd.close()
+
+    def _write_layer(self, fd, data, modelgrid, modeltime, stress_period,
+                     precision, text, fname, ilay=None):
+        header_data = self._get_header(modelgrid, modeltime, stress_period,
+                                       precision, text, fname, ilay)
+        header_data.tofile(fd)
+        data.tofile(fd)
+
+    def _get_header(self, modelgrid, modeltime, stress_period, precision, text,
+                    fname, ilay=None):
+        # handle dis (row, col, lay), disv (ncpl, lay), and disu (nodes) cases
+        if modelgrid is not None and modeltime is not None:
+            pertim = modeltime.perlen[stress_period]
+            totim = modeltime.perlen.sum()
+            if ilay is None:
+                ilay = modelgrid.nlay
+            if modelgrid.grid_type == 'structured':
+                return BinaryHeader.create(
+                    bintype='vardis', precision=precision, text=text,
+                    nrow=modelgrid.nrow, ncol=modelgrid.ncol,
+                    ilay=ilay, pertim=pertim,
+                    totim=totim, kstp=1, kper=stress_period+1)
+            elif modelgrid.grid_type == 'vertex':
+                if ilay is None:
+                    ilay = modelgrid.nlay
+                return BinaryHeader.create(
+                    bintype='vardisv', precision=precision, text=text,
+                    ncpl=modelgrid.ncpl, ilay=ilay, m3=1,
+                    pertim=pertim, totim=totim, kstp=1,
+                    kper=stress_period)
+            elif modelgrid.grid_type == 'unstructured':
+                return BinaryHeader.create(
+                    bintype='vardisu', precision=precision, text=text,
+                    nodes=modelgrid.nnodes, m2=1, m3=1,
+                    pertim=pertim, totim=totim, kstp=1, kper=stress_period)
+            else:
+                if ilay is None:
+                    ilay = 1
+                header = BinaryHeader.create(
+                    bintype='vardis', precision=precision, text=text,
+                    nrow=1, ncol=1, ilay=ilay, pertim=pertim,
+                    totim=totim, kstp=1, kper=stress_period)
+                if self._simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('Model grid does not have a valid type. Using '
+                          'default spatial discretization header values for '
+                          'binary file {}.'.format(fname))
+        else:
+            pertim = np.float64(1.0)
+            header = BinaryHeader.create(
+                bintype='vardis', precision=precision, text=text,
+                nrow=1, ncol=1, ilay=1, pertim=pertim,
+                totim=pertim, kstp=1, kper=stress_period)
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('Binary file data not part of a model. Using default '
+                      'spatial discretization header values for binary file '
+                      '{}.'.format(fname))
+        return header
+
     def write_text_file(self, data, fp, data_type, data_size):
         try:
             fd = open(fp, 'w')
@@ -331,7 +331,6 @@ class MFFileAccessArray(MFFileAccess):
                                   fname=None, fd=None, data_item=None):
         # load variable data from file
         current_size = 0
-        data_out = []
         if layer is None:
             layer = 0
         close_file = False
@@ -625,6 +624,96 @@ class MFFileAccessList(MFFileAccess):
                  current_key):
         super(MFFileAccessList, self).__init__(
             structure, data_dimensions, simulation_data, path, current_key)
+
+    def read_binary_data_from_file(self, read_file, modelgrid,
+                                   precision='double'):
+        # read from file
+        header, int_cellid_indexes, \
+        ext_cellid_indexes = self._get_header(modelgrid, precision)
+        file_array = np.fromfile(read_file, dtype=header, count=-1)
+        # build data list for recarray
+        cellid_size = len(self._get_cell_header(modelgrid))
+        data_list = []
+        for record in file_array:
+            data_record = ()
+            current_cellid_size = 0
+            current_cellid = ()
+            for index, data_item in enumerate(record):
+                if index in ext_cellid_indexes:
+                    current_cellid += (data_item - 1,)
+                    current_cellid_size += 1
+                    if current_cellid_size == cellid_size:
+                        data_record += current_cellid
+                        data_record = (data_record,)
+                        current_cellid = ()
+                        current_cellid_size = 0
+                else:
+                    data_record += (data_item,)
+            data_list.append(data_record)
+        return data_list
+
+    def write_binary_file(self, data, fname, modelgrid=None,
+                          precision='double'):
+        fd = self._open_ext_file(fname, binary=True, write=True)
+        data_array = self._build_data_array(data, modelgrid, precision)
+        data_array.tofile(fd)
+        fd.close()
+
+    def _build_data_array(self, data, modelgrid, precision):
+        header, int_cellid_indexes,\
+            ext_cellid_indexes = self._get_header(modelgrid, precision)
+        data_list = []
+        for record in data:
+            new_record = ()
+            for index, column in enumerate(record):
+                if index in int_cellid_indexes:
+                    if isinstance(column, int):
+                        new_record += (column + 1,)
+                    else:
+                        for item in column:
+                            new_record += (item + 1,)
+                else:
+                    new_record += (column,)
+            data_list.append(new_record)
+        return np.array(data_list, dtype=header)
+
+    def _get_header(self, modelgrid, precision):
+        if precision.lower() == 'double':
+            np_flt_type = np.float64
+        else:
+            np_flt_type = np.float32
+        header = []
+        int_cellid_indexes = {}
+        ext_cellid_indexes = {}
+        ext_index = 0
+        for index, di_struct in enumerate(self.structure.data_item_structures):
+            if di_struct.is_cellid:
+                cell_header = self._get_cell_header(modelgrid)
+                header += cell_header
+                int_cellid_indexes[index] = True
+                for index in range(ext_index, ext_index + len(cell_header)):
+                    ext_cellid_indexes[index] = True
+                ext_index += len(cell_header)
+            elif not di_struct.optional:
+                header.append((di_struct.name, np_flt_type))
+                ext_index += 1
+            elif di_struct.name == 'aux':
+                aux_var_names = self._data_dimensions.package_dim.\
+                    get_aux_variables()
+                if aux_var_names is not None:
+                    for aux_var_name in aux_var_names[0]:
+                        if aux_var_name.lower() != 'auxiliary':
+                            header.append((aux_var_name, np.float64))
+                            ext_index += 1
+        return header, int_cellid_indexes, ext_cellid_indexes
+
+    def _get_cell_header(self, modelgrid):
+        if modelgrid.grid_type == 'structured':
+            return [('layer', np.int32), ('row', np.int32), ('col', np.int32)]
+        elif modelgrid.grid_type == 'vertex_layered':
+            return [('layer', np.int32), ('ncpl', np.int32)]
+        else:
+            return [('nodes', np.int32)]
 
     def load_from_package(self, first_line, file_handle, storage,
                           pre_data_comments=None):

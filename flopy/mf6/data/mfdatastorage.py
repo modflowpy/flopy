@@ -11,7 +11,7 @@ from ..data import mfdatautil
 from ...utils.datautil import DatumUtil, FileIter, MultiListIter, PyListUtil, \
                               ArrayIndexIter, MultiList
 from .mfdatautil import convert_data, MFComment
-from .mffileaccess import MFFileAccessArray, MFFileAccess
+from .mffileaccess import MFFileAccessArray, MFFileAccessList, MFFileAccess
 
 
 class DataStorageType(Enum):
@@ -717,8 +717,6 @@ class DataStorage(object):
         if isinstance(data, dict):
             if 'filename' in data:
                 self.process_open_close_line(data, layer)
-                # store file
-
                 return
         self.store_internal(data, layer, False, multiplier, key=key,
                             autofill=autofill)
@@ -786,7 +784,12 @@ class DataStorage(object):
                     data['data'] = [data['data']]
 
             if 'filename' in data:
-                self.process_open_close_line(data, layer)
+                multiplier, iprn, binary = self.process_open_close_line(data,
+                                                                        layer)
+                # store location to file
+                self.store_external(data['filename'], layer, [multiplier],
+                                    print_format=iprn, binary=binary,
+                                    do_not_verify=True)
                 return True
             elif 'data' in data:
                 multiplier, iprn = self.process_internal_line(data)
@@ -811,24 +814,14 @@ class DataStorage(object):
                                     key=key, print_format=iprn)
                 return True
             elif data[0].lower() != 'open/close':
-                # assume open/close is just omitted, though test data file to
-                # be sure
+                # assume open/close is just omitted
                 new_data = data[:]
                 new_data.insert(0, 'open/close')
             else:
                 new_data = data[:]
             multiplier, iprn, binary = self.process_open_close_line(new_data,
                                                                     layer,
-                                                                    False)
-            model_name = \
-                    self.data_dimensions.package_dim.model_dim[0].model_name
-            resolved_path = \
-                    self._simulation_data.mfpath.resolve_path(new_data[1],
-                                                              model_name)
-            # store location to file
-            self.store_external(new_data[1], layer, [multiplier],
-                                print_format=iprn, binary=binary,
-                                do_not_verify=True)
+                                                                    True)
             return True
         # try to resolve as internal array
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
@@ -1029,16 +1022,13 @@ class DataStorage(object):
                 fp = self._simulation_data.mfpath.resolve_path(file_path,
                                                                model_name)
                 if binary:
-                    text = self.data_dimensions.structure.name
-                    file_access = MFFileAccessArray(
+                    file_access = MFFileAccessList(
                         self.data_dimensions.structure, self.data_dimensions,
                         self._simulation_data, self._data_path,
                         self._stress_period)
-                    file_access.write_binary_file(data, fp, text,
-                                                  self._model_or_sim.modelgrid,
-                                                  self._model_or_sim.modeltime,
-                                                  stress_period=self._stress_period,
-                                                  precision='double')
+                    file_access.write_binary_file(
+                        data, fp, self._model_or_sim.modeldiscrit,
+                        precision='double')
                 else:
                     try:
                         fd = open(fp, 'w')
@@ -1087,14 +1077,11 @@ class DataStorage(object):
                         self.data_dimensions.structure, self.data_dimensions,
                         self._simulation_data, self._data_path,
                         self._stress_period)
-                    file_access.write_binary_file(data, fp, text,
-                                                  self._model_or_sim.modelgrid,
-                                                  self._model_or_sim.modeltime,
-                                                  stress_period=
-                                                  self._stress_period,
-                                                  precision='double',
-                                                  write_multi_layer=
-                                                  (layer is None))
+                    file_access.write_binary_file(
+                        data, fp, text, self._model_or_sim.modeldiscrit,
+                        self._model_or_sim.modeltime,
+                        stress_period=self._stress_period, precision='double',
+                        write_multi_layer=(layer is None))
                 else:
                     file_access = MFFileAccessArray(
                         self.data_dimensions.structure, self.data_dimensions,
@@ -1182,8 +1169,50 @@ class DataStorage(object):
                             binary=binary)
 
     def external_to_internal(self, layer, store_internal=False):
-        # currently only support files containing ndarrays
-        if self.data_structure_type != DataStructureType.ndarray:
+        if layer is None:
+            layer = 0
+        # load data from external file
+        model_name = self.data_dimensions.package_dim.model_dim[0]. \
+            model_name
+        read_file = self._simulation_data.mfpath.resolve_path(
+            self.layer_storage[layer].fname, model_name)
+        # currently support files containing ndarrays or recarrays
+        if self.data_structure_type == DataStructureType.ndarray:
+            file_access = MFFileAccessArray(
+                self.data_dimensions.structure, self.data_dimensions,
+                self._simulation_data, self._data_path,
+                self._stress_period)
+            if self.layer_storage[layer].binary:
+                data_out = file_access.read_binary_data_from_file(
+                    read_file, self.get_data_dimensions(layer),
+                    self.get_data_size(layer), self._data_type,
+                    self._model_or_sim.modeldiscrit)[0]
+            else:
+                data_out = file_access.read_text_data_from_file(
+                    self.get_data_size(layer), self._data_type,
+                    self.get_data_dimensions(layer), layer, read_file)[0]
+            if self.layer_storage[layer].factor is not None:
+                data_out = data_out * self.layer_storage[layer].factor
+
+            if store_internal:
+                self.store_internal(data_out, layer)
+            return data_out
+        elif self.data_structure_type == DataStructureType.recarray:
+            file_access = MFFileAccessList(
+                self.data_dimensions.structure, self.data_dimensions,
+                self._simulation_data, self._data_path,
+                self._stress_period)
+            if self.layer_storage[layer].binary:
+                data = file_access.read_binary_data_from_file(
+                    read_file, self._model_or_sim.modeldiscrit)
+            else:
+                data = file_access.read_list_data_from_file(
+                    read_file, self, self._stress_period)
+            data_out = self._build_recarray(data, layer, False)
+            if store_internal:
+                self.store_internal(data_out, layer)
+            return data_out
+        else:
             path = self.data_dimensions.structure.path
             message= 'Can not convert {} to internal data. External to ' \
                      'internal file operations currently only supported ' \
@@ -1197,33 +1226,6 @@ class DataStorage(object):
                 self.data_dimensions.structure.name, inspect.stack()[0][3],
                 type_, value_, traceback_, message,
                 self._simulation_data.debug)
-
-        if layer is None:
-            layer = 0
-        # load data from external file
-        file_access = MFFileAccessArray(
-            self.data_dimensions.structure, self.data_dimensions,
-            self._simulation_data, self._data_path,
-            self._stress_period)
-        model_name = self.data_dimensions.package_dim.model_dim[0].\
-            model_name
-        read_file = self._simulation_data.mfpath.resolve_path(
-            self.layer_storage[layer].fname, model_name)
-        if self.layer_storage[layer].binary:
-            data_out = file_access.read_binary_data_from_file(
-                read_file, self.get_data_dimensions(layer),
-                self.get_data_size(layer), self._data_type,
-                self._model_or_sim.modelgrid)[0]
-        else:
-            data_out = file_access.read_text_data_from_file(
-                self.get_data_size(layer), self._data_type,
-                self.get_data_dimensions(layer), layer, read_file)[0]
-        if self.layer_storage[layer].factor is not None:
-            data_out = data_out * self.layer_storage[layer].factor
-
-        if store_internal:
-            self.store_internal(data_out, layer)
-        return data_out
 
     def internal_to_external(self, new_external_file, multiplier=None,
                              layer=None, print_format=None, binary=False):
@@ -1609,7 +1611,7 @@ class DataStorage(object):
                     data_out = file_access.read_binary_data_from_file(
                         read_file, self.get_data_dimensions(layer),
                         self.get_data_size(layer), self._data_type,
-                        self._model_or_sim.modelgrid,
+                        self._model_or_sim.modeldiscrit,
                         not self.layered)[0] * mult
                 else:
                     data_out = file_access.read_text_data_from_file(
