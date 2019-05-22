@@ -167,7 +167,6 @@ class Grid(object):
         s += "proj4_str:{0}; ".format(self.proj4)
         s += "units:{0}; ".format(self.units)
         s += "lenuni:{0}; ".format(self.lenuni)
-        s += "length_multiplier:{}".format(1)
         return s
 
     @property
@@ -200,7 +199,22 @@ class Grid(object):
 
     @property
     def proj4(self):
-        return self._proj4
+        proj4 = None
+        if self._proj4 is not None:
+            if "epsg" in self._proj4.lower():
+                if "init" not in self._proj4.lower():
+                    proj4 = "+init=" + self._proj4
+                else:
+                    proj4 = self._proj4
+                # set the epsg if proj4 specifies it
+                tmp = [i for i in self._proj4.split() if
+                       'epsg' in i.lower()]
+                self._epsg = int(tmp[0].split(':')[1])
+            else:
+                proj4 = self._proj4
+        elif self.epsg is not None:
+            proj4 = '+init=epsg:{}'.format(self.epsg)
+        return proj4
 
     @proj4.setter
     def proj4(self, proj4):
@@ -352,6 +366,7 @@ class Grid(object):
                 epsg = self._epsg
             if proj4 is None:
                 proj4 = self._proj4
+
         self._xoff = xoff
         self._yoff = yoff
         self._angrot = angrot

@@ -39,7 +39,7 @@ def max_tuple_abs_size(some_tuple):
 
 
 class DatumUtil(object):
-    @ staticmethod
+    @staticmethod
     def is_int(str):
         try:
             int(str)
@@ -49,7 +49,7 @@ class DatumUtil(object):
         except ValueError:
             return False
 
-    @ staticmethod
+    @staticmethod
     def is_float(str):
         try:
             float(str)
@@ -59,12 +59,13 @@ class DatumUtil(object):
         except ValueError:
             return False
 
-    @ staticmethod
+    @staticmethod
     def is_basic_type(obj):
         if isinstance(obj, str) or isinstance(obj, int) or \
                 isinstance(obj, float):
             return True
         return False
+
 
 class PyListUtil(object):
     """
@@ -130,7 +131,7 @@ class PyListUtil(object):
         if len(current_list) != 1:
             return False
         if (isinstance(current_list[0], list) or
-                isinstance(current_list, np.ndarray)) and \
+            isinstance(current_list, np.ndarray)) and \
                 len(current_list[0] != 0):
             return False
         return True
@@ -186,9 +187,9 @@ class PyListUtil(object):
                                                         np.ndarray):
                     # still in a list of lists, recurse
                     for item in PyListUtil.next_item(item, list_size == 1,
-                                                    nesting_change + 1,
-                                                    list_size ==
-                                                    len(current_list)):
+                                                     nesting_change + 1,
+                                                     list_size ==
+                                                     len(current_list)):
                         yield item
                     nesting_change = -(nesting_change + 1)
                 else:
@@ -229,7 +230,8 @@ class PyListUtil(object):
             # consistent delimiter has been found.  continue using that
             # delimiter without doing further checks
             if PyListUtil.delimiter_used is None:
-                clean_line = line.strip().split()
+                comment_split = line.strip().split('#', 1)
+                clean_line = comment_split[0].strip().split()
             else:
                 comment_split = line.strip().split('#', 1)
                 clean_line = comment_split[0].strip().split(
@@ -312,8 +314,9 @@ class PyListUtil(object):
             # remove all non-numeric text from leading and trailing positions
             # of text
             if text:
-                while text and (text[0] not in PyListUtil.numeric_chars or text[-1]
-                                not in PyListUtil.numeric_chars):
+                while text and (
+                        text[0] not in PyListUtil.numeric_chars or text[-1]
+                        not in PyListUtil.numeric_chars):
                     if text[0] not in PyListUtil.numeric_chars:
                         text = text[1:]
                     if text and text[-1] not in PyListUtil.numeric_chars:
@@ -398,6 +401,7 @@ class MultiList():
         returns an iterator that iterates over each object stored in the
         multi-list
     """
+
     def __init__(self, mdlist=None, shape=None, callback=None):
         if mdlist is not None:
             self.multi_dim_list = mdlist
@@ -513,7 +517,7 @@ class MultiList():
                 new_indexes.append(index)
             else:
                 incremented = True
-                new_indexes.append(index+1)
+                new_indexes.append(index + 1)
         if not incremented:
             new_indexes[-1] += 1
         return tuple(new_indexes)
@@ -641,13 +645,13 @@ class FileIter(object):
             raise StopIteration()
         else:
             while self._current_data is not None and \
-                  self._data_index >= len(self._current_data):
+                    self._data_index >= len(self._current_data):
                 self._next_line()
                 self._data_index = 0
                 if self.eof:
                     raise StopIteration()
             self._data_index += 1
-            return self._current_data[self._data_index-1]
+            return self._current_data[self._data_index - 1]
 
     def close(self):
         self._fd.close()

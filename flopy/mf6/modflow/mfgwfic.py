@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator
 
 
 class ModflowGwfic(mfpackage.MFPackage):
@@ -42,14 +42,15 @@ class ModflowGwfic(mfpackage.MFPackage):
     _package_type = "ic"
     dfn_file_name = "gwf-ic.dfn"
 
-    dfn = [["block griddata", "name strt", "type double precision", 
-            "shape (nodes)", "reader readarray", "layered true", 
+    dfn = [["block griddata", "name strt", "type double precision",
+            "shape (nodes)", "reader readarray", "layered true",
             "default_value 1.0"]]
 
     def __init__(self, model, loading_package=False, strt=1.0, filename=None,
                  pname=None, parent_file=None):
         super(ModflowGwfic, self).__init__(model, "ic", filename, pname,
-                                           loading_package, parent_file)        
+                                           loading_package, parent_file)
 
         # set up variables
-        self.strt = self.build_mfdata("strt",  strt)
+        self.strt = self.build_mfdata("strt", strt)
+        self._init_complete = True

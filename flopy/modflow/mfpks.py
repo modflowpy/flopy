@@ -32,11 +32,12 @@ class ModflowPks(Package):
     iprpks : int
         solver print out interval. (default is 0).
     mutpks : int
-        If mutpcg = 0, tables of maximum head change and residual will be printed each iteration.
+        If mutpcg = 0, tables of maximum head change and residual will be
+            printed each iteration.
         If mutpcg = 1, only the total number of iterations will be printed.
         If mutpcg = 2, no information will be printed.
         If mutpcg = 3, information will only be printed if convergence fails.
-        (default is 3).
+            (default is 3).
     damp : float
         is the steady-state damping factor. (default is 1.)
     dampt : float
@@ -235,8 +236,9 @@ class ModflowPks(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
 
-        print(
-            '   Warning: load method not completed. default pks object created.')
+        msg = 3 * ' ' + \
+              'Warning: load method not completed. default pks object created.'
+        print(msg)
 
         # close the open file
         f.close()
@@ -252,11 +254,9 @@ class ModflowPks(Package):
         pks = ModflowPks(model, unitnumber=unitnumber, filenames=filenames)
         return pks
 
-
     @staticmethod
     def ftype():
         return 'PKS'
-
 
     @staticmethod
     def defaultunit():

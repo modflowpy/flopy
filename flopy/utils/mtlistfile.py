@@ -35,15 +35,7 @@ class MtListBudget(object):
         Class constructor
         """
 
-        # Set up file reading
-        assert os.path.exists(file_name), "file_name {0} not found".format(
-            file_name)
         self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
-
         self.tssp_lines = 0
 
         # Assign the budgetkey, which should have been overridden
@@ -308,9 +300,9 @@ class MtListBudget(object):
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
                 msg = "error parsing 'in' SW items on line {}: " + '{}'.format(
-                        self.lcountm, str(e))
+                    self.lcountm, str(e))
                 raise Exception(
-                    )
+                )
             item += '_{0}_{1}'.format(comp, 'in')
             for lab, val in zip(['_cum', '_flx'], [cval, fval]):
                 iitem = item + lab

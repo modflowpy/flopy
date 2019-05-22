@@ -147,6 +147,7 @@ class SfrFile():
         -------
         df : pandas dataframe
             SFR output as a pandas dataframe
+
         """
 
         df = self.pd.read_csv(self.filename, delim_whitespace=True,
@@ -215,6 +216,7 @@ class SfrFile():
         -------
         results : dataframe
             Dataframe of same format as SfrFile.df, but subset to input locations.
+
         """
         try:
             segment = int(segment)

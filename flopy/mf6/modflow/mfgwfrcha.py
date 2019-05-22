@@ -95,66 +95,66 @@ class ModflowGwfrcha(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    auxiliary = ListTemplateGenerator(('gwf6', 'rcha', 'options', 
+    auxiliary = ListTemplateGenerator(('gwf6', 'rcha', 'options',
                                        'auxiliary'))
-    tas_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options', 
+    tas_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options',
                                             'tas_filerecord'))
-    obs_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options', 
+    obs_filerecord = ListTemplateGenerator(('gwf6', 'rcha', 'options',
                                             'obs_filerecord'))
     irch = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'irch'))
-    recharge = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 
+    recharge = ArrayTemplateGenerator(('gwf6', 'rcha', 'period',
                                        'recharge'))
     aux = ArrayTemplateGenerator(('gwf6', 'rcha', 'period', 'aux'))
     package_abbr = "gwfrcha"
     _package_type = "rcha"
     dfn_file_name = "gwf-rcha.dfn"
 
-    dfn = [["block options", "name readasarrays", "type keyword", "shape", 
+    dfn = [["block options", "name readasarrays", "type keyword", "shape",
             "reader urword", "optional false", "default_value True"],
-           ["block options", "name fixed_cell", "type keyword", "shape", 
+           ["block options", "name fixed_cell", "type keyword", "shape",
             "reader urword", "optional true"],
-           ["block options", "name auxiliary", "type string", 
+           ["block options", "name auxiliary", "type string",
             "shape (naux)", "reader urword", "optional true"],
-           ["block options", "name auxmultname", "type string", "shape", 
+           ["block options", "name auxmultname", "type string", "shape",
             "reader urword", "optional true"],
-           ["block options", "name print_input", "type keyword", 
+           ["block options", "name print_input", "type keyword",
             "reader urword", "optional true"],
-           ["block options", "name print_flows", "type keyword", 
+           ["block options", "name print_flows", "type keyword",
             "reader urword", "optional true"],
-           ["block options", "name save_flows", "type keyword", 
+           ["block options", "name save_flows", "type keyword",
             "reader urword", "optional true"],
-           ["block options", "name tas_filerecord", 
-            "type record tas6 filein tas6_filename", "shape", "reader urword", 
-            "tagged true", "optional true", "construct_package tas", 
+           ["block options", "name tas_filerecord",
+            "type record tas6 filein tas6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package tas",
             "construct_data tas_array", "parameter_name timearrayseries"],
-           ["block options", "name tas6", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name tas6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name filein", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name filein", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name tas6_filename", "type string", 
-            "preserve_case true", "in_record true", "reader urword", 
+           ["block options", "name tas6_filename", "type string",
+            "preserve_case true", "in_record true", "reader urword",
             "optional false", "tagged false"],
-           ["block options", "name obs_filerecord", 
-            "type record obs6 filein obs6_filename", "shape", "reader urword", 
-            "tagged true", "optional true", "construct_package obs", 
+           ["block options", "name obs_filerecord",
+            "type record obs6 filein obs6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package obs",
             "construct_data continuous", "parameter_name observations"],
-           ["block options", "name obs6", "type keyword", "shape", 
-            "in_record true", "reader urword", "tagged true", 
+           ["block options", "name obs6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name obs6_filename", "type string", 
-            "preserve_case true", "in_record true", "tagged false", 
+           ["block options", "name obs6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
             "reader urword", "optional false"],
-           ["block period", "name iper", "type integer", 
-            "block_variable True", "in_record true", "tagged false", "shape", 
+           ["block period", "name iper", "type integer",
+            "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
-           ["block period", "name irch", "type integer", 
+           ["block period", "name irch", "type integer",
             "shape (ncol*nrow; ncpl)", "reader readarray", "optional true"],
-           ["block period", "name recharge", "type double precision", 
-            "shape (ncol*nrow; ncpl)", "reader readarray", 
+           ["block period", "name recharge", "type double precision",
+            "shape (ncol*nrow; ncpl)", "reader readarray",
             "default_value 1.e-3"],
-           ["block period", "name aux", "type double precision", 
+           ["block period", "name aux", "type double precision",
             "shape (ncol*nrow; ncpl)", "reader readarray", "optional true"]]
 
     def __init__(self, model, loading_package=False, readasarrays=True,
@@ -164,26 +164,27 @@ class ModflowGwfrcha(mfpackage.MFPackage):
                  recharge=1.e-3, aux=None, filename=None, pname=None,
                  parent_file=None):
         super(ModflowGwfrcha, self).__init__(model, "rcha", filename, pname,
-                                             loading_package, parent_file)        
+                                             loading_package, parent_file)
 
         # set up variables
-        self.readasarrays = self.build_mfdata("readasarrays",  readasarrays)
-        self.fixed_cell = self.build_mfdata("fixed_cell",  fixed_cell)
-        self.auxiliary = self.build_mfdata("auxiliary",  auxiliary)
-        self.auxmultname = self.build_mfdata("auxmultname",  auxmultname)
-        self.print_input = self.build_mfdata("print_input",  print_input)
-        self.print_flows = self.build_mfdata("print_flows",  print_flows)
-        self.save_flows = self.build_mfdata("save_flows",  save_flows)
-        self._tas_filerecord = self.build_mfdata("tas_filerecord", 
+        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
+        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
+        self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
+        self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.print_input = self.build_mfdata("print_input", print_input)
+        self.print_flows = self.build_mfdata("print_flows", print_flows)
+        self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self._tas_filerecord = self.build_mfdata("tas_filerecord",
                                                  None)
         self._tas_package = self.build_child_package("tas", timearrayseries,
-                                                     "tas_array", 
+                                                     "tas_array",
                                                      self._tas_filerecord)
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", 
+        self._obs_filerecord = self.build_mfdata("obs_filerecord",
                                                  None)
         self._obs_package = self.build_child_package("obs", observations,
-                                                     "continuous", 
+                                                     "continuous",
                                                      self._obs_filerecord)
-        self.irch = self.build_mfdata("irch",  irch)
-        self.recharge = self.build_mfdata("recharge",  recharge)
-        self.aux = self.build_mfdata("aux",  aux)
+        self.irch = self.build_mfdata("irch", irch)
+        self.recharge = self.build_mfdata("recharge", recharge)
+        self.aux = self.build_mfdata("aux", aux)
+        self._init_complete = True

@@ -5,6 +5,7 @@ import os
 import shutil
 import numpy as np
 import flopy
+from nose.tools import raises
 
 try:
     import pymake
@@ -280,6 +281,33 @@ def test_hob_options():
         success, buff = m.run_model(silent=False)
         assert success, 'could not run simple MODFLOW-2005 model'
 
+    return
+
+
+def test_multilayerhob_pr():
+    """
+    test041 test multilayer obs PR == 1 criteria with problematic PRs
+    """
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml, nlay=3, nrow=1, ncol=1, nper=1,
+                                   perlen=[1])
+    flopy.modflow.HeadObservation(ml,layer=-3,row=0,column=0,
+                                  time_series_data=[[1.0, 0]],
+                                  mlay={0:0.19, 1:0.69, 2:0.12})
+    return
+
+
+@raises(ValueError)
+def test_multilayerhob_prfail():
+    """
+    test041 failure of multilayer obs PR == 1 criteria
+    """
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml, nlay=3, nrow=1, ncol=1, nper=1,
+                                   perlen=[1])
+    flopy.modflow.HeadObservation(ml,layer=-3,row=0,column=0,
+                                  time_series_data=[[1.0, 0]],
+                                  mlay={0:0.50, 1:0.50, 2:0.01})
     return
 
 

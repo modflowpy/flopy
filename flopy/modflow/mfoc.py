@@ -11,6 +11,7 @@ import os
 import sys
 
 from ..pakbase import Package
+from ..utils import check
 
 
 class ModflowOc(Package):
@@ -68,11 +69,11 @@ class ModflowOc(Package):
         computer operating systems or different Fortran compilers.
         (default is None)
     stress_period_data : dictionary of of lists
-        Dictionary key is a tuple with the zero-based period and step 
+        Dictionary key is a tuple with the zero-based period and step
         (IPEROC, ITSOC) for each print/save option list. If stress_period_data
         is None, then heads are saved for the last time step of each stress
         period. (default is None)
-        
+
         The list can have any valid MODFLOW OC print/save option:
             PRINT HEAD
             PRINT DRAWDOWN
@@ -81,9 +82,9 @@ class ModflowOc(Package):
             SAVE DRAWDOWN
             SAVE BUDGET
             SAVE IBOUND
-            
-            The lists can also include (1) DDREFERENCE in the list to reset 
-            drawdown reference to the period and step and (2) a list of layers 
+
+            The lists can also include (1) DDREFERENCE in the list to reset
+            drawdown reference to the period and step and (2) a list of layers
             for PRINT HEAD, SAVE HEAD, PRINT DRAWDOWN, SAVE DRAWDOWN, and
             SAVE IBOUND.
 
@@ -118,9 +119,9 @@ class ModflowOc(Package):
 
     Notes
     -----
-    The "words" method for specifying output control is the only option 
-    available.  Also, the "compact" budget should normally be used as it 
-    produces files that are typically much smaller.  The compact budget form is 
+    The "words" method for specifying output control is the only option
+    available.  Also, the "compact" budget should normally be used as it
+    produces files that are typically much smaller.  The compact budget form is
     also a requirement for using the MODPATH particle tracking program.
 
     Examples
@@ -312,6 +313,81 @@ class ModflowOc(Package):
 
         self.parent.add_package(self)
 
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen.
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.oc.check()
+
+        """
+        chk = check(self, f=f, verbose=verbose, level=level)
+        dis = self.parent.get_package('DIS')
+        if dis is None:
+            dis = self.parent.get_package('DISU')
+        if dis is None:
+            chk._add_to_summary('Error', package='OC',
+                                desc='DIS package not available')
+        else:
+            # generate possible actions expected
+            expected_actions = []
+            for first in ['PRINT', 'SAVE']:
+                for second in ['HEAD', 'DRAWDOWN', 'BUDGET', 'IBOUND']:
+                    expected_actions.append([first, second])
+            # remove exception
+            del expected_actions[expected_actions.index(['PRINT', 'IBOUND'])]
+            keys = list(self.stress_period_data.keys())
+            for kper in range(dis.nper):
+                for kstp in range(dis.nstp[kper]):
+                    kperkstp = (kper, kstp)
+                    if kperkstp in keys:
+                        del keys[keys.index(kperkstp)]
+                        data = self.stress_period_data[kperkstp]
+                        if not isinstance(data, list):
+                            data = [data]
+                        for action in data:
+                            words = action.upper().split()
+                            if len(words) < 2:
+                                chk._add_to_summary(
+                                    'Warning', package='OC',  # value=kperkstp,
+                                    desc='action {!r} ignored; too few words'
+                                    .format(action))
+                            elif words[0:2] not in expected_actions:
+                                chk._add_to_summary(
+                                    'Warning', package='OC',  # value=kperkstp,
+                                    desc='action {!r} ignored'.format(action))
+                            # TODO: check data list of layers for some actions
+            for kperkstp in keys:
+                # repeat as many times as remaining keys not used
+                chk._add_to_summary(
+                    'Warning', package='OC',  # value=kperkstp,
+                    desc='action(s) defined in OC stress_period_data ignored '
+                    'as they are not part the stress periods defined by DIS')
+        chk.summarize()
+        return chk
+
     def write_file(self):
         """
         Write the package file.
@@ -489,7 +565,7 @@ class ModflowOc(Package):
         """
 
         # remove existing output file
-        for i, pp in enumerate(self.parent.packagelist):
+        for pp in self.parent.packagelist:
             if hasattr(pp, 'ipakcb'):
                 if pp.ipakcb > 0:
                     self.parent.remove_output(unit=pp.ipakcb)
@@ -499,7 +575,7 @@ class ModflowOc(Package):
         self._set_singlebudgetunit(budgetunit)
 
         # add output file
-        for i, pp in enumerate(self.parent.packagelist):
+        for pp in self.parent.packagelist:
             if hasattr(pp, 'ipakcb'):
                 pp.ipakcb = self.iubud
                 self.parent.add_output_file(pp.ipakcb, fname=fname,
@@ -570,18 +646,14 @@ class ModflowOc(Package):
             else:
                 lnlst = line.strip().split()
                 try:
-                    ihedfm, iddnfm = int(lnlst[0]), int(lnlst[1])
                     ihedun, iddnun = int(lnlst[2]), int(lnlst[3])
                     numericformat = True
                 except:
                     f.seek(ipos)
-                    pass
                 # exit so the remaining data can be read
                 #  from the file based on numericformat
                 break
-        # set pointer to current position in the OC file
-        ipos = f.tell()
-        #
+        # read word formats
         if not numericformat:
             while True:
                 line = f.readline()
@@ -611,14 +683,10 @@ class ModflowOc(Package):
                     break
         #
         if ext_unit_dict is not None:
-            try:
+            if ihedun in ext_unit_dict:
                 fhead = ext_unit_dict[ihedun]
-            except:
-                pass
-            try:
+            if iddnun in ext_unit_dict:
                 fddn = ext_unit_dict[iddnun]
-            except:
-                pass
 
         # close the oc file
         f.close()
@@ -743,7 +811,6 @@ class ModflowOc(Package):
                     numericformat = True
                 except:
                     f.seek(ipos)
-                    pass
                 # exit so the remaining data can be read
                 #  from the file based on numericformat
                 break
@@ -956,19 +1023,22 @@ class ModflowOc(Package):
             try:
                 filenames[1] = os.path.basename(ext_unit_dict[ihedun].filename)
             except:
-                pass
+                if model.verbose:
+                    print('head file name will be generated by flopy')
         if iddnun > 0:
             unitnumber[2] = iddnun
             try:
                 filenames[2] = os.path.basename(ext_unit_dict[iddnun].filename)
             except:
-                pass
+                if model.verbose:
+                    print('drawdown file name will be generated by flopy')
         if ibouun > 0:
             unitnumber[4] = ibouun
             try:
                 filenames[4] = os.path.basename(ext_unit_dict[ibouun].filename)
             except:
-                pass
+                if model.verbose:
+                    print('ibound file name will be generated by flopy')
             if cboufm is None:
                 cboufm = True
 

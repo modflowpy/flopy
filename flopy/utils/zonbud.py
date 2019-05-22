@@ -170,8 +170,8 @@ class ZoneBudget(object):
                 'imeth']
 
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
-        # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS ARE AND THEN USE
-        # FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
+        # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS
+        # ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
         # SWIADDTO--- terms are used by the SWI2 groundwater flow process.
         internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE',
                                'FLOW FRONT FACE', 'FLOW LOWER FACE',
@@ -342,8 +342,9 @@ class ZoneBudget(object):
         None
 
         """
-        # Needs updating to handle the new budget list structure. Write out budgets for all kstpkper
-        # if kstpkper is None or pass list of kstpkper/totim to save particular budgets.
+        # Needs updating to handle the new budget list structure. Write out
+        # budgets for all kstpkper if kstpkper is None or pass list of
+        # kstpkper/totim to save particular budgets.
         with open(fname, 'w') as f:
             # Write header
             f.write(','.join(self._budget.dtype.names) + '\n')

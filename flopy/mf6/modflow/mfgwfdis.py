@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE DIRECTLY.  THIS FILE MUST BE CREATED BY
 # mf6/utils/createpackages.py
 from .. import mfpackage
-from ..data.mfdatautil import ListTemplateGenerator, ArrayTemplateGenerator
+from ..data.mfdatautil import ArrayTemplateGenerator
 
 
 class ModflowGwfdis(mfpackage.MFPackage):
@@ -82,39 +82,39 @@ class ModflowGwfdis(mfpackage.MFPackage):
     delc = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'delc'))
     top = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'top'))
     botm = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 'botm'))
-    idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata', 
+    idomain = ArrayTemplateGenerator(('gwf6', 'dis', 'griddata',
                                       'idomain'))
     package_abbr = "gwfdis"
     _package_type = "dis"
     dfn_file_name = "gwf-dis.dfn"
 
-    dfn = [["block options", "name length_units", "type string", 
+    dfn = [["block options", "name length_units", "type string",
             "reader urword", "optional true"],
-           ["block options", "name nogrb", "type keyword", "reader urword", 
+           ["block options", "name nogrb", "type keyword", "reader urword",
             "optional true"],
-           ["block options", "name xorigin", "type double precision", 
+           ["block options", "name xorigin", "type double precision",
             "reader urword", "optional true"],
-           ["block options", "name yorigin", "type double precision", 
+           ["block options", "name yorigin", "type double precision",
             "reader urword", "optional true"],
-           ["block options", "name angrot", "type double precision", 
+           ["block options", "name angrot", "type double precision",
             "reader urword", "optional true"],
-           ["block dimensions", "name nlay", "type integer", 
+           ["block dimensions", "name nlay", "type integer",
             "reader urword", "optional false", "default_value 1"],
-           ["block dimensions", "name nrow", "type integer", 
+           ["block dimensions", "name nrow", "type integer",
             "reader urword", "optional false", "default_value 2"],
-           ["block dimensions", "name ncol", "type integer", 
+           ["block dimensions", "name ncol", "type integer",
             "reader urword", "optional false", "default_value 2"],
-           ["block griddata", "name delr", "type double precision", 
+           ["block griddata", "name delr", "type double precision",
             "shape (ncol)", "reader readarray", "default_value 1.0"],
-           ["block griddata", "name delc", "type double precision", 
+           ["block griddata", "name delc", "type double precision",
             "shape (nrow)", "reader readarray", "default_value 1.0"],
-           ["block griddata", "name top", "type double precision", 
+           ["block griddata", "name top", "type double precision",
             "shape (ncol, nrow)", "reader readarray", "default_value 1.0"],
-           ["block griddata", "name botm", "type double precision", 
-            "shape (ncol, nrow, nlay)", "reader readarray", "layered true", 
+           ["block griddata", "name botm", "type double precision",
+            "shape (ncol, nrow, nlay)", "reader readarray", "layered true",
             "default_value 0."],
-           ["block griddata", "name idomain", "type integer", 
-            "shape (ncol, nrow, nlay)", "reader readarray", "layered true", 
+           ["block griddata", "name idomain", "type integer",
+            "shape (ncol, nrow, nlay)", "reader readarray", "layered true",
             "optional true"]]
 
     def __init__(self, model, loading_package=False, length_units=None,
@@ -122,19 +122,20 @@ class ModflowGwfdis(mfpackage.MFPackage):
                  nrow=2, ncol=2, delr=1.0, delc=1.0, top=1.0, botm=0.,
                  idomain=None, filename=None, pname=None, parent_file=None):
         super(ModflowGwfdis, self).__init__(model, "dis", filename, pname,
-                                            loading_package, parent_file)        
+                                            loading_package, parent_file)
 
         # set up variables
-        self.length_units = self.build_mfdata("length_units",  length_units)
-        self.nogrb = self.build_mfdata("nogrb",  nogrb)
-        self.xorigin = self.build_mfdata("xorigin",  xorigin)
-        self.yorigin = self.build_mfdata("yorigin",  yorigin)
-        self.angrot = self.build_mfdata("angrot",  angrot)
-        self.nlay = self.build_mfdata("nlay",  nlay)
-        self.nrow = self.build_mfdata("nrow",  nrow)
-        self.ncol = self.build_mfdata("ncol",  ncol)
-        self.delr = self.build_mfdata("delr",  delr)
-        self.delc = self.build_mfdata("delc",  delc)
-        self.top = self.build_mfdata("top",  top)
-        self.botm = self.build_mfdata("botm",  botm)
-        self.idomain = self.build_mfdata("idomain",  idomain)
+        self.length_units = self.build_mfdata("length_units", length_units)
+        self.nogrb = self.build_mfdata("nogrb", nogrb)
+        self.xorigin = self.build_mfdata("xorigin", xorigin)
+        self.yorigin = self.build_mfdata("yorigin", yorigin)
+        self.angrot = self.build_mfdata("angrot", angrot)
+        self.nlay = self.build_mfdata("nlay", nlay)
+        self.nrow = self.build_mfdata("nrow", nrow)
+        self.ncol = self.build_mfdata("ncol", ncol)
+        self.delr = self.build_mfdata("delr", delr)
+        self.delc = self.build_mfdata("delc", delc)
+        self.top = self.build_mfdata("top", top)
+        self.botm = self.build_mfdata("botm", botm)
+        self.idomain = self.build_mfdata("idomain", idomain)
+        self._init_complete = True

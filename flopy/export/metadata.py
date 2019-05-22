@@ -16,7 +16,8 @@ class acdd:
     ----------
 
     sciencebase_id : str
-        Unique identifier for ScienceBase record (e.g. 582da7efe4b04d580bd37be8)
+        Unique identifier for ScienceBase record
+        (e.g. 582da7efe4b04d580bd37be8)
     model : flopy model object
         Model object
 
@@ -209,7 +210,7 @@ class acdd:
         try:
             return self.get_sciencebase_xml_metadata()
         except:
-            None
+            return None
 
     @property
     def xmlfile(self):
@@ -224,7 +225,7 @@ class acdd:
         Parameters
         ----------
         ID : str
-            ScienceBase ID string; 
+            ScienceBase ID string;
             e.g. 582da7efe4b04d580bd37be8 for Dane County Model
 
         Returns
@@ -250,7 +251,7 @@ class acdd:
         Parameters
         ----------
         ID : str
-            ScienceBase ID string; 
+            ScienceBase ID string;
             e.g. 582da7efe4b04d580bd37be8 for Dane County Model
 
         Returns
@@ -258,8 +259,11 @@ class acdd:
         metadata : dict
             Dictionary of metadata
         """
-        import xml.etree.ElementTree as ET
-        from flopy.utils.flopy_io import get_url_text
+        try:
+            # use defusedxml to removed XML security vulnerabilities
+            import defusedxml.ElementTree as ET
+        except ImportError:
+            raise ImportError("DefusedXML must be installed to query metadata")
 
         url = self.xmlfile
         msg = 'Need an internet connection to get metadata from ScienceBase.'

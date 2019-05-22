@@ -10,13 +10,13 @@ from ...mbase import run_model
 from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
                      PackageContainerType, MFDataException, FlopyException, \
                      VerbosityLevel
-from ..mfmodel import MFModel
 from ..mfpackage import MFPackage
 from ..data.mfstructure import DatumType
-from ..data import mfstructure, mfdata
+from ..data import mfstructure
 from ..utils import binaryfile_utils
 from ..utils import mfobservation
 from ..modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
+from ..data.mfdatautil import MFComment
 
 
 class SimulationDict(collections.OrderedDict):
@@ -77,7 +77,7 @@ class SimulationDict(collections.OrderedDict):
                 if key[-1] == key_leaf:
                     # found key_leaf as a key in the dictionary
                     return item, None
-                if not isinstance(item, mfdata.MFComment):
+                if not isinstance(item, MFComment):
                     data_item_index = 0
                     data_item_structures = item.structure.data_item_structures
                     for data_item_struct in data_item_structures:
@@ -168,7 +168,6 @@ class MFSimulationData(object):
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
         self.fast_write = True
-        self.verify_external_data = True
         self.comments_on = False
         self.auto_set_sizes = True
         self.debug = False
@@ -406,7 +405,7 @@ class MFSimulation(PackageContainer):
                                '###################\n\n' \
                                '{}\n'.format(data_str, package._get_pname(),
                                              pk_str)
-        for idx, model in self._models.items():
+        for model in self._models.values():
             if formal:
                 mod_repr = repr(model)
                 if len(mod_repr.strip()) > 0:
@@ -583,7 +582,7 @@ class MFSimulation(PackageContainer):
                                                              )]
 
         try:
-            solution_group_list = solution_recarray.get_data()
+            solution_group_dict = solution_recarray.get_data()
         except MFDataException as mfde:
             message = 'Error occurred while loading solution groups from ' \
                       'the simulation name file.'
@@ -591,7 +590,7 @@ class MFSimulation(PackageContainer):
                                   model=instance.name,
                                   package='nam',
                                   message=message)
-        for solution_group in solution_group_list:
+        for solution_group in solution_group_dict.values():
             for solution_info in solution_group:
                 ims_file = mfims.ModflowIms(instance, filename=solution_info[1],
                                             pname=solution_info[2])
@@ -721,7 +720,7 @@ class MFSimulation(PackageContainer):
 
         in_simulation = False
         pkg_with_same_name = None
-        for index, file in self._ims_files.items():
+        for file in self._ims_files.values():
             if file is ims_file:
                 in_simulation = True
             if file.package_name == ims_file.package_name and \
@@ -792,7 +791,8 @@ class MFSimulation(PackageContainer):
                                           message=message)
 
     def write_simulation(self,
-                         ext_file_action=ExtFileAction.copy_relative_paths):
+                         ext_file_action=ExtFileAction.copy_relative_paths,
+                         silent=False):
         """
         writes the simulation to files
 
@@ -803,10 +803,15 @@ class MFSimulation(PackageContainer):
             has changed.  defaults to copy_relative_paths which copies only
             files with relative paths, leaving files defined by absolute
             paths fixed.
-
+        silent : bool
+            writes out the simulation in silent mode (verbosity_level = 0)
         Examples
         --------
         """
+        saved_verb_lvl = self.simulation_data.verbosity_level
+        if silent:
+            self.simulation_data.verbosity_level = VerbosityLevel.quiet
+
         # write simulation name file
         if self.simulation_data.verbosity_level.value >= \
                 VerbosityLevel.normal.value:
@@ -821,7 +826,7 @@ class MFSimulation(PackageContainer):
         self._tdis_file.write(ext_file_action=ext_file_action)
 
         # write ims files
-        for index, ims_file in self._ims_files.items():
+        for ims_file in self._ims_files.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing ims package {}...'.format(
@@ -829,7 +834,7 @@ class MFSimulation(PackageContainer):
             ims_file.write(ext_file_action=ext_file_action)
 
         # write exchange files
-        for key, exchange_file in self._exchange_files.items():
+        for exchange_file in self._exchange_files.values():
             exchange_file.write()
             if hasattr(exchange_file, 'gnc_filerecord') and \
                     exchange_file.gnc_filerecord.has_data():
@@ -882,7 +887,7 @@ class MFSimulation(PackageContainer):
                               'written.'.format(mvr_file))
 
         # write other packages
-        for index, pp in self._other_files.items():
+        for pp in self._other_files.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing package {}...'.format(pp._get_pname()))
@@ -891,7 +896,7 @@ class MFSimulation(PackageContainer):
         # FIX: model working folder should be model name file folder
 
         # write models
-        for key, model in self._models.items():
+        for model in self._models.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.normal.value:
                 print('  writing model {}...'.format(model.name))
@@ -911,6 +916,9 @@ class MFSimulation(PackageContainer):
             print('INFORMATION: {} external files copied'.format(
                 num_files_copied))
         self.simulation_data.mfpath.set_last_accessed_path()
+
+        if silent:
+            self.simulation_data.verbosity_level = saved_verb_lvl
 
     def set_sim_path(self, path):
         self.simulation_data.mfpath.set_sim_path(path)
@@ -940,7 +948,7 @@ class MFSimulation(PackageContainer):
         output_file_keys = output_req.getkeys(self.simulation_data.mfdata,
                                               self.simulation_data.mfpath,
                                               False)
-        for key, path in output_file_keys.binarypathdict.items():
+        for path in output_file_keys.binarypathdict.values():
             if os.path.isfile(path):
                 os.remove(path)
 
@@ -972,11 +980,7 @@ class MFSimulation(PackageContainer):
     def model_dict(self):
         return self._models.copy()
 
-    @property
-    def model_names(self):
-        return list(self._models.keys())
-
-    def get_model(self, model_name=''):
+    def get_model(self, model_name=None):
         """
         Load an existing model.
 
@@ -992,6 +996,9 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
+        if model_name is None:
+            for model in self._models.values():
+                return model
         return self._models[model_name]
 
     def get_exchange_file(self, filename):
@@ -1379,7 +1386,7 @@ class MFSimulation(PackageContainer):
                 return False
 
         # ims files valid
-        for index, imsfile in self._ims_files.items():
+        for imsfile in self._ims_files.values():
             if not imsfile.is_valid():
                 return False
 
@@ -1407,7 +1414,8 @@ class MFSimulation(PackageContainer):
         else:
             return verbosity_level
 
-    def _get_package_path(self, package):
+    @staticmethod
+    def _get_package_path(package):
         if package.parent_file is not None:
             return (package.parent_file.path) + (package.package_type,)
         else:

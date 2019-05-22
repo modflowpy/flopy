@@ -11,7 +11,6 @@ from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
 from ..discretization.structuredgrid import StructuredGrid
-from ..discretization.unstructuredgrid import UnstructuredGrid
 from ..discretization.grid import Grid
 from flopy.discretization.modeltime import ModelTime
 from .mfpar import ModflowPar
@@ -222,6 +221,7 @@ class Modflow(BaseModel):
                  '  periods = {}\n'
                  '  nodelay = {}\n'.format(nodes, nlay, nper, ncol))
         return s
+
     #
     # def next_ext_unit(self):
     #     """
@@ -264,7 +264,7 @@ class Modflow(BaseModel):
             print('WARNING: Model grid functionality limited for unstructured '
                   'grid.')
         else:
-        # build structured grid
+            # build structured grid
             self._modelgrid = StructuredGrid(self.dis.delc.array,
                                              self.dis.delr.array,
                                              self.dis.top.array,
@@ -410,7 +410,8 @@ class Modflow(BaseModel):
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
                 f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
-                                                        self.glo.unit_number[0],
+                                                        self.glo.unit_number[
+                                                            0],
                                                         self.glo.file_name[0]))
         f_nam.write('{:14s} {:5d}  {}\n'.format(self.lst.name[0],
                                                 self.lst.unit_number[0],
@@ -488,7 +489,7 @@ class Modflow(BaseModel):
                 elif oc.iuddn == iu:
                     oc.iuddn = iu1
 
-         # replace value in ipakcb
+        # replace value in ipakcb
         for p in self.packagelist:
             try:
                 iu0 = p.ipakcb
@@ -496,7 +497,8 @@ class Modflow(BaseModel):
                     j = output_units0.index(iu0)
                     p.ipakcb = self.output_units[j]
             except:
-                pass
+                if self.verbose:
+                    print('   could not replace value in ipakcb')
 
         return
 
@@ -538,9 +540,8 @@ class Modflow(BaseModel):
                     if v.lower() == 'save budget':
                         savebud = True
         except Exception as e:
-            print("error reading output filenames from OC package:{0}". \
-                  format(str(e)))
-            pass
+            print('error reading output filenames ' +
+                  'from OC package: {}'.format(str(e)))
 
         self.hpth = os.path.join(self.model_ws,
                                  '{}.{}'.format(self.name, self.hext))
@@ -647,7 +648,8 @@ class Modflow(BaseModel):
             print('\nCreating new model with name: {}\n{}\n'
                   .format(modelname, 50 * '-'))
 
-        attribs = mfreadnam.attribs_from_namfile_header(os.path.join(model_ws, f))
+        attribs = mfreadnam.attribs_from_namfile_header(
+            os.path.join(model_ws, f))
 
         ml = Modflow(modelname, version=version, exe_name=exe_name,
                      verbose=verbose, model_ws=model_ws, **attribs)
@@ -657,7 +659,7 @@ class Modflow(BaseModel):
 
         # read name file
         ext_unit_dict = mfreadnam.parsenamefile(
-                namefile_path, ml.mfnam_packages, verbose=verbose)
+            namefile_path, ml.mfnam_packages, verbose=verbose)
         if ml.verbose:
             print('\n{}\nExternal unit dictionary:\n{}\n{}\n'
                   .format(50 * '-', ext_unit_dict, 50 * '-'))
@@ -716,9 +718,9 @@ class Modflow(BaseModel):
         if dis_key is None:
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
-        dis = disnamdata.package.load(
-                disnamdata.filename, ml,
-                ext_unit_dict=ext_unit_dict, check=False)
+        dis = disnamdata.package.load(disnamdata.filename, ml,
+                                      ext_unit_dict=ext_unit_dict,
+                                      check=False)
         files_successfully_loaded.append(disnamdata.filename)
         if ml.verbose:
             print('   {:4s} package load...success'.format(dis.name[0]))
@@ -763,13 +765,12 @@ class Modflow(BaseModel):
                             package_load_args = \
                                 list(inspect.getargspec(item.package.load))[0]
                             if "check" in package_load_args:
-                                pck = item.package.load(
-                                        item.filename, ml,
-                                        ext_unit_dict=ext_unit_dict, check=False)
+                                item.package.load(item.filename, ml,
+                                                  ext_unit_dict=ext_unit_dict,
+                                                  check=False)
                             else:
-                                pck = item.package.load(
-                                        item.filename, ml,
-                                        ext_unit_dict=ext_unit_dict)
+                                item.package.load(item.filename, ml,
+                                                  ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
                                 print('   {:4s} package load...success'
@@ -777,39 +778,45 @@ class Modflow(BaseModel):
                         except Exception as e:
                             ml.load_fail = True
                             if ml.verbose:
-                                print('   {:4s} package load...failed\n   {!s}'
-                                      .format(item.filetype, e))
+                                msg = 3 * ' ' + \
+                                      '{:4s} '.format(item.filetype) + \
+                                      'package load...failed\n' + \
+                                      3 * ' ' + '{!s}'.format(e)
+                                print(msg)
                             files_not_loaded.append(item.filename)
                     else:
                         package_load_args = \
                             list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
-                            pck = item.package.load(
-                                item.filename, ml,
-                                ext_unit_dict=ext_unit_dict, check=False)
+                            item.package.load(item.filename, ml,
+                                              ext_unit_dict=ext_unit_dict,
+                                              check=False)
                         else:
-                            pck = item.package.load(
-                                item.filename, ml,
-                                ext_unit_dict=ext_unit_dict)
+                            item.package.load(item.filename, ml,
+                                              ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
-                            print('   {:4s} package load...success'
-                                  .format(item.filetype))
+                            msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                                  'package load...success'
+                            print(msg)
                 else:
                     if ml.verbose:
-                        print('   {:4s} package load...skipped'
-                              .format(item.filetype))
+                        msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                              'package load...skipped'
+                        print(msg)
                     files_not_loaded.append(item.filename)
             elif "data" not in item.filetype.lower():
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
-                    print('   {:4s} package load...skipped'
-                          .format(item.filetype))
+                    msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
+                              'package load...skipped'
+                    print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
-                    print('   {} file load...skipped\n      {}'
-                          .format(item.filetype,
-                                  os.path.basename(item.filename)))
+                    msg = 3 * ' ' + '{:s} '.format(item.filetype) + \
+                          'file load...skipped\n' + 6 * ' ' + \
+                          '{}'.format(os.path.basename(item.filename))
+                    print(msg)
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
@@ -829,19 +836,24 @@ class Modflow(BaseModel):
                 ext_unit_dict.pop(key)
             except KeyError:
                 if ml.verbose:
-                    print('Warning: external file unit {} does not exist in '
-                          'ext_unit_dict.'.format(key))
+                    msg = 'Warning: external file unit {} '.format(key) + \
+                          'does not exist in ext_unit_dict.'
+                    print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
+            msg =  3 * ' ' + 'The following ' + \
+                   '{} '.format(len(files_successfully_loaded)) + \
+                   'packages were successfully loaded.'
             print('')
-            print('   The following {0} packages were successfully loaded.'
-                  .format(len(files_successfully_loaded)))
+            print(msg)
             for fname in files_successfully_loaded:
                 print('      ' + os.path.basename(fname))
             if len(files_not_loaded) > 0:
-                print('   The following {0} packages were not loaded.'
-                      .format(len(files_not_loaded)))
+                msg = 3 * ' ' + 'The following ' + \
+                      '{} '.format(len(files_not_loaded)) + \
+                      'packages were not loaded.'
+                print(msg)
                 for fname in files_not_loaded:
                     print('      ' + os.path.basename(fname))
         if check:

@@ -84,7 +84,8 @@ class ModflowEvt(Package):
 
     """
 
-    def __init__(self, model, nevtop=3, ipakcb=None, surf=0., evtr=1e-3, exdp=1.,
+    def __init__(self, model, nevtop=3, ipakcb=None, surf=0., evtr=1e-3,
+                 exdp=1.,
                  ievt=1,
                  extension='evt', unitnumber=None, filenames=None,
                  external=True):
@@ -147,12 +148,12 @@ class ModflowEvt(Package):
         self.parent.add_package(self)
 
     def ncells(self):
-        # Returns the  maximum number of cells that have 
+        # Returns the  maximum number of cells that have
         # evapotranspiration (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return (nrow * ncol)
 
-    def write_file(self,f=None):
+    def write_file(self, f=None):
         """
         Write the package file.
 

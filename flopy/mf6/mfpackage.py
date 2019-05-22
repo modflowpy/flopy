@@ -15,6 +15,7 @@ from ..utils import datautil
 from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
+from .data.mfdatautil import MFComment
 
 
 class MFBlockHeader(object):
@@ -77,9 +78,9 @@ class MFBlockHeader(object):
                 DatumType.keyword:
             data_item = block_header_structure[0].data_item_structures[0]
             fixed_data.append(data_item.name)
-        if type(data) == tuple:
+        if isinstance(data, tuple):
             data = list(data)
-        if type(data) == list:
+        if isinstance(data, list):
             fixed_data = fixed_data + data
         else:
             fixed_data.append(data)
@@ -240,9 +241,8 @@ class MFBlock(object):
         self._model_or_sim = model_or_sim
         self._container_package = container_package
         self.block_headers = [MFBlockHeader(structure.name, [],
-                                            mfdata.MFComment('', path,
-                                                             simulation_data,
-                                                             0),
+                                            MFComment('', path, simulation_data,
+                                                      0),
                                             simulation_data, path)]
         self.structure = structure
         self.path = path
@@ -252,10 +252,10 @@ class MFBlock(object):
         self.blk_post_comment_path = path + ('blk_post_comment',)
         if self.blk_trailing_comment_path not in simulation_data.mfdata:
             simulation_data.mfdata[self.blk_trailing_comment_path] = \
-              mfdata.MFComment('', '', simulation_data, 0)
+              MFComment('', '', simulation_data, 0)
         if self.blk_post_comment_path not in simulation_data.mfdata:
             simulation_data.mfdata[self.blk_post_comment_path] = \
-              mfdata.MFComment('\n', '', simulation_data, 0)
+              MFComment('\n', '', simulation_data, 0)
         # initially disable if optional
         self.enabled = structure.number_non_optional_data() > 0
         self.loaded = False
@@ -270,7 +270,7 @@ class MFBlock(object):
 
     def _get_data_str(self, formal):
         data_str = ''
-        for idx, dataset in self.datasets.items():
+        for dataset in self.datasets.values():
             if formal:
                 ds_repr = repr(dataset)
                 if len(ds_repr.strip()) > 0:
@@ -335,7 +335,7 @@ class MFBlock(object):
 
     def _structure_init(self):
         # load datasets keywords into dictionary
-        for key, dataset_struct in self.structure.data_structures.items():
+        for dataset_struct in self.structure.data_structures.values():
             for keyword in dataset_struct.get_keywords():
                 self.datasets_keyword[keyword] = dataset_struct
         # load block header data items into dictionary
@@ -361,8 +361,7 @@ class MFBlock(object):
                 if file_data:
                     # update file path location for all file paths
                     for file_line in file_data:
-                        old_file_path, old_file_name = \
-                                os.path.split(file_line[0])
+                        old_file_name = os.path.split(file_line[0])[1]
                         file_line[0] = os.path.join(model_ws, old_file_name)
         # update block headers
         for block_header in self.block_headers:
@@ -442,7 +441,7 @@ class MFBlock(object):
            self.block_headers[-1].data_items[0].get_data() is not None:
             block_header_path = self.path + (len(self.block_headers) + 1,)
             block_header = MFBlockHeader(self.structure.name, [],
-                                         mfdata.MFComment('', self.path,
+                                         MFComment('', self.path,
                                          self._simulation_data, 0),
                                          self._simulation_data,
                                          block_header_path)
@@ -581,12 +580,12 @@ class MFBlock(object):
         comments = []
 
         # capture any initial comments
-        initial_comment = mfdata.MFComment('', '', 0)
+        initial_comment = MFComment('', '', 0)
         fd_block = fd
         line = fd_block.readline()
         datautil.PyListUtil.reset_delimiter_used()
         arr_line = datautil.PyListUtil.split_data_line(line)
-        while mfdata.MFComment.is_comment(line, True):
+        while MFComment.is_comment(line, True):
             initial_comment.add_text(line)
             line = fd_block.readline()
             arr_line = datautil.PyListUtil.split_data_line(line)
@@ -596,8 +595,7 @@ class MFBlock(object):
             if arr_line[0].lower() == 'open/close':
                 # open block contents from external file
                 fd_block.readline()
-                fd_path, filename = os.path.split(
-                  os.path.realpath(fd_block.name))
+                fd_path = os.path.split(os.path.realpath(fd_block.name))[0]
                 try:
                     if self._simulation_data.verbosity_level.value >= \
                             VerbosityLevel.verbose.value:
@@ -664,7 +662,7 @@ class MFBlock(object):
                 else:
                     arr_line = ''
                 # capture any trailing comments
-                post_data_comments = mfdata.MFComment('', '',
+                post_data_comments = MFComment('', '',
                                                       self._simulation_data, 0)
                 dataset.post_data_comments = post_data_comments
                 while arr_line and (len(next_line[1]) <= 2 or
@@ -852,7 +850,7 @@ class MFBlock(object):
     def _save_comments(self, arr_line, line, key, comments):
         # FIX: Save these comments somewhere in the data set
         if not key in self.datasets_keyword:
-            if mfdata.MFComment.is_comment(key, True):
+            if MFComment.is_comment(key, True):
                 if comments:
                     comments.append('\n')
                 comments.append(arr_line)
@@ -916,7 +914,7 @@ class MFBlock(object):
             fd.write('{}open/close {}\n'.format(indent_string,
                                                 self.external_file_name))
             fd_main = fd
-            fd_path, filename = os.path.split(os.path.realpath(fd.name))
+            fd_path = os.path.split(os.path.realpath(fd.name))[0]
             try:
                 fd = open(os.path.join(fd_path, self.external_file_name), 'w')
             except:
@@ -1030,7 +1028,7 @@ class MFBlock(object):
 
     def is_valid(self):
         # check data sets
-        for key, dataset in self.datasets.items():
+        for dataset in self.datasets.values():
             # Non-optional datasets must be enabled
             if not dataset.structure.optional and not dataset.enabled:
                 return False
@@ -1228,7 +1226,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 child_pkg_group = self.parent_file._child_package_groups[
                     self.structure.file_type]
                 child_pkg_group._update_filename(self._filename, fname)
-            except:
+            except Exception:
                 print('WARNING: Unable to update file name for parent'
                       'package of {}.'.format(self.name))
         self._filename = fname
@@ -1265,10 +1263,6 @@ class MFPackage(PackageContainer, PackageInterface):
         # return [data_object, data_object, ...]
         return self._data_list
 
-    def export(self, f, **kwargs):
-        from flopy import export
-        return export.utils.package_export(f, self, **kwargs)
-
     def _get_data_str(self, formal, show_data=True):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
                    '\nmodel_or_simulation_package = {}' \
@@ -1284,7 +1278,7 @@ class MFPackage(PackageContainer, PackageInterface):
         else:
             data_str = '{}\n'.format(data_str)
         if show_data:
-            for idx, block in self.blocks.items():
+            for block in self.blocks.values():
                 if formal:
                     bl_repr = repr(block)
                     if len(bl_repr.strip()) > 0:
@@ -1309,8 +1303,8 @@ class MFPackage(PackageContainer, PackageInterface):
         # init
         header_variable_strs = []
         arr_clean_line = line.strip().split()
-        header_comment = mfdata.MFComment('', path + (arr_clean_line[1],),
-                                          self._simulation_data, 0)
+        header_comment = MFComment('', path + (arr_clean_line[1],),
+                                   self._simulation_data, 0)
         # break header into components
         if len(arr_clean_line) < 2:
             message = 'Block header does not contain a name. Name ' \
@@ -1331,7 +1325,7 @@ class MFPackage(PackageContainer, PackageInterface):
             comment = False
             for entry in arr_clean_line[2:]:
                 # if start of comment
-                if mfdata.MFComment.is_comment(entry.strip()[0]):
+                if MFComment.is_comment(entry.strip()[0]):
                     comment = True
                 if comment:
                     header_comment.text = ' '.join([header_comment.text,
@@ -1344,13 +1338,13 @@ class MFPackage(PackageContainer, PackageInterface):
     def _update_size_defs(self):
         # build temporary data lookup by name
         data_lookup = {}
-        for name, block in self.blocks.items():
-            for ds_index, dataset in block.datasets.items():
+        for block in self.blocks.values():
+            for dataset in block.datasets.values():
                 data_lookup[dataset.structure.name] = dataset
 
         # loop through all data
-        for name, block in self.blocks.items():
-            for ds_index, dataset in block.datasets.items():
+        for block in self.blocks.values():
+            for dataset in block.datasets.values():
                 # if data shape is 1-D
                 if dataset.structure.shape and \
                         len(dataset.structure.shape) == 1:
@@ -1524,7 +1518,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
     def is_valid(self):
         # Check blocks
-        for key, block in self.blocks.items():
+        for block in self.blocks.values():
             # Non-optional blocks must be enabled
             if block.structure.number_non_optional_data() > 0 and \
                not block.enabled and block.is_allowed():
@@ -1542,9 +1536,9 @@ class MFPackage(PackageContainer, PackageInterface):
     def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
         # init
         self._simulation_data.mfdata[self.path + ('pkg_hdr_comments',)] = \
-          mfdata.MFComment('', self.path, self._simulation_data)
-        self.post_block_comments = mfdata.MFComment('', self.path,
-                                                    self._simulation_data)
+          MFComment('', self.path, self._simulation_data)
+        self.post_block_comments = MFComment('', self.path,
+                                             self._simulation_data)
 
         blocks_read = 0
         found_first_block = False
@@ -1553,7 +1547,7 @@ class MFPackage(PackageContainer, PackageInterface):
             line = fd_input_file.readline()
             clean_line = line.strip()
             # If comment or empty line
-            if mfdata.MFComment.is_comment(clean_line, True):
+            if MFComment.is_comment(clean_line, True):
                 self._store_comment(line, found_first_block)
             elif len(clean_line) > 4 and clean_line[:5].upper() == 'BEGIN':
                 # parse block header
@@ -1568,7 +1562,7 @@ class MFPackage(PackageContainer, PackageInterface):
                                           self.path, 'loading block header',
                                           None, inspect.stack()[0][3],
                                           type_, value_, traceback_, message,
-                                          self._simulation_data.debug)
+                                          self._simulation_data.debug, mfde)
 
                 # if there is more than one possible block with the same name,
                 # resolve the correct block to use
@@ -1605,7 +1599,7 @@ class MFPackage(PackageContainer, PackageInterface):
                 else:
                     found_first_block = True
                     self.post_block_comments = \
-                      mfdata.MFComment('', self.path, self._simulation_data)
+                      MFComment('', self.path, self._simulation_data)
                     skip_block = False
                     if self.blocks[block_key].loaded:
                         # Only blocks defined as repeating are allowed to have
@@ -1729,7 +1723,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
         # loop through blocks
         block_num = 1
-        for index, block in self.blocks.items():
+        for block in self.blocks.values():
             if self.simulation_data.verbosity_level.value >= \
                     VerbosityLevel.verbose.value:
                 print('      writing block {}...'.format(block.structure.name))
@@ -1847,7 +1841,7 @@ class MFChildPackages(object):
         super(MFChildPackages, self).__setattr__(key, value)
 
     def __default_file_path_base(self, file_path, suffix=''):
-        root, stem = os.path.split(file_path)
+        stem = os.path.split(file_path)[1]
         stem_lst = stem.split('.')
         file_name = '.'.join(stem_lst[:-1])
         if len(stem_lst) > 1:

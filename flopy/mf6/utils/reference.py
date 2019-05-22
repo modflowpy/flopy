@@ -70,7 +70,7 @@ class StructuredSpatialReference(object):
     """
 
     def __init__(self, delr=1.0, delc=1.0, lenuni=1, nlay=1, xul=None,
-                 yul=None, rotation=0.0, proj4_str="EPSG:4326", **kwargs):
+                 yul=None, rotation=0.0, proj4_str=None, **kwargs):
         self.delc = np.atleast_1d(np.array(delc))
         self.delr = np.atleast_1d(np.array(delr))
         self.nlay = nlay
@@ -91,7 +91,7 @@ class StructuredSpatialReference(object):
 
         xul, yul = None, None
         rotation = 0.0
-        proj4_str = "EPSG:4326"
+        proj4_str = None
         start_datetime = "1/1/1970"
 
         for item in header:
@@ -565,7 +565,7 @@ class VertexSpatialReference(object):
 
     """
     def __init__(self, xvdict=None, yvdict=None, nlay=1, xadj=0, yadj=0,
-                 rotation=0., lenuni=1., proj4_str='EPSG:4326', **kwargs):
+                 rotation=0., lenuni=1., proj4_str=None, **kwargs):
 
         assert len(xvdict) == len(yvdict), \
             'len(xvdict): {} != len(yvdict): {}'.format(len(xvdict),
@@ -600,7 +600,7 @@ class VertexSpatialReference(object):
                 header.extend(line.strip().replace('#', '').split(','))
 
         xadj, yadj = None, None
-        proj4_str = "EPSG:4326"
+        proj4_str = None
         start_datetime = "1/1/1970"
 
         for item in header:
@@ -844,7 +844,7 @@ class SpatialReference(object):
     """
     def __new__(cls, delr=1.0, delc=1.0, xvdict=None, yvdict=None, lenuni=1,
                 nlay=1, xul=None, yul=None, xadj=0., yadj=0., rotation=0.0,
-                proj4_str="EPSG:4326", distype='structured'):
+                proj4_str=None, distype='structured'):
 
         if distype == 'structured':
             new = object.__new__(StructuredSpatialReference)

@@ -1,13 +1,15 @@
 from ..pakbase import Package
 
+
 class Mt3dPhc(Package):
-    '''
+    """
     PHC package class for PHT3D
-    '''
+    """
     unitnumber = 38
-    def __init__(self, model, os=2, temp=25, asbin=0, eps_aqu=0, eps_ph=0, 
+
+    def __init__(self, model, os=2, temp=25, asbin=0, eps_aqu=0, eps_ph=0,
                  scr_output=1, cb_offset=0, smse=['pH', 'pe'], mine=[], ie=[],
-                 surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[], 
+                 surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[],
                  extension='phc', unitnumber=None):
 
         if unitnumber is None:
@@ -59,8 +61,8 @@ class Mt3dPhc(Package):
         self.nimobkin = len(self.imobkin)
         self.parent.add_package(self)
         return
-        
-    def __repr__( self ):
+
+    def __repr__(self):
         return 'PHC package class for PHT3D'
 
     def write_file(self):
@@ -74,15 +76,15 @@ class Mt3dPhc(Package):
         """
         # Open file for writing
         f_phc = open(self.fn_path, 'w')
-        f_phc.write('%3d%10f%3d%10f%10f%3d\n' % (self.os, self.temp, 
-                                                 self.asbin, self.eps_aqu, 
+        f_phc.write('%3d%10f%3d%10f%10f%3d\n' % (self.os, self.temp,
+                                                 self.asbin, self.eps_aqu,
                                                  self.eps_ph, self.scr_output))
         f_phc.write('%10f\n' % (self.cb_offset))
         f_phc.write('%3d\n' % (self.nsmse))
         f_phc.write('%3d\n' % (self.nmine))
         f_phc.write('%3d\n' % (self.nie))
         f_phc.write('%3d\n' % (self.nsurf))
-        f_phc.write('%3d%3d%3d%3d\n' % (self.nmobkin, self.nminkin, 
+        f_phc.write('%3d%3d%3d%3d\n' % (self.nmobkin, self.nminkin,
                                         self.nsurfkin, self.nimobkin))
         for s in self.smse:
             f_phc.write('%s\n' % (s))

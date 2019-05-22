@@ -85,7 +85,8 @@ class ModflowZon(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -100,7 +101,6 @@ class ModflowZon(Package):
             self.zone_dict = zone_dict
         self.parent.add_package(self)
 
-
     def write_file(self):
         """
         Write the package file.
@@ -114,8 +114,7 @@ class ModflowZon(Package):
         Not implemented because parameters are only supported on load
 
         """
-        pass
-
+        return
 
     @staticmethod
     def load(f, model, nrow=None, ncol=None, ext_unit_dict=None):
@@ -166,15 +165,15 @@ class ModflowZon(Package):
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
+        # dataset 1
         t = line.strip().split()
         nzn = int(t[0])
 
-        #get nlay,nrow,ncol if not passed
+        # get nlay,nrow,ncol if not passed
         if nrow is None and ncol is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
-        #read zone data
+        # read zone data
         zone_dict = collections.OrderedDict()
         for n in range(nzn):
             line = f.readline()
@@ -184,11 +183,13 @@ class ModflowZon(Package):
             else:
                 zonnam = t[0].lower()
             if model.verbose:
-                sys.stdout.write('   reading data for "{:<10s}" zone\n'.format(zonnam))
+                sys.stdout.write(
+                    '   reading data for "{:<10s}" zone\n'.format(zonnam))
             # load data
             t = Util2d.load(f, model, (nrow, ncol), np.int32, zonnam,
-                             ext_unit_dict)
-            # add unit number to list of external files in ext_unit_dict to remove.
+                            ext_unit_dict)
+            # add unit number to list of external files in ext_unit_dict
+            # to remove.
             if t.locat is not None:
                 model.add_pop_key_list(t.locat)
             zone_dict[zonnam] = t
@@ -205,11 +206,9 @@ class ModflowZon(Package):
                          filenames=filenames)
         return zon
 
-
     @staticmethod
     def ftype():
         return 'ZONE'
-
 
     @staticmethod
     def defaultunit():

@@ -120,7 +120,8 @@ class ModflowPcg(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -243,21 +244,25 @@ class ModflowPcg(Package):
             ifrfm = True
         ihcofadd = 0
         dampt = 0.
+
+        # free format
         if ifrfm:
             t = line_parse(line)
-            #t = line.strip().split()
+            # t = line.strip().split()
             mxiter = int(t[0])
             iter1 = int(t[1])
             npcond = int(t[2])
             try:
                 ihcofadd = int(t[3])
             except:
-                pass
+                if model.verbose:
+                    print('   explicit ihcofadd in file')
+
             # dataset 2
             try:
                 line = f.readline()
                 t = line_parse(line)
-                #t = line.strip().split()
+                # t = line.strip().split()
                 hclose = float(t[0])
                 rclose = float(t[1])
                 relax = float(t[2])
@@ -277,7 +282,7 @@ class ModflowPcg(Package):
                 damp = float(line[60:70].strip())
                 if damp < 0.:
                     dampt = float(line[70:80].strip())
-            pass
+        # fixed format
         else:
             mxiter = int(line[0:10].strip())
             iter1 = int(line[10:20].strip())
@@ -285,7 +290,9 @@ class ModflowPcg(Package):
             try:
                 ihcofadd = int(line[30:40].strip())
             except:
-                pass
+                if model.verbose:
+                    print('   explicit ihcofadd in file')
+
             # dataset 2
             line = f.readline()
             hclose = float(line[0:10].strip())

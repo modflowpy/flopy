@@ -37,7 +37,8 @@ class BinaryHeader(Header):
         """
         Set values using kwargs
         """
-        ikey = ['ntrans', 'kstp', 'kper', 'ncol', 'nrow', 'ilay']
+        ikey = ['ntrans', 'kstp', 'kper', 'ncol', 'nrow', 'ilay', 'ncpl',
+                'nodes', 'm2', 'm3']
         fkey = ['pertim', 'totim']
         ckey = ['text']
         for k in ikey:
@@ -53,8 +54,8 @@ class BinaryHeader(Header):
                 try:
                     self.header[0][k] = float(kwargs[k])
                 except:
-                    msg = '{0} key not available in {1} header '
-                    'dtype'.format(k, self.header_type)
+                    msg = '{} key not available '.format(k) + \
+                          'in {} header dtype'.format(self.header_type)
                     print(msg)
         for k in ckey:
             if k in kwargs.keys():
@@ -99,6 +100,7 @@ class BinaryHeader(Header):
 def binaryread_struct(file, vartype, shape=(1,), charlen=16):
     """
     Read text, a scalar value, or an array of values from a binary file.
+
         file : file object
             is an open file object
         vartype : type
@@ -219,23 +221,28 @@ def get_headfile_precision(filename):
             if t.upper() not in asciiset:
                 raise Exception()
         result = 'single'
+        success = True
     except:
-        pass
+        success = False
 
     # next try double
-    f.seek(0)
-    vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f8'),
-               ('totim', '<f8'), ('text', 'S16')]
-    hdr = binaryread(f, vartype)
-    text = hdr[0][4]
-    try:
-        text = text.decode()
-        for t in text:
-            if t.upper() not in asciiset:
-                raise Exception()
-        result = 'double'
-    except:
-        pass
+    if not success:
+        f.seek(0)
+        vartype = [('kstp', '<i4'), ('kper', '<i4'), ('pertim', '<f8'),
+                   ('totim', '<f8'), ('text', 'S16')]
+        hdr = binaryread(f, vartype)
+        text = hdr[0][4]
+        try:
+            text = text.decode()
+            for t in text:
+                if t.upper() not in asciiset:
+                    raise Exception()
+            result = 'double'
+        except:
+            f.close()
+            e = 'Could not determine the precision of ' + \
+                'the headfile {}'.format(filename)
+            raise IOError(e)
 
     # close and return result
     f.close()

@@ -219,9 +219,7 @@ class MFFileMgmt(object):
     def copy_files(self, copy_relative_only=True):
         num_files_copied = 0
         if self._last_loaded_sim_path is not None:
-            for key, mffile_path in self.existing_file_dict.items():
-#                for model_name in mffile_path.model_name:
-#                    if model_name in self._last_loaded_model_relative_path:
+            for mffile_path in self.existing_file_dict.values():
                 # resolve previous simulation path.  if mf6 changes
                 # so that paths are relative to the model folder, then
                 # this call should have "model_name" instead of "None"
@@ -233,8 +231,8 @@ class MFFileMgmt(object):
                     # supports model relative paths
                     path_new = self.resolve_path(mffile_path,
                                                  None)
-                    if not os.path.exists(path_new):
-                        new_folders, new_leaf = os.path.split(path_new)
+                    if path_old != path_new:
+                        new_folders = os.path.split(path_new)[0]
                         if not os.path.exists(new_folders):
                             os.makedirs(new_folders)
                         try:
@@ -261,7 +259,7 @@ class MFFileMgmt(object):
         if ext_file_action == ExtFileAction.copy_all:
             if os.path.isabs(external_file_path):
                 # move file path to local model or simulation path
-                base_path, file_name = os.path.split(external_file_path)
+                file_name = os.path.split(external_file_path)[1]
                 if model_name:
                     return os.path.join(self.get_model_path(model_name),
                                         file_name)
@@ -530,7 +528,7 @@ class PackageContainer(object):
 
     @staticmethod
     def get_package_file_paths():
-        base_path, tail = os.path.split(os.path.realpath(__file__))
+        base_path = os.path.split(os.path.realpath(__file__))[0]
         package_path = os.path.join(base_path, 'modflow')
         return glob.glob(os.path.join(package_path, "*.py"))
 
@@ -565,7 +563,7 @@ class PackageContainer(object):
 
         # collect keys of items to be removed from main dictionary
         items_to_remove = []
-        for key, data in self.simulation_data.mfdata.items():
+        for key in self.simulation_data.mfdata:
             is_subkey = True
             for pitem, ditem in zip(package.path, key):
                 if pitem != ditem:

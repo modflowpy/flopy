@@ -93,6 +93,7 @@ def recarray(array, dtype):
 
     """
     array = np.atleast_2d(array)
+
     # convert each entry of the list to a tuple
     if not isinstance(array[0], tuple):
         array = list(map(tuple, array))

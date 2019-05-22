@@ -20,21 +20,24 @@ class ModflowSor(Package):
     Parameters
     ----------
     model : model object
-        The model object (of type :class:flopy.modflow.mf.Modflow) to which this package will be added.
+        The model object (of type :class:flopy.modflow.mf.Modflow) to which
+        this package will be added.
     mxiter : integer
-        The maximum number of iterations allowed in a time step. (default is 200)
+        The maximum number of iterations allowed in a time step.
+        (default is 200)
     accl : float
         The acceleration variable, which must be greater than zero
         and is generally between 1. and 2. (default is 1)
     hclose : float > 0
-        The head change criterion for convergence. When the maximum absolute value of head change from all nodes
-        during an iteration is less than or equal to hclose, iteration stops. (default is 1e-5)
+        The head change criterion for convergence. When the maximum absolute
+        value of head change from all nodes during an iteration is less than
+        or equal to hclose, iteration stops. (default is 1e-5)
     iprsor : integer > 0
-        the printout interval for sor. iprsor, if equal to zero, is changed to 999.
-        The maximum head change (positive or negative) is printed for each iteration of
-        a time step whenever the time step is an even multiple of iprsor. This printout
-        also occurs at the end of each stress period regardless of the value of iprsor.
-        (default is 0)
+        the printout interval for sor. iprsor, if equal to zero, is changed to
+        999. The maximum head change (positive or negative) is printed for each
+        iteration of a time step whenever the time step is an even multiple of
+        iprsor. This printout also occurs at the end of each stress period
+        regardless of the value of iprsor. (default is 0)
     extension : string
         Filename extension (default is 'sor')
     unitnumber : int
@@ -90,14 +93,15 @@ class ModflowSor(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
         # check if a valid model version has been specified
         if model.version != 'mf2k':
-            err = 'Error: cannot use {} package with model version {}'.format(
-                self.name, model.version)
+            err = 'Error: cannot use {} '.format(self.name) + \
+                  'package with model version {}'.format(model.version)
             raise Exception(err)
 
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -122,9 +126,10 @@ class ModflowSor(Package):
         # Open file for writing
         f = open(self.fn_path, 'w')
         f.write('{}\n'.format(self.heading))
-        f.write('{10d}\n'.format(self.mxiter))
-        f.write(
-            '{10.4g}{10.4g}{10d}\n' % (self.accl, self.hclose, self.iprsor))
+        f.write('{:10d}\n'.format(self.mxiter))
+        line = '{:10.4g}{:10.4g}{:10d}\n'.format(self.accl, self.hclose,
+                                                 self.iprsor)
+        f.write(line)
         f.close()
 
     @staticmethod
@@ -167,8 +172,9 @@ class ModflowSor(Package):
             f = open(filename, 'r')
         # dataset 0 -- header
 
-        print(
-            '   Warning: load method not completed. default sor object created.')
+        msg = 3 * ' ' + 'Warning: load method not completed. ' + \
+              'Default sor object created.'
+        print(msg)
 
         # close the open file
         f.close()

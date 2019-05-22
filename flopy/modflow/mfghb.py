@@ -62,7 +62,7 @@ class ModflowGhb(Package):
         stress_period_data can be found in the flopy3boundaries Notebook in
         the basic subdirectory of the examples directory
     dtype : dtype definition
-        if data type is different from default 
+        if data type is different from default
     options : list of strings
         Package options. (default is None).
     extension : string
@@ -163,7 +163,8 @@ class ModflowGhb(Package):
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+            self.dtype = self.get_default_dtype(
+                structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
 
     def ncells(self):
@@ -187,11 +188,13 @@ class ModflowGhb(Package):
         None
 
         """
-        if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
+        if check:  # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
         f_ghb = open(self.fn_path, 'w')
         f_ghb.write('{}\n'.format(self.heading))
-        f_ghb.write('{:10d}{:10d}'.format(self.stress_period_data.mxact, self.ipakcb))
+        f_ghb.write(
+            '{:10d}{:10d}'.format(self.stress_period_data.mxact, self.ipakcb))
         for option in self.options:
             f_ghb.write('  {}'.format(option))
         f_ghb.write('\n')
@@ -264,14 +267,12 @@ class ModflowGhb(Package):
         if model.verbose:
             sys.stdout.write('loading ghb package file...\n')
 
-        return Package.load(model, ModflowGhb, f, nper, check=check,
+        return Package.load(f, model, ModflowGhb, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
-
 
     @staticmethod
     def ftype():
         return 'GHB'
-
 
     @staticmethod
     def defaultunit():

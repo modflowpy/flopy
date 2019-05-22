@@ -712,7 +712,6 @@ class LRCParticleData(object):
         for lrcregion in lrcregions:
             totalcellregioncount += lrcregion.shape[0]
 
-
         # assign attributes
         self.particletemplatecount = shape
         self.totalcellregioncount = totalcellregioncount
@@ -761,6 +760,7 @@ class LRCParticleData(object):
                 f.write(line)
 
         return
+
 
 class NodeParticleData(object):
     """
@@ -918,5 +918,3 @@ class NodeParticleData(object):
             f.write(line)
 
         return
-
-

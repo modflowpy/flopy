@@ -14,71 +14,71 @@ from ..pakbase import Package
 class ModflowDe4(Package):
     """
     MODFLOW DE4 - Direct Solver Package
-    
+
     Parameters
     ----------
     model : model object
         The model object (of type :class:`flopy.modflow.mf.Modflow`) to which
         this package will be added.
     itmx : int
-        Maximum number of iterations for each time step. Specify ITMAX = 1 if 
-        iteration is not desired. Ideally iteration would not be required for 
-        direct solution. However, it is necessary to iterate if the flow 
-        equation is nonlinear or if computer precision limitations result in 
-        inaccurate calculations as indicated by a large water budget error 
+        Maximum number of iterations for each time step. Specify ITMAX = 1 if
+        iteration is not desired. Ideally iteration would not be required for
+        direct solution. However, it is necessary to iterate if the flow
+        equation is nonlinear or if computer precision limitations result in
+        inaccurate calculations as indicated by a large water budget error
         (default is 50).
     mxup : int
-        Maximum number of equations in the upper part of the equations to be 
-        solved. This value impacts the amount of memory used by the DE4 
-        Package. If specified as 0, the program will calculate MXUP as half 
-        the number of cells in the model, which is an upper limit (default 
+        Maximum number of equations in the upper part of the equations to be
+        solved. This value impacts the amount of memory used by the DE4
+        Package. If specified as 0, the program will calculate MXUP as half
+        the number of cells in the model, which is an upper limit (default
         is 0).
     mxlow : int
-        Maximum number of equations in the lower part of equations to be 
-        solved. This value impacts the amount of memory used by the DE4 
-        Package. If specified as 0, the program will calculate MXLOW as half 
-        the number of cells in the model, which is an upper limit (default is 
+        Maximum number of equations in the lower part of equations to be
+        solved. This value impacts the amount of memory used by the DE4
+        Package. If specified as 0, the program will calculate MXLOW as half
+        the number of cells in the model, which is an upper limit (default is
         0).
     mxbw : int
-        Maximum band width plus 1 of the lower part of the head coefficients 
-        matrix. This value impacts the amount of memory used by the DE4 
-        Package. If specified as 0, the program will calculate MXBW as the 
-        product of the two smallest grid dimensions plus 1, which is an 
+        Maximum band width plus 1 of the lower part of the head coefficients
+        matrix. This value impacts the amount of memory used by the DE4
+        Package. If specified as 0, the program will calculate MXBW as the
+        product of the two smallest grid dimensions plus 1, which is an
         upper limit (default is 0).
     ifreq : int
-        Flag indicating the frequency at which coefficients in head matrix 
+        Flag indicating the frequency at which coefficients in head matrix
         change.
-        IFREQ = 1 indicates that the flow equations are linear and that 
-        coefficients of simulated head for all stress terms are constant 
-        for all stress periods. 
-        IFREQ = 2 indicates that the flow equations are linear, but 
-        coefficients of simulated head for some stress terms may change 
+        IFREQ = 1 indicates that the flow equations are linear and that
+        coefficients of simulated head for all stress terms are constant
+        for all stress periods.
+        IFREQ = 2 indicates that the flow equations are linear, but
+        coefficients of simulated head for some stress terms may change
         at the start of each stress period.
-        IFREQ = 3 indicates that a nonlinear flow equation is being solved, 
-        which means that some terms in the head coefficients matrix depend 
+        IFREQ = 3 indicates that a nonlinear flow equation is being solved,
+        which means that some terms in the head coefficients matrix depend
         on simulated head (default is 3).
     mutd4 : int
-        Flag that indicates the quantity of information that is printed when 
+        Flag that indicates the quantity of information that is printed when
         convergence information is printed for a time step.
-        MUTD4 = 0 indicates that the number of iterations in the time step 
+        MUTD4 = 0 indicates that the number of iterations in the time step
         and the maximum head change each iteration are printed.
-        MUTD4 = 1 indicates that only the number of iterations in the time 
+        MUTD4 = 1 indicates that only the number of iterations in the time
         step is printed.
         MUTD4 = 2 indicates no information is printed (default is 0).
     accl : int
-        Multiplier for the computed head change for each iteration. Normally 
-        this value is 1. A value greater than 1 may be useful for improving 
-        the rate of convergence when using external iteration to solve 
+        Multiplier for the computed head change for each iteration. Normally
+        this value is 1. A value greater than 1 may be useful for improving
+        the rate of convergence when using external iteration to solve
         nonlinear problems (default is 1).
     hclose : float
-        Head change closure criterion. If iterating (ITMX > 1), iteration 
-        stops when the absolute value of head change at every node is less 
-        than or equal to HCLOSE. HCLOSE is not used if not iterating, but a 
+        Head change closure criterion. If iterating (ITMX > 1), iteration
+        stops when the absolute value of head change at every node is less
+        than or equal to HCLOSE. HCLOSE is not used if not iterating, but a
         value must always be specified (default is 1e-5).
     iprd4 : int
-        Time step interval for printing out convergence information when 
-        iterating (ITMX > 1). If IPRD4 is 2, convergence information is 
-        printed every other time step. A value must always be specified 
+        Time step interval for printing out convergence information when
+        iterating (ITMX > 1). If IPRD4 is 2, convergence information is
+        printed every other time step. A value must always be specified
         even if not iterating (default is 1).
     extension : string
         Filename extension (default is 'de4')
@@ -176,31 +176,31 @@ class ModflowDe4(Package):
         """
         # Open file for writing
         f = open(self.fn_path, 'w')
-        f.write('%s\n' % self.heading)
+        f.write('{}\n'.format(self.heading))
         ifrfm = self.parent.get_ifrefm()
         if ifrfm:
-            f.write('{0} '.format(self.itmx))
-            f.write('{0} '.format(self.mxup))
-            f.write('{0} '.format(self.mxlow))
-            f.write('{0} '.format(self.mxbw))
+            f.write('{} '.format(self.itmx))
+            f.write('{} '.format(self.mxup))
+            f.write('{} '.format(self.mxlow))
+            f.write('{} '.format(self.mxbw))
             f.write('\n')
-            f.write('{0} '.format(self.ifreq))
-            f.write('{0} '.format(self.mutd4))
-            f.write('{0} '.format(self.accl))
-            f.write('{0} '.format(self.hclose))
-            f.write('{0} '.format(self.iprd4))
+            f.write('{} '.format(self.ifreq))
+            f.write('{} '.format(self.mutd4))
+            f.write('{} '.format(self.accl))
+            f.write('{} '.format(self.hclose))
+            f.write('{} '.format(self.iprd4))
             f.write('\n')
         else:
-            f.write('{0:10d}'.format(self.itmx))
-            f.write('{0:10d}'.format(self.mxup))
-            f.write('{0:10d}'.format(self.mxlow))
-            f.write('{0:10d}'.format(self.mxbw))
+            f.write('{:10d}'.format(self.itmx))
+            f.write('{:10d}'.format(self.mxup))
+            f.write('{:10d}'.format(self.mxlow))
+            f.write('{:10d}'.format(self.mxbw))
             f.write('\n')
-            f.write('{0:10d}'.format(self.ifreq))
-            f.write('{0:10d}'.format(self.mutd4))
-            f.write('{0:9.4e} '.format(self.accl))
-            f.write('{0:9.4e} '.format(self.hclose))
-            f.write('{0:10d}'.format(self.iprd4))
+            f.write('{:10d}'.format(self.ifreq))
+            f.write('{:10d}'.format(self.mutd4))
+            f.write('{:9.4e} '.format(self.accl))
+            f.write('{:9.4e} '.format(self.hclose))
+            f.write('{:10d}'.format(self.iprd4))
             f.write('\n')
         f.close()
 
@@ -291,11 +291,9 @@ class ModflowDe4(Package):
                          filenames=filenames)
         return de4
 
-
     @staticmethod
     def ftype():
         return 'DE4'
-
 
     @staticmethod
     def defaultunit():

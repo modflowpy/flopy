@@ -6,10 +6,9 @@ import shutil
 import json
 import numpy as np
 import os
-import sys
 import warnings
-from ..datbase import DataType, DataInterface, DataListInterface
-from ..utils import Util2d, Util3d, Transient2d, MfList, SpatialReference
+from ..datbase import DataType, DataInterface
+from ..utils import Util3d, SpatialReference
 
 
 def import_shapefile():
@@ -60,9 +59,10 @@ def write_gridlines_shapefile(filename, mg):
     wr.field("number", "N", 18, 0)
     if isinstance(mg, SpatialReference):
         grid_lines = mg.get_grid_lines()
-        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
-                      " instead.",
-                      category=DeprecationWarning)
+        warnings.warn(
+            "SpatialReference has been deprecated. Use StructuredGrid"
+            " instead.",
+            category=DeprecationWarning)
     else:
         grid_lines = mg.grid_lines()
     for i, line in enumerate(grid_lines):
@@ -75,7 +75,7 @@ def write_gridlines_shapefile(filename, mg):
     return
 
 
-def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
+def write_grid_shapefile(filename, mg, array_dict, nan_val=None):  # -1.0e9):
     """
     Write a grid shapefile array_dict attributes.
 
@@ -102,9 +102,10 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
     else:
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     if isinstance(mg, SpatialReference):
-        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
-                      " instead.",
-                      category=DeprecationWarning)
+        warnings.warn(
+            "SpatialReference has been deprecated. Use StructuredGrid"
+            " instead.",
+            category=DeprecationWarning)
         wr.field("row", "N", 10, 0)
         wr.field("column", "N", 10, 0)
     elif mg.grid_type == 'structured':
@@ -128,10 +129,10 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
         if array.dtype in [np.float, np.float32, np.float64]:
             array[np.where(np.isnan(array))] = nan_val
         else:
-            j=2
-        #if array.dtype in [np.int, np.int32, np.int64]:
+            j = 2
+        # if array.dtype in [np.int, np.int32, np.int64]:
         #    wr.field(name, "N", 18, 0)
-        #else:
+        # else:
         #    wr.field(name, "F", 18, 12)
         wr.field(name, *get_pyshp_field_info(array.dtype.name))
         arrays.append(array)
@@ -169,9 +170,8 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=None):#-1.0e9):
     return
 
 
-def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
+def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
                           epsg=None, prj=None):
-
     shapefile = import_shapefile()
     sfv = shapefile_version(shapefile)
     if sfv < 2:
@@ -182,9 +182,10 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
 
     if isinstance(mg, SpatialReference):
         verts = copy.deepcopy(mg.vertices)
-        warnings.warn("SpatialReference has been deprecated. Use StructuredGrid"
-                      " instead.",
-                      category=DeprecationWarning)
+        warnings.warn(
+            "SpatialReference has been deprecated. Use StructuredGrid"
+            " instead.",
+            category=DeprecationWarning)
     elif mg.grid_type == 'structured':
         verts = [mg.get_cell_vertices(i, j)
                  for i in range(mg.nrow)
@@ -194,7 +195,6 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                  for cellid in range(mg.ncpl)]
     else:
         raise Exception('Grid type {} not supported.'.format(mg.grid_type))
-
 
     # set up the attribute fields
     if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
@@ -212,7 +212,8 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,#-1.0e9,
                  [(enforce_10ch_limit([name])[0], arr.dtype)
                   for name, arr in array_dict.items()]
 
-    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in dtypes}
+    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
+                 dtypes}
     for n in names:
         w.field(n, *fieldinfo[n])
 
@@ -254,9 +255,9 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                   array_dict=None,
                                   **kwargs):
     """
-    Wrapper function for writing a shapefile of model data.  If package_names is
-    not None, then search through the requested packages looking for arrays that
-    can be added to the shapefile as attributes
+    Wrapper function for writing a shapefile of model data.  If package_names
+    is not None, then search through the requested packages looking for arrays
+    that can be added to the shapefile as attributes
 
     Parameters
     ----------
@@ -267,7 +268,8 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     package_names : list of package names (e.g. ["dis","lpf"])
         Packages to export data arrays to shapefile. (default is None)
     array_dict : dict of {name:2D array} pairs
-       Additional 2D arrays to add as attributes to the shapefile. (default is None)
+       Additional 2D arrays to add as attributes to the shapefile.
+       (default is None)
 
 
     Returns
@@ -307,18 +309,23 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                 attrs.remove('start_datetime')
             for attr in attrs:
                 a = pak.__getattribute__(attr)
-                if a is None or not hasattr(a, 'data_type') or a.name == 'thickness':
+                if a is None or not hasattr(a,
+                                            'data_type') or a.name == 'thickness':
                     continue
                 if a.data_type == DataType.array2d and a.array.shape == horz_shape:
                     name = shape_attr_name(a.name, keep_layer=True)
-                    #name = a.name.lower()
+                    # name = a.name.lower()
                     array_dict[name] = a.array
-                elif a.data_type == DataType.array3d: #elif isinstance(a, Util3d):
-                    try: # Not sure how best to check if an object has array data
+                # elif isinstance(a, Util3d):
+                elif a.data_type == DataType.array3d:
+                    # Not sure how best to check if an object has array data
+                    try:
                         assert a.array is not None
                     except:
-                        print('Failed to get data for {} array, {} package'.format(a.name,
-                                                                                   pak.name[0]))
+                        print(
+                            'Failed to get data for {} array, {} package'.format(
+                                a.name,
+                                pak.name[0]))
                         continue
                     if isinstance(a.name, list) and a.name[0] == 'thickness':
                         continue
@@ -339,12 +346,15 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         assert arr.shape == horz_shape
                         name = '{}_{}'.format(aname, ilay + 1)
                         array_dict[name] = arr
-                elif a.data_type == DataType.transient2d:#elif isinstance(a, Transient2d):
-                    try: # Not sure how best to check if an object has array data
+                elif a.data_type == DataType.transient2d:  # elif isinstance(a, Transient2d):
+                    # Not sure how best to check if an object has array data
+                    try:
                         assert a.array is not None
                     except:
-                        print('Failed to get data for {} array, {} package'.format(a.name,
-                                                                                   pak.name[0]))
+                        print(
+                            'Failed to get data for {} array, {} package'.format(
+                                a.name,
+                                pak.name[0]))
                         continue
                     for kper in range(a.array.shape[0]):
                         name = '{}{}'.format(
@@ -352,7 +362,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                         arr = a.array[kper][0]
                         assert arr.shape == horz_shape
                         array_dict[name] = arr
-                elif a.data_type == DataType.transientlist: #elif isinstance(a, MfList):
+                elif a.data_type == DataType.transientlist:  # elif isinstance(a, MfList):
                     try:
                         list(a.masked_4D_arrays_itr())
                     except:
@@ -378,6 +388,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 arr = u2d.array
                                 assert arr.shape == horz_shape
                                 array_dict[name] = arr
+
     # write data arrays to a shapefile
     write_grid_shapefile2(filename, ml.modelgrid, array_dict)
     epsg = kwargs.get('epsg', None)
@@ -500,20 +511,19 @@ def shp2recarray(shpname):
     """
     try:
         import shapefile as sf
-    except Exception as e:
+    except Exception:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
     from ..utils.geometry import shape
 
     sfobj = sf.Reader(shpname)
-    dtype = [(str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]]
+    dtype = [(str(f[0]), get_pyshp_field_dtypes(f[1])) for f in
+             sfobj.fields[1:]]
 
     geoms = [shape(s) for s in sfobj.iterShapes()]
     records = [tuple(r) + (geoms[i],) for i, r in
                enumerate(sfobj.iterRecords())]
     dtype += [('geometry', np.object)]
-    # recfunctions.append_fields(array, names='tmp1', data=col1,
-    #                                           asrecarray=True)
 
     recarray = np.array(records, dtype=dtype).view(np.recarray)
     return recarray
@@ -529,7 +539,8 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     Parameters
     ----------
     recarray : np.recarray
-        Numpy record array with attribute information that will go in the shapefile
+        Numpy record array with attribute information that will go in the
+        shapefile
     geoms : list of flopy.utils.geometry objects
         The number of geometries in geoms must equal the number of records in
         recarray.
@@ -543,13 +554,12 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     Notes
     -----
     Uses pyshp.
-    epsg code requires an internet connection the first time to get the projection
-    file text from spatialreference.org, but then stashes the text in the file
-    epsgref.json (located in the user's data directory) for subsequent use. See
-    flopy.reference for more details.
+    epsg code requires an internet connection the first time to get the
+    projection file text from spatialreference.org, but then stashes the text
+    in the file epsgref.json (located in the user's data directory) for
+    subsequent use. See flopy.reference for more details.
 
     """
-
 
     if len(recarray) != len(geoms):
         raise IndexError(
@@ -562,7 +572,7 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     for g in geoms:
         try:
             geomtype = g.shapeType
-        except:
+        except AttributeError:
             continue
 
     # set up for pyshp 1 or 2
@@ -658,8 +668,8 @@ class CRS(object):
 
         self.wktstr = None
         if prj is not None:
-            with open(prj) as input:
-                self.wktstr = input.read()
+            with open(prj) as prj_input:
+                self.wktstr = prj_input.read()
         elif esri_wkt is not None:
             self.wktstr = esri_wkt
         elif epsg is not None:
@@ -671,7 +681,9 @@ class CRS(object):
 
     @property
     def crs(self):
-        """Dict mapping crs attibutes to proj4 parameters"""
+        """
+        Dict mapping crs attibutes to proj4 parameters
+        """
         proj = None
         if self.projcs is not None:
             # projection
@@ -713,9 +725,6 @@ class CRS(object):
         elif 'wgs' in self.spheriod_name.lower():
             ellps = 'wgs84'
 
-        # prime meridian
-        pm = self.primem[0].lower()
-
         return {'proj': proj,
                 'datum': datum,
                 'ellps': ellps,
@@ -733,9 +742,11 @@ class CRS(object):
 
     @property
     def grid_mapping_attribs(self):
-        """Map parameters for CF Grid Mappings
+        """
+        Map parameters for CF Grid Mappings
         http://http://cfconventions.org/cf-conventions/cf-conventions.html,
         Appendix F: Grid Mappings
+
         """
         if self.wktstr is not None:
             sp = [p for p in [self.standard_parallel_1,
@@ -764,7 +775,9 @@ class CRS(object):
 
     @property
     def proj4(self):
-        """Not implemented yet"""
+        """
+        Not implemented yet
+        """
         return None
 
     def parse_wkt(self):
@@ -807,7 +820,7 @@ class CRS(object):
             end = s[strt:].find(']') + strt
             try:
                 return float(self.wktstr[strt:end].split(',')[1])
-            except:
+            except (IndexError, TypeError, ValueError, AttributeError):
                 pass
 
     def _getgcsparam(self, txt):
@@ -831,8 +844,11 @@ class CRS(object):
 
     @staticmethod
     def getprj(epsg, addlocalreference=True, text='esriwkt'):
-        """Gets projection file (.prj) text for given epsg code from spatialreference.org
+        """
+        Gets projection file (.prj) text for given epsg code from
+        spatialreference.org
         See: https://www.epsg-registry.org/
+
         Parameters
         ----------
         epsg : int
@@ -844,6 +860,7 @@ class CRS(object):
         -------
         prj : str
             text for a projection (*.prj) file.
+
         """
         epsgfile = EpsgReference()
         wktstr = None
@@ -860,10 +877,12 @@ class CRS(object):
 
     @staticmethod
     def get_spatialreference(epsg, text='esriwkt'):
-        """Gets text for given epsg code and text format from spatialreference.org
+        """
+        Gets text for given epsg code and text format from spatialreference.org
         Fetches the reference text using the url:
             http://spatialreference.org/ref/epsg/<epsg code>/<text>/
         See: https://www.epsg-registry.org/
+
         Parameters
         ----------
         epsg : int
@@ -873,6 +892,7 @@ class CRS(object):
         Returns
         -------
         url : str
+
         """
         from flopy.utils.flopy_io import get_url_text
 
@@ -899,8 +919,10 @@ class CRS(object):
 
     @staticmethod
     def getproj4(epsg):
-        """Gets projection file (.prj) text for given epsg code from
+        """
+        Gets projection file (.prj) text for given epsg code from
         spatialreference.org. See: https://www.epsg-registry.org/
+
         Parameters
         ----------
         epsg : int
@@ -914,7 +936,8 @@ class CRS(object):
 
 
 class EpsgReference:
-    """Sets up a local database of projection file text referenced by epsg code.
+    """
+    Sets up a local database of projection file text referenced by epsg code.
     The database is located in the site packages folder in epsgref.py, which
     contains a dictionary, prj, of projection file text keyed by epsg value.
     """
@@ -938,7 +961,8 @@ class EpsgReference:
         try:  # get rid of pyc file
             os.remove(self.location + 'c')
         except:
-            pass
+            msg = 'could not remove {}'.format(self.location + 'c')
+            print(msg)
 
     def make(self):
         if not os.path.exists(self.location):
@@ -963,7 +987,9 @@ class EpsgReference:
             epsgfile.write('\n')
 
     def remove(self, epsg):
-        """removes an epsg entry from epsgref.py"""
+        """
+        removes an epsg entry from epsgref.py
+        """
         from epsgref import prj
         self.reset(verbose=False)
         if epsg in prj.keys():
@@ -975,7 +1001,7 @@ class EpsgReference:
     def show():
         try:
             from importlib import reload
-        except:
+        except ImportError:
             from imp import reload
         import epsgref
         from epsgref import prj

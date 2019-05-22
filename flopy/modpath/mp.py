@@ -7,9 +7,9 @@ import os
 
 
 class ModpathList(Package):
-    '''
+    """
     List package class
-    '''
+    """
 
     def __init__(self, model, extension='list', listunit=7):
         """
@@ -335,14 +335,17 @@ class Modpath(BaseModel):
                 model_ws = ''
                 if self.__mf is not None:
                     model_ws = self.__mf.model_ws
-                if os.path.exists(os.path.join(model_ws,package)):
-                    print("detected a particle starting locations file in packages")
-                    assert len(packages) == 1, "if a particle starting locations file is passed" + \
-                                               ", other packages cannot be specified"
+                if os.path.exists(os.path.join(model_ws, package)):
+                    print(
+                        "detected a particle starting locations file in packages")
+                    assert len(
+                        packages) == 1, "if a particle starting locations file is passed" + \
+                                        ", other packages cannot be specified"
                     ParticleGenerationOption = 2
                     strt_file = package
                 else:
-                    raise Exception("package '{0}' not supported".format(package))
+                    raise Exception(
+                        "package '{0}' not supported".format(package))
 
         SimulationType = 1
         if simtype.lower() == 'endpoint':

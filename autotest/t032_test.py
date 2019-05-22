@@ -76,9 +76,9 @@ def test_epsgref():
     ep = epsgRef()
     ep.reset()
 
-    getprj(4326)
+    getprj(32614)  # WGS 84 / UTM zone 14N
     prj = ep.to_dict()
-    assert 4326 in prj
+    assert 32614 in prj
 
     ep.add(9999, 'junk')
     prj = ep.to_dict()

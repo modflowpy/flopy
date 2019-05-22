@@ -10,7 +10,6 @@ import time
 from .metadata import acdd
 import flopy
 
-
 # globals
 FILLVALUE = -99999.9
 ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
@@ -163,7 +162,7 @@ class NetCdf(object):
         if self.model_grid.grid_type == 'structured':
             self.dimension_names = ('layer', 'y', 'x')
             STANDARD_VARS.extend(['delc', 'delr'])
-        #elif self.model_grid.grid_type == 'vertex':
+        # elif self.model_grid.grid_type == 'vertex':
         #    self.dimension_names = ('layer', 'ncpl')
         else:
             raise Exception('Grid type {} not supported.'.format(
@@ -468,7 +467,7 @@ class NetCdf(object):
         # add the vars to the instance
         for vname in self_vars:
             if vname not in self.var_attr_dict or \
-                            new_net.nc.variables.get(vname) is not None:
+                    new_net.nc.variables.get(vname) is not None:
                 self.logger.warn("skipping variable: {0}".format(vname))
                 continue
             self.log("processing variable {0}".format(vname))
@@ -558,7 +557,7 @@ class NetCdf(object):
             try:
                 if self.nc.attributes.get(k) is not None:
                     self.nc.setncattr(k, v)
-            except Exception as e:
+            except Exception:
                 self.logger.warn(
                     'error setting global attribute {0}'.format(k))
 
@@ -667,7 +666,6 @@ class NetCdf(object):
                          [xmin, ymax],
                          [xmax, ymax],
                          [xmax, ymin]])
-        tp = bbox.transpose()
         x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
         self.bounds = x.min(), y.min(), x.max(), y.max()
         self.vbounds = vmin, vmax
@@ -738,7 +736,7 @@ class NetCdf(object):
             time_values = np.cumsum(self.model_time.perlen)
         self.nc.createDimension("time", len(time_values))
         for name, length in zip(self.dimension_names, self.shape):
-           self.nc.createDimension(name, length)
+            self.nc.createDimension(name, length)
         self.log("creating dimensions")
 
         self.log("setting CRS info")
@@ -820,8 +818,8 @@ class NetCdf(object):
         attribs = crs.grid_mapping_attribs
         if attribs is not None:
             self.log("creating grid mapping variable")
-            gmv = self.create_variable(attribs['grid_mapping_name'], attribs,
-                                       precision_str="f8")
+            self.create_variable(attribs['grid_mapping_name'], attribs,
+                                 precision_str="f8")
 
         # layer
         self.log("creating layer var")
@@ -846,7 +844,7 @@ class NetCdf(object):
                                 "To compute the unrotated grid, use the origin point and this array."
 
             # delr
-            attribs = {"units":self.model_grid.units.strip('s'),
+            attribs = {"units": self.model_grid.units.strip('s'),
                        "long_name": NC_LONG_NAMES.get("delr",
                                                       "Model grid cell spacing along a row"),
                        }
@@ -856,15 +854,14 @@ class NetCdf(object):
                 delr.comments = "This is the col spacing that applied to the UNROTATED grid. " + \
                                 "This grid HAS been rotated before being saved to NetCDF. " + \
                                 "To compute the unrotated grid, use the origin point and this array."
-        #else:
-            # vertices
-            #attribs = {"units": self.model_grid.lenuni.strip('s'),
-            #           "long_name": NC_LONG_NAMES.get("vertices",
-            #                                          "List of vertices used in the model by cell"),
-            #           }
-            #vertices = self.create_variable('vertices', attribs, dimensions=('ncpl',))
-            #vertices[:] = self.model_grid.vertices
-
+        # else:
+        # vertices
+        # attribs = {"units": self.model_grid.lenuni.strip('s'),
+        #           "long_name": NC_LONG_NAMES.get("vertices",
+        #                                          "List of vertices used in the model by cell"),
+        #           }
+        # vertices = self.create_variable('vertices', attribs, dimensions=('ncpl',))
+        # vertices[:] = self.model_grid.vertices
 
         # Workaround for CF/CDM.
         # http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/
@@ -916,7 +913,7 @@ class NetCdf(object):
         if name in STANDARD_VARS and name in self.nc.variables.keys():
             return
         if name not in self.var_attr_dict.keys() and \
-                        name in self.nc.variables.keys():
+                name in self.nc.variables.keys():
             if self.forgive:
                 self.logger.warn(
                     "skipping duplicate variable: {0}".format(name))
@@ -936,8 +933,8 @@ class NetCdf(object):
 
         # check that the requested dimension exists and
         # build up the chuck sizes
-        #chunks = []
-        #for dimension in dimensions:
+        # chunks = []
+        # for dimension in dimensions:
         #    assert self.nc.dimensions.get(dimension) is not None, \
         #        "netcdf.create_variable() dimension not found:" + dimension
         #    chunk = self.chunks[dimension]
@@ -991,7 +988,7 @@ class NetCdf(object):
     def add_sciencebase_metadata(self, id, check=True):
         """Add metadata from ScienceBase using the
         flopy.export.metadata.acdd class.
-        
+
         Returns
         -------
         metadata : flopy.export.metadata.acdd object
@@ -1031,22 +1028,19 @@ class NetCdf(object):
         assert md.geospatial_lat_max - ymax < tol
         assert md.geospatial_vertical_min - self.vbounds[0] < tol
         assert md.geospatial_vertical_max - self.vbounds[1] < tol
-        pass
 
     def get_longnames_from_docstrings(self, outfile='longnames.json'):
         """
         This is experimental.
-        
+
         Scrape Flopy module docstrings and return docstrings for parameters
         included in the list of variables added to NetCdf object. Create
         a dictionary of longnames keyed by the NetCdf variable names; make each
         longname from the first sentence of the docstring for that parameter.
-        
+
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        import inspect
-        path = ''
         try:
             from numpydoc.docscrape import NumpyDocString
         except Exception as e:
@@ -1089,8 +1083,9 @@ class NetCdf(object):
 
         # parse docstrings to get long names
         longnames = {}
-        for cname, obj in packages:
+        for pkg in packages:
             # parse the docstring
+            obj = pkg[-1]
             ds = obj.__doc__.split('\n')
             start, stop = startstop(ds)
             txt = ds[start:stop]
@@ -1107,4 +1102,3 @@ class NetCdf(object):
         with open(outfile, 'w') as output:
             json.dump(longnames, output, sort_keys=True, indent=2)
         return longnames
-

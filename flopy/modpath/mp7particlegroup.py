@@ -316,7 +316,6 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
     location input style 2. Particle locations for this template are specified
     by layer, row, column regions.
 
-
     Parameters
     ----------
     particlegroupname : str
@@ -409,7 +408,6 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
     Node particle template class to create MODPATH 7 particle location
     input style 3. Particle locations for this template are specified
     by nodes.
-
 
     Parameters
     ----------

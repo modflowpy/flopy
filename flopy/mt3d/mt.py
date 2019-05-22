@@ -18,6 +18,7 @@ from .mtlkt import Mt3dLkt
 from ..discretization.structuredgrid import StructuredGrid
 from flopy.discretization.modeltime import ModelTime
 
+
 class Mt3dList(Package):
     """
     List package class
@@ -248,7 +249,7 @@ class Mt3dms(BaseModel):
         if os.path.isfile(os.path.join(self.model_ws,
                                        str(modelname + '.' + namefile_ext))):
             with open(os.path.join(self.model_ws, str(
-                                    modelname + '.' + namefile_ext))) as nm_file:
+                    modelname + '.' + namefile_ext))) as nm_file:
                 for line in nm_file:
                     if line[0:3] == 'FTL':
                         ftlfilename = line.strip().split()[2]
@@ -295,7 +296,7 @@ class Mt3dms(BaseModel):
         # the starting external data unit number
         self._next_ext_unit = 2000
         if external_path is not None:
-            #assert model_ws == '.', "ERROR: external cannot be used " + \
+            # assert model_ws == '.', "ERROR: external cannot be used " + \
             #                        "with model_ws"
 
             # external_path = os.path.join(model_ws, external_path)
@@ -357,11 +358,11 @@ class Mt3dms(BaseModel):
                                          top=self.mf.dis.top.array,
                                          botm=self.mf.dis.botm.array,
                                          idomain=ibound,
-                                         proj4 = self._modelgrid.proj4,
+                                         proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
-                                         xoff = self._modelgrid.xoffset,
-                                         yoff = self._modelgrid.yoffset,
-                                         angrot = self._modelgrid.angrot)
+                                         xoff=self._modelgrid.xoffset,
+                                         yoff=self._modelgrid.yoffset,
+                                         angrot=self._modelgrid.angrot)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -543,13 +544,8 @@ class Mt3dms(BaseModel):
         >>> mt.ftlfilename = 'example.ftl'
 
         """
-        # test if name file is passed with extension (i.e., is a valid file)
-        modelname_extension = None
-        if os.path.isfile(os.path.join(model_ws, f)):
-            modelname = f.rpartition('.')[0]
-            modelname_extension = f.rpartition('.')[2]
-        else:
-            modelname = f
+        modelname, ext = os.path.splitext(f)
+        modelname_extension = ext[1:]  # without '.'
 
         if verbose:
             sys.stdout.write('\nCreating new model with name: {}\n{}\n\n'.
@@ -563,13 +559,12 @@ class Mt3dms(BaseModel):
         files_not_loaded = []
 
         # read name file
+        namefile_path = os.path.join(mt.model_ws, f)
+        if not os.path.isfile(namefile_path):
+            raise IOError('cannot find name file: ' + str(namefile_path))
         try:
-            # namefile_path = os.path.join(mt.model_ws, mt.namefile)
-            # namefile_path = f
-            namefile_path = os.path.join(mt.model_ws, f)
-            ext_unit_dict = mfreadnam.parsenamefile(namefile_path,
-                                                    mt.mfnam_packages,
-                                                    verbose=verbose)
+            ext_unit_dict = mfreadnam.parsenamefile(
+                namefile_path, mt.mfnam_packages, verbose=verbose)
         except Exception as e:
             # print("error loading name file entries from file")
             # print(str(e))

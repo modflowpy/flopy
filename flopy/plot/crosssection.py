@@ -2,13 +2,11 @@ import numpy as np
 
 try:
     import matplotlib.pyplot as plt
-    import matplotlib.colors
 except:
     plt = None
 from flopy.plot import plotutil
 from flopy.utils import geometry
 import warnings
-import copy
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
@@ -50,7 +48,7 @@ class _CrossSection(object):
         else:
             raise Exception("Cannot find model grid")
 
-        if type(None) in (type(self.mg.top), type(self.mg.botm)):
+        if self.mg.top is None or self.mg.botm is None:
             raise AssertionError("modelgrid top and botm must be defined")
 
 
@@ -606,7 +604,7 @@ class _StructuredCrossSection(_CrossSection):
                     ll = ((self.xpts[idx][2], self.zpts[k + 1, idx]))
                     try:
                         dx = self.xpts[idx + 2][2] - self.xpts[idx][2]
-                    except:
+                    except (IndexError, ValueError):
                         dx = self.xpts[idx + 1][2] - self.xpts[idx][2]
                     dz = self.zpts[k, idx] - self.zpts[k + 1, idx]
                     # horizontal lines
@@ -617,7 +615,7 @@ class _StructuredCrossSection(_CrossSection):
                     linecol.append(((ll), (ll[0], ll[1] + dz)))
                     linecol.append(
                         ((ll[0] + dx, ll[1]), (ll[0] + dx, ll[1] + dz)))
-                except:
+                except (IndexError, AttributeError, ValueError):
                     pass
 
         linecollection = LineCollection(linecol, color=color, **kwargs)

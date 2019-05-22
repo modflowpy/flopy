@@ -93,7 +93,7 @@ class ModflowDrt(Package):
     Notes
     -----
     Parameters are not supported in FloPy.
-    
+
     Examples
     --------
 
@@ -139,7 +139,7 @@ class ModflowDrt(Package):
                 break
         if not found:
             options.append("RETURNFLOW")
-        
+
         name = [ModflowDrt.ftype()]
         units = [unitnumber]
         extra = ['']
@@ -160,28 +160,28 @@ class ModflowDrt(Package):
 
         self.np = 0
 
-
         self.options = options
         if dtype is not None:
             self.dtype = dtype
         else:
-            self.dtype = self.get_default_dtype(structured=self.parent.structured)
+            self.dtype = self.get_default_dtype(
+                structured=self.parent.structured)
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
     @staticmethod
     def get_default_dtype(structured=True):
-        if structured:    
+        if structured:
             dtype = np.dtype([("k", np.int), ("i", np.int),
                               ("j", np.int), ("elev", np.float32),
-                              ("cond", np.float32), ("layr",np.int),
-                              ("rowr",np.int),("colr",np.int),
-                              ("rfprop",np.float32)])
+                              ("cond", np.float32), ("layr", np.int),
+                              ("rowr", np.int), ("colr", np.int),
+                              ("rfprop", np.float32)])
         else:
-            dtype = np.dtype([("inode", np.int),("elev", np.float32),
-                              ("cond", np.float32), ("layr",np.int),
-                              ("rowr",np.int),("colr",np.int),
-                              ("rfprop",np.float32)])
+            dtype = np.dtype([("inode", np.int), ("elev", np.float32),
+                              ("cond", np.float32), ("layr", np.int),
+                              ("rowr", np.int), ("colr", np.int),
+                              ("rfprop", np.float32)])
         return dtype
 
     def ncells(self):
@@ -203,12 +203,14 @@ class ModflowDrt(Package):
         None
 
         """
-        if check: # allows turning off package checks when writing files at model level
-            self.check(f='{}.chk'.format(self.name[0]), verbose=self.parent.verbose, level=1)
+        if check:  # allows turning off package checks when writing files at model level
+            self.check(f='{}.chk'.format(self.name[0]),
+                       verbose=self.parent.verbose, level=1)
         f_drn = open(self.fn_path, 'w')
         f_drn.write('{0}\n'.format(self.heading))
         # f_drn.write('%10i%10i\n' % (self.mxactd, self.idrncb))
-        line = '{0:10d}{1:10d}{2:10d}{3:10d}'.format(self.stress_period_data.mxact, self.ipakcb,0,0)
+        line = '{0:10d}{1:10d}{2:10d}{3:10d}'.format(
+            self.stress_period_data.mxact, self.ipakcb, 0, 0)
         for opt in self.options:
             line += ' ' + str(opt)
         line += '\n'
@@ -222,9 +224,8 @@ class ModflowDrt(Package):
         except Exception as e:
             raise Exception("mfdrt error adding record to list: " + str(e))
 
-
     @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True,is_drt=False):
+    def get_empty(ncells=0, aux_names=None, structured=True, is_drt=False):
         # get an empty recarray that corresponds to dtype
         dtype = ModflowDrt.get_default_dtype(structured=structured)
         if aux_names is not None:
@@ -269,14 +270,12 @@ class ModflowDrt(Package):
         if model.verbose:
             sys.stdout.write('loading drt package file...\n')
 
-        return Package.load(model, ModflowDrt, f, nper, check=check,
+        return Package.load(f, model, ModflowDrt, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
-
 
     @staticmethod
     def ftype():
         return 'DRT'
-
 
     @staticmethod
     def defaultunit():

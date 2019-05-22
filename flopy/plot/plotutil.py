@@ -1351,18 +1351,17 @@ class PlotUtilities(object):
         for idx, k in enumerate(range(i0, i1)):
             pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
-            qm = pmv.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
-                             color=color)
+            pmv.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
+                        color=color)
 
             if defaults['grid']:
                 pmv.plot_grid(ax=axes[idx])
 
             if defaults['inactive']:
-                try:
+                if model.modelgrid is not None:
                     ib = model.modelgrid.idomain
-                    pmv.plot_inactive(ibound=ib, ax=axes[idx])
-                except:
-                    pass
+                    if ib is not None:
+                        pmv.plot_inactive(ibound=ib, ax=axes[idx])
 
         if len(axes) == 1:
             axes = axes[0]
@@ -1473,7 +1472,7 @@ class PlotUtilities(object):
                 if i >= f0:
                     f0 = i + 1
             finc = f0 - fignum[0]
-            for idx in range(len(fignum)):
+            for idx, _ in enumerate(fignum):
                 fignum[idx] += finc
         else:
             # check for existing figures
@@ -1522,8 +1521,8 @@ class PlotUtilities(object):
             # prepare some axis objects for use
             axes = []
             for idx, k in enumerate(range(i0, i1)):
-                fig = plt.figure(figsize=defaults['figsize'],
-                                 num=fignum[idx])
+                plt.figure(figsize=defaults['figsize'],
+                           num=fignum[idx])
                 ax = plt.subplot(1, 1, 1, aspect='equal')
                 if names is not None:
                     title = names[k]
@@ -1579,7 +1578,7 @@ class PlotUtilities(object):
         # which makes it consistent with the mf6 iconvert array
         if laytyp.ndim == 1:
             t = np.zeros(head.shape)
-            for ix, lay in enumerate(laytyp):
+            for ix, _ in enumerate(laytyp):
                 t[ix, :] = laytyp[ix]
             laytyp = t
             del t
@@ -1699,7 +1698,7 @@ class UnstructuredPlotUtilities(object):
     Collection of unstructured grid and vertex grid compatible
     plotting helper functions
     """
-    
+
     @staticmethod
     def line_intersect_grid(ptsin, xgrid, ygrid):
         """
@@ -1788,7 +1787,7 @@ class UnstructuredPlotUtilities(object):
             numb = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
             denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
             ua = numa / denom
-            ub = numb / denom
+            # ub = numb / denom
             del numa
             del numb
             del denom
@@ -1893,13 +1892,13 @@ class SwiConcentration():
                 self.__nu = swi.nu.array
                 self.__istrat = swi.istrat
                 self.__nsrf = swi.nsrf
-            except:
+            except (AttributeError, ValueError):
                 sys.stdout.write('Error: SWI2 package not available...\n')
         self.__nlay = self.__botm.shape[0] - 1
         self.__nrow = self.__botm[0, :, :].shape[0]
         self.__ncol = self.__botm[0, :, :].shape[1]
-        self.__b = self.__botm[0:-1, :, :] - self.__botm[1:, :, :] 
-     
+        self.__b = self.__botm[0:-1, :, :] - self.__botm[1:, :, :]
+
     def calc_conc(self, zeta, layer=None):
         """
         Calculate concentrations for a given time step using passed zeta.
@@ -1909,8 +1908,8 @@ class SwiConcentration():
         zeta : dictionary of numpy arrays
             Dictionary of zeta results. zeta keys are zero-based zeta surfaces.
         layer : int
-            Concentration will be calculated for the specified layer.  If layer 
-            is None, then the concentration will be calculated for all layers. 
+            Concentration will be calculated for the specified layer.  If layer
+            is None, then the concentration will be calculated for all layers.
             (default is None).
 
         Returns
@@ -1928,7 +1927,7 @@ class SwiConcentration():
 
         """
         conc = np.zeros((self.__nlay, self.__nrow, self.__ncol), np.float)
-        
+
         pct = {}
         for isrf in range(self.__nsrf):
             z = zeta[isrf]
@@ -1976,7 +1975,7 @@ def shapefile_extents(shp):
     shapes = sf.shapes()
     nshp = len(shapes)
     xmin, xmax, ymin, ymax = 1.e20, -1.e20, 1.e20, -1.e20
-    ptchs = []
+
     for n in range(nshp):
         for p in shapes[n].points:
             xmin, xmax = min(xmin, p[0]), max(xmax, p[0])
@@ -1996,7 +1995,7 @@ def shapefile_get_vertices(shp):
     Returns
     -------
     vertices : list
-        Vertices is a list with vertices for each feature in the shapefile. 
+        Vertices is a list with vertices for each feature in the shapefile.
         Individual feature vertices are x, y tuples and contained in a list.
         A list with a single x, y tuple is returned for point shapefiles. A
         list with multiple x, y tuples is returned for polyline and polygon
@@ -2008,7 +2007,7 @@ def shapefile_get_vertices(shp):
     >>> import flopy
     >>> fshp = 'myshapefile'
     >>> lines = flopy.plot.plotutil.shapefile_get_vertices(fshp)
-    
+
     """
     if shapefile is None:
         s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
@@ -2039,7 +2038,7 @@ def shapefile_get_vertices(shp):
             for pij in range(len(prt)):
                 vertices.append(pts[par[pij]:par[pij+1]])
     return vertices
-    
+
 
 def shapefile_to_patch_collection(shp, radius=500., idx=None):
     """
@@ -2202,7 +2201,7 @@ def cvfd_to_patch_collection(verts, iverts):
     from matplotlib.patches import Polygon
     from matplotlib.collections import PatchCollection
     ptchs = []
-    for icell, ivertlist in enumerate(iverts):
+    for ivertlist in iverts:
         points = []
         for iv in ivertlist:
             points.append((verts[iv, 0], verts[iv, 1]))
@@ -2255,7 +2254,6 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
     --------
 
     """
-    import numpy as np
     import matplotlib.pyplot as plt
 
     if 'vmin' in kwargs:
@@ -2338,8 +2336,6 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
     # add the patch collection to the axis
     ax.add_collection(pc)
     return pc
-
-
 
 
 def findrowcolumn(pt, xedge, yedge):
@@ -2476,9 +2472,9 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
         # process data
         if irow0 >= 0 and jcol0 >= 0:
             iadd = True
-            if idx > 1 and returnvertices: 
+            if idx > 1 and returnvertices:
                 iadd = False
-            if iadd: 
+            if iadd:
                 pts.append((x0, y0, dlen))
         icnt = 0
         while True:
@@ -2500,7 +2496,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
             yt = y0 + dy + incy
             dl = math.sqrt(math.pow((xt - x0), 2.) + math.pow((yt - y0), 2.))
             dlen += dl
-            if not returnvertices: 
+            if not returnvertices:
                 pts.append((xt, yt, dlen))
             x0, y0 = xt, yt
             xt = x0 - 2. * incx
@@ -2510,7 +2506,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
             x0, y0 = xt, yt
             irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
             if irow0 >= 0 and jcol0 >= 0:
-                if not returnvertices: 
+                if not returnvertices:
                     pts.append((xt, yt, dlen))
             elif irow1 < 0 or jcol1 < 0:
                 dl = math.sqrt(math.pow((x1 - x0), 2.) + math.pow((y1 - y0), 2.))
@@ -2571,7 +2567,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
         vdata = np.array(vdata)
 
     vcell = []
-    for idx, [xt, yt, dlen] in enumerate(pts):
+    for (xt, yt, _) in pts:
         # find the modflow cell containing point
         irow, jcol = findrowcolumn((xt, yt), xedge, yedge)
         if irow >= 0 and jcol >= 0:
@@ -2579,7 +2575,7 @@ def cell_value_points(pts, xedge, yedge, vdata):
                 vcell.append(np.nan)
             else:
                 v = np.asarray(vdata[irow, jcol])
-                vcell.append(v) 
+                vcell.append(v)
 
     return np.array(vcell)
 
@@ -2609,7 +2605,7 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     import warnings
     if xul is not None and yul is not None:
         warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                      PendingDeprecationWarning)
+                      DeprecationWarning)
         if rotation is not None:
             mg._angrot = rotation
 

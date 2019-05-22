@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/app/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 
 Introduction
 -----------------------------------------------
@@ -29,6 +29,41 @@ FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](
 
 Getting Started
 -----------------------------------------------
+
+### MODFLOW 6 Quick Start
+```python
+import os
+import flopy
+ws = './mymodel'
+name = 'mymodel'
+sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=ws, exe_name='mf6')
+tdis = flopy.mf6.ModflowTdis(sim)
+ims = flopy.mf6.ModflowIms(sim)
+gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
+dis = flopy.mf6.ModflowGwfdis(gwf, nrow=10, ncol=10)
+ic = flopy.mf6.ModflowGwfic(gwf)
+npf = flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True)
+chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 1.],
+                                                       [(0, 9, 9), 0.]])
+budget_file = name + '.bud'
+head_file = name + '.hds'
+oc = flopy.mf6.ModflowGwfoc(gwf,
+                            budget_filerecord=budget_file,
+                            head_filerecord=head_file,
+                            saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
+sim.write_simulation()
+sim.run_simulation()
+head = flopy.utils.HeadFile(os.path.join(ws, head_file)).get_data()
+bud = flopy.utils.CellBudgetFile(os.path.join(ws, budget_file),
+                                 precision='double')
+spdis = bud.get_data(text='DATA-SPDIS')[0]
+pmv = flopy.plot.PlotMapView(gwf)
+pmv.plot_array(head)
+pmv.plot_grid(colors='white')
+pmv.contour_array(head, levels=[.2, .4, .6, .8], linewidths=3.)
+pmv.plot_specific_discharge(spdis, color='white')
+```
+<img src="examples/images/quickstart.png" alt="plot" style="width:30;height:30">
 
 ### [Frequently asked questions](docs/flopyFAQ.md)
 
@@ -141,6 +176,8 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 
 | Method                                                                               | Python Package                                     |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `.PlotMapView()` in `flopy.plot`                                                     | **matplotlib** >= 1.4                              |
+| `.PlotCrossSection()` in `flopy.plot`                                                | **matplotlib** >= 1.4                              |
 | `.plot()`                                                                            | **matplotlib** >= 1.4                              |
 | `.plot_shapefile()`                                                                  | **matplotlib** >= 1.4 and **Pyshp** >= 1.2         |
 | `.to_shapefile()`                                                                    | **Pyshp** >= 1.2                                   |
@@ -162,6 +199,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.time_coverage()` in `flopy.export.metadata` `acc` class - ***used if available***  | **pandas** >= 0.15                                 |
 | `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)  |
+| `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                              |
 
 
 How to Cite

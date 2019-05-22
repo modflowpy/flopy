@@ -12,10 +12,8 @@ import collections
 import warnings
 import numpy as np
 
-try:
-    from numpy.lib.recfunctions import append_fields, stack_arrays
-except:
-    pass
+from numpy.lib.recfunctions import append_fields, stack_arrays
+
 from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
@@ -37,6 +35,7 @@ class PathlineFile():
     >>> import flopy
     >>> pthobj = flopy.utils.PathlineFile('model.mppth')
     >>> p1 = pthobj.get_data(partid=1)
+
     """
     kijnames = ['k', 'i', 'j', 'node',
                 'particleid', 'particlegroup', 'linesegmentindex',
@@ -67,10 +66,8 @@ class PathlineFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid'])
@@ -111,6 +108,7 @@ class PathlineFile():
             elif self.version == 3 or self.version == 5:
                 break
         self.file.seek(0)
+        return
 
     def _get_dtypes(self):
         """
@@ -153,7 +151,6 @@ class PathlineFile():
         return outdtype
 
     def _get_mp7data(self):
-        data = None
         dtyper = np.dtype([("node", np.int32), ("x", np.float32),
                            ("y", np.float32), ("z", np.float32),
                            ("time", np.float32), ("xloc", np.float32),
@@ -473,9 +470,11 @@ class PathlineFile():
         pth = pth.copy()
         pth.sort(order=['particleid', 'time'])
 
-        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
-            warnings.warn("Deprecation warning: SpatialReference is deprecated."
-                          "Use the Grid class instead.", DeprecationWarning)
+        if isinstance(mg, SpatialReference) or isinstance(sr,
+                                                          SpatialReference):
+            warnings.warn(
+                "Deprecation warning: SpatialReference is deprecated."
+                "Use the Grid class instead.", DeprecationWarning)
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
@@ -605,10 +604,8 @@ class EndpointFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid']).shape[0]
@@ -1001,9 +998,11 @@ class EndpointFile():
             errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
                      'or "starting".'
             raise Exception(errmsg)
-        if isinstance(mg, SpatialReference) or isinstance(sr, SpatialReference):
-            warnings.warn("Deprecation warning: SpatialReference is deprecated."
-                          "Use the Grid class instead.", DeprecationWarning)
+        if isinstance(mg, SpatialReference) or isinstance(sr,
+                                                          SpatialReference):
+            warnings.warn(
+                "Deprecation warning: SpatialReference is deprecated."
+                "Use the Grid class instead.", DeprecationWarning)
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
@@ -1023,10 +1022,8 @@ class EndpointFile():
         geoms = [Point(x[i], y[i], z[i]) for i in range(len(epd))]
         # convert back to one-based
         for n in self.kijnames:
-            try:
+            if n in epd.dtype.names:
                 epd[n] += 1
-            except:
-                pass
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
@@ -1076,10 +1073,8 @@ class TimeseriesFile():
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
         for n in self.kijnames:
-            try:
+            if n in self._data.dtype.names:
                 self._data[n] -= 1
-            except:
-                pass
 
         # set number of particle ids
         self.nid = np.unique(self._data['particleid'])

@@ -6,6 +6,7 @@ import glob
 import os
 import shutil
 import numpy as np
+import warnings
 import flopy
 
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -343,12 +344,14 @@ def test_mbase_modelgrid():
 
     assert ml.modelgrid.xoffset == 500
     assert ml.modelgrid.yoffset == 0.0
+    assert ml.modelgrid.proj4 is None
     ml.model_ws = tpth
 
     ml.write_input()
     ml1 = flopy.modflow.Modflow.load("test.nam", model_ws=ml.model_ws)
     assert str(ml1.modelgrid) == str(ml.modelgrid)
     assert ml1.start_datetime == ml.start_datetime
+    assert ml1.modelgrid.proj4 is None
 
 def test_free_format_flag():
     import flopy
@@ -425,8 +428,7 @@ def test_mg():
                                                        delr=ms.dis.delr.array,
                                                        xoff=xll, yoff=xll,
                                                        angrot=angrot,
-                                                       lenuni=2,
-                                                       proj4='EPSG:4326')
+                                                       lenuni=2)
 
     # test that transform for arbitrary coordinates
     # is working in same as transform for model grid
@@ -456,8 +458,7 @@ def test_mg():
 
     ms.write_input()
     ms1 = flopy.modflow.Modflow.load(ms.namefile, model_ws=ms.model_ws)
-    print(ms.modelgrid.lenuni)
-    print(ms1.modelgrid.lenuni)
+
     assert str(ms1.modelgrid) == str(ms.modelgrid)
     assert ms1.start_datetime == ms.start_datetime
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
@@ -472,98 +473,16 @@ def test_epsgs():
     sr = flopy.discretization.StructuredGrid(delr=delr, delc=delc)
     sr.epsg = 102733
     assert sr.epsg == 102733
+    if not "proj4_str:+init=epsg:102733" in sr.__repr__():
+        raise AssertionError()
+
 
     sr.epsg = 4326  # WGS 84
     crs = shp.CRS(epsg=4326)
     assert crs.crs['proj'] == 'longlat'
     assert crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
-
-# scaling has not been implemented on the modelgrid class
-"""
-def test_sr_scaling():
-    nlay, nrow, ncol = 1, 10, 5
-    delr, delc = 250, 500
-    top = 100
-    botm = 50
-    xll, yll = 286.80, 29.03
-
-    print(np.__version__)
-    # test scaling of length units
-    ms2 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc)
-    ms2.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
-                                                 delr=ms2.dis.delr.array,
-                                                 xoff=xll,
-                                                 yoff=yll, angrot=0)
-    ms2.modelgrid.epsg = 26715
-    ms2.dis.export(os.path.join(spth, 'dis2.shp'))
-    ms3 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms3, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr,
-                                   delc=delc, top=top, botm=botm)
-    ms3.sr = flopy.discretization.StructuredGrid(delc=ms2.dis.delc.array,
-                                                 delr=ms2.dis.delr.array,
-                                                 xoff=xll, yoff=yll,
-                                                 angrot=0)
-    ms3.dis.export(os.path.join(spth, 'dis3.shp'), epsg=26715)
-
-    # check that the origin(s) are maintained
-    mg3 = ms3.modelgrid
-    assert np.array_equal(mg3.get_cell_vertices(nrow - 1, 0)[1],
-                          [ms3.modelgrid.xoffset, ms3.modelgrid.yoffset])
-    mg2 = ms2.modelgrid
-    assert np.allclose(mg3.get_cell_vertices(nrow - 1, 0)[1],
-                       mg2.get_cell_vertices(nrow - 1, 0)[1])
-
-    # check that the upper left corner is computed correctly
-    # in this case, length_multiplier overrides the given units
-    def check_size(mg):
-        xur, yur = mg.get_cell_vertices(0, ncol - 1)[3]
-        assert np.abs(xur - (xll + mg.sr.length_multiplier * delr * ncol)) < \
-               1e-4
-        assert np.abs(yur - (yll + mg.sr.length_multiplier * delc * nrow)) < \
-               1e-4
-    check_size(mg3)
-
-    # run the same tests but with units specified instead of a length multiplier
-    ms2 = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ms2, nlay=nlay, nrow=nrow, ncol=ncol,
-                                   delr=delr, delc=delc,
-                                   lenuni=1 # feet; should have no effect on SR
-                                   # (model not supplied to SR)
-                                   )
-    ms2.sr = flopy.discretization.reference.SpatialReference(delc=ms2.dis.delc.array,
-                                                             lenuni=2,  # meters
-                                                             epsg=26715,  # meters,
-                                                             # listed
-                                                             # on spatialreference.org
-                                                             xll=xll, yll=yll,
-                                                             rotation=0)
-    assert ms2.sr.model_length_units == 'meters'
-    assert ms2.sr.length_multiplier == 1.
-    ms2.sr.lenuni = 1 # feet; test dynamic setting
-    assert ms2.sr.model_length_units == 'feet'
-    check_size(mg2)
-    assert ms2.sr.length_multiplier == .3048
-    ms2.sr.lenuni = 3 # centimeters
-    assert ms2.sr.model_length_units == 'centimeters'
-    check_size(mg2)
-    assert ms2.sr.length_multiplier == 0.01
-    ms2.sr.lenuni = 2 # meters
-    check_size(mg2)
-    ms2.sr.units = 'meters'
-    ms2.sr.proj4_str = '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
-    assert ms2.sr.proj4_str == '+proj=utm +zone=16 +datum=NAD83 +units=us-ft +no_defs'
-    assert ms2.sr.units == 'feet'
-    assert ms2.sr.length_multiplier == 1/.3048
-    check_size(mg2)
-    ms2.sr.epsg = 6610 # meters, not listed on spatialreference.org but understood by pyproj
-    assert ms2.sr.units == 'meters'
-    assert ms2.sr.proj4_str is not None
-    check_size(mg2)
-"""
+    if not "proj4_str:+init=epsg:4326" in sr.__repr__():
+        raise AssertionError()
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -753,6 +672,7 @@ def test_rotation():
     assert np.abs(mg4.yvertices[0, 0] - yul) < 1e-4
 
 def test_sr_with_Map():
+    # Note that most of this is either deprecated, or has pending deprecation
     import matplotlib.pyplot as plt
     m = flopy.modflow.Modflow(rotation=20.)
     dis = flopy.modflow.ModflowDis(m, nlay=1, nrow=40, ncol=20,
@@ -760,8 +680,17 @@ def test_sr_with_Map():
                                    delc=250., top=10, botm=0)
     # transformation assigned by arguments
     xul, yul, rotation = 500000., 2934000., 45.
-    modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
-                                   rotation=rotation)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, xul=xul, yul=yul,
+                                       rotation=rotation)
+        assert len(w) == 2, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+        assert w[1].category == DeprecationWarning, w[1]
+        assert 'xul/yul have been deprecated' in str(w[1].message)
+
     lc = modelmap.plot_grid()
     xll, yll = modelmap.mg.xoffset, modelmap.mg.yoffset
     plt.close()
@@ -776,8 +705,15 @@ def test_sr_with_Map():
 
     check_vertices()
 
-    modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
-                                   rotation=rotation)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, xll=xll, yll=yll,
+                                       rotation=rotation)
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -787,7 +723,15 @@ def test_sr_with_Map():
                                       delc=m.dis.delc.array,
                                       xll=xll, yll=yll, rotation=rotation)
     m.sr = copy.deepcopy(sr)
-    modelmap = flopy.plot.ModelMap(model=m)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m)
+
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -795,7 +739,15 @@ def test_sr_with_Map():
     # transformation assign from sr instance
     m.sr._reset()
     m.sr.set_spatialreference()
-    modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelmap = flopy.plot.ModelMap(model=m, sr=sr)
+
+        assert len(w) == 1, len(w)
+        assert w[0].category == PendingDeprecationWarning, w[0]
+        assert 'ModelMap will be replaced by PlotMapView' in str(w[0].message)
+
     lc = modelmap.plot_grid()
     check_vertices()
     plt.close()
@@ -807,8 +759,29 @@ def test_sr_with_Map():
     dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=10, ncol=20, delr=1., delc=1., xul=100, yul=210)
     #fig, ax = plt.subplots()
     verts = [[101., 201.], [119., 209.]]
-    modelxsect = flopy.plot.ModelCrossSection(model=mf, line={'line': verts},
-                                              xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+
+        modelxsect = flopy.plot.ModelCrossSection(
+            model=mf, line={'line': verts},
+            xul=mf.dis.sr.xul, yul=mf.dis.sr.yul)
+
+        # for wn in w:
+        #    print(str(wn))
+        assert len(w) in (3, 5), len(w)
+        if len(w) == 5:
+            assert w[0].category == DeprecationWarning, w[0]
+            assert 'SpatialReference has been deprecated' in str(w[0].message)
+            assert w[1].category == DeprecationWarning, w[1]
+            assert 'SpatialReference has been deprecated' in str(w[1].message)
+        assert w[-3].category == PendingDeprecationWarning, w[-3]
+        assert 'ModelCrossSection will be replaced by' in str(w[-3].message)
+        assert w[-2].category == DeprecationWarning, w[-2]
+        assert 'xul/yul have been deprecated' in str(w[-2].message)
+        assert w[-1].category == DeprecationWarning, w[-1]
+        assert 'xul/yul have been deprecated' in str(w[-1].message)
+
     linecollection = modelxsect.plot_grid()
     plt.close()
 
@@ -912,6 +885,23 @@ def test_get_rc_from_node_coordinates():
     r, c = m.dis.get_rc_from_node_coordinates([50., 110.], [50., 220.])
     assert np.array_equal(r, np.array([9, 7]))
     assert np.array_equal(c, np.array([0, 1]))
+
+    # test variable delr and delc spacing
+    mf = flopy.modflow.Modflow()
+    delc = [0.5] * 5 + [2.0] * 5
+    delr = [0.5] * 5 + [2.0] * 5
+    nrow = 10
+    ncol = 10
+    mfdis=flopy.modflow.ModflowDis(mf, nrow=nrow, ncol=ncol, delr=delr, delc=delc) #, xul=50, yul=1000)
+    ygrid, xgrid, zgrid = mfdis.get_node_coordinates()
+    for i in range(nrow):
+        for j in range(ncol):
+            x = xgrid[j]
+            y = ygrid[i]
+            r, c = mfdis.get_rc_from_node_coordinates(x, y)
+            assert r == i, 'row {} not equal {} for xy ({}, {})'.format(r, i, x, y)
+            assert c == j, 'col {} not equal {} for xy ({}, {})'.format(c, j, x, y)
+
 
 def test_netcdf_classmethods():
     import os
@@ -1060,7 +1050,7 @@ if __name__ == '__main__':
     # test_rotation()
     # test_model_dot_plot()
     # test_vertex_model_dot_plot()
-    #test_sr_with_Map()
+    test_sr_with_Map()
     #test_modelgrid_with_PlotMapView()
     # test_epsgs()
     # test_sr_scaling()
@@ -1073,7 +1063,7 @@ if __name__ == '__main__':
     #for namfile in namfiles:
     #test_freyberg_export()
     #test_export_array()
-    test_write_shapefile()
+    #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     pass

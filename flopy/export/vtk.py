@@ -23,6 +23,7 @@ class Vtk(object):
     Support for writing a model to a vtk file
 
     """
+
     def __init__(self, output_filename, model, verbose=None):
 
         assert output_filename.lower().endswith(".vtu")
@@ -88,13 +89,15 @@ class Vtk(object):
                        dis.botm.array])
         if shared_vertex:
             verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(dis.nlay,
-                                                            z, ibound=ibound)
+                                                                     z,
+                                                                     ibound=ibound)
         else:
             top = z[:-1]
             bot = z[1:]
             if htop is not None:
                 top = htop
-            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, top, bot,
+            verts, iverts = dis.sr.get_3d_vertex_connectivity(dis.nlay, top,
+                                                              bot,
                                                               ibound=ibound)
         ncells = len(iverts)
         npoints = verts.shape[0]
@@ -123,7 +126,7 @@ class Vtk(object):
 
         s = '<DataArray type="Float64" NumberOfComponents="3">'
         indent_level = start_tag(f, s, indent_level)
-        assert(isinstance(self.modelgrid, StructuredGrid))
+        assert (isinstance(self.modelgrid, StructuredGrid))
         z = np.vstack([self.modelgrid.top.reshape(1, self.modelgrid.nrow,
                                                   self.modelgrid.ncol),
                        self.modelgrid.botm])
@@ -217,7 +220,8 @@ class Vtk(object):
         if ibound is not None and hasattr(self.model, 'dis') and \
                 hasattr(self.model.dis, 'laycbd'):
             cbd = np.where(self.model.dis.laycbd.array > 0)
-            ibound = np.insert(ibound, cbd[0]+1, ibound[cbd[0],:,:], axis=0)
+            ibound = np.insert(ibound, cbd[0] + 1, ibound[cbd[0], :, :],
+                               axis=0)
 
         for k in range(nlay):
             s = indent_level * '  '
@@ -241,7 +245,7 @@ class Vtk(object):
     def get_3d_shared_vertex_connectivity(mg):
 
         # get the x and y points for the grid
-        x, y, z = mg.xyzvertices
+        x, y = mg.xyzvertices[0:2]
         x = x.flatten()
         y = y.flatten()
 
@@ -261,8 +265,8 @@ class Vtk(object):
         top_botm = mg.top_botm
         for k in range(mg.nlay + 1):
             verts[istart:istop, 2] = mg.interpolate(top_botm[k],
-                                                      verts[istart:istop, :2],
-                                                      method='linear')
+                                                    verts[istart:istop, :2],
+                                                    method='linear')
             istart = istop
             istop = istart + nrvncv
 
@@ -360,7 +364,7 @@ class Vtk(object):
 
 if __name__ == '__main__':
     import flopy
-    import numpy as np
+
     ml = flopy.modflow.Modflow()
     dis = flopy.modflow.ModflowDis(ml, nlay=3, nrow=3, ncol=3, top=0,
                                    botm=[-1., -2., -3.])

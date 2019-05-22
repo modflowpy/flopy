@@ -13,6 +13,7 @@ except ImportError:
 
 from . import plotutil
 import warnings
+
 warnings.simplefilter('always', PendingDeprecationWarning)
 
 
@@ -42,6 +43,7 @@ class PlotMapView(object):
 
 
     """
+
     def __init__(self, model=None, modelgrid=None, ax=None,
                  layer=0, extent=None):
 
@@ -134,7 +136,8 @@ class PlotMapView(object):
             plotarray = a
 
         else:
-            raise TypeError("Unrecognized grid type {}".format(self.mg.grid_type))
+            raise TypeError(
+                "Unrecognized grid type {}".format(self.mg.grid_type))
 
         if masked_values is not None:
             for mval in masked_values:
@@ -261,7 +264,7 @@ class PlotMapView(object):
 
             if self.mg.grid_type in ('structured', 'vertex'):
                 idx = (xcentergrid >= extent[0]) & (
-                       xcentergrid <= extent[1]) & (
+                        xcentergrid <= extent[1]) & (
                               ycentergrid >= extent[2]) & (
                               ycentergrid <= extent[3])
                 plotarray = plotarray[idx]
@@ -281,7 +284,7 @@ class PlotMapView(object):
                 if amask[n0] or amask[n1] or amask[n2]:
                     mask[ipos] = True
             triang.set_mask(mask)
-        except:
+        except (AttributeError, IndexError):
             pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
@@ -480,7 +483,7 @@ class PlotMapView(object):
             for k in range(nlay):
                 plotarray[k] = pa.copy()
         else:
-            plotarray[list(idx)] = 1
+            plotarray[tuple(idx)] = 1
 
         # mask the plot array
         plotarray = np.ma.masked_equal(plotarray, 0)
@@ -754,7 +757,7 @@ class PlotMapView(object):
             delc = self.mg.delc
             top = np.copy(self.mg.top)
             botm = np.copy(self.mg.botm)
-            nlay, nrow, ncol = botm.shape
+            nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.
             hdry = 999.
@@ -787,6 +790,7 @@ class PlotMapView(object):
             ib = ib.ravel()
             qx = qx.ravel()
             qy = qy.ravel()
+            del qz
 
             temp = []
             for ix, val in enumerate(ib):
@@ -1042,7 +1046,6 @@ class PlotMapView(object):
                     idx = (t['time'] <= time)
                 tp = ts[idx]
 
-
             x0r, y0r = geometry.transform(tp['x'], tp['y'],
                                           self.mg.xoffset,
                                           self.mg.yoffset,
@@ -1238,6 +1241,7 @@ class DeprecatedMapView(PlotMapView):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
+
     def __init__(self, model=None, modelgrid=None, ax=None,
                  layer=0, extent=None):
         super(DeprecatedMapView, self).__init__(model=model,
@@ -1339,6 +1343,7 @@ class ModelMap(object):
     arguments are provided, then it puts the lower-left-hand corner of the
     grid at (0, 0).
     """
+
     def __new__(cls, sr=None, ax=None, model=None, dis=None, layer=0,
                 extent=None, xul=None, yul=None, xll=None, yll=None,
                 rotation=None, length_multiplier=None):
@@ -1352,7 +1357,8 @@ class ModelMap(object):
 
         modelgrid = None
         if model is not None:
-            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+            if (xul, yul, xll, yll, rotation) != (
+            None, None, None, None, None):
                 modelgrid = plotutil._set_coord_info(model.modelgrid,
                                                      xul, yul, xll, yll,
                                                      rotation)
@@ -1360,7 +1366,8 @@ class ModelMap(object):
             if length_multiplier is not None:
                 sr.length_multiplier = length_multiplier
 
-            if (xul, yul, xll, yll, rotation) != (None, None, None, None, None):
+            if (xul, yul, xll, yll, rotation) != (
+            None, None, None, None, None):
                 sr.set_spatialreference(xul, yul, xll, yll, rotation)
 
             if isinstance(sr, SpatialReferenceUnstructured):
@@ -1381,7 +1388,8 @@ class ModelMap(object):
 
             elif dis is not None:
                 modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
-                                           top=dis.top.array, botm=dis.botm.array,
+                                           top=dis.top.array,
+                                           botm=dis.botm.array,
                                            xoff=sr.xll, yoff=sr.yll,
                                            angrot=sr.rotation)
             else:

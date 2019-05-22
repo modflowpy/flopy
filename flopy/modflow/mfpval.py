@@ -8,9 +8,8 @@ MODFLOW Guide
 
 """
 import sys
-import collections
-import numpy as np
 from ..pakbase import Package
+
 
 class ModflowPval(Package):
     """
@@ -58,8 +57,9 @@ class ModflowPval(Package):
     >>> pval_dict = flopy.modflow.ModflowZon(m, pval_dict=pval_dict)
 
     """
+
     def __init__(self, model, pval_dict=None,
-                 extension ='pval', unitnumber=None, filenames=None):
+                 extension='pval', unitnumber=None, filenames=None):
         """
         Package constructor.
 
@@ -82,7 +82,8 @@ class ModflowPval(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent, extension, name and
+        # unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -111,7 +112,6 @@ class ModflowPval(Package):
 
         """
         pass
-
 
     def __getitem__(self, item):
         """
@@ -165,19 +165,21 @@ class ModflowPval(Package):
         else:
             filename = f.name
 
-        #dataset 0 -- header
+        # dataset 0 -- header
         while True:
             line = f.readline()
             if line[0] != '#':
                 break
-        #dataset 1
+        # dataset 1
         t = line.strip().split()
         npval = int(t[0])
 
         if model.verbose:
-            sys.stdout.write('   reading parameter values from "{:<10s}"\n'.format(filename))
+            sys.stdout.write(
+                '   reading parameter values from "{:<10s}"\n'.format(
+                    filename))
 
-        #read PVAL data
+        # read PVAL data
         pval_dict = dict()
         for n in range(npval):
             line = f.readline()
@@ -201,13 +203,10 @@ class ModflowPval(Package):
                            unitnumber=unitnumber, filenames=filenames)
         return pval
 
-
     @staticmethod
     def ftype():
         return 'PVAL'
 
-
     @staticmethod
     def defaultunit():
         return 1005
-

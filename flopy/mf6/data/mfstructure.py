@@ -928,8 +928,8 @@ class MFDataItemStructure(object):
         item_desc = '* {} ({}) {}'.format(self.name, self.type_string,
                                           self.description)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
-                          subsequent_indent='  {}'.format(
-                              initial_indent))
+                          drop_whitespace = True,
+                          subsequent_indent='  {}'.format(initial_indent))
         item_desc = '\n'.join(twr.wrap(item_desc))
         return item_desc
 
@@ -940,7 +940,8 @@ class MFDataItemStructure(object):
         param_doc_string = '{} : {}'.format(self.python_name,
                                             self.get_type_string())
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
-                          subsequent_indent='  {}'.format(initial_indent))
+                          subsequent_indent='  {}'.format(initial_indent),
+                          drop_whitespace=True)
         param_doc_string = '\n'.join(twr.wrap(param_doc_string))
         param_doc_string = '{}\n{}'.format(param_doc_string, description)
         return param_doc_string

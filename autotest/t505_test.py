@@ -4,7 +4,7 @@ import numpy as np
 
 import flopy
 import flopy.utils.binaryfile as bf
-from flopy.mf6.data.mfdata import DataStorageType
+from flopy.mf6.data.mfdatastorage import DataStorageType
 from flopy.utils.datautil import PyListUtil
 from flopy.mf6.mfbase import FlopyException
 from flopy.mf6.modflow.mfgwf import ModflowGwf
@@ -134,10 +134,12 @@ def np001():
                                           pname='mydispkg')
     # specifying dis package twice with the same name should automatically
     # remove the old dis package
+    top = {'filename': 'top.bin', 'data': 100.0, 'binary': True}
+    botm = {'filename': 'botm.bin', 'data': 50.0, 'binary': True}
     dis_package = flopy.mf6.ModflowGwfdis(model, length_units='FEET', nlay=1,
                                           nrow=1, ncol=10, delr=500.0,
                                           delc=500.0,
-                                          top=100.0, botm=50.0,
+                                          top=top, botm=botm,
                                           filename='{}.dis'.format(model_name),
                                           pname='mydispkg')
     ic_package = flopy.mf6.ModflowGwfic(model, strt='initial_heads.txt',
@@ -307,6 +309,7 @@ def np002():
                               filename='{}.ic'.format(model_name))
     ic_package.strt.store_as_external_file('initial_heads.txt')
     npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=1, k=100.0)
+    npf_package.k.store_as_external_file('k.bin', binary=True)
     oc_package = ModflowGwfoc(model, budget_filerecord=[('np002_mod.cbc',)],
                               head_filerecord=[('np002_mod.hds',)],
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
@@ -342,6 +345,11 @@ def np002():
         # run simulation
         sim.run_simulation()
 
+        sim2 = MFSimulation.load(sim_ws=run_folder)
+        model = sim2.get_model(model_name)
+        npf_package = model.get_package('npf')
+        k = npf_package.k.array
+
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file)
         budget_obj = bf.CellBudgetFile(budget_file, precision='double')
@@ -360,7 +368,7 @@ def np002():
             (model_name, 'CBC', 'FLOW-JA-FACE')]
         assert array_util.array_comp(budget_frf_valid, budget_frf)
 
-        # verify external file was written correctly
+        # verify external text file was written correctly
         ext_file_path = os.path.join(run_folder, 'initial_heads.txt')
         fd = open(ext_file_path, 'r')
         line = fd.readline()
@@ -410,7 +418,10 @@ def test021_twri():
                                           delr=5000.0, delc=5000.0,
                                           top=200.0, botm=[-200, -300, -450],
                                           filename='{}.dis'.format(model_name))
-    ic_package = ModflowGwfic(model, strt=0.0,
+    strt = [{'filename': 'strt.txt', 'factor': 1.0, 'data': 0.0},
+            {'filename': 'strt2.bin', 'factor': 1.0, 'data': 1.0,
+             'binary': 'True'}, 2.0]
+    ic_package = ModflowGwfic(model, strt=strt,
                               filename='{}.ic'.format(model_name))
     npf_package = ModflowGwfnpf(model, save_flows=True, perched=True,
                                 cvoptions='dewatered',
@@ -431,6 +442,9 @@ def test021_twri():
                                 stress_period_data=stress_period_data)
 
     # build stress_period_data for drn package
+    conc = np.ones((15, 15), dtype=np.float) * 35.
+    auxdata = {0: [6, conc]}
+
     stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1, 10), drn_heads):
@@ -439,7 +453,11 @@ def test021_twri():
                                 save_flows=True, maxbound=9,
                                 stress_period_data=stress_period_data)
     rch_package = ModflowGwfrcha(model, readasarrays=True, fixed_cell=True,
-                                 recharge={0: 0.00000003})
+                                 recharge={0: 0.00000003},
+                                 auxiliary=[('iface', 'conc')], aux=auxdata)
+
+    aux = rch_package.aux.get_data()
+
 
     stress_period_data = []
     layers = [2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -459,6 +477,14 @@ def test021_twri():
 
     # run simulation
     sim.run_simulation()
+
+    sim2 = MFSimulation.load(sim_ws=run_folder)
+    model2 = sim2.get_model()
+    ic2 = model2.get_package('ic')
+    strt2 = ic2.strt.get_data()
+    assert(strt2[0,0,0] == 0.0)
+    assert(strt2[1,0,0] == 1.0)
+    assert(strt2[2,0,0] == 2.0)
 
     # compare output to expected results
     head_file = os.path.join(os.getcwd(), expected_head_file)
@@ -887,11 +913,18 @@ def test004_bcfss():
                                                 'DIGITS', 2, 'GENERAL')],
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],
                               printrecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')])
-
+    aux = {0: [[50.0], [1.3]], 1: [[200.0], [1.5]]}
+    # aux = {0: [[100.0], [2.3]]}
     rch_package = ModflowGwfrcha(model, readasarrays=True, save_flows=True,
                                  auxiliary=[('var1', 'var2')],
-                                 recharge={0: 0.004}, aux={
-            0: [[100.0], [2.3]]})  # *** test if aux works ***
+                                 recharge={0: 0.004}, aux=aux)  # *** test if aux works ***
+
+    # aux tests
+    aux_out = rch_package.aux.get_data()
+    assert(aux_out[0][0][0,0] == 50.)
+    assert(aux_out[0][1][0,0] == 1.3)
+    assert(aux_out[1][0][0,0] == 200.0)
+    assert(aux_out[1][1][0,0] == 1.5)
 
     riv_period = {}
     riv_period_array = []
@@ -1076,8 +1109,12 @@ def test006_gwf3_disv():
                  0]
     ic_package = ModflowGwfic(model, strt=strt_list,
                               filename='{}.ic'.format(model_name))
-    npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=0, k=1.0,
+    k = {'filename': 'k.bin', 'factor': 1.0, 'data': 1.0, 'binary': 'True'}
+    npf_package = ModflowGwfnpf(model, save_flows=True, icelltype=0, k=k,
                                 k33=1.0)
+    k_data = npf_package.k.get_data()
+    assert(k_data[0,0] == 1.0)
+
     oc_package = ModflowGwfoc(model, budget_filerecord='flow.cbc',
                               head_filerecord='flow.hds',
                               saverecord=[('HEAD', 'ALL'), ('BUDGET', 'ALL')],

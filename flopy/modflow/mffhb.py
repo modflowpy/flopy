@@ -14,6 +14,7 @@ import numpy as np
 from ..pakbase import Package
 from ..utils.recarray_utils import create_empty_recarray
 
+
 class ModflowFhb(Package):
     """
     MODFLOW Flow and Head Boundary Package Class.

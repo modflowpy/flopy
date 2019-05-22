@@ -17,6 +17,7 @@ from ..utils.binaryfile import BinaryHeader
 from ..utils.flopy_io import line_parse
 from ..datbase import DataType, DataInterface
 
+
 class ArrayFormat(object):
     """
     ArrayFormat class for handling various output format types for both
@@ -1843,7 +1844,7 @@ class Util2d(DataInterface):
         >>> import flopy
         >>> ml = flopy.modflow.Modflow.load('test.nam')
         >>> ml.dis.top.plot()
-        
+
         """
         from flopy.plot import PlotUtilities
 
@@ -2124,7 +2125,7 @@ class Util2d(DataInterface):
         # if self.format.binary:
         #    locat = -1 * np.abs(locat)
         self._model.add_external(self.model_file_path, locat,
-                                self.format.binary)
+                                 self.format.binary)
         if self.format.array_free_format:
             cr = 'EXTERNAL  {0:>30d} {1:15} {2:>10s} {3:2.0f} {4:<30s}\n'.format(
                 locat, self.cnstnt_str,
@@ -2764,7 +2765,8 @@ class Util2d(DataInterface):
                         # td = ext_unit_dict[int(raw[1])]
                         fname = ext_unit_dict[int(raw[1])].filename.strip()
                     except:
-                        pass
+                        print('   could not determine filename ' +
+                              'for unit {}'.format(raw[1]))
 
                 nunit = int(raw[1])
                 if isfloat:
