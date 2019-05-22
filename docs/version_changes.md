@@ -22,6 +22,7 @@ FloPy Changes
     * Fixed bug in MNW2 in which nodes were not sorted correctly.
     * Ensure that external 1-D free arrays are written on one line.
     * Typos corrected for various functions, keyword arguments, property names, input file options, and documentation.
+    * Fixed bug in `Mt3dUzt.__init__` that originated when copying code from mtsft.py to get started on mtuzt.py class.  The variable ioutobs doesn't exist in the UZT package and should never have appeared in the package to begin with.
 
 ### Version 3.2.10
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
