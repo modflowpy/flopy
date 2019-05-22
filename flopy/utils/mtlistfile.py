@@ -75,7 +75,7 @@ class MtListBudget(object):
         df_gw,df_sw : pandas.DataFrame
             a dataframe for the groundwater mass and
             (optionally) surface-water mass budget.
-            If the SFT process is not used, only one dataframe is returned.
+            If the SFT process is not used, df_sw is None.
         """
         try:
             import pandas as pd
