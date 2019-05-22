@@ -1105,7 +1105,7 @@ class SpatialReference(object):
                 return
             dxdy = self.delc[0] * self.length_multiplier
             trans = Affine.translation(self.xul, self.yul) * \
-                    Affine.angrot(self.rotation) * \
+                    Affine.rotation(self.rotation) * \
                     Affine.scale(dxdy, -dxdy)
 
             # third dimension is the number of bands

@@ -13,6 +13,14 @@ def test_mtlist():
 
     mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
     mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp.list"))
+    df_gw, df_sw = mt.parse(forgive=False, diff=False, start_datetime=None)
+
+    mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
+    mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "CrnkNic.mt3d.list"))
+    df_gw, df_sw = mt.parse(forgive=False, diff=True, start_datetime=None)
+
+    mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
+    mt = flopy.utils.MtListBudget(os.path.join(mt_dir, "mcomp.list"))
     df_gw, df_sw = mt.parse(forgive=False, start_datetime=None)
 
     mt_dir = os.path.join("..", "examples", "data", "mt3d_test")
