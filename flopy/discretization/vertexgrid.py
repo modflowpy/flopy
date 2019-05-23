@@ -134,7 +134,9 @@ class VertexGrid(Grid):
             The y-coordinate of the requested point
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
-
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
     
         Returns
         -------
