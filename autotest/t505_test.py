@@ -33,6 +33,8 @@ from flopy.mf6.modflow.mftdis import ModflowTdis
 from flopy.mf6.modflow.mfutlobs import ModflowUtlobs
 from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
+from flopy.mf6.mfbase import MFDataException
+
 
 try:
     import pymake
@@ -142,6 +144,8 @@ def np001():
                                           top=top, botm=botm,
                                           filename='{}.dis'.format(model_name),
                                           pname='mydispkg')
+    top_data = dis_package.top.get_data()
+    assert top_data[0,0] == 100.0
     ic_package = flopy.mf6.ModflowGwfic(model, strt='initial_heads.txt',
                                         filename='{}.ic'.format(model_name))
     npf_package = ModflowGwfnpf(model, pname='npf_1', save_flows=True,
@@ -176,13 +180,20 @@ def np001():
     sto_package = ModflowGwfsto(model, save_flows=True, iconvert=1,
                                 ss=0.000001, sy=0.15)
 
+    # test saving a binary file with list data
+    well_spd = {0: {'filename': 'wel0.bin', 'binary': True,
+                    'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]}}
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=2,
-                                stress_period_data=[((0, 0, 4), -2000.0),
-                                                    ((0, 0, 7), -2.0)])
+                                stress_period_data=well_spd)
     wel_package.stress_period_data.add_transient_key(1)
     wel_package.stress_period_data.set_data(
         {1: {'filename': 'wel.txt', 'factor': 1.0}})
+
+    # test getting data from a binary file
+    well_data = wel_package.stress_period_data.get_data(0)
+    assert well_data[0][0] == (0, 0, 4)
+    assert well_data[0][1] == -2000.0
 
     drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=1,
@@ -191,10 +202,20 @@ def np001():
     drn_package.ts.time_series_namerecord = 'drn_1'
     drn_package.ts.interpolation_methodrecord = 'linearend'
 
+    riv_spd = {0: {'filename': 'riv.txt', 'data':[((0, 0, 9), 110, 90.0,
+      100.0, 1.0, 2.0, 3.0)]}}
     riv_package = ModflowGwfriv(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=1,
-                                stress_period_data=[
-                                    ((0, 0, 9), 110, 90.0, 100.0)])
+                                auxiliary=['var1', 'var2', 'var3'],
+                                stress_period_data=riv_spd)
+    riv_data = riv_package.stress_period_data.get_data(0)
+    assert riv_data[0][0] == (0, 0, 9)
+    assert riv_data[0][1] == 110
+    assert riv_data[0][2] == 90.0
+    assert riv_data[0][3] == 100.0
+    assert riv_data[0][4] == 1.0
+    assert riv_data[0][5] == 2.0
+    assert riv_data[0][6] == 3.0
 
     # verify package look-up
     pkgs = model.get_package()
@@ -251,6 +272,18 @@ def np001():
         # clean up
         sim.delete_output_files()
 
+    try:
+        error_occurred = False
+        well_spd = {0: {'filename': 'wel0.bin', 'binary': True,
+                        'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]}}
+        wel_package = ModflowGwfwel(model, boundnames=True,
+                                    print_input=True, print_flows=True,
+                                    save_flows=True, maxbound=2,
+                                    stress_period_data=well_spd)
+    except MFDataException:
+        error_occurred = True
+
+    assert error_occurred
     return
 
 
