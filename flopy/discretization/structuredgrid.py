@@ -228,7 +228,9 @@ class StructuredGrid(Grid):
             The y-coordinate of the requested point
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
-
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
 
         Returns
         -------
@@ -247,10 +249,7 @@ class StructuredGrid(Grid):
         xcomp = x > xe
         if np.all(xcomp) or not np.any(xcomp):
             if forgive:
-                if np.all(xcomp):
-                    col = self.ncol - 1
-                elif not np.any(xcomp):
-                    col = 0
+                col = np.nan
             else:
                 raise Exception(
                     'x, y point given is outside of the model area')
@@ -260,16 +259,14 @@ class StructuredGrid(Grid):
         ycomp = y < ye
         if np.all(ycomp) or not np.any(ycomp):
             if forgive:
-                if np.all(ycomp):
-                    row = self.nrow - 1
-                elif not np.any(ycomp):
-                    row = 0
+                row = np.nan
             else:
                 raise Exception(
                     'x, y point given is outside of the model area')
         else:
             row = np.where(ycomp)[0][-1]
-
+        if np.any(np.isnan([row, col])):
+            row = col = np.nan
         return row, col
 
     def _cell_vert_list(self, i, j):
