@@ -851,7 +851,7 @@ class MFFileAccessList(MFFileAccess):
         while line != '':
             line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(line)
-            if arr_line and (len(arr_line[0]) >= 2 and
+            if not arr_line or(len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
                 # end of block
                 if store_data:
@@ -859,11 +859,13 @@ class MFFileAccessList(MFFileAccess):
                         # store as rec array
                         storage.store_internal(data_loaded, None, False,
                                                current_key)
+                        storage.data_dimensions.unlock()
+                        return [False, line, data_line]
                     else:
                         data_rec = storage._build_recarray(data_loaded,
                                                            current_key, True)
-                storage.data_dimensions.unlock()
-                return [False, line, data_line]
+                        storage.data_dimensions.unlock()
+                        return data_rec
             if recarray_len != 1 and \
                     not MFComment.is_comment(arr_line, True):
                 key = find_keyword(arr_line, struct.get_keywords())
@@ -873,12 +875,14 @@ class MFFileAccessList(MFFileAccess):
                         if store_internal:
                             storage.store_internal(data_loaded, None, False,
                                                    current_key)
+                            storage.data_dimensions.unlock()
+                            return [True, line, data_line]
                         else:
                             data_rec = storage._build_recarray(data_loaded,
                                                                current_key,
                                                                True)
-                    storage.data_dimensions.unlock()
-                    return [True, line, data_line]
+                            storage.data_dimensions.unlock()
+                            return data_rec
             if simple_line and struct.num_optional == 0:
                 if MFComment.is_comment(arr_line,
                                         True):

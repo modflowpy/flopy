@@ -716,6 +716,21 @@ class DataStorage(object):
     def _set_list(self, data, layer, multiplier, key, autofill):
         if isinstance(data, dict):
             if 'filename' in data:
+                if 'binary' in data and data['binary']:
+                    if self.data_dimensions.package_dim.boundnames():
+                        message = 'Unable to store list data ({}) to a binary '\
+                                  'file when using boundnames' \
+                                  '.'.format(self.data_dimensions.structure.
+                                             name)
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(
+                            self.data_dimensions.structure.get_model(),
+                            self.data_dimensions.structure.get_package(),
+                            self.data_dimensions.structure.path,
+                            'writing list data to binary file',
+                            self.data_dimensions.structure.name,
+                            inspect.stack()[0][3], type_, value_, traceback_,
+                            message, self._simulation_data.debug)
                 self.process_open_close_line(data, layer)
                 return
         self.store_internal(data, layer, False, multiplier, key=key,
@@ -1205,10 +1220,12 @@ class DataStorage(object):
             if self.layer_storage[layer].binary:
                 data = file_access.read_binary_data_from_file(
                     read_file, self._model_or_sim.modeldiscrit)
+                data_out = self._build_recarray(data, layer, False)
             else:
-                data = file_access.read_list_data_from_file(
-                    read_file, self, self._stress_period)
-            data_out = self._build_recarray(data, layer, False)
+                with open(read_file, 'r') as fd_read_file:
+                    data_out = file_access.read_list_data_from_file(
+                        fd_read_file, self, self._stress_period,
+                        store_internal=False)
             if store_internal:
                 self.store_internal(data_out, layer)
             return data_out
