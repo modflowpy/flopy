@@ -846,7 +846,7 @@ class ModflowSfr2(Package):
         aux_variables = {}  # not sure where the auxiliary variables are supposed to go
         for i in range(0, nper):
             # Dataset 5
-            dataset_5[i] = _get_dataset(f.readline(), [1, 0, 0, 0])
+            dataset_5[i] = _get_dataset(f.readline(), [-1, 0, 0, 0])
             itmp = dataset_5[i][0]
             if itmp > 0:
                 # Item 6

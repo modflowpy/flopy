@@ -46,4 +46,5 @@ setup(name=__name__,
                 'flopy.mf6.modflow', 'flopy.mf6.utils'],
       include_package_data=True, # includes files listed in MANIFEST.in
       # use this version ID if .svn data cannot be found
-      version=__version__)
+      version=__version__,
+      classifiers=['Topic :: Scientific/Engineering :: Hydrology'])

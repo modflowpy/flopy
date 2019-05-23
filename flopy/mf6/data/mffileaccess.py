@@ -338,30 +338,14 @@ class MFFileAccessArray(MFFileAccess):
         if fd is None:
             close_file = True
             fd = self._open_ext_file(fname)
+        data_raw = []
         line = ' '
         PyListUtil.reset_delimiter_used()
-        while line != '':
+        while line != '' and len(data_raw) < data_size:
             line = fd.readline()
-            arr_line = PyListUtil.split_data_line(line, True)
-            for data in arr_line:
-                if data != '':
-                    if current_size == data_size:
-                        if self._simulation_data.verbosity_level.value >= \
-                                VerbosityLevel.normal.value:
-                            path = self._data_dimensions.structure.path
-                            print(
-                                'WARNING: More data found than expected in '
-                                'file {} for data '
-                                '"{}".'.format(fd.name,
-                                               path))
-                        break
-                    data_out.append(convert_data(data, self._data_dimensions,
-                                                 data_type, data_item))
-                    current_size += 1
-            if current_size == data_size:
-                break
+            data_raw += PyListUtil.split_data_line(line, True)
 
-        if current_size != data_size:
+        if len(data_raw) < data_size:
             message = 'Not enough data in file {} for data "{}".  ' \
                       'Expected data size {} but only found ' \
                       '{}.'.format(fd.name,
@@ -380,6 +364,7 @@ class MFFileAccessArray(MFFileAccess):
                 traceback_, message,
                 self._simulation_data.debug)
 
+        data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
         if close_file:
             fd.close()
 
@@ -551,8 +536,10 @@ class MFFileAccessArray(MFFileAccess):
                     storage.layer_storage[layer].factor = multiplier
                 if print_format is not None:
                     storage.layer_storage[layer].iprn = print_format
+                data_type = storage.data_dimensions.structure.\
+                        get_datum_type(True)
                 data_from_file = self.read_text_data_from_file(
-                    storage.get_data_size(layer), storage._data_type,
+                    storage.get_data_size(layer), data_type,
                     storage.get_data_dimensions(layer), layer,
                     fd=file_handle)
             except Exception as ex:
@@ -583,22 +570,6 @@ class MFFileAccessArray(MFFileAccess):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, comment,
                                       self._simulation_data.debug, ex)
-            # verify correct size
-            if layer_size > 0 and layer_size != data_from_file[1]:
-                message = 'Data array "{}" does not contain the expected ' \
-                          'amount of INTERNAL data. expected {},' \
-                          ' found {}.'.format(self.structure.name,
-                                              layer_size,
-                                              data_from_file[1])
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'loading data layer from file',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, message,
-                                      self._simulation_data.debug)
         elif arr_line[0].upper() == 'OPEN/CLOSE':
             try:
                 storage.process_open_close_line(arr_line, layer)
@@ -775,8 +746,6 @@ class MFFileAccessList(MFFileAccess):
 
         if struct.type == DatumType.record or struct.type == DatumType.string:
             # records only contain a single line
-            if data_loaded == [False]:
-                print('break')
             storage.append_data(data_loaded)
             storage.data_dimensions.unlock()
             return [False, None, data_line]

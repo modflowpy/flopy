@@ -184,6 +184,8 @@ class ModflowBcf(Package):
         if dis is None:
             dis = self.parent.get_package('DISU')
 
+        ifrefm = self.parent.get_ifrefm()
+
         # Open file for writing
         if f is not None:
             f_bcf = f
@@ -193,14 +195,21 @@ class ModflowBcf(Package):
         f_bcf.write('{:10d}{:10.6G}{:10d}{:10.3f}{:10d}{:10d}\n'.format(
             self.ipakcb, self.hdry, self.iwdflg, self.wetfct, self.iwetit,
             self.ihdwet))
+
         # LAYCON array
         for k in range(nlay):
-            if self.intercellt[k] > 0:
-                f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],
-                                                   self.laycon[k]))
+            if ifrefm:
+                if self.intercellt[k] > 0:
+                    f_bcf.write('{0:1d}{1:1d} '.format(self.intercellt[k],
+                                                       self.laycon[k]))
+                else:
+                    f_bcf.write('0{0:1d} '.format(self.laycon[k]))
             else:
-                f_bcf.write('{0:1d} '.format(self.laycon[k]))
-
+                if self.intercellt[k] > 0:
+                    f_bcf.write('{0:1d}{1:1d}'.format(self.intercellt[k],
+                                                       self.laycon[k]))
+                else:
+                    f_bcf.write('0{0:1d}'.format(self.laycon[k]))
         f_bcf.write('\n')
         f_bcf.write(self.trpy.get_file_entry())
         transient = not dis.steady.all()

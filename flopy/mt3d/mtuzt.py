@@ -145,8 +145,6 @@ class Mt3dUzt(Package):
         # set filenames
         if filenames is None:
             filenames = [None, None]
-            if abs(ioutobs) > 0:
-                filenames[1] = model.name
         elif isinstance(filenames, str):
             filenames = [filenames, None, None]
         elif isinstance(filenames, list):

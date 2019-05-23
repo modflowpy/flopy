@@ -52,15 +52,15 @@ def test001a_tharmonic():
                             verbosity_level=0)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
+    # write simulation to new location
+    sim.write_simulation(silent=True)
+
     model = sim.get_model(model_name)
     model.export('{}/tharmonic.nc'.format(model.model_ws))
     model.export('{}/tharmonic.shp'.format(model.model_ws))
     model.dis.botm.export('{}/botm.shp'.format(model.model_ws))
 
     mg = model.modelgrid
-
-    # write simulation to new location
-    sim.write_simulation()
 
     if run:
         # run simulation
