@@ -241,7 +241,7 @@ class StructuredGrid(Grid):
 
         """
         # transform x and y to local coordinates
-        x, y = super(StructuredGrid, self).intersect(x, y, local)
+        x, y = super(StructuredGrid, self).intersect(x, y, local, forgive)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges

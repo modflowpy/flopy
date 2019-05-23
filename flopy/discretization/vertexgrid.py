@@ -119,7 +119,7 @@ class VertexGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
         
@@ -165,6 +165,9 @@ class VertexGrid(Grid):
                     radius = 1e-9
                 if path.contains_point((x, y), radius=radius):
                     return icell2d
+        if forgive:
+            icell2d = np.nan
+            return icell2d
         raise Exception('x, y point given is outside of the model area')
 
     def get_cell_vertices(self, cellid):
