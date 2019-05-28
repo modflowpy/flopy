@@ -327,6 +327,7 @@ def test_export_array():
             assert np.abs(src.bounds[0] - m.modelgrid.extent[0]) < 1e-6
             assert np.abs(src.bounds[1] - m.modelgrid.extent[1]) < 1e-6
 
+
 def test_mbase_modelgrid():
     import numpy as np
     import flopy
@@ -352,6 +353,7 @@ def test_mbase_modelgrid():
     assert str(ml1.modelgrid) == str(ml.modelgrid)
     assert ml1.start_datetime == ml.start_datetime
     assert ml1.modelgrid.proj4 is None
+
 
 def test_free_format_flag():
     import flopy
@@ -464,6 +466,7 @@ def test_mg():
     assert ms1.modelgrid.lenuni == ms.modelgrid.lenuni
     #assert ms1.sr.lenuni != sr.lenuni
 
+
 def test_epsgs():
     import flopy.export.shapefile_utils as shp
     # test setting a geographic (lat/lon) coordinate reference
@@ -483,6 +486,7 @@ def test_epsgs():
     assert crs.grid_mapping_attribs['grid_mapping_name'] == 'latitude_longitude'
     if not "proj4_str:+init=epsg:4326" in sr.__repr__():
         raise AssertionError()
+
 
 def test_dynamic_xll_yll():
     nlay, nrow, ncol = 1, 10, 5
@@ -555,6 +559,7 @@ def test_dynamic_xll_yll():
     assert sr5.units == 'feet'
     assert sr5.length_multiplier == 1/.3048
 
+
 def test_namfile_readwrite():
     nlay, nrow, ncol = 1, 30, 5
     delr, delc = 250, 500
@@ -586,6 +591,7 @@ def test_namfile_readwrite():
     assert ml.modelgrid.xoffset == ml.modelgrid._xul_to_xll(619653)
     assert ml.modelgrid.yoffset == ml.modelgrid._yul_to_yll(3353277)
     assert ml.modelgrid.angrot == 15.
+
 
 def test_read_usgs_model_reference():
     nlay, nrow, ncol = 1, 30, 5
@@ -670,6 +676,7 @@ def test_rotation():
 
     assert np.abs(mg4.xvertices[0, 0] - xul) < 1e-4
     assert np.abs(mg4.yvertices[0, 0] - yul) < 1e-4
+
 
 def test_sr_with_Map():
     # Note that most of this is either deprecated, or has pending deprecation
@@ -857,11 +864,13 @@ def test_get_vertices():
     a2 = np.array(mg.get_cell_vertices(0, 0))
     assert np.array_equal(a1, a2)
 
+
 def test_vertex_model_dot_plot():
     # load up the vertex example problem
     sim_name = "mfsim.nam"
     sim_path = "../examples/data/mf6/test003_gwftri_disv"
-    disv_sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, version="mf6", exe_name="mf6",
+    disv_sim = flopy.mf6.MFSimulation.load(sim_name=sim_name, version="mf6",
+                                           exe_name="mf6",
                                            sim_ws=sim_path)
     disv_ml = disv_sim.get_model('gwf_1')
 
@@ -869,12 +878,13 @@ def test_vertex_model_dot_plot():
 
     assert ax
 
+
 def test_model_dot_plot():
     loadpth = os.path.join('..', 'examples', 'data', 'secp')
     ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
-
     ax = ml.plot()
     assert ax
+
 
 def test_get_rc_from_node_coordinates():
     m = flopy.modflow.Modflow(rotation=20.)
@@ -991,6 +1001,7 @@ def test_wkt_parse():
                     if k in wkttxt.lower():
                         assert crsobj.__dict__[k] is not None
 
+
 def test_shapefile_ibound():
     import os
     import flopy
@@ -1018,6 +1029,7 @@ def test_shapefile():
         yield export_shapefile, namfile
     return
 
+
 def test_netcdf():
     for namfile in namfiles:
         yield export_mf2005_netcdf, namfile
@@ -1037,6 +1049,72 @@ def build_sfr_netcdf():
     return
 
 
+def test_export_array():
+    from flopy.discretization import StructuredGrid
+    from flopy.export.utils import export_array
+    nrow = 7
+    ncol = 11
+    epsg = 4111
+
+    # no epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1)
+    filename = os.path.join(spth, 'myarray1.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array(modelgrid, filename, a)
+    assert os.path.isfile(filename), 'did not create array shapefile'
+
+    # with modelgrid epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1, epsg=epsg)
+    filename = os.path.join(spth, 'myarray2.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array(modelgrid, filename, a)
+    assert os.path.isfile(filename), 'did not create array shapefile'
+
+    # with passing in epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1)
+    filename = os.path.join(spth, 'myarray3.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array(modelgrid, filename, a, epsg=epsg)
+    assert os.path.isfile(filename), 'did not create array shapefile'
+    return
+
+
+def test_export_array_contours():
+    from flopy.discretization import StructuredGrid
+    from flopy.export.utils import export_array_contours
+    nrow = 7
+    ncol = 11
+    epsg = 4111
+
+    # no epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1)
+    filename = os.path.join(spth, 'myarraycontours1.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array_contours(modelgrid, filename, a)
+    assert os.path.isfile(filename), 'did not create contour shapefile'
+
+    # with modelgrid epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1, epsg=epsg)
+    filename = os.path.join(spth, 'myarraycontours2.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array_contours(modelgrid, filename, a)
+    assert os.path.isfile(filename), 'did not create contour shapefile'
+
+    # with passing in epsg code
+    modelgrid = StructuredGrid(delr=np.ones(ncol) * 1.1,
+                               delc=np.ones(nrow) * 1.1)
+    filename = os.path.join(spth, 'myarraycontours3.shp')
+    a = np.arange(nrow*ncol).reshape((nrow, ncol))
+    export_array_contours(modelgrid, filename, a, epsg=epsg)
+    assert os.path.isfile(filename), 'did not create contour shapefile'
+    return
+
+
 if __name__ == '__main__':
     #test_shapefile()
     # test_shapefile_ibound()
@@ -1050,7 +1128,7 @@ if __name__ == '__main__':
     # test_rotation()
     # test_model_dot_plot()
     # test_vertex_model_dot_plot()
-    test_sr_with_Map()
+    #test_sr_with_Map()
     #test_modelgrid_with_PlotMapView()
     # test_epsgs()
     # test_sr_scaling()
@@ -1066,4 +1144,6 @@ if __name__ == '__main__':
     #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
+    test_export_array()
+    test_export_array_contours()
     pass
