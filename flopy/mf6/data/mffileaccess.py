@@ -851,7 +851,7 @@ class MFFileAccessList(MFFileAccess):
         while line != '':
             line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(line)
-            if not arr_line or(len(arr_line[0]) >= 2 and
+            if not line or (arr_line and len(arr_line[0]) >= 2 and
                     arr_line[0][:3].upper() == 'END'):
                 # end of block
                 if store_data:
