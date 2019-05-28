@@ -253,6 +253,21 @@ class MFModel(PackageContainer, ModelInterface):
         return self._model_time
 
     @property
+    def modeldiscrit(self):
+        if self.get_grid_type() == DiscretizationType.DIS:
+            dis = self.get_package('dis')
+            return StructuredGrid(nlay=dis.nlay.get_data(),
+                                  nrow=dis.nrow.get_data(),
+                                  ncol=dis.ncol.get_data())
+        elif self.get_grid_type() == DiscretizationType.DISV:
+            dis = self.get_package('disv')
+            return VertexGrid(ncpl=dis.ncpl.get_data(),
+                              nlay=dis.nlay.get_data())
+        elif self.get_grid_type() == DiscretizationType.DISU:
+            dis = self.get_package('disu')
+            return UnstructuredGrid(nodes=dis.nodes.get_data())
+
+    @property
     def modelgrid(self):
         if not self._mg_resync:
             return self._modelgrid

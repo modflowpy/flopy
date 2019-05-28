@@ -32,9 +32,10 @@ class VertexGrid(Grid):
         returns vertices for a single cell at cellid.
     """
 
-    def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
+    def __init__(self, vertices=None, cell2d=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, grid_type='vertex'):
+                 yoff=0.0, angrot=0.0, grid_type='vertex',
+                 nlay=None, ncpl=None):
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
                                          epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
@@ -42,15 +43,26 @@ class VertexGrid(Grid):
         self._top = top
         self._botm = botm
         self._idomain = idomain
+        if botm is None:
+            self._nlay = nlay
+            self._ncpl = ncpl
+        else:
+            self._nlay = None
+            self._ncpl = None
 
     @property
     def nlay(self):
         if self._botm is not None:
             return len(self._botm)
+        else:
+            return self._nlay
 
     @property
     def ncpl(self):
-        return len(self._botm[0])
+        if self._botm is not None:
+            return len(self._botm[0])
+        else:
+            return self._ncpl
 
     @property
     def shape(self):

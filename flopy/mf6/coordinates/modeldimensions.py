@@ -11,6 +11,7 @@ from ..data.mfstructure import DatumType
 from ..utils.mfenums import DiscretizationType
 from ...utils.datautil import DatumUtil, NameIter
 
+
 class DataDimensions(object):
     """
     Resolves dimension information for model data using information contained
