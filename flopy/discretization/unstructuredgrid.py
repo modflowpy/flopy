@@ -149,8 +149,8 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
-    def intersect(self, x, y, local=False):
-        x, y = super(UnstructuredGrid, self).intersect(x, y, local)
+    def intersect(self, x, y, local=False, forgive=False):
+        x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)
         raise Exception('Not implemented yet')
 
     def get_cell_vertices(self, cellid):

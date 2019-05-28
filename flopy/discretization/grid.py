@@ -347,7 +347,7 @@ class Grid(object):
 
         return x, y
 
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         if not local:
             return self.get_local_coords(x, y)
         else:

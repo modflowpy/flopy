@@ -213,7 +213,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -228,7 +228,9 @@ class StructuredGrid(Grid):
             The y-coordinate of the requested point
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
-
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
 
         Returns
         -------
@@ -239,21 +241,32 @@ class StructuredGrid(Grid):
 
         """
         # transform x and y to local coordinates
-        x, y = super(StructuredGrid, self).intersect(x, y, local)
+        x, y = super(StructuredGrid, self).intersect(x, y, local, forgive)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges
 
         xcomp = x > xe
         if np.all(xcomp) or not np.any(xcomp):
-            raise Exception('x, y point given is outside of the model area')
-        col = np.where(xcomp)[0][-1]
+            if forgive:
+                col = np.nan
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            col = np.where(xcomp)[0][-1]
 
         ycomp = y < ye
         if np.all(ycomp) or not np.any(ycomp):
-            raise Exception('x, y point given is outside of the model area')
-        row = np.where(ycomp)[0][-1]
-
+            if forgive:
+                row = np.nan
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            row = np.where(ycomp)[0][-1]
+        if np.any(np.isnan([row, col])):
+            row = col = np.nan
         return row, col
 
     def _cell_vert_list(self, i, j):
