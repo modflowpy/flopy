@@ -215,11 +215,8 @@ class BaseModel(ModelInterface):
         xll = kwargs.pop("xll", None)
         yll = kwargs.pop("yll", None)
         self._xul = kwargs.pop("xul", None)
-        if self._xul is not None:
-            warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                          DeprecationWarning)
         self._yul = kwargs.pop("yul", None)
-        if self._yul is not None:
+        if self._xul is not None or self._yul is not None:
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           DeprecationWarning)
 

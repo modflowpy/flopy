@@ -213,12 +213,12 @@ class ModflowDis(Package):
             yll = mg._yul_to_yll(yul)
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
 
-        if rotation is None:
-            rotation = 0.0
-        self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
-                                    xul=xul, yul=yul,
-                                    rotation=rotation,
-                                    proj4_str=proj4_str)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
+                                        xul=xul, yul=yul,
+                                        rotation=rotation or 0.0,
+                                        proj4_str=proj4_str)
 
         self.tr = TemporalReference(itmuni=self.itmuni,
                                     start_datetime=start_datetime)
