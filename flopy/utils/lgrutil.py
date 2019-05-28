@@ -238,6 +238,10 @@ class Lgr(object):
 
         """
 
+        assert 0 <= kc < self.nlay, 'layer must be >= 0 and < child nlay'
+        assert 0 <= ic < self.nrow, 'layer must be >= 0 and < child nrow'
+        assert 0 <= jc < self.ncol, 'layer must be >= 0 and < child ncol'
+
         parentlist = []
         (kp, ip, jp) = self.get_parent_indices(kc, ic, jc)
 
