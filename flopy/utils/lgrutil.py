@@ -161,6 +161,36 @@ class Lgr(object):
                         kc += 1
         return botm[0], botm[1:]
 
+    def get_replicated_parent_array(self, parent_array):
+        """
+        Get a two-dimensional array the size of the child grid that has values
+        replicated from the provided parent array.
+
+        Parameters
+        ----------
+        parent_array : ndarray
+            A two-dimensional array that is the size of the parent model rows
+            and columns.
+
+        Returns
+        -------
+        child_array : ndarray
+            A two-dimensional array that is the size of the child model rows
+            and columns
+
+        """
+        assert parent_array.shape == (self.nrowp, self.ncolp)
+        child_array = np.empty((self.nrow, self.ncol), dtype=parent_array.dtype)
+        for ip in range(self.nprbeg, self.nprend + 1):
+            for jp in range(self.npcbeg, self.npcend + 1):
+                icrowstart = (ip - self.nprbeg) * self.ncpp
+                icrowend = icrowstart + self.ncpp
+                iccolstart = (jp - self.npcbeg) * self.ncpp
+                iccolend = iccolstart + self.ncpp
+                value = parent_array[ip, jp]
+                child_array[icrowstart:icrowend, iccolstart:iccolend] = value
+        return child_array
+
     def get_idomain(self):
         """
         Return the idomain array for the child model.  This will normally
@@ -170,8 +200,8 @@ class Lgr(object):
 
         Returns
         -------
-            idomain : ndarray
-                idomain array for the child model
+        idomain : ndarray
+            idomain array for the child model
 
         """
         idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=np.int)
