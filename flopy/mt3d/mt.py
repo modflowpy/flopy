@@ -351,18 +351,21 @@ class Mt3dms(BaseModel):
         if self.btn is not None:
             ibound = self.btn.icbund.array
         else:
-            ibound = None
+            if self.mf.bas6 is not None:
+                ibound = self.mf.bas6.ibound.array
+            else:
+                ibound = None
         # build grid
         self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
                                          delr=self.mf.dis.delr.array,
                                          top=self.mf.dis.top.array,
                                          botm=self.mf.dis.botm.array,
                                          idomain=ibound,
-                                         proj4=self.mf._modelgrid.proj4,
-                                         epsg=self.mf._modelgrid.epsg,
-                                         xoff=self.mf._modelgrid.xoffset,
-                                         yoff=self.mf._modelgrid.yoffset,
-                                         angrot=self.mf._modelgrid.angrot)
+                                         proj4=self._modelgrid.proj4,
+                                         epsg=self._modelgrid.epsg,
+                                         xoff=self._modelgrid.xoffset,
+                                         yoff=self._modelgrid.yoffset,
+                                         angrot=self._modelgrid.angrot)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -370,16 +373,39 @@ class Mt3dms(BaseModel):
             if self._xul is not None:
                 xoff = self._modelgrid._xul_to_xll(self._xul)
             else:
-                xoff = 0.0
+                xoff = self.mf._modelgrid.xoffset
+            if xoff is None:
+                # incase mf._modelgrid.xoffset is not set but mf._xul is
+                if self.mf._xul is not None:
+                    xoff = self._modelgrid._xul_to_xll(self.mf._xul)
+                else:
+                    xoff = 0.0
         yoff = self._modelgrid.yoffset
         if yoff is None:
             if self._yul is not None:
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
-                yoff = 0.0
-        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
-                                       self._modelgrid.epsg,
-                                       self._modelgrid.proj4)
+                yoff = self.mf._modelgrid.yoffset
+            if yoff is None:
+                # incase mf._modelgrid.yoffset is not set but mf._yul is
+                if self.mf._yul is not None:
+                    yoff = self._modelgrid._yul_to_yll(self.mf._yul)
+                else:
+                    yoff = 0.0
+        proj4 = self._modelgrid.proj4
+        if proj4 is None:
+            proj4 = self.mf._modelgrid.proj4
+        epsg = self._modelgrid.epsg
+        if epsg is None:
+            epsg = self.mf._modelgrid.epsg
+        angrot = self._modelgrid.angrot
+        if angrot is None or angrot == 0.0:  # angrot normally defaulted to 0.0
+            if self.mf._modelgrid.angrot is not None:
+                angrot = self.mf._modelgrid.angrot
+            else:
+                angrot = 0.0
+
+        self._modelgrid.set_coord_info(xoff, yoff, angrot, epsg, proj4)
 
         return self._modelgrid
 
