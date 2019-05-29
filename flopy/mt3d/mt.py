@@ -348,7 +348,7 @@ class Mt3dms(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.mf.bas is not None:
+        if self.btn is not None:
             ibound = self.btn.icbund.array
         else:
             ibound = None
@@ -358,11 +358,11 @@ class Mt3dms(BaseModel):
                                          top=self.mf.dis.top.array,
                                          botm=self.mf.dis.botm.array,
                                          idomain=ibound,
-                                         proj4=self._modelgrid.proj4,
-                                         epsg=self._modelgrid.epsg,
-                                         xoff=self._modelgrid.xoffset,
-                                         yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+                                         proj4=self.mf._modelgrid.proj4,
+                                         epsg=self.mf._modelgrid.epsg,
+                                         xoff=self.mf._modelgrid.xoffset,
+                                         yoff=self.mf._modelgrid.yoffset,
+                                         angrot=self.mf._modelgrid.angrot)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
