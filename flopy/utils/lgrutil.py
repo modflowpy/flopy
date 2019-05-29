@@ -1,5 +1,5 @@
 import numpy as np
-from ..modflow import Modflow, ModflowDis
+from ..modflow import Modflow
 from .util_array import Util2d, Util3d
 
 
@@ -153,7 +153,7 @@ class Lgr(object):
                     top = pbotm[kp, ip, jp]
                     bot = pbotm[kp + 1, ip, jp]
                     dz = (top - bot) / self.ncppl[kp - 1]
-                    for n in range(self.ncppl[kp - 1]):
+                    for _ in range(self.ncppl[kp - 1]):
                         botm[kc, icrowstart:icrowend,
                         iccolstart: iccolend] = botm[kc - 1,
                                                 icrowstart:icrowend,
@@ -180,7 +180,8 @@ class Lgr(object):
 
         """
         assert parent_array.shape == (self.nrowp, self.ncolp)
-        child_array = np.empty((self.nrow, self.ncol), dtype=parent_array.dtype)
+        child_array = np.empty((self.nrow, self.ncol),
+                                dtype=parent_array.dtype)
         for ip in range(self.nprbeg, self.nprend + 1):
             for jp in range(self.npcbeg, self.npcend + 1):
                 icrowstart = (ip - self.nprbeg) * self.ncpp
@@ -237,6 +238,10 @@ class Lgr(object):
         cell kc, ic, jc.
 
         """
+
+        assert 0 <= kc < self.nlay, 'layer must be >= 0 and < child nlay'
+        assert 0 <= ic < self.nrow, 'layer must be >= 0 and < child nrow'
+        assert 0 <= jc < self.ncol, 'layer must be >= 0 and < child ncol'
 
         parentlist = []
         (kp, ip, jp) = self.get_parent_indices(kc, ic, jc)
