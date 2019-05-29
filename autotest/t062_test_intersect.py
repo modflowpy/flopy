@@ -72,6 +72,7 @@ def disv_model():
     gwf.modelgrid.set_coord_info(xoff=xorigin,yoff=yorigin,angrot=angrot)
     return gwf
 
+
 def test_intersection():
     ml_dis = dis_model()
     ml_disv = disv_model()
@@ -82,36 +83,64 @@ def test_intersection():
         plt.subplots()
         ml_disv.modelgrid.plot()
 
-    for i in range(3):
+    for i in range(5):
         if i==0:
             # inside a cell, in real-world coordinates
             x = 4000
             y = 4000
             local = False
+            forgive = False
         elif i==1:
             # on the cell-edge, in local coordinates
             x = 4000
             y = 4000
             local = True
+            forgive = False
         elif i==2:
             # inside a cell, in local coordinates
             x = 4001
             y = 4001
             local = True
+            forgive = False
+        elif i==3:
+            # inside a cell, in local coordinates
+            x = 4001
+            y = 4001
+            local = False
+            forgive = False
+        elif i==4:
+            # inside a cell, in local coordinates
+            x = 999
+            y = 4001
+            local = False
+            forgive = True
         if local:
             print('In local coordinates:')
         else:
             print('In real_world coordinates:')
-        row,col = ml_dis.modelgrid.intersect(x,y,local)
-        print('x={},y={} in dis  is in row {} and col {}, so...'.format(x,y,row,
-                                                                        col))
+        try:
+            row, col = ml_dis.modelgrid.intersect(x, y, local, forgive=forgive)
+            cell2d_disv = ml_disv.modelgrid.intersect(x, y, local,
+                                                      forgive=forgive)
+        except Exception as e:
+            if not forgive and any(['outside of the model area' 
+                                    in k for k in e.args]):
+                pass
+            else:  # should be forgiving x,y out of grid
+                raise e
+        print('x={},y={} in dis  is in row {} and col {}, so...'.format(
+            x, y, row, col))
         cell2d_dis = row * ml_dis.modelgrid.ncol + col
-        print('x={},y={} in dis  is in cell2d-number {}'.format(x,y,cell2d_dis))
+        print('x={},y={} in dis  is in cell2d-number {}'.format(
+            x, y, cell2d_dis))
+        print('x={},y={} in disv is in cell2d-number {}'.format(
+            x, y, cell2d_disv))
 
-        cell2d_disv = ml_disv.modelgrid.intersect(x, y,local)
-        print('x={},y={} in disv is in cell2d-number {}'.format(x,y,cell2d_disv))
+        if not forgive:
+            assert cell2d_dis == cell2d_disv
+        else: 
+            assert all(np.isnan([row, col, cell2d_disv]))
 
-        assert cell2d_dis == cell2d_disv
 
 if __name__ == '__main__':
     test_intersection()

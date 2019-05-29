@@ -474,15 +474,9 @@ class MFMultiDimVar(MFData):
         layer_storage.fname = ext_file_path
         ext_format = ['OPEN/CLOSE', "'{}'".format(ext_file_path)]
         if storage.data_structure_type != DataStructureType.recarray:
-            ext_format.append('FACTOR')
             if layer_storage.factor is not None:
+                ext_format.append('FACTOR')
                 ext_format.append(str(layer_storage.factor))
-            else:
-                if self.structure.get_datum_type(return_enum_type=True) == \
-                        DatumType.double_precision:
-                    ext_format.append('1.0')
-                else:
-                    ext_format.append('1')
         if layer_storage.binary:
             ext_format.append('(BINARY)')
         if layer_storage.iprn is not None:

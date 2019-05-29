@@ -1104,7 +1104,7 @@ def export_contours(modelgrid, filename, contours,
     ra = np.array(level,
                   dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
+    recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
 
 
 def export_array_contours(modelgrid, filename, a,
