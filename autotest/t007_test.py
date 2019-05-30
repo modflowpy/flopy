@@ -367,6 +367,7 @@ def test_mt_modelgrid():
     assert ml.modelgrid.xoffset == 500
     assert ml.modelgrid.yoffset == 0.0
     assert ml.modelgrid.epsg == 2193
+    assert ml.modelgrid.idomain is None
     ml.model_ws = tpth
 
     mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
@@ -376,6 +377,49 @@ def test_mt_modelgrid():
     assert mt.modelgrid.yoffset == ml.modelgrid.yoffset
     assert mt.modelgrid.epsg == ml.modelgrid.epsg
     assert mt.modelgrid.angrot == ml.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+
+    # no modflowmodel
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=None,
+                              mt3dmodel=None, model_ws=ml.model_ws, verbose=True)
+    assert swt.modelgrid is swt.dis is swt.bas6 is None
+
+    #passing modflowmodel
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=ml,
+                              mt3dmodel=mt, model_ws=ml.model_ws, verbose=True)
+
+    assert \
+        swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert \
+        swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
+    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+    assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
+
+    # bas and btn present
+    ibound = np.ones(ml.dis.botm.shape)
+    ibound[0][0:5] = 0
+    bas = flopy.modflow.ModflowBas(ml, ibound=ibound)
+    assert ml.modelgrid.idomain is not None
+
+    mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
+                           model_ws=ml.model_ws, verbose=True)
+    btn = flopy.mt3d.Mt3dBtn(mt, icbund=ml.bas6.ibound.array)
+    
+    # reload swt
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=ml,
+                              mt3dmodel=mt, model_ws=ml.model_ws, verbose=True)
+    
+    assert \
+        ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
+    assert \
+        mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
+    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+    assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
+
 
 def test_free_format_flag():
     import flopy

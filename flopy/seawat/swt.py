@@ -96,6 +96,7 @@ class Seawat(BaseModel):
         if modflowmodel is not None:
             for p in modflowmodel.packagelist:
                 self.packagelist.append(p)
+            self._modelgrid = modflowmodel.modelgrid
         else:
             modflowmodel = Modflow()
 
@@ -159,16 +160,17 @@ class Seawat(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.bas is not None:
-            ibound = self.bas.ibound.array
+        if self.bas6 is not None: 
+            ibound = self.bas6.ibound.array
         else:
             ibound = None
         # build grid
+        # self.dis should exist if modflow model passed 
         self._modelgrid = StructuredGrid(self.dis.delc.array,
                                          self.dis.delr.array,
                                          self.dis.top.array,
-                                         self.dis.botm.array, ibound,
-                                         lenuni=self.dis.lenuni,
+                                         self.dis.botm.array, 
+                                         idomain=ibound,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,

@@ -350,16 +350,24 @@ class Mt3dms(BaseModel):
 
         if self.btn is not None:
             ibound = self.btn.icbund.array
+            delc = self.btn.delc.array
+            delr = self.btn.delr.array
+            top = self.btn.htop.array
+            botm = np.subtract(top, self.btn.dz.array.cumsum(axis=0))
         else:
+            delc = self.mf.dis.delc.array
+            delr = self.mf.dis.delr.array
+            top = self.mf.dis.top.array
+            botm = self.mf.dis.botm.array
             if self.mf.bas6 is not None:
                 ibound = self.mf.bas6.ibound.array
             else:
                 ibound = None
         # build grid
-        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
-                                         delr=self.mf.dis.delr.array,
-                                         top=self.mf.dis.top.array,
-                                         botm=self.mf.dis.botm.array,
+        self._modelgrid = StructuredGrid(delc=delc,
+                                         delr=delr,
+                                         top=top,
+                                         botm=botm,
                                          idomain=ibound,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
