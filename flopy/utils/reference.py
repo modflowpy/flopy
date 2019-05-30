@@ -9,6 +9,9 @@ import warnings
 
 from collections import OrderedDict
 
+# web address of spatial reference dot org
+srefhttp = 'https://spatialreference.org'
+
 
 class SpatialReference(object):
     """
@@ -2146,7 +2149,7 @@ def get_spatialreference(epsg, text='esriwkt'):
     Gets text for given epsg code and text format from spatialreference.org
 
     Fetches the reference text using the url:
-        http://spatialreference.org/ref/epsg/<epsg code>/<text>/
+        https://spatialreference.org/ref/epsg/<epsg code>/<text>/
 
     See: https://www.epsg-registry.org/
 
@@ -2169,9 +2172,7 @@ def get_spatialreference(epsg, text='esriwkt'):
 
     epsg_categories = ['epsg', 'esri']
     for cat in epsg_categories:
-        url = "http://spatialreference.org/ref/{2}/{0}/{1}/".format(epsg,
-                                                                    text,
-                                                                    cat)
+        url = "{}/ref/{}/{}/{}/".format(srefhttp, cat, epsg, text)
         result = get_url_text(url)
         if result is not None:
             break
@@ -2179,13 +2180,14 @@ def get_spatialreference(epsg, text='esriwkt'):
         return result.replace("\n", "")
     elif result is None and text != 'epsg':
         for cat in epsg_categories:
-            error_msg = 'No internet connection or epsg code {0} ' \
-                        'not found at http://spatialreference.org/ref/{2}/{0}/{1}'.format(
-                epsg,
-                text,
-                cat)
+            error_msg = 'No internet connection or ' + \
+                        'epsg code {} '.format(epsg) +  \
+                        'not found at {}/ref/'.format(srefhttp) + \
+                        '{}/{}/{}'.format(cat, cat, epsg)
             print(error_msg)
-    elif text == 'epsg':  # epsg code not listed on spatialreference.org may still work with pyproj
+    # epsg code not listed on spatialreference.org
+    # may still work with pyproj
+    elif text == 'epsg':
         return '+init=epsg:{}'.format(epsg)
 
 

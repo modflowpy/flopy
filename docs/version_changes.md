@@ -28,7 +28,7 @@ FloPy Changes
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
 * MODFLOW 6 model and simulation packages can not be retrieved as a `MFSimulation` attribute
 * Added support for multicomponent load in `mfsft.py`
-* Added functionality to read esri-style epsg codes from [spatialreference.org](http://spatialreference.org).
+* Added functionality to read esri-style epsg codes from [spatialreference.org](https://spatialreference.org).
 * Added functionality to MODFLOW 6 that will automatically replace the existing package with the one being added if it has the same name as the existing package.
 * Added separate MODFLOW 6 model classes for each model type. Model classes contain name file options.
 * Added standard `run_model()` method arguments to mf6 `run_simulation()` method.
