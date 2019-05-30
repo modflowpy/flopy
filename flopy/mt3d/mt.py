@@ -588,9 +588,6 @@ class Mt3dms(BaseModel):
                     version=version, exe_name=exe_name,
                     verbose=verbose, model_ws=model_ws,
                     modflowmodel=modflowmodel)
-        # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
-        poss_output_units = [range(201, 300), range(301, 400),
-                             range(401, 500), range(601, 700), [17]]
         files_successfully_loaded = []
         files_not_loaded = []
 
@@ -658,7 +655,11 @@ class Mt3dms(BaseModel):
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
         ext_unit_dict.pop(btn_key)
-
+        ncomp = mt.btn.ncomp
+        # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
+        poss_output_units = [range(201, 201+ncomp), range(301, 301+ncomp),
+                             range(401, 401+ncomp), range(601, 601+ncomp),
+                             [17]]
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
