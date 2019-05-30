@@ -355,6 +355,72 @@ def test_mbase_modelgrid():
     assert ml1.modelgrid.proj4 is None
 
 
+def test_mt_modelgrid():
+    import numpy as np
+    import flopy
+
+    ml = flopy.modflow.Modflow(modelname="test", xll=500.0,
+                               proj4_str='epsg:2193',
+                               rotation=12.5, start_datetime="1/1/2016")
+    dis = flopy.modflow.ModflowDis(ml, nrow=10, ncol=5, delr=np.arange(5))
+
+    assert ml.modelgrid.xoffset == 500
+    assert ml.modelgrid.yoffset == 0.0
+    assert ml.modelgrid.epsg == 2193
+    assert ml.modelgrid.idomain is None
+    ml.model_ws = tpth
+
+    mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
+                           model_ws=ml.model_ws, verbose=True)
+
+    assert mt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert mt.modelgrid.yoffset == ml.modelgrid.yoffset
+    assert mt.modelgrid.epsg == ml.modelgrid.epsg
+    assert mt.modelgrid.angrot == ml.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+
+    # no modflowmodel
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=None,
+                              mt3dmodel=None, model_ws=ml.model_ws, verbose=True)
+    assert swt.modelgrid is swt.dis is swt.bas6 is None
+
+    #passing modflowmodel
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=ml,
+                              mt3dmodel=mt, model_ws=ml.model_ws, verbose=True)
+
+    assert \
+        swt.modelgrid.xoffset == mt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert \
+        swt.modelgrid.yoffset == mt.modelgrid.yoffset == ml.modelgrid.yoffset
+    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+    assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
+
+    # bas and btn present
+    ibound = np.ones(ml.dis.botm.shape)
+    ibound[0][0:5] = 0
+    bas = flopy.modflow.ModflowBas(ml, ibound=ibound)
+    assert ml.modelgrid.idomain is not None
+
+    mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
+                           model_ws=ml.model_ws, verbose=True)
+    btn = flopy.mt3d.Mt3dBtn(mt, icbund=ml.bas6.ibound.array)
+    
+    # reload swt
+    swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=ml,
+                              mt3dmodel=mt, model_ws=ml.model_ws, verbose=True)
+    
+    assert \
+        ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
+    assert \
+        mt.modelgrid.yoffset == ml.modelgrid.yoffset == swt.modelgrid.yoffset
+    assert mt.modelgrid.epsg == ml.modelgrid.epsg == swt.modelgrid.epsg
+    assert mt.modelgrid.angrot == ml.modelgrid.angrot == swt.modelgrid.angrot
+    assert np.array_equal(mt.modelgrid.idomain, ml.modelgrid.idomain)
+    assert np.array_equal(swt.modelgrid.idomain, ml.modelgrid.idomain)
+
+
 def test_free_format_flag():
     import flopy
     Lx = 100.
@@ -1125,6 +1191,7 @@ if __name__ == '__main__':
     # build_sfr_netcdf()
     # test_mg()
     # test_mbase_modelgrid()
+    test_mt_modelgrid()
     # test_rotation()
     # test_model_dot_plot()
     # test_vertex_model_dot_plot()
@@ -1144,6 +1211,6 @@ if __name__ == '__main__':
     #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
-    test_export_array()
-    test_export_array_contours()
+    # test_export_array()
+    # test_export_array_contours()
     pass
