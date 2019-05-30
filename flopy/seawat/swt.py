@@ -96,6 +96,11 @@ class Seawat(BaseModel):
         if modflowmodel is not None:
             for p in modflowmodel.packagelist:
                 self.packagelist.append(p)
+
+            # if a MODFLOW model was passed in, then add its reference
+            mg = modflowmodel.modelgrid
+            self._modelgrid.set_coord_info(mg.xoffset, mg.yoffset, mg.angrot,
+                                           mg.epsg, mg.proj4)
         else:
             modflowmodel = Modflow()
 
@@ -188,6 +193,7 @@ class Seawat(BaseModel):
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
                 yoff = 0.0
+
         self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)

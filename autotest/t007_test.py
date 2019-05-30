@@ -355,6 +355,30 @@ def test_mbase_modelgrid():
     assert ml1.modelgrid.proj4 is None
 
 
+def test_swt_modelgrid():
+    import numpy as np
+    import flopy
+
+    ml = flopy.modflow.Modflow(modelname="test", xll=500.0,
+                               proj4_str='epsg:2193',
+                               rotation=12.5, start_datetime="1/1/2016")
+    dis = flopy.modflow.ModflowDis(ml, nrow=10, ncol=5, delr=np.arange(5))
+
+    assert ml.modelgrid.xoffset == 500
+    assert ml.modelgrid.yoffset == 0.0
+    assert ml.modelgrid.epsg == 2193
+    ml.model_ws = tpth
+
+    mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
+                           model_ws=ml.model_ws, verbose=True)
+
+    swt = flopy.seawat.Seawat(modflowmodel=ml, mt3dmodel=mt)
+
+    assert swt.modelgrid.xoffset == ml.modelgrid.xoffset
+    assert swt.modelgrid.yoffset == ml.modelgrid.yoffset
+    assert swt.modelgrid.epsg == ml.modelgrid.epsg
+    assert swt.modelgrid.angrot == ml.modelgrid.angrot
+
 def test_free_format_flag():
     import flopy
     Lx = 100.
@@ -1144,6 +1168,7 @@ if __name__ == '__main__':
     #test_write_shapefile()
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
-    test_export_array()
-    test_export_array_contours()
+    #test_export_array()
+    #test_export_array_contours()
+    test_swt_modelgrid()
     pass
