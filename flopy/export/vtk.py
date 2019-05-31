@@ -85,15 +85,15 @@ class Vtk(object):
             ibound = self.modelgrid.idomain
 
         dis = self.model.dis
-        nlay, nrow, ncol = self.shape
-        z = np.vstack([dis.top.array.reshape(1, nrow, ncol),
+        z = np.vstack([dis.top.array.reshape(1, self.modelgrid.nrow,
+                                             self.modelgrid.ncol),
                        dis.botm.array])
         if shared_vertex:
             verts, iverts = self.get_3d_shared_vertex_connectivity(
                 self.modelgrid)
             #verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(nlay,
             #                                                         z,
-            #                                                        ibound=ibound)
+            #                                                     ibound=ibound)
         else:
             top = z[:-1]
             bot = z[1:]
