@@ -657,9 +657,10 @@ class Mt3dms(BaseModel):
         ext_unit_dict.pop(btn_key)
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
-        poss_output_units = [range(201, 201+ncomp), range(301, 301+ncomp),
-                             range(401, 401+ncomp), range(601, 601+ncomp),
-                             [17]]
+        poss_output_units = set(list(range(201, 201+ncomp)) +
+                                list(range(301, 301+ncomp)) +
+                                list(range(401, 401+ncomp)) +
+                                list(range(601, 601+ncomp)) + [17])
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -726,7 +727,7 @@ class Mt3dms(BaseModel):
                     sys.stdout.write('   {} file load...skipped\n      {}\n'
                                      .format(item.filetype,
                                              os.path.basename(item.filename)))
-                if any([key in r for r in poss_output_units]):
+                if key in poss_output_units:
                     # id files specified to output unit numbers and allow to
                     # pass through
                     mt.output_fnames.append(os.path.basename(item.filename))
