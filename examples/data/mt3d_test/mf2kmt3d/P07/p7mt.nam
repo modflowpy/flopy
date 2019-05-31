@@ -21,8 +21,8 @@ FTL   0 p7.ftl
 # The unit numbers for these files are preset in the
 # MT3DMS code.
 
-# data(binary) 201 p7.ucn
-# data(binary) 301 p7s.ucn
-# data         401 p7.obs
-# data         601 p7.mas
-# data         17  p7.cnf
+data(binary) 201 p7.ucn
+data(binary) 301 p7s.ucn
+data         401 p7.obs
+data         601 p7.mas
+data         17  p7.cnf

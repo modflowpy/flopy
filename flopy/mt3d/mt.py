@@ -588,7 +588,6 @@ class Mt3dms(BaseModel):
                     version=version, exe_name=exe_name,
                     verbose=verbose, model_ws=model_ws,
                     modflowmodel=modflowmodel)
-
         files_successfully_loaded = []
         files_not_loaded = []
 
@@ -656,7 +655,12 @@ class Mt3dms(BaseModel):
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
         ext_unit_dict.pop(btn_key)
-
+        ncomp = mt.btn.ncomp
+        # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
+        poss_output_units = set(list(range(201, 201+ncomp)) +
+                                list(range(301, 301+ncomp)) +
+                                list(range(401, 401+ncomp)) +
+                                list(range(601, 601+ncomp)) + [17])
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -723,7 +727,14 @@ class Mt3dms(BaseModel):
                     sys.stdout.write('   {} file load...skipped\n      {}\n'
                                      .format(item.filetype,
                                              os.path.basename(item.filename)))
-                if key not in mt.pop_key_list:
+                if key in poss_output_units:
+                    # id files specified to output unit numbers and allow to
+                    # pass through
+                    mt.output_fnames.append(os.path.basename(item.filename))
+                    mt.output_units.append(key)
+                    mt.output_binflag.append("binary"
+                                             in item.filetype.lower())
+                elif key not in mt.pop_key_list:
                     mt.external_fnames.append(item.filename)
                     mt.external_units.append(key)
                     mt.external_binflag.append("binary"
@@ -735,11 +746,13 @@ class Mt3dms(BaseModel):
         for key in mt.pop_key_list:
             try:
                 mt.remove_external(unit=key)
-                ext_unit_dict.pop(key)
+                if key != btn_key:  # btn_key already popped above
+                    ext_unit_dict.pop(key)
             except:
                 if mt.verbose:
-                    sys.stdout.write('Warning: external file unit " +\
-                        "{} does not exist in ext_unit_dict.\n'.format(key))
+                    sys.stdout.write(
+                        "Warning: external file unit "
+                        "{} does not exist in ext_unit_dict.\n".format(key))
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:
