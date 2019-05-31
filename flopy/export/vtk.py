@@ -93,7 +93,7 @@ class Vtk(object):
                 self.modelgrid)
             #verts, iverts = dis.sr.get_3d_shared_vertex_connectivity(nlay,
             #                                                         z,
-            #                                                     ibound=ibound)
+            #                                                   ibound=ibound)
         else:
             top = z[:-1]
             bot = z[1:]
