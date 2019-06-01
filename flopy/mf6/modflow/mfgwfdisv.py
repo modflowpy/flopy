@@ -123,7 +123,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
            ["block dimensions", "name nvert", "type integer",
             "reader urword", "optional false"],
            ["block griddata", "name top", "type double precision",
-            "shape (ncpl)", "reader readarray"],
+            "shape (1, ncpl)", "reader readarray"],
            ["block griddata", "name botm", "type double precision",
             "shape (nlay, ncpl)", "reader readarray", "layered true"],
            ["block griddata", "name idomain", "type integer",
