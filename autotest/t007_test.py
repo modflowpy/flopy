@@ -406,11 +406,11 @@ def test_mt_modelgrid():
     mt = flopy.mt3d.Mt3dms(modelname='test_mt', modflowmodel=ml,
                            model_ws=ml.model_ws, verbose=True)
     btn = flopy.mt3d.Mt3dBtn(mt, icbund=ml.bas6.ibound.array)
-    
+
     # reload swt
     swt = flopy.seawat.Seawat(modelname='test_swt', modflowmodel=ml,
                               mt3dmodel=mt, model_ws=ml.model_ws, verbose=True)
-    
+
     assert \
         ml.modelgrid.xoffset == mt.modelgrid.xoffset == swt.modelgrid.xoffset
     assert \
@@ -903,6 +903,41 @@ def test_modelgrid_with_PlotMapView():
     plt.close()
 
 
+def test_tricontour_NaN():
+    from flopy.plot import PlotMapView
+    import numpy as np
+    from flopy.discretization import StructuredGrid
+
+    arr = np.random.rand(10, 10) * 100
+    arr[-1, :] = np.nan
+    delc = np.array([10] * 10, dtype=float)
+    delr = np.array([8] * 10, dtype=float)
+    top = np.ones((10, 10), dtype=float)
+    botm = np.ones((3, 10, 10), dtype=float)
+    botm[0] = 0.75
+    botm[1] = 0.5
+    botm[2] = 0.25
+    idomain = np.ones((3, 10, 10))
+    idomain[0, 0, :] = 0
+    vmin = np.nanmin(arr)
+    vmax = np.nanmax(arr)
+    levels = np.linspace(vmin, vmax, 7)
+
+    grid = StructuredGrid(delc=delc,
+                          delr=delr,
+                          top=top,
+                          botm=botm,
+                          idomain=idomain,
+                          lenuni=1,
+                          nlay=3, nrow=10, ncol=10)
+
+    pmv = PlotMapView(modelgrid=grid, layer=0)
+    contours = pmv.contour_array(a=arr)
+
+    if not np.allclose(contours.levels, levels[:-1]):
+        raise AssertionError("TriContour NaN catch Failed")
+
+
 def test_get_vertices():
     from flopy.utils.reference import SpatialReference
     from flopy.discretization import StructuredGrid
@@ -1191,7 +1226,7 @@ if __name__ == '__main__':
     # build_sfr_netcdf()
     # test_mg()
     # test_mbase_modelgrid()
-    test_mt_modelgrid()
+    # test_mt_modelgrid()
     # test_rotation()
     # test_model_dot_plot()
     # test_vertex_model_dot_plot()
@@ -1212,5 +1247,6 @@ if __name__ == '__main__':
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     # test_export_array()
-    # test_export_array_contours()
+    test_export_array_contours()
+    test_tricontour_NaN()
     pass
