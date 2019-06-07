@@ -934,8 +934,9 @@ def test_tricontour_NaN():
     pmv = PlotMapView(modelgrid=grid, layer=0)
     contours = pmv.contour_array(a=arr)
 
-    if not np.allclose(contours.levels, levels[:-1]):
-        raise AssertionError("TriContour NaN catch Failed")
+    for ix, lev in enumerate(contours.levels):
+        if not np.allclose(lev, levels[ix]):
+            raise AssertionError("TriContour NaN catch Failed")
 
 
 def test_get_vertices():
