@@ -499,7 +499,8 @@ class _VertexCrossSection(_CrossSection):
 
         if ismasked is not None:
             ismasked = ismasked.flatten()
-            mask = np.any(np.where(ismasked[triang.triangles], True, False), axis=1)
+            mask = np.any(np.where(ismasked[triang.triangles],
+                                   True, False), axis=1)
             triang.set_mask(mask)
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)

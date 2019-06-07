@@ -274,7 +274,7 @@ class PlotMapView(object):
         # use -2**31 to allow for 32 bit int arrays
         plotarray[np.isnan(plotarray)] = -2**31
         if masked_values is None:
-             masked_values = [-2**31]
+            masked_values = [-2**31]
         else:
             masked_values = list(masked_values)
             if -2**31 not in masked_values:
@@ -321,7 +321,8 @@ class PlotMapView(object):
 
         if ismasked is not None:
             ismasked = ismasked.flatten()
-            mask = np.any(np.where(ismasked[triang.triangles], True, False), axis=1)
+            mask = np.any(np.where(ismasked[triang.triangles],
+                                   True, False), axis=1)
             triang.set_mask(mask)
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
