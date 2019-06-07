@@ -127,7 +127,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=0)
+                    a = np.squeeze(a, axis=1)
                     plotarray = a[self.layer, :]
                 else:
                     raise Exception("Array must be of dimension 1 or 2")
@@ -241,7 +241,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=0)
+                    a = np.squeeze(a, axis=1)
                     plotarray = a[self.layer, :]
                 else:
                     raise Exception("Array must be of dimension 1 or 2")
