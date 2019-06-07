@@ -90,11 +90,22 @@ class _VertexCrossSection(_CrossSection):
                                self.mg.xoffset, self.mg.yoffset,
                                self.mg.angrot_radians, inverse=True)
 
-        self.xvertices, self.yvertices = \
-            geometry.transform(self.mg.xvertices,
-                               self.mg.yvertices,
-                               self.mg.xoffset, self.mg.yoffset,
-                               self.mg.angrot_radians, inverse=True)
+        try:
+            self.xvertices, self.yvertices = \
+                geometry.transform(self.mg.xvertices,
+                                   self.mg.yvertices,
+                                   self.mg.xoffset, self.mg.yoffset,
+                                   self.mg.angrot_radians, inverse=True)
+        except ValueError:
+            # irregular shapes in vertex grid ie. squares and triangles
+            xverts, yverts = plotutil.UnstructuredPlotUtilities.\
+                irregular_shape_patch(self.mg.xvertices, self.mg.yvertices)
+
+            self.xvertices, self.yvertices = \
+                geometry.transform(xverts, yverts,
+                                   self.mg.xoffset,
+                                   self.mg.yoffset,
+                                   self.mg.angrot_radians, inverse=True)
 
         pts = [(xt, yt) for xt, yt in zip(xp, yp)]
         self.pts = np.array(pts)
@@ -430,9 +441,38 @@ class _VertexCrossSection(_CrossSection):
         plotarray = np.array([a[cell] for cell
                               in sorted(self.projpts)])
 
+        # work around for tri-contour ignore vmin & vmax
+        # necessary for the tri-contour NaN issue fix
+        if "levels" not in kwargs:
+            if "vmin" not in kwargs:
+                vmin = np.nanmin(plotarray)
+            else:
+                vmin = kwargs.pop("vmin")
+            if "vmax" not in kwargs:
+                vmax = np.nanmax(plotarray)
+            else:
+                vmax = kwargs.pop('vmax')
+
+            levels = np.linspace(vmin, vmax, 7)
+            kwargs['levels'] = levels
+
+        # workaround for tri-contour nan issue
+        plotarray[np.isnan(plotarray)] = -2**31
+        if masked_values is None:
+            masked_values = [-2**31]
+        else:
+            masked_values = list(masked_values)
+            if -2**31 not in masked_values:
+                masked_values.append(-2**31)
+
+        ismasked = None
         if masked_values is not None:
             for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
+                if ismasked is None:
+                    ismasked = np.equal(plotarray, mval)
+                else:
+                    t = np.equal(plotarray, mval)
+                    ismasked += t
 
         if isinstance(head, np.ndarray):
             zcenters = self.set_zcentergrid(np.ravel(head))
@@ -457,15 +497,10 @@ class _VertexCrossSection(_CrossSection):
 
         triang = tri.Triangulation(xcenters, zcenters)
 
-        try:
-            amask = plotarray.mask
-            mask = [False for _ in range(triang.triangles.shape[0])]
-            for ipos, (n0, n1, n2) in enumerate(triang.triangles):
-                if amask[n0] or amask[n1] or amask[n2]:
-                    mask[ipos] = True
+        if ismasked is not None:
+            ismasked = ismasked.flatten()
+            mask = np.any(np.where(ismasked[triang.triangles], True, False), axis=1)
             triang.set_mask(mask)
-        except (AttributeError, IndexError):
-            pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
 

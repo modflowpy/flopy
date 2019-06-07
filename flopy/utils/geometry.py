@@ -360,9 +360,9 @@ def transform(x, y, xoff, yoff, angrot_radians,
 
     """
     if isinstance(x, list):
-        x = np.array(x)
+        x = np.array(x, dtype=float)
     if isinstance(y, list):
-        y = np.array(y)
+        y = np.array(y, dtype=float)
 
     if not np.isscalar(x):
         x, y = x.copy(), y.copy()

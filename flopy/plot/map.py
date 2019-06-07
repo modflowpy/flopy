@@ -125,7 +125,13 @@ class PlotMapView(object):
                 raise Exception('Array must be of dimension 1, 2, or 3')
 
         elif self.mg.grid_type == "vertex":
-            if a.ndim == 2:
+            if a.ndim == 3:
+                if a.shape[0] == 1:
+                    a = np.squeeze(a, axis=0)
+                    plotarray = a[self.layer, :]
+                else:
+                    raise Exception("Array must be of dimension 1 or 2")
+            elif a.ndim == 2:
                 plotarray = a[self.layer, :]
             elif a.ndim == 1:
                 plotarray = a
@@ -215,6 +221,7 @@ class PlotMapView(object):
             err_msg = "Matplotlib must be updated to use contour_array"
             raise ImportError(err_msg)
 
+        a = np.copy(a)
         if not isinstance(a, np.ndarray):
             a = np.array(a)
 
@@ -232,7 +239,13 @@ class PlotMapView(object):
                 raise Exception('Array must be of dimension 1, 2 or 3')
 
         elif self.mg.grid_type == "vertex":
-            if a.ndim == 2:
+            if a.ndim == 3:
+                if a.shape[0] == 1:
+                    a = np.squeeze(a, axis=0)
+                    plotarray = a[self.layer, :]
+                else:
+                    raise Exception("Array must be of dimension 1 or 2")
+            elif a.ndim == 2:
                 plotarray = a[self.layer, :]
             elif a.ndim == 1:
                 plotarray = a
@@ -242,9 +255,39 @@ class PlotMapView(object):
         else:
             plotarray = a
 
+        # work around for tri-contour ignore vmin & vmax
+        # necessary block for tri-contour NaN issue
+        if "levels" not in kwargs:
+            if "vmin" not in kwargs:
+                vmin = np.nanmin(plotarray)
+            else:
+                vmin = kwargs.pop("vmin")
+            if "vmax" not in kwargs:
+                vmax = np.nanmax(plotarray)
+            else:
+                vmax = kwargs.pop('vmax')
+
+            levels = np.linspace(vmin, vmax, 7)
+            kwargs['levels'] = levels
+
+        # workaround for tri-contour nan issue
+        # use -2**31 to allow for 32 bit int arrays
+        plotarray[np.isnan(plotarray)] = -2**31
+        if masked_values is None:
+             masked_values = [-2**31]
+        else:
+            masked_values = list(masked_values)
+            if -2**31 not in masked_values:
+                masked_values.append(-2**31)
+
+        ismasked = None
         if masked_values is not None:
             for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
+                if ismasked is None:
+                    ismasked = np.equal(plotarray, mval)
+                else:
+                    t = np.equal(plotarray, mval)
+                    ismasked += t
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -276,16 +319,10 @@ class PlotMapView(object):
         ycentergrid = ycentergrid.flatten()
         triang = tri.Triangulation(xcentergrid, ycentergrid)
 
-        mask = None
-        try:
-            amask = plotarray.mask
-            mask = [False for i in range(triang.triangles.shape[0])]
-            for ipos, (n0, n1, n2) in enumerate(triang.triangles):
-                if amask[n0] or amask[n1] or amask[n2]:
-                    mask[ipos] = True
+        if ismasked is not None:
+            ismasked = ismasked.flatten()
+            mask = np.any(np.where(ismasked[triang.triangles], True, False), axis=1)
             triang.set_mask(mask)
-        except (AttributeError, IndexError):
-            pass
 
         contour_set = ax.tricontour(triang, plotarray, **kwargs)
 

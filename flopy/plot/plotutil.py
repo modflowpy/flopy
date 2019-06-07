@@ -1834,6 +1834,56 @@ class UnstructuredPlotUtilities(object):
         return vdict
 
     @staticmethod
+    def irregular_shape_patch(xverts, yverts):
+        """
+        Patch for vertex cross section plotting when
+        we have an irregular shape type throughout the
+        model grid or multiple shape types.
+
+        Parameters
+        ----------
+        xverts : list
+            xvertices
+        yverts : list
+            yvertices
+
+        Returns
+        -------
+            xverts, yverts as np.ndarray
+
+        """
+        max_verts = 0
+
+        for xv in xverts:
+            if len(xv) > max_verts:
+                max_verts = len(xv)
+
+        for yv in yverts:
+            if len(yv) > max_verts:
+                max_verts = len(yv)
+
+        adj_xverts = []
+        for xv in xverts:
+            if len(xv) < max_verts:
+                n = max_verts - len(xv)
+                adj_xverts.append(xv + [xv[-1]] * n)
+            else:
+                adj_xverts.append(xv)
+
+        adj_yverts = []
+        for yv in yverts:
+            if len(yv) < max_verts:
+                n = max_verts - len(yv)
+                adj_yverts.append(yv + [yv[-1]] * n)
+            else:
+                adj_yverts.append(yv)
+
+        xverts = np.array(adj_xverts)
+        yverts = np.array(adj_yverts)
+
+        return xverts, yverts
+
+    @staticmethod
     def arctan2(verts):
         """
         Reads 2 dimensional set of verts and orders them using the arctan 2 method
