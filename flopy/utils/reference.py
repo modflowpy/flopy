@@ -282,7 +282,9 @@ class SpatialReference(object):
                 units = "feet"
             return units
         except:
-            print('   could not parse units from {}'.format(self.proj4_str))
+            if self.proj4_str is not None:
+                print('   could not parse units from {}'.format(
+                    self.proj4_str))
 
     @property
     def units(self):
