@@ -526,8 +526,14 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-
-        return self.get_package(item)
+        #return self.get_package(item)
+        # to avoid infinite recursion
+        if item == "_packagelist" or item == "packagelist":
+            raise AttributeError(item)
+        pckg = self.get_package(item)
+        if pckg is not None:
+            return pckg
+        raise AttributeError(item)
 
     def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
                           pop_key=True):
