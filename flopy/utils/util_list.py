@@ -251,7 +251,7 @@ class MfList(DataInterface, DataListInterface):
             use_free = self.list_free_format
         else:
             use_free = True
-            if self.package.parent.bas6 is not None:
+            if self.package.parent.has_package('bas6'):
                 use_free = self.package.parent.bas6.ifrefm
             # mt3d list data is fixed format
             if 'mt3d' in self.package.parent.version.lower():

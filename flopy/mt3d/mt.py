@@ -243,6 +243,7 @@ class Mt3dms(BaseModel):
         self.ftlfilename = ftlfilename
         self.ftlfree = ftlfree
         self.ftlunit = ftlunit
+        self.free_format = None
 
         # Check whether specified ftlfile exists in model directory; if not,
         # warn user
