@@ -882,7 +882,7 @@ class Mt3dBtn(Package):
                 i = int(line[10:20])
                 j = int(line[20:30])
                 obs.append([k, i, j])
-            obs = np.array(obs)
+            obs = np.array(obs) - 1
             if model.verbose:
                 print('   OBS {}'.format(obs))
 
