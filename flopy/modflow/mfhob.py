@@ -456,20 +456,21 @@ class HeadObservation(object):
     Parameters
     ----------
     tomulth : float
-        time-offset multiplier for head observations. Default is 1.
+        Time-offset multiplier for head observations. Default is 1.
     obsnam : string
         Observation name. Default is 'HOBS'
     layer : int
-        is the zero-based layer index of the cell in which the head observation
+        The zero-based layer index of the cell in which the head observation
         is located. If layer is less than zero, hydraulic heads from multiple
         layers are combined to calculate a simulated value. The number of
         layers equals the absolute value of layer, or abs(layer). Default is 0.
     row : int
-        zero-based row index for the observation. Default is 0.
+        The zero-based row index for the observation. Default is 0.
     column : int
-        zero-based column index of the observation. Default is 0.
+        The zero-based column index of the observation. Default is 0.
     irefsp : int
-        the stress period to which the observation time is referenced.
+        The zero-based stress period to which the observation time is
+        referenced.
     roff : float
         Fractional offset from center of cell in Y direction (between rows).
         Default is 0.
@@ -482,17 +483,17 @@ class HeadObservation(object):
         if initial value is head and subsequent changes in head. Only
         specified if irefsp is < 0. Default is 1.
     mlay : dictionary of length (abs(irefsp))
-        key represents zero-based layer numbers for multilayer observations an
+        Key represents zero-based layer numbers for multilayer observations and
         value represents the fractional value for each layer of multilayer
         observations. If mlay is None, a default mlay of {0: 1.} will be
         used (default is None).
     time_series_data : list or numpy array
-        two-dimensional list or numpy array containing the simulation time of
+        Two-dimensional list or numpy array containing the simulation time of
         the observation and the observed head [[totim, hob]]. If
         time_series_dataDefault is None, a default observation of 0. at
         totim 0. will be created (default is None).
     names : list
-        list of specified observation names. If names is None, observation
+        List of specified observation names. If names is None, observation
         names will be automatically generated from obsname and the order
         of the timeseries data (default is None).
 

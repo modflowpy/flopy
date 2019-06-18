@@ -34,7 +34,8 @@ class ModflowFlwob(Package):
     obsnam : string list of length nqtfb
         Observation name
     irefsp : int of length nqtfb
-        Stress period to which the observation time is referenced.
+        The zero-based stress period to which the observation time is
+        referenced.
         The reference point is the beginning of the specified stress period.
     toffset : float list of length nqtfb
         Is the time from the beginning of the stress period irefsp to the time
@@ -49,11 +50,11 @@ class ModflowFlwob(Package):
         Observed flow value from the head-dependent flow boundary into the
         aquifer (+) or the flow from the aquifer into the boundary (-)
     layer : int list of length(nqfb, nqclfb)
-        layer index for the cell included in the cell group
+        The zero-based layer index for the cell included in the cell group.
     row : int list of length(nqfb, nqclfb)
-        row index for the cell included in the cell group
+        The zero-based row index for the cell included in the cell group.
     column : int list of length(nqfb, nqclfb)
-        column index of the cell included in the cell group
+        The zero-based column index of the cell included in the cell group.
     factor : float list of length(nqfb, nqclfb)
         Is the portion of the simulated gain or loss in the cell that is
         included in the total gain or loss for this cell group (fn of eq. 5).
@@ -275,7 +276,7 @@ class ModflowFlwob(Package):
             for j in range(self.nqobfb[i]):
                 # write section 4
                 line = '{}{:10d}{:10.4g} {:10.4g}\n'.format(self.obsnam[c],
-                                                            self.irefsp[c],
+                                                            self.irefsp[c] + 1,
                                                             self.toffset[c],
                                                             self.flwobs[c])
                 f_fbob.write(line)
@@ -287,9 +288,9 @@ class ModflowFlwob(Package):
                 # set factor to 1.0 for all cells in group
                 if self.nqclfb[i] < 0:
                     self.factor[i, :] = 1.0
-                line = '{:10d}'.format(self.layer[i, j])
-                line += '{:10d}'.format(self.row[i, j])
-                line += '{:10d}'.format(self.column[i, j])
+                line = '{:10d}'.format(self.layer[i, j] + 1)
+                line += '{:10d}'.format(self.row[i, j] + 1)
+                line += '{:10d}'.format(self.column[i, j] + 1)
                 line += ' '.format(self.factor[i, j])
                 # note is 10f good enough here?
                 line += '{:10f}\n'.format(self.factor[i, j])
