@@ -34,7 +34,8 @@ class ModflowFlwob(Package):
     obsnam : string list of length nqtfb
         Observation name
     irefsp : int of length nqtfb
-        The zero-based stress period to which the observation time is referenced.
+        The zero-based stress period to which the observation time is
+        referenced.
         The reference point is the beginning of the specified stress period.
     toffset : float list of length nqtfb
         Is the time from the beginning of the stress period irefsp to the time

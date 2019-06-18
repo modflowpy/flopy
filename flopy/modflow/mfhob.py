@@ -469,7 +469,8 @@ class HeadObservation(object):
     column : int
         The zero-based column index of the observation. Default is 0.
     irefsp : int
-        The zero-based stress period to which the observation time is referenced.
+        The zero-based stress period to which the observation time is
+        referenced.
     roff : float
         Fractional offset from center of cell in Y direction (between rows).
         Default is 0.
