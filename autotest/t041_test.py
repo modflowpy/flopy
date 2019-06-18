@@ -205,16 +205,19 @@ def test_obs_create_and_write():
             raise ValueError('could not load new HOB output file')
 
 
-def test_hob_options():
+def test_filenames():
     """
-    test041 load and run a simple MODFLOW-2005 OBS example with specified filenames
+    test041 load and run a simple MODFLOW-2005 OBS example with specified
+    filenames
     """
-    print('test041 load and run a simple MODFLOW-2005 OBS example with specified filenames')
+    print('test041 load and run a simple MODFLOW-2005 OBS example with'
+          ' specified filenames')
     pth = os.path.join(cpth, 'simple')
     modelname = 'hob_simple'
     pkglst = ['dis', 'bas6', 'pcg', 'lpf']
-    m = flopy.modflow.Modflow.load(modelname + '.nam', model_ws=pth, check=False,
-                                   load_only=pkglst, verbose=False, exe_name=exe_name)
+    m = flopy.modflow.Modflow.load(modelname + '.nam', model_ws=pth,
+                                   check=False, load_only=pkglst,
+                                   verbose=False, exe_name=exe_name)
 
     obs = flopy.modflow.HeadObservation(m, layer=0, row=5, column=5,
                                         time_series_data=[[1., 54.4],
@@ -240,14 +243,14 @@ def test_hob_options():
 
     # Lists of length nqtfb
     obsnam = ['drob_1', 'drob_2']
-    irefsp = [1, 1]
+    irefsp = [0, 0]
     toffset = [0, 0]
     flwobs = [0., 0.]
 
     # Lists of length (nqfb, nqclfb)
-    layer = [[1], [1]]
-    row = [[6], [9]]
-    column = [[6], [9]]
+    layer = [[0], [0]]
+    row = [[5], [8]]
+    column = [[5], [8]]
     factor = [[1.], [1.]]
 
     drob = flopy.modflow.ModflowFlwob(m,
@@ -271,10 +274,11 @@ def test_hob_options():
     # Write the model input files
     m.write_input()
 
-    assert m.get_output(unit=51) == f_out, 'output filename ({}) does \
-                                                not match specified name'.format(m.get_output(unit=51))
-
-    assert os.path.isfile(os.path.join(pth, f_in)), 'specified HOB input file not found'
+    s = 'output filename ({}) does ' \
+        'not match specified name'.format(m.get_output(unit=51))
+    assert m.get_output(unit=51) == f_out, s
+    s = 'specified HOB input file not found'
+    assert os.path.isfile(os.path.join(pth, f_in)), s
 
     # run the modflow-2005 model
     if run:
@@ -315,4 +319,4 @@ if __name__ == '__main__':
     test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
-    test_hob_options()
+    test_filenames()
