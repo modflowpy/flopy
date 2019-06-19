@@ -298,10 +298,10 @@ class ModflowFlwob(Package):
             # Loop through observation times for the groups
             for j in range(self.nqobfb[i]):
                 # write section 4
-                line = '{}{:10d}{:10.4g} {:10.4g}\n'.format(self.obsnam[c],
-                                                            self.irefsp[c] + 1,
-                                                            self.toffset[c],
-                                                            self.flwobs[c])
+                line = '{:12}'.format(self.obsnam[c])
+                line += '{:8d}'.format(self.irefsp[c])
+                line += '{:16.10g}'.format(self.toffset[c])
+                line += ' {:10.4g}\n'.format(self.flwobs[c])
                 f_fbob.write(line)
                 c += 1  # index variable
 
