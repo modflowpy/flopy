@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from ..pakbase import Package
 
@@ -314,3 +315,183 @@ class ModflowFlwob(Package):
         # swm: END hack for writing standard file
 
         return
+
+    @staticmethod
+    def load(f, model, flowtype=None, ext_unit_dict=None, check=True):
+        """
+        Load an existing package.
+
+        Parameters
+        ----------
+        f : filename or file handle
+            File to load.
+        model : model object
+            The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+            which this package will be added.
+        ext_unit_dict : dictionary, optional
+            If the arrays in the file are specified using EXTERNAL,
+            or older style array control records, then `f` should be a file
+            handle.  In this case ext_unit_dict is required, which can be
+            constructed using the function
+            :class:`flopy.utils.mfreadnam.parsenamefile`.
+        check : boolean
+            Check package data for common errors. (default True)
+
+        Returns
+        -------
+        flwob : ModflowFlwob package object
+            ModflowFlwob package object.
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow()
+        >>> hobs = flopy.modflow.ModflowFlwob.load('test.drob', m)
+
+        """
+
+        if model.verbose:
+            sys.stdout.write('loading flwob package file...\n')
+
+        if not hasattr(f, 'read'):
+            filename = f
+            f = open(filename, 'r')
+
+        ext = None
+        if flowtype is None:
+            # attempt to infer flowtype
+            ext = f.name.split('.')[-1].lower()
+            if 'ch' in ext.lower():
+                ext = 'chob'
+                flowtype = 'CHD'
+            elif 'gb' in ext.lower():
+                ext = 'gbob'
+                flowtype = 'GHB'
+            elif 'dr' in ext.lower():
+                ext = 'drob'
+                flowtype = 'DRN'
+            elif 'rv' in ext.lower():
+                ext = 'rvob'
+                flowtype = 'RIV'
+            else:
+                msg = 'ModflowFlwob: flowtype cannot be inferred ' \
+                      'from file name {}'.format(f.name)
+                raise KeyError(msg)
+
+        # dataset 0 -- header
+        while True:
+            line = f.readline()
+            if line[0] != '#':
+                break
+
+        # read dataset 1 -- NQFB NQCFB NQTFB IUFBOBSV Options
+        t = line.strip().split()
+        nqfb = int(t[0])
+        nqcfb = int(t[1])
+        nqtfb = int(t[2])
+        iufbobsv = int(t[3])
+        options = []
+        if len(t) > 4:
+            options = t[4:]
+
+        # read dataset 2 -- TOMULTFB
+        line = f.readline()
+        t = line.strip().split()
+        tomultfb = float(t[0])
+
+        nqobfb = np.zeros(nqfb, dtype=np.int32)
+        nqclfb = np.zeros(nqfb, dtype=np.int32)
+        obsnam = []
+        irefsp = []
+        toffset = []
+        flwobs = []
+
+        layer = []
+        row = []
+        column = []
+        factor = []
+
+        # read datasets 3, 4, and 5 for each of nqfb groups
+        # of cells
+        nobs = 0
+        while True:
+
+            # read dataset 3 -- NQOBFB NQCLFB
+            line = f.readline()
+            t = line.strip().split()
+            nqobfb[nobs] = int(t[0])
+            nqclfb[nobs] = int(t[1])
+
+            # read dataset 4 -- OBSNAM IREFSP TOFFSET FLWOBS
+            ntimes = 0
+            while True:
+                line = f.readline()
+                t = line.strip().split()
+                obsnam.append(t[0])
+                irefsp.append(int(t[1]))
+                toffset.append(float(t[2]))
+                flwobs.append(float(t[3]))
+                ntimes += 1
+                if ntimes == nqobfb[nobs]:
+                    break
+
+            # read dataset 5 -- Layer Row Column Factor
+            k = np.zeros(abs(nqclfb[nobs]), np.int32)
+            i = np.zeros(abs(nqclfb[nobs]), np.int32)
+            j = np.zeros(abs(nqclfb[nobs]), np.int32)
+            fac = np.zeros(abs(nqclfb[nobs]), np.float32)
+
+            ncells = 0
+            while True:
+                line = f.readline()
+                t = line.strip().split()
+                k[ncells] = int(t[0])
+                i[ncells] = int(t[1])
+                j[ncells] = int(t[2])
+                fac[ncells] = float(t[3])
+
+                ncells += 1
+                if ncells == abs(nqclfb[nobs]):
+                    layer.append(k)
+                    row.append(i)
+                    column.append(j)
+                    factor.append(fac)
+                    break
+
+            nobs += 1
+            if nobs == nqfb:
+                break
+
+        irefsp = np.array(irefsp) - 1
+        layer = np.array(layer) - 1
+        row = np.array(row) - 1
+        column = np.array(column) - 1
+        factor = np.array(factor)
+
+        # close the file
+        f.close()
+
+        # set package unit number
+        unitnumber = None
+        filenames = [None, None]
+        if ext_unit_dict is not None:
+            unitnumber, filenames[0] = \
+                model.get_ext_dict_attr(ext_unit_dict,
+                                        filetype=ext.upper())
+            if iufbobsv > 0:
+                iu, filenames[1] = \
+                    model.get_ext_dict_attr(ext_unit_dict, unit=iufbobsv)
+                model.add_pop_key_list(iufbobsv)
+
+        # create ModflowFlwob object instance
+        flwob = ModflowFlwob(model, iufbobsv=iufbobsv, tomultfb=tomultfb,
+                             nqfb=nqfb, nqcfb=nqcfb,
+                             nqtfb=nqtfb, nqobfb=nqobfb, nqclfb=nqclfb,
+                             obsnam=obsnam, irefsp=irefsp, toffset=toffset,
+                             flwobs=flwobs, layer=layer, row=row,
+                             column=column, factor=factor, options=options,
+                             flowtype=flowtype, unitnumber=unitnumber,
+                             filenames=filenames)
+
+        return flwob
