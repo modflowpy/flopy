@@ -224,10 +224,14 @@ class ModflowFlwob(Package):
         self.factor = factor
 
         # -create empty arrays of the correct size
-        self.layer = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.row = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.column = np.zeros((self.nqfb, max(self.nqclfb)), dtype='int32')
-        self.factor = np.zeros((self.nqfb, max(self.nqclfb)), dtype='float32')
+        self.layer = np.zeros((self.nqfb, max(np.abs(self.nqclfb))),
+                              dtype='int32')
+        self.row = np.zeros((self.nqfb, max(np.abs(self.nqclfb))),
+                            dtype='int32')
+        self.column = np.zeros((self.nqfb, max(np.abs(self.nqclfb))),
+                               dtype='int32')
+        self.factor = np.zeros((self.nqfb, max(np.abs(self.nqclfb))),
+                               dtype='float32')
         self.nqobfb = np.zeros((self.nqfb), dtype='int32')
         self.nqclfb = np.zeros((self.nqfb), dtype='int32')
         self.irefsp = np.zeros((self.nqtfb), dtype='int32')
