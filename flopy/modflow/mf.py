@@ -825,7 +825,8 @@ class Modflow(BaseModel):
                 if key not in ml.pop_key_list:
                     # do not add unit number (key) if it already exists
                     if key not in ml.external_units:
-                        ml.external_fnames.append(item.filename)
+                        ml.external_fnames.append(os.path.relpath(item.filename,
+                                                                  ml.model_ws))
                         ml.external_units.append(key)
                         ml.external_binflag.append("binary"
                                                    in item.filetype.lower())
