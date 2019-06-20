@@ -303,7 +303,7 @@ class ModflowFlwob(Package):
             for j in range(self.nqobfb[i]):
                 # write section 4
                 line = '{:12}'.format(self.obsnam[c])
-                line += '{:8d}'.format(self.irefsp[c])
+                line += '{:8d}'.format(self.irefsp[c] + 1)
                 line += '{:16.10g}'.format(self.toffset[c])
                 line += ' {:10.4g}\n'.format(self.flwobs[c])
                 f_fbob.write(line)
