@@ -1217,6 +1217,21 @@ def test_export_array_contours():
     return
 
 
+def test_export_contourf():
+    try:
+        import shapely
+    except:
+        return
+    import matplotlib.pyplot as plt
+    from flopy.export.utils import export_contourf
+    filename = os.path.join(spth, 'myfilledcontours.shp')
+    a = np.random.random((10, 10))
+    cs = plt.contourf(a)
+    export_contourf(filename, cs)
+    assert os.path.isfile(filename), 'did not create contourf shapefile'
+    return
+
+
 if __name__ == '__main__':
     #test_shapefile()
     # test_shapefile_ibound()
@@ -1248,6 +1263,7 @@ if __name__ == '__main__':
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     # test_export_array()
-    test_export_array_contours()
-    test_tricontour_NaN()
+    #test_export_array_contours()
+    #test_tricontour_NaN()
+    test_export_contourf()
     pass
