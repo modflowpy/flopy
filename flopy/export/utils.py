@@ -1171,7 +1171,8 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
                 for ncp, cp in enumerate(contour_path.to_polygons()):
                     x = cp[:, 0]
                     y = cp[:, 1]
-                    new_shape = geometry.Polygon([(i[0], i[1]) for i in zip(x, y)])
+                    new_shape = geometry.Polygon([(i[0], i[1])
+                                                  for i in zip(x, y)])
                     if ncp == 0:
                         poly = new_shape
                     else:
