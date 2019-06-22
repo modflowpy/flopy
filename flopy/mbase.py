@@ -318,7 +318,7 @@ class BaseModel(ModelInterface):
         if self.get_package("BCF6") is not None:
             return self.get_package("BCF6").laycon.array
         if self.get_package("UPW") is not None:
-            return self.get_package("UPW").laycon.array
+            return self.get_package("UPW").laytyp.array
 
         return None
 
