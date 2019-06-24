@@ -548,9 +548,9 @@ def _get_ftype_from_filename(fn, ext_unit_dict=None):
 
     # determine filetype from filename using ext_unit_dict
     if ext_unit_dict is not None:
-        for _, v in ext_unit_dict.items():
-            if v.filename == fn:
-                ftype = v.filetype
+        for key, value in ext_unit_dict.items():
+            if value.filename == fn:
+                ftype = value.filetype
                 break
 
     # else, try to infer filetype from filename extension
