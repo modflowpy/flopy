@@ -501,7 +501,7 @@ class ModflowFlwob(Package):
                 model.get_ext_dict_attr(ext_unit_dict,
                                         filetype=ftype.upper())
             if iufbobsv > 0:
-                _, filenames[1] = \
+                iu, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=iufbobsv)
                 model.add_pop_key_list(iufbobsv)
 
