@@ -217,7 +217,8 @@ def test_filenames():
     pkglst = ['dis', 'bas6', 'pcg', 'lpf']
     m = flopy.modflow.Modflow.load(modelname + '.nam', model_ws=pth,
                                    check=False, load_only=pkglst,
-                                   verbose=False, exe_name=exe_name)
+                                   verbose=False, exe_name=exe_name,
+                                   forgive=False)
 
     obs = flopy.modflow.HeadObservation(m, layer=0, row=5, column=5,
                                         time_series_data=[[1., 54.4],
@@ -229,48 +230,6 @@ def test_filenames():
                                    obs_data=[obs], options=['NOPRINT'],
                                    filenames=filenames)
 
-
-    # add DRN package
-    spd = {0: [[0, 5, 5, .5, 8e6],
-               [0, 8, 8, .7, 8e6]]}
-    drn = flopy.modflow.ModflowDrn(m, 53, stress_period_data=spd)
-
-    # flow observation
-
-    # Lists of length nqfb
-    nqobfb = [1, 1]
-    nqclfb = [1, 1]
-
-    # Lists of length nqtfb
-    obsnam = ['drob_1', 'drob_2']
-    irefsp = [0, 0]
-    toffset = [0, 0]
-    flwobs = [0., 0.]
-
-    # Lists of length (nqfb, nqclfb)
-    layer = [[0], [0]]
-    row = [[5], [8]]
-    column = [[5], [8]]
-    factor = [[1.], [1.]]
-
-    drob = flopy.modflow.ModflowFlwob(m,
-                                      nqfb=len(nqclfb),
-                                      nqcfb=np.sum(nqclfb),
-                                      nqtfb=np.sum(nqobfb),
-                                      nqobfb=nqobfb,
-                                      nqclfb=nqclfb,
-                                      obsnam=obsnam,
-                                      irefsp=irefsp,
-                                      toffset=toffset,
-                                      flwobs=flwobs,
-                                      layer=layer,
-                                      row=row,
-                                      column=column,
-                                      factor=factor,
-                                      flowtype='drn',
-                                      options=['NOPRINT'],
-                                      filenames=['flwobs_simple.drob',
-                                                 'flwobs_simple.obd'])
     # Write the model input files
     m.write_input()
 
@@ -315,8 +274,95 @@ def test_multilayerhob_prfail():
     return
 
 
+def test_flwob_load():
+    """
+    test041 create, write, and load ModflowFlwob package.
+    """
+    # load the modflow model
+    opth = os.path.join(cpth, 'tc1-true', 'orig')
+    m = flopy.modflow.Modflow.load('tc1-true.nam', verbose=True,
+                                   model_ws=opth, exe_name=exe_name)
+
+    npth = os.path.join(cpth, 'tc1-true', 'flwob')
+    m.change_model_ws(new_pth=npth, reset_external=True)
+
+    # write the lgr model in to the new path
+    m.write_input()
+
+    # add DRN package
+    spd = {0: [[0, 5, 5, .5, 8e6],
+               [0, 8, 8, .7, 8e6]]}
+    drn = flopy.modflow.ModflowDrn(m, 53, stress_period_data=spd)
+
+    # flow observation
+
+    # Lists of length nqfb
+    nqobfb = [1, 1]
+    nqclfb = [1, 1]
+
+    # Lists of length nqtfb
+    obsnam = ['drob_1', 'drob_2']
+    irefsp = [0, 0]
+    toffset = [0, 0]
+    flwobs = [-5.678, -6.874]
+
+    # Lists of length (nqfb, nqclfb)
+    layer = [[0], [0]]
+    row = [[5], [8]]
+    column = [[5], [8]]
+    factor = [[1.], [1.]]
+
+    drob = flopy.modflow.ModflowFlwob(m,
+                                      nqfb=len(nqclfb),
+                                      nqcfb=np.sum(nqclfb),
+                                      nqtfb=np.sum(nqobfb),
+                                      nqobfb=nqobfb,
+                                      nqclfb=nqclfb,
+                                      obsnam=obsnam,
+                                      irefsp=irefsp,
+                                      toffset=toffset,
+                                      flwobs=flwobs,
+                                      layer=layer,
+                                      row=row,
+                                      column=column,
+                                      factor=factor,
+                                      flowtype='drn',
+                                      options=['NOPRINT'])
+    # Write the model input files
+    m.write_input(check=False)
+
+    # Load the DROB package and compare it to the original
+    pkglst = ['drob']
+    m = flopy.modflow.Modflow.load('tc1-true.nam', model_ws=npth,
+                                   check=False, load_only=pkglst,
+                                   verbose=False, exe_name=exe_name,
+                                   forgive=False)
+
+    # check variables were read properly
+    s = 'nqfb loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert(drob.nqfb == m.drob.nqfb), s
+    s = 'nqcfb loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert (drob.nqcfb == m.drob.nqcfb), s
+    s = 'nqtfb loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert (drob.nqtfb == m.drob.nqtfb), s
+    s = 'obsnam loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert (list([n for n in drob.obsnam]) ==
+            list([n for n in m.drob.obsnam])), s
+    s = 'flwobs loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert np.array_equal(drob.flwobs, m.drob.flwobs), s
+    s = 'layer loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert np.array_equal(drob.layer, m.drob.layer), s
+    s = 'row loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert np.array_equal(drob.row, m.drob.row), s
+    s = 'column loaded from {} read incorrectly'.format(m.drob.fn_path)
+    assert np.array_equal(drob.column, m.drob.column), s
+
+    return
+
+
 if __name__ == '__main__':
     test_hob_simple()
     test_obs_create_and_write()
     test_obs_load_and_write()
     test_filenames()
+    test_flwob_load()
