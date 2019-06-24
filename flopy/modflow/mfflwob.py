@@ -548,8 +548,8 @@ def _get_ftype_from_filename(fn, ext_unit_dict=None):
 
     # determine filetype from filename using ext_unit_dict
     if ext_unit_dict is not None:
-        for k, v in ext_unit_dict.items():
-            if v.filename == fn :
+        for _, v in ext_unit_dict.items():
+            if v.filename == fn:
                 ftype = v.filetype
                 break
 
