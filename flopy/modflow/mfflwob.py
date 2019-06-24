@@ -1,6 +1,8 @@
+import os
 import sys
 import numpy as np
 from ..pakbase import Package
+from ..utils import parsenamefile
 
 
 class ModflowFlwob(Package):
@@ -350,7 +352,7 @@ class ModflowFlwob(Package):
         return
 
     @staticmethod
-    def load(f, model, flowtype=None, ext_unit_dict=None, check=True):
+    def load(f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -390,27 +392,6 @@ class ModflowFlwob(Package):
         if not hasattr(f, 'read'):
             filename = f
             f = open(filename, 'r')
-
-        ext = None
-        if flowtype is None:
-            # attempt to infer flowtype
-            ext = f.name.split('.')[-1].lower()
-            if 'ch' in ext.lower():
-                ext = 'chob'
-                flowtype = 'CHD'
-            elif 'gb' in ext.lower():
-                ext = 'gbob'
-                flowtype = 'GHB'
-            elif 'dr' in ext.lower():
-                ext = 'drob'
-                flowtype = 'DRN'
-            elif 'rv' in ext.lower():
-                ext = 'rvob'
-                flowtype = 'RIV'
-            else:
-                msg = 'ModflowFlwob: flowtype cannot be inferred ' \
-                      'from file name {}'.format(f.name)
-                raise KeyError(msg)
 
         # dataset 0 -- header
         while True:
@@ -505,13 +486,20 @@ class ModflowFlwob(Package):
         # close the file
         f.close()
 
+        # get ext_unit_dict if none passed
+        if ext_unit_dict is None:
+            namefile = os.path.join(model.model_ws, model.namefile)
+            ext_unit_dict = parsenamefile(namefile, model.mfnam_packages)
+
+        flowtype, ftype = _get_ftype_from_filename(f.name, ext_unit_dict)
+
         # set package unit number
         unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=ext.upper())
+                                        filetype=ftype.upper())
             if iufbobsv > 0:
                 _, filenames[1] = \
                     model.get_ext_dict_attr(ext_unit_dict, unit=iufbobsv)
@@ -528,3 +516,64 @@ class ModflowFlwob(Package):
                              filenames=filenames)
 
         return flwob
+
+
+def _get_ftype_from_filename(fn, ext_unit_dict=None):
+    """
+    Returns the boundary flowtype and filetype for a given ModflowFlwob
+    package filename.
+
+    Parameters
+    ----------
+    fn : str
+        The filename to be parsed.
+    ext_unit_dict : dictionary, optional
+        If the arrays in the file are specified using EXTERNAL,
+        or older style array control records, then `f` should be a file
+        handle.  In this case ext_unit_dict is required, which can be
+        constructed using the function
+        :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+    Returns
+    -------
+    flowtype : str
+        Corresponds to the type of the head-dependent boundary package for
+        which observations are desired (e.g. "CHD", "GHB", "DRN", or "RIV").
+    ftype : str
+        Corresponds to the observation file type (e.g. "CHOB", "GBOB",
+        "DROB", or "RVOB").
+    """
+
+    ftype = None
+
+    # determine filetype from filename using ext_unit_dict
+    if ext_unit_dict is not None:
+        for k, v in ext_unit_dict.items():
+            if v.filename == fn :
+                ftype = v.filetype
+                break
+
+    # else, try to infer filetype from filename extension
+    else:
+        ext = fn.split('.')[-1].lower()
+        if 'ch' in ext.lower():
+            ftype = 'CHOB'
+        elif 'gb' in ext.lower():
+            ftype = 'GBOB'
+        elif 'dr' in ext.lower():
+            ftype = 'DROB'
+        elif 'rv' in ext.lower():
+            ftype = 'RVOB'
+
+    msg = 'ModflowFlwob: filetype cannot be inferred ' \
+          'from file name {}'.format(fn)
+    if ftype is None:
+        raise AssertionError(msg)
+
+    flowtype_dict = {'CHOB': 'CHD',
+                     'GOBO': 'GHB',
+                     'DROB': 'DRN',
+                     'RVOB': 'RIV'}
+    flowtype = flowtype_dict[ftype]
+
+    return flowtype, ftype
