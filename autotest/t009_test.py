@@ -399,7 +399,7 @@ def test_ds_6d_6e_disordered():
     sfr2 = m2.get_package("SFR")
 
 
-    if len(sfr.all_segments) != len(sfr2.all_segments):
+    if len(sfr.graph) != len(sfr2.graph):
         raise AssertionError
 
     if len(sfr.segment_data[0]) != len(sfr2.segment_data[0]):
