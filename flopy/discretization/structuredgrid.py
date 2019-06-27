@@ -34,23 +34,29 @@ class StructuredGrid(Grid):
     get_cell_vertices(i, j)
         returns vertices for a single cell at row, column i, j.
     """
-    def __init__(self, delc, delr, top=None, botm=None, idomain=None,
+    def __init__(self, delc=None, delr=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0):
+                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
                                              lenuni, epsg, proj4, prj, xoff,
                                              yoff, angrot)
         self.__delc = delc
         self.__delr = delr
-        self.__nrow = len(delc)
-        self.__ncol = len(delr)
+        if delc is not None:
+            self.__nrow = len(delc)
+        else:
+            self.__nrow = nrow
+        if delr is not None:
+            self.__ncol = len(delr)
+        else:
+            self.__ncol = ncol
         if top is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
             self.__nlay = len(botm)
         else:
-            self.__nlay = None
+            self.__nlay = nlay
 
     ####################
     # Properties
@@ -213,7 +219,7 @@ class StructuredGrid(Grid):
     ###############
     ### Methods ###
     ###############
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         """
         Get the row and column of a point with coordinates x and y
 
@@ -228,7 +234,9 @@ class StructuredGrid(Grid):
             The y-coordinate of the requested point
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
-
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
 
         Returns
         -------
@@ -239,21 +247,32 @@ class StructuredGrid(Grid):
 
         """
         # transform x and y to local coordinates
-        x, y = super(StructuredGrid, self).intersect(x, y, local)
+        x, y = super(StructuredGrid, self).intersect(x, y, local, forgive)
 
         # get the cell edges in local coordinates
         xe, ye = self.xyedges
 
         xcomp = x > xe
         if np.all(xcomp) or not np.any(xcomp):
-            raise Exception('x, y point given is outside of the model area')
-        col = np.where(xcomp)[0][-1]
+            if forgive:
+                col = np.nan
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            col = np.where(xcomp)[0][-1]
 
         ycomp = y < ye
         if np.all(ycomp) or not np.any(ycomp):
-            raise Exception('x, y point given is outside of the model area')
-        row = np.where(ycomp)[0][-1]
-
+            if forgive:
+                row = np.nan
+            else:
+                raise Exception(
+                    'x, y point given is outside of the model area')
+        else:
+            row = np.where(ycomp)[0][-1]
+        if np.any(np.isnan([row, col])):
+            row = col = np.nan
         return row, col
 
     def _cell_vert_list(self, i, j):

@@ -1,5 +1,33 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.12
+
+* Added a check method for OC package (#558)
+* Change default map projection from EPSG:4326 to None (#535)
+* Refactor warning message visibility and categories (#554, #575)
+* Support for MODFLOW 6 external binary files added. Flopy can read/write binary files containing list and array data (#470, #553).
+* Added silent option for MODFLOW 6 write_simulation (#552)
+* Refactored MODFLOW-6 data classes. File writing operations moved from mfdata*.py to new classes created in mffileaccess.py. Data storage classes moved from mfdata.py to mfdatastorage.py. MFArray, MFList, and MFScalar interface classes simplified with most of the data processing code moved to mfdatastorage.py and mffileaccess.py.
+* Added MODFLOW 6 quickstart example to front page.
+* Added lgrutil test as autotest/t063_test_lgrutil.py and implemented a get_replicated_parent_array() method to the Lgr class so that the user can pass in a parent array and get back an array that is the size of the child model.
+* Refactored much of the flopy code style to conform with Python conventions and those checked by Codacy.  Added an automated Codacy check as part of the pull request and commit checks.
+
+* Bug fixes:
+
+    * Fixed bug in Mt3dms.load to show correct error message when loading non-existent NAM file (#545)
+    * Removed errant SFT parameter contained in Mt3dUzt.__init__ routine (#572)
+    * Fixed DISV shapefile export bug that applied layer 1 parameter values to all model layers during export (#508)
+    * Updated ModflowSfr2.load to store channel_geometry and channel_flow_data (6d, 6e) by nseg instead of itmp position (#546)
+    * Fixed bug in ModflowMnw2.make_node_data to be able to set multiple wells with different numbers of nodes (#556)
+    * Fixed bug reading MODFLOW 6 comma separated files (#509)
+    * Fixed bug constructing a grid class with MODFLOW-USG (#513)
+    * Optimized performance of grid class by minimizing redundant operations through use of data result caching (#520)
+    * Fixed bug passing multiple auxiliary variables for MODFLOW 6 array data (#533)
+    * Fixed bug in Mt3dUzt.__init__;  the variable ioutobs doesn't exist in the UZT package and was removed.
+    * Fixed MODFLOW-LGR bug in which ascii files were not able to be created for some output.  Added better testing of the MODFLOW-LGR capabilities to t035_test.py.
+    * Fixed multiple issues in mfdis that resulted in incorrect row column determination when using the method get_rc_from_node_coordinates (#560).  Added better testing of this to t007_test.py.
+    * Fixed the export_array_contours function as contours would not export in some cases (#577).  Added tests of export_array_contours and export_array to t007_test.py as these methods were not tested at all.
+
 ### Version 3.2.11
 * Added support for the drain return package.
 * Added support for pyshp version 2.x, which contains a different call signature for the writer than earlier versions.
@@ -28,7 +56,7 @@ FloPy Changes
 * Added parameter_load variable to `mbase` that is set to true if parameter data are applied in the model (only used in models that support parameters). If this is set to `True` `free_format_input` is set to `True` (if currently `False`) when the `write_input()` method is called. This change preserves the precision of parameter data (which is free format data).
 * MODFLOW 6 model and simulation packages can not be retrieved as a `MFSimulation` attribute
 * Added support for multicomponent load in `mfsft.py`
-* Added functionality to read esri-style epsg codes from [spatialreference.org](http://spatialreference.org).
+* Added functionality to read esri-style epsg codes from [spatialreference.org](https://spatialreference.org).
 * Added functionality to MODFLOW 6 that will automatically replace the existing package with the one being added if it has the same name as the existing package.
 * Added separate MODFLOW 6 model classes for each model type. Model classes contain name file options.
 * Added standard `run_model()` method arguments to mf6 `run_simulation()` method.

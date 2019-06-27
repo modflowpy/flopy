@@ -1080,8 +1080,8 @@ def export_contours(modelgrid, filename, contours,
     df : dataframe of shapefile contents
 
     """
-    from flopy.utils.geometry import LineString
-    from flopy.export.shapefile_utils import recarray2shp
+    from ..utils.geometry import LineString
+    from .shapefile_utils import recarray2shp
 
     if not isinstance(contours, list):
         contours = [contours]
@@ -1104,7 +1104,99 @@ def export_contours(modelgrid, filename, contours,
     ra = np.array(level,
                   dtype=[(fieldname, float)]).view(np.recarray)
 
-    recarray2shp(ra, geoms, filename, epsg, prj, **kwargs)
+    recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
+    return
+
+
+def export_contourf(filename, contours, fieldname='level', epsg=None,
+                    prj=None, **kwargs):
+    """
+    Write matplotlib filled contours to shapefile.  This utility requires
+    that shapely is installed.
+
+    Parameters
+    ----------
+    filename : str
+        name of output shapefile (e.g. myshp.shp)
+    contours : matplotlib.contour.QuadContourSet or list of them
+        (object returned by matplotlib.pyplot.contourf)
+    fieldname : str
+        Name of shapefile attribute field to contain the contour level.  The
+        fieldname column in the attribute table will contain the lower end of
+        the range represented by the polygon.  Default is 'level'.
+    epsg : int
+        EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
+    prj : str
+        Existing projection file to be used with new shapefile.
+
+    **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> import flopy
+    >>> import matplotlib.pyplot as plt
+    >>> from flopy.export.utils import export_contourf
+    >>> a = np.random.random((10, 10))
+    >>> cs = plt.contourf(a)
+    >>> export_contourf('myfilledcontours.shp', cs)
+
+    """
+
+    try:
+        from shapely import geometry
+    except:
+        raise ImportError('export_contourf requires python shapely package')
+
+    from ..utils.geometry import Polygon
+    from .shapefile_utils import recarray2shp
+
+    shapelygeoms = []
+    level = []
+
+    if not isinstance(contours, list):
+        contours = [contours]
+
+    for c in contours:
+        levels = c.levels
+        for i, col in enumerate(c.collections):
+            # Loop through all polygons that have the same intensity level
+            for contour_path in col.get_paths():
+                # Create the polygon for this intensity level
+                # The first polygon in the path is the main one, the following
+                # ones are "holes"
+                for ncp, cp in enumerate(contour_path.to_polygons()):
+                    x = cp[:, 0]
+                    y = cp[:, 1]
+                    new_shape = geometry.Polygon([(i[0], i[1])
+                                                  for i in zip(x, y)])
+                    if ncp == 0:
+                        poly = new_shape
+                    else:
+                        # Remove the holes if there are any
+                        poly = poly.difference(new_shape)
+
+                # store shapely geometry object
+                shapelygeoms.append(poly)
+                level.append(levels[i])
+
+    geoms = []
+    for shpgeom in shapelygeoms:
+        xa, ya = shpgeom.exterior.coords.xy
+        interiors = [s.coords for s in shpgeom.interiors]
+        pg = Polygon([(x, y) for x, y in zip(xa, ya)], interiors=interiors)
+        geoms += [pg]
+
+    print('Writing {} polygons'.format(len(level)))
+
+    # Create recarray
+    ra = np.array(level, dtype=[(fieldname, float)]).view(np.recarray)
+
+    recarray2shp(ra, geoms, filename, epsg=epsg, prj=prj, **kwargs)
+    return
 
 
 def export_array_contours(modelgrid, filename, a,

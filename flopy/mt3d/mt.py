@@ -348,15 +348,26 @@ class Mt3dms(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.mf.bas is not None:
+        if self.btn is not None:
             ibound = self.btn.icbund.array
+            delc = self.btn.delc.array
+            delr = self.btn.delr.array
+            top = self.btn.htop.array
+            botm = np.subtract(top, self.btn.dz.array.cumsum(axis=0))
         else:
-            ibound = None
+            delc = self.mf.dis.delc.array
+            delr = self.mf.dis.delr.array
+            top = self.mf.dis.top.array
+            botm = self.mf.dis.botm.array
+            if self.mf.bas6 is not None:
+                ibound = self.mf.bas6.ibound.array
+            else:
+                ibound = None
         # build grid
-        self._modelgrid = StructuredGrid(delc=self.mf.dis.delc.array,
-                                         delr=self.mf.dis.delr.array,
-                                         top=self.mf.dis.top.array,
-                                         botm=self.mf.dis.botm.array,
+        self._modelgrid = StructuredGrid(delc=delc,
+                                         delr=delr,
+                                         top=top,
+                                         botm=botm,
                                          idomain=ibound,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
@@ -370,16 +381,39 @@ class Mt3dms(BaseModel):
             if self._xul is not None:
                 xoff = self._modelgrid._xul_to_xll(self._xul)
             else:
-                xoff = 0.0
+                xoff = self.mf._modelgrid.xoffset
+            if xoff is None:
+                # incase mf._modelgrid.xoffset is not set but mf._xul is
+                if self.mf._xul is not None:
+                    xoff = self._modelgrid._xul_to_xll(self.mf._xul)
+                else:
+                    xoff = 0.0
         yoff = self._modelgrid.yoffset
         if yoff is None:
             if self._yul is not None:
                 yoff = self._modelgrid._yul_to_yll(self._yul)
             else:
-                yoff = 0.0
-        self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
-                                       self._modelgrid.epsg,
-                                       self._modelgrid.proj4)
+                yoff = self.mf._modelgrid.yoffset
+            if yoff is None:
+                # incase mf._modelgrid.yoffset is not set but mf._yul is
+                if self.mf._yul is not None:
+                    yoff = self._modelgrid._yul_to_yll(self.mf._yul)
+                else:
+                    yoff = 0.0
+        proj4 = self._modelgrid.proj4
+        if proj4 is None:
+            proj4 = self.mf._modelgrid.proj4
+        epsg = self._modelgrid.epsg
+        if epsg is None:
+            epsg = self.mf._modelgrid.epsg
+        angrot = self._modelgrid.angrot
+        if angrot is None or angrot == 0.0:  # angrot normally defaulted to 0.0
+            if self.mf._modelgrid.angrot is not None:
+                angrot = self.mf._modelgrid.angrot
+            else:
+                angrot = 0.0
+
+        self._modelgrid.set_coord_info(xoff, yoff, angrot, epsg, proj4)
 
         return self._modelgrid
 
@@ -554,7 +588,6 @@ class Mt3dms(BaseModel):
                     version=version, exe_name=exe_name,
                     verbose=verbose, model_ws=model_ws,
                     modflowmodel=modflowmodel)
-
         files_successfully_loaded = []
         files_not_loaded = []
 
@@ -622,7 +655,12 @@ class Mt3dms(BaseModel):
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
         ext_unit_dict.pop(btn_key)
-
+        ncomp = mt.btn.ncomp
+        # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
+        poss_output_units = set(list(range(201, 201+ncomp)) +
+                                list(range(301, 301+ncomp)) +
+                                list(range(401, 401+ncomp)) +
+                                list(range(601, 601+ncomp)) + [17])
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -689,7 +727,14 @@ class Mt3dms(BaseModel):
                     sys.stdout.write('   {} file load...skipped\n      {}\n'
                                      .format(item.filetype,
                                              os.path.basename(item.filename)))
-                if key not in mt.pop_key_list:
+                if key in poss_output_units:
+                    # id files specified to output unit numbers and allow to
+                    # pass through
+                    mt.output_fnames.append(os.path.basename(item.filename))
+                    mt.output_units.append(key)
+                    mt.output_binflag.append("binary"
+                                             in item.filetype.lower())
+                elif key not in mt.pop_key_list:
                     mt.external_fnames.append(item.filename)
                     mt.external_units.append(key)
                     mt.external_binflag.append("binary"
@@ -701,11 +746,13 @@ class Mt3dms(BaseModel):
         for key in mt.pop_key_list:
             try:
                 mt.remove_external(unit=key)
-                ext_unit_dict.pop(key)
+                if key != btn_key:  # btn_key already popped above
+                    ext_unit_dict.pop(key)
             except:
                 if mt.verbose:
-                    sys.stdout.write('Warning: external file unit " +\
-                        "{} does not exist in ext_unit_dict.\n'.format(key))
+                    sys.stdout.write(
+                        "Warning: external file unit "
+                        "{} does not exist in ext_unit_dict.\n".format(key))
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:

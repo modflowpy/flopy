@@ -85,7 +85,33 @@ class Polygon:
 
     @property
     def pyshp_parts(self):
-        return [list(self.exterior) + [list(i) for i in self.interiors]]
+        from ..export.shapefile_utils import (import_shapefile,
+                                              shapefile_version)
+
+        # exterior ring must be clockwise (negative area)
+        # interiors rings must be counter-clockwise (positive area)
+
+        shapefile = import_shapefile()
+        sfv = shapefile_version(shapefile)
+
+        exterior = list(self.exterior)
+        if shapefile.signed_area(exterior) > 0:
+            exterior.reverse()
+
+        interiors = []
+        for i in self.interiors:
+            il = list(i)
+            if shapefile.signed_area(il) < 0:
+                il.reverse()
+            interiors.append(il)
+
+        if sfv < 2:
+            result = [exterior + [i for i in interiors]]
+        else:
+            result = [exterior]
+            for i in interiors:
+                result.append(i)
+        return result
 
     @property
     def patch(self):
@@ -360,9 +386,9 @@ def transform(x, y, xoff, yoff, angrot_radians,
 
     """
     if isinstance(x, list):
-        x = np.array(x)
+        x = np.array(x, dtype=float)
     if isinstance(y, list):
-        y = np.array(y)
+        y = np.array(y, dtype=float)
 
     if not np.isscalar(x):
         x, y = x.copy(), y.copy()

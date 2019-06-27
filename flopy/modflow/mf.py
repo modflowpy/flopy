@@ -5,8 +5,12 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 """
 
 import os
-import inspect
 import flopy
+import sys
+if sys.version_info[0] == 2:
+    from inspect import getargspec as getfullargspec
+else:
+    from inspect import getfullargspec
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
@@ -199,6 +203,10 @@ class Modflow(BaseModel):
             "swt": flopy.modflow.ModflowSwt,
             "hyd": flopy.modflow.ModflowHyd,
             "hob": flopy.modflow.ModflowHob,
+            "chob": flopy.modflow.ModflowFlwob,
+            "gbob": flopy.modflow.ModflowFlwob,
+            "drob": flopy.modflow.ModflowFlwob,
+            "rvob": flopy.modflow.ModflowFlwob,
             "vdf": flopy.seawat.SeawatVdf,
             "vsc": flopy.seawat.SeawatVsc
         }
@@ -760,10 +768,9 @@ class Modflow(BaseModel):
         for key, item in ext_unit_dict.items():
             if item.package is not None:
                 if item.filetype in load_only:
+                    package_load_args = getfullargspec(item.package.load)[0]
                     if forgive:
                         try:
-                            package_load_args = \
-                                list(inspect.getargspec(item.package.load))[0]
                             if "check" in package_load_args:
                                 item.package.load(item.filename, ml,
                                                   ext_unit_dict=ext_unit_dict,
@@ -785,8 +792,6 @@ class Modflow(BaseModel):
                                 print(msg)
                             files_not_loaded.append(item.filename)
                     else:
-                        package_load_args = \
-                            list(inspect.getargspec(item.package.load))[0]
                         if "check" in package_load_args:
                             item.package.load(item.filename, ml,
                                               ext_unit_dict=ext_unit_dict,

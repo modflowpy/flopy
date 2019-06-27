@@ -25,10 +25,10 @@ class UnstructuredGrid(Grid):
     get_cell_vertices(cellid)
         returns vertices for a single cell at cellid.
     """
-    def __init__(self, vertices, iverts, xcenters, ycenters,
+    def __init__(self, vertices=None, iverts=None, xcenters=None, ycenters=None,
                  top=None, botm=None, idomain=None, lenuni=None,
                  ncpl=None, epsg=None, proj4=None, prj=None,
-                 xoff=0., yoff=0., angrot=0., layered=True):
+                 xoff=0., yoff=0., angrot=0., layered=True, nodes=None):
         super(UnstructuredGrid, self).__init__(self.grid_type, top, botm, idomain,
                                                lenuni, epsg, proj4, prj,
                                                xoff, yoff, angrot)
@@ -41,6 +41,7 @@ class UnstructuredGrid(Grid):
         self._layered = layered
         self._xc = xcenters
         self._yc = ycenters
+        self._nodes = nodes
 
         if iverts is not None:
             if self.layered:
@@ -72,6 +73,13 @@ class UnstructuredGrid(Grid):
     @property
     def layered(self):
         return self._layered
+
+    @property
+    def nnodes(self):
+        if self._nodes is not None:
+            return self._nodes
+        else:
+            return self.nlay * self.ncpl
 
     @property
     def ncpl(self):
@@ -149,8 +157,8 @@ class UnstructuredGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
-    def intersect(self, x, y, local=False):
-        x, y = super(UnstructuredGrid, self).intersect(x, y, local)
+    def intersect(self, x, y, local=False, forgive=False):
+        x, y = super(UnstructuredGrid, self).intersect(x, y, local, forgive)
         raise Exception('Not implemented yet')
 
     def get_cell_vertices(self, cellid):

@@ -32,9 +32,10 @@ class VertexGrid(Grid):
         returns vertices for a single cell at cellid.
     """
 
-    def __init__(self, vertices, cell2d, top=None, botm=None, idomain=None,
+    def __init__(self, vertices=None, cell2d=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, grid_type='vertex'):
+                 yoff=0.0, angrot=0.0, grid_type='vertex',
+                 nlay=None, ncpl=None):
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
                                          epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
@@ -42,15 +43,26 @@ class VertexGrid(Grid):
         self._top = top
         self._botm = botm
         self._idomain = idomain
+        if botm is None:
+            self._nlay = nlay
+            self._ncpl = ncpl
+        else:
+            self._nlay = None
+            self._ncpl = None
 
     @property
     def nlay(self):
         if self._botm is not None:
             return len(self._botm)
+        else:
+            return self._nlay
 
     @property
     def ncpl(self):
-        return len(self._botm[0])
+        if self._botm is not None:
+            return len(self._botm[0])
+        else:
+            return self._ncpl
 
     @property
     def shape(self):
@@ -119,7 +131,7 @@ class VertexGrid(Grid):
         else:
             return self._cache_dict[cache_index].data_nocopy
 
-    def intersect(self, x, y, local=False):
+    def intersect(self, x, y, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
         
@@ -134,7 +146,9 @@ class VertexGrid(Grid):
             The y-coordinate of the requested point
         local: bool (optional)
             If True, x and y are in local coordinates (defaults to False)
-
+        forgive: bool (optional)
+            Forgive x,y arguments that fall outside the model grid and
+            return NaNs instead (defaults to False - will throw exception)
     
         Returns
         -------
@@ -165,6 +179,9 @@ class VertexGrid(Grid):
                     radius = 1e-9
                 if path.contains_point((x, y), radius=radius):
                     return icell2d
+        if forgive:
+            icell2d = np.nan
+            return icell2d
         raise Exception('x, y point given is outside of the model area')
 
     def get_cell_vertices(self, cellid):

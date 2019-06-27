@@ -1,5 +1,5 @@
 import numpy as np
-from ..modflow import Modflow, ModflowDis
+from ..modflow import Modflow
 from .util_array import Util2d, Util3d
 
 
@@ -153,13 +153,44 @@ class Lgr(object):
                     top = pbotm[kp, ip, jp]
                     bot = pbotm[kp + 1, ip, jp]
                     dz = (top - bot) / self.ncppl[kp - 1]
-                    for n in range(self.ncppl[kp - 1]):
+                    for _ in range(self.ncppl[kp - 1]):
                         botm[kc, icrowstart:icrowend,
                         iccolstart: iccolend] = botm[kc - 1,
                                                 icrowstart:icrowend,
                                                 iccolstart: iccolend] - dz
                         kc += 1
         return botm[0], botm[1:]
+
+    def get_replicated_parent_array(self, parent_array):
+        """
+        Get a two-dimensional array the size of the child grid that has values
+        replicated from the provided parent array.
+
+        Parameters
+        ----------
+        parent_array : ndarray
+            A two-dimensional array that is the size of the parent model rows
+            and columns.
+
+        Returns
+        -------
+        child_array : ndarray
+            A two-dimensional array that is the size of the child model rows
+            and columns
+
+        """
+        assert parent_array.shape == (self.nrowp, self.ncolp)
+        child_array = np.empty((self.nrow, self.ncol),
+                                dtype=parent_array.dtype)
+        for ip in range(self.nprbeg, self.nprend + 1):
+            for jp in range(self.npcbeg, self.npcend + 1):
+                icrowstart = (ip - self.nprbeg) * self.ncpp
+                icrowend = icrowstart + self.ncpp
+                iccolstart = (jp - self.npcbeg) * self.ncpp
+                iccolend = iccolstart + self.ncpp
+                value = parent_array[ip, jp]
+                child_array[icrowstart:icrowend, iccolstart:iccolend] = value
+        return child_array
 
     def get_idomain(self):
         """
@@ -170,8 +201,8 @@ class Lgr(object):
 
         Returns
         -------
-            idomain : ndarray
-                idomain array for the child model
+        idomain : ndarray
+            idomain array for the child model
 
         """
         idomain = np.ones((self.nlay, self.nrow, self.ncol), dtype=np.int)
@@ -207,6 +238,10 @@ class Lgr(object):
         cell kc, ic, jc.
 
         """
+
+        assert 0 <= kc < self.nlay, 'layer must be >= 0 and < child nlay'
+        assert 0 <= ic < self.nrow, 'layer must be >= 0 and < child nrow'
+        assert 0 <= jc < self.ncol, 'layer must be >= 0 and < child ncol'
 
         parentlist = []
         (kp, ip, jp) = self.get_parent_indices(kc, ic, jc)

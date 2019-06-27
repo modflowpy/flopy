@@ -10,7 +10,7 @@ FloPy Supported Packages
 | Direct Solver (DE4)                            | Supported            | Supported            | Not supported        |
 | Discretization (DIS)                           | Supported            | Supported            | Not supported        |
 | Drain (DRN)                                    | Supported            | Supported            | Not supported        |
-| Drain Return (DRT)                             | Not supported        | Not supported        | Not supported        |
+| Drain Return (DRT)                             | Supported            | Supported            | Not supported        |
 | Evapotranspiration (EVT)                       | Supported            | Supported            | Not supported        |
 | Evapotranspiration Segments (ETS)              | Not supported        | Not supported        | Not supported        |
 | Flow and Head Boundary (FHB)                   | Supported            | Supported            | Not supported        |
