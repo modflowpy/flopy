@@ -2,7 +2,6 @@ __author__ = 'aleaf'
 
 import sys
 import os
-import time
 import numpy as np
 import warnings
 import copy
