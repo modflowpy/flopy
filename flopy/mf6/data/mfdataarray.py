@@ -565,6 +565,10 @@ class MFArray(MFMultiDimVar):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, None,
                                       self._simulation_data.debug, ex)
+            if self.structure.data_item_structures[0].numeric_index or \
+                    self.structure.data_item_structures[0].is_cellid:
+                # for cellid and numeric indices convert from 0 base to 1 based
+                data = abs(data) + 1
             file_entry_array.append('{}{}{}{}\n'.format(indent,
                                                         self.structure.name,
                                                         indent,
@@ -746,13 +750,16 @@ class MFArray(MFMultiDimVar):
                                   self._simulation_data.debug, ex)
         data_iter = datautil.PyListUtil.next_item(data)
         indent_str = self._simulation_data.indent_string
+        is_cellid = self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid
+
         for item, last_item, new_list, nesting_change in data_iter:
             # increment data/layer counts
             line_data_count += 1
             try:
                 data_lyr = to_string(item, self._data_type,
                                      self._simulation_data,
-                                     self._data_dimensions)
+                                     self._data_dimensions, is_cellid)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 comment = 'Could not convert data "{}" of type "{}" to a ' \

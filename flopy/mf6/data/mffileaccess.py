@@ -167,6 +167,7 @@ class MFFileAccessArray(MFFileAccess):
     def write_binary_file(self, data, fname, text, modelgrid=None,
                           modeltime=None, stress_period=0,
                           precision='double', write_multi_layer=False):
+        data = self._resolve_cellid_numbers_to_file(data)
         fd = self._open_ext_file(fname, binary=True, write=True)
         if write_multi_layer:
             for layer, value in enumerate(data):
@@ -255,6 +256,7 @@ class MFFileAccessArray(MFFileAccess):
                 value_, traceback_, message,
                 self._simulation_data.debug)
         current_size = 0
+        is_cellid = self._is_cellid_or_numeric_index()
         for data_item in MultiListIter(data, True):
             if data_item[2] and current_size > 0:
                 # new list/dimension, add appropriate formatting to
@@ -262,7 +264,7 @@ class MFFileAccessArray(MFFileAccess):
                 fd.write('\n')
             fd.write('{} '.format(to_string(data_item[0], data_type,
                                             self._simulation_data,
-                                            self._data_dimensions)))
+                                            self._data_dimensions, is_cellid)))
             current_size += 1
         if current_size != data_size:
             message = 'Not enough data for "{}" provided for file' \
@@ -289,7 +291,7 @@ class MFFileAccessArray(MFFileAccess):
         numpy_type, name = self.datum_to_numpy_type(data_type)
         header_dtype = bf.BinaryHeader.set_dtype(
             bintype=self._get_bintype(modelgrid),
-            precision=name)
+            precision='double')
         if read_multi_layer and len(data_shape) > 1:
             all_data = np.empty(data_shape, numpy_type)
             headers = []
@@ -312,6 +314,7 @@ class MFFileAccessArray(MFFileAccess):
                                 data_size, data_shape):
         header_data = np.fromfile(fd, dtype=header_dtype, count=1)
         data = np.fromfile(fd, dtype=numpy_type, count=data_size)
+        data = self._resolve_cellid_numbers_from_file(data)
         if data.size != data_size:
             message = 'Binary file {} does not contain expected data. ' \
                       'Expected array size {} but found size ' \
@@ -364,6 +367,7 @@ class MFFileAccessArray(MFFileAccess):
                 self._simulation_data.debug)
 
         data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
+        data_out = self._resolve_cellid_numbers_from_file(data_out)
         if close_file:
             fd.close()
 
@@ -584,6 +588,24 @@ class MFFileAccessArray(MFFileAccess):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, comment,
                                       self._simulation_data.debug, ex)
+
+    def _is_cellid_or_numeric_index(self):
+        if self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid:
+            return True
+        return False
+
+    def _resolve_cellid_numbers_to_file(self, data):
+        if self._is_cellid_or_numeric_index():
+            return abs(data) + 1
+        else:
+            return data
+
+    def _resolve_cellid_numbers_from_file(self, data):
+        if self._is_cellid_or_numeric_index():
+            return abs(data) - 1
+        else:
+            return data
 
     def _resolve_data_shape(self, data, layer_shape, storage):
         try:

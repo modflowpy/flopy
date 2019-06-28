@@ -1096,7 +1096,7 @@ class DataStorage(object):
                         data, fp, text, self._model_or_sim.modeldiscrit,
                         self._model_or_sim.modeltime,
                         stress_period=self._stress_period, precision='double',
-                        write_multi_layer=(layer is None))
+                        write_multi_layer=(layer is None and self.layered))
                 else:
                     file_access = MFFileAccessArray(
                         self.data_dimensions.structure, self.data_dimensions,
