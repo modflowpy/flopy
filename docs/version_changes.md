@@ -1,5 +1,11 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.13
+
+* Bug fixes:
+
+    * Fixed instantiation of IUZBND in UZT class. When no array was supplied in argument list for IUZBND, default of a 3D array was used, needs to be 2D (#605)
+
 ### Version 3.2.12
 
 * Added a check method for OC package (#558)
