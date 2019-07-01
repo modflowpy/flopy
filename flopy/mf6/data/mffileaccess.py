@@ -255,32 +255,7 @@ class MFFileAccessArray(MFFileAccess):
                 self.structure.name, inspect.stack()[0][3], type_,
                 value_, traceback_, message,
                 self._simulation_data.debug)
-        current_size = 0
-        is_cellid = self._is_cellid_or_numeric_index()
-        for data_item in MultiListIter(data, True):
-            if data_item[2] and current_size > 0:
-                # new list/dimension, add appropriate formatting to
-                # the file
-                fd.write('\n')
-            fd.write('{} '.format(to_string(data_item[0], data_type,
-                                            self._simulation_data,
-                                            self._data_dimensions, is_cellid)))
-            current_size += 1
-        if current_size != data_size:
-            message = 'Not enough data for "{}" provided for file' \
-                      ' {}.  Expected data size is {}, actual data ' \
-                      'size is' \
-                      '{}.'.format(self.structure.path, fd.name,
-                                   data_size, current_size)
-            type_, value_, traceback_ = sys.exc_info()
-            fd.close()
-            raise MFDataException(
-                self._data_dimensions.structure.get_model(),
-                self._data_dimensions.structure.get_package(),
-                self._data_dimensions.structure.path,
-                'storing external data', self.structure.name,
-                inspect.stack()[0][3], type_, value_, traceback_,
-                message, self._simulation_data.debug)
+        fd.write(self.get_data_string(data, data_type, ''))
         fd.close()
 
     def read_binary_data_from_file(self, fname, data_shape, data_size,
@@ -309,6 +284,65 @@ class MFFileAccessArray(MFFileAccess):
                 fd, fname, header_dtype, numpy_type, data_size, data_shape)
             fd.close()
             return bin_data
+
+    def get_data_string(self, data, data_type, data_indent=''):
+        layer_data_string = ['{}'.format(data_indent)]
+        line_data_count = 0
+        indent_str = self._simulation_data.indent_string
+        data_iter = datautil.PyListUtil.next_item(data)
+        is_cellid = self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid
+
+        jag_arr = self.structure.data_item_structures[0].jagged_array
+        jagged_def = None
+        jagged_def_index = 0
+        if jag_arr is not None:
+            # get jagged array definition
+            jagged_def_path = self._path[0:-1] + (jag_arr,)
+            if jagged_def_path in self._simulation_data.mfdata:
+                jagged_def = self._simulation_data.mfdata[jagged_def_path].array
+
+        for item, last_item, new_list, nesting_change in data_iter:
+            # increment data/layer counts
+            line_data_count += 1
+            try:
+                data_lyr = to_string(item, data_type,
+                                     self._simulation_data,
+                                     self._data_dimensions, is_cellid)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                comment = 'Could not convert data "{}" of type "{}" to a ' \
+                          'string.'.format(item, data_type)
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'converting data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, comment,
+                                      self._simulation_data.debug, ex)
+            layer_data_string[-1] = '{}{}{}'.format(layer_data_string[-1],
+                                                    indent_str,
+                                                    data_lyr)
+
+            if jagged_def is not None:
+                if line_data_count == jagged_def[jagged_def_index]:
+                    layer_data_string.append('{}'.format(data_indent))
+                    line_data_count = 0
+                    jagged_def_index += 1
+            else:
+                if self._simulation_data.wrap_multidim_arrays and \
+                        (line_data_count == self._simulation_data.
+                            max_columns_of_data or last_item):
+                    layer_data_string.append('{}'.format(data_indent))
+                    line_data_count = 0
+        if len(layer_data_string) > 0:
+            # clean up the text at the end of the array
+            layer_data_string[-1] = layer_data_string[-1].strip()
+        if len(layer_data_string) == 1:
+            return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
+        else:
+            return '\n'.join(layer_data_string)
 
     def _read_binary_file_layer(self, fd, fname, header_dtype, numpy_type,
                                 data_size, data_shape):

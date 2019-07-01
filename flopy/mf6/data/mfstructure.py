@@ -778,6 +778,8 @@ class MFDataItemStructure(object):
         self.construct_data = None
         self.parameter_name = None
         self.one_per_pkg = False
+        self.jagged_array = None
+
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -920,6 +922,8 @@ class MFDataItemStructure(object):
                 self.parameter_name = arr_line[1]
             elif arr_line[0] == 'one_per_pkg':
                 self.one_per_pkg = bool(arr_line[1])
+            elif arr_line[0] == 'jagged_array':
+                self.jagged_array = arr_line[1]
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)

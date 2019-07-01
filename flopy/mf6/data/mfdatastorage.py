@@ -1573,7 +1573,7 @@ class DataStorage(object):
         if dimensions[0] < 0:
             return None
         all_none = True
-        np_data_type =  self.data_dimensions.structure.get_datum_type()
+        np_data_type = self.data_dimensions.structure.get_datum_type()
         full_data = np.full(dimensions, np.nan,
                             self.data_dimensions.structure.get_datum_type(True))
         is_aux = self.data_dimensions.structure.name == 'aux'

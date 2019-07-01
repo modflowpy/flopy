@@ -684,9 +684,8 @@ class MFArray(MFMultiDimVar):
             # internal data header + data
             format_str = self._get_internal_formatting_string(layer).upper()
             lay_str = self._get_data_layer_string(layer, data_indent).upper()
-            file_entry = '{}{}{}\n{}{}'.format(file_entry, indent_string,
-                                               format_str, indent_string,
-                                               lay_str)
+            file_entry = '{}{}{}\n{}'.format(file_entry, indent_string,
+                                               format_str, lay_str)
         elif storage_type == DataStorageType.internal_constant:
             #  constant data
             try:
@@ -732,8 +731,6 @@ class MFArray(MFMultiDimVar):
         return file_entry
 
     def _get_data_layer_string(self, layer, data_indent):
-        layer_data_string = ['']
-        line_data_count = 0
         # iterate through data layer
         try:
             data = self._get_storage_obj().get_data(layer, False)
@@ -748,45 +745,10 @@ class MFArray(MFMultiDimVar):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, comment,
                                   self._simulation_data.debug, ex)
-        data_iter = datautil.PyListUtil.next_item(data)
-        indent_str = self._simulation_data.indent_string
-        is_cellid = self.structure.data_item_structures[0].numeric_index or \
-                self.structure.data_item_structures[0].is_cellid
-
-        for item, last_item, new_list, nesting_change in data_iter:
-            # increment data/layer counts
-            line_data_count += 1
-            try:
-                data_lyr = to_string(item, self._data_type,
-                                     self._simulation_data,
-                                     self._data_dimensions, is_cellid)
-            except Exception as ex:
-                type_, value_, traceback_ = sys.exc_info()
-                comment = 'Could not convert data "{}" of type "{}" to a ' \
-                          'string.'.format(item, self._data_type)
-                raise MFDataException(self.structure.get_model(),
-                                      self.structure.get_package(),
-                                      self._path,
-                                      'converting data',
-                                      self.structure.name,
-                                      inspect.stack()[0][3], type_,
-                                      value_, traceback_, comment,
-                                      self._simulation_data.debug, ex)
-            layer_data_string[-1] = '{}{}{}'.format(layer_data_string[-1],
-                                                    indent_str,
-                                                    data_lyr)
-            if self._simulation_data.wrap_multidim_arrays and \
-                    (line_data_count == self._simulation_data.
-                        max_columns_of_data or last_item):
-                layer_data_string.append('{}'.format(data_indent))
-                line_data_count = 0
-        if len(layer_data_string) > 0:
-            # clean up the text at the end of the array
-            layer_data_string[-1] = layer_data_string[-1].strip()
-        if len(layer_data_string) == 1:
-            return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
-        else:
-            return '\n'.join(layer_data_string)
+        file_access = MFFileAccessArray(self.structure, self._data_dimensions,
+                                        self._simulation_data, self._path,
+                                        self._current_key)
+        return file_access.get_data_string(data, self._data_type, data_indent)
 
     def _resolve_layer_index(self, layer, allow_multiple_layers=False):
         # handle layered vs non-layered data
