@@ -190,8 +190,8 @@ class Mt3dUzt(Package):
                                   locat=self.unit_number[0])
         # set iuzfbnd based on UZF input file
         else:
-            arr = np.zeros((nlay, nrow, ncol), dtype=np.int32)
-            self.iuzfbnd = Util3d(self.parent, (nlay, nrow, ncol), np.int32,
+            arr = np.zeros((nrow, ncol), dtype=np.int32)
+            self.iuzfbnd = Util2d(self.parent, (nrow, ncol), np.int32,
                                   arr, name='iuzfbnd',
                                   locat=self.unit_number[0])
 
