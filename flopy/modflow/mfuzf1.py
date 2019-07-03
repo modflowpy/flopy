@@ -996,7 +996,7 @@ def _parse8(line):
     iuzcol = None
     iuzopt = 0
     line = line_parse(line)
-    if len(line) > 1:
+    if len(line) > 1 and not int(line[0]) < 0:
         iuzrow = pop_item(line, int) - 1
         iuzcol = pop_item(line, int) - 1
         iftunit = pop_item(line, int)
