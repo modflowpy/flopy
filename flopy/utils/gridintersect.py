@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from .geometry import transform
 try:
-    import shapely
     from shapely.geometry import (LineString, MultiLineString, MultiPoint,
-                                  MultiPolygon, Point, Polygon, box)
+                                  Point, Polygon, box)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
-    print("Shapely is needed for grid intersect operations! Please install shapely.")
+    print("Shapely is needed for grid intersect operations!"
+          "Please install shapely.")
 
 
 class GridIntersect:
@@ -24,9 +24,9 @@ class GridIntersect:
      - Building the STRtree can take a while for large grids. Once built the
        intersect routines (for individual shapes) should be pretty fast.
      - The optimized routines for structured grids will generally outperform
-       the shapely routines because of the reduced overhead of building and parsing
-       the queried STR-tree. For Polygons, shapely is sometimes faster than
-       the optimized structured routines.
+       the shapely routines because of the reduced overhead of building and
+       parsing the queried STR-tree. For Polygons, shapely is sometimes faster
+       than the optimized structured routines.
      - The STR-tree query is based on the bounding box of the shape, if the
        bounding box of the shape covers nearly the entire grid, the query
        won't be able to limit the search space much resulting in slower
@@ -95,7 +95,8 @@ class GridIntersect:
         return shplist
 
     def _usg_grid_to_shape_list(self):
-        """internal method, convert unstructred grid to list of shapely polygons
+        """internal method, convert unstructred grid to list of shapely
+        polygons
 
         Returns
         -------
@@ -122,7 +123,9 @@ class GridIntersect:
         if isinstance(self.mfgrid._cell2d, np.recarray):
             for icell in self.mfgrid._cell2d.icell2d:
                 points = []
-                for iv in self.mfgrid._cell2d[["icvert_0", "icvert_1", "icvert_2"]][icell]:
+                for iv in self.mfgrid._cell2d[["icvert_0",
+                                               "icvert_1",
+                                               "icvert_2"]][icell]:
                     points.append((self.mfgrid._vertices.xv[iv],
                                    self.mfgrid._vertices.yv[iv]))
                 # close the polygon, if necessary
@@ -145,7 +148,8 @@ class GridIntersect:
                 shplist.append(p)
         return shplist
 
-    def _sort_strtree_result(self, shapelist):
+    @staticmethod
+    def _sort_strtree_result(shapelist):
         """internal method, sort strtree query result by node id
 
         Parameters
@@ -205,7 +209,8 @@ class GridIntersect:
 
             if intersect.is_empty:
                 continue
-            elif intersect.geom_type == "Point" or intersect.geom_type == "MultiPoint":
+            elif (intersect.geom_type == "Point" or
+                  intersect.geom_type == "MultiPoint"):
                 pt = intersect.__geo_interface__["coordinates"]
                 if pt in vertices:
                     continue
@@ -213,7 +218,8 @@ class GridIntersect:
                 vertices.append(pt)
                 cellids.append(r.name)
 
-        rec = np.recarray(len(isectshp), names=["cellids", "vertices", "ixshapes"],
+        rec = np.recarray(len(isectshp),
+                          names=["cellids", "vertices", "ixshapes"],
                           formats=["O", "O", "O"])
         rec.ixshapes = isectshp
         rec.vertices = vertices
@@ -221,7 +227,8 @@ class GridIntersect:
 
         return rec
 
-    def _intersect_linestring_shapely(self, shp, keepzerolengths=False, sort_by_cellid=True):
+    def _intersect_linestring_shapely(self, shp, keepzerolengths=False,
+                                      sort_by_cellid=True):
         """intersect with LineString or MultiLineString
 
         Parameters
@@ -259,7 +266,8 @@ class GridIntersect:
             # Results in:
             #  - LineString:
             #  - MultiLineString:
-            #  - GeometryCollection (Empty, or collection of LineString and Point)
+            #  - GeometryCollection (Empty, or collection of LineString
+            #    and Point)
 
             if "LineString" in intersect.geom_type:
                     # result is a LineString or MultiLineString
@@ -306,7 +314,8 @@ class GridIntersect:
             #         isectshp.append(intersect)
             #         cellids.append(r.name)
 
-        rec = np.recarray(len(isectshp), names=["cellids", "vertices", "lengths", "ixshapes"],
+        rec = np.recarray(len(isectshp),
+                          names=["cellids", "vertices", "lengths", "ixshapes"],
                           formats=["O", "O", "f8", "O"])
         rec.ixshapes = isectshp
         rec.vertices = vertices
@@ -350,9 +359,11 @@ class GridIntersect:
             intersect = shp.intersection(r)
 
             # Results in
-            #  - GeomCollection (Combination of Points, LineStrings and Polygons
-            #    and Emptys) -> store as multiple entries in rec_array (only Polygons or MultiPolygons)
-            #  - MultiPolygon (several Polygons) -> store as single entry in rec array
+            #  - GeomCollection (Combination of Points, LineStrings and
+            #    Polygons and Emptys) -> store as multiple entries in rec_array
+            #    (only Polygons or MultiPolygons)
+            #  - MultiPolygon (several Polygons) -> store as single entry
+            #    in rec array
             #  - Polygon (single Polygon) -> store as single entry in rec array
 
             if "Polygon" in intersect.geom_type:
@@ -405,7 +416,8 @@ class GridIntersect:
             #             vertices.append(np.nan)
             #         cellids.append(r.name)
 
-        rec = np.recarray(len(isectshp), names=["cellids", "vertices", "areas", "ixshapes"],
+        rec = np.recarray(len(isectshp),
+                          names=["cellids", "vertices", "areas", "ixshapes"],
                           formats=["O", "O", "f8", "O"])
         rec.ixshapes = isectshp
         rec.vertices = vertices
@@ -525,7 +537,8 @@ class GridIntersect:
         lineclip = shp.intersection(pl)
 
         if lineclip.length == 0.:  # linestring does not intersect modelgrid
-            return np.recarray(0, names=["cellids", "vertices", "lengths", "ixshapes"],
+            return np.recarray(0, names=["cellids", "vertices",
+                                         "lengths", "ixshapes"],
                                formats=["O", "O", "f8", "O"])
         if lineclip.geom_type is 'MultiLineString':  # there are multiple lines
             nodelist, lengths, vertices = [], [], []
@@ -534,12 +547,14 @@ class GridIntersect:
                 n, l, v, ix = self._get_nodes_intersecting_linestring(ls)
                 nodelist += n
                 lengths += l
-                # if necessary, transform coordinates back to real world coordinates
+                # if necessary, transform coordinates back to real
+                # world coordinates
                 if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
                         or self.mfgrid.yoffset != 0.):
                     v_realworld = []
                     for pt in v:
-                        rx, ry = transform([pt[0]], [pt[1]], self.mfgrid.xoffset,
+                        rx, ry = transform([pt[0]], [pt[1]],
+                                           self.mfgrid.xoffset,
                                            self.mfgrid.yoffset,
                                            self.mfgrid.angrot_radians,
                                            inverse=False)
@@ -554,9 +569,11 @@ class GridIntersect:
                 vertices += v_realworld
                 ixshapes += ix_realworld
         else:  # linestring is fully within grid
-            nodelist, lengths, vertices, ixshapes = self._get_nodes_intersecting_linestring(
-                lineclip)
-            # if necessary, transform coordinates back to real world coordinates
+            nodelist, lengths, vertices, ixshapes = \
+                self._get_nodes_intersecting_linestring(
+                    lineclip)
+            # if necessary, transform coordinates back to real
+            # world coordinates
             if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
                     or self.mfgrid.yoffset != 0.):
                 v_realworld = []
@@ -602,7 +619,7 @@ class GridIntersect:
             templengths = []
             tempverts = []
             tempshapes = []
-            for i in range(len(nodelist)):
+            for i, _ in enumerate(nodelist):
                 if lengths[i] > 0:
                     tempnodes.append(nodelist[i])
                     templengths.append(lengths[i])
@@ -613,7 +630,8 @@ class GridIntersect:
             vertices = tempverts
             ixshapes = tempshapes
 
-        rec = np.recarray(len(nodelist), names=["cellids", "vertices", "lengths", "ixshapes"],
+        rec = np.recarray(len(nodelist),
+                          names=["cellids", "vertices", "lengths", "ixshapes"],
                           formats=["O", "O", "f8", "O"])
         rec.vertices = vertices
         rec.lengths = lengths
@@ -689,8 +707,9 @@ class GridIntersect:
         n = 0
         while True:
             (i, j) = nodelist[n]
-            node, length, verts, ixshape = self._check_adjacent_cells_intersecting_line(
-                linestring, (i, j), nodelist)
+            node, length, verts, ixshape = \
+                self._check_adjacent_cells_intersecting_line(
+                    linestring, (i, j), nodelist)
 
             for inode, ilength, ivert, ix in zip(node, length, verts, ixshape):
                 if inode is not None:
@@ -706,7 +725,8 @@ class GridIntersect:
 
         return nodelist, lengths, vertices, ixshapes
 
-    def _check_adjacent_cells_intersecting_line(self, linestring, i_j, nodelist):
+    def _check_adjacent_cells_intersecting_line(self, linestring, i_j,
+                                                nodelist):
         """helper method that follows a line through a structured grid
 
         Parameters
@@ -979,17 +999,20 @@ class GridIntersect:
                     nodelist.append((i, j))
                     areas.append(intersect.area)
 
-                    # if necessary, transform coordinates back to real world coordinates
+                    # if necessary, transform coordinates back to real
+                    # world coordinates
                     if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
                             or self.mfgrid.yoffset != 0.):
                         v_realworld = []
                         for pt in intersect.__geo_interface__["coordinates"]:
-                            rx, ry = transform([pt[0]], [pt[1]], self.mfgrid.xoffset,
+                            rx, ry = transform([pt[0]], [pt[1]],
+                                               self.mfgrid.xoffset,
                                                self.mfgrid.yoffset,
                                                self.mfgrid.angrot_radians,
                                                inverse=False)
                             v_realworld.append([rx, ry])
-                        intersect_realworld = rotate(intersect, self.mfgrid.angrot,
+                        intersect_realworld = rotate(intersect,
+                                                     self.mfgrid.angrot,
                                                      origin=(0., 0.))
                         intersect_realworld = translate(intersect_realworld,
                                                         self.mfgrid.xoffset,
@@ -1001,7 +1024,8 @@ class GridIntersect:
                     ixshapes.append(intersect_realworld)
                     vertices.append(v_realworld)
 
-        rec = np.recarray(len(nodelist), names=["cellids", "vertices", "areas", "ixshapes"],
+        rec = np.recarray(len(nodelist),
+                          names=["cellids", "vertices", "areas", "ixshapes"],
                           formats=["O", "O", "f8", "O"])
         rec.vertices = vertices
         rec.areas = areas
@@ -1010,7 +1034,8 @@ class GridIntersect:
 
         return rec
 
-    def plot_polygon(self, rec, ax=None, **kwargs):
+    @staticmethod
+    def plot_polygon(rec, ax=None, **kwargs):
         """method to plot the polygon intersection results from
         the resulting numpy.recarray.
 
@@ -1019,7 +1044,8 @@ class GridIntersect:
         Parameters
         ----------
         rec : numpy.recarray
-            record array containing intersection results (the resulting shapes)
+            record array containing intersection results
+            (the resulting shapes)
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1046,7 +1072,8 @@ class GridIntersect:
 
         return ax
 
-    def plot_linestring(self, rec, ax=None, **kwargs):
+    @staticmethod
+    def plot_linestring(rec, ax=None, **kwargs):
         """method to plot the linestring intersection results from
         the resulting numpy.recarray.
 
@@ -1055,7 +1082,8 @@ class GridIntersect:
         Parameters
         ----------
         rec : numpy.recarray
-            record array containing intersection results (the resulting shapes)
+            record array containing intersection results
+            (the resulting shapes)
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1081,7 +1109,8 @@ class GridIntersect:
 
         return ax
 
-    def plot_point(self, rec, ax=None, **kwargs):
+    @staticmethod
+    def plot_point(rec, ax=None, **kwargs):
         """method to plot the point intersection results from
         the resulting numpy.recarray.
 
@@ -1090,7 +1119,8 @@ class GridIntersect:
         Parameters
         ----------
         rec : numpy.recarray
-            record array containing intersection results (the resulting shapes)
+            record array containing intersection results
+            (the resulting shapes)
         ax : matplotlib.pyplot.axes, optional
             axes to plot onto, if not provided, creates a new figure
         **kwargs:
@@ -1122,15 +1152,16 @@ class ModflowGridIndices:
     @staticmethod
     def find_position_in_array(arr, x):
         '''
-        If arr has x positions for the left edge of a cell, then return the cell
-        index containing x.
+        If arr has x positions for the left edge of a cell, then
+        return the cell index containing x.
 
-        Arguments:
+        Parameters
+        ----------
+        arr : A one dimensional array (such as Xe) that contains
+            coordinates for the left cell edge.
 
-            *arr*: A one dimensional array (such as Xe) that contains coordinates
-                for the left cell edge.
-
-            *x*: The x position to find in arr.
+        x : float
+            The x position to find in arr.
         '''
         jpos = None
 
@@ -1161,16 +1192,17 @@ class ModflowGridIndices:
         Convert the modflow node number to a zero-based layer, row and column
         format.  Return (k0, i0, j0).
 
-        Arguments:
-
-            *nodenumber*: The cell nodenumber, ranging from 1 to number of
-                nodes.
-
-            *nlay*: The number of layers.
-
-            *nrow*: The number of rows.
-
-            *ncol*: The number of columns.
+        Parameters
+        ----------
+        nodenumber: int
+            The cell nodenumber, ranging from 1 to number of
+            nodes.
+        nlay: int
+            The number of layers.
+        nrow: int
+            The number of rows.
+        ncol: int
+            The number of columns.
 
         '''
         if nodenumber > nlay * nrow * ncol:
@@ -1187,17 +1219,18 @@ class ModflowGridIndices:
         Calculate the nodenumber using the zero-based layer, row, and column
         values.  The first node has a value of 1.
 
-        Arguments:
-
-            *k*: The model layer number as a zero-based value.
-
-            *i*: The model row number as a zero-based value.
-
-            *j*: The model column number as a zero-based value.
-
-            *nrow*: The number of model rows.
-
-            *ncol*: The number of model columns.
+        Parameters
+        ----------
+        k : int
+            The model layer number as a zero-based value.
+        i : int
+            The model row number as a zero-based value.
+        j : int
+            The model column number as a zero-based value.
+        nrow : int
+            The number of model rows.
+        ncol : int
+            The number of model columns.
         '''
         return k * nrow * ncol + i * ncol + j + 1
 
@@ -1205,19 +1238,20 @@ class ModflowGridIndices:
     def nn0_from_kij(k, i, j, nrow, ncol):
         '''
         Calculate the zero-based nodenumber using the zero-based layer, row,
-         and column values.  The first node has a value of 0.
+        and column values.  The first node has a value of 0.
 
-        Arguments:
-
-            *k*: The model layer number as a zero-based value.
-
-            *i*: The model row number as a zero-based value.
-
-            *j*: The model column number as a zero-based value.
-
-            *nrow*: The number of model rows.
-
-            *ncol*: The number of model columns.
+        Parameters
+        ----------
+        k : int
+            The model layer number as a zero-based value.
+        i : int
+            The model row number as a zero-based value.
+        j : int
+            The model column number as a zero-based value.
+        nrow : int
+            The number of model rows.
+        ncol : int
+            The number of model columns.
         '''
         return k * nrow * ncol + i * ncol + j
 
@@ -1227,16 +1261,17 @@ class ModflowGridIndices:
         Convert the node number to a zero-based layer, row and column
         format.  Return (k0, i0, j0).
 
-        Arguments:
-
-            *nodenumber*: The cell nodenumber, ranging from 0 to number of
-                nodes - 1.
-
-            *nlay*: The number of layers.
-
-            *nrow*: The number of rows.
-
-            *ncol*: The number of columns.
+        Parameters
+        ----------
+        nodenumber : int
+            The cell nodenumber, ranging from 0 to number of
+            nodes - 1.
+        nlay : int
+            The number of layers.
+        nrow : int
+            The number of rows.
+        ncol : int
+            The number of columns.
 
         '''
         if n > nlay * nrow * ncol:
