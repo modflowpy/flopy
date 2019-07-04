@@ -3,7 +3,7 @@ import flopy.plot as fplot
 import matplotlib.pyplot as plt
 import numpy as np
 from descartes import PolygonPatch
-from flopy.utils.triangle import Triangle as Triangle
+from flopy.utils.triangle import Triangle
 try:
     from shapely.geometry import (LineString, MultiLineString, MultiPoint,
                                   MultiPolygon, Point, Polygon)
@@ -36,7 +36,8 @@ def get_rect_grid(angrot=0., xyoffset=0.):
     delc = 10*np.ones(2, dtype=np.float)
     delr = 10*np.ones(2, dtype=np.float)
     sgr = fgrid.StructuredGrid(
-        delc, delr, top=None, botm=None, xoff=xyoffset, yoff=xyoffset, angrot=angrot)
+        delc, delr, top=None, botm=None, xoff=xyoffset, yoff=xyoffset,
+        angrot=angrot)
     return sgr
 
 

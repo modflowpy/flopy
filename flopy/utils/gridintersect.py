@@ -103,10 +103,6 @@ class GridIntersect:
         list
             list of shapely Polygons
         """
-
-        #         shplist = []
-        # TODO: add logic here
-        #         return shplist
         raise NotImplementedError()
 
     def _vtx_grid_to_shape_list(self):
