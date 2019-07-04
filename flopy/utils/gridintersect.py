@@ -285,10 +285,10 @@ class GridIntersect:
                 if intersect.is_empty:
                     continue
 
-                # if not keep_all_ix, continue if length == 0.0
-                # if not keep_all_ix:
-                if intersect.length == 0.0:
-                    continue
+                # if keep zero lengths
+                if not keepzerolengths:
+                    if intersect.length == 0.0:
+                        continue
 
                 # loop over collection
                 for geom in intersect.geoms:
