@@ -293,7 +293,6 @@ class GridIntersect:
                 # loop over collection
                 for geom in intersect.geoms:
                     verts = geom.__geo_interface__["coordinates"]
-                    # if not keep_all_ix:
                     if verts in vertices:
                         continue
                     vertices.append(verts)
