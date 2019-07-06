@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from .geometry import transform
 try:
-    from shapely.geometry import (LineString, MultiLineString, MultiPoint,
-                                  Point, Polygon, box)
+    from shapely.geometry import (LineString, MultiLineString, MultiPoint, Point, Polygon, box)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
@@ -481,6 +480,7 @@ class GridIntersect:
                 tempnodes.append(node)
                 tempshapes.append(ixs)
             else:
+                #TODO: not sure if this is correct
                 tempshapes[-1] = MultiPoint([tempshapes[-1], ixs])
 
         ixshapes = tempshapes
@@ -695,7 +695,7 @@ class GridIntersect:
         else:
             x = intersect.xy[0]
             y = intersect.xy[1]
-        verts = [(i[0], i[1]) for i in zip(x, y)]
+        verts = [(ixy[0], ixy[1]) for ixy in zip(x, y)]
         vertices.append(verts)
         nodelist.append((i, j))
 
@@ -775,7 +775,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(i[0], i[1]) for i in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to right
@@ -802,7 +802,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(i[0], i[1]) for i in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to back
@@ -829,7 +829,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(i[0], i[1]) for i in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to front
@@ -856,7 +856,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(i[0], i[1]) for i in zip(x, y)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         return node, length, verts, ixshape
