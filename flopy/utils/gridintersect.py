@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from .geometry import transform
 try:
-    from shapely.geometry import (LineString, MultiPoint, Point, Polygon, box)
+    from shapely.geometry import MultiPoint, Point, Polygon, box
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
