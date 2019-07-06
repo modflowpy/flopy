@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from .geometry import transform
 try:
-    from shapely.geometry import (LineString, MultiLineString, MultiPoint, Point, Polygon, box)
+    from shapely.geometry import (LineString, MultiPoint, Point, Polygon, box)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
@@ -480,7 +480,7 @@ class GridIntersect:
                 tempnodes.append(node)
                 tempshapes.append(ixs)
             else:
-                #TODO: not sure if this is correct
+                # TODO: not sure if this is correct
                 tempshapes[-1] = MultiPoint([tempshapes[-1], ixs])
 
         ixshapes = tempshapes
@@ -775,7 +775,8 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1])
+                                  for ixy in zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to right
@@ -802,7 +803,8 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1])
+                                  for ixy in zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to back
@@ -829,7 +831,8 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1]) for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in
+                                  zip(*intersect.xy)])
                     node.append((ii, jj))
 
         # check to front
