@@ -734,10 +734,7 @@ class MFFileAccessList(MFFileAccess):
         return np.array(data_list, dtype=header)
 
     def _get_header(self, modelgrid, precision):
-        if precision.lower() == 'double':
-            np_flt_type = np.float64
-        else:
-            np_flt_type = np.float32
+        np_flt_type = np.float64
         header = []
         int_cellid_indexes = {}
         ext_cellid_indexes = {}
@@ -759,7 +756,7 @@ class MFFileAccessList(MFFileAccess):
                 if aux_var_names is not None:
                     for aux_var_name in aux_var_names[0]:
                         if aux_var_name.lower() != 'auxiliary':
-                            header.append((aux_var_name, np.float64))
+                            header.append((aux_var_name, np_flt_type))
                             ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 

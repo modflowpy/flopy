@@ -528,7 +528,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
                                    data_type)
         elif data_storage_type == DataStorageType.internal_constant:
             if default_value is None:
-                if data_type == np.int:
+                if data_type == np.int32:
                     data = 0
                 else:
                     data = 0.0

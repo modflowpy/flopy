@@ -1599,9 +1599,9 @@ class MFDataStructure(object):
                 else:
                     if numpy_type:
                         if var_type[0] == DatumType.double_precision:
-                            return np.float
+                            return np.float64
                         elif var_type[0] == DatumType.integer:
-                            return np.int
+                            return np.int32
                         else:
                             return np.object
                     else:

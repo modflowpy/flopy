@@ -928,6 +928,7 @@ class MFBlock(object):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
                                       self._simulation_data.debug)
+
         # write data sets
         for key, dataset in self.datasets.items():
             try:
