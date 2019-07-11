@@ -451,7 +451,7 @@ class MfList(DataInterface, DataListInterface):
         # create list of dataframes for each stress period
         # each with index of k, i, j
         dfs = []
-        for per in range(self._model.nper):
+        for per in self.data.keys():
             recs = self.data[per]
             if recs is None or recs is 0:
                 # add an empty dataframe if a stress period is

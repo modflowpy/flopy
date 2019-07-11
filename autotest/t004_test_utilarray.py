@@ -685,8 +685,18 @@ def test_mflist():
     sp_data = {0: [[1, 1, 1, 1.0], [1, 1, 2, 2.0], [1, 1, 3, 3.0]],
                1: [1, 2, 4, 4.0]}
     wel = flopy.modflow.ModflowWel(ml, stress_period_data=sp_data)
-    m4ds = ml.wel.stress_period_data.masked_4D_arrays
+    spd = wel.stress_period_data
 
+    # verify dataframe can be cast when spd.data.keys() != to ml.nper
+    # verify that dataframe is cast correctly by recreating spd.data items
+    df = wel.stress_period_data.get_dataframe()
+    for per, data in spd.data.items():
+        fluxcol = 'flux{}'.format(per)
+        dfper = df.dropna(subset=[fluxcol], axis=0).copy()
+        dfper.rename(columns={fluxcol: 'flux'}, inplace=True)
+        assert np.array_equal(dfper[['k', 'i', 'j', 'flux']].to_records(index=False), data)
+
+    m4ds = ml.wel.stress_period_data.masked_4D_arrays
     sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data \
         (flopy.modflow.ModflowWel.get_default_dtype(), m4ds)
     assert np.array_equal(sp_data[0], ml.wel.stress_period_data[0])

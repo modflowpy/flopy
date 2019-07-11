@@ -614,6 +614,12 @@ class PlotMapView(object):
         contour_set : matplotlib.pyplot.contour
 
         """
+        try:
+            import matplotlib.tri as tri
+        except ImportError:
+            err_msg = "Matplotlib must be updated to use contour_array"
+            raise ImportError(err_msg)
+
         if 'ncpl' in kwargs:
             nlay = self.layer + 1
             ncpl = kwargs.pop('ncpl')
@@ -635,9 +641,14 @@ class PlotMapView(object):
 
         plotarray = a[i0:i1]
 
+        ismasked = None
         if masked_values is not None:
             for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
+                if ismasked is None:
+                    ismasked = np.equal(plotarray, mval)
+                else:
+                    t = np.equal(plotarray, mval)
+                    ismasked += t
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -648,8 +659,15 @@ class PlotMapView(object):
             if 'cmap' in kwargs.keys():
                 kwargs.pop('cmap')
 
-        contour_set = ax.tricontour(vertc[:, 0], vertc[:, 1],
-                                    plotarray, **kwargs)
+        triang = tri.Triangulation(vertc[:, 0], vertc[:, 1])
+
+        if ismasked is not None:
+            ismasked = ismasked.flatten()
+            mask = np.any(np.where(ismasked[triang.triangles],
+                                   True, False), axis=1)
+            triang.set_mask(mask)
+
+        contour_set = ax.tricontour(triang, plotarray, **kwargs)
 
         return contour_set
 
@@ -1395,8 +1413,8 @@ class ModelMap(object):
 
         modelgrid = None
         if model is not None:
-            if (xul, yul, xll, yll, rotation) != (
-            None, None, None, None, None):
+            if (xul, yul, xll, yll, rotation) != (None, None,
+                                                  None, None, None):
                 modelgrid = plotutil._set_coord_info(model.modelgrid,
                                                      xul, yul, xll, yll,
                                                      rotation)
@@ -1404,8 +1422,8 @@ class ModelMap(object):
             if length_multiplier is not None:
                 sr.length_multiplier = length_multiplier
 
-            if (xul, yul, xll, yll, rotation) != (
-            None, None, None, None, None):
+            if (xul, yul, xll, yll, rotation) != (None, None,
+                                                  None, None, None):
                 sr.set_spatialreference(xul, yul, xll, yll, rotation)
 
             if isinstance(sr, SpatialReferenceUnstructured):
