@@ -64,7 +64,7 @@ class Dfn(object):
         self.common = os.path.join(self.dfndir, 'common.dfn')
         # FIX: Transport - multi packages are hard coded
         self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
-                              'gwfrch': 0,
+                              'gwfrch': 0, 'gwfwel': 0,
                               'gwfdrn': 0, 'gwfriv': 0, 'utlobs': 0,
                               'utlts': 0, 'utltas': 0}
 
