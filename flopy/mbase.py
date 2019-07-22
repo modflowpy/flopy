@@ -1473,7 +1473,7 @@ class BaseModel(ModelInterface):
 
 def run_model(exe_name, namefile, model_ws='./',
               silent=False, pause=False, report=False,
-              normal_msg='normal termination', use_async=False,
+              normal_msg='normal termination', use_async=True,
               cargs=None):
     """
     This function will run the model using subprocess.Popen.  It
@@ -1629,10 +1629,11 @@ def run_model(exe_name, namefile, model_ws='./',
     proc.stdout.close()
 
     for line in buff:
-        if normal_msg in line:
-            print("success")
-            success = True
-            break
+        for msg in normal_msg:
+            if msg in line.lower():
+                print("success")
+                success = True
+                break
 
     if pause:
         input('Press Enter to continue...')
