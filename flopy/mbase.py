@@ -915,14 +915,17 @@ class BaseModel(ModelInterface):
         ----------
 
         """
-        s = ''
+        lines = []
         for p in self.packagelist:
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s += '{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) + \
-                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
-        return s
+                s = '{:14s} {:5d}  {}'.format(
+                        p.name[i], p.unit_number[i], p.file_name[i])
+                if p.extra[i]:
+                    s += ' ' + p.extra[i]
+                lines.append(s)
+        return '\n'.join(lines) + '\n'
 
     def has_package(self, name):
         """
