@@ -9,7 +9,6 @@ from __future__ import print_function
 import abc
 import sys
 import os
-import subprocess as sp
 import shutil
 import threading
 import warnings
@@ -19,6 +18,7 @@ if sys.version_info > (3, 0):
 else:
     import Queue
 from datetime import datetime
+from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
 from flopy import utils, discretization
@@ -1499,9 +1499,10 @@ def run_model(exe_name, namefile, model_ws='./',
     report : boolean, optional
         Save stdout lines to a list (buff) which is returned
         by the method . (default is False).
-    normal_msg : str
+    normal_msg : str or list
         Normal termination message used to determine if the
-        run terminated normally. (default is 'normal termination')
+        run terminated normally. More than one message can be provided using
+        a list. (Default is 'normal termination')
     use_async : boolean
         asynchronously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
@@ -1519,12 +1520,11 @@ def run_model(exe_name, namefile, model_ws='./',
     success = False
     buff = []
 
-    # convert normal_msg to lower case for comparison
+    # convert normal_msg to a list of lower case str for comparison
     if isinstance(normal_msg, str):
-        normal_msg = [normal_msg.lower()]
-    elif isinstance(normal_msg, list):
-        for idx, s in enumerate(normal_msg):
-            normal_msg[idx] = s.lower()
+        normal_msg = [normal_msg]
+    for idx, s in enumerate(normal_msg):
+        normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
@@ -1568,24 +1568,31 @@ def run_model(exe_name, namefile, model_ws='./',
         for t in cargs:
             argv.append(t)
 
+    if sys.version_info[0:2] == (2, 7) and sys.platform != 'win32':
+        # Python 2.7 workaround for non-Windows
+        close_fds = True
+    else:
+        close_fds = False  # default
+
     # run the model with Popen
-    proc = sp.Popen(argv,
-                    stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
+    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws,
+                 close_fds=close_fds)
 
     if not use_async:
         while True:
-            line = proc.stdout.readline()
-            c = line.decode('utf-8')
-            if c != '':
+            line = proc.stdout.readline().decode('utf-8')
+            if line == '' and proc.poll() is not None:
+                break
+            if line:
                 for msg in normal_msg:
-                    if msg in c.lower():
+                    if msg in line.lower():
                         success = True
                         break
-                c = c.rstrip('\r\n')
+                line = line.rstrip('\r\n')
                 if not silent:
-                    print('{}'.format(c))
-                if report == True:
-                    buff.append(c)
+                    print(line)
+                if report:
+                    buff.append(line)
             else:
                 break
         return success, buff
@@ -1629,10 +1636,11 @@ def run_model(exe_name, namefile, model_ws='./',
     proc.stdout.close()
 
     for line in buff:
-        if normal_msg in line:
-            print("success")
-            success = True
-            break
+        for msg in normal_msg:
+            if msg in line.lower():
+                print("success")
+                success = True
+                break
 
     if pause:
         input('Press Enter to continue...')
