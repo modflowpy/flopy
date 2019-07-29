@@ -438,7 +438,7 @@ class MFModel(PackageContainer, ModelInterface):
         return None
 
     @property
-    def hnoflow(self):
+    def hnoflo(self):
         return None
 
     @property
