@@ -162,12 +162,11 @@ class Grid(object):
     # access to basic grid properties
     ###################################
     def __repr__(self):
-        s = "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; ". \
-            format(self.xoffset, self.yoffset, self.angrot)
-        s += "proj4_str:{0}; ".format(self.proj4)
-        s += "units:{0}; ".format(self.units)
-        s += "lenuni:{0}; ".format(self.lenuni)
-        return s
+        return (
+            "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; proj4_str:{3}; "
+            "units:{4}; lenuni:{5}"
+            .format(self.xoffset, self.yoffset, self.angrot, self.proj4,
+                    self.units, self.lenuni))
 
     @property
     def grid_type(self):

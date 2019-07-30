@@ -695,13 +695,15 @@ class MfList(DataInterface, DataListInterface):
 
             if kper_vtype == np.recarray:
                 name = f.name
-                f.close()
-                f = open(name, 'ab+')
-                # print(f)
-                self.__tofile(f, kper_data)
-                f.close()
-                f = open(name, 'a')
-                # print(f)
+                if self.__binary:
+                    f.close()
+                    # switch file append mode to binary
+                    with open(name, 'ab+') as f:
+                        self.__tofile(f, kper_data)
+                    # continue back to non-binary
+                    f = open(name, 'a')
+                else:
+                    self.__tofile(f, kper_data)
             elif kper_vtype == str:
                 f.write('         open/close ' + kper_data)
                 if self.__binary:
