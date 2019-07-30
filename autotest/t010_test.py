@@ -79,9 +79,9 @@ def test_sfrcheck():
     m.sfr.reach_data['ireach'][3] += 1
     
     # create circular routing instance
-    m.sfr.segment_data[0]['outseg'][1] = 1
-    m.sfr.segment_data[0]['outseg']
-    
+    m.sfr.segment_data[0]['outseg'][0] = 1
+    m.sfr._graph = None  # weak, but the above shouldn't happen
+
     chk = check(m.sfr)
     chk.numbering()
     assert 'continuity in segment and reach numbering' in chk.errors
