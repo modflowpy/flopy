@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 from ..mfbase import MFDataException, FlopyException
 from .mfstructure import DatumType
-from ...utils.datautil import PyListUtil
+from ...utils.datautil import PyListUtil, DatumUtil
 import struct
 
 
@@ -122,7 +122,7 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
             else:
                 return sim_data.sci_format_str.format(val)
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
-        if isinstance(val, np.int32):
+        if DatumUtil.is_int(val):
             return str(val + 1)
         if len(val) > 0 and val[0] == 'none':
             # handle case that cellid is 'none'
