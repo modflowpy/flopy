@@ -27,11 +27,15 @@ def test_polygon_from_ij():
                                    nlay=2, delr=100, delc=100,
                                    top=3, botm=botm, model=m)
 
-    ncdf = NetCdf('toy.model.nc', m)
+    fname = os.path.join(mpth, 'toy.model.nc')
+    ncdf = NetCdf(fname, m)
     ncdf.write()
 
-    m.export('toy_model_two.nc')
-    dis.export('toy_model_dis.nc')
+    fname = os.path.join(mpth, 'toy_model_two.nc')
+    m.export(fname)
+
+    fname = os.path.join(mpth, 'toy_model_dis.nc')
+    dis.export(fname)
 
     mg = m.modelgrid
     mg.set_coord_info(xoff=mg._xul_to_xll(600000.0, -45.0),

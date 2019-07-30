@@ -1201,6 +1201,21 @@ class PlotUtilities(object):
         # test if this is vertex or structured grid
         if model is not None:
             grid_type = model.modelgrid.grid_type
+            hnoflo = model.hnoflo
+            hdry = model.hdry
+            if defaults['masked_values'] is None:
+                t = []
+                if hnoflo is not None:
+                    t.append(hnoflo)
+                if hdry is not None:
+                    t.append(hdry)
+                if t:
+                    defaults['masked_values'] = t
+            else:
+                if hnoflo is not None:
+                    defaults['masked_values'].append(hnoflo)
+                if hdry is not None:
+                    defaults['masked_values'].append(hdry)
 
         elif modelgrid is not None:
             grid_type = modelgrid.grid_type

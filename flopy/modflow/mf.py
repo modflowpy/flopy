@@ -414,7 +414,7 @@ class Modflow(BaseModel):
         f_nam.write('{}\n'.format(self.heading))
         if self.structured:
             f_nam.write('#' + str(self.modelgrid))
-        f_nam.write(" ;start_datetime:{0}\n".format(self.start_datetime))
+        f_nam.write("; start_datetime:{0}\n".format(self.start_datetime))
         if self.version == 'mf2k':
             if self.glo.unit_number[0] > 0:
                 f_nam.write('{:14s} {:5d}  {}\n'.format(self.glo.name[0],
