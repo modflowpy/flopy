@@ -600,7 +600,7 @@ def transient2d_export(f, t2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for kper in range(t2d.model.modeltime.sim_time.nper):
+        for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
             name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), kper + 1)

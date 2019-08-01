@@ -886,6 +886,20 @@ class MFSimulation(PackageContainer):
                               'writing. File will not be '
                               'written.'.format(mvr_file))
 
+        if ext_file_action == ExtFileAction.copy_relative_paths:
+            # move external files with relative paths
+            num_files_copied = self.simulation_data.mfpath.copy_files()
+        elif ext_file_action == ExtFileAction.copy_all:
+            # move all external files
+            num_files_copied = self.simulation_data.mfpath.copy_files(
+                copy_relative_only=False)
+        else:
+            num_files_copied = 0
+        if self.simulation_data.verbosity_level.value >= \
+                VerbosityLevel.verbose.value and num_files_copied > 0:
+            print('INFORMATION: {} external files copied'.format(
+                num_files_copied))
+
         # write other packages
         for pp in self._other_files.values():
             if self.simulation_data.verbosity_level.value >= \
@@ -902,19 +916,6 @@ class MFSimulation(PackageContainer):
                 print('  writing model {}...'.format(model.name))
             model.write(ext_file_action=ext_file_action)
 
-        if ext_file_action == ExtFileAction.copy_relative_paths:
-            # move external files with relative paths
-            num_files_copied = self.simulation_data.mfpath.copy_files()
-        elif ext_file_action == ExtFileAction.copy_all:
-            # move all external files
-            num_files_copied = self.simulation_data.mfpath.copy_files(
-                copy_relative_only=False)
-        else:
-            num_files_copied = 0
-        if self.simulation_data.verbosity_level.value >= \
-                VerbosityLevel.verbose.value and num_files_copied > 0:
-            print('INFORMATION: {} external files copied'.format(
-                num_files_copied))
         self.simulation_data.mfpath.set_last_accessed_path()
 
         if silent:
