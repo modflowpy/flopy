@@ -1933,6 +1933,9 @@ class crs(object):
     """
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
+        warnings.warn(
+            "crs has been deprecated. Use CRS in shapefile_utils instead.",
+            category=DeprecationWarning)
         self.wktstr = None
         if prj is not None:
             with open(prj) as fprj:
@@ -1973,6 +1976,7 @@ class crs(object):
             proj = 'longlat'
 
         # datum
+        datum = None
         if 'NAD' in self.datum.lower() or \
                 'north' in self.datum.lower() and \
                 'america' in self.datum.lower():
@@ -1985,6 +1989,7 @@ class crs(object):
             datum = 'wgs84'
 
         # ellipse
+        ellps = None
         if '1866' in self.spheroid_name:
             ellps = 'clrk66'
         elif 'grs' in self.spheroid_name.lower():

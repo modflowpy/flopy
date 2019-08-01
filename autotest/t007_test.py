@@ -1081,19 +1081,20 @@ def test_wkt_parse():
     """Test parsing of Coordinate Reference System parameters
     from well-known-text in .prj files."""
 
-    from flopy.utils.reference import crs
+    from flopy.export.shapefile_utils import CRS
+
+    geocs_params = [
+        'wktstr', 'geogcs', 'datum', 'spheroid_name', 'semi_major_axis',
+        'inverse_flattening', 'primem', 'gcs_unit']
 
     prjs = glob.glob('../examples/data/prj_test/*')
-
     for prj in prjs:
         with open(prj) as src:
             wkttxt = src.read()
             wkttxt = wkttxt.replace("'", '"')
         if len(wkttxt) > 0 and 'projcs' in wkttxt.lower():
-            crsobj = crs(esri_wkt=wkttxt)
-            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheroid_name',
-                            'semi_major_axis', 'inverse_flattening',
-                            'primem', 'gcs_unit']
+            crsobj = CRS(esri_wkt=wkttxt)
+            assert isinstance(crsobj.crs, dict)
             for k in geocs_params:
                 assert crsobj.__dict__[k] is not None
             projcs_params = [k for k in crsobj.__dict__
