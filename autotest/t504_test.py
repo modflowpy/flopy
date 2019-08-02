@@ -318,6 +318,16 @@ def test006_gwf3():
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
 
+    model = sim.get_model()
+    disu = model.get_package('disu')
+    # test switching disu array to internal array
+    disu.ja = disu.ja.array
+    # test writing hwva and cl12 arrays out to different locations
+    disu.hwva = {'filename': 'flow.disu.hwva_new.dat', 'factor': 1.0,
+               'data': disu.hwva.array}
+    disu.cl12 = {'filename': 'flow.disu.cl12_new.dat', 'factor': 1.0,
+               'data': disu.cl12.array}
+
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
     # write simulation to new location
@@ -858,12 +868,12 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
+    test006_gwf3()
     test001a_tharmonic()
     test001e_uzf_3lay()
     test003_gwfs_disv()
     test005_advgw_tidal()
     test006_2models_mvr()
-    test006_gwf3()
     test027_timeseriestest()
     test036_twrihfb()
     test045_lake1ss_table()

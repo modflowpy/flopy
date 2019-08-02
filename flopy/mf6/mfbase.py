@@ -597,10 +597,6 @@ class PackageContainer(object):
         if name.lower() in self.package_name_dict:
             return self.package_name_dict[name.lower()]
 
-        # search for package key
-        if name.lower() in self.package_key_dict:
-            return self.package_key_dict[name.lower()]
-
         # search for package type
         if name.lower() in self.package_type_dict:
             if len(self.package_type_dict[name.lower()]) == 0:
@@ -609,6 +605,10 @@ class PackageContainer(object):
                 return self.package_type_dict[name.lower()][0]
             else:
                 return self.package_type_dict[name.lower()]
+
+        # search for package key
+        if name.lower() in self.package_key_dict:
+            return self.package_key_dict[name.lower()]
 
         # search for partial package name
         for pp in self._packagelist:
