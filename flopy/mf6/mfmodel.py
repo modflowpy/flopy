@@ -174,7 +174,13 @@ class MFModel(PackageContainer, ModelInterface):
             Package object of type :class:`flopy.pakbase.Package`
 
         """
-        return self.get_package(item)
+        if item == 'name_file' or not hasattr(self, 'name_file'):
+            raise AttributeError(item)
+
+        package = self.get_package(item)
+        if package is not None:
+            return package
+        raise AttributeError(item)
 
     def __repr__(self):
         return self._get_data_str(True)
