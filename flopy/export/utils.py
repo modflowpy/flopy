@@ -1162,7 +1162,7 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
 
     for c in contours:
         levels = c.levels
-        for i, col in enumerate(c.collections):
+        for idx, col in enumerate(c.collections):
             # Loop through all polygons that have the same intensity level
             for contour_path in col.get_paths():
                 # Create the polygon for this intensity level
@@ -1181,7 +1181,7 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
 
                 # store shapely geometry object
                 shapelygeoms.append(poly)
-                level.append(levels[i])
+                level.append(levels[idx])
 
     geoms = []
     for shpgeom in shapelygeoms:
