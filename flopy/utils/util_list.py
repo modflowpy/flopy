@@ -695,7 +695,7 @@ class MfList(DataInterface, DataListInterface):
 
             if kper_vtype == np.recarray:
                 name = f.name
-                if self.__binary:
+                if self.__binary or not numpy114:
                     f.close()
                     # switch file append mode to binary
                     with open(name, 'ab+') as f:
