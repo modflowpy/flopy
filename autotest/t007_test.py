@@ -975,17 +975,17 @@ def test_vertex_model_dot_plot():
                                            exe_name="mf6",
                                            sim_ws=sim_path)
     disv_ml = disv_sim.get_model('gwf_1')
-
-    ax = disv_ml.plot()
-
-    assert ax
+    if sys.version_info[0] > 2:
+        ax = disv_ml.plot()
+        assert ax
 
 
 def test_model_dot_plot():
     loadpth = os.path.join('..', 'examples', 'data', 'secp')
     ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
-    ax = ml.plot()
-    assert ax
+    if sys.version_info[0] > 2:
+        ax = ml.plot()
+        assert ax
 
 
 def test_get_rc_from_node_coordinates():
@@ -1245,8 +1245,8 @@ if __name__ == '__main__':
     # test_mbase_modelgrid()
     # test_mt_modelgrid()
     # test_rotation()
-    # test_model_dot_plot()
-    # test_vertex_model_dot_plot()
+    test_model_dot_plot()
+    test_vertex_model_dot_plot()
     #test_sr_with_Map()
     #test_modelgrid_with_PlotMapView()
     # test_epsgs()
