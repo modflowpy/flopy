@@ -45,6 +45,8 @@ class SimulationDict(collections.OrderedDict):
     shapefile : (key : string, **kwargs)
         create shapefile from data with key 'key' and with additional fields
         in **kwargs
+    rename_all_packages : (name : string)
+        renames all packages in the simulation and associated models
     """
     def __init__(self, path=None):
         collections.OrderedDict.__init__(self)
@@ -799,6 +801,32 @@ class MFSimulation(PackageContainer):
                     raise MFDataException(mfdata_except=mfde,
                                           package='nam',
                                           message=message)
+
+    @staticmethod
+    def _rename_package_group(group_dict, name):
+        package_type_count = {}
+        for package in group_dict.values():
+            if package.package_type not in package_type_count:
+                package.filename = '{}.{}'.format(name, package.package_type)
+                package_type_count[package.package_type] = 1
+            else:
+                package_type_count[package.package_type] += 1
+                package.filename = '{}_{}.{}'.format(
+                    name, package_type_count[package.package.package_type],
+                    package.package_type)
+
+    def rename_all_packages(self, name):
+        if self._tdis_file is not None:
+            self._tdis_file.filename = '{}.{}'.format(
+                name, self._tdis_file.package_type)
+
+        self._rename_package_group(self._exchange_files, name)
+        self._rename_package_group(self._ims_files, name)
+        self._rename_package_group(self._ghost_node_files, name)
+        self._rename_package_group(self._mover_files, name)
+        self._rename_package_group(self._other_files, name)
+        for model in self._models.values():
+            model.rename_all_packages(name)
 
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths,

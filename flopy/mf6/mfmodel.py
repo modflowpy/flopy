@@ -74,6 +74,8 @@ class MFModel(PackageContainer, ModelInterface):
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
         checks the validity of the model and all of its packages
+    rename_all_packages : (name : string)
+        renames all packages in the model
 
     See Also
     --------
@@ -833,6 +835,19 @@ class MFModel(PackageContainer, ModelInterface):
             # remove child packages
             for child_package in child_package_list:
                 self._remove_package_from_dictionaries(child_package)
+
+    def rename_all_packages(self, name):
+        package_type_count = {}
+        self.name_file.filename = '{}.nam'.format(name)
+        for package in self.packagelist:
+            if package.package_type not in package_type_count:
+                package.filename = '{}.{}'.format(name, package.package_type)
+                package_type_count[package.package_type] = 1
+            else:
+                package_type_count[package.package_type] += 1
+                package.filename = '{}_{}.{}'.format(
+                    name, package_type_count[package.package_type],
+                    package.package_type)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
