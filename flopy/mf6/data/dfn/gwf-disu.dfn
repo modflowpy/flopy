@@ -64,7 +64,7 @@ type integer
 reader urword
 optional true
 longname number of vertices
-description is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  If NVERT is not specified or is specified as zero, then the VERTICES and CELL2D blocks below are not read.  NVERT and the accompanying VERTICES and CELL2D blocks should be specified for most simulations.  If the XT3D or SAVE\_SPECIFIC\_DISCHARGE options are specified in the NPF Package, these this information is required.
+description is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  If NVERT is not specified or is specified as zero, then the VERTICES and CELL2D blocks below are not read.  NVERT and the accompanying VERTICES and CELL2D blocks should be specified for most simulations.  If the XT3D or SAVE\_SPECIFIC\_DISCHARGE options are specified in the NPF Package, then this information is required.
 
 # --------------------- gwf disu griddata ---------------------
 
