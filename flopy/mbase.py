@@ -485,6 +485,9 @@ class BaseModel(ModelInterface):
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
+        if item == 'output_packages' or not hasattr(self, 'output_packages'):
+            raise AttributeError(item)
+
         if item == 'sr':
             if self.dis is not None:
                 return self.dis.sr

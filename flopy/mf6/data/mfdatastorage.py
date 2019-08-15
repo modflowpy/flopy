@@ -120,6 +120,9 @@ class LayerStorage(object):
             return str(self.get_data())
 
     def __getattr__(self, attr):
+        if attr == 'binary' or not hasattr(self, 'binary'):
+            raise AttributeError(attr)
+
         if attr == 'array':
             return self._data_storage_parent.get_data(self._lay_indexes, True)
         elif attr == '__getstate__':

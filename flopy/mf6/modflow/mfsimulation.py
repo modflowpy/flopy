@@ -45,15 +45,16 @@ class SimulationDict(collections.OrderedDict):
     shapefile : (key : string, **kwargs)
         create shapefile from data with key 'key' and with additional fields
         in **kwargs
+    rename_all_packages : (name : string)
+        renames all packages in the simulation and associated models
     """
-    def __init__(self, path, *args):
-        self._path = path
+    def __init__(self, path=None):
         collections.OrderedDict.__init__(self)
+        self._path = path
 
     def __getitem__(self, key):
-        # check if the key refers to a binary output file, or an observation
-        # output file, if so override the dictionary request and call output
-        #  requester classes
+        if key == '_path' or not hasattr(self, '_path'):
+            raise AttributeError(key)
 
         # FIX: Transport - Include transport output files
         if key[1] in ('CBC', 'HDS', 'DDN', 'UCN'):
@@ -64,8 +65,10 @@ class SimulationDict(collections.OrderedDict):
             val = mfobservation.MFObservation(self, self._path, key)
             return val.data
 
-        val = collections.OrderedDict.__getitem__(self, key)
-        return val
+        if key in self:
+            val = collections.OrderedDict.__getitem__(self, key)
+            return val
+        return AttributeError(key)
 
     def __setitem__(self, key, val):
         collections.OrderedDict.__setitem__(self, key, val)
@@ -320,6 +323,7 @@ class MFSimulation(PackageContainer):
         self._mover_files = {}
         self._other_files = collections.OrderedDict()
         self.structure = fpdata.sim_struct
+        self.model_type = None
 
         self._exg_file_num = {}
         self._gnc_file_num = 0
@@ -364,6 +368,8 @@ class MFSimulation(PackageContainer):
             :class:flopy6.mfpackage
 
         """
+        if item == 'valid' or not hasattr(self, 'valid'):
+            raise AttributeError(item)
 
         models = []
         if item in self.structure.model_types:
@@ -375,9 +381,15 @@ class MFSimulation(PackageContainer):
         if len(models) > 0:
             return models
         elif item in self._models:
-            return self.get_model(item)
+            model = self.get_model(item)
+            if model is not None:
+                return model
+            raise AttributeError(item)
         else:
-            return self.get_package(item)
+            package = self.get_package(item)
+            if package is not None:
+                return package
+            raise AttributeError(item)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -790,6 +802,32 @@ class MFSimulation(PackageContainer):
                                           package='nam',
                                           message=message)
 
+    @staticmethod
+    def _rename_package_group(group_dict, name):
+        package_type_count = {}
+        for package in group_dict.values():
+            if package.package_type not in package_type_count:
+                package.filename = '{}.{}'.format(name, package.package_type)
+                package_type_count[package.package_type] = 1
+            else:
+                package_type_count[package.package_type] += 1
+                package.filename = '{}_{}.{}'.format(
+                    name, package_type_count[package.package.package_type],
+                    package.package_type)
+
+    def rename_all_packages(self, name):
+        if self._tdis_file is not None:
+            self._tdis_file.filename = '{}.{}'.format(
+                name, self._tdis_file.package_type)
+
+        self._rename_package_group(self._exchange_files, name)
+        self._rename_package_group(self._ims_files, name)
+        self._rename_package_group(self._ghost_node_files, name)
+        self._rename_package_group(self._mover_files, name)
+        self._rename_package_group(self._other_files, name)
+        for model in self._models.values():
+            model.rename_all_packages(name)
+
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths,
                          silent=False):
@@ -997,10 +1035,15 @@ class MFSimulation(PackageContainer):
         Examples
         --------
         """
+        if len(self._models) == 0:
+            return None
+
         if model_name is None:
             for model in self._models.values():
                 return model
-        return self._models[model_name]
+        if model_name in self._models:
+            return self._models[model_name]
+        return None
 
     def get_exchange_file(self, filename):
         """
