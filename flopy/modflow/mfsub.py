@@ -539,9 +539,10 @@ class ModflowSub(Package):
         itmin, idsave, idrest = int(t[8]), int(t[9]), int(t[10])
 
         idbit = None
-        try:
-            idbit = int(t[11])
-        except:
+        if len(t) > 11:
+            if isinstance(t[11], (int, float)):
+                idbit = int(t[11])
+        if idbit is None:
             if model.verbose:
                 print('   explicit idbit in file')
 
