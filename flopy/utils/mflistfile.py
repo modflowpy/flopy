@@ -619,7 +619,7 @@ class ListBudget(object):
                     # Add list to overall list of data
                     lsData.append(ls)
         f.close()
-        
+
         return(np.rec.fromrecords([tuple(x) for x in lsData],
                                   dtype=dtype))
 
