@@ -37,6 +37,13 @@ class ModflowSub(Package):
     idrest : int
         idrest is a flag and a unit number on which restart records for delay
         interbeds will be read in at the start of the simulation (default is 0).
+    idbit : int
+        idrest is an optional flag that defines if iteration will be used for
+        the delay bed solution of heads. If idbit is 0 or less than 0,
+        iteration will not be used (this is is identical to the approach used
+        in MODFLOW-2005 versions less than 1.13. if idbit is greater than
+        0, iteration of the delay bed solution will continue until convergence
+        is achieved. (default is 0).
     nndb : int
         nndb is the number of systems of no-delay interbeds. (default is 1).
     ndb : int
@@ -209,6 +216,7 @@ class ModflowSub(Package):
     """
 
     def __init__(self, model, ipakcb=None, isuboc=0, idsave=None, idrest=None,
+                 idbit=None,
                  nndb=1, ndb=1, nmz=1, nn=20, ac1=0., ac2=1.0, itmin=5,
                  ln=0, ldn=0, rnb=1,
                  hc=100000., sfe=1.e-4, sfv=1.e-3, com=0.,
@@ -295,6 +303,7 @@ class ModflowSub(Package):
         self.isuboc = isuboc
         self.idsave = idsave
         self.idrest = idrest
+        self.idbit = idbit
         self.nndb = nndb
         self.ndb = ndb
         self.nmz = nmz
@@ -406,9 +415,15 @@ class ModflowSub(Package):
             '{} {} {} {} {} {} '.format(self.ipakcb, self.isuboc, self.nndb,
                                         self.ndb, self.nmz, self.nn))
 
-        f.write('{} {} {} {} {}\n'.format(self.ac1, self.ac2,
-                                          self.itmin, self.idsave,
-                                          self.idrest))
+        f.write('{} {} {} {} {}'.format(self.ac1, self.ac2,
+                                        self.itmin, self.idsave,
+                                        self.idrest))
+        line = ''
+        if self.idbit is not None:
+            line += ' {}'.format(self.idbit)
+        line += '\n'
+        f.write(line)
+
         if self.nndb > 0:
             t = self.ln.array
             for tt in t:
@@ -523,13 +538,12 @@ class ModflowSub(Package):
         ac1, ac2 = float(t[6]), float(t[7])
         itmin, idsave, idrest = int(t[8]), int(t[9]), int(t[10])
 
-        # if ipakcb > 0:
-        #     ipakcb = 53
-        # if idsave > 0:
-        #     idsave = 2052
-        # if idrest > 0:
-        #     ext_unit_dict[2053] = ext_unit_dict.pop(idrest)
-        #     idrest = 2053
+        idbit = None
+        try:
+            idbit = int(t[11])
+        except:
+            if model.verbose:
+                print('   explicit idbit in file')
 
         ln = None
         if nndb > 0:
@@ -675,11 +689,6 @@ class ModflowSub(Package):
                 sys.stdout.write(msg)
             ids15 = np.empty(12, dtype=np.int32)
             ids15 = read1d(f, ids15)
-            #iu = 1
-            #for k in range(1, 12, 2):
-            #    model.add_pop_key_list(ids15[k])
-            #    ids15[k] = 2051 + iu  # all subsidence data sent to unit 2051
-            #    iu += 1
             # dataset 16
             ids16 = [0] * isuboc
             for k in range(isuboc):
@@ -722,7 +731,7 @@ class ModflowSub(Package):
 
         # create sub instance
         sub = ModflowSub(model, ipakcb=ipakcb, isuboc=isuboc, idsave=idsave,
-                         idrest=idrest,
+                         idrest=idrest, idbit=idbit,
                          nndb=nndb, ndb=ndb, nmz=nmz, nn=nn, ac1=ac1, ac2=ac2,
                          itmin=itmin,
                          ln=ln, ldn=ldn, rnb=rnb,
