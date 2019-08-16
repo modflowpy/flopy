@@ -540,12 +540,12 @@ class ListBudget(object):
         # Eval based on model list type
         if isinstance(self, MfListBudget):
             # Check if reduced pumping data was set to be written
-            #to list file
-            sCheck = 'WELLS WITH REDUCED PUMPING WILL BE REPORTED '+\
+            # to list file
+            sCheck = 'WELLS WITH REDUCED PUMPING WILL BE REPORTED ' +\
                      'TO THE MAIN LISTING FILE'
             assert open(self.f.name).read().find(sCheck) > 0,\
-                   'Pumping reductions not written to list file. ' +\
-                   'Try removing "noprint" keyword from well file.'
+                'Pumping reductions not written to list file. ' +\
+                'Try removing "noprint" keyword from well file.'
 
             # Set dtypes for resulting data
             dtype = np.dtype([('SP', np.int32), ('TS', np.int32),
@@ -560,7 +560,7 @@ class ListBudget(object):
 
         elif isinstance(self, MfusgListBudget):
             # Check if reduced pumping data was written and if set to
-            #be written to list file
+            # be written to list file
             sCheck = 'WELL REDUCTION INFO WILL BE WRITTEN TO UNIT:'
             bLstUnit = False
             bRdcdPpg = False
@@ -572,8 +572,8 @@ class ListBudget(object):
                 if sCheck in l:
                     bRdcdPpg = True
                     assert int(l.strip().split()[-1]) == iLstUnit,\
-                    'Pumping reductions not written to list file. ' +\
-                    'Try setting iunitafr to the list file unit number.'
+                        'Pumping reductions not written to list file. ' +\
+                        'Try setting iunitafr to the list file unit number.'
             assert bRdcdPpg, 'Auto pumping reductions not active.'
 
             # Set dtypes for resulting data
@@ -588,7 +588,7 @@ class ListBudget(object):
             # Define string to id start of reduced ppg data
             sKey = 'WELLS WITH REDUCED PUMPING FOR STRESS PERIOD'
 
-        #elif isinstance(self, other ListBudget class):
+        # elif isinstance(self, other ListBudget class):
 
         else:
             msg = 'get_reduced_pumping() is only implemented for the ' +\
@@ -600,12 +600,16 @@ class ListBudget(object):
         # Iterate through list file to read in reduced ppg info
         f = open(self.f.name)
         lsData = []
-        for l in f:
+        while True:
+            l = f.readline()
+            if l == '':
+                break
             # If l is reduced ppg header row
             if sKey in l:
                 # Extract sp and ts
                 ts, sp = self._get_ts_sp(l)
-                l = f.readline()
+                # Skip line of data column titles
+                f.readline()
                 # Iterate through lines of reduced ppg data
                 while True:
                     l = f.readline()
@@ -613,7 +617,7 @@ class ListBudget(object):
                     if len(l.strip().split()) < 6:
                         break
                     # Create list of hold line of data
-                    ls = [sp,ts]
+                    ls = [sp, ts]
                     # Add other data to list
                     ls.extend([float(x) for x in l.split()])
                     # Add list to overall list of data
