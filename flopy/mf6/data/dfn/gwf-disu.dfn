@@ -64,7 +64,7 @@ type integer
 reader urword
 optional true
 longname number of vertices
-description is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  If NVERT is not specified or is specified as zero, then the VERTICES and CELL2D blocks below are not read.  NVERT and the accompanying VERTICES and CELL2D blocks should be specified for most simulations.  If the XT3D or SAVE\_SPECIFIC\_DISCHARGE options are specified in the NPF Package, these this information is required.
+description is the total number of (x, y) vertex pairs used to define the plan-view shape of each cell in the model grid.  If NVERT is not specified or is specified as zero, then the VERTICES and CELL2D blocks below are not read.  NVERT and the accompanying VERTICES and CELL2D blocks should be specified for most simulations.  If the XT3D or SAVE\_SPECIFIC\_DISCHARGE options are specified in the NPF Package, then this information is required.
 
 # --------------------- gwf disu griddata ---------------------
 
@@ -111,6 +111,7 @@ reader readarray
 longname grid connectivity
 description is a list of cell number (n) followed by its connecting cell numbers (m) for each of the m cells connected to cell n. The number of values to provide for cell n is IAC(n).  This list is sequentially provided for the first to the last cell. The first value in the list must be cell n itself, and the remaining cells must be listed in an increasing order (sorted from lowest number to highest).  Note that the cell and its connections are only supplied for the GWF cells and their connections to the other GWF cells.  Also note that the JA list input may be divided such that every node and its connectivity list can be on a separate line for ease in readability of the file. To further ease readability of the file, the node number of the cell whose connectivity is subsequently listed, may be expressed as a negative number, the sign of which is subsequently converted to positive by the code.
 numeric_index true
+jagged_array iac
 
 block connectiondata
 name ihc
@@ -119,6 +120,7 @@ shape (nja)
 reader readarray
 longname connection type
 description is an index array indicating the direction between node n and all of its m connections.  If IHC = 0 then cell n and cell m are connected in the vertical direction.  Cell n overlies cell m if the cell number for n is less than m; cell m overlies cell n if the cell number for m is less than n.  If IHC = 1 then cell n and cell m are connected in the horizontal direction.  If IHC = 2 then cell n and cell m are connected in the horizontal direction, and the connection is vertically staggered.  A vertically staggered connection is one in which a cell is horizontally connected to more than one cell in a horizontal connection.
+jagged_array iac
 
 block connectiondata
 name cl12
@@ -127,6 +129,7 @@ shape (nja)
 reader readarray
 longname connection lengths
 description is the array containing connection lengths between the center of cell n and the shared face with each adjacent m cell.
+jagged_array iac
 
 block connectiondata
 name hwva
@@ -135,6 +138,7 @@ shape (nja)
 reader readarray
 longname connection lengths
 description is a symmetric array of size NJA.  For horizontal connections, entries in HWVA are the horizontal width perpendicular to flow.  For vertical connections, entries in HWVA are the vertical area for flow.  Thus, values in the HWVA array contain dimensions of both length and area.  Entries in the HWVA array have a one-to-one correspondence with the connections specified in the JA array.  Likewise, there is a one-to-one correspondence between entries in the HWVA array and entries in the IHC array, which specifies the connection type (horizontal or vertical).  Entries in the HWVA array must be symmetric; the program will terminate with an error if the value for HWVA for an n to m connection does not equal the value for HWVA for the corresponding n to m connection.
+jagged_array iac
 
 block connectiondata
 name angldegx
@@ -144,6 +148,7 @@ shape (nja)
 reader readarray
 longname angle of face normal to connection
 description is the angle (in degrees) between the horizontal x-axis and the outward normal to the face between a cell and its connecting cells. The angle varies between zero and 360.0 degrees, where zero degrees points in the positive x-axis direction, and 90 degrees points in the positive y-axis direction.  ANGLDEGX is only needed if horizontal anisotropy is specified in the NPF Package, if the XT3D option is used in the NPF Package, or if the SAVE\_SPECIFIC\_DISCHARGE option is specifed in the NPF Package.  ANGLDEGX does not need to be specified if these conditions are not met.  ANGLDEGX is of size NJA; values specified for vertical connections and for the diagonal position are not used.  Note that ANGLDEGX is read in degrees, which is different from MODFLOW-USG, which reads a similar variable (ANGLEX) in radians.
+jagged_array iac
 
 # --------------------- gwf disu vertices ---------------------
 

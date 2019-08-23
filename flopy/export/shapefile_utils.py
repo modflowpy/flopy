@@ -685,7 +685,7 @@ class CRS(object):
     @property
     def crs(self):
         """
-        Dict mapping crs attibutes to proj4 parameters
+        Dict mapping crs attributes to proj4 parameters
         """
         proj = None
         if self.projcs is not None:
@@ -709,6 +709,7 @@ class CRS(object):
             proj = 'longlat'
 
         # datum
+        datum = None
         if 'NAD' in self.datum.lower() or \
                 'north' in self.datum.lower() and \
                 'america' in self.datum.lower():
@@ -721,11 +722,12 @@ class CRS(object):
             datum = 'wgs84'
 
         # ellipse
-        if '1866' in self.spheriod_name:
+        ellps = None
+        if '1866' in self.spheroid_name:
             ellps = 'clrk66'
-        elif 'grs' in self.spheriod_name.lower():
+        elif 'grs' in self.spheroid_name.lower():
             ellps = 'grs80'
-        elif 'wgs' in self.spheriod_name.lower():
+        elif 'wgs' in self.spheroid_name.lower():
             ellps = 'wgs84'
 
         return {'proj': proj,
@@ -792,7 +794,7 @@ class CRS(object):
         self.geogcs = self._gettxt('GEOGCS["', '"')
         self.datum = self._gettxt('DATUM["', '"')
         tmp = self._getgcsparam('SPHEROID')
-        self.spheriod_name = tmp.pop(0)
+        self.spheroid_name = tmp.pop(0)
         self.semi_major_axis = tmp.pop(0)
         self.inverse_flattening = tmp.pop(0)
         self.primem = self._getgcsparam('PRIMEM')

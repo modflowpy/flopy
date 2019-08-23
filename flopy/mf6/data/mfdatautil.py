@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 from ..mfbase import MFDataException, FlopyException
 from .mfstructure import DatumType
-from ...utils.datautil import PyListUtil
+from ...utils.datautil import PyListUtil, DatumUtil
 import struct
 
 
@@ -122,6 +122,8 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
             else:
                 return sim_data.sci_format_str.format(val)
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
+        if DatumUtil.is_int(val):
+            return str(val + 1)
         if len(val) > 0 and val[0] == 'none':
             # handle case that cellid is 'none'
             return val[0]
@@ -526,7 +528,7 @@ class ArrayTemplateGenerator(TemplateGenerator):
                                    data_type)
         elif data_storage_type == DataStorageType.internal_constant:
             if default_value is None:
-                if data_type == np.int:
+                if data_type == np.int32:
                     data = 0
                 else:
                     data = 0.0

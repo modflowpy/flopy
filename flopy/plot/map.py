@@ -170,7 +170,7 @@ class PlotMapView(object):
 
         else:
             quadmesh = plotutil.plot_cvfd(self.mg._vertices, self.mg._iverts,
-                                          a=a, ax=ax)
+                                          a=plotarray, ax=ax)
 
         # set max and min
         if 'vmin' in kwargs:

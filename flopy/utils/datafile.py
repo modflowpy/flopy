@@ -292,7 +292,7 @@ class LayerFile(object):
 
         masked_values = kwargs.pop("masked_values", [])
         if self.model is not None:
-            if self.model.bas6 is not None:
+            if hasattr(self.model, 'bas6') and self.model.bas6 is not None:
                 masked_values.append(self.model.bas6.hnoflo)
         kwargs["masked_values"] = masked_values
 
