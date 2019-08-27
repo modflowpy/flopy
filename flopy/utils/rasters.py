@@ -168,7 +168,7 @@ class Raster(object):
         in the raster object
         """
         arr = None
-        for k, arr in self.__arr_dict.items():
+        for _, arr in self.__arr_dict.items():
             break
 
         if arr is None:
@@ -268,7 +268,7 @@ class Raster(object):
             raise AssertionError(err)
 
         if self._dataset is not None:
-            arr_dict, rstr_crp_meta = self._sample_rio_dataset(polygon, invert)
+            arr_dict = self._sample_rio_dataset(polygon, invert)[0]
 
             for b, arr in arr_dict.items():
                 for val in self.nodatavals:
@@ -755,7 +755,7 @@ class Raster(object):
         else:
             d0 = len(self.__arr_dict)
             d1, d2 = None, None
-            for b, arr in self.__arr_dict.items():
+            for _, arr in self.__arr_dict.items():
                 d1, d2 = arr.shape
 
             if d1 is None:
@@ -763,7 +763,7 @@ class Raster(object):
 
             data = np.zeros((d0, d1, d2), dtype=float)
             i = 0
-            for b, arr in sorted(self.__arr_dict.items()):
+            for _, arr in sorted(self.__arr_dict.items()):
                 data[i, :, :] = arr
                 i += 1
 
