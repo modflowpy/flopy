@@ -551,7 +551,8 @@ class Raster(object):
 
         return mask
 
-    def _point_in_polygon(self, xc, yc, polygon):
+    @staticmethod
+    def _point_in_polygon(xc, yc, polygon):
         """
         Use the ray casting algorithm to determine if a point
         is within a polygon. Enables very fast
