@@ -706,7 +706,7 @@ class Raster(object):
         else:
             d0 = len(self.__arr_dict)
             d1, d2 = None, None
-            for b, arr in self.__arr_dict.items():
+            for _, arr in self.__arr_dict.items():
                 d1, d2 = arr.shape
 
             if d1 is None:
@@ -714,7 +714,7 @@ class Raster(object):
 
             data = np.zeros((d0, d1, d2), dtype=float)
             i = 0
-            for b, arr in sorted(self.__arr_dict.items()):
+            for _, arr in sorted(self.__arr_dict.items()):
                 data[i, :, :] = arr
                 i += 1
 
