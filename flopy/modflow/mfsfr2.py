@@ -2829,8 +2829,8 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
 
 def _fmt_string(array, float_format='{!s}'):
     fmt_string = ''
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
+    for field in array.dtype.names:  #TODO handle out of order arrays - iter over dtype.names;
+        vtype = array.dtype[field].str[1].lower()  #TODO vtype = array.dtype[field].str
         if vtype == 'v':
             continue
         if vtype == 'i':
