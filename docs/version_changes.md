@@ -1,5 +1,9 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.2.13
+
+New features and bug fixes being made on develop for the 3.2.13 release should be described [here](https://github.com/modflowpy/flopy/wiki/FloPy-version-3.2.13-release-candidate-changes).
+
 ### Version 3.2.12
 
 * Added a check method for OC package (#558)

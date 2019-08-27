@@ -975,17 +975,17 @@ def test_vertex_model_dot_plot():
                                            exe_name="mf6",
                                            sim_ws=sim_path)
     disv_ml = disv_sim.get_model('gwf_1')
-
-    ax = disv_ml.plot()
-
-    assert ax
+    if sys.version_info[0] > 2:
+        ax = disv_ml.plot()
+        assert ax
 
 
 def test_model_dot_plot():
     loadpth = os.path.join('..', 'examples', 'data', 'secp')
     ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
-    ax = ml.plot()
-    assert ax
+    if sys.version_info[0] > 2:
+        ax = ml.plot()
+        assert ax
 
 
 def test_get_rc_from_node_coordinates():
@@ -1081,19 +1081,20 @@ def test_wkt_parse():
     """Test parsing of Coordinate Reference System parameters
     from well-known-text in .prj files."""
 
-    from flopy.utils.reference import crs
+    from flopy.export.shapefile_utils import CRS
+
+    geocs_params = [
+        'wktstr', 'geogcs', 'datum', 'spheroid_name', 'semi_major_axis',
+        'inverse_flattening', 'primem', 'gcs_unit']
 
     prjs = glob.glob('../examples/data/prj_test/*')
-
     for prj in prjs:
         with open(prj) as src:
             wkttxt = src.read()
             wkttxt = wkttxt.replace("'", '"')
         if len(wkttxt) > 0 and 'projcs' in wkttxt.lower():
-            crsobj = crs(esri_wkt=wkttxt)
-            geocs_params = ['wktstr', 'geogcs', 'datum', 'spheroid_name',
-                            'semi_major_axis', 'inverse_flattening',
-                            'primem', 'gcs_unit']
+            crsobj = CRS(esri_wkt=wkttxt)
+            assert isinstance(crsobj.crs, dict)
             for k in geocs_params:
                 assert crsobj.__dict__[k] is not None
             projcs_params = [k for k in crsobj.__dict__
@@ -1217,6 +1218,21 @@ def test_export_array_contours():
     return
 
 
+def test_export_contourf():
+    try:
+        import shapely
+    except:
+        return
+    import matplotlib.pyplot as plt
+    from flopy.export.utils import export_contourf
+    filename = os.path.join(spth, 'myfilledcontours.shp')
+    a = np.random.random((10, 10))
+    cs = plt.contourf(a)
+    export_contourf(filename, cs)
+    assert os.path.isfile(filename), 'did not create contourf shapefile'
+    return
+
+
 if __name__ == '__main__':
     #test_shapefile()
     # test_shapefile_ibound()
@@ -1248,6 +1264,7 @@ if __name__ == '__main__':
     #test_wkt_parse()
     #test_get_rc_from_node_coordinates()
     # test_export_array()
-    test_export_array_contours()
-    test_tricontour_NaN()
+    #test_export_array_contours()
+    #test_tricontour_NaN()
+    test_export_contourf()
     pass

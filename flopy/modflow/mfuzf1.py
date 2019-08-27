@@ -341,7 +341,7 @@ class ModflowUzf1(Package):
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
                  thtr=0.15, thti=0.20,
-                 specifythtr=0, specifythti=0, nosurfleak=0,
+                 specifythtr=False, specifythti=False, nosurfleak=False,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
                  nwt_11_fmt=False,
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
@@ -445,12 +445,12 @@ class ModflowUzf1(Package):
                           " please provide a flopy.utils.OptionBlock object"
                           " to the options argument", DeprecationWarning)
         self.nwt_11_fmt = nwt_11_fmt
-        self.specifythtr = specifythtr
-        self.specifythti = specifythti
-        self.nosurfleak = nosurfleak
-        self.specifysurfk = specifysurfk
-        self.rejectsurfk = rejectsurfk
-        self.seepsurfk = seepsurfk
+        self.specifythtr = bool(specifythtr)
+        self.specifythti = bool(specifythti)
+        self.nosurfleak = bool(nosurfleak)
+        self.specifysurfk = bool(specifysurfk)
+        self.rejectsurfk = bool(rejectsurfk)
+        self.seepsurfk = bool(seepsurfk)
         self.etsquare = False
         self.smoothfact = None
         if etsquare is not None:
@@ -783,8 +783,14 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # dataset 1a
-        specifythtr, specifythti, nosurfleak = False, False, False
-        etsquare, netflux, rejectsurfk, seepsurfk = None, None, False, False
+        specifythtr = False
+        specifythti = False
+        nosurfleak = False
+        specifysurfk = False
+        etsquare = None
+        netflux = None
+        rejectsurfk = False
+        seepsurfk = False
         options = None
         if model.version == 'mfnwt' and 'options' in line.lower():
             options = OptionBlock.load_options(f, ModflowUzf1)
@@ -807,6 +813,7 @@ class ModflowUzf1(Package):
             nosurfleak = options.nosurfleak
             rejectsurfk = options.rejectsurfk
             seepsurfk = options.seepsurfk
+            specifysurfk = options.specifysurfk
 
             if options.etsquare:
                 etsquare = options.smoothfact
@@ -943,6 +950,7 @@ class ModflowUzf1(Package):
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, etsquare=etsquare,
                            netflux=netflux, seepsurfk=seepsurfk,
+                           specifysurfk=specifysurfk,
                            rejectsurfk=rejectsurfk,
                            unitnumber=unitnumber,
                            filenames=filenames, options=options, **arrays)
@@ -988,7 +996,8 @@ def _parse8(line):
     iuzcol = None
     iuzopt = 0
     line = line_parse(line)
-    if len(line) > 1:
+    if((len(line) > 1 and not int(line[0]) < 0) or
+       (len(line) > 1 and line[1].isdigit())):
         iuzrow = pop_item(line, int) - 1
         iuzcol = pop_item(line, int) - 1
         iftunit = pop_item(line, int)

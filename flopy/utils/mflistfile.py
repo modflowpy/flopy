@@ -11,6 +11,7 @@ import re
 import sys
 from datetime import timedelta
 import numpy as np
+import errno
 
 from ..utils.utils_def import totim_to_datetime
 
@@ -509,6 +510,122 @@ class ListBudget(object):
             df_flux.sort_index(axis=1, inplace=True)
             df_vol.sort_index(axis=1, inplace=True)
             return df_flux, df_vol
+
+    def get_reduced_pumping(self):
+        """
+        Get numpy recarray of reduced pumping data from a list file.
+        Reduced pumping data most have been written to the list file
+        during the model run. Works with MfListBudget and MfusgListBudget.
+
+        Returns
+        -------
+        numpy recarray
+            A numpy recarray with the reduced pumping data from the list
+            file.
+
+        Example
+        --------
+        >>> objLST = MfListBudget("my_model.lst")
+        >>> raryReducedPpg = objLST.get_reduced_pumping()
+        >>> dfReducedPpg = pd.DataFrame.from_records(raryReducedPpg)
+
+        """
+
+        # Ensure list file exists
+        if not os.path.isfile(self.f.name):
+            raise FileNotFoundError(errno.ENOENT,
+                                    os.strerror(errno.ENOENT),
+                                    self.f.name)
+
+        # Eval based on model list type
+        if isinstance(self, MfListBudget):
+            # Check if reduced pumping data was set to be written
+            # to list file
+            sCheck = 'WELLS WITH REDUCED PUMPING WILL BE REPORTED ' +\
+                     'TO THE MAIN LISTING FILE'
+            assert open(self.f.name).read().find(sCheck) > 0,\
+                'Pumping reductions not written to list file. ' +\
+                'Try removing "noprint" keyword from well file.'
+
+            # Set dtypes for resulting data
+            dtype = np.dtype([('SP', np.int32), ('TS', np.int32),
+                              ('LAY', np.int32), ('ROW', np.int32),
+                              ('COL', np.int32), ('APPL.Q', np.float64),
+                              ('ACT.Q', np.float64),
+                              ('GW-HEAD', np.float64),
+                              ('CELL-BOT', np.float64)])
+
+            # Define string to id start of reduced ppg data
+            sKey = 'WELLS WITH REDUCED PUMPING FOR STRESS PERIOD'
+
+        elif isinstance(self, MfusgListBudget):
+            # Check if reduced pumping data was written and if set to
+            # be written to list file
+            sCheck = 'WELL REDUCTION INFO WILL BE WRITTEN TO UNIT:'
+            bLstUnit = False
+            bRdcdPpg = False
+            for l in open(self.f.name):
+                # Assumes LST unit always first
+                if 'UNIT' in l and not bLstUnit:
+                    iLstUnit = int(l.strip().split()[-1])
+                    bLstUnit = True
+                if sCheck in l:
+                    bRdcdPpg = True
+                    assert int(l.strip().split()[-1]) == iLstUnit,\
+                        'Pumping reductions not written to list file. ' +\
+                        'Try setting iunitafr to the list file unit number.'
+            assert bRdcdPpg, 'Auto pumping reductions not active.'
+
+            # Set dtypes for resulting data
+            dtype = np.dtype([('SP', np.int32), ('TS', np.int32),
+                              ('WELL.NO', np.int32),
+                              ('CLN NODE', np.int32),
+                              ('APPL.Q', np.float64),
+                              ('ACT.Q', np.float64),
+                              ('GW_HEAD', np.float64),
+                              ('CELL_BOT', np.float64)])
+
+            # Define string to id start of reduced ppg data
+            sKey = 'WELLS WITH REDUCED PUMPING FOR STRESS PERIOD'
+
+        # elif isinstance(self, other ListBudget class):
+
+        else:
+            msg = 'get_reduced_pumping() is only implemented for the ' +\
+                  'MfListBudget or MfusgListBudget classes. Please ' +\
+                  'feel free to expand the functionality to other ' +\
+                  'ListBudget classes.'
+            raise NotImplementedError(msg)
+
+        # Iterate through list file to read in reduced ppg info
+        f = open(self.f.name)
+        lsData = []
+        while True:
+            l = f.readline()
+            if l == '':
+                break
+            # If l is reduced ppg header row
+            if sKey in l:
+                # Extract sp and ts
+                ts, sp = self._get_ts_sp(l)
+                # Skip line of data column titles
+                f.readline()
+                # Iterate through lines of reduced ppg data
+                while True:
+                    l = f.readline()
+                    # Condition to exit loop
+                    if len(l.strip().split()) < 6:
+                        break
+                    # Create list of hold line of data
+                    ls = [sp, ts]
+                    # Add other data to list
+                    ls.extend([float(x) for x in l.split()])
+                    # Add list to overall list of data
+                    lsData.append(ls)
+        f.close()
+
+        return(np.rec.fromrecords([tuple(x) for x in lsData],
+                                  dtype=dtype))
 
     def _build_index(self, maxentries):
         self.idx_map = self._get_index(maxentries)

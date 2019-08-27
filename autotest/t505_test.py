@@ -881,6 +881,38 @@ def test005_advgw_tidal():
     assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
                                 outfile=outfile)
 
+    # test rename all
+    model.rename_all_packages('new_name')
+    assert model.name_file.filename == 'new_name.nam'
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == 'new_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'new_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'new_name.dis')
+    assert os.path.exists(dis_file)
+
+    sim.rename_all_packages('all_files_same_name')
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == \
+                   'all_files_same_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    assert sim._tdis_file.filename == 'all_files_same_name.tdis'
+    for ims_file in sim._ims_files.values():
+        assert ims_file.filename == 'all_files_same_name.ims'
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'all_files_same_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'all_files_same_name.dis')
+    assert os.path.exists(dis_file)
+    tdis_file = os.path.join(run_folder, 'all_files_same_name.tdis')
+    assert os.path.exists(tdis_file)
+
     # clean up
     sim.delete_output_files()
 

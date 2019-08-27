@@ -80,17 +80,17 @@ class MFScalar(mfdata.MFData):
     @property
     def dtype(self):
         if self.structure.type == DatumType.double_precision:
-            return np.float32
+            return np.float64
         elif self.structure.type == DatumType.integer:
-            return np.int
+            return np.int32
         elif self.structure.type == DatumType.recarray or \
                 self.structure.type == DatumType.record or \
                 self.structure.type == DatumType.repeating_record:
             for data_item_struct in self.structure.data_item_structures:
                 if data_item_struct.type == DatumType.double_precision:
-                    return np.float32
+                    return np.float64
                 elif data_item_struct.type == DatumType.integer:
-                    return np.int
+                    return np.int32
         return None
 
     def has_data(self):
@@ -169,7 +169,7 @@ class MFScalar(mfdata.MFData):
 
     def add_one(self):
         datum_type = self.structure.get_datum_type()
-        if datum_type == int or datum_type == np.int:
+        if datum_type == int or datum_type == np.int32:
             if self._get_storage_obj().get_data() is None:
                 try:
                     self._get_storage_obj().set_data(1)

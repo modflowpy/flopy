@@ -120,6 +120,9 @@ class LayerStorage(object):
             return str(self.get_data())
 
     def __getattr__(self, attr):
+        if attr == 'binary' or not hasattr(self, 'binary'):
+            raise AttributeError(attr)
+
         if attr == 'array':
             return self._data_storage_parent.get_data(self._lay_indexes, True)
         elif attr == '__getstate__':
@@ -1092,11 +1095,12 @@ class DataStorage(object):
                         self.data_dimensions.structure, self.data_dimensions,
                         self._simulation_data, self._data_path,
                         self._stress_period)
+                    str_layered = self.data_dimensions.structure.layered
                     file_access.write_binary_file(
                         data, fp, text, self._model_or_sim.modeldiscrit,
                         self._model_or_sim.modeltime,
                         stress_period=self._stress_period, precision='double',
-                        write_multi_layer=(layer is None))
+                        write_multi_layer=(layer is None and str_layered))
                 else:
                     file_access = MFFileAccessArray(
                         self.data_dimensions.structure, self.data_dimensions,
@@ -1573,7 +1577,7 @@ class DataStorage(object):
         if dimensions[0] < 0:
             return None
         all_none = True
-        np_data_type =  self.data_dimensions.structure.get_datum_type()
+        np_data_type = self.data_dimensions.structure.get_datum_type()
         full_data = np.full(dimensions, np.nan,
                             self.data_dimensions.structure.get_datum_type(True))
         is_aux = self.data_dimensions.structure.name == 'aux'
@@ -1675,7 +1679,9 @@ class DataStorage(object):
         if data_dimensions[0] < 0:
             return ls.data_const_value
         else:
-            return np.full(data_dimensions, ls.data_const_value[0])
+            data_type = self.data_dimensions.structure. \
+                get_datum_type(numpy_type=True)
+            return np.full(data_dimensions, ls.data_const_value[0], data_type)
 
     def _is_type(self, data_item, data_type):
         if data_type == DatumType.string or data_type == DatumType.keyword:
