@@ -53,7 +53,10 @@ install:
 - export CXX="g++"
 - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install -r requirements27.travis.txt;
   echo requests version1; python -c "import requests; print(requests.__version__)";
-  else pip install -r requirements.travis.txt; fi
+  else pip install -r requirements.travis.txt;
+  pip install --no-binary rasterio rasterio;
+  pip install --upgrade numpy;
+  fi
 - pip install https://github.com/modflowpy/pymake/zipball/master
 - pip install --upgrade jupyter
 - pip install shapely[vectorize]
