@@ -398,7 +398,6 @@ def test_ds_6d_6e_disordered():
     sfr = m.get_package("SFR")
     sfr2 = m2.get_package("SFR")
 
-
     if len(sfr.graph) != len(sfr2.graph):
         raise AssertionError
 
@@ -414,6 +413,28 @@ def test_ds_6d_6e_disordered():
         for seg, value in d.items():
             if not np.allclose(value, sfr2.channel_geometry_data[kper][seg]):
                 raise AssertionError
+
+
+def test_disordered_reachdata_fields():
+    path = os.path.join("..", "examples", "data", "hydmod_test")
+    wpath = os.path.join(".", "temp", "t009_disorderfields")
+    m = flopy.modflow.Modflow.load("test1tr2.nam",
+                                   model_ws=path)
+    sfr = m.get_package("SFR")
+    orig_reach_data = sfr.reach_data
+    # build shuffled rec array
+    shuffled_fields = list(set(orig_reach_data.dtype.names))
+    data = []
+    names = []
+    formats = []
+    for field in shuffled_fields:
+        data.append(orig_reach_data[field])
+        names.append(field)
+        formats.append(orig_reach_data.dtype[field].str)
+    reach_data = np.rec.fromarrays(data, names=names, formats=formats)
+    m.sfr.reach_data = reach_data
+    m.change_model_ws(wpath)
+    m.write_input()
 
 
 def test_transient_example():
@@ -488,14 +509,16 @@ def test_sfr_plot():
     #assert True
     pass
 
+
 if __name__ == '__main__':
     # test_sfr()
     # test_ds_6d_6e_disordered()
+    test_disordered_reachdata_fields()
     # test_sfr_renumbering()
     # test_example()
     # test_export()
-    #test_transient_example()
-    #test_sfr_plot()
+    # test_transient_example()
+    # mtest_sfr_plot()
     # test_assign_layers()
     # test_SfrFile()
     # test_const()
