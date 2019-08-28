@@ -139,7 +139,7 @@ class ModflowEvt(Package):
         self.surf = Transient2d(model, (nrow, ncol), np.float32,
                                 surf, name='surf')
         self.evtr = Transient2d(model, (nrow, ncol), np.float32,
-                                evtr, name='etvr')
+                                evtr, name='evtr')
         self.exdp = Transient2d(model, (nrow, ncol), np.float32,
                                 exdp, name='exdp')
         self.ievt = Transient2d(model, (nrow, ncol), np.int32,
