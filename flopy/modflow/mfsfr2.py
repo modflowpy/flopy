@@ -1605,7 +1605,7 @@ class ModflowSfr2(Package):
         for idx in ['k', 'i', 'j', 'node']:
             if (idx in columns):
                 d[idx] += 1
-        d = d[columns]
+        d = d[columns]  # data columns sorted
         formats = _fmt_string(d)[:-1] + '\n'
         for rec in d:
             f_sfr.write(formats.format(*rec))
@@ -2805,8 +2805,8 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
 
 def _fmt_string(array, float_format='{!s}'):
     fmt_string = ''
-    for field in array.dtype.names:  #TODO handle out of order arrays - iter over dtype.names;
-        vtype = array.dtype[field].str[1].lower()  #TODO vtype = array.dtype[field].str
+    for field in array.dtype.names:  # data already sorted
+        vtype = array.dtype[field].str[1].lower()
         if vtype == 'v':
             continue
         if vtype == 'i':
