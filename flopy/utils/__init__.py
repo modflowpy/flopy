@@ -44,3 +44,4 @@ from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
 from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
+from .rasters import Raster

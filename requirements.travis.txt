@@ -6,3 +6,4 @@ descartes
 pyproj
 pyshp
 pandas
+scipy
