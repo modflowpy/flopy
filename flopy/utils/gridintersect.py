@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from .geometry import transform
 try:
@@ -1056,6 +1055,10 @@ class GridIntersect:
 
         """
         try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print('This feature requires matplotlib.')
+        try:
             from descartes import PolygonPatch
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
@@ -1093,6 +1096,10 @@ class GridIntersect:
             returns the axes handle
 
         """
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print('This feature requires matplotlib.')
         if ax is None:
             _, ax = plt.subplots()
 
@@ -1130,6 +1137,10 @@ class GridIntersect:
             returns the axes handle
 
         """
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print('This feature requires matplotlib.')
         if ax is None:
             _, ax = plt.subplots()
 
