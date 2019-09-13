@@ -244,6 +244,7 @@ class MtListBudget(object):
     def _parse_gw(self, f, line):
         raw = line.strip().split()
         comp = int(raw[-1][:2])
+        self.imm = False
         for _ in range(7):
             line = self._readline(f)
             if line is None:
@@ -286,7 +287,11 @@ class MtListBudget(object):
             if line is None:
                 raise Exception("EOF while reading budget")
             elif '-----' in line:
+                self.imm = False
                 break_next = True
+                continue
+            elif '....immobile' in line:
+                self.imm = True
                 continue
             try:
                 item, ival, oval = self._parse_gw_line(line)
@@ -328,7 +333,8 @@ class MtListBudget(object):
         item = raw[0].strip().strip('[\|]').replace(' ', '_')
         idx_ival = 0
         idx_oval = 1
-
+        if self.imm:
+            item = "imm_" + item
         if "TOTAL" in item.upper():
             idx_oval += 1  # to deal with the units in the total string
         # net (in-out) and discrepancy will only have 1 entry
