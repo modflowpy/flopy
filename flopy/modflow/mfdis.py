@@ -79,11 +79,15 @@ class ModflowDis(Package):
         single string is passed the package will be set to the string.
         Default is None.
     xul : float
-        x coordinate of upper left corner of the grid, default is None
+        x coordinate of upper left corner of the grid, default is None, which
+        means xul will be set to zero.
     yul : float
-        y coordinate of upper left corner of the grid, default is None
+        y coordinate of upper-left corner of the grid, default is None, which
+        means yul will be calculated as the sum of the delc array.  This
+        default, combined with the xul and rotation defaults will place the
+        lower-left corner of the grid at (0, 0).
     rotation : float
-        clockwise rotation (in degrees) of the grid about the upper left
+        counter-clockwise rotation (in degrees) of the grid about the lower left
         corner. default is 0.0
     proj4_str : str
         PROJ4 string that defines the projected coordinate system
