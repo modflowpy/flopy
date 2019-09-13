@@ -1400,7 +1400,7 @@ class ModflowMnw2(Package):
             mnwspd = Mnw.get_empty_stress_period_data(self.nper,
                                                       aux_names=self.aux)
             for per, itmp in enumerate(self.itmp):
-                inds = stress_period_data[0].wellid == wellid
+                inds = stress_period_data[per].wellid == wellid
                 if itmp > 0 and np.any(inds):
                     names = [n for n in
                              stress_period_data[per][inds].dtype.names if
