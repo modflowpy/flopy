@@ -87,8 +87,8 @@ class ModflowDis(Package):
         default, combined with the xul and rotation defaults will place the
         lower-left corner of the grid at (0, 0).
     rotation : float
-        counter-clockwise rotation (in degrees) of the grid about the lower left
-        corner. default is 0.0
+        counter-clockwise rotation (in degrees) of the grid about the lower-
+        left corner. default is 0.0
     proj4_str : str
         PROJ4 string that defines the projected coordinate system
         (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
