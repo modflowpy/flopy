@@ -48,9 +48,9 @@ class ModflowGwfdis(mfpackage.MFPackage):
     ncol : integer
         * ncol (integer) is the number of columns in the model grid.
     delr : [double]
-        * delr (double) is the is the column spacing in the row direction.
+        * delr (double) is the column spacing in the row direction.
     delc : [double]
-        * delc (double) is the is the row spacing in the column direction.
+        * delc (double) is the row spacing in the column direction.
     top : [double]
         * top (double) is the top elevation for each cell in the top model
           layer.

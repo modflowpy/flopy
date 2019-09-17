@@ -64,8 +64,9 @@ class ModflowGwfevt(mfpackage.MFPackage):
           package data as values. Data just for the observations variable is
           also acceptable. See obs package documentation for more information.
     surf_rate_specified : boolean
-        * surf_rate_specified (boolean) indicates that the evapotranspiration
-          rate at the ET surface will be specified as PETM0 in list input.
+        * surf_rate_specified (boolean) indicates that the proportion of the
+          evapotranspiration rate at the ET surface will be specified as PETM0
+          in list input.
     maxbound : integer
         * maxbound (integer) integer value specifying the maximum number of
           evapotranspiration cells cells that will be specified for use during
