@@ -1,0 +1,1666 @@
+ LISTING FILE: west_taupo_mt.lst
+                         UNIT  16
+
+ OPENING west_taupo_mf.ftl
+ FILE TYPE:FTL   UNIT  10
+
+ OPENING west_taupo_mt.btn
+ FILE TYPE:BTN   UNIT  31
+
+ OPENING west_taupo_mt.adv
+ FILE TYPE:ADV   UNIT   2
+
+ OPENING west_taupo_mt.dsp
+ FILE TYPE:DSP   UNIT   3
+
+ OPENING west_taupo_mt.ssm
+ FILE TYPE:SSM   UNIT  34
+
+ OPENING west_taupo_mt.rct
+ FILE TYPE:RCT   UNIT   8
+
+ OPENING west_taupo_mt.gcg
+ FILE TYPE:GCG   UNIT   9
+
+ OPENING dat\delr.ref
+ FILE TYPE:DATA   UNIT2001
+
+ OPENING dat\delc.ref
+ FILE TYPE:DATA   UNIT2002
+
+ OPENING dat\htop.ref
+ FILE TYPE:DATA   UNIT2003
+
+ OPENING dat\dz_layer_1.ref
+ FILE TYPE:DATA   UNIT2004
+
+ OPENING dat\dz_layer_2.ref
+ FILE TYPE:DATA   UNIT2005
+
+ OPENING dat\dz_layer_3.ref
+ FILE TYPE:DATA   UNIT2006
+
+ OPENING dat\dz_layer_4.ref
+ FILE TYPE:DATA   UNIT2007
+
+ OPENING dat\dz_layer_5.ref
+ FILE TYPE:DATA   UNIT2008
+
+ OPENING dat\dz_layer_6.ref
+ FILE TYPE:DATA   UNIT2009
+
+ OPENING dat\dz_layer_7.ref
+ FILE TYPE:DATA   UNIT2010
+
+ OPENING dat\dz_layer_8.ref
+ FILE TYPE:DATA   UNIT2011
+
+ OPENING dat\dz_layer_9.ref
+ FILE TYPE:DATA   UNIT2012
+
+ OPENING dat\dz_layer_10.ref
+ FILE TYPE:DATA   UNIT2013
+
+ OPENING dat\dz_layer_11.ref
+ FILE TYPE:DATA   UNIT2014
+
+ OPENING dat\dz_layer_12.ref
+ FILE TYPE:DATA   UNIT2015
+
+ OPENING dat\dz_layer_13.ref
+ FILE TYPE:DATA   UNIT2016
+
+ OPENING dat\dz_layer_14.ref
+ FILE TYPE:DATA   UNIT2017
+
+ OPENING dat\dz_layer_15.ref
+ FILE TYPE:DATA   UNIT2018
+
+ OPENING dat\dz_layer_16.ref
+ FILE TYPE:DATA   UNIT2019
+
+ OPENING dat\prsity_layer_1.ref
+ FILE TYPE:DATA   UNIT2020
+
+ OPENING dat\prsity_layer_2.ref
+ FILE TYPE:DATA   UNIT2021
+
+ OPENING dat\prsity_layer_3.ref
+ FILE TYPE:DATA   UNIT2022
+
+ OPENING dat\prsity_layer_4.ref
+ FILE TYPE:DATA   UNIT2023
+
+ OPENING dat\prsity_layer_5.ref
+ FILE TYPE:DATA   UNIT2024
+
+ OPENING dat\prsity_layer_6.ref
+ FILE TYPE:DATA   UNIT2025
+
+ OPENING dat\prsity_layer_7.ref
+ FILE TYPE:DATA   UNIT2026
+
+ OPENING dat\prsity_layer_8.ref
+ FILE TYPE:DATA   UNIT2027
+
+ OPENING dat\prsity_layer_9.ref
+ FILE TYPE:DATA   UNIT2028
+
+ OPENING dat\prsity_layer_10.ref
+ FILE TYPE:DATA   UNIT2029
+
+ OPENING dat\prsity_layer_11.ref
+ FILE TYPE:DATA   UNIT2030
+
+ OPENING dat\prsity_layer_12.ref
+ FILE TYPE:DATA   UNIT2031
+
+ OPENING dat\prsity_layer_13.ref
+ FILE TYPE:DATA   UNIT2032
+
+ OPENING dat\prsity_layer_14.ref
+ FILE TYPE:DATA   UNIT2033
+
+ OPENING dat\prsity_layer_15.ref
+ FILE TYPE:DATA   UNIT2034
+
+ OPENING dat\prsity_layer_16.ref
+ FILE TYPE:DATA   UNIT2035
+
+ OPENING dat\icbund_layer_1.ref
+ FILE TYPE:DATA   UNIT2036
+
+ OPENING dat\icbund_layer_2.ref
+ FILE TYPE:DATA   UNIT2037
+
+ OPENING dat\icbund_layer_3.ref
+ FILE TYPE:DATA   UNIT2038
+
+ OPENING dat\icbund_layer_4.ref
+ FILE TYPE:DATA   UNIT2039
+
+ OPENING dat\icbund_layer_5.ref
+ FILE TYPE:DATA   UNIT2040
+
+ OPENING dat\icbund_layer_6.ref
+ FILE TYPE:DATA   UNIT2041
+
+ OPENING dat\icbund_layer_7.ref
+ FILE TYPE:DATA   UNIT2042
+
+ OPENING dat\icbund_layer_8.ref
+ FILE TYPE:DATA   UNIT2043
+
+ OPENING dat\icbund_layer_9.ref
+ FILE TYPE:DATA   UNIT2044
+
+ OPENING dat\icbund_layer_10.ref
+ FILE TYPE:DATA   UNIT2045
+
+ OPENING dat\icbund_layer_11.ref
+ FILE TYPE:DATA   UNIT2046
+
+ OPENING dat\icbund_layer_12.ref
+ FILE TYPE:DATA   UNIT2047
+
+ OPENING dat\icbund_layer_13.ref
+ FILE TYPE:DATA   UNIT2048
+
+ OPENING dat\icbund_layer_14.ref
+ FILE TYPE:DATA   UNIT2049
+
+ OPENING dat\icbund_layer_15.ref
+ FILE TYPE:DATA   UNIT2050
+
+ OPENING dat\icbund_layer_16.ref
+ FILE TYPE:DATA   UNIT2051
+
+ OPENING dat\sconc1_layer_1.ref
+ FILE TYPE:DATA   UNIT2052
+
+ OPENING dat\sconc1_layer_2.ref
+ FILE TYPE:DATA   UNIT2053
+
+ OPENING dat\sconc1_layer_3.ref
+ FILE TYPE:DATA   UNIT2054
+
+ OPENING dat\sconc1_layer_4.ref
+ FILE TYPE:DATA   UNIT2055
+
+ OPENING dat\sconc1_layer_5.ref
+ FILE TYPE:DATA   UNIT2056
+
+ OPENING dat\sconc1_layer_6.ref
+ FILE TYPE:DATA   UNIT2057
+
+ OPENING dat\sconc1_layer_7.ref
+ FILE TYPE:DATA   UNIT2058
+
+ OPENING dat\sconc1_layer_8.ref
+ FILE TYPE:DATA   UNIT2059
+
+ OPENING dat\sconc1_layer_9.ref
+ FILE TYPE:DATA   UNIT2060
+
+ OPENING dat\sconc1_layer_10.ref
+ FILE TYPE:DATA   UNIT2061
+
+ OPENING dat\sconc1_layer_11.ref
+ FILE TYPE:DATA   UNIT2062
+
+ OPENING dat\sconc1_layer_12.ref
+ FILE TYPE:DATA   UNIT2063
+
+ OPENING dat\sconc1_layer_13.ref
+ FILE TYPE:DATA   UNIT2064
+
+ OPENING dat\sconc1_layer_14.ref
+ FILE TYPE:DATA   UNIT2065
+
+ OPENING dat\sconc1_layer_15.ref
+ FILE TYPE:DATA   UNIT2066
+
+ OPENING dat\sconc1_layer_16.ref
+ FILE TYPE:DATA   UNIT2067
+
+ OPENING dat\al_layer_1.ref
+ FILE TYPE:DATA   UNIT2068
+
+ OPENING dat\al_layer_2.ref
+ FILE TYPE:DATA   UNIT2069
+
+ OPENING dat\al_layer_3.ref
+ FILE TYPE:DATA   UNIT2070
+
+ OPENING dat\al_layer_4.ref
+ FILE TYPE:DATA   UNIT2071
+
+ OPENING dat\al_layer_5.ref
+ FILE TYPE:DATA   UNIT2072
+
+ OPENING dat\al_layer_6.ref
+ FILE TYPE:DATA   UNIT2073
+
+ OPENING dat\al_layer_7.ref
+ FILE TYPE:DATA   UNIT2074
+
+ OPENING dat\al_layer_8.ref
+ FILE TYPE:DATA   UNIT2075
+
+ OPENING dat\al_layer_9.ref
+ FILE TYPE:DATA   UNIT2076
+
+ OPENING dat\al_layer_10.ref
+ FILE TYPE:DATA   UNIT2077
+
+ OPENING dat\al_layer_11.ref
+ FILE TYPE:DATA   UNIT2078
+
+ OPENING dat\al_layer_12.ref
+ FILE TYPE:DATA   UNIT2079
+
+ OPENING dat\al_layer_13.ref
+ FILE TYPE:DATA   UNIT2080
+
+ OPENING dat\al_layer_14.ref
+ FILE TYPE:DATA   UNIT2081
+
+ OPENING dat\al_layer_15.ref
+ FILE TYPE:DATA   UNIT2082
+
+ OPENING dat\al_layer_16.ref
+ FILE TYPE:DATA   UNIT2083
+
+ OPENING dat\trpt.ref
+ FILE TYPE:DATA   UNIT2084
+
+ OPENING dat\trpv.ref
+ FILE TYPE:DATA   UNIT2085
+
+ OPENING dat\dmcoef1.ref
+ FILE TYPE:DATA   UNIT2086
+
+ OPENING dat\crch10.ref
+ FILE TYPE:DATA   UNIT2088
+
+ OPENING dat\prsity2_layer_1.ref
+ FILE TYPE:DATA   UNIT2089
+
+ OPENING dat\prsity2_layer_2.ref
+ FILE TYPE:DATA   UNIT2090
+
+ OPENING dat\prsity2_layer_3.ref
+ FILE TYPE:DATA   UNIT2091
+
+ OPENING dat\prsity2_layer_4.ref
+ FILE TYPE:DATA   UNIT2092
+
+ OPENING dat\prsity2_layer_5.ref
+ FILE TYPE:DATA   UNIT2093
+
+ OPENING dat\prsity2_layer_6.ref
+ FILE TYPE:DATA   UNIT2094
+
+ OPENING dat\prsity2_layer_7.ref
+ FILE TYPE:DATA   UNIT2095
+
+ OPENING dat\prsity2_layer_8.ref
+ FILE TYPE:DATA   UNIT2096
+
+ OPENING dat\prsity2_layer_9.ref
+ FILE TYPE:DATA   UNIT2097
+
+ OPENING dat\prsity2_layer_10.ref
+ FILE TYPE:DATA   UNIT2098
+
+ OPENING dat\prsity2_layer_11.ref
+ FILE TYPE:DATA   UNIT2099
+
+ OPENING dat\prsity2_layer_12.ref
+ FILE TYPE:DATA   UNIT2100
+
+ OPENING dat\prsity2_layer_13.ref
+ FILE TYPE:DATA   UNIT2101
+
+ OPENING dat\prsity2_layer_14.ref
+ FILE TYPE:DATA   UNIT2102
+
+ OPENING dat\prsity2_layer_15.ref
+ FILE TYPE:DATA   UNIT2103
+
+ OPENING dat\prsity2_layer_16.ref
+ FILE TYPE:DATA   UNIT2104
+
+ OPENING dat\sp11_layer_1.ref
+ FILE TYPE:DATA   UNIT2105
+
+ OPENING dat\sp11_layer_2.ref
+ FILE TYPE:DATA   UNIT2106
+
+ OPENING dat\sp11_layer_3.ref
+ FILE TYPE:DATA   UNIT2107
+
+ OPENING dat\sp11_layer_4.ref
+ FILE TYPE:DATA   UNIT2108
+
+ OPENING dat\sp11_layer_5.ref
+ FILE TYPE:DATA   UNIT2109
+
+ OPENING dat\sp11_layer_6.ref
+ FILE TYPE:DATA   UNIT2110
+
+ OPENING dat\sp11_layer_7.ref
+ FILE TYPE:DATA   UNIT2111
+
+ OPENING dat\sp11_layer_8.ref
+ FILE TYPE:DATA   UNIT2112
+
+ OPENING dat\sp11_layer_9.ref
+ FILE TYPE:DATA   UNIT2113
+
+ OPENING dat\sp11_layer_10.ref
+ FILE TYPE:DATA   UNIT2114
+
+ OPENING dat\sp11_layer_11.ref
+ FILE TYPE:DATA   UNIT2115
+
+ OPENING dat\sp11_layer_12.ref
+ FILE TYPE:DATA   UNIT2116
+
+ OPENING dat\sp11_layer_13.ref
+ FILE TYPE:DATA   UNIT2117
+
+ OPENING dat\sp11_layer_14.ref
+ FILE TYPE:DATA   UNIT2118
+
+ OPENING dat\sp11_layer_15.ref
+ FILE TYPE:DATA   UNIT2119
+
+ OPENING dat\sp11_layer_16.ref
+ FILE TYPE:DATA   UNIT2120
+
+ OPENING dat\sp21_layer_1.ref
+ FILE TYPE:DATA   UNIT2121
+
+ OPENING dat\sp21_layer_2.ref
+ FILE TYPE:DATA   UNIT2122
+
+ OPENING dat\sp21_layer_3.ref
+ FILE TYPE:DATA   UNIT2123
+
+ OPENING dat\sp21_layer_4.ref
+ FILE TYPE:DATA   UNIT2124
+
+ OPENING dat\sp21_layer_5.ref
+ FILE TYPE:DATA   UNIT2125
+
+ OPENING dat\sp21_layer_6.ref
+ FILE TYPE:DATA   UNIT2126
+
+ OPENING dat\sp21_layer_7.ref
+ FILE TYPE:DATA   UNIT2127
+
+ OPENING dat\sp21_layer_8.ref
+ FILE TYPE:DATA   UNIT2128
+
+ OPENING dat\sp21_layer_9.ref
+ FILE TYPE:DATA   UNIT2129
+
+ OPENING dat\sp21_layer_10.ref
+ FILE TYPE:DATA   UNIT2130
+
+ OPENING dat\sp21_layer_11.ref
+ FILE TYPE:DATA   UNIT2131
+
+ OPENING dat\sp21_layer_12.ref
+ FILE TYPE:DATA   UNIT2132
+
+ OPENING dat\sp21_layer_13.ref
+ FILE TYPE:DATA   UNIT2133
+
+ OPENING dat\sp21_layer_14.ref
+ FILE TYPE:DATA   UNIT2134
+
+ OPENING dat\sp21_layer_15.ref
+ FILE TYPE:DATA   UNIT2135
+
+ OPENING dat\sp21_layer_16.ref
+ FILE TYPE:DATA   UNIT2136
+
+ OPENING dat\rc11_layer_1.ref
+ FILE TYPE:DATA   UNIT2137
+
+ OPENING dat\rc11_layer_2.ref
+ FILE TYPE:DATA   UNIT2138
+
+ OPENING dat\rc11_layer_3.ref
+ FILE TYPE:DATA   UNIT2139
+
+ OPENING dat\rc11_layer_4.ref
+ FILE TYPE:DATA   UNIT2140
+
+ OPENING dat\rc11_layer_5.ref
+ FILE TYPE:DATA   UNIT2141
+
+ OPENING dat\rc11_layer_6.ref
+ FILE TYPE:DATA   UNIT2142
+
+ OPENING dat\rc11_layer_7.ref
+ FILE TYPE:DATA   UNIT2143
+
+ OPENING dat\rc11_layer_8.ref
+ FILE TYPE:DATA   UNIT2144
+
+ OPENING dat\rc11_layer_9.ref
+ FILE TYPE:DATA   UNIT2145
+
+ OPENING dat\rc11_layer_10.ref
+ FILE TYPE:DATA   UNIT2146
+
+ OPENING dat\rc11_layer_11.ref
+ FILE TYPE:DATA   UNIT2147
+
+ OPENING dat\rc11_layer_12.ref
+ FILE TYPE:DATA   UNIT2148
+
+ OPENING dat\rc11_layer_13.ref
+ FILE TYPE:DATA   UNIT2149
+
+ OPENING dat\rc11_layer_14.ref
+ FILE TYPE:DATA   UNIT2150
+
+ OPENING dat\rc11_layer_15.ref
+ FILE TYPE:DATA   UNIT2151
+
+ OPENING dat\rc11_layer_16.ref
+ FILE TYPE:DATA   UNIT2152
+
+ OPENING dat\rc21_layer_1.ref
+ FILE TYPE:DATA   UNIT2153
+
+ OPENING dat\rc21_layer_2.ref
+ FILE TYPE:DATA   UNIT2154
+
+ OPENING dat\rc21_layer_3.ref
+ FILE TYPE:DATA   UNIT2155
+
+ OPENING dat\rc21_layer_4.ref
+ FILE TYPE:DATA   UNIT2156
+
+ OPENING dat\rc21_layer_5.ref
+ FILE TYPE:DATA   UNIT2157
+
+ OPENING dat\rc21_layer_6.ref
+ FILE TYPE:DATA   UNIT2158
+
+ OPENING dat\rc21_layer_7.ref
+ FILE TYPE:DATA   UNIT2159
+
+ OPENING dat\rc21_layer_8.ref
+ FILE TYPE:DATA   UNIT2160
+
+ OPENING dat\rc21_layer_9.ref
+ FILE TYPE:DATA   UNIT2161
+
+ OPENING dat\rc21_layer_10.ref
+ FILE TYPE:DATA   UNIT2162
+
+ OPENING dat\rc21_layer_11.ref
+ FILE TYPE:DATA   UNIT2163
+
+ OPENING dat\rc21_layer_12.ref
+ FILE TYPE:DATA   UNIT2164
+
+ OPENING dat\rc21_layer_13.ref
+ FILE TYPE:DATA   UNIT2165
+
+ OPENING dat\rc21_layer_14.ref
+ FILE TYPE:DATA   UNIT2166
+
+ OPENING dat\rc21_layer_15.ref
+ FILE TYPE:DATA   UNIT2167
+
+ OPENING dat\rc21_layer_16.ref
+ FILE TYPE:DATA   UNIT2168
+
+ OPENING west_taupo_mt001.ucn
+ FILE TYPE:DATA(BINARY)   UNIT 201
+
+ OPENING west_taupo_mt001s.ucn
+ FILE TYPE:DATA(BINARY)   UNIT 301
+
+ OPENING west_taupo_mt001.mas
+ FILE TYPE:DATA   UNIT 601
+
+ OPENING west_taupo_mt001.obs
+ FILE TYPE:DATA   UNIT 401
+
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                              +                                                                     +
+                              +                              MT3D-USGS                              +
+                              +             A Modular 3D Multi-Species Transport Model              +
+                              +    For Simulation of Advection, Dispersion and Chemical Reactions   +
+                              +                of Contaminants in Groundwater Systems               +
+                              +                                                                     +
+                              +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  ----- 
+ | M T | ## BTN for MT3DMS, generated by Flopy.                                          
+ | 3 D | ##                                                                              
+  ----- 
+ THE TRANSPORT MODEL CONSISTS OF    16 LAYER(S)  500 ROW(S)  335 COLUMN(S)
+ NUMBER OF STRESS PERIOD(S) FOR TRANSPORT SIMULATION =    1
+ NUMBER OF ALL COMPONENTS INCLUDED IN SIMULATION =    1
+ NUMBER OF MOBILE COMPONENTS INCLUDED IN SIMULATION =    1
+ UNIT FOR TIME IS D   ;  UNIT FOR LENGTH IS M   ;  UNIT FOR MASS IS KG  
+ OPTIONAL PACKAGES INCLUDED IN CURRENT SIMULATION:
+  o ADV   ON UNIT  2
+  o DSP   ON UNIT  3
+  o SSM   ON UNIT 34
+  o RCT   ON UNIT  8
+  o GCG   ON UNIT  9
+
+
+ BTN1 -- BASIC TRANSPORT PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT 31
+
+ BTN PACKAGE KEYWORD INPUT: 
+  DRYCELL KEYWORD ACTIVATED TO LET MASS FLOW THROUGH DRY CELLS
+
+ LAYER NUMBER  AQUIFER TYPE
+ ------------  ------------
+       1            3
+       2            3
+       3            3
+       4            3
+       5            3
+       6            3
+       7            3
+       8            3
+       9            3
+      10            3
+      11            3
+      12            3
+      13            3
+      14            3
+      15            3
+      16            3
+
+                           WIDTH ALONG ROWS (DELR)  READ ON UNIT2001 USING FORMAT: "         (335E15.6) "
+                           -----------------------------------------------------------------------------
+
+                           WIDTH ALONG COLS (DELC)  READ ON UNIT2002 USING FORMAT: "         (500E15.6) "
+                           -----------------------------------------------------------------------------
+
+                           TOP ELEV. OF 1ST LAYER   READ ON UNIT2003 USING FORMAT: "         (335E15.6) "
+                           -----------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  1 READ ON UNIT2004 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  2 READ ON UNIT2005 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  3 READ ON UNIT2006 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  4 READ ON UNIT2007 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  5 READ ON UNIT2008 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  6 READ ON UNIT2009 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  7 READ ON UNIT2010 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  8 READ ON UNIT2011 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER  9 READ ON UNIT2012 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 10 READ ON UNIT2013 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 11 READ ON UNIT2014 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 12 READ ON UNIT2015 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 13 READ ON UNIT2016 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 14 READ ON UNIT2017 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 15 READ ON UNIT2018 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CELL THICKNESS (DZ)      FOR LAYER 16 READ ON UNIT2019 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  1 READ ON UNIT2020 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  2 READ ON UNIT2021 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  3 READ ON UNIT2022 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  4 READ ON UNIT2023 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  5 READ ON UNIT2024 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  6 READ ON UNIT2025 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  7 READ ON UNIT2026 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  8 READ ON UNIT2027 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER  9 READ ON UNIT2028 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 10 READ ON UNIT2029 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 11 READ ON UNIT2030 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 12 READ ON UNIT2031 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 13 READ ON UNIT2032 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 14 READ ON UNIT2033 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 15 READ ON UNIT2034 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     POROSITY                 FOR LAYER 16 READ ON UNIT2035 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  1 READ ON UNIT2036 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  2 READ ON UNIT2037 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  3 READ ON UNIT2038 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  4 READ ON UNIT2039 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  5 READ ON UNIT2040 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  6 READ ON UNIT2041 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  7 READ ON UNIT2042 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  8 READ ON UNIT2043 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER  9 READ ON UNIT2044 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 10 READ ON UNIT2045 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 11 READ ON UNIT2046 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 12 READ ON UNIT2047 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 13 READ ON UNIT2048 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 14 READ ON UNIT2049 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 15 READ ON UNIT2050 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     CONCN. BOUNDARY ARRAY    FOR LAYER 16 READ ON UNIT2051 USING FORMAT: "           (335I10) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  1 READ ON UNIT2052 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  2 READ ON UNIT2053 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  3 READ ON UNIT2054 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  4 READ ON UNIT2055 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  5 READ ON UNIT2056 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  6 READ ON UNIT2057 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  7 READ ON UNIT2058 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  8 READ ON UNIT2059 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER  9 READ ON UNIT2060 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 10 READ ON UNIT2061 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 11 READ ON UNIT2062 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 12 READ ON UNIT2063 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 13 READ ON UNIT2064 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 14 READ ON UNIT2065 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 15 READ ON UNIT2066 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     INITIAL CONC.: COMP.  01 FOR LAYER 16 READ ON UNIT2067 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+ VALUE INDICATING INACTIVE CONCENTRATION CELLS =   0.1000000E+31
+ MINIMUM SATURATED THICKNESS [THKMIN] ALLOWED =  0.0100000 OF TOTAL CELL THICKNESS
+
+
+ OUTPUT CONTROL OPTIONS
+ ----------------------
+
+ DO NOT PRINT CELL CONCENTRATION
+ DO NOT PRINT PARTICLE NUMBER IN EACH CELL
+ DO NOT PRINT RETARDATION FACTOR
+ DO NOT PRINT DISPERSION COEFFICIENT
+ SAVE DISSOLVED PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3Dnnn.UCN]
+  FOR EACH SPECIES ON UNITS 201 AND ABOVE
+
+ SIMULATION RESULTS ARE SAVED EVERY   1 TRANSPORT STEP(S)
+
+ NUMBER OF OBSERVATION POINTS =    6
+ SAVE CONCENTRATIONS AT OBSERVATION POINTS IN FILES [MT3Dnnn.OBS]
+  FOR EACH SPECIES ON UNITS   401 AND ABOVE, EVERY    1 TRANSPORT STEPS
+ LOCATION OF OBSERVATION POINTS
+ ..............................
+ NUMBER  LAYER   ROW   COLUMN
+   1        1    366    272
+   2        1     98    182
+   3        2    278    193
+   4        3    295    182
+   5        1    294    182
+   6        1    349    167
+
+ SAVE ONE-LINE SUMMARY OF MASS BUDGETS IN FILES [MT3Dnnn.MAS]
+  FOR EACH SPECIES ON UNITS 601 AND ABOVE, EVERY  1 TRANSPORT STEPS
+
+ MAXIMUM LENGTH ALONG THE X (J) AXIS =   26800.00    
+ MAXIMUM LENGTH ALONG THE Y (I) AXIS =   40000.00    
+ MAXIMUM LENGTH ALONG THE Z (K) AXIS =   320.0050    
+ FMI1 -- FLOW MODEL INTERFACE PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT 10
+ FLOW MODEL IS STEADY-STATE
+ FLOW MODEL CONTAINS CONSTANT-HEAD CELLS
+
+
+ ADV1 -- ADVECTION PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT  2
+ ADVECTION IS SOLVED WITH THE UPSTREAM FINITE DIFFERENCE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM = 0.750    
+
+
+ ADVECTION SOLUTION OPTIONS
+ --------------------------
+
+ ADVECTION IS SOLVED WITH THE UPSTREAM FINITE DIFFERENCE SCHEME
+ COURANT NUMBER ALLOWED IN SOLVING THE ADVECTION TERM = 0.750    
+
+ DSP1 -- DISPERSION PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT  3
+
+
+ DISPERSION INPUT PARAMETERS
+ ---------------------------
+
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  1 READ ON UNIT2068 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  2 READ ON UNIT2069 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  3 READ ON UNIT2070 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  4 READ ON UNIT2071 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  5 READ ON UNIT2072 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  6 READ ON UNIT2073 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  7 READ ON UNIT2074 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  8 READ ON UNIT2075 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER  9 READ ON UNIT2076 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 10 READ ON UNIT2077 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 11 READ ON UNIT2078 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 12 READ ON UNIT2079 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 13 READ ON UNIT2080 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 14 READ ON UNIT2081 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 15 READ ON UNIT2082 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     LONG. DISPERSIVITY (AL)  FOR LAYER 16 READ ON UNIT2083 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                           H. TRANS./LONG. DISP.    READ ON UNIT2084 USING FORMAT: "          (16E15.6) "
+                           -----------------------------------------------------------------------------
+
+            1           2           3           4           5           6           7           8           9          10
+           11          12          13          14          15          16
+ ........................................................................................................................
+   1   0.1000      0.1000      0.1000      0.1000      0.1000      0.1000      0.1000      0.1000      0.1000      0.1000    
+       0.1000      0.1000      0.1000      0.1000      0.1000      0.1000    
+
+                           V. TRANS./LONG. DISP.    READ ON UNIT2085 USING FORMAT: "          (16E15.6) "
+                           -----------------------------------------------------------------------------
+
+            1           2           3           4           5           6           7           8           9          10
+           11          12          13          14          15          16
+ ........................................................................................................................
+   1   1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02
+       1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02
+
+                           DIFFUSION COEFFICIENT    READ ON UNIT2086 USING FORMAT: "          (16E15.6) "
+                           -----------------------------------------------------------------------------
+
+            1           2           3           4           5           6           7           8           9          10
+           11          12          13          14          15          16
+ ........................................................................................................................
+   1   1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02
+       1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02  1.0000E-02
+
+ SSM1 -- SINK & SOURCE MIXING PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT 34
+ HEADER LINE OF THE SSM PACKAGE INPUT FILE:
+  F T T F F F F F F F F F F F F F                                        
+ MAJOR STRESS COMPONENTS PRESENT IN THE FLOW MODEL:
+  o DRAIN [DRN]
+  o RECHARGE [RCH]
+ MAXIMUM NUMBER OF POINT SINKS/SOURCES =  208817
+
+ RCT1 -- CHEMICAL REACTION PACKAGE, VERSION 1, MAY 2016, INPUT READ FROM UNIT  8
+ DUAL DOMAIN MASS TRANSFER IS SIMULATED
+ FIRST-ORDER IRREVERSIBLE REACTION [RADIOACTIVE DECAY OR BIODEGRADATION] IS SIMULATED
+ REACTION COEFFICIENTS ASSIGNED CELL-BY-CELL
+ INITIAL SORBED/IMMOBILE PHASE CONCENTRATION ASSIGNED BY DEFAULT
+ SAVE SORBED/IMMOBILE PHASE CONCENTRATIONS IN UNFORMATTED FILES [MT3DnnnS.UCN]
+  FOR EACH SPECIES ON UNITS 301 AND ABOVE, IF SORPTION/MASS TRANSFER SIMULATED
+
+
+ SORPTION AND 1ST/0TH ORDER REACTION PARAMETERS
+ ----------------------------------------------
+
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  1 READ ON UNIT2089 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  2 READ ON UNIT2090 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  3 READ ON UNIT2091 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  4 READ ON UNIT2092 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  5 READ ON UNIT2093 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  6 READ ON UNIT2094 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  7 READ ON UNIT2095 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  8 READ ON UNIT2096 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER  9 READ ON UNIT2097 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 10 READ ON UNIT2098 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 11 READ ON UNIT2099 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 12 READ ON UNIT2100 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 13 READ ON UNIT2101 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 14 READ ON UNIT2102 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 15 READ ON UNIT2103 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     IMMOBILE DOMAIN POROSITY FOR LAYER 16 READ ON UNIT2104 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  1 READ ON UNIT2105 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  2 READ ON UNIT2106 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  3 READ ON UNIT2107 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  4 READ ON UNIT2108 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  5 READ ON UNIT2109 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  6 READ ON UNIT2110 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  7 READ ON UNIT2111 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  8 READ ON UNIT2112 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER  9 READ ON UNIT2113 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 10 READ ON UNIT2114 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 11 READ ON UNIT2115 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 12 READ ON UNIT2116 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 13 READ ON UNIT2117 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 14 READ ON UNIT2118 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 15 READ ON UNIT2119 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     1ST SORP. COEF. COMP. 01 FOR LAYER 16 READ ON UNIT2120 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  1 READ ON UNIT2121 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  2 READ ON UNIT2122 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  3 READ ON UNIT2123 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  4 READ ON UNIT2124 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  5 READ ON UNIT2125 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  6 READ ON UNIT2126 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  7 READ ON UNIT2127 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  8 READ ON UNIT2128 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER  9 READ ON UNIT2129 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 10 READ ON UNIT2130 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 11 READ ON UNIT2131 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 12 READ ON UNIT2132 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 13 READ ON UNIT2133 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 14 READ ON UNIT2134 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 15 READ ON UNIT2135 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     2ND SORP. COEF. COMP. 01 FOR LAYER 16 READ ON UNIT2136 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  1 READ ON UNIT2137 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  2 READ ON UNIT2138 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  3 READ ON UNIT2139 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  4 READ ON UNIT2140 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  5 READ ON UNIT2141 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  6 READ ON UNIT2142 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  7 READ ON UNIT2143 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  8 READ ON UNIT2144 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER  9 READ ON UNIT2145 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 10 READ ON UNIT2146 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 11 READ ON UNIT2147 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 12 READ ON UNIT2148 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 13 READ ON UNIT2149 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 14 READ ON UNIT2150 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 15 READ ON UNIT2151 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SOLUTE RXN RATE: COMP 01 FOR LAYER 16 READ ON UNIT2152 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  1 READ ON UNIT2153 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  2 READ ON UNIT2154 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  3 READ ON UNIT2155 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  4 READ ON UNIT2156 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  5 READ ON UNIT2157 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  6 READ ON UNIT2158 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  7 READ ON UNIT2159 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  8 READ ON UNIT2160 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER  9 READ ON UNIT2161 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 10 READ ON UNIT2162 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 11 READ ON UNIT2163 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 12 READ ON UNIT2164 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 13 READ ON UNIT2165 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 14 READ ON UNIT2166 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 15 READ ON UNIT2167 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+                     SORBED RXN RATE: COMP 01 FOR LAYER 16 READ ON UNIT2168 USING FORMAT: "         (335E15.6) "
+                     ------------------------------------------------------------------------------------------
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE REACTION TERM
+ =  64.29     AT K=   1, I=   1, J=  97
+
+ GCG1 -- GENERALIZED CONJUGATE GRADIENT SOLVER PACKAGE, VERSION 1, OCTOBER 2010 INPUT READ FROM UNIT  9
+ MAXIMUM OF  100 OUTER ITERATIONS
+        AND  100 INNER ITERATIONS ALLOWED FOR CLOSURE
+ THE PRECONDITIONING TYPE SELECTED IS JACOBI.
+ DISPERSION CROSS TERMS LUMPED INTO RIGHT-HAND-SIDE
+
+
+
+                                               SOLUTION BY THE GENERALIZED CONJUGATE GRADIENT METHOD
+                                               -----------------------------------------------------
+                                     MAXIMUM OUTER ITERATIONS ALLOWED FOR CLOSURE =      100
+                                     MAXIMUM INNER ITERATIONS ALLOWED FOR CLOSURE =      100
+                                                    PRECONDITIONING TYPE SELECTED =    1
+                                                           ACCELERATION PARAMETER =     1.0000    
+                                       CONCENTRATION CHANGE CRITERION FOR CLOSURE =    0.10000E-02
+                                       GCG CONCENTRATION CHANGE PRINTOUT INTERVAL =      999
+
+
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                                                       STRESS PERIOD NO.  001
+                                   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+ LENGTH OF CURRENT STRESS PERIOD =   730.0000    
+ NUMBER OF TIME STEPS FOR CURRENT STRESS PERIOD =    1
+ TIME STEP MULTIPLIER USED IN FLOW SOLUTION =   1.000000    
+
+ ***Type of Transport Simulation is TRANSIENT
+
+ USER-SPECIFIED TRANSPORT STEPSIZE =   73.00000    D   
+ MAXIMUM NUMBER OF TRANSPORT STEPS ALLOWED  IN ONE FLOW TIME STEP =     50000
+ MULTIPLIER FOR SUCCESSIVE TRANSPORT STEPS  [USED IN IMPLICIT SCHEMES] =     1.000
+ MAXIMUM TRANSPORT STEP SIZE  [USED IN IMPLICIT SCHEMES] =   0.000000    D   
+
+ CONCENTRATION OF RECHARGE FLUXES WILL BE READ IN STRESS PERIOD  1
+
+                           RECH. CONC. COMP.  01    READ ON UNIT2088 USING FORMAT: "         (335E15.6) "
+                           -----------------------------------------------------------------------------
+
+ NO. OF POINT SINKS/SOURCES OF SPECIFIED CONCENTRATIONS =    0 IN STRESS PERIOD  1
+
+
+                                          ================================================
+                                                         TIME STEP NO.  001
+                                          ================================================
+
+ FROM TIME =   0.0000     TO    730.00    
+
+
+                    "THKSAT          " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QXX             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QYY             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "QZZ             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+ WARNING: SATURATED THICKNESS =   0.0000     NOT ALLOWED IN TRANSPORT MODEL
+          AT ACTIVE CELL K =   7,   I= 259,   J= 290;  RESET AS INACTIVE
+
+ MAXIMUM STEPSIZE DURING WHICH ANY PARTICLE CANNOT MOVE MORE THAN ONE CELL
+ = 0.4969    (WHEN MIN. R.F.=1)  AT K=   2, I= 463, J= 187
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE ADVECTION TERM
+ (FOR PURE FINITE-DIFFERENCE OPTION, MIXELM=0) 
+ = 0.4393    (WHEN MIN. R.F.=1)  AT K=   2, I= 463, J= 187
+
+                    "CNH             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "DRN             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+                    "RCH             " FLOW TERMS FOR TIME STEP  1, STRESS PERIOD  1 READ UNFORMATTED ON UNIT 10
+                    --------------------------------------------------------------------------------------------
+
+
+ TOTAL NUMBER OF POINT SOURCES/SINKS PRESENT IN THE FLOW MODEL = 41317
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE SINK & SOURCE TERM
+ = 0.5735    (WHEN MIN. R.F.=1)  AT K=   1, I= 200, J=  34
+
+ MAXIMUM STEPSIZE WHICH MEETS STABILITY CRITERION OF THE DISPERSION TERM
+ =  1.803    (WHEN MIN. R.F.=1)  AT K=   1, I= 233, J= 269
+
+
+     4 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     1 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     29 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    1
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   73.00000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    1, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                  -0.8659471    
+                                               DRAINS:    0.000000                   -3920.410    
+                                             RECHARGE:    62079.75                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    24830.74                   -24831.07    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    1.075409                   -56480.65    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.2505730E-01               -1642.204    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    86911.59     KG            -86875.20     KG  
+
+                                                          NET (IN - OUT):    36.38281    
+                                                   DISCREPANCY (PERCENT):   0.4187063E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     2 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     25 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    2
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   146.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    2, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -3.501174    
+                                               DRAINS:    0.000000                   -10152.37    
+                                             RECHARGE:    124159.5                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    49774.24                   -49774.92    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    2.003738                   -110047.8    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.5244503E-01               -3881.945    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    173935.8     KG            -173860.5     KG  
+
+                                                          NET (IN - OUT):    75.25000    
+                                                   DISCREPANCY (PERCENT):   0.4327245E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     3 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     20 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    3
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   219.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    3, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -8.763472    
+                                               DRAINS:    0.000000                   -18112.95    
+                                             RECHARGE:    186239.2                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    74792.16                   -74793.17    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    2.751405                   -161703.3    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.7634491E-01               -6299.156    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    261034.2     KG            -260917.3     KG  
+
+                                                          NET (IN - OUT):    116.9219    
+                                                   DISCREPANCY (PERCENT):   0.4480181E-01
+     4 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     4 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     17 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    4
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   292.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    4, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -17.48012    
+                                               DRAINS:    0.000000                   -27504.49    
+                                             RECHARGE:    248319.0                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    99864.42                   -99865.75    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    3.376850                   -211911.9    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.9624702E-01               -8727.726    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    348186.9     KG            -348027.3     KG  
+
+                                                          NET (IN - OUT):    159.5625    
+                                                   DISCREPANCY (PERCENT):   0.4583718E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     5 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     19 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    5
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   365.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    5, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -30.46858    
+                                               DRAINS:    0.000000                   -38136.89    
+                                             RECHARGE:    310398.8                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    124978.9                   -124980.6    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    3.911038                   -260926.1    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1133749                   -11105.58    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    435381.7     KG            -435179.6     KG  
+
+                                                          NET (IN - OUT):    202.0938    
+                                                   DISCREPANCY (PERCENT):   0.4642838E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     6 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     18 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    6
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   438.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    6, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -48.54318    
+                                               DRAINS:    0.000000                   -49879.54    
+                                             RECHARGE:    372478.5                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    150127.5                   -150129.5    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    4.366704                   -308895.3    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1280964                   -13412.43    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    522610.5     KG            -522365.3     KG  
+
+                                                          NET (IN - OUT):    245.1875    
+                                                   DISCREPANCY (PERCENT):   0.4692692E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     7 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     19 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    7
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   511.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    7, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -72.53539    
+                                               DRAINS:    0.000000                   -62630.89    
+                                             RECHARGE:    434558.2                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    175304.4                   -175306.8    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    4.763884                   -355922.8    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1407891                   -15644.66    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    609867.6     KG            -609577.8     KG  
+
+                                                          NET (IN - OUT):    289.8125    
+                                                   DISCREPANCY (PERCENT):   0.4753186E-01
+     4 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     8 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     21 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    8
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   584.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    8, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -103.2640    
+                                               DRAINS:    0.000000                   -76315.52    
+                                             RECHARGE:    496638.0                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    200505.4                   -200508.2    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    5.108041                   -402084.1    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1517631                   -17804.49    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    697148.7     KG            -696815.6     KG  
+
+                                                          NET (IN - OUT):    333.0625    
+                                                   DISCREPANCY (PERCENT):   0.4778638E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP     9 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     14 TOTAL ITERATIONS
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.    9
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   657.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP    9, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -141.5509    
+                                               DRAINS:    0.000000                   -90866.61    
+                                             RECHARGE:    558717.8                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    225727.2                   -225730.3    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    5.407094                   -447437.4    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1612779                   -19895.90    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    784450.6     KG            -784071.8     KG  
+
+                                                          NET (IN - OUT):    378.8750    
+                                                   DISCREPANCY (PERCENT):   0.4830980E-01
+     3 CALLS TO GCG PACKAGE FOR TRANSPORT TIME STEP    10 IN FLOW TIME STEP     1 STRESS PERIOD     1
+     20 TOTAL ITERATIONS
+  MAXIMUM CONCENTRATION CHANGES FOR EACH ITERATION:
+  MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL MAX. CHANGE LAYER,ROW,COL
+ ------------------------------------------------------------------------------------------------------------------------------------
+   0.6243E-01 (  7,264,288)  0.3905E-01 (  6,264,277)  0.2929E-01 (  2,381,233)  0.2267E-01 (  2,381,234)  0.1902E-01 (  3,383,219)
+   0.1119E-01 (  3,384,219)  0.3945E-02 (  4,384,219)  0.3078E-01 (  3,384,219)  0.4199E-01 (  3,384,219)  0.1662E-01 (  3,384,219)
+   0.3576E-02 (  3,384,219)  0.3118E-02 (  1,421,246)  0.5279E-02 (  4,221,233)  0.3639E-02 (  4,221,233)  0.1045E-03 (  5,221,232)
+   0.5361E-02 (  2,243,227)  0.3003E-02 (  3,243,227)  0.1127E-02 (  4,243,227)  0.1152E-03 (  5,243,227)  0.6982E-03 (  5,243,227)
+
+
+
+ >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>FOR COMPONENT NO. 01<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+                                            -------------------------------------------
+                                                      TRANSPORT STEP NO.   10
+                                            -------------------------------------------
+
+ TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION =   730.0000    D   
+ .....................................................................
+
+                     CUMULATIVE MASS BUDGETS AT END OF TRANSPORT STEP   10, TIME STEP    1, STRESS PERIOD    1
+                     -----------------------------------------------------------------------------------------
+
+                                                             IN                           OUT
+                                                      ----------------             ----------------
+                               CONSTANT CONCENTRATION:    0.000000                    0.000000    
+                                        CONSTANT HEAD:    0.000000                   -188.2088    
+                                               DRAINS:    0.000000                   -106234.6    
+                                             RECHARGE:    620797.5                    0.000000    
+                              INACTIVE CELLS(ICBND=0):    250967.2                   -250970.7    
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                               MASS STOR (FLOW MODEL):    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):    5.665885                   -492031.8    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                              ....immobile domain....
+                               1ST/0TH ORDER REACTION:    0.000000                    0.000000    
+                                MASS STORAGE (SOLUTE):   0.1694500                   -21923.58    
+                                MASS STORAGE (SORBED):    0.000000                    0.000000    
+                            ---------------------------------------------------------------------------
+                                              [TOTAL]:    871770.6     KG            -871348.8     KG  
+
+                                                          NET (IN - OUT):    421.8125    
+                                                   DISCREPANCY (PERCENT):   0.4839743E-01
+  ----- 
+ | M T |
+ | 3 D | END OF MODEL OUTPUT
+  ----- 

@@ -183,7 +183,7 @@ class SeawatVdf(Package):
     unitnumber = 37
 
     def __init__(self, model, mtdnconc=1, mfnadvfd=1, nswtcpl=1, iwtable=1,
-                 densemin=1.000, densemax=1.025, dnscrit=1e-2, denseref=1.000,
+                 densemin=0, densemax=0, dnscrit=1e-2, denseref=1.000,
                  denseslp=.025, crhoref=0, firstdt=0.001, indense=1,
                  dense=1.000, nsrhoeos=1, drhodprhd=4.46e-3, prhdref=0.,
                  extension='vdf', unitnumber=None, filenames=None, **kwargs):
