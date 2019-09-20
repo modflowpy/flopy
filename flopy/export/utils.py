@@ -70,8 +70,8 @@ def ensemble_helper(inputs_filename, outputs_filename, models, add_reals=True,
         f_in.add_global_attributes({"namefile": ''})
 
     if outputs_filename is not None:
-        f_out = output_helper(outputs_filename, models[0], models[0]. \
-                              load_results(as_dict=True), **kwargs)
+        f_out = output_helper(outputs_filename, models[0],
+                              models[0].load_results(as_dict=True), **kwargs)
         vdict = {}
         vdicts = [output_helper(vdict, models[0], models[0]. \
                                 load_results(as_dict=True), **kwargs)]
@@ -211,9 +211,15 @@ def output_helper(f, ml, oudic, **kwargs):
 
     Parameters
     ----------
-        f : filename for output - must have .shp or .nc extension
-        ml : BaseModel derived type
-        oudic : dict {output_filename,flopy datafile/cellbudgetfile instance}
+    f : str
+        filename for output - must have .shp or .nc extension
+    ml : flopy.mbase.ModelInterface derived type
+    oudic : dict
+        output_filename,flopy datafile/cellbudgetfile instance
+    **kwargs : keyword arguments
+        modelgrid : flopy.discretizaiton.Grid
+            user supplied model grid instance that will be used for export
+            in lieu of the models model grid instance
 
     Returns
     -------
@@ -274,7 +280,7 @@ def output_helper(f, ml, oudic, **kwargs):
     times = [t for t in common_times[::stride]]
     if isinstance(f, str) and f.lower().endswith(".nc"):
         f = NetCdf(f, ml, time_values=times, logger=logger,
-                   forgive=forgive)
+                   forgive=forgive, **kwargs)
     elif isinstance(f, NetCdf):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
@@ -336,6 +342,28 @@ def output_helper(f, ml, oudic, **kwargs):
 
 
 def model_export(f, ml, **kwargs):
+    """
+    Method to export a model to a shapefile or netcdf file
+
+    Parameters
+    ----------
+    f : str
+        file name (".nc" for netcdf or ".shp" for shapefile)
+        or dictionary of ....
+    ml : flopy.modflow.mbase.ModelInterface object
+        flopy model object
+
+    **kwargs : keyword arguments
+         modelgrid: flopy.discretization.Grid
+            user supplied modelgrid object which will supercede the built
+            in modelgrid object
+        epsg : int
+            epsg projection code
+        prj : str
+            prj file name
+
+
+    """
     assert isinstance(ml, ModelInterface)
     package_names = kwargs.get("package_names", None)
     if package_names is None:
@@ -353,13 +381,13 @@ def model_export(f, ml, **kwargs):
 
         for pak in ml.packagelist:
             if pak.name[0] in package_names:
-                f = pak.export(f, **kwargs)
+                f = package_export(f, pak, **kwargs)
                 assert f is not None
         return f
 
     elif isinstance(f, dict):
         for pak in ml.packagelist:
-            f = pak.export(f, **kwargs)
+            f = package_export(f, pak, **kwargs)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -368,9 +396,32 @@ def model_export(f, ml, **kwargs):
 
 
 def package_export(f, pak, **kwargs):
+    """
+    Method to export a package to shapefile or netcdf
+
+    Parameters
+    ----------
+    f : str
+        output file name (ends in .shp for shapefile or .nc for netcdf)
+    pak : flopy.pakbase.Package object
+        package to export
+    ** kwargs : keword arguments
+        modelgrid: flopy.discretization.Grid
+            user supplied modelgrid object which will supercede the built
+            in modelgrid object
+        epsg : int
+            epsg projection code
+        prj : str
+            prj file name
+
+    Returns
+    -------
+        f : NetCdf object or None
+
+    """
     assert isinstance(pak, PackageInterface)
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, pak.parent)
+        f = NetCdf(f, pak.parent, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         shapefile_utils.model_attributes_to_shapefile(f, pak.parent,
@@ -381,7 +432,8 @@ def package_export(f, pak, **kwargs):
         for a in pak.data_list:
             if isinstance(a, DataInterface):
                 if a.array is not None:
-                    if a.data_type == DataType.array2d and len(a.array.shape) == 2 \
+                    if a.data_type == DataType.array2d \
+                            and len(a.array.shape) == 2 \
                             and a.array.shape[1] > 0:
                         try:
                             f = array2d_export(f, a, **kwargs)
@@ -408,12 +460,33 @@ def package_export(f, pak, **kwargs):
 def generic_array_export(f, array, var_name="generic_array",
                          dimensions=("time", "layer", "y", "x"),
                          precision_str="f4", units="unitless", **kwargs):
-    # assert isinstance(f,NetCdf),"generic_array_helper() can only be used " +\
-    #                            "with instantiated netCDfs"
+    """
+    Method to export a generic array to NetCdf
+
+    Parameters
+    ----------
+    f : str
+        filename or existing export instance type (NetCdf only for now)
+    array : np.ndarray
+    var_name : str
+        variable name
+    dimensions : tuple
+        netcdf dimensions
+    precision_str : str
+        binary precision string, default "f4"
+    units : string
+        units of array data
+    **kwargs : keyword arguments
+        model : flopy.modflow.mbase
+            flopy model object
+
+    """
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        assert "model" in kwargs.keys(), "creating a new netCDF using generic_array_helper requires a 'model' kwarg"
+        assert "model" in kwargs.keys(), "creating a new netCDF using " \
+                                         "generic_array_helper requires a " \
+                                         "'model' kwarg"
         assert isinstance(kwargs["model"], BaseModel)
-        f = NetCdf(f, kwargs.pop("model"))
+        f = NetCdf(f, kwargs.pop("model"), **kwargs)
 
     assert array.ndim == len(dimensions), "generic_array_helper() " + \
                                           "array.ndim != dimensions"
@@ -456,28 +529,33 @@ def mflist_export(f, mfl, **kwargs):
 
     Parameters
     -----------
-        f : string (filename) or existing export instance type
-        (NetCdf only for now)
-        mfl : MfList instance
+    f : str
+        filename or existing export instance type (NetCdf only for now)
+    mfl : MfList instance
+    **kwargs : keyword arguments
+        modelgrid : flopy.discretization.Grid
+            model grid instance which will supercede the flopy.model.modelgrid
 
     """
     assert isinstance(mfl, DataListInterface) and \
            isinstance(mfl, DataInterface) \
         , "mflist_helper only helps instances that support DataListInterface"
 
+    modelgrid = mfl.model.modelgrid
+    if "modelgrid" in kwargs:
+        modelgrid = kwargs.pop("modelgrid")
+
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, mfl.model)
+        f = NetCdf(f, mfl.model, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         sparse = kwargs.get("sparse", False)
         kper = kwargs.get("kper", 0)
         squeeze = kwargs.get("squeeze", True)
 
-        model_grid = mfl.model.modelgrid
-
-        if model_grid is None:
+        if modelgrid is None:
             raise Exception("MfList.to_shapefile: ModelGrid is not set")
-        elif model_grid.grid_type == 'USG-Unstructured':
+        elif modelgrid.grid_type == 'USG-Unstructured':
             raise Exception('Flopy does not support exporting to shapefile '
                             'from a MODFLOW-USG unstructured grid.')
 
@@ -496,26 +574,26 @@ def mflist_export(f, mfl, **kwargs):
                         n = shapefile_utils.shape_attr_name(name, length=4)
                         aname = "{}{}{}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile2(f, model_grid, array_dict)
+            shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
             #if np.isscalar(kper):
             #    kper = [kper]
-            model_grid = mfl.mg
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
-                verts = np.array(model_grid.get_cell_vertices(ra.i, ra.j))
+                verts = np.array(modelgrid.get_cell_vertices(ra.i, ra.j))
             elif df is not None:
-                verts = np.array([model_grid.get_cell_vertices(i, df.j.values[ix])
+                verts = np.array([modelgrid.get_cell_vertices(i,
+                                                              df.j.values[ix])
                                   for ix, i in enumerate(df.i.values)])
                 ra = df.to_records(index=False)
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             polys = np.array([Polygon(v) for v in verts])
             recarray2shp(ra, geoms=polys, shpname=f,
-                         mg=model_grid, epsg=epsg, prj=prj)
+                         mg=modelgrid, epsg=epsg, prj=prj)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         base_name = mfl.package.name[0].lower()
@@ -581,10 +659,14 @@ def transient2d_export(f, t2d, **kwargs):
 
     Parameters
     -----------
-        f : string (filename) or existing export instance type (NetCdf only for now)
-        t2d : Transient2d instance
+    f : str
+        filename or existing export instance type (NetCdf only for now)
+    u2d : Transient2d instance
+    **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
+        modelgrid : flopy.discretization.Grid
+            model grid instance which will supercede the flopy.model.modelgrid
 
     """
 
@@ -595,25 +677,28 @@ def transient2d_export(f, t2d, **kwargs):
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
 
+    modelgrid = t2d.model.modelgrid
+    if 'modelgrid' in kwargs:
+        modelgrid = kwargs.pop("modelgrid")
+
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, t2d.model)
+        f = NetCdf(f, t2d.model, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
         for kper in range(t2d.model.modeltime.nper):
             u2d = t2d[kper]
-            name = '{}_{}'.format(
-                shapefile_utils.shape_attr_name(u2d.name), kper + 1)
+            name = '{}_{}'.format(shapefile_utils.shape_attr_name(u2d.name),
+                                  kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile2(f, t2d.model.modelgrid,
-                                             array_dict)
+        shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # mask the array is defined by any row col with at lease
         # one active cell
         mask = None
-        if t2d.model.modelgrid.idomain is not None:
-            ibnd = np.abs(t2d.model.modelgrid.idomain).sum(axis=0)
+        if modelgrid.idomain is not None:
+            ibnd = np.abs(modelgrid.idomain).sum(axis=0)
             mask = ibnd == 0
 
         # f.log("getting 4D array for {0}".format(t2d.name_base))
@@ -691,33 +776,39 @@ def array3d_export(f, u3d, **kwargs):
 
     Parameters
     -----------
-        f : string (filename) or existing export instance type (NetCdf only for now)
-        u3d : Util3d instance
+    f : str
+        filename or existing export instance type (NetCdf only for now)
+    u2d : Util3d instance
+    **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
+        modelgrid : flopy.discretization.Grid
+            model grid instance which will supercede the flopy.model.modelgrid
 
     """
 
     assert isinstance(u3d, DataInterface), "array3d_export only helps " \
                                            "instances that support " \
                                            "DataInterface"
-    #assert len(u3d.array.shape) == 3, "array3d_export only supports 3D arrays"
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
 
+    modelgrid = u3d.model.modelgrid
+    if "modelgrid" in kwargs:
+        modelgrid = kwargs.pop("modelgrid")
+
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, u3d.model)
+        f = NetCdf(f, u3d.model, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         array_dict = {}
-        for ilay in range(u3d.model.modelgrid.nlay):
+        for ilay in range(modelgrid.nlay):
             u2d = u3d[ilay]
             name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile2(f, u3d.model.modelgrid,
-                                             array_dict)
+        shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         var_name = u3d.name
@@ -738,9 +829,8 @@ def array3d_export(f, u3d, **kwargs):
         # f.log("getting 3D array for {0}".format(var_name))
         #
         mask = None
-        if u3d.model.modelgrid.idomain is not None and "ibound" not in \
-                var_name:
-            mask = u3d.model.modelgrid.idomain == 0
+        if modelgrid.idomain is not None and "ibound" not in var_name:
+            mask = modelgrid.idomain == 0
 
         if mask is not None and array.shape != mask.shape:
             # f.log("broadcasting 3D array for {0}".format(var_name))
@@ -771,10 +861,8 @@ def array3d_export(f, u3d, **kwargs):
                     array[mask] = netcdf.FILLVALUE
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u3d.model.modelgrid.idomain is not None and "ibound" not\
-                        in var_name:
-                    array[u3d.model.modelgrid.idomain == 0] = \
-                        netcdf.FILLVALUE
+                if modelgrid.idomain is not None and "ibound" not in var_name:
+                    array[modelgrid.idomain == 0] = netcdf.FILLVALUE
 
         if isinstance(f, dict):
             f[var_name] = array
@@ -823,10 +911,14 @@ def array2d_export(f, u2d, **kwargs):
 
     Parameters
     ----------
-        f : string (filename) or existing export instance type (NetCdf only for now)
-        u2d : Util2d instance
+    f : str
+        filename or existing export instance type (NetCdf only for now)
+    u2d : Util2d instance
+    **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
+        modelgrid : flopy.discretization.Grid
+            model grid instance which will supercede the flopy.model.modelgrid
 
     """
     assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
@@ -837,17 +929,21 @@ def array2d_export(f, u2d, **kwargs):
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
 
+    modelgrid = u2d.model.modelgrid
+    if "modelgrid" in kwargs:
+        modelgrid = kwargs.pop("modelgrid")
+
     if isinstance(f, str) and f.lower().endswith(".nc"):
-        f = NetCdf(f, u2d.model)
+        f = NetCdf(f, u2d.model, **kwargs)
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile2(f, u2d.model.modelgrid,
+        shapefile_utils.write_grid_shapefile2(f, modelgrid,
                                              {name: u2d.array})
         return
 
     elif isinstance(f, str) and f.lower().endswith(".asc"):
-        export_array( u2d.model.modelgrid, f, u2d.array, **kwargs)
+        export_array(modelgrid, f, u2d.array, **kwargs)
         return
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -859,10 +955,10 @@ def array2d_export(f, u2d, **kwargs):
 
         with np.errstate(invalid="ignore"):
             if array.dtype not in [int, np.int, np.int32, np.int64]:
-                if u2d.model.modelgrid.idomain is not None and \
+                if modelgrid.idomain is not None and \
                                 "ibound" not in u2d.name.lower() and \
                                 "idomain" not in u2d.name.lower():
-                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = np.NaN
+                    array[modelgrid.idomain[0, :, :] == 0] = np.NaN
                 array[array <= min_valid] = np.NaN
                 array[array >= max_valid] = np.NaN
                 mx, mn = np.nanmax(array), np.nanmin(array)
@@ -870,11 +966,11 @@ def array2d_export(f, u2d, **kwargs):
                 mx, mn = np.nanmax(array), np.nanmin(array)
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
-                if u2d.model.modelgrid.idomain is not None and \
+                if modelgrid.idomain is not None and \
                                 "ibound" not in u2d.name.lower() and \
                                 "idomain" not in u2d.name.lower() and \
                                 "icbund" not in u2d.name.lower():
-                    array[u2d.model.modelgrid.idomain[0, :, :] == 0] = \
+                    array[modelgrid.idomain[0, :, :] == 0] = \
                         netcdf.FILLVALUE
         var_name = u2d.name
         if isinstance(f, dict):
@@ -920,8 +1016,7 @@ def array2d_export(f, u2d, **kwargs):
 
 
 def export_array(modelgrid, filename, a, nodata=-9999,
-                 fieldname='value',
-                 **kwargs):
+                 fieldname='value', **kwargs):
     """
     Write a numpy array to Arc Ascii grid or shapefile with the model
     reference.
@@ -1065,10 +1160,14 @@ def export_contours(modelgrid, filename, contours,
 
     Parameters
     ----------
+    modelgrid : flopy.discretization.Grid
+        flopy modelgrid instance
     filename : str
         path of output shapefile
     contours : matplotlib.contour.QuadContourSet or list of them
         (object returned by matplotlib.pyplot.contour)
+    fieldname : str
+        gis attribute table field name
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
     prj : str
@@ -1216,6 +1315,12 @@ def export_array_contours(modelgrid, filename, a,
         Path of output file with '.shp' extention.
     a : 2D numpy array
         Array to contour
+    fieldname : str
+        gis field name
+    levels : list
+        list of contour levels
+    maxlevels : int
+        maximum number of contour levels
     epsg : int
         EPSG code. See https://www.epsg-registry.org/ or spatialreference.org
     prj : str
