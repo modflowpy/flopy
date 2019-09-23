@@ -235,6 +235,9 @@ def output_helper(f, ml, oudic, **kwargs):
     stride = kwargs.pop("stride", 1)
     forgive = kwargs.pop("forgive", False)
     kwargs.pop("suffix", None)
+    mask_vals = []
+    if "masked_vals" in kwargs:
+        mask_vals = kwargs.pop("masked_vals")
     if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
@@ -286,7 +289,6 @@ def output_helper(f, ml, oudic, **kwargs):
         assert otimes == times
     if isinstance(f, NetCdf) or isinstance(f, dict):
         shape3d = (ml.nlay, ml.nrow, ml.ncol)
-        mask_vals = []
         mask_array3d = None
         if ml.bas6:
             mask_vals.append(ml.bas6.hnoflo)
