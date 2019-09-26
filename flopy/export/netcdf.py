@@ -122,9 +122,13 @@ class NetCdf(object):
         (default 'down')
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
-    forgive: what to do if a duplicate variable name is being created.  If
+    forgive : what to do if a duplicate variable name is being created.  If
         True, then the newly requested var is skipped.  If False, then
         an exception is raised.
+    **kwargs : keyword arguments
+        modelgrid : flopy.discretization.Grid instance
+            user supplied model grid which will be used in lieu of the model
+            object modelgrid for netcdf production
 
     Notes
     -----
@@ -136,7 +140,7 @@ class NetCdf(object):
 
     def __init__(self, output_filename, model, time_values=None,
                  z_positive='up', verbose=None, prj=None, logger=None,
-                 forgive=False):
+                 forgive=False, **kwargs):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
@@ -156,6 +160,8 @@ class NetCdf(object):
 
         self.model = model
         self.model_grid = model.modelgrid
+        if "modelgrid" in kwargs:
+            self.model_grid = kwargs.pop("modelgrid")
         self.model_time = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
