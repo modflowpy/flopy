@@ -1193,8 +1193,8 @@ class CellBudgetFile(object):
                            'not {}'.format(len(times))
                     raise Exception(etxt)
                 timesint = times
-            for idx, t in enumerate(timesint):
-                result[idx, 0] = t
+        for idx, t in enumerate(timesint):
+            result[idx, 0] = t
 
         for itim, k in enumerate(kk):
             v = self.get_data(kstpkper=k, text=text, full3D=True)
