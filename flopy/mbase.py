@@ -396,9 +396,24 @@ class BaseModel(ModelInterface):
         return next_unit
 
     def export(self, f, **kwargs):
-        # for pak in self.packagelist:
-        #    f = pak.export(f)
-        # return f
+        """
+        Method to export a model to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from .export import utils
         return utils.model_export(f, self, **kwargs)
 

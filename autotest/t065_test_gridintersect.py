@@ -1027,3 +1027,70 @@ def test_polygon_offset_rot_structured_grid_shapely():
     result = ix.intersect_polygon(p)
     # assert len(result) == 3.
     return result
+
+def test_rasters():
+    from flopy.utils import Raster
+    import os
+    import flopy as fp
+
+    ws = os.path.join("..", "examples", "data", "options")
+    raster_name = "dem.img"
+
+    try:
+        rio = Raster.load(os.path.join(ws, "dem", raster_name))
+    except ImportError:
+        return
+
+    ml = fp.modflow.Modflow.load("sagehen.nam", version="mfnwt",
+                                 model_ws=os.path.join(ws, 'sagehen'))
+    xoff = 214110
+    yoff = 4366620
+    ml.modelgrid.set_coord_info(xoff, yoff)
+
+    # test sampling points and polygons
+    val = rio.sample_point(xoff + 2000, yoff + 2000, band=1)
+    print(val - 2336.3965)
+    if abs(val - 2336.3965) > 1e-4:
+        raise AssertionError
+
+    x0, x1, y0, y1 = rio.bounds
+
+    x0 += 1000
+    y0 += 1000
+    x1 -= 1000
+    y1 -= 1000
+    shape = np.array([(x0, y0), (x0, y1), (x1, y1), (x1, y0), (x0, y0)])
+
+    data = rio.sample_polygon(shape, band=rio.bands[0])
+    if data.size != 267050:
+        raise AssertionError
+    if abs(np.min(data) - 1942.1735) > 1e-4:
+        raise AssertionError
+    if (np.max(data) - 2608.557) > 1e-4:
+        raise AssertionError
+
+    rio.crop(shape)
+    data = rio.get_array(band=rio.bands[0], masked=True)
+    if data.size != 267050:
+        raise AssertionError
+    if abs(np.min(data) - 1942.1735) > 1e-4:
+        raise AssertionError
+    if (np.max(data) - 2608.557) > 1e-4:
+        raise AssertionError
+
+    data = rio.resample_to_grid(ml.modelgrid.xcellcenters,
+                                ml.modelgrid.ycellcenters,
+                                band=rio.bands[0],
+                                method="nearest")
+    if data.size != 5913:
+        raise AssertionError
+    if abs(np.min(data) - 1942.1735) > 1e-4:
+        raise AssertionError
+    if abs(np.max(data) - 2605.6204) > 1e-4:
+        raise AssertionError
+
+    del rio
+
+
+if __name__ == "__main__":
+    test_rasters()

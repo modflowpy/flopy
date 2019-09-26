@@ -274,6 +274,14 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
        Additional 2D arrays to add as attributes to the shapefile.
        (default is None)
 
+    **kwargs : keyword arguments
+        modelgrid : fp.modflow.Grid object
+            if modelgrid is supplied, user supplied modelgrid is used in lieu
+            of the modelgrid attached to the modflow model object
+        epsg : int
+            epsg projection information
+        prj : str
+            user supplied prj file
 
     Returns
     -------
@@ -297,7 +305,11 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    grid = ml.modelgrid
+    if "modelgrid" in kwargs:
+        grid = kwargs.pop("modelgrid")
+    else:
+        grid = ml.modelgrid
+
     if grid.grid_type == 'USG-Unstructured':
         raise Exception('Flopy does not support exporting to shapefile from '
                         'and MODFLOW-USG unstructured grid.')
@@ -393,10 +405,10 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile2(filename, ml.modelgrid, array_dict)
+    write_grid_shapefile2(filename, grid, array_dict)
     epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
-    write_prj(filename, ml.modelgrid, epsg, prj)
+    write_prj(filename, grid, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
