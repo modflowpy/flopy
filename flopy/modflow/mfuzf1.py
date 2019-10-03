@@ -514,7 +514,7 @@ class ModflowUzf1(Package):
         if abs(iuzfopt) in [0, 1]:
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
 
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk,
                                 name='surfk')
 
@@ -680,7 +680,7 @@ class ModflowUzf1(Package):
             f_uzf.write(self.vks.get_file_entry())
 
         # Dataset 4b modflow 2005 v. 1.12 and modflow-nwt v. 1.1
-        if self.seepsurfk:
+        if self.seepsurfk or self.specifysurfk:
             f_uzf.write(self.surfk.get_file_entry())
 
         if self.iuzfopt > 0:
@@ -852,7 +852,7 @@ class ModflowUzf1(Package):
             load_util2d('vks', np.float32)
 
         # dataset 4b
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             load_util2d('surfk', np.float32)
 
         if iuzfopt > 0:

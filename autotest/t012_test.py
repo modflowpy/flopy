@@ -39,6 +39,12 @@ def test_mf2005_p07():
     namfile = 'p7mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namfile, model_ws=pth, verbose=True,
                                    exe_name=mt3d_exe)
+    # Optional keyword line is absent in this example, ensure defaults are kept
+    assert mt.btn.DRYCell is False
+    assert mt.btn.Legacy99Stor is False
+    assert mt.btn.MFStyleArr is False
+    assert mt.btn.AltWTSorb is False
+
     mt.model_ws = cpth
     ftlfile = 'p7.ftl'
     mt.ftlfilename = ftlfile
@@ -374,6 +380,12 @@ def test_mfnwt_keat_uzf():
     namefile = 'Keat_UZF_mt.nam'
     mt = flopy.mt3d.mt.Mt3dms.load(namefile, model_ws=pth, verbose=True,
                                    version='mt3d-usgs', exe_name=mt3d_usgs_exe)
+    # Check a few options specified as optional keywords on line 3
+    assert mt.btn.DRYCell is True
+    assert mt.btn.Legacy99Stor is False
+    assert mt.btn.MFStyleArr is True
+    assert mt.btn.AltWTSorb is False
+
     mt.model_ws = cpth
     ftlfile = 'Keat_UZF.ftl'
     mt.ftlfilename = ftlfile

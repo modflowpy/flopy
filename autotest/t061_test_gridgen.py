@@ -39,8 +39,15 @@ def test_gridgen():
                                     delr=delr,
                                     delc=delc, top=top, botm=botm)
 
+    sim = flopy.mf6.MFSimulation()
+    gwf = gwf = flopy.mf6.ModflowGwf(sim)
+    dis6 = flopy.mf6.ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol,
+                                    delr=delr,
+                                    delc=delc, top=top, botm=botm)
+
     gridgen_ws = cpth
     g = Gridgen(dis5, model_ws=gridgen_ws, exe_name=exe_name)
+    g6 = Gridgen(dis6, model_ws=gridgen_ws, exe_name=exe_name)
 
     rf0shp = os.path.join(gridgen_ws, 'rf0')
     xmin = 7 * delr
@@ -50,6 +57,7 @@ def test_gridgen():
     rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
+    g6.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, 'rf1')
     xmin = 8 * delr
@@ -59,6 +67,7 @@ def test_gridgen():
     rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
+    g6.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, 'rf2')
     xmin = 9 * delr
@@ -68,12 +77,14 @@ def test_gridgen():
     rfpoly = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
+    g6.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
 
     # if gridgen executable is available then do the main part of the test
     if run:
 
         # Use gridgen to build the grid
         g.build()
+        g6.build()
 
         # test the different gridprops dictionaries, which contain all the
         # information needed to make the different discretization packages

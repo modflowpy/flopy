@@ -149,12 +149,13 @@ class Gridgen(object):
             self.nlay = self.dis.nlay.get_data()
             self.nrow = self.dis.nrow.get_data()
             self.ncol = self.dis.ncol.get_data()
-            self.sr = self.dis._model_or_sim.sr
+            self.modelgrid = self.dis.parent.modelgrid
         else:
             self.nlay = self.dis.nlay
             self.nrow = self.dis.nrow
             self.ncol = self.dis.ncol
-            self.sr = self.dis.parent.sr
+            self.modelgrid = self.dis.parent.modelgrid
+
         self.nodes = 0
         self.nja = 0
         self.nodelay = np.zeros((self.nlay), dtype=np.int)
@@ -1580,21 +1581,18 @@ class Gridgen(object):
         return s
 
     def _mfgrid_block(self):
-        # Need to adjust offsets and rotation because gridgen rotates around
-        # lower left corner, whereas flopy rotates around upper left.
-        # gridgen rotation is counter clockwise, whereas flopy rotation is
-        # clock wise.  Crazy.
-        xll = self.sr.xul
-        yll = self.sr.yul - self.sr.yedge[0]
-        xllrot, yllrot = self.sr.rotate(xll, yll, self.sr.rotation,
-                                        xorigin=self.sr.xul,
-                                        yorigin=self.sr.yul)
+        # flopy modelgrid object uses same xoff, yoff, and rotation convention
+        # as gridgen
+
+        xoff = self.modelgrid.xoffset
+        yoff = self.modelgrid.yoffset
+        angrot = self.modelgrid.angrot
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(self.sr.rotation)
-        s += '  X_OFFSET = {}\n'.format(xllrot)
-        s += '  Y_OFFSET = {}\n'.format(yllrot)
+        s += '  ROTATION_ANGLE = {}\n'.format(angrot)
+        s += '  X_OFFSET = {}\n'.format(xoff)
+        s += '  Y_OFFSET = {}\n'.format(yoff)
         s += '  NLAY = {}\n'.format(self.nlay)
         s += '  NROW = {}\n'.format(self.nrow)
         s += '  NCOL = {}\n'.format(self.ncol)
@@ -1627,12 +1625,12 @@ class Gridgen(object):
             np.savetxt(fname, top)
 
         # bot
-        botm = self.dis.botm
+        botm = self.dis.botm.array
         for k in range(self.nlay):
             if isinstance(self.dis, ModflowGwfdis):
                 bot = botm[k]
             else:
-                bot = botm[k].array
+                bot = botm[k]
             if bot.min() == bot.max():
                 s += '  BOTTOM LAYER {} = CONSTANT {}\n'.format(k + 1,
                                                                 bot.min())

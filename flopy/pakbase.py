@@ -264,6 +264,24 @@ class Package(PackageInterface):
         return dl
 
     def export(self, f, **kwargs):
+        """
+        Method to export a package to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from flopy import export
         return export.utils.package_export(f, self, **kwargs)
 

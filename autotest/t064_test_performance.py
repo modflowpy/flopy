@@ -62,7 +62,7 @@ class TestModflowPerformance():
         """test model and package init time(s)."""
         mfp = TestModflowPerformance()
         target = 0.3 # seconds
-        assert mfp.init_time < target, "model init took {:.2fs}, should take {:.1f}s".format(mfp.init_time, target)
+        assert mfp.init_time < target, "model init took {:.2f}s, should take {:.1f}s".format(mfp.init_time, target)
         print('setting up model took {:.2f}s'.format(mfp.init_time))
 
     def test_0_write_time(self):
@@ -73,7 +73,7 @@ class TestModflowPerformance():
         t0 = time.time()
         mfp.m.write_input()
         t1 = time.time() - t0
-        assert t1 < target, "model write took {:.2fs}, should take {:.1f}s".format(t1, target)
+        assert t1 < target, "model write took {:.2f}s, should take {:.1f}s".format(t1, target)
         print('writing input took {:.2f}s'.format(t1))
 
     def test_9_load_time(self):
@@ -85,7 +85,7 @@ class TestModflowPerformance():
         m = fm.Modflow.load('{}.nam'.format(mfp.modelname),
                             model_ws=mfp.model_ws, check=False)
         t1 = time.time() - t0
-        assert t1 < target, "model load took {:.2fs}, should take {:.1f}s".format(t1, target)
+        assert t1 < target, "model load took {:.2f}s, should take {:.1f}s".format(t1, target)
         print('loading the model took {:.2f}s'.format(t1))
 
     @classmethod

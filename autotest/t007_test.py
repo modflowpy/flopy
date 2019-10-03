@@ -78,7 +78,7 @@ def export_netcdf(m):
         fnc.write()
     except Exception as e:
         raise Exception(
-            'ncdf export fail for namfile {0}:\n{1}  '.format(namfile, str(e)))
+            'ncdf export fail for namfile {0}:\n{1}  '.format(m.name, str(e)))
     try:
         nc = netCDF4.Dataset(fnc_name, 'r')
     except Exception as e:
@@ -117,6 +117,44 @@ def export_shapefile(namfile):
                                             "shapefile {0}:{1:d}".format(
                                                 fnc_name, s.numRecords)
     return
+
+
+def export_shapefile_modelgrid_override(namfile):
+    try:
+        import shapefile as shp
+    except:
+        return
+
+    from flopy.discretization import StructuredGrid
+
+    print(namfile)
+    m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
+    mg0 = m.modelgrid
+    modelgrid = StructuredGrid(mg0.delc * 0.3048, mg0.delr * 0.3048,
+                               mg0.top, mg0.botm, mg0.idomain, mg0.lenuni,
+                               mg0.epsg, mg0.proj4, xoff=mg0.xoffset,
+                               yoff=mg0.yoffset, angrot=mg0.angrot)
+
+    assert m, 'Could not load namefile {}'.format(namfile)
+    assert isinstance(m, flopy.modflow.Modflow)
+    fnc_name = os.path.join(spth, m.name + '.shp')
+
+    try:
+        fnc = m.export(fnc_name, modelgrid=modelgrid)
+        #fnc2 = m.export(fnc_name, package_names=None)
+        #fnc3 = m.export(fnc_name, package_names=['DIS'])
+
+
+    except Exception as e:
+        raise Exception(
+            'shapefile export fail for namfile {0}:\n{1}  '.format(namfile,
+                                                                   str(e)))
+    try:
+        s = shp.Reader(fnc_name)
+    except Exception as e:
+        raise Exception(
+            ' shapefile import fail for {0}:{1}'.format(fnc_name, str(e)))
+
 
 def test_freyberg_export():
     from flopy.discretization import StructuredGrid
@@ -1130,6 +1168,12 @@ def test_shapefile_ibound():
 def test_shapefile():
     for namfile in namfiles:
         yield export_shapefile, namfile
+    return
+
+
+def test_shapefile_export_modelgrid_override():
+    for namfile in namfiles[0:2]:
+        yield export_shapefile_modelgrid_override, namfile
     return
 
 
