@@ -497,6 +497,24 @@ def test_free_format_flag():
     assert ms1.free_format_input == ms1.bas6.ifrefm
 
 
+def test_sr():
+    import flopy
+    m = flopy.modflow.Modflow("test", model_ws="./temp",
+                              xll=12345, yll=12345,
+                              proj4_str="test test test")
+    flopy.modflow.ModflowDis(m,10,10,10)
+    m.sr.xll = 12345
+    m.sr.yll = 12345
+    m.write_input()
+    mm = flopy.modflow.Modflow.load("test.nam")
+    if mm.sr.xul != 12345:
+        raise AssertionError()
+    if mm.sr.yul != 12355:
+        raise AssertionError()
+    if mm.sr.proj4_str != "test test test":
+        raise AssertionError()
+
+
 def test_mg():
     import flopy
     from flopy.utils import geometry
@@ -1310,5 +1328,6 @@ if __name__ == '__main__':
     # test_export_array()
     #test_export_array_contours()
     #test_tricontour_NaN()
-    test_export_contourf()
+    #test_export_contourf()
+    test_sr()
     pass
