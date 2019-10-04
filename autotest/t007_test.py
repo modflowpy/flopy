@@ -506,7 +506,7 @@ def test_sr():
     m.sr.xll = 12345
     m.sr.yll = 12345
     m.write_input()
-    mm = flopy.modflow.Modflow.load("test.nam")
+    mm = flopy.modflow.Modflow.load("test.nam", model_ws="./temp")
     if mm.sr.xul != 12345:
         raise AssertionError()
     if mm.sr.yul != 12355:
