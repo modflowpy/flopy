@@ -541,7 +541,8 @@ class _VertexCrossSection(_CrossSection):
         raise NotImplementedError("plot_specific_discharge must be "
                                   "used for VertexGrid models")
 
-    def get_grid_patch_collection(self, projpts, plotarray, **kwargs):
+    @classmethod
+    def get_grid_patch_collection(cls, projpts, plotarray, **kwargs):
         """
         Get a PatchCollection of plotarray in unmasked cells
 

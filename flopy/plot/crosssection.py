@@ -215,44 +215,13 @@ class _StructuredCrossSection(_CrossSection):
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 
-        xcentergrid = []
-        zcentergrid = []
-        nz = 0
-        if self.mg.nlay == 1:
-            for k in range(0, self.zpts.shape[0]):
-                nz += 1
-                nx = 0
-                for i in range(0, self.xpts.shape[0], 2):
-                    try:
-                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i + 1][2])
-                        zp = self.zpts[k, i]
-                        xcentergrid.append(xp)
-                        zcentergrid.append(zp)
-                        nx += 1
-                    except:
-                        break
-        else:
-            for k in range(0, self.zpts.shape[0] - 1):
-                nz += 1
-                nx = 0
-                for i in range(0, self.xpts.shape[0], 2):
-                    try:
-                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i + 1][2])
-                        zp = 0.5 * (self.zpts[k, i] + self.zpts[k + 1, i + 1])
-                        xcentergrid.append(xp)
-                        zcentergrid.append(zp)
-                        nx += 1
-                    except:
-                        break
-
         xcentergrid, zcentergrid = self.get_centergrids(self.xpts, self.zpts)
-        self.xcentergrid = np.array(xcentergrid).reshape((nz, nx))
-        self.zcentergrid = np.array(zcentergrid).reshape((nz, nx))
+        self.xcentergrid = xcentergrid
+        self.zcentergrid = zcentergrid
 
         geo_xcentergrid, _ = self.get_centergrids(self.geographic_xpts,
                                                   self.zpts)
-        self.geographic_xcentergrid = \
-            np.array(geo_xcentergrid).reshape((nz, nx))
+        self.geographic_xcentergrid = geo_xcentergrid
 
         # Create cross-section extent
         if extent is None:
@@ -341,6 +310,8 @@ class _StructuredCrossSection(_CrossSection):
                     except:
                         break
 
+        xcentergrid = np.array(xcentergrid).reshape((nz, nx))
+        zcentergrid = np.array(zcentergrid).reshape((nz, nx))
         return xcentergrid, zcentergrid
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
