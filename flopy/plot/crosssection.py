@@ -133,7 +133,6 @@ class _StructuredCrossSection(_CrossSection):
                     ycenter[int(line[onkey])] - eps),
                    (xedge[-1] - eps,
                     ycenter[int(line[onkey])] + eps)]
-            self.offset = self.mg.xvertices[line[onkey]+1, 0]
         elif 'column' in linekeys:
             self.direction = 'y'
             xcenter = self.xcellcenters[0, :]
@@ -141,7 +140,6 @@ class _StructuredCrossSection(_CrossSection):
                     yedge[0] - eps),
                    (xcenter[int(line[onkey])] - eps,
                     yedge[-1] + eps)]
-            self.offset = self.mg.yvertices[-1, line[onkey]+1]
         else:
             self.direction = 'xy'
             verts = line[onkey]
@@ -155,7 +153,6 @@ class _StructuredCrossSection(_CrossSection):
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
             # for now set offset to zero, since we do not have
             # information on projection from the user
-            self.offset = 0.
 
         # convert pts list to numpy array
         self.pts = np.array(pts)
