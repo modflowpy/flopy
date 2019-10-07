@@ -36,12 +36,18 @@ class _VertexCrossSection(_CrossSection):
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
+    geographic_coords : bool
+        boolean flag to allow the user to plot cross section lines in
+        geographic coordinates. If False (default), cross section is plotted
+        as the distance along the cross section line.
 
     """
     def __init__(self, ax=None, model=None, modelgrid=None,
-                 line=None, extent=None):
+                 line=None, extent=None, geographic_coords=False):
         super(_VertexCrossSection, self).__init__(ax=ax, model=model,
-                                                  modelgrid=modelgrid)
+                                                  modelgrid=modelgrid,
+                                                  geographic_coords=
+                                                  geographic_coords)
 
         if line is None:
             err_msg = 'line must be specified.'
@@ -123,6 +129,19 @@ class _VertexCrossSection(_CrossSection):
             s += '   {} points intersect the grid.'.format(len(self.xypts))
             raise Exception(s)
 
+        if self.geographic_coords:
+            # transform back to geographic coordinates
+            xypts = {}
+            for nn, pt in self.xypts.items():
+                xp = [t[0] for t in pt]
+                yp = [t[1] for t in pt]
+                xp, yp = geometry.transform(xp, yp, self.mg.xoffset,
+                                            self.mg.yoffset,
+                                            self.mg.angrot_radians)
+                xypts[nn] = [(xt, yt) for xt, yt in zip(xp, yp)]
+
+            self.xypts = xypts
+
         top = self.mg.top
         top.shape = (1, -1)
         botm = self.mg.botm
@@ -153,24 +172,9 @@ class _VertexCrossSection(_CrossSection):
             self.direction = "y"
 
         # make vertex array based on projection direction
-        self.projpts = {}
-        for k in range(1, nlay + 1):
-            top = self.elev[k - 1, :]
-            botm = self.elev[k, :]
-            adjnn = (k - 1) * ncpl
-            for nn, verts in self.xypts.items():
-                t = top[nn]
-                b = botm[nn]
-                if self.direction == "x":
-                    projt = [(v[0], t) for v in verts]
-                    projb = [(v[0], b) for v in verts]
-                else:
-                    projt = [(v[1], t) for v in verts]
-                    projb = [(v[1], b) for v in verts]
+        self.projpts = self.set_zpts(None)
 
-                self.projpts[nn + adjnn] = projt + projb
-
-                # Create cross-section extent
+        # Create cross-section extent
         if extent is None:
             self.extent = self.get_extent()
         else:
@@ -178,9 +182,11 @@ class _VertexCrossSection(_CrossSection):
 
         self.layer0 = None
         self.layer1 = None
+
         self.d = {i: (np.min(np.array(v).T[0]),
                       np.max(np.array(v).T[0])) for
                   i, v in sorted(self.projpts.items())}
+
         self.xpts = None
         self.active = None
         self.ncb = None
@@ -188,6 +194,8 @@ class _VertexCrossSection(_CrossSection):
         self.zpts = None
         self.xcentergrid = None
         self.zcentergrid = None
+        self.geographic_xcentergrid = None
+        self.geographic_xpts = None
 
         # Set axis limits
         self.ax.set_xlim(self.extent[0], self.extent[1])
@@ -395,6 +403,7 @@ class _VertexCrossSection(_CrossSection):
 
             v = [v] * len(x)
 
+            x = np.array(x)
             plot.append(ax.fill_between(x, y1, v, color=colors[0], **kwargs))
             plot.append(ax.fill_between(x, v, y2, color=colors[1], **kwargs))
 
@@ -532,8 +541,7 @@ class _VertexCrossSection(_CrossSection):
         raise NotImplementedError("plot_specific_discharge must be "
                                   "used for VertexGrid models")
 
-    @classmethod
-    def get_grid_patch_collection(cls, projpts, plotarray, **kwargs):
+    def get_grid_patch_collection(self, projpts, plotarray, **kwargs):
         """
         Get a PatchCollection of plotarray in unmasked cells
 
@@ -637,28 +645,50 @@ class _VertexCrossSection(_CrossSection):
 
         Returns
         -------
-        zpts : numpy.ndarray
+        zpts : dict
+
         """
         # make vertex array based on projection direction
-        if not isinstance(vs, np.ndarray):
-            vs = np.array(vs)
+        if vs is not None:
+            if not isinstance(vs, np.ndarray):
+                vs = np.array(vs)
+
+        if self.direction == "x":
+            xyix = 0
+        else:
+            xyix = -1
 
         projpts = {}
         for k in range(1, self.mg.nlay + 1):
             top = self.elev[k - 1, :]
             botm = self.elev[k, :]
             adjnn = (k - 1) * self.mg.ncpl
-            for nn, verts in sorted(self.xypts.items()):
-                t = vs[nn]
-                if top[nn] < vs[nn]:
+            d0 = 0
+            for nn, verts in sorted(self.xypts.items(),
+                                    key=lambda q: q[-1][xyix][xyix]):
+                if vs is None:
                     t = top[nn]
-                b = botm[nn]
-                if self.direction == "x":
-                    projt = [(v[0], t) for v in verts]
-                    projb = [(v[0], b) for v in verts]
                 else:
-                    projt = [(v[1], t) for v in verts]
-                    projb = [(v[1], b) for v in verts]
+                    t = vs[nn]
+                    if top[nn] < vs[nn]:
+                        t = top[nn]
+                b = botm[nn]
+                if self.geographic_coords:
+                    if self.direction == "x":
+                        projt = [(v[0], t) for v in verts]
+                        projb = [(v[0], b) for v in verts]
+                    else:
+                        projt = [(v[1], t) for v in verts]
+                        projb = [(v[1], b) for v in verts]
+                else:
+                    verts = np.array(verts).T
+                    a2 = (np.max(verts[0]) - np.min(verts[0])) ** 2
+                    b2 = (np.max(verts[1]) - np.min(verts[1])) ** 2
+                    c = np.sqrt(a2 + b2)
+                    d1 = d0 + c
+                    projt = [(d0, t), (d1, t)]
+                    projb = [(d0, b), (d1, b)]
+                    d0 += c
 
                 projpts[nn + adjnn] = projt + projb
 
@@ -694,14 +724,9 @@ class _VertexCrossSection(_CrossSection):
         tuple : (xmin, xmax, ymin, ymax)
         """
         xpts = []
-        if self.direction == "x":
-            for nn, verts in self.xypts.items():
-                for v in verts:
-                    xpts.append(v[0])
-        else:
-            for _, verts in self.xypts.items():
-                for v in verts:
-                    xpts.append(v[1])
+        for _, verts in self.projpts.items():
+            for v in verts:
+                xpts.append(v[0])
 
         xmin = np.min(xpts)
         xmax = np.max(xpts)
