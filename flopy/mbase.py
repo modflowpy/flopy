@@ -220,13 +220,13 @@ class BaseModel(ModelInterface):
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           DeprecationWarning)
 
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
-        self._modelgrid = Grid(proj4=proj4_str, xoff=xll, yoff=yll,
-                               angrot=rotation)
+        self._modelgrid = Grid(proj4=self._proj4_str, xoff=xll, yoff=yll,
+                               angrot=self._rotation)
         self._modeltime = None
 
         # Model file information
