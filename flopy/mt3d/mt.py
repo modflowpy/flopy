@@ -414,7 +414,7 @@ class Mt3dms(BaseModel):
                 angrot = 0.0
 
         self._modelgrid.set_coord_info(xoff, yoff, angrot, epsg, proj4)
-
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property

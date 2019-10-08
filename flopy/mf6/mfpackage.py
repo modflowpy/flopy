@@ -1195,7 +1195,6 @@ class MFPackage(PackageContainer, PackageInterface):
         if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
-                self.parent._mg_resync = True
                 try:
                     if isinstance(attribute, mfdatalist.MFList):
                         attribute.set_data(value, autofill=True)

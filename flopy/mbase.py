@@ -66,6 +66,14 @@ class ModelInterface(object):
         self._mg_resync = True
         self._modelgrid = None
 
+    def update_modelgrid(self):
+        if self._modelgrid is not None:
+            self._modelgrid = Grid(proj4=self._modelgrid.proj4,
+                                   xoff=self._modelgrid.xoffset,
+                                   yoff=self._modelgrid.yoffset,
+                                   angrot=self._modelgrid.angrot)
+        self._mg_resync = True
+
     @property
     @abc.abstractmethod
     def modelgrid(self):
@@ -1146,12 +1154,10 @@ class BaseModel(ModelInterface):
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
     def __setattr__(self, key, value):
-
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
             super(BaseModel, self).__setattr__(key, value)
-
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
@@ -1181,7 +1187,6 @@ class BaseModel(ModelInterface):
             else:
                 raise Exception("cannot set start_datetime -"
                                 "ModflowDis not found")
-
         else:
             super(BaseModel, self).__setattr__(key, value)
 

@@ -300,10 +300,12 @@ class Modflow(BaseModel):
         self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @modelgrid.setter
     def modelgrid(self, value):
+        self._mg_resync = False
         self._modelgrid = value
 
     @property

@@ -177,6 +177,17 @@ class Grid(object):
         return s
 
     @property
+    def is_valid(self):
+        return True
+
+    @property
+    def is_complete(self):
+        if self._top is not None and self._botm is not None and \
+                self._idomain is not None:
+            return True
+        return False
+
+    @property
     def grid_type(self):
         return self._grid_type
 
@@ -237,11 +248,11 @@ class Grid(object):
 
     @property
     def top(self):
-        return self._top
+        return copy.deepcopy(self._top)
 
     @property
     def botm(self):
-        return self._botm
+        return copy.deepcopy(self._botm)
 
     @property
     def top_botm(self):
@@ -258,7 +269,7 @@ class Grid(object):
 
     @property
     def idomain(self):
-        return self._idomain
+        return copy.deepcopy(self._idomain)
 
     @property
     def shape(self):
