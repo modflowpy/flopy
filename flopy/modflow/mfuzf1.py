@@ -889,26 +889,26 @@ class ModflowUzf1(Package):
             nuzf1 = pop_item(line, int)
 
             # dataset 10
-            if nuzf1 > 0:
+            if nuzf1 >= 0:
                 load_util2d('finf', np.float32, per=per)
 
             if ietflg > 0:
                 # dataset 11
                 line = line_parse(f.readline())
                 nuzf2 = pop_item(line, int)
-                if nuzf2 > 0:
+                if nuzf2 >= 0:
                     # dataset 12
                     load_util2d('pet', np.float32, per=per)
                 # dataset 13
                 line = line_parse(f.readline())
                 nuzf3 = pop_item(line, int)
-                if nuzf3 > 0:
+                if nuzf3 >= 0:
                     # dataset 14
                     load_util2d('extdp', np.float32, per=per)
                 # dataset 15
                 line = line_parse(f.readline())
                 nuzf4 = pop_item(line, int)
-                if nuzf4 > 0:
+                if nuzf4 >= 0:
                     # dataset 16
                     load_util2d('extwc', np.float32, per=per)
 
