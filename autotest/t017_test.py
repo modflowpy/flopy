@@ -1,6 +1,7 @@
 # Test binary and formatted data readers
 import os
 import shutil
+import sys
 import numpy as np
 import flopy
 from nose.tools import assert_raises
@@ -10,6 +11,11 @@ cpth = os.path.join('temp', 't017')
 if os.path.isdir(cpth):
     shutil.rmtree(cpth)
 os.makedirs(cpth)
+
+if sys.version_info[0] == 2:
+    closed_file_error_msg = 'I/O operation on closed file'
+else:
+    closed_file_error_msg = 'seek of closed file'
 
 
 def test_formattedfile_read():
@@ -36,6 +42,7 @@ def test_formattedfile_read():
     ts = h.get_ts((0, 7, 5))
     assert np.isclose(ts[0, 1], 944.487, 1e-6), \
         'time series value ({}) != {}'.format(ts[0, 1], 944.487)
+    h.close()
 
     # Check error when reading empty file
     fname = os.path.join(cpth, 'empty.githds')
@@ -70,6 +77,7 @@ def test_binaryfile_read():
     ts = h.get_ts((0, 7, 5))
     assert np.isclose(ts[0, 1], 26.00697135925293), \
         'time series value ({}) != {}'.format(ts[0, 1], - 26.00697135925293)
+    h.close()
 
     # Check error when reading empty file
     fname = os.path.join(cpth, 'empty.githds')
@@ -81,6 +89,34 @@ def test_binaryfile_read():
         flopy.utils.HeadFile(fname, 'head', 'single')
 
     return
+
+
+def test_binaryfile_read_context():
+    hds_path = os.path.join(
+            '..', 'examples', 'data', 'freyberg', 'freyberg.githds')
+    with flopy.utils.HeadFile(hds_path) as h:
+        data = h.get_data()
+        assert data.max() > 0, data.max()
+        assert not h.file.closed
+    assert h.file.closed
+
+    with assert_raises(ValueError) as e:
+        h.get_data()
+    assert str(e.exception) == closed_file_error_msg, str(e.exception)
+
+
+def test_cellbudgetfile_read_context():
+    cbc_path = os.path.join(
+            '..', 'examples', 'data', 'mf2005_test', 'mnw1.gitcbc')
+    with flopy.utils.CellBudgetFile(cbc_path) as v:
+        data = v.get_data(text='DRAINS')[0]
+        assert data.min() < 0, data.min()
+        assert not v.file.closed
+    assert v.file.closed
+
+    with assert_raises(ValueError) as e:
+        v.get_data(text='DRAINS')
+    assert str(e.exception) == closed_file_error_msg, str(e.exception)
 
 
 def test_cellbudgetfile_read():
@@ -102,7 +138,7 @@ def test_cellbudgetfile_read():
                 'binary budget item {0} read using kstpkper != binary budget item {0} read using idx'.format(
                     record)
             idx += 1
-
+    v.close()
     return
 
 
@@ -126,6 +162,7 @@ def test_cellbudgetfile_position():
     cbcd = []
     for i in range(idx, v.get_nrecords()):
         cbcd.append(v.get_data(i)[0])
+    v.close()
 
     # write the last entry as a new binary file
     fin = open(fpth, 'rb')
@@ -140,6 +177,7 @@ def test_cellbudgetfile_position():
             data = fin.read(chunk)
             fout.write(data)
             length -= chunk
+    fin.close()
 
     v2 = flopy.utils.CellBudgetFile(opth, verbose=True)
 
@@ -153,6 +191,7 @@ def test_cellbudgetfile_position():
     cbcd2 = []
     for i in range(0, v2.get_nrecords()):
         cbcd2.append(v2.get_data(i)[0])
+    v2.close()
 
     for i, (d1, d2) in enumerate(zip(cbcd, cbcd2)):
         msg = '{} data from slice is not identical'.format(names[i].rstrip())
@@ -168,17 +207,20 @@ def test_cellbudgetfile_position():
     return
 
 
-
-
 def test_cellbudgetfile_readrecord():
 
-    v = flopy.utils.CellBudgetFile(
-        os.path.join('..', 'examples', 'data', 'mf2005_test',
-                     'test1tr.gitcbc'))
+    cbc_fname = os.path.join(
+            '..', 'examples', 'data', 'mf2005_test', 'test1tr.gitcbc')
+    v = flopy.utils.CellBudgetFile(cbc_fname)
     assert isinstance(v, flopy.utils.CellBudgetFile)
 
     kstpkper = v.get_kstpkper()
     assert len(kstpkper) == 30, 'length of kstpkper != 30'
+
+    with assert_raises(TypeError) as e:
+        v.get_data()
+    assert str(e.exception).startswith(
+            'get_data() missing 1 required argument'), str(e.exception)
 
     t = v.get_data(text='STREAM LEAKAGE')
     assert len(t) == 30, 'length of stream leakage data != 30'
@@ -210,14 +252,22 @@ def test_cellbudgetfile_readrecord():
                 'binary budget item {0} read using kstpkper != binary budget item {0} read using idx'.format(
                     record)
 
+    # idx can be either an int or a list of ints
+    s9 = v.get_data(idx=9)
+    assert len(s9) == 1
+    s09 = v.get_data(idx=[0, 9])
+    assert len(s09) == 2
+    assert (s09[1] == s9).all()
+
+    v.close()
     return
 
 
 def test_cellbudgetfile_readrecord_waux():
 
-    v = flopy.utils.CellBudgetFile(
-        os.path.join('..', 'examples', 'data', 'mf2005_test',
-                     'test1tr.gitcbc'))
+    cbc_fname = os.path.join(
+            '..', 'examples', 'data', 'mf2005_test', 'test1tr.gitcbc')
+    v = flopy.utils.CellBudgetFile(cbc_fname)
     assert isinstance(v, flopy.utils.CellBudgetFile)
 
     kstpkper = v.get_kstpkper()
@@ -251,7 +301,7 @@ def test_cellbudgetfile_readrecord_waux():
             assert np.array_equal(t0, t1), \
                 'binary budget item {0} read using kstpkper != binary budget item {0} read using idx'.format(
                     record)
-
+    v.close()
     return
 
 
