@@ -51,6 +51,19 @@ class VertexGrid(Grid):
             self._ncpl = None
 
     @property
+    def is_valid(self):
+        if self._vertices is not None and self._cell2d is not None:
+            return True
+        return False
+
+    @property
+    def is_complete(self):
+        if self._vertices is not None and self._cell2d is not None and \
+                super(VertexGrid, self).is_complete:
+            return True
+        return False
+
+    @property
     def nlay(self):
         if self._botm is not None:
             return len(self._botm)
@@ -296,8 +309,6 @@ if __name__ == "__main__":
     sr_lc = t.grid_lines
     sr_e = t.extent
 
-    print('break')
-
     t.use_ref_coords = False
     x = t.xvertices
     y = t.yvertices
@@ -307,5 +318,3 @@ if __name__ == "__main__":
     zc = t.zcellcenters
     lc = t.grid_lines
     e = t.extent
-
-    print('break')
