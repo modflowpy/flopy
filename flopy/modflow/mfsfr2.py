@@ -80,7 +80,7 @@ class ModflowSfr2(Package):
         Output Control (see Harbaugh and others, 2000, pages 52-55). If
         ipakcb = 0, leakage values will not be printed or saved. Printing to
         the listing file (ipakcb < 0) is not supported.
-    istcsb2 : integer
+    istcb2 : integer
         An integer value used as a flag for writing to a separate formatted
         file all information on inflows and outflows from each reach; on
         stream depth, width, and streambed conductance; and on head difference
