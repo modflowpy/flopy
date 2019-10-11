@@ -378,7 +378,8 @@ class ModflowSms(Package):
             print(msg)
             model.version = 'mfusg'
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -525,6 +526,9 @@ class ModflowSms(Package):
                 print('   IORD {}'.format(iord))
                 print('   RCLOSEPCGU {}'.format(rclosepcgu))
                 print('   RELAXPCGU {}'.format(relaxpcgu))
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

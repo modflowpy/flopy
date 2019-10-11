@@ -423,7 +423,8 @@ class ModflowFhb(Package):
         if model.verbose:
             sys.stdout.write('loading fhb package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -667,6 +668,9 @@ class ModflowFhb(Package):
                         raw = line.strip().split()
                         current[n] = tuple(raw[:len(dtype.names)])
                     ds8.append(current.copy())
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

@@ -459,7 +459,8 @@ class ModflowDisU(Package):
             print(msg)
             model.version = 'mfusg'
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -655,6 +656,9 @@ class ModflowDisU(Package):
             print('   NSTP {}'.format(nstp))
             print('   TSMULT {}'.format(tsmult))
             print('   STEADY {}'.format(steady))
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

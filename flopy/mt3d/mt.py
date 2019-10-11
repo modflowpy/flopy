@@ -654,7 +654,7 @@ class Mt3dms(BaseModel):
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
-        ext_unit_dict.pop(btn_key)
+        ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
         poss_output_units = set(list(range(201, 201+ncomp)) +
@@ -691,7 +691,7 @@ class Mt3dms(BaseModel):
                 if item.filetype in load_only:
                     if forgive:
                         try:
-                            pck = item.package.load(item.filename, mt,
+                            pck = item.package.load(item.filehandle, mt,
                                                     ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:
@@ -705,7 +705,7 @@ class Mt3dms(BaseModel):
                                         .format(item.filetype, o))
                             files_not_loaded.append(item.filename)
                     else:
-                        pck = item.package.load(item.filename, mt,
+                        pck = item.package.load(item.filehandle, mt,
                                                 ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if mt.verbose:
@@ -746,9 +746,10 @@ class Mt3dms(BaseModel):
         for key in mt.pop_key_list:
             try:
                 mt.remove_external(unit=key)
-                if key != btn_key:  # btn_key already popped above
-                    ext_unit_dict.pop(key)
-            except:
+                item = ext_unit_dict.pop(key)
+                if hasattr(item.filehandle, 'close'):
+                    item.filehandle.close()
+            except KeyError:
                 if mt.verbose:
                     sys.stdout.write(
                         "Warning: external file unit "

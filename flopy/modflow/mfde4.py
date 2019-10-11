@@ -239,9 +239,11 @@ class ModflowDe4(Package):
         if model.verbose:
             sys.stdout.write('loading de4 package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # read dataset 0 -- header
         while True:
             line = f.readline()
@@ -276,6 +278,9 @@ class ModflowDe4(Package):
             accl = float(line[20:30].strip())
             hclose = float(line[30:40].strip())
             iprd4 = int(line[40:50].strip())
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None
