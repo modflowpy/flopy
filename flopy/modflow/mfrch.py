@@ -344,9 +344,11 @@ class ModflowRch(Package):
         if model.verbose:
             sys.stdout.write('loading rch package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -426,6 +428,9 @@ class ModflowRch(Package):
                                     ext_unit_dict)
                     current_irch = t
                 irch[iper] = current_irch
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

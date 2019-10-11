@@ -168,7 +168,8 @@ class Mt3dGcg(Package):
             sys.stdout.write('loading gcg package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -204,6 +205,9 @@ class Mt3dGcg(Package):
             print('   ACCL {}'.format(accl))
             print('   CCLOSE {}'.format(cclose))
             print('   IPRGCG {}'.format(iprgcg))
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

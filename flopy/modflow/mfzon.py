@@ -157,9 +157,11 @@ class ModflowZon(Package):
         if model.verbose:
             sys.stdout.write('loading zone package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -193,6 +195,9 @@ class ModflowZon(Package):
             if t.locat is not None:
                 model.add_pop_key_list(t.locat)
             zone_dict[zonnam] = t
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

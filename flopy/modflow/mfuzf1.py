@@ -769,9 +769,11 @@ class ModflowUzf1(Package):
         if model.verbose:
             sys.stdout.write('loading uzf package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             # can't use next() because util2d uses readline()

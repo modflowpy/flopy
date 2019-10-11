@@ -728,14 +728,14 @@ class Modflow(BaseModel):
         if dis_key is None:
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
-        dis = disnamdata.package.load(disnamdata.filename, ml,
+        dis = disnamdata.package.load(disnamdata.filehandle, ml,
                                       ext_unit_dict=ext_unit_dict,
                                       check=False)
         files_successfully_loaded.append(disnamdata.filename)
         if ml.verbose:
             print('   {:4s} package load...success'.format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
-        ext_unit_dict.pop(dis_key)
+        ext_unit_dict.pop(dis_key).filehandle.close()
 
         dis.start_datetime = ml._start_datetime
 
@@ -774,11 +774,11 @@ class Modflow(BaseModel):
                     if forgive:
                         try:
                             if "check" in package_load_args:
-                                item.package.load(item.filename, ml,
+                                item.package.load(item.filehandle, ml,
                                                   ext_unit_dict=ext_unit_dict,
                                                   check=False)
                             else:
-                                item.package.load(item.filename, ml,
+                                item.package.load(item.filehandle, ml,
                                                   ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
@@ -795,11 +795,11 @@ class Modflow(BaseModel):
                             files_not_loaded.append(item.filename)
                     else:
                         if "check" in package_load_args:
-                            item.package.load(item.filename, ml,
+                            item.package.load(item.filehandle, ml,
                                               ext_unit_dict=ext_unit_dict,
                                               check=False)
                         else:
-                            item.package.load(item.filename, ml,
+                            item.package.load(item.filehandle, ml,
                                               ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
@@ -840,7 +840,9 @@ class Modflow(BaseModel):
         for key in ml.pop_key_list:
             try:
                 ml.remove_external(unit=key)
-                ext_unit_dict.pop(key)
+                item = ext_unit_dict.pop(key)
+                if hasattr(item.filehandle, 'close'):
+                    item.filehandle.close()
             except KeyError:
                 if ml.verbose:
                     msg = 'Warning: external file unit {} '.format(key) + \

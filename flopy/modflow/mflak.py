@@ -611,7 +611,8 @@ class ModflowLak(Package):
         if model.verbose:
             sys.stdout.write('loading lak package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             if sys.version_info[0] == 2:
                 f = open(filename, 'r')
@@ -788,6 +789,9 @@ class ModflowLak(Package):
                         tds.append(0.)
                     ds9[n] = tds
                 flux_data[iper] = ds9
+
+        if openfile:
+            f.close()
 
         # convert lake data to Transient3d objects
         lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int32,

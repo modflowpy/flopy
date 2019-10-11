@@ -667,7 +667,8 @@ class Package(PackageInterface):
             check = True
 
         # open the file if not already open
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             if platform.system().lower() == 'windows' and \
                     sys.version_info[0] < 3:
@@ -675,6 +676,10 @@ class Package(PackageInterface):
                 f = io.open(filename, 'r')
             else:
                 f = open(filename, 'r')
+        elif hasattr(f, 'name'):
+            filename = f.name
+        else:
+            filename = '?'
 
         # set string from pak_type
         pak_type_str = str(pak_type).lower()
@@ -955,6 +960,9 @@ class Package(PackageInterface):
 
         dtype = pak_type.get_empty(0, aux_names=aux_names,
                                    structured=model.structured).dtype
+
+        if openfile:
+            f.close()
 
         # set package unit number
         filenames = [None, None]

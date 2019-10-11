@@ -279,7 +279,8 @@ class Mt3dAdv(Package):
             sys.stdout.write('loading adv package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -371,6 +372,9 @@ class Mt3dAdv(Package):
             dchmoc = float(line[0:10])
             if model.verbose:
                 print('   DCHMOC {}'.format(dchmoc))
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

@@ -381,7 +381,8 @@ class Mt3dUzt(Package):
             print('loading uzt package file...\n')
 
         # Open file if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -599,6 +600,9 @@ class Mt3dUzt(Package):
                               '{0:5d}'.format(iper) + ' in kper ' \
                                                       '{0:5d}'.format(
                             iper + 1))
+
+        if openfile:
+            f.close()
 
         unitnumber = None
         filenames = [None, None]

@@ -262,9 +262,11 @@ class ModflowHfb(Package):
         if model.verbose:
             sys.stdout.write('loading hfb6 package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -360,6 +362,10 @@ class ModflowHfb(Package):
                 else:
                     bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
+
+        if openfile:
+            f.close()
+
         # set package unit number
         unitnumber = None
         filenames = [None]

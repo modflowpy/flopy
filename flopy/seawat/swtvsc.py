@@ -297,7 +297,8 @@ class SeawatVsc(Package):
             sys.stdout.write('loading vsc package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -443,6 +444,9 @@ class SeawatVsc(Package):
 
             # Set invisc = 1 because all concentrations converted to density
             invisc = 1
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

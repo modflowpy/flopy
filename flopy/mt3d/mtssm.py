@@ -488,7 +488,8 @@ class Mt3dSsm(Package):
             sys.stdout.write('loading ssm package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -700,6 +701,9 @@ class Mt3dSsm(Package):
                 current['j'] -= 1
                 current = current.view(np.recarray)
             stress_period_data[iper] = current
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

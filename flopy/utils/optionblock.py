@@ -333,10 +333,8 @@ class OptionBlock(object):
         """
         context = package._options
 
-        if hasattr(options, "read"):
-            pass
-
-        else:
+        openfile = not hasattr(options, 'read')
+        if openfile:
             try:
                 options = open(options, "r")
             except IOError:
@@ -381,6 +379,8 @@ class OptionBlock(object):
                             ix += 1
 
             else:
+                if openfile:
+                    options.close()
                 return OptionBlock(options_line=option_line,
                                    package=package)
 

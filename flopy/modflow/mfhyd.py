@@ -299,7 +299,8 @@ class ModflowHyd(Package):
         if model.verbose:
             sys.stdout.write('loading hydmod package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -327,8 +328,8 @@ class ModflowHyd(Package):
             obs['yl'][idx] = float(t[5])
             obs['hydlbl'][idx] = t[6].strip()
 
-        # close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

@@ -319,9 +319,11 @@ class ModflowGmg(Package):
         if model.verbose:
             sys.stdout.write('loading gmg package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -358,8 +360,8 @@ class ModflowGmg(Package):
         t = line.strip().split()
         relax = float(t[0])
 
-        # close the open file
-        f.close()
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

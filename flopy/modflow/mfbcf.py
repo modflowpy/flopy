@@ -269,7 +269,8 @@ class ModflowBcf(Package):
         if model.verbose:
             sys.stdout.write('loading bcf package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -405,6 +406,9 @@ class ModflowBcf(Package):
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'wetdry',
                                 ext_unit_dict)
                 wetdry[k] = t
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

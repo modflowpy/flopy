@@ -154,9 +154,11 @@ class ModflowMlt(Package):
         if model.verbose:
             sys.stdout.write('loading mult package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -201,6 +203,9 @@ class ModflowMlt(Package):
                 t = [kwrd, line]
                 t = ModflowMlt.mult_function(mult_dict, line)
             mult_dict[mltnam] = t
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

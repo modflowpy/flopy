@@ -552,7 +552,8 @@ class ModflowStr(Package):
         if model.verbose:
             sys.stdout.write('loading str package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -807,6 +808,9 @@ class ModflowStr(Package):
             else:
                 stress_period_data[iper] = bnd_output
                 segment_data[iper] = seg_output
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

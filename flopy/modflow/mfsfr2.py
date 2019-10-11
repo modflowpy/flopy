@@ -749,9 +749,11 @@ class ModflowSfr2(Package):
             nper = model.nper
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # Item 0 -- header
         while True:
             line = f.readline()
@@ -889,6 +891,9 @@ class ModflowSfr2(Package):
 
             else:
                 continue
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None
