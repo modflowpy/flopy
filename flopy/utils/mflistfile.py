@@ -15,6 +15,9 @@ import errno
 
 from ..utils.utils_def import totim_to_datetime
 
+if sys.version_info[0] == 2:
+    FileNotFoundError = IOError
+
 
 class ListBudget(object):
     """
