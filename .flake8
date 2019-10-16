@@ -1,0 +1,30 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist
+ignore =
+    # https://flake8.pycqa.org/en/latest/user/error-codes.html
+    F401, # 'module' imported but unused
+    # https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
+    E121, # continuation line under-indented for hanging indent
+    E122, # continuation line missing indentation or outdented
+    E126, # continuation line over-indented for hanging indent
+    E127, # continuation line over-indented for visual indent
+    E128, # continuation line under-indented for visual indent
+    E221, # multiple spaces before operator
+    E222, # multiple spaces after operator
+    E226, # missing whitespace around arithmetic operator
+    E231, # missing whitespace after ','
+    E241, # multiple spaces after ','
+    E402, # module level import not at top of file
+    E501, # line too long (> 79 characters)
+    E722, # do not use bare 'except'
+    W291, # trailing whitespace
+    W292, # no newline at end of file
+    W293, # blank line contains whitespace
+    W391, # blank line at end of file
+    W503, # line break before binary operator
+    W504  # line break after binary operator
+statistics = True
