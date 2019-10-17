@@ -1287,7 +1287,7 @@ class Gridgen(object):
 
         """
 
-        gridprops = self.get_gridprops()
+        gridprops = self.get_gridprops_disu6()
         f = open(fname, 'w')
 
         # opts
@@ -1338,7 +1338,7 @@ class Gridgen(object):
             # celldata -- not optimized for redundant vertices yet
             f.write('BEGIN CELL2D\n')
             iv = 1
-            for n in range(nodes):
+            for n in range(gridprops['nodes']):
                 xc, yc = self.get_center(n)
                 s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
                                                          iv + 1, iv + 2,
