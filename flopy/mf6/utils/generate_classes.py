@@ -79,7 +79,7 @@ def backup_existing_dfns(flopy_dfn_path):
     backup_folder = os.path.join(parent_folder, 'dfn_backup', timestr)
     shutil.copytree(flopy_dfn_path, backup_folder)
     assert os.path.isdir(backup_folder), \
-        'dfn backup files not found: {}'.format(pth)
+        'dfn backup files not found: {}'.format(backup_folder)
     return
 
 
