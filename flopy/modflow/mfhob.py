@@ -333,8 +333,11 @@ class ModflowHob(Package):
         # read dataset 1
         t = line.strip().split()
         nh = int(t[0])
-        iuhobsv = int(t[3])
-        hobdry = float(t[4])
+        iuhobsv = None
+        hobdry = 0
+        if len(t) > 3:
+            iuhobsv = int(t[3])
+            hobdry = float(t[4])
 
         # read dataset 2
         line = f.readline()
@@ -368,15 +371,28 @@ class ModflowHob(Package):
                 line = f.readline()
                 t = line.strip().split()
                 mlay = collections.OrderedDict()
-                for j in range(0, abs(layer) * 2, 2):
-                    k = int(t[j]) - 1
-                    # catch case where the same layer is specified more than
-                    # once. In this case add previous value to the current value
-                    keys = list(mlay.keys())
-                    v = 0.
-                    if k in keys:
-                        v = mlay[k]
-                    mlay[k] = float(t[j + 1]) + v
+                if len(t) >= abs(layer) * 2:
+                    for j in range(0, abs(layer) * 2, 2):
+                        k = int(t[j]) - 1
+                        # catch case where the same layer is specified more than
+                        # once. In this case add previous value to the current value
+                        keys = list(mlay.keys())
+                        v = 0.
+                        if k in keys:
+                            v = mlay[k]
+                        mlay[k] = float(t[j + 1]) + v
+                else:
+                    for j in range(abs(layer)):
+                        k = int(t[0]) - 1
+                        keys = list(mlay.keys())
+                        v = 0.
+                        if k in keys:
+                            v = mlay[k]
+                        mlay[k] = float(t[1]) + v
+
+                        if j != abs(layer) - 1:
+                            line = f.readline()
+                            t = line.strip().split()
                 # reset layer
                 layer = -len(list(mlay.keys()))
 
@@ -429,10 +445,11 @@ class ModflowHob(Package):
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
                                         filetype=ModflowHob.ftype())
-            if iuhobsv > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
-                model.add_pop_key_list(iuhobsv)
+            if iuhobsv is not None:
+                if iuhobsv > 0:
+                    iu, filenames[1] = \
+                        model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
+                    model.add_pop_key_list(iuhobsv)
 
         # create hob object instance
         hob = ModflowHob(model, iuhobsv=iuhobsv, hobdry=hobdry,
