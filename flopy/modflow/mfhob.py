@@ -122,7 +122,8 @@ class ModflowHob(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent,
+        # extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -137,7 +138,7 @@ class ModflowHob(Package):
 
         # create default
         if obs_data is None:
-            obs_data = HeadObservation()
+            obs_data = HeadObservation(model)
 
         # make sure obs_data is a list
         if isinstance(obs_data, HeadObservation):
@@ -374,8 +375,9 @@ class ModflowHob(Package):
                 if len(t) >= abs(layer) * 2:
                     for j in range(0, abs(layer) * 2, 2):
                         k = int(t[j]) - 1
-                        # catch case where the same layer is specified more than
-                        # once. In this case add previous value to the current value
+                        # catch case where the same layer is specified
+                        # more than once. In this case add previous
+                        # value to the current value
                         keys = list(mlay.keys())
                         v = 0.
                         if k in keys:
@@ -400,8 +402,9 @@ class ModflowHob(Package):
             if irefsp0 > 0:
                 itt = 1
                 irefsp0 -= 1
-                totim = model.dis.get_totim_from_kper_toffset(irefsp0,
-                                                              toffset * tomulth)
+                totim = model.dis.get_totim_from_kper_toffset(
+                    irefsp0,
+                    toffset * tomulth)
                 names = [obsnam]
                 tsd = [totim, hob]
                 nobs += 1
@@ -419,8 +422,9 @@ class ModflowHob(Package):
                     names.append(t[0])
                     irefsp = int(t[1]) - 1
                     toffset = float(t[2])
-                    totim = model.dis.get_totim_from_kper_toffset(irefsp,
-                                                                  toffset * tomulth)
+                    totim = model.dis.get_totim_from_kper_toffset(
+                        irefsp,
+                        toffset * tomulth)
                     hob = float(t[3])
                     tsd.append([totim, hob])
                     nobs += 1
@@ -476,7 +480,7 @@ class HeadObservation(object):
     ----------
     tomulth : float
         Time-offset multiplier for head observations. Default is 1.
-    obsnam : string
+    obsname : string
         Observation name. Default is 'HOBS'
     layer : int
         The zero-based layer index of the cell in which the head observation
@@ -573,10 +577,11 @@ class HeadObservation(object):
             for key, value in self.mlay.items():
                 tot += value
             if not (np.isclose(tot, 1.0, rtol=0)):
-                msg = ('sum of dataset 4 proportions must equal 1.0 - ' + \
+                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
                        'sum of dataset 4 proportions = {tot} for ' + \
-                       'observation name {obsname}.').format(tot=tot,
-                                                             obsname=self.obsname)
+                       'observation name {obsname}.'.format(
+                           tot=tot,
+                           obsname=self.obsname)
                 raise ValueError(msg)
 
         # convert passed time_series_data to a numpy array
