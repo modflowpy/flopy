@@ -228,7 +228,7 @@ class ModflowMlt(Package):
 
         """
         t = line.strip().split()
-        basename = t.pop(0).lower()
+        basename = t.pop(0).lower()[0:10]
         multarray = mult_dict[basename]
         try:
             multarray = multarray.array.copy()
@@ -239,7 +239,7 @@ class ModflowMlt(Package):
             if len(t) < 2:
                 break
             op = t.pop(0)
-            multname = t.pop(0)
+            multname = t.pop(0)[0:10]
             try:
                 atemp = mult_dict[multname.lower()].array
             except:
