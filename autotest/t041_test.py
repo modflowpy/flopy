@@ -2,6 +2,7 @@
 Test the observation process load and write
 """
 import os
+import sys
 import shutil
 import numpy as np
 import flopy
@@ -274,6 +275,34 @@ def test_multilayerhob_prfail():
     return
 
 
+def test_multilayerhob_pr_multiline():
+    if sys.version_info[0] > 2:
+        from io import StringIO
+    else:
+        from cStringIO import StringIO
+
+    problem_hob = ["2 4 7",
+                   "1 1",
+                   "A19E1_1 -2 140 91 1 1 -0.28321 -0.05389"
+                   " 69 1 1 1  # A19E1 8/13/1975",
+                   "3 0.954",
+                   "4 0.046",
+                   "A19E1_2 -2 140 91 1 1 -0.28321 -0.05389"
+                   " 72 1 1 1  # A19E1 10/9/1975",
+                   "3 0.954",
+                   "4 0.046"]
+
+    problem_hob = "\n".join(problem_hob)
+    ml = flopy.modflow.Modflow('hobtest')
+    dis = flopy.modflow.ModflowDis(ml, nlay=4, nrow=200, ncol=200,
+                                   nper=100, perlen=10, nstp=4, tsmult=1.,
+                                   steady=False)
+    hob = flopy.modflow.ModflowHob.load(StringIO(problem_hob), ml)
+
+    if len(hob.obs_data) != 2:
+        raise AssertionError("pr, mlay... load error")
+
+
 def test_flwob_load():
     """
     test041 create, write, and load ModflowFlwob package.
@@ -366,3 +395,4 @@ if __name__ == '__main__':
     test_obs_load_and_write()
     test_filenames()
     test_flwob_load()
+    test_multilayerhob_pr_multiline()
