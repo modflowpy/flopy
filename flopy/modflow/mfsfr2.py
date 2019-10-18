@@ -848,13 +848,20 @@ class ModflowSfr2(Package):
                     icalc = dataset_6a[1]
                     # link dataset 6d, 6e by nseg of dataset_6a
                     temp_nseg = dataset_6a[0]
-                    dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-                    dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-
+                    # datasets 6b and 6c aren't read under the conditions below
+                    # see table under description of dataset 6c,
+                    # in the MODFLOW Online Guide for a description
+                    # of this logic
+                    # https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm
+                    dataset_6b, dataset_6c = (0,) * 9, (0,) * 9
+                    if not (isfropt in [2, 3] and icalc == 1 and i > 1) and \
+                            not (isfropt in [1, 2, 3] and icalc >= 2):
+                        dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
+                        dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
                     current[j] = dataset_6a + dataset_6b + dataset_6c
 
                     if icalc == 2:

@@ -114,6 +114,18 @@ def test_gridgen():
         mu = flopy.modflow.Modflow(version='mfusg', structured=False)
         disu = g.get_disu(mu)
 
+        # test writing a modflow 6 disu package
+        fname = os.path.join(cpth, 'mymf6model.disu')
+        g6.to_disu6(fname)
+        assert os.path.isfile(fname), \
+            'MF6 disu file not created: {}'.format(fname)
+
+        # test writing a modflow 6 disv package
+        fname = os.path.join(cpth, 'mymf6model.disv')
+        g6.to_disv6(fname)
+        assert os.path.isfile(fname), \
+            'MF6 disv file not created: {}'.format(fname)
+
     return
 
 
