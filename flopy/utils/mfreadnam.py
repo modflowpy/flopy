@@ -160,13 +160,7 @@ def parsenamefile(namfilename, packages, verbose=True):
             fpath = fpath.replace("'", "")
 
         # need make filenames with paths system agnostic
-        if '/' in fpath:
-            raw = fpath.split('/')
-        elif '\\' in fpath:
-            raw = fpath.split('\\')
-        else:
-            raw = [fpath]
-        fpath = os.path.join(*raw)
+        fpath = fpath.replace('\\', os.sep).replace('/', os.sep)
 
         fname = os.path.join(os.path.dirname(namfilename), fpath)
         if not os.path.isfile(fname) or not os.path.exists(fname):
