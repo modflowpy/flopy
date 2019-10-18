@@ -24,15 +24,20 @@ class OptionBlock(object):
     dtype = "dtype"
     n_nested = "nvars"
     vars = "vars"
+    optional = "optional"
 
     simple_flag = OrderedDict([(dtype, np.bool_),
-                               (nested, False)])
+                               (nested, False),
+                               (optional, False)])
     simple_str = OrderedDict([(dtype, str),
-                              (nested, False)])
+                              (nested, False),
+                              (optional, False)])
     simple_float = OrderedDict([(dtype, float),
-                                (nested, False)])
+                                (nested, False),
+                                (optional, False)])
     simple_int = OrderedDict([(dtype, int),
-                              (nested, False)])
+                              (nested, False),
+                              (optional, False)])
 
     simple_tabfile = OrderedDict([(dtype, np.bool_),
                                   (nested, True),
@@ -114,7 +119,12 @@ class OptionBlock(object):
                             else:
                                 val.append(str(k))
                         else:
-                            val.append(str((object.__getattribute__(self, k))))
+                            v = str(object.__getattribute__(self, k))
+                            if v == "None" and d[OptionBlock.optional]:
+                                pass
+                            else:
+                                val.append(str((object.__getattribute__(self,
+                                                                        k))))
 
                 if "None" in val:
                     pass
@@ -277,6 +287,15 @@ class OptionBlock(object):
                 for key, d in ctx[OptionBlock.vars].items():
                     dtype = d[OptionBlock.dtype]
 
+                    if d[OptionBlock.optional]:
+                        if ix >= len(t):
+                            continue
+                        else:
+                            try:
+                                OptionUtil.isvalid(dtype, t[ix])
+                            except TypeError:
+                                continue
+
                     OptionUtil.isvalid(dtype, t[ix])
 
                     if dtype == np.bool_:
@@ -363,6 +382,9 @@ class OptionBlock(object):
                         ix = 1
 
                         for k, d in ctx[OptionBlock.vars].items():
+                            if ix >= len(t) and d[OptionBlock.optional]:
+                                continue
+
                             if d[OptionBlock.dtype] == float:
                                 valid = OptionUtil.isfloat(t[ix])
                             elif d[OptionBlock.dtype] == int:
