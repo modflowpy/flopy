@@ -147,7 +147,6 @@ class ModflowHfb(Package):
         aux_names = []
         it = 0
         while it < len(options):
-            print(it, options[it])
             if 'aux' in options[it].lower():
                 aux_names.append(options[it + 1].lower())
                 it += 1
@@ -285,7 +284,7 @@ class ModflowHfb(Package):
             while it < len(t):
                 toption = t[it]
                 # print it, t[it]
-                if toption.lower() is 'noprint':
+                if toption.lower() == 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
                     options.append(' '.join(t[it:it + 2]))

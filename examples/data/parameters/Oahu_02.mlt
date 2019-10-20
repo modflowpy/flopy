@@ -1,0 +1,9 @@
+4
+prehk
+CONSTANT 1.5e+02
+k_f
+CONSTANT 10
+HKL1 FUNCTION
+prehk * k_f
+VKAL1
+CONSTANT 1.0
