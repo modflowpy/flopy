@@ -812,7 +812,7 @@ class ListBudget(object):
             if len(re.findall('=', line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
-                except e:
+                except Exception:
                     print('error parsing budget line in ts,sp', ts, sp)
                     return self.null_entries
                 if flux is None:
