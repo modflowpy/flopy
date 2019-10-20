@@ -392,9 +392,10 @@ class ModflowSms(Package):
         # Record 1a
         nopt = 0
         opts = ['simple', 'moderate', 'complex']
+        options = []
         for o in opts:
             if o in line.lower():
-                options.append(0)
+                options.append(o)
                 nopt += 1
 
         if nopt > 0:
@@ -546,7 +547,7 @@ class ModflowSms(Package):
                          iacl=iacl, norder=norder, level=level, north=north,
                          iredsys=iredsys, rrctol=rrctol, idroptol=idroptol,
                          epsrn=epsrn, clin=clin, ipc=ipc, iscl=iscl,
-                         iord=iord, rclosepcgu=rclosepcgu,
+                         iord=iord, rclosepcgu=rclosepcgu, options=options,
                          relaxpcgu=relaxpcgu, unitnumber=unitnumber,
                          filenames=filenames)
         return sms

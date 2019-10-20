@@ -271,7 +271,7 @@ class ModflowDe4(Package):
             itmx = int(line[0:10].strip())
             mxup = int(line[10:20].strip())
             mxlow = int(line[20:30].strip())
-            mxbw = int(tline[30:40].strip())
+            mxbw = int(line[30:40].strip())
             line = f.readline()
             ifreq = int(line[0:10].strip())
             mutd4 = int(line[10:20].strip())
