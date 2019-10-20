@@ -7,8 +7,9 @@ import filecmp
 import flopy
 try:
     import pymake
-except:
+except ImportError:
     print('could not import pymake')
+    pymake = False
 
 path = os.path.join('..', 'examples', 'data', 'mf2005_test')
 cpth = os.path.join('temp', 't048')
@@ -32,16 +33,13 @@ def load_and_write_fhb(mfnam, pth):
     exe_name = 'mf2005'
     v = flopy.which(exe_name)
 
-    run = True
-    if v is None:
-        run = False
-    try:
-        import pymake
+    if pymake:
+        run = v is not None
         lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
         apth = os.path.join(lpth, 'flopy')
         compth = lpth
         pymake.setup(os.path.join(pth, mfnam), lpth)
-    except:
+    else:
         run = False
         lpth = pth
         apth = cpth

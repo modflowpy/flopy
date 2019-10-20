@@ -24,13 +24,6 @@ for f in mffiles:
     shutil.copy(f, os.path.join(path, os.path.split(f)[1]))
 
 
-def ra_slice(ra, cols):
-    raslice = np.column_stack([ra[c] for c in cols])
-    dtype = [(str(d[0]), d[1]) for d in ra.dtype.descr if d[0] in cols]
-    return np.array([tuple(r) for r in raslice],
-                    dtype=dtype).view(np.recarray)
-
-
 def test_mpsim():
     model_ws = path
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=model_ws)
