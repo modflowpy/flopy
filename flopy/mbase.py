@@ -203,6 +203,7 @@ class BaseModel(ModelInterface):
         self.heading = ''
         self.exe_name = exe_name
         self._verbose = verbose
+        self.external_path = None
         self.external_extension = 'ref'
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
@@ -526,8 +527,16 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-
-        return self.get_package(item)
+        #return self.get_package(item)
+        # to avoid infinite recursion
+        if item == "_packagelist" or item == "packagelist":
+            raise AttributeError(item)
+        pckg = self.get_package(item)
+        if pckg is not None or item in self.mfnam_packages:
+            return pckg
+        if item == 'modelgrid':
+            return
+        raise AttributeError(item)
 
     def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
                           pop_key=True):

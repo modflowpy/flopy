@@ -293,8 +293,8 @@ def output_helper(f, ml, oudic, **kwargs):
         if ml.bas6:
             mask_vals.append(ml.bas6.hnoflo)
             mask_array3d = ml.bas6.ibound.array == 0
-        if ml.bcf:
-            mask_vals.append(ml.bcf.hdry)
+        if ml.bcf6:
+            mask_vals.append(ml.bcf6.hdry)
         if ml.lpf:
             mask_vals.append(ml.lpf.hdry)
 

@@ -1967,6 +1967,7 @@ class check:
             self.sr = self.sfr.parent.modelgrid.sr
         except AttributeError:
             self.sr = self.sfr.parent.sr
+            self.mg = None
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data

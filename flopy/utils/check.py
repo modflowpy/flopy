@@ -82,7 +82,7 @@ class check:
 
         # allow for instantiation with model or package
         # if isinstance(package, BaseModel): didn't work
-        if package.parent is not None:
+        if hasattr(package, 'parent'):
             self.model = package.parent
             self.prefix = '{} PACKAGE DATA VALIDATION'.format(package.name[0])
         else:
