@@ -226,6 +226,10 @@ class ModflowHfb(Package):
         return dtype
 
     @staticmethod
+    def get_sfac_columns():
+        return ['hydchr']
+
+    @staticmethod
     def load(f, model, ext_unit_dict=None):
         """
         Load an existing package.
@@ -328,9 +332,6 @@ class ModflowHfb(Package):
                 iname = 'static'
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                # print par_dict
-                # print data_dict
-
                 par_current = ModflowHfb.get_empty(par_dict['nlst'])
 
                 #
@@ -344,6 +345,7 @@ class ModflowHfb(Package):
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
+                    t = tuple(t)
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
                 # convert indices to zero-based

@@ -5,7 +5,7 @@ the ModflowParBc class as `flopy.modflow.ModflowParBc`.
 """
 
 import numpy as np
-from ..utils.flopy_io import line_strip
+from ..utils.flopy_io import line_strip, ulstrd
 
 
 class ModflowParBc(object):
@@ -42,7 +42,7 @@ class ModflowParBc(object):
         return None
 
     @staticmethod
-    def load(f, npar, dt, verbose=False):
+    def load(f, npar, dt, model, ext_unit_dict=None, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV, etc.).
@@ -101,22 +101,9 @@ class ModflowParBc(object):
                         instnam = t[0].lower()
                     else:
                         instnam = 'static'
-                    bcinst = []
-                    for nw in range(nlst):
-                        line = f.readline()
-                        t = line_strip(line).split()
-                        bnd = []
-                        for jdx in range(nitems):
-                            # if jdx < 3:
-                            if issubclass(dt[jdx].type, np.integer):
-                                # conversion to zero-based occurs in package load method in mbase.
-                                bnd.append(int(t[jdx]))
-                            else:
-                                try:
-                                    bnd.append(float(t[jdx]))
-                                except IndexError:
-                                    bnd.append(1.)
-                        bcinst.append(bnd)
+
+                    ra = np.zeros(nlst, dtype=dt)
+                    bcinst = ulstrd(f, nlst, ra, model, [], ext_unit_dict)
                     pinst[instnam] = bcinst
                 bc_parms[parnam] = [{'partyp': partyp, 'parval': parval,
                                      'nlst': nlst, 'timevarying': timeVarying},
