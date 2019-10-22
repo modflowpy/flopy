@@ -430,17 +430,19 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
             if ii != 0:
                 line = file_handle.readline()
 
-            try:
+            if model.free_format_input:
                 # whitespace separated
                 t = line.strip().split()
-                ra[ii] = tuple(t[:ncol])
-            except:
+                if len(t) < ncol:
+                    t = t + (ncol - len(t)) * [0.0]
+                else:
+                    t = t[:ncol]
+                t = tuple(t)
+                ra[ii] = t
+            else:
                 # fixed format
-                t = []
-                for ivar in range(ncol):
-                    istart = ivar * 10
-                    istop = istart + 10
-                    t.append(line[istart:istop])
+                t = read_fixed_var(line, ncol=ncol)
+                t = tuple(t)
                 ra[ii] = tuple(t[:ncol])
 
     # scale the data and check

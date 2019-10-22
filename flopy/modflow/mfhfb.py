@@ -298,7 +298,9 @@ class ModflowHfb(Package):
         # data set 2 and 3
         if nphfb > 0:
             dt = ModflowHfb.get_empty(1).dtype
-            pak_parms = mfparbc.load(f, nphfb, dt, model.verbose)
+            pak_parms = mfparbc.load(f, nphfb, dt, model,
+                                     ext_unit_dict=ext_unit_dict,
+                                     verbose=model.verbose)
         # data set 4
         bnd_output = None
         if nhfbnp > 0:

@@ -103,6 +103,9 @@ class ModflowParBc(object):
                         instnam = 'static'
 
                     ra = np.zeros(nlst, dtype=dt)
+                    #todo: if sfac is used for parameter definition, then
+                    # the empty list on the next line needs to be the package
+                    # get_sfac_columns
                     bcinst = ulstrd(f, nlst, ra, model, [], ext_unit_dict)
                     pinst[instnam] = bcinst
                 bc_parms[parnam] = [{'partyp': partyp, 'parval': parval,

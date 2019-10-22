@@ -619,7 +619,8 @@ class ModflowStr(Package):
         # read parameter data
         if npstr > 0:
             dt = ModflowStr.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, npstr, dt, model.verbose)
+            pak_parms = mfparbc.load(f, npstr, dt, model, ext_unit_dict,
+                                     model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
