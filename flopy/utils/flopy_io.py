@@ -443,7 +443,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
                 # fixed format
                 t = read_fixed_var(line, ncol=ncol)
                 t = tuple(t)
-                ra[ii] = tuple(t[:ncol])
+                ra[ii] = t
 
     # scale the data and check
     for column_name in sfac_columns:

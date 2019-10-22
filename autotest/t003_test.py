@@ -108,11 +108,11 @@ def test_load_nam_mt_nonexistant_file():
 
 
 if __name__ == '__main__':
-    #test_loadoc()
-    #test_loadoc_nstpfail()
-    #test_load_nam_mf_nonexistant_file()
-    #test_load_nam_mt_nonexistant_file()
-    #test_loadoc_lenfail()
-    #test_loadfreyberg()
+    test_loadoc()
+    test_loadoc_nstpfail()
+    test_load_nam_mf_nonexistant_file()
+    test_load_nam_mt_nonexistant_file()
+    test_loadoc_lenfail()
+    test_loadfreyberg()
     test_loadoahu()
-    #test_loadtwrip()
+    test_loadtwrip()

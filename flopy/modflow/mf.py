@@ -433,7 +433,6 @@ class Modflow(BaseModel):
                               self.external_binflag, self.external_output):
             if u == 0:
                 continue
-            # fr = os.path.relpath(f, self.model_ws)
             replace_text = ''
             if o:
                 replace_text = 'REPLACE'
