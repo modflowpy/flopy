@@ -332,6 +332,10 @@ class ModflowWel(Package):
         return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
 
     @staticmethod
+    def get_sfac_columns():
+        return ['flux']
+
+    @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.

@@ -429,14 +429,17 @@ class Modflow(BaseModel):
         f_nam.write('{}'.format(self.get_name_file_entries()))
 
         # write the external files
-        for u, f, b in zip(self.external_units, self.external_fnames,
-                           self.external_binflag):
+        for u, f, b, o in zip(self.external_units, self.external_fnames,
+                              self.external_binflag, self.external_output):
             if u == 0:
                 continue
-            # fr = os.path.relpath(f, self.model_ws)
+            replace_text = ''
+            if o:
+                replace_text = 'REPLACE'
             if b:
                 f_nam.write(
-                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f +
+                     replace_text + '\n')
             else:
                 f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
