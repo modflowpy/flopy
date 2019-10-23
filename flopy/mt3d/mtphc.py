@@ -10,7 +10,7 @@ class Mt3dPhc(Package):
     def __init__(self, model, os=2, temp=25, asbin=0, eps_aqu=0, eps_ph=0,
                  scr_output=1, cb_offset=0, smse=['pH', 'pe'], mine=[], ie=[],
                  surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[],
-                 extension='phc', unitnumber=None):
+                 extension='phc', unitnumber=None, filenames=None):
 
         if unitnumber is None:
             unitnumber = Mt3dPhc.defaultunit()

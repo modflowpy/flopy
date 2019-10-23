@@ -2328,7 +2328,8 @@ class Util2d(DataInterface):
         nrow, ncol = shape
         data = np.ma.zeros(shape, dtype=dtype)
         data.mask = True
-        if not hasattr(file_in, 'read'):
+        openfile = not hasattr(file_in, 'read')
+        if openfile:
             file_in = open(file_in, 'r')
         line = file_in.readline().strip()
         nblock = int(line.split()[0])
@@ -2341,6 +2342,8 @@ class Util2d(DataInterface):
             i1, i2 = int(raw[0]) - 1, int(raw[1])
             j1, j2 = int(raw[2]) - 1, int(raw[3])
             data[i1:i2, j1:j2] = raw[4]
+        if openfile:
+            file_in.close()
         if data.mask.any():
             warn('Util2d.load_block(): blocks do not cover full array')
         return data.data
@@ -2377,7 +2380,8 @@ class Util2d(DataInterface):
             raise ValueError(
                 'Util2d.load_txt(): expected 1 or 2 dimensions, found shape {0}'
                     .format(shape))
-        if not hasattr(file_in, 'read'):
+        openfile = not hasattr(file_in, 'read')
+        if openfile:
             file_in = open(file_in, 'r')
         npl, fmt, width, decimal = ArrayFormat.decode_fortran_descriptor(fmtin)
         items = []
@@ -2408,6 +2412,8 @@ class Util2d(DataInterface):
                             items.append(item)
                     except IndexError:
                         break
+        if openfile:
+            file_in.close()
         data = np.fromiter(items, dtype=dtype, count=num_items)
         if data.size != num_items:
             raise ValueError('Util2d.load_txt(): expected array size {0},'
@@ -2522,13 +2528,16 @@ class Util2d(DataInterface):
                 warn('Util2d: setting integer dtype from {0} to int32'
                      .format(dtype))
             dtype = np.int32
-        if not hasattr(file_in, 'read'):
+        openfile = not hasattr(file_in, 'read')
+        if openfile:
             file_in = open(file_in, 'rb')
         header_data = None
         if bintype is not None and np.issubdtype(dtype, np.floating):
             header_dtype = bf.BinaryHeader.set_dtype(bintype=bintype)
             header_data = np.fromfile(file_in, dtype=header_dtype, count=1)
         data = np.fromfile(file_in, dtype=dtype, count=num_items)
+        if openfile:
+            file_in.close()
         if data.size != num_items:
             raise ValueError('Util2d.load_bin(): expected array size {0},'
                              ' but found size {1}'.format(num_items,

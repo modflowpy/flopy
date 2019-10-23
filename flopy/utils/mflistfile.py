@@ -15,6 +15,9 @@ import errno
 
 from ..utils.utils_def import totim_to_datetime
 
+if sys.version_info[0] == 2:
+    FileNotFoundError = IOError
+
 
 class ListBudget(object):
     """
@@ -809,7 +812,7 @@ class ListBudget(object):
             if len(re.findall('=', line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
-                except e:
+                except Exception:
                     print('error parsing budget line in ts,sp', ts, sp)
                     return self.null_entries
                 if flux is None:

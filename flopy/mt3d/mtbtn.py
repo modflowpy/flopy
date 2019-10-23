@@ -660,7 +660,8 @@ class Mt3dBtn(Package):
         >>> btn = flopy.mt3d.Mt3dBtn.load('test.btn', mt)
 
         """
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -947,8 +948,8 @@ class Mt3dBtn(Package):
             print('   TTSMULT {}'.format(ttsmult))
             print('   TTSMAX {}'.format(ttsmax))
 
-        # Close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

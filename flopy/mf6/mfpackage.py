@@ -1195,7 +1195,6 @@ class MFPackage(PackageContainer, PackageInterface):
         if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
-                self.parent._mg_resync = True
                 try:
                     if isinstance(attribute, mfdatalist.MFList):
                         attribute.set_data(value, autofill=True)
@@ -1741,6 +1740,24 @@ class MFPackage(PackageContainer, PackageInterface):
                                 self._filename)
 
     def export(self, f, **kwargs):
+        """
+        Method to export a package to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from flopy import export
         return export.utils.package_export(f, self, **kwargs)
 

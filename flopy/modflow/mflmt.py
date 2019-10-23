@@ -183,18 +183,25 @@ class ModflowLmt(Package):
         if model.verbose:
             sys.stdout.write('loading lmt package file...\n')
 
+        openfile = not hasattr(f, 'read')
+        if openfile:
+            filename = f
+            f = open(filename, 'r')
+        elif hasattr(f, 'name'):
+            filename = f.name
+        else:
+            filename = None
+
         # set default values
-        prefix = os.path.basename(f)
-        prefix = prefix[:prefix.rfind('.')]
-        output_file_name = prefix + '.ftl'
+        if filename:
+            prefix = os.path.splitext(os.path.basename(filename))[0]
+            output_file_name = prefix + '.ftl'
+        else:
+            output_file_name = model.name + '.ftl'
         output_file_unit = 333
         output_file_header = 'standard'
         output_file_format = 'unformatted'
         package_flows = []
-
-        if not hasattr(f, 'read'):
-            filename = f
-            f = open(filename, 'r')
 
         for line in f:
             if line[0] == '#':
@@ -215,6 +222,9 @@ class ModflowLmt(Package):
                 if len(t) > 1:
                     for i in range(1, len(t)):
                         package_flows.append(t[i])
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

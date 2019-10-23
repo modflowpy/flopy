@@ -32,11 +32,15 @@ class PlotCrossSection(object):
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
         then these will be calculated based on grid, coordinates, and rotation.
+    geographic_coords : bool
+        boolean flag to allow the user to plot cross section lines in
+        geographic coordinates. If False (default), cross section is plotted
+        as the distance along the cross section line.
 
     """
 
     def __init__(self, model=None, modelgrid=None, ax=None,
-                 line=None, extent=None):
+                 line=None, extent=None, geographic_coords=False):
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelMap method'
@@ -51,7 +55,9 @@ class PlotCrossSection(object):
         if tmp == "structured":
             self.__cls = _StructuredCrossSection(ax=ax, model=model,
                                                  modelgrid=modelgrid,
-                                                 line=line, extent=extent)
+                                                 line=line, extent=extent,
+                                                 geographic_coords=
+                                                 geographic_coords)
 
         elif tmp == "unstructured":
             raise NotImplementedError("Unstructured xc not yet implemented")
@@ -59,7 +65,9 @@ class PlotCrossSection(object):
         elif tmp == "vertex":
             self.__cls = _VertexCrossSection(ax=ax, model=model,
                                              modelgrid=modelgrid,
-                                             line=line, extent=extent)
+                                             line=line, extent=extent,
+                                             geographic_coords=
+                                             geographic_coords)
 
         else:
             raise ValueError("Unknown modelgrid type {}".format(tmp))
@@ -80,6 +88,7 @@ class PlotCrossSection(object):
         self.zpts = self.__cls.zpts
         self.xcentergrid = self.__cls.xcentergrid
         self.zcentergrid = self.__cls.zcentergrid
+        self.geographic_coords = self.__cls.geographic_coords
         self.extent = self.__cls.extent
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
@@ -480,17 +489,22 @@ class PlotCrossSection(object):
             else:
                 zcentergrid = self.zcentergrid
 
+            if self.geographic_coords:
+                xcentergrid = self.__cls.geographic_xcentergrid
+            else:
+                xcentergrid = self.xcentergrid
+
             if nlay == 1:
                 x = []
                 z = []
                 for k in range(nlay):
-                    for i in range(self.xcentergrid.shape[1]):
-                        x.append(self.xcentergrid[k, i])
+                    for i in range(xcentergrid.shape[1]):
+                        x.append(xcentergrid[k, i])
                         z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
-                x = np.array(x).reshape((1, self.xcentergrid.shape[1]))
-                z = np.array(z).reshape((1, self.xcentergrid.shape[1]))
+                x = np.array(x).reshape((1, xcentergrid.shape[1]))
+                z = np.array(z).reshape((1, xcentergrid.shape[1]))
             else:
-                x = self.xcentergrid
+                x = xcentergrid
                 z = zcentergrid
 
             u = []
@@ -534,12 +548,8 @@ class PlotCrossSection(object):
 
             u = np.array([qx[cell] for cell in sorted(projpts)])
 
-            if self.direction == "x":
-                x = np.array([np.mean(np.array(v).T[0]) for i, v
-                              in sorted(projpts.items())])
-            else:
-                x = np.array([np.mean(np.array(v).T[1]) for i, v
-                              in sorted(projpts.items())])
+            x = np.array([np.mean(np.array(v).T[0]) for i, v
+                          in sorted(projpts.items())])
 
             z = np.ravel(zcenters)
             v = np.array([qz[cell] for cell

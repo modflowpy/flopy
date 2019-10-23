@@ -295,7 +295,8 @@ class Mt3dLkt(Package):
         if model.verbose:
             sys.stdout.write('loading lkt package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -416,6 +417,9 @@ class Mt3dLkt(Package):
                 if model.verbose:
                     print('   No transient boundary conditions specified')
                 pass
+
+        if openfile:
+            f.close()
 
         if len(lk_stress_period_data) == 0:
             lk_stress_period_data = None

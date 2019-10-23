@@ -264,7 +264,8 @@ class Mt3dDsp(Package):
             ncol = model.ncol
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -335,6 +336,9 @@ class Mt3dDsp(Package):
             #         u2d = Util2d.load(f, model, (nlay,), np.float32, name,
             #                     ext_unit_dict, array_format="mt3d")
             #         kwargs[name] = u2d
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

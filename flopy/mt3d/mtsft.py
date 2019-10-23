@@ -458,7 +458,8 @@ class Mt3dSft(Package):
         if model.verbose:
             sys.stdout.write('loading sft package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -661,6 +662,9 @@ class Mt3dSft(Package):
                 if model.verbose:
                     print('   No transient boundary conditions specified')
                 pass
+
+        if openfile:
+            f.close()
 
         # 1 item for SFT input file, 1 item for SFTOBS file
         unitnumber = None

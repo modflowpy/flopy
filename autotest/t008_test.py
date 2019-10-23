@@ -15,6 +15,9 @@ if not os.path.isdir(tpth):
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
 
+ppth = os.path.join('..', 'examples', 'data', 'parameters')
+pnamfiles = ["Oahu_02.nam",]
+
 test_nwt_pth = os.path.join("..", "examples", "data", "nwt_test")
 nwt_files = [os.path.join(test_nwt_pth, f) for f in os.listdir(test_nwt_pth)
              if f.endswith('.nwt')]
@@ -25,6 +28,13 @@ nwt_nam = [os.path.join(test_nwt_pth, f) for f in os.listdir(test_nwt_pth)
 
 def load_model(namfile):
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth,
+                                   version='mf2005', verbose=True)
+    assert m, 'Could not load namefile {}'.format(namfile)
+    assert m.load_fail is False
+
+
+def load_parameter_model(namfile):
+    m = flopy.modflow.Modflow.load(namfile, model_ws=ppth,
                                    version='mf2005', verbose=True)
     assert m, 'Could not load namefile {}'.format(namfile)
     assert m.load_fail is False
@@ -41,6 +51,11 @@ def load_only_bas6_model(namfile):
 def test_modflow_load():
     for namfile in namfiles:
         yield load_model, namfile
+    return
+
+def test_parameter_load():
+    for namfile in pnamfiles:
+        yield load_parameter_model, namfile
     return
 
 

@@ -1206,9 +1206,11 @@ class ModflowMnw2(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 (header)
         while True:
             line = next(f)
@@ -1266,7 +1268,9 @@ class ModflowMnw2(Package):
                 mnw[wellid].stress_period_data[per] = \
                     mnw[wellid].stress_period_data[per - 1]
             itmp.append(itmp_per)
-        f.close()
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

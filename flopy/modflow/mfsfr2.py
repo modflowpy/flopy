@@ -80,7 +80,7 @@ class ModflowSfr2(Package):
         Output Control (see Harbaugh and others, 2000, pages 52-55). If
         ipakcb = 0, leakage values will not be printed or saved. Printing to
         the listing file (ipakcb < 0) is not supported.
-    istcsb2 : integer
+    istcb2 : integer
         An integer value used as a flag for writing to a separate formatted
         file all information on inflows and outflows from each reach; on
         stream depth, width, and streambed conductance; and on head difference
@@ -749,9 +749,11 @@ class ModflowSfr2(Package):
             nper = model.nper
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # Item 0 -- header
         while True:
             line = f.readline()
@@ -846,13 +848,20 @@ class ModflowSfr2(Package):
                     icalc = dataset_6a[1]
                     # link dataset 6d, 6e by nseg of dataset_6a
                     temp_nseg = dataset_6a[0]
-                    dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-                    dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-
+                    # datasets 6b and 6c aren't read under the conditions below
+                    # see table under description of dataset 6c,
+                    # in the MODFLOW Online Guide for a description
+                    # of this logic
+                    # https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm
+                    dataset_6b, dataset_6c = (0,) * 9, (0,) * 9
+                    if not (isfropt in [2, 3] and icalc == 1 and i > 1) and \
+                            not (isfropt in [1, 2, 3] and icalc >= 2):
+                        dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
+                        dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
                     current[j] = dataset_6a + dataset_6b + dataset_6c
 
                     if icalc == 2:
@@ -889,6 +898,9 @@ class ModflowSfr2(Package):
 
             else:
                 continue
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None
@@ -1955,6 +1967,7 @@ class check:
             self.sr = self.sfr.parent.modelgrid.sr
         except AttributeError:
             self.sr = self.sfr.parent.sr
+            self.mg = None
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data

@@ -90,6 +90,9 @@ class Seawat(BaseModel):
         self.version_types = {'seawat': 'SEAWAT'}
         self.set_version(version)
         self.lst = SeawatList(self, listunit=listunit)
+        self.glo = None
+        self._mf = None
+        self._mt = None
 
         # If a MODFLOW model was passed in, then add its packages
         self.mf = self
@@ -160,7 +163,7 @@ class Seawat(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.bas6 is not None:
+        if self.has_package('bas6'):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
@@ -193,6 +196,7 @@ class Seawat(BaseModel):
         self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property

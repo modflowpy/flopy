@@ -147,7 +147,6 @@ class ModflowHfb(Package):
         aux_names = []
         it = 0
         while it < len(options):
-            print(it, options[it])
             if 'aux' in options[it].lower():
                 aux_names.append(options[it + 1].lower())
                 it += 1
@@ -227,6 +226,10 @@ class ModflowHfb(Package):
         return dtype
 
     @staticmethod
+    def get_sfac_columns():
+        return ['hydchr']
+
+    @staticmethod
     def load(f, model, ext_unit_dict=None):
         """
         Load an existing package.
@@ -262,9 +265,11 @@ class ModflowHfb(Package):
         if model.verbose:
             sys.stdout.write('loading hfb6 package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -283,7 +288,7 @@ class ModflowHfb(Package):
             while it < len(t):
                 toption = t[it]
                 # print it, t[it]
-                if toption.lower() is 'noprint':
+                if toption.lower() == 'noprint':
                     options.append(toption)
                 elif 'aux' in toption.lower():
                     options.append(' '.join(t[it:it + 2]))
@@ -293,7 +298,9 @@ class ModflowHfb(Package):
         # data set 2 and 3
         if nphfb > 0:
             dt = ModflowHfb.get_empty(1).dtype
-            pak_parms = mfparbc.load(f, nphfb, dt, model.verbose)
+            pak_parms = mfparbc.load(f, nphfb, dt, model,
+                                     ext_unit_dict=ext_unit_dict,
+                                     verbose=model.verbose)
         # data set 4
         bnd_output = None
         if nhfbnp > 0:
@@ -327,9 +334,6 @@ class ModflowHfb(Package):
                 iname = 'static'
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
-                # print par_dict
-                # print data_dict
-
                 par_current = ModflowHfb.get_empty(par_dict['nlst'])
 
                 #
@@ -343,6 +347,7 @@ class ModflowHfb(Package):
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
+                    t = tuple(t)
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
                 # convert indices to zero-based
@@ -360,6 +365,10 @@ class ModflowHfb(Package):
                 else:
                     bnd_output = stack_arrays((bnd_output, par_current),
                                               asrecarray=True, usemask=False)
+
+        if openfile:
+            f.close()
+
         # set package unit number
         unitnumber = None
         filenames = [None]

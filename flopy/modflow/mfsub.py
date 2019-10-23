@@ -518,9 +518,11 @@ class ModflowSub(Package):
         if model.verbose:
             sys.stdout.write('loading sub package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -701,9 +703,11 @@ class ModflowSub(Package):
                 t = read1d(f, t)
                 t[0:4] -= 1
                 ids16[k] = t
+
+        if openfile:
+            f.close()
+
         model.add_pop_key_list(2051)
-        # close file
-        f.close()
 
         # determine specified unit number
         unitnumber = None
