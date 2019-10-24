@@ -694,7 +694,10 @@ def test_mflist():
         fluxcol = 'flux{}'.format(per)
         dfper = df.dropna(subset=[fluxcol], axis=0).copy()
         dfper.rename(columns={fluxcol: 'flux'}, inplace=True)
-        assert np.array_equal(dfper[['k', 'i', 'j', 'flux']].to_records(index=False), data)
+        dfdata = dfper[['k', 'i', 'j', 'flux']].to_records(index=False)
+        dfdata = dfdata.astype(data.dtype)
+        errmsg = 'data not equal:\n  {}\n  {}'.format(dfdata, data)
+        assert np.array_equal(dfdata, data), errmsg
 
     m4ds = ml.wel.stress_period_data.masked_4D_arrays
     sp_data = flopy.utils.MfList.masked4D_arrays_to_stress_period_data \
@@ -792,7 +795,7 @@ if __name__ == '__main__':
     # test_util2d_external_fixed_nomodelws()
     # test_util2d_external_fixed_path_nomodelws()
     # test_transient2d()
-    #test_transient3d()
+    # test_transient3d()
     # test_util2d()
     # test_util3d()
     # test_how()
