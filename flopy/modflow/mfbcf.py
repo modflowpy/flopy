@@ -321,6 +321,12 @@ class ModflowBcf(Package):
             istart = 0
             for k in range(nlay):
                 lcode = line[istart:istart + 2]
+                if lcode.strip() == '':
+                    # hit end of line before expected end of data
+                    # read next line
+                    line = f.readline()
+                    istart = 0
+                    lcode = line[istart:istart + 2]
                 lcode = lcode.replace(' ', '0')
                 t.append(lcode)
                 istart += 2

@@ -554,6 +554,10 @@ class Mt3dms(BaseModel):
             Filetype(s) to load (e.g. ['btn', 'adv'])
             (default is None, which means that all will be loaded)
 
+        forgive : bool, optional
+            Option to raise exceptions on package load failure, which can be
+            useful for debugging. Default False.
+
         modflowmodel : flopy.modflow.mf.Modflow
             This is a flopy Modflow model object upon which this Mt3dms
             model is based. (the default is None)

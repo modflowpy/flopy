@@ -428,11 +428,11 @@ class Seawat(BaseModel):
                     verbose=verbose)
 
         mf = Modflow.load(f, version='mf2k', exe_name=None, verbose=verbose,
-                          model_ws=model_ws, load_only=load_only, forgive=True,
+                          model_ws=model_ws, load_only=load_only, forgive=False,
                           check=False)
 
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
-                         model_ws=model_ws, forgive=True)
+                         model_ws=model_ws, forgive=False)
 
         # set listing and global files using mf objects
         ms.lst = mf.lst
