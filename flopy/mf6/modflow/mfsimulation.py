@@ -470,7 +470,8 @@ class MFSimulation(PackageContainer):
             will load. default is None, which loads all packages. the
             discritization packages will load regardless of this setting.
             subpackages, like time series and observations, will also load
-            regardless of this setting. example list: ['ic', 'maw', 'npf', 'oc']
+            regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc']
 
         Returns
         -------

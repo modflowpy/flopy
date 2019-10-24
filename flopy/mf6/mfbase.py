@@ -626,7 +626,8 @@ class PackageContainer(object):
         path = (package.package_name,)
         return (path, None)
 
-    def _load_only_dict(self, load_only):
+    @staticmethod
+    def _load_only_dict(load_only):
         if load_only is None:
             return None
         if isinstance(load_only, dict):
@@ -640,7 +641,8 @@ class PackageContainer(object):
             load_only_dict[item.lower()] = True
         return load_only_dict
 
-    def _in_pkg_list(self, pkg_list, pkg_name):
+    @staticmethod
+    def _in_pkg_list(pkg_list, pkg_name):
         if pkg_name in pkg_list:
             return True
         # split to make cases like "gwf6-gwf6" easier to process
@@ -648,7 +650,7 @@ class PackageContainer(object):
         try:
             # if there is a number on the end of the package try
             # excluding it
-            i = int(pkg_name[0][-1])
+            int(pkg_name[0][-1])
             for key in pkg_list.keys():
                 key = key.split('-')
                 if len(key) == len(pkg_name):

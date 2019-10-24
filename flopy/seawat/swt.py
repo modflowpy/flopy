@@ -428,8 +428,8 @@ class Seawat(BaseModel):
                     verbose=verbose)
 
         mf = Modflow.load(f, version='mf2k', exe_name=None, verbose=verbose,
-                          model_ws=model_ws, load_only=load_only, forgive=False,
-                          check=False)
+                          model_ws=model_ws, load_only=load_only,
+                          forgive=False, check=False)
 
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
                          model_ws=model_ws, forgive=False)
