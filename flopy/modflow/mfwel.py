@@ -117,7 +117,11 @@ class ModflowWel(Package):
                                              [('phiramp',
                                                OptionBlock.simple_float),
                                               ('iunitramp',
-                                               OptionBlock.simple_int)])}),
+                                               OrderedDict(
+                                                   [(OptionBlock.dtype, int),
+                                                   (OptionBlock.nested, False),
+                                                   (OptionBlock.optional, True)
+                                                    ]))])}),
                             ('tabfiles', OptionBlock.simple_tabfile)])
 
     def __init__(self, model, ipakcb=None, stress_period_data=None, dtype=None,
@@ -326,6 +330,10 @@ class ModflowWel(Package):
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
+
+    @staticmethod
+    def get_sfac_columns():
+        return ['flux']
 
     @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None, check=True):

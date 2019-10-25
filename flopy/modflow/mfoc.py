@@ -630,8 +630,8 @@ class ModflowOc(Package):
 
         numericformat = False
 
-        # open file
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -688,8 +688,8 @@ class ModflowOc(Package):
             if iddnun in ext_unit_dict:
                 fddn = ext_unit_dict[iddnun]
 
-        # close the oc file
-        f.close()
+        if openfile:
+            f.close()
 
         # return
         return ihedun, fhead, iddnun, fddn
@@ -788,8 +788,8 @@ class ModflowOc(Package):
 
         stress_period_data = {}
 
-        # open file
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
         else:
@@ -1003,6 +1003,9 @@ class ModflowOc(Package):
                 if iempty == True:
                     kperkstp = (iperoc1 - 1, itsoc1 - 1)
                     stress_period_data[kperkstp] = []
+
+        if openfile:
+            f.close()
 
         # reset unit numbers
         unitnumber = [14, 0, 0, 0, 0]

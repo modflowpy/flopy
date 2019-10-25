@@ -279,7 +279,6 @@ class MFModel(PackageContainer, ModelInterface):
     def modelgrid(self):
         if not self._mg_resync:
             return self._modelgrid
-
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
             if not hasattr(dis, '_init_complete'):
@@ -400,7 +399,7 @@ class MFModel(PackageContainer, ModelInterface):
         self._modelgrid.set_coord_info(xorig, yorig, angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
-
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property

@@ -294,7 +294,8 @@ class ModflowGage(Package):
         if model.verbose:
             sys.stdout.write('loading gage package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             if sys.version_info[0] == 2:
                 f = open(filename, 'r')
@@ -350,6 +351,9 @@ class ModflowGage(Package):
                                                  model.model_ws)
                         files.append(relpth)
                         break
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

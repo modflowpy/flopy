@@ -1,6 +1,7 @@
 """
 Module for input/output utilities
 """
+import os
 import sys
 import numpy as np
 
@@ -323,3 +324,134 @@ def get_url_text(url, error_msg=None):
         if error_msg is not None:
             print(error_msg)
         return
+
+
+def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
+    """
+    Read a list and allow for open/close, binary, external, sfac, etc.
+
+    Parameters
+    ----------
+    f : file handle
+        file handle for where the list is being read from
+    nlist : int
+        size of the list (number of rows) to read
+    ra : np.recarray
+        A record array of the correct size that will be filled with the list
+    model : model object
+        The model object (of type :class:`flopy.modflow.mf.Modflow`) to
+        which this package will be added.
+    sfac_columns : list
+        A list of strings containing the column names to scale by sfac
+    ext_unit_dict : dictionary, optional
+        If the list in the file is specified using EXTERNAL,
+        then in this case ext_unit_dict is required, which can be
+        constructed using the function
+        :class:`flopy.utils.mfreadnam.parsenamefile`.
+
+    Returns
+    -------
+
+    """
+
+    # initialize variables
+    line = f.readline()
+    sfac = 1.
+    binary = False
+    ncol = len(ra.dtype.names)
+    line_list = line.strip().split()
+    close_the_file = False
+    file_handle = f
+    mode = 'r'
+
+    # check for external
+    if line.strip().lower().startswith('external'):
+        inunit = int(line_list[1])
+        errmsg = 'Could not find a file for unit {}'.format(inunit)
+        if ext_unit_dict is not None:
+            if inunit in ext_unit_dict:
+                namdata = ext_unit_dict[inunit]
+                file_handle = namdata.filehandle
+            else:
+                raise IOError(errmsg)
+        else:
+            raise IOError(errmsg)
+        if namdata.filetype == 'DATA(BINARY)':
+            binary = True
+        if not binary:
+            line = file_handle.readline()
+
+    # or check for open/close
+    elif line.strip().lower().startswith('open/close'):
+        raw = line.strip().split()
+        fname = raw[1]
+        if '/' in fname:
+            raw = fname.split('/')
+        elif '\\' in fname:
+            raw = fname.split('\\')
+        else:
+            raw = [fname]
+        fname = os.path.join(*raw)
+        oc_filename = os.path.join(model.model_ws, fname)
+        msg = 'Package.load() error: open/close filename ' + \
+              oc_filename + ' not found'
+        assert os.path.exists(oc_filename), msg
+        if '(binary)' in line.lower():
+            binary = True
+            mode = 'rb'
+        file_handle = open(oc_filename, mode)
+        close_the_file = True
+        if not binary:
+            line = file_handle.readline()
+
+    # check for scaling factor
+    if not binary:
+        line_list = line.strip().split()
+        if line.strip().lower().startswith('sfac'):
+            sfac = float(line_list[1])
+            line = file_handle.readline()
+
+    # fast binary read fromfile
+    if binary:
+        dtype2 = []
+        for name in ra.dtype.names:
+            dtype2.append((name, np.float32))
+        dtype2 = np.dtype(dtype2)
+        d = np.fromfile(file_handle, dtype=dtype2, count=nlist)
+        ra = np.array(d, dtype=ra.dtype)
+        ra = ra.view(np.recarray)
+
+    # else, read ascii
+    else:
+
+        for ii in range(nlist):
+
+            # first line was already read
+            if ii != 0:
+                line = file_handle.readline()
+
+            if model.free_format_input:
+                # whitespace separated
+                t = line.strip().split()
+                if len(t) < ncol:
+                    t = t + (ncol - len(t)) * [0.0]
+                else:
+                    t = t[:ncol]
+                t = tuple(t)
+                ra[ii] = t
+            else:
+                # fixed format
+                t = read_fixed_var(line, ncol=ncol)
+                t = tuple(t)
+                ra[ii] = t
+
+    # scale the data and check
+    for column_name in sfac_columns:
+        ra[column_name] *= sfac
+        if 'auxsfac' in ra.dtype.names:
+            ra[column_name] *= ra['auxsfac']
+
+    if close_the_file:
+        file_handle.close()
+
+    return ra

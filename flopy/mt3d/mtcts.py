@@ -194,7 +194,8 @@ class Mt3dCts(Package):
         #     sys.stdout.write('loading cts package file...\n')
         #
         # # Open file, if necessary
-        # if not hasattr(f, 'read'):
+        # openfile = not hasattr(f, 'read')
+        # if openfile:
         #     filename = f
         #     f = open(filename, 'r')
         #
@@ -249,6 +250,9 @@ class Mt3dCts(Package):
         #         next = int(m_arr[1])
         #         ninj = int(m_arr[2])
         #         itrtinj = int(m_arr[3])
+        #
+        # if openfile:
+        #     f.close()
 
     @staticmethod
     def get_default_CTS_dtype(ncomp=1, iforce=0):

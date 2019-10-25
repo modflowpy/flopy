@@ -523,9 +523,11 @@ class ModflowSwt(Package):
         if model.verbose:
             sys.stdout.write('loading swt package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -704,8 +706,8 @@ class ModflowSwt(Package):
                 t[0:4] -= 1
                 ids17[k] = t
 
-        # close file
-        f.close()
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

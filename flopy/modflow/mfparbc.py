@@ -5,6 +5,7 @@ the ModflowParBc class as `flopy.modflow.ModflowParBc`.
 """
 
 import numpy as np
+from ..utils.flopy_io import line_strip, ulstrd
 
 
 class ModflowParBc(object):
@@ -41,7 +42,7 @@ class ModflowParBc(object):
         return None
 
     @staticmethod
-    def load(f, npar, dt, verbose=False):
+    def load(f, npar, dt, model, ext_unit_dict=None, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV, etc.).
@@ -74,7 +75,7 @@ class ModflowParBc(object):
             bc_parms = {}
             for idx in range(npar):
                 line = f.readline()
-                t = line.strip().split()
+                t = line_strip(line).split()
                 parnam = t[0].lower()
                 if parnam.startswith("'"):
                     parnam = parnam[1:]
@@ -96,23 +97,16 @@ class ModflowParBc(object):
                     # read instance name
                     if timeVarying:
                         line = f.readline()
-                        t = line.strip().split()
+                        t = line_strip(line).split()
                         instnam = t[0].lower()
                     else:
                         instnam = 'static'
-                    bcinst = []
-                    for nw in range(nlst):
-                        line = f.readline()
-                        t = line.strip().split()
-                        bnd = []
-                        for jdx in range(nitems):
-                            # if jdx < 3:
-                            if issubclass(dt[jdx].type, np.integer):
-                                # conversion to zero-based occurs in package load method in mbase.
-                                bnd.append(int(t[jdx]))
-                            else:
-                                bnd.append(float(t[jdx]))
-                        bcinst.append(bnd)
+
+                    ra = np.zeros(nlst, dtype=dt)
+                    #todo: if sfac is used for parameter definition, then
+                    # the empty list on the next line needs to be the package
+                    # get_sfac_columns
+                    bcinst = ulstrd(f, nlst, ra, model, [], ext_unit_dict)
                     pinst[instnam] = bcinst
                 bc_parms[parnam] = [{'partyp': partyp, 'parval': parval,
                                      'nlst': nlst, 'timevarying': timeVarying},

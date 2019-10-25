@@ -5,6 +5,7 @@ sys.path.append('/Users/aleaf/Documents/GitHub/flopy3')
 import os
 import glob
 import shutil
+import io
 import numpy as np
 from flopy.utils.recarray_utils import create_empty_recarray
 
@@ -49,6 +50,7 @@ sfr_items = {0: {'mfnam': 'test1ss.nam',
                  'sfrfile': 'TL2009.sfr'}
              }
 
+
 def create_sfr_data():
     dtype = np.dtype([('k', int),
              ('i', int),
@@ -81,6 +83,7 @@ def create_sfr_data():
     d['nseg'] = range(1, 10)
     d['outseg'] = [4, 0, 6, 8, 3, 8, 1, 2, 8]
     return r, d
+
 
 def sfr_process(mfnam, sfrfile, model_ws, outfolder=outpath):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws, verbose=False)
@@ -252,6 +255,7 @@ def test_sfr_renumbering():
     assert isequal(sfr.reach_data.slope[21], 0.2)
     assert isequal(sfr.reach_data.slope[-1], default_slope)
 
+
 def test_const():
 
     fm = flopy.modflow
@@ -272,6 +276,7 @@ def test_const():
     m.sfr.const = None
     assert sfr.const == 1.486 * 86400.
     assert True
+
 
 def test_export():
     fm = flopy.modflow
@@ -309,6 +314,7 @@ def test_export():
     assert (x.min(), x.max(), y.min(), y.max()) == m.modelgrid.extent
     assert ra[(ra.iseg0 == 2) & (ra.ireach0 == 1)]['geometry'][0].bounds \
         == (6.0, 2.0, 7.0, 3.0)
+
 
 def test_example():
     m = flopy.modflow.Modflow.load('test1ss.nam', version='mf2005',
@@ -383,6 +389,35 @@ def test_example():
     for i in range(1, nper):
         assert sfr2.dataset_5[i][0] == -1
 
+
+def test_no_ds_6bc():
+    """Test case where datasets 6b and 6c aren't read
+    (e.g., see table at https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm)
+    """
+    sfrfiletxt = (
+        u'REACHINPUT\n'
+        '2 2 0 0 128390 0.0001 119 0 3 10 1 30 0 4 0.75 91.54\n'
+        '1 1 1 1 1 1.0 1.0 0.001 1 1 .3 0.02 3.5 0.7\n'
+        '1 2 2 2 1 1.0 0.5 0.001 1 1 .3 0.02 3.5 0.7\n'
+        '2 2 0\n'
+        '1 2 2 0 0 0 0 0 0.041 0.111\n'
+        '0 3.64 7.28 10.92 14.55 18.19 21.83 25.47\n'
+        '2.55 1.02 0.76 0 0.25 0.76 1.02 2.55\n'
+        '2 2 0 0 0 0 0 0 0.041 0.111\n'
+        '0 3.96 7.92 11.88 15.83 19.79 23.75 27.71\n'
+        '2.77 1.11 0.83 0 0.28 0.83 1.11 2.77\n'
+    )
+    sfrfile = io.StringIO(sfrfiletxt)
+    m = fm.Modflow('junk', model_ws='temp')
+    sfr = fm.ModflowSfr2.load(sfrfile, model=m)
+    assert len(sfr.segment_data[0]) == 2
+    assert len(sfr.channel_geometry_data[0]) == 2
+    assert len(sfr.channel_geometry_data[0][1]) == 2
+    for i in range(2):
+        assert len(sfr.channel_geometry_data[0][1][i]) == 8
+        assert sum(sfr.channel_geometry_data[0][1][i]) > 0.
+
+
 def test_ds_6d_6e_disordered():
     path = os.path.join("..", "examples", "data", "hydmod_test")
     path2 = os.path.join(".", "temp", "t009")
@@ -452,6 +487,7 @@ def test_transient_example():
     m2 = mf.Modflow.load('testsfr2.nam', model_ws=path)
     assert m2.sfr.istcb2 == -49
     assert m2.get_output_attribute(unit=abs(m2.sfr.istcb2), attr='binflag')
+
 
 def test_assign_layers():
     m = fm.Modflow()

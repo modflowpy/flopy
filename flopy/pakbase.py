@@ -19,6 +19,7 @@ from numpy.lib.recfunctions import stack_arrays
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
 from .utils import OptionBlock
+from .utils.flopy_io import ulstrd
 
 
 class PackageInterface(object):
@@ -174,8 +175,6 @@ class Package(PackageInterface):
     def __setattr__(self, key, value):
         var_dict = vars(self)
         if key in list(var_dict.keys()):
-            if hasattr(self, 'parent'):
-                self.parent._mg_resync = True
             old_value = var_dict[key]
             if isinstance(old_value, Util2d):
                 value = Util2d(self.parent, old_value.shape,
@@ -308,6 +307,15 @@ class Package(PackageInterface):
         for field_name, field_type in zip(field_names, field_types):
             newdtypes.append((str(field_name), field_type))
         return np.dtype(newdtypes)
+
+    @staticmethod
+    def get_sfac_columns():
+        """
+        This should be overriden for individual packages that support an
+        sfac multiplier for individual list columns
+
+        """
+        return []
 
     def check(self, f=None, verbose=True, level=1):
         """
@@ -669,7 +677,8 @@ class Package(PackageInterface):
             check = True
 
         # open the file if not already open
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             if platform.system().lower() == 'windows' and \
                     sys.version_info[0] < 3:
@@ -677,6 +686,10 @@ class Package(PackageInterface):
                 f = io.open(filename, 'r')
             else:
                 f = open(filename, 'r')
+        elif hasattr(f, 'name'):
+            filename = f.name
+        else:
+            filename = '?'
 
         # set string from pak_type
         pak_type_str = str(pak_type).lower()
@@ -787,12 +800,15 @@ class Package(PackageInterface):
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in pak_type_str:
             partype = ['shead', 'ehead']
 
+        # get the list columns that should be scaled with sfac
+        sfac_columns = pak_type.get_sfac_columns()
+
         # read parameter data
         if nppak > 0:
             dt = pak_type.get_empty(1, aux_names=aux_names,
                                     structured=model.structured).dtype
-            pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
-            # pak_parms = mfparbc.load(f, nppak, len(dt.names))
+            pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict,
+                                     model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -824,69 +840,8 @@ class Package(PackageInterface):
             elif itmp > 0:
                 current = pak_type.get_empty(itmp, aux_names=aux_names,
                                              structured=model.structured)
-                for ibnd in range(itmp):
-                    line = f.readline()
-                    if "open/close" in line.lower():
-                        binary = False
-                        if '(binary)' in line.lower():
-                            binary = True
-                        # need to strip out existing path seps and
-                        # replace current-system path seps
-                        raw = line.strip().split()
-                        fname = raw[1]
-                        if '/' in fname:
-                            raw = fname.split('/')
-                        elif '\\' in fname:
-                            raw = fname.split('\\')
-                        else:
-                            raw = [fname]
-                        fname = os.path.join(*raw)
-                        oc_filename = os.path.join(model.model_ws, fname)
-                        msg = 'Package.load() error: open/close filename ' + \
-                              oc_filename + ' not found'
-                        assert os.path.exists(oc_filename), msg
-                        try:
-                            if binary:
-                                dtype2 = []
-                                for name in current.dtype.names:
-                                    dtype2.append((name, np.float32))
-                                dtype2 = np.dtype(dtype2)
-                                d = np.fromfile(oc_filename,
-                                                dtype=dtype2,
-                                                count=itmp)
-                                current = np.array(d, dtype=current.dtype)
-                            else:
-                                cd = current.dtype
-                                current = np.loadtxt(oc_filename).transpose()
-                                if current.ndim == 1:
-                                    current = np.atleast_2d(
-                                        current).transpose()
-                                current = np.core.records.fromarrays(current,
-                                                                     dtype=cd)
-                            current = current.view(np.recarray)
-                        except Exception as e:
-                            msg = 'Package.load() error loading ' + \
-                                  'open/close file ' + oc_filename + \
-                                  ': ' + str(e)
-                            raise Exception(msg)
-                        msg = 'Package.load() error: open/close ' + \
-                              'recarray from file ' + oc_filename + \
-                              ' shape (' + str(current.shape) + \
-                              ') does not match itmp: {:d}'.format(itmp)
-                        assert current.shape[0] == itmp, msg
-                        break
-                    try:
-                        t = line.strip().split()
-                        current[ibnd] = tuple(t[:len(current.dtype.names)])
-                    except:
-                        t = []
-                        for ivar in range(len(current.dtype.names)):
-                            istart = ivar * 10
-                            istop = istart + 10
-                            t.append(line[istart:istop])
-                        current[ibnd] = tuple(t[:len(current.dtype.names)])
-
-                # convert indices to zero-based
+                current = ulstrd(f, itmp, current, model, sfac_columns,
+                                 ext_unit_dict)
                 if model.structured:
                     current['k'] -= 1
                     current['i'] -= 1
@@ -932,6 +887,7 @@ class Package(PackageInterface):
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
+                    t = tuple(t)
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
                 if model.structured:
@@ -957,6 +913,9 @@ class Package(PackageInterface):
 
         dtype = pak_type.get_empty(0, aux_names=aux_names,
                                    structured=model.structured).dtype
+
+        if openfile:
+            f.close()
 
         # set package unit number
         filenames = [None, None]

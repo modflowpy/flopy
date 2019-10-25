@@ -190,7 +190,8 @@ class ModflowMnw1(Package):
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -246,6 +247,9 @@ class ModflowMnw1(Package):
                 for n in dtype.descr:
                     spd[n[0]] = tmp[n[0]]
                 stress_period_data[per] = spd
+
+        if openfile:
+            f.close()
 
         return ModflowMnw1(model, mxmnw=mxmnw, ipakcb=ipakcb, iwelpt=iwelpt,
                            nomoiter=nomoiter,

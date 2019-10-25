@@ -68,7 +68,8 @@ def test_mnw1_load_write():
     m2 = flopy.modflow.Modflow.load('mnw1.nam', model_ws=cpth,
                                    load_only=['mnw1'],
                                    verbose=True, forgive=False)
-    assert m.stress_period_data == m2.stress_period_data
+    for k, v in m.mnw1.stress_period_data.data.items():
+        assert np.array_equal(v, m2.mnw1.stress_period_data[k])
 
 def test_make_package():
     """t027 test make MNW2 Package"""

@@ -159,7 +159,8 @@ class ModflowPval(Package):
         if model.verbose:
             sys.stdout.write('loading pval package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
         else:
@@ -190,6 +191,9 @@ class ModflowPval(Package):
                 pvalnam = t[0].lower()
 
             pval_dict[pvalnam] = float(t[1])
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

@@ -1,11 +1,14 @@
 import numpy as np
+import sys
+if sys.version_info[0] == 2:
+    ModuleNotFoundError = ImportError
 from .geometry import transform
 try:
     from shapely.geometry import MultiPoint, Point, Polygon, box
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
-    print("Shapely is needed for grid intersect operations!"
+    print("Shapely is needed for grid intersect operations! "
           "Please install shapely.")
 
 

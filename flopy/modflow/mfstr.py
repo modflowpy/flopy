@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from ..utils import MfList
 from ..pakbase import Package
+from .mfparbc import ModflowParBc as mfparbc
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -290,9 +291,9 @@ class ModflowStr(Package):
             self.dtype = dtype[0]
             self.dtype2 = dtype[1]
         else:
-            auxnames = []
+            aux_names = []
             if len(options) > 0:
-                auxnames = []
+                aux_names = []
                 it = 0
                 while True:
                     if 'aux' in options[it].lower():
@@ -301,9 +302,9 @@ class ModflowStr(Package):
                     it += 1
                     if it > len(options):
                         break
-            if len(auxnames) < 1:
-                auxnames = None
-            d, d2 = self.get_empty(1, 1, aux_names=auxnames,
+            if len(aux_names) < 1:
+                aux_names = None
+            d, d2 = self.get_empty(1, 1, aux_names=aux_names,
                                    structured=self.parent.structured)
             self.dtype = d.dtype
             self.dtype2 = d2.dtype
@@ -552,7 +553,8 @@ class ModflowStr(Package):
         if model.verbose:
             sys.stdout.write('loading str package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -617,7 +619,8 @@ class ModflowStr(Package):
         # read parameter data
         if npstr > 0:
             dt = ModflowStr.get_empty(1, aux_names=aux_names).dtype
-            pak_parms = mfparbc.load(f, npstr, dt, model.verbose)
+            pak_parms = mfparbc.load(f, npstr, dt, model, ext_unit_dict,
+                                     model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -807,6 +810,9 @@ class ModflowStr(Package):
             else:
                 stress_period_data[iper] = bnd_output
                 segment_data[iper] = seg_output
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

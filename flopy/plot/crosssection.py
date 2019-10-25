@@ -24,12 +24,17 @@ class _CrossSection(object):
     ax : matplotlib.pyplot.axes object
     model : flopy.mf6.Modflow or flopy.modflow.Modflow object
     modelgrid : flopy.discretization.grid object
+    geographic_coords : bool
+        boolean flag to allow the user to plot cross section lines in
+        geographic coordinates. If False (default), cross section is plotted
+        as the distance along the cross section line.
 
     """
-    def __init__(self, ax=None, model=None, modelgrid=None):
+    def __init__(self, ax=None, model=None, modelgrid=None,
+                 geographic_coords=False):
 
         self.ax = ax
-
+        self.geographic_coords = geographic_coords
         if plt is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
                 ' in order to use ModelCrossSection method'
@@ -76,14 +81,20 @@ class _StructuredCrossSection(_CrossSection):
         yul, and rotation.
     extent : tuple of floats
         (xmin, xmax, ymin, ymax) will be used to specify axes limits.  If None
-        then these will be calculated based on grid, coordinates, and rotation.
+        then these will be calculated based on grid, coordinates, and rotation
+    geographic_coords : bool
+        boolean flag to allow the user to plot cross section lines in
+        geographic coordinates. If False (default), cross section is plotted
+        as the distance along the cross section line.
 
     """
 
     def __init__(self, ax=None, model=None, modelgrid=None,
-                 line=None, extent=None):
+                 line=None, extent=None, geographic_coords=False):
         super(_StructuredCrossSection, self).__init__(ax=ax, model=model,
-                                                      modelgrid=modelgrid)
+                                                      modelgrid=modelgrid,
+                                                      geographic_coords=
+                                                      geographic_coords)
 
         if line is None:
             s = 'line must be specified.'
@@ -106,6 +117,7 @@ class _StructuredCrossSection(_CrossSection):
         onkey = list(line.keys())[0]
         eps = 1.e-4
         xedge, yedge = self.mg.xyedges
+        self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
         self.xcellcenters, self.ycellcenters = \
@@ -139,6 +151,8 @@ class _StructuredCrossSection(_CrossSection):
 
             xp, yp = self.mg.get_local_coords(xp, yp)
             pts = [(xt, yt) for xt, yt in zip(xp, yp)]
+            # for now set offset to zero, since we do not have
+            # information on projection from the user
 
         # convert pts list to numpy array
         self.pts = np.array(pts)
@@ -152,7 +166,7 @@ class _StructuredCrossSection(_CrossSection):
             s += '   {} points intersect the grid.'.format(len(self.xpts))
             raise Exception(s)
 
-            # set horizontal distance
+        # set horizontal distance
         d = []
         for v in self.xpts:
             d.append(v[2])
@@ -201,37 +215,13 @@ class _StructuredCrossSection(_CrossSection):
                                                    self.elev[k, :, :]))
         self.zpts = np.array(zpts)
 
-        xcentergrid = []
-        zcentergrid = []
-        nz = 0
-        if self.mg.nlay == 1:
-            for k in range(0, self.zpts.shape[0]):
-                nz += 1
-                nx = 0
-                for i in range(0, self.xpts.shape[0], 2):
-                    try:
-                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i + 1][2])
-                        zp = self.zpts[k, i]
-                        xcentergrid.append(xp)
-                        zcentergrid.append(zp)
-                        nx += 1
-                    except:
-                        break
-        else:
-            for k in range(0, self.zpts.shape[0] - 1):
-                nz += 1
-                nx = 0
-                for i in range(0, self.xpts.shape[0], 2):
-                    try:
-                        xp = 0.5 * (self.xpts[i][2] + self.xpts[i + 1][2])
-                        zp = 0.5 * (self.zpts[k, i] + self.zpts[k + 1, i + 1])
-                        xcentergrid.append(xp)
-                        zcentergrid.append(zp)
-                        nx += 1
-                    except:
-                        break
-        self.xcentergrid = np.array(xcentergrid).reshape((nz, nx))
-        self.zcentergrid = np.array(zcentergrid).reshape((nz, nx))
+        xcentergrid, zcentergrid = self.get_centergrids(self.xpts, self.zpts)
+        self.xcentergrid = xcentergrid
+        self.zcentergrid = zcentergrid
+
+        geo_xcentergrid, _ = self.get_centergrids(self.geographic_xpts,
+                                                  self.zpts)
+        self.geographic_xcentergrid = geo_xcentergrid
 
         # Create cross-section extent
         if extent is None:
@@ -244,6 +234,85 @@ class _StructuredCrossSection(_CrossSection):
         self.ax.set_ylim(self.extent[2], self.extent[3])
 
         return
+
+    @property
+    def geographic_xpts(self):
+        """
+        Method to retranslate model coordinates to geometric
+        coordinates for plotting
+
+        Returns:
+
+        """
+        if self.__geographic_xpts is None:
+            xypts = self.xpts.T
+            xypts = geometry.transform(xypts[0], xypts[1],
+                                       self.mg.xoffset,
+                                       self.mg.yoffset,
+                                       self.mg.angrot_radians)
+
+            if self.direction == "xy":
+                xdist = np.max(xypts[0]) - np.min(xypts[0])
+                ydist = np.max(xypts[1]) - np.min(xypts[1])
+                if xdist >= ydist:
+                    xypts = np.append(xypts, np.array([xypts[0]]), axis=0)
+                else:
+                    xypts = np.append(xypts, np.array([xypts[1]]), axis=0)
+            else:
+                xypts = np.append(xypts, np.array([xypts[0]]), axis=0)
+
+            self.__geographic_xpts = xypts.T
+
+        return self.__geographic_xpts
+
+    def get_centergrids(self, xpts, zpts):
+        """
+        Method to calculate the centergrid information for plotting
+
+        Parameters
+        ----------
+        xpts : np.ndarray
+            array of x, y, distance along the cross section
+        zpts : np.ndarray
+            array of elevation values along the cross section
+
+        Returns
+        -------
+            tuple : (xcentergrid, zcentergrid)
+        """
+        xcentergrid = []
+        zcentergrid = []
+        nz = 0
+        if self.mg.nlay == 1:
+            for k in range(0, zpts.shape[0]):
+                nz += 1
+                nx = 0
+                for i in range(0, xpts.shape[0], 2):
+                    try:
+                        xp = 0.5 * (xpts[i][2] + xpts[i + 1][2])
+                        zp = zpts[k, i]
+                        xcentergrid.append(xp)
+                        zcentergrid.append(zp)
+                        nx += 1
+                    except:
+                        break
+        else:
+            for k in range(0, zpts.shape[0] - 1):
+                nz += 1
+                nx = 0
+                for i in range(0, xpts.shape[0], 2):
+                    try:
+                        xp = 0.5 * (xpts[i][2] + xpts[i + 1][2])
+                        zp = 0.5 * (zpts[k, i] + zpts[k + 1, i + 1])
+                        xcentergrid.append(xp)
+                        zcentergrid.append(zp)
+                        nx += 1
+                    except:
+                        break
+
+        xcentergrid = np.array(xcentergrid).reshape((nz, nx))
+        zcentergrid = np.array(zcentergrid).reshape((nz, nx))
+        return xcentergrid, zcentergrid
 
     def plot_array(self, a, masked_values=None, head=None, **kwargs):
         """
@@ -352,8 +421,13 @@ class _StructuredCrossSection(_CrossSection):
                 vpts = np.ma.masked_equal(vpts, mval)
 
         plot = []
+        # adust distance array for modelgrid offset
+        if self.geographic_coords:
+            d = self.geographic_xpts.T[-1]
+        else:
+            d = self.d
         for k in range(vpts.shape[0]):
-            plot.append(ax.plot(self.d, vpts[k, :], **kwargs))
+            plot.append(ax.plot(d, vpts[k, :], **kwargs))
 
         return plot
 
@@ -440,12 +514,17 @@ class _StructuredCrossSection(_CrossSection):
             # mask cells
             y1[idxmk] = np.nan
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2,
+            # adjust distance array for modelgrid offset
+            if self.geographic_coords:
+                d = self.geographic_xpts.T[-1]
+            else:
+                d = self.d
+            plot.append(ax.fill_between(d, y1=y1, y2=y2,
                                         color=colors[0], **kwargs))
             y1 = y2
             y2 = self.zpts[k + 1, :]
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(self.d, y1=y1, y2=y2,
+            plot.append(ax.fill_between(d, y1=y1, y2=y2,
                                         color=colors[1], **kwargs))
         return plot
 
@@ -493,7 +572,11 @@ class _StructuredCrossSection(_CrossSection):
         else:
             zcentergrid = self.zcentergrid
 
-        contour_set = self.ax.contour(self.xcentergrid, zcentergrid,
+        if self.geographic_coords:
+            xcentergrid = self.geographic_xcentergrid
+        else:
+            xcentergrid = self.xcentergrid
+        contour_set = self.ax.contour(xcentergrid, zcentergrid,
                                       vpts, **kwargs)
         return contour_set
 
@@ -549,14 +632,18 @@ class _StructuredCrossSection(_CrossSection):
             vmax = None
 
         colors = []
+        if self.geographic_coords:
+            xpts = self.geographic_xpts
+        else:
+            xpts = self.xpts
         for k in range(zpts.shape[0] - 1):
-            for idx in range(0, len(self.xpts) - 1, 2):
+            for idx in range(0, len(xpts) - 1, 2):
                 try:
-                    ll = ((self.xpts[idx][2], zpts[k + 1, idx]))
+                    ll = ((xpts[idx][2], zpts[k + 1, idx]))
                     try:
-                        dx = self.xpts[idx + 2][2] - self.xpts[idx][2]
+                        dx = xpts[idx + 2][2] - xpts[idx][2]
                     except:
-                        dx = self.xpts[idx + 1][2] - self.xpts[idx][2]
+                        dx = xpts[idx + 1][2] - xpts[idx][2]
                     dz = zpts[k, idx] - zpts[k + 1, idx]
                     pts = (ll,
                            (ll[0], ll[1] + dz), (ll[0] + dx, ll[1] + dz),
@@ -598,14 +685,18 @@ class _StructuredCrossSection(_CrossSection):
             color = kwargs.pop('color')
 
         linecol = []
+        if self.geographic_coords:
+            xpts = self.geographic_xpts
+        else:
+            xpts = self.xpts
         for k in range(self.zpts.shape[0] - 1):
-            for idx in range(0, len(self.xpts) - 1, 2):
+            for idx in range(0, len(xpts) - 1, 2):
                 try:
-                    ll = ((self.xpts[idx][2], self.zpts[k + 1, idx]))
+                    ll = ((xpts[idx][2], self.zpts[k + 1, idx]))
                     try:
-                        dx = self.xpts[idx + 2][2] - self.xpts[idx][2]
+                        dx = xpts[idx + 2][2] - xpts[idx][2]
                     except (IndexError, ValueError):
-                        dx = self.xpts[idx + 1][2] - self.xpts[idx][2]
+                        dx = xpts[idx + 1][2] - xpts[idx][2]
                     dz = self.zpts[k, idx] - self.zpts[k + 1, idx]
                     # horizontal lines
                     linecol.append(((ll), (ll[0] + dx, ll[1])))
@@ -711,9 +802,13 @@ class _StructuredCrossSection(_CrossSection):
         tuple : (xmin, xmax, ymin, ymax)
 
         """
+        if self.geographic_coords:
+            xpts = self.geographic_xpts
+        else:
+            xpts = self.xpts
 
-        xmin = self.xpts[0][2]
-        xmax = self.xpts[-1][2]
+        xmin = xpts[0][2]
+        xmax = xpts[-1][2]
 
         ymin = self.zpts.min()
         ymax = self.zpts.max()

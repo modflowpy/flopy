@@ -78,6 +78,24 @@ def test_mt3d_create_woutmfmodel():
     return
 
 
+def test_mt3d_pht3d():
+    # Note: this test is incomplete!
+    model_ws = os.path.join('.', 'temp', 't013')
+
+    # Create MT3D model
+    mt = flopy.mt3d.Mt3dms(model_ws=model_ws)
+    phc = flopy.mt3d.Mt3dPhc(mt, minkin=[[[1]], [[2]]])
+
+    # Write the output
+    mt.write_input()
+
+    # confirm that MT3D files exist
+    assert os.path.isfile(
+        os.path.join(model_ws, '{}.{}'.format(mt.name, phc.extension[0])))
+
+    return
+
+
 if __name__ == '__main__':
     test_mt3d_create_withmfmodel()
     test_mt3d_create_woutmfmodel()

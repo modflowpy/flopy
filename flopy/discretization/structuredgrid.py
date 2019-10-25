@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -62,6 +63,19 @@ class StructuredGrid(Grid):
     # Properties
     ####################
     @property
+    def is_valid(self):
+        if self.__delc is not None and self.__delr is not None:
+            return True
+        return False
+
+    @property
+    def is_complete(self):
+        if self.__delc is not None and self.__delr is not None and \
+                super(StructuredGrid, self).is_complete:
+            return True
+        return False
+
+    @property
     def nlay(self):
         return self.__nlay
 
@@ -87,11 +101,11 @@ class StructuredGrid(Grid):
 
     @property
     def delc(self):
-        return self.__delc
+        return copy.deepcopy(self.__delc)
 
     @property
     def delr(self):
-        return self.__delr
+        return copy.deepcopy(self.__delr)
 
     @property
     def xyzvertices(self):
@@ -410,8 +424,6 @@ if __name__ == "__main__":
     #extent = t.extent
     grid = t.grid_lines
 
-    #print('break')
-
     t.use_ref_coords = True
     sr_x = t.xvertices
     sr_y = t.yvertices
@@ -422,4 +434,3 @@ if __name__ == "__main__":
     print(sr_grid)
     #t.plot_grid_lines()
     #plt.show()
-    #print('break')

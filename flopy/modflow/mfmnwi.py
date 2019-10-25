@@ -176,7 +176,8 @@ class ModflowMnwi(Package):
             # otherwise iterations from 0, nper won't run
             nper = 1 if nper == 0 else nper
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -209,6 +210,9 @@ class ModflowMnwi(Package):
                 wellid_unit_qndflag_qhbflag_concflag.append(tmp)
                 if unit not in unique_units:
                     unique_units.append(unit)
+
+        if openfile:
+            f.close()
 
         for unit in unique_units:
             model.add_pop_key_list(unit)

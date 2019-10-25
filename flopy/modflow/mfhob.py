@@ -122,7 +122,8 @@ class ModflowHob(Package):
         # set package name
         fname = [filenames[0]]
 
-        # Call ancestor's init to set self.parent, extension, name and unit number
+        # Call ancestor's init to set self.parent,
+        # extension, name and unit number
         Package.__init__(self, model, extension=extension, name=name,
                          unit_number=units, extra=extra, filenames=fname)
 
@@ -137,7 +138,7 @@ class ModflowHob(Package):
 
         # create default
         if obs_data is None:
-            obs_data = HeadObservation()
+            obs_data = HeadObservation(model)
 
         # make sure obs_data is a list
         if isinstance(obs_data, HeadObservation):
@@ -319,9 +320,11 @@ class ModflowHob(Package):
         if model.verbose:
             sys.stdout.write('loading hob package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -331,8 +334,11 @@ class ModflowHob(Package):
         # read dataset 1
         t = line.strip().split()
         nh = int(t[0])
-        iuhobsv = int(t[3])
-        hobdry = float(t[4])
+        iuhobsv = None
+        hobdry = 0
+        if len(t) > 3:
+            iuhobsv = int(t[3])
+            hobdry = float(t[4])
 
         # read dataset 2
         line = f.readline()
@@ -366,15 +372,29 @@ class ModflowHob(Package):
                 line = f.readline()
                 t = line.strip().split()
                 mlay = collections.OrderedDict()
-                for j in range(0, abs(layer) * 2, 2):
-                    k = int(t[j]) - 1
-                    # catch case where the same layer is specified more than
-                    # once. In this case add previous value to the current value
-                    keys = list(mlay.keys())
-                    v = 0.
-                    if k in keys:
-                        v = mlay[k]
-                    mlay[k] = float(t[j + 1]) + v
+                if len(t) >= abs(layer) * 2:
+                    for j in range(0, abs(layer) * 2, 2):
+                        k = int(t[j]) - 1
+                        # catch case where the same layer is specified
+                        # more than once. In this case add previous
+                        # value to the current value
+                        keys = list(mlay.keys())
+                        v = 0.
+                        if k in keys:
+                            v = mlay[k]
+                        mlay[k] = float(t[j + 1]) + v
+                else:
+                    for j in range(abs(layer)):
+                        k = int(t[0]) - 1
+                        keys = list(mlay.keys())
+                        v = 0.
+                        if k in keys:
+                            v = mlay[k]
+                        mlay[k] = float(t[1]) + v
+
+                        if j != abs(layer) - 1:
+                            line = f.readline()
+                            t = line.strip().split()
                 # reset layer
                 layer = -len(list(mlay.keys()))
 
@@ -382,8 +402,9 @@ class ModflowHob(Package):
             if irefsp0 > 0:
                 itt = 1
                 irefsp0 -= 1
-                totim = model.dis.get_totim_from_kper_toffset(irefsp0,
-                                                              toffset * tomulth)
+                totim = model.dis.get_totim_from_kper_toffset(
+                    irefsp0,
+                    toffset * tomulth)
                 names = [obsnam]
                 tsd = [totim, hob]
                 nobs += 1
@@ -401,8 +422,9 @@ class ModflowHob(Package):
                     names.append(t[0])
                     irefsp = int(t[1]) - 1
                     toffset = float(t[2])
-                    totim = model.dis.get_totim_from_kper_toffset(irefsp,
-                                                                  toffset * tomulth)
+                    totim = model.dis.get_totim_from_kper_toffset(
+                        irefsp,
+                        toffset * tomulth)
                     hob = float(t[3])
                     tsd.append([totim, hob])
                     nobs += 1
@@ -417,8 +439,8 @@ class ModflowHob(Package):
             if nobs == nh:
                 break
 
-        # close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None
@@ -427,10 +449,11 @@ class ModflowHob(Package):
             unitnumber, filenames[0] = \
                 model.get_ext_dict_attr(ext_unit_dict,
                                         filetype=ModflowHob.ftype())
-            if iuhobsv > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
-                model.add_pop_key_list(iuhobsv)
+            if iuhobsv is not None:
+                if iuhobsv > 0:
+                    iu, filenames[1] = \
+                        model.get_ext_dict_attr(ext_unit_dict, unit=iuhobsv)
+                    model.add_pop_key_list(iuhobsv)
 
         # create hob object instance
         hob = ModflowHob(model, iuhobsv=iuhobsv, hobdry=hobdry,
@@ -457,7 +480,7 @@ class HeadObservation(object):
     ----------
     tomulth : float
         Time-offset multiplier for head observations. Default is 1.
-    obsnam : string
+    obsname : string
         Observation name. Default is 'HOBS'
     layer : int
         The zero-based layer index of the cell in which the head observation
@@ -554,10 +577,11 @@ class HeadObservation(object):
             for key, value in self.mlay.items():
                 tot += value
             if not (np.isclose(tot, 1.0, rtol=0)):
-                msg = ('sum of dataset 4 proportions must equal 1.0 - ' + \
+                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
                        'sum of dataset 4 proportions = {tot} for ' + \
-                       'observation name {obsname}.').format(tot=tot,
-                                                             obsname=self.obsname)
+                       'observation name {obsname}.'.format(
+                           tot=tot,
+                           obsname=self.obsname)
                 raise ValueError(msg)
 
         # convert passed time_series_data to a numpy array

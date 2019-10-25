@@ -261,6 +261,12 @@ class BinaryLayerFile(LayerFile):
                                               kwargs)
         return
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
     def _build_index(self):
         """
         Build the recordarray and iposarray, which maps the header information
@@ -628,6 +634,12 @@ class CellBudgetFile(object):
         # self.value = np.empty((self.nlay, self.nrow, self.ncol),
         #                      dtype=self.realtype)
         return
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
 
     def _totim_from_kstpkper(self, kstpkper):
         if self.dis is None:
@@ -1014,7 +1026,7 @@ class CellBudgetFile(object):
 
         Parameters
         ----------
-        idx : int
+        idx : int or list
             The zero-based record number.  The first record is record 0.
         kstpkper : tuple of ints
             A tuple containing the time step and stress period (kstp, kper).
@@ -1121,6 +1133,11 @@ class CellBudgetFile(object):
         # case where only text is entered
         elif text is not None:
             select_indices = np.where((self.recordarray['text'] == text16))
+
+        else:
+            raise TypeError(
+                "get_data() missing 1 required argument: 'kstpkper', 'totim', "
+                "'idx', or 'text'")
 
         # build and return the record list
         if isinstance(select_indices, tuple):

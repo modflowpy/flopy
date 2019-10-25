@@ -859,9 +859,11 @@ class ModflowDis(Package):
         if model.verbose:
             sys.stdout.write('loading dis package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         header = ''
         while True:
@@ -999,6 +1001,9 @@ class ModflowDis(Package):
             nstp.append(a2)
             tsmult.append(a3)
             steady.append(a4)
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

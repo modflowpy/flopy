@@ -346,7 +346,8 @@ class SeawatVdf(Package):
             sys.stdout.write('loading vdf package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -473,6 +474,9 @@ class SeawatVdf(Package):
 
             # Set indense = 1 because all concentrations converted to density
             indense = 1
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None
