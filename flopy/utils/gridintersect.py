@@ -512,6 +512,7 @@ class GridIntersect:
 
         """
         try:
+            from shapely.geometry import box
             from shapely.affinity import translate, rotate
         except ModuleNotFoundError:
             print("Shapely is needed for grid intersect operations! "
