@@ -642,6 +642,17 @@ def test006_2models_mvr():
         assert (len(sim._ims_files) > 0) == ('ims6' in load_only or
                                              'ims' in load_only)
 
+    # load package by name
+    load_only_list = ['ic6', 'maw', 'npf_p1', 'oc_p2', 'ims']
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth,
+                            load_only=load_only_list)
+    model_parent = sim.get_model('parent')
+    model_child = sim.get_model('child')
+    assert 'oc' not in model_parent.package_type_dict
+    assert 'oc' in model_child.package_type_dict
+    assert 'npf' in model_parent.package_type_dict
+    assert 'npf' not in model_child.package_type_dict
+
     if run:
         # test running a runnable load_only case
         sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth,
@@ -721,9 +732,9 @@ def test001e_uzf_3lay():
                                 load_only=load_only)
         model = sim.get_model()
         for package in model_package_check:
+            print(package)
             assert (package in model.package_type_dict) == \
-                   (package in load_only or '{}6'.format(package) in
-                                               load_only)
+                   (package in load_only or '{}6'.format(package) in load_only)
     if run:
         # test running a runnable load_only case
         sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
@@ -745,8 +756,10 @@ def test045_lake2tr():
         os.makedirs(save_folder)
 
     expected_output_folder = os.path.join(pth, 'expected_output')
-    expected_head_file_a = os.path.join(expected_output_folder, 'lakeex2a_unch.hds')
-    expected_head_file_b = os.path.join(expected_output_folder, 'lakeex2a_adj.hds')
+    expected_head_file_a = os.path.join(expected_output_folder,
+                                        'lakeex2a_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder,
+                                        'lakeex2a_adj.hds')
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)

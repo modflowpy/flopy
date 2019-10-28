@@ -466,12 +466,12 @@ class MFSimulation(PackageContainer):
                 2 : verbose mode with full error/warning/informational
                     messages.  this is ideal for debugging
         load_only : list
-            list of package abbreviations corresponding to packages that flopy
-            will load. default is None, which loads all packages. the
-            discritization packages will load regardless of this setting.
-            subpackages, like time series and observations, will also load
-            regardless of this setting.
-            example list: ['ic', 'maw', 'npf', 'oc']
+            list of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. the discretization packages will load regardless of this
+            setting. subpackages, like time series and observations, will also
+            load regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
 
         Returns
         -------
@@ -556,7 +556,8 @@ class MFSimulation(PackageContainer):
                                       message=message)
             for exgfile in exch_data:
                 if load_only is not None and not \
-                        instance._in_pkg_list(load_only, exgfile[0].lower()):
+                        instance._in_pkg_list(load_only, exgfile[0],
+                                              exgfile[2]):
                     if instance.simulation_data.verbosity_level.value >= \
                             VerbosityLevel.normal.value:
                         print('    skipping package {}..'
@@ -624,7 +625,8 @@ class MFSimulation(PackageContainer):
             for solution_info in solution_group:
                 if load_only is not None and \
                         not instance._in_pkg_list(load_only,
-                                                  solution_info[0].lower()):
+                                                  solution_info[0],
+                                                  solution_info[2]):
                     if instance.simulation_data.verbosity_level.value >= \
                             VerbosityLevel.normal.value:
                         print('    skipping package {}..'

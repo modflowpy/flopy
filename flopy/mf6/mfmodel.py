@@ -495,12 +495,12 @@ class MFModel(PackageContainer, ModelInterface):
         model_rel_path : string
             relative path of model folder to simulation folder
         load_only : list
-            list of package abbreviations corresponding to packages that flopy
-            will load. default is None, which loads all packages. the
-            discritization packages will load regardless of this setting.
-            subpackages, like time series and observations, will also load
-            regardless of this setting.
-            example list: ['ic', 'maw', 'npf', 'oc']
+            list of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. the discretization packages will load regardless of this
+            setting. subpackages, like time series and observations, will also
+            load regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc', 'my_well_package_1']
 
         Returns
         -------
@@ -545,8 +545,10 @@ class MFModel(PackageContainer, ModelInterface):
             if ftype in structure.package_struct_objs or ftype in \
               sim_struct.utl_struct_objs:
                 if load_only is not None and not \
-                        instance._in_pkg_list(priority_packages, ftype_orig) \
-                        and not instance._in_pkg_list(load_only, ftype_orig):
+                        instance._in_pkg_list(priority_packages, ftype_orig,
+                                              pname) \
+                        and not instance._in_pkg_list(load_only, ftype_orig,
+                                                      pname):
                     if simulation.simulation_data.verbosity_level.value >= \
                             VerbosityLevel.normal.value:
                         print('    skipping package {}...'.format(ftype))
@@ -617,7 +619,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         Returns
         -------
-        grid type : DiscritizationType
+        grid type : DiscretizationType
         """
         package_recarray = self.name_file.packages
         structure = mfstructure.MFStructure()

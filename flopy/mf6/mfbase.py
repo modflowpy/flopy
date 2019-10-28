@@ -642,20 +642,25 @@ class PackageContainer(object):
         return load_only_dict
 
     @staticmethod
-    def _in_pkg_list(pkg_list, pkg_name):
-        if pkg_name in pkg_list:
+    def _in_pkg_list(pkg_list, pkg_type, pkg_name):
+        if pkg_type is not None:
+            pkg_type = pkg_type.lower()
+        if pkg_name is not None:
+            pkg_name = pkg_name.lower()
+        if pkg_type in pkg_list or pkg_name in pkg_list:
             return True
+
         # split to make cases like "gwf6-gwf6" easier to process
-        pkg_name = pkg_name.split('-')
+        pkg_type = pkg_type.split('-')
         try:
             # if there is a number on the end of the package try
             # excluding it
-            int(pkg_name[0][-1])
+            int(pkg_type[0][-1])
             for key in pkg_list.keys():
                 key = key.split('-')
-                if len(key) == len(pkg_name):
+                if len(key) == len(pkg_type):
                     matches = True
-                    for key_item, pkg_item in zip(key, pkg_name):
+                    for key_item, pkg_item in zip(key, pkg_type):
                         if pkg_item[0:-1] != key_item and pkg_item != key_item:
                             matches = False
                     if matches:
