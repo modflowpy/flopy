@@ -7,6 +7,6 @@ BEGIN PACKAGES
   IC6            model2.ic
   NPF6           model2.npf
   MAW6           model2.mawq
-  OC6            model2.oc
+  OC6            model2.oc    oc_p2
 END PACKAGES
 
