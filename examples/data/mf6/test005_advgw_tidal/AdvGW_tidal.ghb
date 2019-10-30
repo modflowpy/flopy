@@ -44,3 +44,8 @@ BEGIN PERIOD  1
   3 15 10  tides  1500.0  estuary-l3
 END PERIOD  1
 
+BEGIN PERIOD  10
+  2 1 10  2.0  15.0  estuary-l2
+  2 2 10  3.0  15.0  estuary-l2
+  2 3 10  4.0  15.0  estuary-l2
+END PERIOD  10

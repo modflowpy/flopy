@@ -1,4 +1,4 @@
-import os
+import os, copy
 
 import numpy as np
 
@@ -248,6 +248,11 @@ def test005_advgw_tidal():
     assert(digits == 10)
     names = ghb.ts.time_series_namerecord.get_data()
     assert(names[0][0] == 'tides')
+
+    # add a stress period beyond nper
+    spd = ghb.stress_period_data.get_data()
+    spd[20] = copy.deepcopy(spd[9])
+    ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -732,7 +737,6 @@ def test001e_uzf_3lay():
                                 load_only=load_only)
         model = sim.get_model()
         for package in model_package_check:
-            print(package)
             assert (package in model.package_type_dict) == \
                    (package in load_only or '{}6'.format(package) in load_only)
     if run:
