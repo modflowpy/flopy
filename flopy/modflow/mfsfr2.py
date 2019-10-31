@@ -2829,9 +2829,9 @@ def _fmt_string(array, float_format='{!s}'):
         elif vtype == 'o':
             fmt_string += '{} '
         elif vtype == 's':
-            raise Exception("MfList error: '\str\' type found it dtype." + \
+            raise Exception("MfList error: 'str' type found in dtype." + \
                             " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
+                            "recarray to file - change to 'object' type")
         else:
             raise Exception("MfList.fmt_string error: unknown vtype " + \
                             "in dtype:" + vtype)
@@ -2851,9 +2851,9 @@ def _fmt_string_list(array, float_format='{!s}'):
         elif (vtype == 'o'):
             fmt_string += ['{}']
         elif (vtype == 's'):
-            raise Exception("MfList error: '\str\' type found it dtype." + \
+            raise Exception("MfList error: 'str' type found in dtype." + \
                             " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
+                            "recarray to file - change to 'object' type")
         else:
             raise Exception("MfList.fmt_string error: unknown vtype " + \
                             "in dtype:" + vtype)

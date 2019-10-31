@@ -96,7 +96,9 @@ class ModflowGwf(mfmodel.MFModel):
     @classmethod
     def load(cls, simulation, structure, modelname='NewModel',
              model_nam_file='modflowtest.nam', version='mf6',
-             exe_name='mf6.exe', strict=True, model_rel_path='.'):
+             exe_name='mf6.exe', strict=True, model_rel_path='.',
+             load_only=None):
         return mfmodel.MFModel.load_base(simulation, structure, modelname,
                                          model_nam_file, 'gwf', version,
-                                         exe_name, strict, model_rel_path)
+                                         exe_name, strict, model_rel_path,
+                                         load_only)

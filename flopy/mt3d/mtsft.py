@@ -167,18 +167,17 @@ class Mt3dSft(Package):
     Examples
     --------
 
-    >>> mf = flopy.modflow.Modflow.load('CrnkNic_mf.nam',
-    >>>                                  load_only=['dis', 'bas6'])
+    >>> import flopy
+    >>> datadir = 'examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic'
+    >>> mf = flopy.modflow.Modflow.load(
+    ...     'CrnkNic.nam', model_ws=datadir, load_only=['dis', 'bas6'])
     >>> sfr = flopy.modflow.ModflowSfr2.load('CrnkNic.sfr2', mf)
     >>> chk = sfr.check()
-
     >>> # initialize an MT3D-USGS model
-    >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam',
-    >>>        exe_name = 'mt3d-usgs_1.0.00.exe',
-    >>>        model_ws = r'.\CrnkNic',
-    >>>        load_only='btn')
+    >>> mt = flopy.mt3d.Mt3dms.load(
+    ...     'CrnkNic.mtnam', exe_name='mt3d-usgs_1.0.00.exe',
+    >>>     model_ws=datadir, load_only='btn')
     >>> sft = flopy.mt3d.Mt3dSft.load(mt, 'CrnkNic.sft')
-
 
     """
 
@@ -327,12 +326,12 @@ class Mt3dSft(Package):
 
         Examples
         --------
-        >>> mt = flopy.mt3d.Mt3dms.load('CrnkNic_mt.nam',
-        >>>      exe_name = 'mt3d-usgs_1.0.00.exe',
-        >>>      model_ws = r'C:\EDM_LT\GitHub\mt3d-usgs\autotest\temp\CrnkNic',
-        >>>      verbose=True)
+        >>> import flopy
+        >>> datadir = .examples/data/mt3d_test/mfnwt_mt3dusgs/sft_crnkNic
+        >>> mt = flopy.mt3d.Mt3dms.load(
+        ...     'CrnkNic.mtnam', exe_name='mt3d-usgs_1.0.00.exe',
+        ...     model_ws=datadir, verbose=True)
         >>> mt.name = 'CrnkNic_rewrite'
-        >>>
         >>> mt.sft.dispsf.fmtin = '(10F12.2)'
         >>> mt.write_input()
 

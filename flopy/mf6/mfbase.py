@@ -625,3 +625,46 @@ class PackageContainer(object):
     def register_package(self, package):
         path = (package.package_name,)
         return (path, None)
+
+    @staticmethod
+    def _load_only_dict(load_only):
+        if load_only is None:
+            return None
+        if isinstance(load_only, dict):
+            return load_only
+        if not isinstance(load_only, collections.Iterable):
+            raise FlopyException('load_only must be iterable or None. '
+                                 'load_only value of "{}" is '
+                                 'invalid'.format(load_only))
+        load_only_dict = {}
+        for item in load_only:
+            load_only_dict[item.lower()] = True
+        return load_only_dict
+
+    @staticmethod
+    def _in_pkg_list(pkg_list, pkg_type, pkg_name):
+        if pkg_type is not None:
+            pkg_type = pkg_type.lower()
+        if pkg_name is not None:
+            pkg_name = pkg_name.lower()
+        if pkg_type in pkg_list or pkg_name in pkg_list:
+            return True
+
+        # split to make cases like "gwf6-gwf6" easier to process
+        pkg_type = pkg_type.split('-')
+        try:
+            # if there is a number on the end of the package try
+            # excluding it
+            int(pkg_type[0][-1])
+            for key in pkg_list.keys():
+                key = key.split('-')
+                if len(key) == len(pkg_type):
+                    matches = True
+                    for key_item, pkg_item in zip(key, pkg_type):
+                        if pkg_item[0:-1] != key_item and pkg_item != key_item:
+                            matches = False
+                    if matches:
+                        return True
+        except ValueError:
+            return False
+        return False

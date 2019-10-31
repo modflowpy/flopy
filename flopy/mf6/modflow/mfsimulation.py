@@ -441,7 +441,7 @@ class MFSimulation(PackageContainer):
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
-             sim_ws='.', strict=True, verbosity_level=1):
+             sim_ws='.', strict=True, verbosity_level=1, load_only=None):
         """
         Load an existing model.
 
@@ -465,6 +465,14 @@ class MFSimulation(PackageContainer):
                     messages
                 2 : verbose mode with full error/warning/informational
                     messages.  this is ideal for debugging
+        load_only : list
+            list of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. the discretization packages will load regardless of this
+            setting. subpackages, like time series and observations, will also
+            load regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
+
         Returns
         -------
         sim : MFSimulation object
@@ -479,6 +487,9 @@ class MFSimulation(PackageContainer):
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print('loading simulation...')
+
+        # build case consistent load_only dictionary for quick lookups
+        load_only = instance._load_only_dict(load_only)
 
         # load simulation name file
         if verbosity_level.value >= VerbosityLevel.normal.value:
@@ -520,7 +531,7 @@ class MFSimulation(PackageContainer):
             instance._models[item[2]] = model_obj.load(
                 instance,
                 instance.structure.model_struct_objs[item[0].lower()], item[2],
-                name_file, version, exe_name, strict, path)
+                name_file, version, exe_name, strict, path, load_only)
 
         # load exchange packages and dependent packages
         try:
@@ -544,6 +555,14 @@ class MFSimulation(PackageContainer):
                                       package='nam',
                                       message=message)
             for exgfile in exch_data:
+                if load_only is not None and not \
+                        instance._in_pkg_list(load_only, exgfile[0],
+                                              exgfile[2]):
+                    if instance.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('    skipping package {}..'
+                              '.'.format(exgfile[0].lower()))
+                    continue
                 # get exchange type by removing numbers from exgtype
                 exchange_type = ''.join([char for char in exgfile[0] if
                                          not char.isdigit()]).upper()
@@ -604,6 +623,15 @@ class MFSimulation(PackageContainer):
                                   message=message)
         for solution_group in solution_group_dict.values():
             for solution_info in solution_group:
+                if load_only is not None and \
+                        not instance._in_pkg_list(load_only,
+                                                  solution_info[0],
+                                                  solution_info[2]):
+                    if instance.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('    skipping package {}..'
+                              '.'.format(solution_info[0].lower()))
+                    continue
                 ims_file = mfims.ModflowIms(instance, filename=solution_info[1],
                                             pname=solution_info[2])
                 if verbosity_level.value >= VerbosityLevel.normal.value:
