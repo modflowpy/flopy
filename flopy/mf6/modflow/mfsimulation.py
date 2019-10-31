@@ -226,10 +226,27 @@ class MFSimulation(PackageContainer):
     verbosity_level : int
         verbosity level of standard output
             0 : no standard output
-            1 : standard error/warning messages with some informational messages
+            1 : standard error/warning messages with some informational
+                messages
             2 : verbose mode with full error/warning/informational messages.
                 this is ideal for debugging
-
+    continue_ : bool
+        sets the continue option in the simulation name file. the continue
+        option is a keyword flag to indicate that the simulation should
+        continue even if one or more solutions do not converge.
+    nocheck : bool
+         sets the nocheck option in the simulation name file. the nocheck
+         option is a keyword flag to indicate that the model input check
+         routines should not be called prior to each time step. checks
+         are performed by default.
+    memory_print_option : str
+         sets memory_print_option in the simulation name file.
+         memory_print_option is a flag that controls printing of detailed
+         memory manager usage to the end of the simulation list file.  NONE
+         means do not print detailed information. SUMMARY means print only
+         the total memory for each simulation component. ALL means print
+         information for each variable stored in the memory manager. NONE is
+         default if memory_print_option is not specified.
     Attributes
     ----------
     sim_name : string
@@ -296,9 +313,9 @@ class MFSimulation(PackageContainer):
     >>> s = flopy6.mfsimulation.load('my simulation', 'simulation.nam')
 
     """
-    def __init__(self, sim_name='sim', version='mf6',
-                 exe_name='mf6.exe', sim_ws='.',
-                 verbosity_level=1):
+    def __init__(self, sim_name='sim', version='mf6', exe_name='mf6.exe',
+                 sim_ws='.', verbosity_level=1, continue_=None,
+                 nocheck=None, memory_print_option=None):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level)
@@ -332,7 +349,9 @@ class MFSimulation(PackageContainer):
         self.simulation_data.mfpath.set_last_accessed_path()
 
         # build simulation name file
-        self.name_file = mfnam.ModflowNam(self, filename='mfsim.nam')
+        self.name_file = mfnam.ModflowNam(
+            self, filename='mfsim.nam', continue_=continue_, nocheck=nocheck,
+            memory_print_option=memory_print_option)
 
         # try to build directory structure
         sim_path = self.simulation_data.mfpath.get_sim_path()
