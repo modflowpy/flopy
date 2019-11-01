@@ -1817,7 +1817,8 @@ class MFChildPackages(object):
         self._package_class = package_class
 
     def __getattr__(self, attr):
-        if '_packages' in self.__dict__ and len(self._packages) > 0 and hasattr(self._packages[0], attr):
+        if '_packages' in self.__dict__ and len(self._packages) > 0 and \
+                hasattr(self._packages[0], attr):
             item = getattr(self._packages[0], attr)
             return item
         raise AttributeError(attr)
