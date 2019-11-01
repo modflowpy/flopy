@@ -2,7 +2,7 @@ from operator import itemgetter
 import sys
 import inspect
 from ..mfbase import MFDataException, MFInvalidTransientBlockHeaderException, \
-                     FlopyException
+                     FlopyException, VerbosityLevel
 from ..data.mfstructure import DatumType
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
@@ -151,9 +151,12 @@ class MFTransient(object):
                                  'nper).')
         nper = self._simulation_data.mfdata[('tdis', 'dimensions', 'nper')]
         if not (sp_num <= nper.get_data()):
-            raise FlopyException('Stress period value sp_num ({}) is greater '
-                                 'than the number of stress periods defined '
-                                 'in nper.'.format(sp_num))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Stress period value {} in package {} is '
+                      'greater than the number of stress periods defined '
+                      'in nper.'.format(sp_num + 1,
+                                        self.structure.get_package()))
         return True
 
 
