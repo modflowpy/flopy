@@ -108,9 +108,14 @@ def package_is_copy(pk1, pk2):
         elif type(v) == bool:
             if not v == v2:
                 return False
-        elif type(v) in [str, int, float, dict, list]:
+        elif type(v) in [str, int, float, dict]:
             if v != v2:
                 return False
+        elif type(v) == list:
+            for item, item2 in zip(v, v2):
+                if not isinstance(item, mf6.mfpackage.MFPackage):
+                    if item != item2:
+                        return False
         elif isinstance(v, ModelInterface):
             # weak, but calling model_eq would result in recursion
             if v.__repr__() != v2.__repr__():

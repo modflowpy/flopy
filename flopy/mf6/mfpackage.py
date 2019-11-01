@@ -1815,32 +1815,18 @@ class MFChildPackages(object):
         self._cpparent = parent
         self._pkg_type = pkg_type
         self._package_class = package_class
-        self._inattr = False
-
-    def __getattribute__(self, name):
-        if name == '_MFChildPackages_packages' or name == \
-                '_MFChildPackages_inattr' or name == '_packages' or \
-                name == '_inattr':
-            return super(MFChildPackages, self).__getattribute__(name)
-
-        if self._inattr is not None and not self._inattr:
-            if self._packages and hasattr(self._packages[0], name):
-                self._inattr = True
-                item = getattr(self._packages[0], name)
-                self._inattr = False
-                return item
-        return super(MFChildPackages, self).__getattribute__(name)
 
     def __getattr__(self, attr):
-        if attr == '_MFChildPackages_inattr' or attr == '_inattr':
-            return None
+        if '_packages' in self.__dict__ and len(self._packages) > 0 and hasattr(self._packages[0], attr):
+            item = getattr(self._packages[0], attr)
+            return item
         raise AttributeError(attr)
 
     def __getitem__(self, k):
         if isinstance(k, int):
             if k < len(self._packages):
                 return self._packages[k]
-        raise Exception('Package index {} does not exist.'.format(k))
+        raise ValueError('Package index {} does not exist.'.format(k))
 
     def __setattr__(self, key, value):
         if key != '_packages' and key != '_model' and key != '_cpparent' and \
