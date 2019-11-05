@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export PATH=/home/jovyan/binaries/:$PATH
+
+exec "$@"
