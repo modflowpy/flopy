@@ -1209,7 +1209,6 @@ class MFDataStructure(object):
         self.name_length = len(self.name)
         self.is_aux = data_item.is_aux
         self.is_boundname = data_item.is_boundname
-        self.is_mname = data_item.is_mname
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname
@@ -1245,6 +1244,13 @@ class MFDataStructure(object):
         else:
             self.expected_data_items[data_item.name] = len(
                 self.expected_data_items)
+
+    @property
+    def is_mname(self):
+        for item in self.data_item_structures:
+            if item.is_mname:
+                return True
+        return False
 
     def get_item(self, item_name):
         for item in self.data_item_structures:

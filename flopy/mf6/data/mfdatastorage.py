@@ -890,7 +890,8 @@ class DataStorage(object):
                 self.layer_storage.first_item().data_storage_type = \
                         DataStorageType.internal_array
                 if data is None or isinstance(data, np.recarray):
-                    self._verify_list(data)
+                    if self._simulation_data.verify_data:
+                        self._verify_list(data)
                     self.layer_storage.first_item().internal_data = data
                 else:
                     if data is None:
@@ -977,7 +978,6 @@ class DataStorage(object):
             # add placeholders to data so it agrees with
             # expected dimensions of recarray
             self._add_placeholders(data)
-        self._verify_list(data)
         try:
             new_data = np.rec.array(data,
                                     self._recarray_type_list)
@@ -1006,7 +1006,8 @@ class DataStorage(object):
                 inspect.stack()[0][3], type_, value_,
                 traceback_, message,
                 self._simulation_data.debug)
-        self._verify_list(new_data)
+        if self._simulation_data.verify_data:
+            self._verify_list(new_data)
         return new_data
 
     def _resolve_multitype_fields(self, data):
@@ -1510,6 +1511,8 @@ class DataStorage(object):
 
     def _verify_list(self, data):
         if data is not None:
+            model_grid = None
+            cellid_size = None
             for data_line in data:
                 data_line_len = len(data_line)
                 for index in range(0, min(data_line_len,
@@ -1519,8 +1522,10 @@ class DataStorage(object):
                             is not None and data_line[index] is not None:
                         # this is a cell id.  verify that it contains the
                         # correct number of integers
-                        model_grid = self.data_dimensions.get_model_grid()
-                        cellid_size = model_grid.get_num_spatial_coordinates()
+                        if cellid_size is None:
+                            model_grid = self.data_dimensions.get_model_grid()
+                            cellid_size = model_grid.\
+                                get_num_spatial_coordinates()
                         if len(data_line[index]) != cellid_size:
                             message = 'Cellid "{}" contains {} integer(s). ' \
                                       'Expected a cellid containing {} ' \

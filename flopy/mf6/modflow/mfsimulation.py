@@ -173,6 +173,7 @@ class MFSimulationData(object):
         self.fast_write = True
         self.comments_on = False
         self.auto_set_sizes = True
+        self.verify_data = True
         self.debug = False
         self.verbose = True
         self.verbosity_level = VerbosityLevel.normal
@@ -460,7 +461,8 @@ class MFSimulation(PackageContainer):
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
-             sim_ws='.', strict=True, verbosity_level=1, load_only=None):
+             sim_ws='.', strict=True, verbosity_level=1, load_only=None,
+             verify_data=True):
         """
         Load an existing model.
 
@@ -491,6 +493,8 @@ class MFSimulation(PackageContainer):
             setting. subpackages, like time series and observations, will also
             load regardless of this setting.
             example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
+        verify_data : bool
+            verify data when it is loaded. this can slow down loading
 
         Returns
         -------
@@ -503,6 +507,7 @@ class MFSimulation(PackageContainer):
         # initialize
         instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level)
         verbosity_level = instance.simulation_data.verbosity_level
+        instance.simulation_data.verify_data = verify_data
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print('loading simulation...')
