@@ -1005,12 +1005,12 @@ class MFFileAccessList(MFFileAccess):
                             if arr_line[data_index][0] == '#':
                                 break
                             elif data_item.name == 'aux':
-                                data_index, self._data_line, \
-                                more_data_expected = \
+                                data_index, self._data_line = \
                                     self._process_aux(
                                         storage, arr_line, arr_line_len,
                                         data_item, data_index, None,
-                                        current_key, self._data_line, False)
+                                        current_key, self._data_line,
+                                        False)[0:2]
                             elif data_item.name == 'boundnames' and \
                                     self._data_dimensions.package_dim.\
                                     boundnames():
@@ -1020,8 +1020,8 @@ class MFFileAccessList(MFFileAccess):
                                     data_item.type,
                                     data_item),)
                     if arr_line_len > data_index + 1:
-                        # FEATURE: Keep number of white space characters used in
-                        # comments section
+                        # FEATURE: Keep number of white space characters used
+                        # in comments section
                         storage.comments[line_num] = MFComment(
                             ' '.join(arr_line[data_index + 1:]), struct.path,
                             self._simulation_data, line_num)
