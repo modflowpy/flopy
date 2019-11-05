@@ -18,6 +18,18 @@ try:
 except:
     pd = False
 
+try:
+    from numpy.lib import NumpyVersion
+    numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
+except ImportError:
+    numpy114 = False
+if numpy114:
+    # use numpy's floating-point formatter (Dragon4)
+    default_float_format = '{!s}'
+else:
+    # single-precision floats have ~7.2 decimal digits
+    default_float_format = '{:.8g}'
+
 
 class ModflowSfr2(Package):
     """
@@ -1618,7 +1630,7 @@ class ModflowSfr2(Package):
             if (idx in columns):
                 d[idx] += 1
         d = d[columns]  # data columns sorted
-        formats = _fmt_string(d)[:-1] + '\n'
+        formats = _fmt_string(d) + '\n'
         for rec in d:
             f_sfr.write(formats.format(*rec))
 
@@ -2816,51 +2828,35 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     return names
 
 
-def _fmt_string(array, float_format='{!s}'):
-    fmt_string = ''
-    for field in array.dtype.names:  # data already sorted
-        vtype = array.dtype[field].str[1].lower()
+def _fmt_string_list(array, float_format=default_float_format):
+    fmt_list = []
+    for name in array.dtype.names:
+        vtype = array.dtype[name].str[1].lower()
         if vtype == 'v':
             continue
         if vtype == 'i':
-            fmt_string += '{:.0f} '
+            fmt_list.append('{:d}')
         elif vtype == 'f':
-            fmt_string += '{} '.format(float_format)
+            fmt_list.append(float_format)
         elif vtype == 'o':
-            fmt_string += '{} '
+            float_format = '{!s}'
         elif vtype == 's':
-            raise Exception("MfList error: 'str' type found in dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to 'object' type")
+            raise ValueError(
+                "'str' type found in dtype for {!r}. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type".format(name))
         else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+            raise ValueError(
+                "unknown dtype for {!r}: {!r}".format(name, vtype))
+    return fmt_list
 
 
-def _fmt_string_list(array, float_format='{!s}'):
-    fmt_string = []
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
-        if vtype == 'v':
-            continue
-        if (vtype == 'i'):
-            fmt_string += ['{:.0f}']
-        elif (vtype == 'f'):
-            fmt_string += [float_format]
-        elif (vtype == 'o'):
-            fmt_string += ['{}']
-        elif (vtype == 's'):
-            raise Exception("MfList error: 'str' type found in dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to 'object' type")
-        else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+def _fmt_string(array, float_format=default_float_format):
+    return ' '.join(_fmt_string_list(array, float_format))
 
 
-def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
+def _print_rec_array(array, cols=None, delimiter=' ',
+                     float_format=default_float_format):
     """
     Print out a numpy record array to string, with column names.
 
