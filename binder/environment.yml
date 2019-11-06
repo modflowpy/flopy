@@ -21,5 +21,4 @@ dependencies:
   - rasterstats
   - pyshp
   - hydrofunctions
-  - flopy
   - pip

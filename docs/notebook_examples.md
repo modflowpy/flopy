@@ -5,7 +5,7 @@ Examples
 
 The following jupyter Notebooks contain examples for using FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models. The FloPy example notebooks can be opened and run using Pangeo by clicking on the launch binder link below.
 
-[![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/modflowpy/flopy.git/develop?filepath=https%3A%2F%2Fgithub.com%2Fmodflowpy%2Fflopy%2Ftree%2Fdevelop%2Fexamples%2FNotebooks)
+[![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/modflowpy/flopy.git/develop)
 
 #### MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODPATH, MT3DMS, MT3D-USGS, and SEAWAT
 
