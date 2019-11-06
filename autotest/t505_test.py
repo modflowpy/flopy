@@ -71,7 +71,13 @@ def np001():
 
     # model tests
     test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
-                            exe_name=exe_name, sim_ws=run_folder)
+                            exe_name=exe_name, sim_ws=run_folder,
+                            continue_=True, memory_print_option='summary')
+    name = test_sim.name_file
+    assert name.continue_.get_data() == True
+    assert name.nocheck.get_data() == None
+    assert name.memory_print_option.get_data() == 'summary'
+
     kwargs = {}
     kwargs['bad_kwarg'] = 20
     try:
@@ -305,7 +311,12 @@ def np002():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=run_folder)
+                       sim_ws=run_folder, nocheck=True)
+    name = sim.name_file
+    assert name.continue_.get_data() == None
+    assert name.nocheck.get_data() == True
+    assert name.memory_print_option.get_data() == None
+
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)

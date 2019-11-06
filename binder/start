@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export PATH=/home/jovyan/binaries/:$PATH
+export PYTHONPATH=/home/jovyan/flopy/:${PYTHONPATH}
+
+exec "$@"

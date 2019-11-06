@@ -3,7 +3,9 @@ Examples
 
 ### jupyter Notebook Examples
 
-The following jupyter Notebooks contain examples for using FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
+The following jupyter Notebooks contain examples for using FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models. The FloPy example notebooks can be opened and run using Pangeo by clicking on the launch binder link below.
+
+[![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/modflowpy/flopy.git/develop)
 
 #### MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODPATH, MT3DMS, MT3D-USGS, and SEAWAT
 
@@ -43,11 +45,11 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook. See the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook for an example of using GRIDGEN to create an unstructured DISV quadtree discretization for MODFLOW 6.
 
-+ The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model. 
++ The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model.
 
 + A variant of the [water-table example](../examples/Notebooks/flopy3_WatertableRecharge_example.ipynb), a very simple example of one-dimensional groundwater flow in an unconfined aquifer with recharge, from the MODFLOW-NWT documentation (http://pubs.usgs.gov/tm/tm6a37/). This IPython Notebook build files for MODFLOW-NWT.
 
-+ The [Zaidel discontinuous water-table example](../examples/Notebooks/flopy3_Zaidel_example.ipynb), which simulates a discontinuous water table over a stairway impervious base, from http://onlinelibrary.wiley.com/doi/10.1111/gwat.12019/abstract. This IPython Notebook build files for MODFLOW-USG. (http://pubs.usgs.gov/tm/06/a45/). 
++ The [Zaidel discontinuous water-table example](../examples/Notebooks/flopy3_Zaidel_example.ipynb), which simulates a discontinuous water table over a stairway impervious base, from http://onlinelibrary.wiley.com/doi/10.1111/gwat.12019/abstract. This IPython Notebook build files for MODFLOW-USG. (http://pubs.usgs.gov/tm/06/a45/).
 
 + The [MT3DMS Example Problems](../examples/Notebooks/flopy3_MT3DMS_examples.ipynb), which uses to Flopy to reproduce the ten example problems described in the MT3DMS documentation report by Zheng and Wang (1999).
 
@@ -113,7 +115,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of options for adding observations, time series, and time array series to MODFLOW 6 packages is given in the [flopy3_mf6_obs_ts_tas](../examples/Notebooks/flopy3_mf6_obs_ts_tas.ipynb) Notebook.
 
-#### Model grid examples 
+#### Model grid examples
 
 + An overview of the FloPy [model grid class capabilities](../examples/Notebooks/flopy3_demo_of_modelgrid_classes.ipynb).
 
@@ -142,4 +144,3 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 #### Additional MODFLOW examples
 
 + Example problems from the 2015 2nd edition of [Applied Groundwater Modeling](https://github.com/Applied-Groundwater-Modeling-2nd-Ed) by Mary P. Anderson, William W. Woessner, and Randall J. Hunt (https://github.com/Applied-Groundwater-Modeling-2nd-Ed)
-

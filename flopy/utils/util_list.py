@@ -463,7 +463,6 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                # dfi = dfi.set_index(names)
                 dfg = dfi.groupby(names)
                 count = dfg[varnames[0]].count().rename('n')
                 if (count > 1).values.any():

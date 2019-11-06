@@ -3,13 +3,6 @@ import sys
 if sys.version_info[0] == 2:
     ModuleNotFoundError = ImportError
 from .geometry import transform
-try:
-    from shapely.geometry import MultiPoint, Point, Polygon, box
-    from shapely.strtree import STRtree
-    from shapely.affinity import translate, rotate
-except ModuleNotFoundError:
-    print("Shapely is needed for grid intersect operations! "
-          "Please install shapely.")
 
 
 class GridIntersect:
@@ -49,6 +42,11 @@ class GridIntersect:
             for structured grids, by default "strtree"
 
         """
+        try:
+            from shapely.strtree import STRtree
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
 
         self.mfgrid = mfgrid
 
@@ -86,6 +84,12 @@ class GridIntersect:
             list of shapely Polygons
 
         """
+        try:
+            from shapely.geometry import Polygon
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
+
         shplist = []
         for i in range(self.mfgrid.nrow):
             for j in range(self.mfgrid.ncol):
@@ -115,7 +119,11 @@ class GridIntersect:
             list of shapely Polygons
 
         """
-
+        try:
+            from shapely.geometry import Polygon
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
         shplist = []
         if isinstance(self.mfgrid._cell2d, np.recarray):
             for icell in self.mfgrid._cell2d.icell2d:
@@ -398,20 +406,6 @@ class GridIntersect:
                         vertices.append(np.nan)
                     cellids.append(r.name)
 
-            # else:  # Point or LineString
-            #     if keep_all_ix:
-            #         isectshp.append(intersect)
-            #         if "Polygon" in intersect.geom_type:
-            #             areas.append(intersect.area)
-            #         else:
-            #             areas.append(np.nan)
-            #         if "coordinates" in intersect.__geo_interface__.keys():
-            #             vertices.append(
-            #                 intersect.__geo_interface__["coordinates"])
-            #         else:
-            #             vertices.append(np.nan)
-            #         cellids.append(r.name)
-
         rec = np.recarray(len(isectshp),
                           names=["cellids", "vertices", "areas", "ixshapes"],
                           formats=["O", "O", "f8", "O"])
@@ -436,8 +430,13 @@ class GridIntersect:
             a record array containing information about the intersection
 
         """
-        nodelist = []
+        try:
+            from shapely.geometry import MultiPoint
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
 
+        nodelist = []
         Xe, Ye = self.mfgrid.xyedges
 
         try:
@@ -512,6 +511,13 @@ class GridIntersect:
             a record array containing information about the intersection
 
         """
+        try:
+            from shapely.geometry import box
+            from shapely.affinity import translate, rotate
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
+
         # get local extent of grid
         if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
                 or self.mfgrid.yoffset != 0.):
@@ -654,6 +660,11 @@ class GridIntersect:
             start and end points of the intersects
 
         """
+        try:
+            from shapely.geometry import Point, box
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
         nodelist = []
         lengths = []
         vertices = []
@@ -744,8 +755,13 @@ class GridIntersect:
             current cell (i, j)
 
         """
-        i, j = i_j
+        try:
+            from shapely.geometry import box
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
 
+        i, j = i_j
         Xe, Ye = self.mfgrid.xyedges
 
         node = []
@@ -886,6 +902,11 @@ class GridIntersect:
             the rectangle intersects
 
         """
+        try:
+            from shapely.geometry import box
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
 
         nodelist = []
 
@@ -960,6 +981,12 @@ class GridIntersect:
             a record array containing information about the intersection
 
         """
+        try:
+            from shapely.geometry import Polygon
+            from shapely.affinity import translate, rotate
+        except ModuleNotFoundError:
+            print("Shapely is needed for grid intersect operations! "
+                  "Please install pyshp.")
 
         # initialize the result lists
         nodelist = []

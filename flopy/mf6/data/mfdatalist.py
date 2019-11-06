@@ -179,7 +179,6 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
         for name, arr in arrays.items():
             cnt = np.zeros(shape, dtype=np.float64)
-            #print(name,kper)
             for sp_rec in sarr:
                 if sp_rec is not None:
                     for rec in sp_rec:

@@ -603,7 +603,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2005', exe_name='mf2005.exe', verbose=False,
-             model_ws='.', load_only=None, forgive=True, check=True):
+             model_ws='.', load_only=None, forgive=False, check=True):
         """
         Load an existing MODFLOW model.
 

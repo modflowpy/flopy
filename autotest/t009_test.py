@@ -521,19 +521,35 @@ def test_assign_layers():
 
 
 def test_SfrFile():
+    common_names = [
+        'layer', 'row', 'column', 'segment', 'reach',
+        'Qin', 'Qaquifer', 'Qout', 'Qovr', 'Qprecip', 'Qet',
+        'stage', 'depth', 'width', 'Cond']
     sfrout = SfrFile('../examples/data/sfr_examples/sfroutput2.txt')
+    assert sfrout.ncol == 18, sfrout.ncol
+    assert sfrout.names == common_names + ['Qwt', 'delUzstor', 'gw_head'],\
+        sfrout.names
+    assert sfrout.times == [(0, 0), (49, 1)], sfrout.times
     # will be None if pandas is not installed
     if sfrout.pd is not None:
         df = sfrout.get_dataframe()
         assert df.layer.values[0] == 1
         assert df.column.values[0] == 169
         assert df.Cond.values[0] == 74510.0
-        assert df.col18.values[3] == 1.288E+03
+        assert df.gw_head.values[3] == 1.288E+03
 
     sfrout = SfrFile('../examples/data/sfr_examples/test1tr.flw')
+    assert sfrout.ncol == 16, sfrout.ncol
+    assert sfrout.names == common_names + ['gradient'], sfrout.names
+    expected_times = [
+        (0, 0), (4, 0), (9, 0), (12, 0), (14, 0), (19, 0), (24, 0), (29, 0),
+        (32, 0), (34, 0), (39, 0), (44, 0), (49, 0), (0, 1), (4, 1), (9, 1),
+        (12, 1), (14, 1), (19, 1), (24, 1), (29, 1), (32, 1), (34, 1), (39, 1),
+        (44, 1), (45, 1), (46, 1), (47, 1), (48, 1), (49, 1)]
+    assert sfrout.times == expected_times, sfrout.times
     if sfrout.pd is not None:
         df = sfrout.get_dataframe()
-        assert df.col16.values[-1] == 5.502E-02
+        assert df.gradient.values[-1] == 5.502E-02
         assert df.shape == (1080, 20)
 
 
