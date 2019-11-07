@@ -1312,7 +1312,7 @@ if __name__ == '__main__':
     # test_vertex_model_dot_plot()
     #test_sr_with_Map()
     #test_modelgrid_with_PlotMapView()
-    # test_epsgs()
+    test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     #test_dynamic_xll_yll()
@@ -1330,5 +1330,5 @@ if __name__ == '__main__':
     #test_export_array_contours()
     #test_tricontour_NaN()
     #test_export_contourf()
-    test_sr()
+    #test_sr()
     pass
