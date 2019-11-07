@@ -292,7 +292,11 @@ class ModflowRch(Package):
             irch = {}
             for kper,u2d in self.irch.transient_2ds.items():
                 irch[kper] = u2d.array + 1
-            irch = Transient2d(self.parent,self.irch.shape,self.irch.dtype,irch,self.irch.name)
+            irch = Transient2d(self.parent
+                               ,self.irch.shape,
+                               self.irch.dtype,
+                               irch,
+                               self.irch.name)
 
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
