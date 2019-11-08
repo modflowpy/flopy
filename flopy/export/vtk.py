@@ -7,9 +7,7 @@ import flopy.utils.binaryfile as bf
 from flopy.utils import HeadFile
 import numpy.ma as ma
 
-"""
-Module for exporting vtk from flopy
-"""
+# Module for exporting vtk from flopy
 
 
 def start_tag(f, tag, indent_level, indent_char='  '):
@@ -110,7 +108,8 @@ class Vtk(object):
         self.ibound = ibound
 
         # build the model vertices
-        self.verts, self.iverts, self.zverts = self.get_3d_vertex_connectivity()
+        self.verts, self.iverts, self.zverts = \
+            self.get_3d_vertex_connectivity()
 
         return
 
@@ -128,21 +127,12 @@ class Vtk(object):
         if name == 'ibound':
             return
 
-        # limited recarray support
-        if type(a) == np.recarray:
-            matrix = np.zeros(self.shape)
-            for row in a:
-                matrix[a.k, a.i, a.j ] = 1
-            a = matrix
-
-        else:
-
-            # if array is 2d reformat to 3d array
-            if array2d:
-                assert a.shape == self.shape2d
-                array = np.full(self.shape, self.nanval)
-                array[0, :, :] = a
-                a = array
+        # if array is 2d reformat to 3d array
+        if array2d:
+            assert a.shape == self.shape2d
+            array = np.full(self.shape, self.nanval)
+            array[0, :, :] = a
+            a = array
 
         try:
 
@@ -150,8 +140,8 @@ class Vtk(object):
         except AssertionError:
             return
             # raise AssertionError
-        if a.dtype == int:
-            a = a.astype(float)
+        # if a.dtype == int:
+        a = a.astype(float)
         # add array to self.arrays
         self.arrays[name] = a
         return
@@ -324,7 +314,8 @@ class Vtk(object):
         # build index array
         ot_idx_array = np.zeros(shape1d, dtype=np.int)
         # loop through arrays
-        for name, array in self.arrays.items():
+        for name in self.arrays:
+            array = self.arrays[name]
             # make array 1d
             a = array.ravel()
             # find where no data
@@ -352,12 +343,9 @@ class Vtk(object):
         :return: dictionaries of verts, iverts, and zvalues
         """
         # set up active cells
-        if actwcells is not None:
-            ncells = int(actwcells.sum())
-        else:
-            ncells = self.nlay * self.nrow * self.ncol
+        if actwcells is None:
             actwcells = self.ibound
-        npoints = ncells * 8
+
         ipoint = 0
 
         vertsdict = {}
@@ -402,7 +390,8 @@ class Vtk(object):
                             verts.append([pt0[0], pt0[1], elev])
                             # verts[ipoint+3, :] = np.append(pt3,elev)
                             verts.append([pt3[0], pt3[1], elev])
-                            ivert.extend([ipoint, ipoint+1, ipoint+2, ipoint+3])
+                            ivert.extend([ipoint, ipoint+1, ipoint+2,
+                                          ipoint+3])
                             zverts.extend([elev, elev, elev, elev])
                             ipoint += 4
                         vertsdict[cellid] = verts
@@ -416,11 +405,13 @@ class Vtk(object):
                             verts.append([pt2[0], pt2[1], zVertices[lay, i+1,
                                                                     j+1]])
 
-                            verts.append([pt0[0], pt0[1], zVertices[lay, i, j]])
+                            verts.append([pt0[0], pt0[1], zVertices[lay, i,
+                                                                    j]])
 
                             verts.append([pt3[0], pt3[1], zVertices[lay, i,
                                                                     j+1]])
-                            ivert.extend([ipoint, ipoint+1, ipoint+2, ipoint+3])
+                            ivert.extend([ipoint, ipoint+1, ipoint+2,
+                                          ipoint+3])
                             zverts.extend([zVertices[lay, i+1, j], zVertices[
                                 lay, i+1, j+1],
                                         zVertices[lay, i, j], zVertices[lay, i,
@@ -451,7 +442,8 @@ class Vtk(object):
                     for index in indexList:
                         if index[0] in range(self.nrow) and index[1] in \
                                 range(self.ncol):
-                            neighList.append(dataArray[lay, index[0], index[1]])
+                            neighList.append(dataArray[lay, index[0],
+                                                       index[1]])
                     neighList = np.array(neighList)
                     if neighList[neighList > self.nanval].shape[0] > 0:
                         headMean = neighList[neighList > self.nanval].mean()
@@ -460,7 +452,8 @@ class Vtk(object):
                     matrix[lay, row, col] = headMean
         return matrix
 
-    def write_data_array(self, f, indent_level, arrayName, arrayValues,
+    @staticmethod
+    def write_data_array(f, indent_level, arrayName, arrayValues,
                          actWCells):
         """
 
@@ -506,8 +499,10 @@ class Vtk(object):
         indent_level = start_tag(f, s, indent_level)
 
         # data
-        verts, secus, zverts = self.get_3d_vertex_connectivity(
+        verts_info = self.get_3d_vertex_connectivity(
             actwcells=actwcells, zvalues=data_array)
+
+        zverts = verts_info[2]
 
         for cellid in sorted(zverts):
             for z in zverts[cellid]:
@@ -531,15 +526,20 @@ class Vtk(object):
         :param verts: vertices being output
         :return: iverts for output
         """
-        count = 0
+        ncells = len(verts)
+        npoints = ncells * 8
         iverts = []
-        for a in verts:
-            ivert = []
-            for i in range(len(a)):
-                ivert.append(count)
-                count += 1
-            iverts.append(ivert)
+        ivert = []
+        count = 1
+        for i in range(npoints):
+            ivert.append(i)
+            if count == 8:
+                iverts.append(ivert)
+                ivert = []
+                count = 0
+            count += 1
         iverts = np.array(iverts)
+
         return iverts
 
 
@@ -937,7 +937,8 @@ def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
                         pass
 
                     else:
-                        raise Exception('Data type not understond in data list')
+                        raise Exception('Data type not understond in data '
+                                        'list')
 
             elif value.data_type == DataType.transient3d:
                 # add to transient dictionary for output
