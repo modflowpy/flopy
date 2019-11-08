@@ -2,7 +2,7 @@ import shutil
 import os
 import numpy as np
 import flopy
-from flopy.export.vtk import Vtk
+from flopy.export import vtk
 
 # create output directory
 cpth = os.path.join('temp', 't050')
@@ -11,65 +11,150 @@ if os.path.isdir(cpth):
 os.makedirs(cpth)
 
 
-def test_vtkoutput():
-    """Make vtk with ibound_filter"""
-    nlay = 3
-    nrow = 3
-    ncol = 3
-    ml = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0,
-                                   botm=[-1., -2., -3.])
-    ibound = np.ones((nlay, nrow, ncol), dtype=np.int)
-    ibound[0, 1, 1] = 0
-    bas = flopy.modflow.ModflowBas(ml, ibound=ibound)
+def test_vtk_export_array2d():
+    """Export 2d array"""
+    mpath = os.path.join('..', 'examples', 'data',
+                         'freyberg_multilayer_transient')
+    namfile = 'freyberg.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpath, verbose=False)
+    m.dis.top.export(os.path.join(cpth, 'array_2d_test'), fmt='vtk')
+    # with smoothing
+    m.dis.top.export(os.path.join(cpth, 'array_2d_test'), fmt='vtk',
+                     name='top_smooth', smooth=True)
 
-    fvtkout = os.path.join(cpth, 'test.vtu')
-    vtkfile = Vtk(fvtkout, ml)
-    a = np.arange(nlay * nrow * ncol).reshape((nlay, nrow, ncol))
-    vtkfile.add_array('testarray', a)
-    vtkfile.write(shared_vertex=False, ibound_filter=True)
+
+def test_vtk_export_array3d():
+    """Vtk export 3d array"""
+    mpath = os.path.join('..', 'examples', 'data',
+                         'freyberg_multilayer_transient')
+    namfile = 'freyberg.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpath, verbose=False)
+    m.upw.hk.export(os.path.join(cpth, 'array_3d_test'), fmt='vtk')
+    # with point scalars
+    m.upw.hk.export(os.path.join(cpth, 'array_3d_test'), fmt='vtk',
+                    name='hk_points', point_scalars=True)
+
     return
 
 
-def test_vtkoutput_noibound():
-    """Make vtk without ibound_filter"""
-    nlay = 3
-    nrow = 3
-    ncol = 3
-    ml = flopy.modflow.Modflow()
-    dis = flopy.modflow.ModflowDis(ml, nlay=nlay, nrow=nrow, ncol=ncol, top=0,
-                                   botm=[-1., -2., -3.])
-    fvtkout = os.path.join(cpth, 'test.vtu')
-    vtkfile = Vtk(fvtkout, ml)
-    a = np.arange(nlay * nrow * ncol).reshape((nlay, nrow, ncol))
-    vtkfile.add_array('testarray', a)
-    vtkfile.write(shared_vertex=False, ibound_filter=False)
+def test_vtk_transient_array_2d():
+    """VTK export transient 2d array"""
+    mpath = os.path.join('..', 'examples', 'data',
+                         'freyberg_multilayer_transient')
+    namfile = 'freyberg.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpath, verbose=False)
+    m.rch.rech.export(os.path.join(cpth, 'transient_2d_test'), fmt='vtk')
+
     return
 
 
-def test_vtkoutput_mf6():
-    """Make vtk with ibound_filter"""
-    nlay = 3
-    nrow = 3
-    ncol = 3
-    sim = flopy.mf6.MFSimulation()
-    gwf = flopy.mf6.ModflowGwf(sim)
-    idomain = np.ones((nlay, nrow, ncol), dtype=np.int)
-    idomain[0, 1, 1] = 0
-    dis = flopy.mf6.ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol, top=0,
-                                   botm=[-1., -2., -3.], idomain=idomain)
+def test_vtk_export_packages():
+    """testing vtk package export"""
+    mpath = os.path.join('..', 'examples', 'data',
+                         'freyberg_multilayer_transient')
+    namfile = 'freyberg.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpath, verbose=False)
+    # test dis export
+    m.dis.export(os.path.join(cpth, 'DIS'), fmt='vtk')
+    # upw with point scalar output
+    m.upw.export(os.path.join(cpth, 'UPW'), fmt='vtk', point_scalars=True)
+    # bas with smoothing on
+    m.bas6.export(os.path.join(cpth, 'BAS'), fmt='vtk', smooth=True)
+    # transient package drain
+    m.drn.export(os.path.join(cpth, 'DRN'), fmt='vtk')
 
-    fvtkout = os.path.join(cpth, 'test.vtu')
-    vtkfile = Vtk(fvtkout, gwf)
-    a = np.arange(nlay * nrow * ncol).reshape((nlay, nrow, ncol))
-    vtkfile.add_array('testarray', a)
-    vtkfile.write(shared_vertex=False, ibound_filter=True)
     return
 
 
+# add mf2005 model exports
+def test_export_mf2005_vtk():
+    """test vtk model export mf2005"""
+    pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    namfiles = [namfile for namfile in os.listdir(pth) if
+                namfile.endswith('.nam')]
+    skip = ['bcf2ss.nam']
+    for namfile in namfiles:
+        if namfile in skip:
+            continue
+        print('testing namefile', namfile)
+        m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
+        m.export(os.path.join(cpth, m.name), fmt='vtk')
 
+    return
+
+
+def test_vtk_mf6():
+    mf6expth = os.path.join('..', 'examples', 'data', 'mf6')
+    # test vtk mf6 export
+    mf6sims = ['test005_advgw_tidal', 'test045_lake1ss_table',
+               'test036_twrihfb', 'test045_lake2tr', 'test006_2models_mvr']
+    # mf6sims = ['test005_advgw_tidal']
+    # mf6sims = ['test036_twrihfb']
+
+    for simnm in mf6sims:
+        print(simnm)
+        simpth = os.path.join(mf6expth, simnm)
+        loaded_sim = flopy.mf6.MFSimulation.load(simnm, 'mf6', 'mf6',
+                                                 simpth)
+        sim_models = loaded_sim.model_names
+        print(sim_models)
+        for mname in sim_models:
+            print(mname)
+            m = loaded_sim.get_model(mname)
+            m.export(os.path.join(cpth, m.name), fmt='vtk')
+
+    return
+
+
+def test_vtk_bindary_head_export():
+
+    """test vet export of heads"""
+
+    freyberg_pth = os.path.join('..', 'examples', 'data',
+                                'freyberg_multilayer_transient')
+
+    hdsfile = os.path.join(freyberg_pth, 'freyberg.hds')
+
+    m = flopy.modflow.Modflow.load('freyberg.nam', model_ws=freyberg_pth,
+                                   verbose=False)
+    otfolder = os.path.join(cpth, 'freyberg_hds_test')
+
+    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
+                                                         1090])
+    # test with points
+    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
+                                                     1090], point_scalars=True)
+
+    # test vtk export heads with smoothing and no point scalars
+    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
+                                                     1090],
+                     point_scalars=False, smooth=True)
+
+    return
+
+
+def test_vtk_cbc():
+    # test mf 2005 freyberg
+    freyberg_cbc = os.path.join('..', 'examples', 'data',
+                        'freyberg_multilayer_transient', 'freyberg.cbc')
+
+    freyberg_mpth = os.path.join('..', 'examples', 'data',
+                         'freyberg_multilayer_transient')
+
+    m = flopy.modflow.Modflow.load('freyberg.nam', model_ws=freyberg_mpth,
+                                   verbose=False)
+
+    vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST'),
+                   kperlist=[1, 2, 3], point_scalars=True)
+
+    return
 
 if __name__ == '__main__':
-    test_vtkoutput()
-    test_vtkoutput_noibound()
-    test_vtkoutput_mf6()
+    test_vtk_export_array2d()
+    test_vtk_export_array3d()
+    test_vtk_transient_array_2d()
+    test_vtk_export_packages()
+    test_export_mf2005_vtk()
+    test_vtk_mf6()
+    test_vtk_bindary_head_export()
+    test_vtk_cbc()
