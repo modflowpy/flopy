@@ -238,7 +238,6 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
         if at.dtype in [np.float, np.float32, np.float64]:
             at[np.isnan(at)] = nan_val
         at = np.array([tuple(i) for i in at], dtype=dtypes)
-        print('break')
     elif mg.grid_type == 'vertex':
         # set-up array of attributes of shape ncells x nattributes
         node = list(range(1, mg.ncpl + 1))
