@@ -244,7 +244,7 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     for i, r in enumerate(at):
         # check if polygon is closed, if not close polygon for QGIS
         if verts[i][-1] != verts[i][0]:
-             verts[i] = verts[i] + [verts[i][0]]
+            verts[i] = verts[i] + [verts[i][0]]
         w.poly([verts[i]])
         w.record(*r)
     # close
