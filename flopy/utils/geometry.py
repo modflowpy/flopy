@@ -105,12 +105,9 @@ class Polygon:
                 il.reverse()
             interiors.append(il)
 
-        if sfv < 2:
-            result = [exterior + [i for i in interiors]]
-        else:
-            result = [exterior]
-            for i in interiors:
-                result.append(i)
+        result = [exterior]
+        for i in interiors:
+            result.append(i)
         return result
 
     @property

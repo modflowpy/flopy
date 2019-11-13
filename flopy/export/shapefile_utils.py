@@ -201,53 +201,50 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     else:
         raise Exception('Grid type {} not supported.'.format(mg.grid_type))
 
-    # set up the attribute fields
+    # set up the attribute fields and arrays of attributes
     if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         names = ['node', 'row', 'column'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
         dtypes = [('node', np.dtype('int')),
                   ('row', np.dtype('int')),
                   ('column', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[3:]]
+        node = list(range(1, mg.ncol * mg.nrow + 1))
+        col = list(range(1, mg.ncol + 1)) * mg.nrow
+        row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
+        at = np.vstack(
+            [node, row, col] +
+            [array_dict[name].ravel() for name in names[3:]]).transpose()
+
+        names = enforce_10ch_limit(names)
+
     elif mg.grid_type == 'vertex':
         names = ['node'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
         dtypes = [('node', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[1:]]
+        node = list(range(1, mg.ncpl + 1))
+        at = np.vstack(
+            [node] +
+            [array_dict[name].ravel() for name in names[1:]]).transpose()
 
+        names = enforce_10ch_limit(names)
+
+    # flag nan values and explicitly set the dtypes
+    if at.dtype in [np.float, np.float32, np.float64]:
+        at[np.isnan(at)] = nan_val
+    at = np.array([tuple(i) for i in at], dtype=dtypes)
+
+    # write field information
     fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
                  dtypes}
     for n in names:
         w.field(n, *fieldinfo[n])
 
-    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
-        # set-up array of attributes of shape ncells x nattributes
-        node = list(range(1, mg.ncol * mg.nrow + 1))
-        col = list(range(1, mg.ncol + 1)) * mg.nrow
-        row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
-        arrs = []
-        dtypes = [("node", int), ("row", int), ("col", int)]
-        for n, arr in array_dict.items():
-            arrs.append(arr.ravel())
-            dtypes.append((n, arr.dtype))
-
-        at = np.vstack([node, row, col] + arrs).transpose()
-
-        if at.dtype in [np.float, np.float32, np.float64]:
-            at[np.isnan(at)] = nan_val
-        at = np.array([tuple(i) for i in at], dtype=dtypes)
-    elif mg.grid_type == 'vertex':
-        # set-up array of attributes of shape ncells x nattributes
-        node = list(range(1, mg.ncpl + 1))
-        at = np.vstack(
-            [node] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
-    if at.dtype in [np.float, np.float32, np.float64]:
-        at[np.isnan(at)] = nan_val
-
     for i, r in enumerate(at):
+        # check if polygon is closed, if not close polygon for QGIS
+        if verts[i][-1] != verts[i][0]:
+             verts[i] = verts[i] + [verts[i][0]]
         w.poly([verts[i]])
         w.record(*r)
     # close

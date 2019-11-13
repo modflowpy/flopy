@@ -301,6 +301,38 @@ def test_write_shapefile():
             pass
 
 
+def test_shapefile_polygon_closed():
+    import os
+    import flopy
+    try:
+        import shapefile
+    except:
+        return
+
+    xll, yll = 468970, 3478635
+    xur, yur = 681010, 3716462
+
+    spacing = 2000
+
+    ncol = int((xur - xll) / spacing)
+    nrow = int((yur - yll) / spacing)
+    print(nrow, ncol)
+
+    m = flopy.modflow.Modflow("test.nam", proj4_str="EPSG:32614", xll=xll,
+                              yll=yll)
+
+    flopy.modflow.ModflowDis(m, delr=spacing, delc=spacing, nrow=nrow,
+                             ncol=ncol)
+
+    shp_file = os.path.join(spth, "test_polygon.shp")
+    m.dis.export(shp_file)
+
+    shp = shapefile.Reader(shp_file)
+    for shape in shp.iterShapes():
+        if len(shape.points) != 5:
+            raise AssertionError("Shapefile polygon is not closed!")
+
+
 def test_export_array():
     from flopy.export import utils
     try:
@@ -1331,4 +1363,5 @@ if __name__ == '__main__':
     #test_tricontour_NaN()
     #test_export_contourf()
     #test_sr()
+    # test_shapefile_polygon_closed()
     pass
