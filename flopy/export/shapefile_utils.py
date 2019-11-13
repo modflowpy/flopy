@@ -80,6 +80,10 @@ def write_grid_shapefile(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     prj : str
         projection file name path
 
+    Returns
+    -------
+    None
+
     """
     shapefile = import_shapefile()
     w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
