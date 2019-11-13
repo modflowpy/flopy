@@ -85,14 +85,12 @@ class Polygon:
 
     @property
     def pyshp_parts(self):
-        from ..export.shapefile_utils import (import_shapefile,
-                                              shapefile_version)
+        from ..export.shapefile_utils import import_shapefile
 
         # exterior ring must be clockwise (negative area)
         # interiors rings must be counter-clockwise (positive area)
 
         shapefile = import_shapefile()
-        sfv = shapefile_version(shapefile)
 
         exterior = list(self.exterior)
         if shapefile.signed_area(exterior) > 0:
