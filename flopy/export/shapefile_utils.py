@@ -227,11 +227,18 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
         node = list(range(1, mg.ncol * mg.nrow + 1))
         col = list(range(1, mg.ncol + 1)) * mg.nrow
         row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
-        at = np.vstack(
-            [node, row, col] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
+        arrs = []
+        dtypes = [("node", int), ("row", int), ("col", int)]
+        for n, arr in array_dict.items():
+            arrs.append(arr.ravel())
+            dtypes.append((n, arr.dtype))
+
+        at = np.vstack([node, row, col] + arrs).transpose()
+
         if at.dtype in [np.float, np.float32, np.float64]:
             at[np.isnan(at)] = nan_val
+        at = np.array([tuple(i) for i in at], dtype=dtypes)
+        print('break')
     elif mg.grid_type == 'vertex':
         # set-up array of attributes of shape ncells x nattributes
         node = list(range(1, mg.ncpl + 1))
@@ -244,7 +251,6 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     for i, r in enumerate(at):
         w.poly([verts[i]])
         w.record(*r)
-
     # close
     if sfv < 2:
         w.save(filename)
