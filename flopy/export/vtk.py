@@ -6,8 +6,119 @@ from ..datbase import DataType, DataInterface
 import flopy.utils.binaryfile as bf
 from flopy.utils import HeadFile
 import numpy.ma as ma
+import struct
+import sys
 
 # Module for exporting vtk from flopy
+
+# BINARY *********************************************
+np_to_struct = {'int8': 'b',
+                'uint8': 'B',
+                'int16': 'h',
+                'uint16': 'H',
+                'int32': 'i',
+                'uint32': 'I',
+                'int64': 'q',
+                'uint64': 'Q',
+                'float32': 'f',
+                'float64': 'd'}
+
+
+class BinaryXml:
+    def __init__(self, file_path):
+        self.stream = open(file_path, "wb")
+        self.open_tag = False
+        self.current = []
+        self.stream.write(b'<?xml version="1.0"?>')
+        if sys.byteorder == "little":
+            self.byte_order = '<'
+        else:
+            self.byte_order = '>'
+
+    def write_size(self, block_size):
+        # size is a 64 bit unsigned integer
+        byte_order = self.byte_order + 'Q'
+        block_size = struct.pack(byte_order, block_size)
+        self.stream.write(block_size)
+
+    def write_array(self, data):
+        assert (data.flags['C_CONTIGUOUS'] or data.flags['F_CONTIGUOUS'])
+
+        # ravel in fortran order
+        dd = np.ravel(data, order='F')
+
+        data_format = self.byte_order + str(data.size) + \
+                      np_to_struct[data.dtype.name]
+        binary_data = struct.pack(data_format, *dd)
+        self.stream.write(binary_data)
+
+    def write_coord_arrays(self, x, y, z):
+        # check that arrays are the same shape and data type
+        assert (x.size == y.size == z.size)
+        assert (x.dtype.itemsize == y.dtype.itemsize == z.dtype.itemsize)
+
+        # check if arrays are contiguous
+        assert (x.flags['C_CONTIGUOUS'] or x.flags['F_CONTIGUOUS'])
+        assert (y.flags['C_CONTIGUOUS'] or y.flags['F_CONTIGUOUS'])
+        assert (z.flags['C_CONTIGUOUS'] or z.flags['F_CONTIGUOUS'])
+
+        data_format = self.byte_order + str(1) + \
+            np_to_struct[x.dtype.name]
+
+        xrav = np.ravel(x, order='F')
+        yrav = np.ravel(y, order='F')
+        zrav = np.ravel(z, order='F')
+
+        for idx in range(x.size):
+            bx = struct.pack(data_format, xrav[idx])
+            by = struct.pack(data_format, yrav[idx])
+            bz = struct.pack(data_format, zrav[idx])
+            self.stream.write(bx)
+            self.stream.write(by)
+            self.stream.write(bz)
+
+    def close(self):
+        assert (not self.open_tag)
+        self.stream.close()
+
+    def open_element(self, tag):
+        if self.open_tag:
+            self.stream.write(b">")
+        tag_string = "\n<%s" % tag
+        self.stream.write(str.encode(tag_string))
+        self.open_tag = True
+        self.current.append(tag)
+        return self
+
+    def close_element(self, tag=None):
+        if tag:
+            assert (self.current.pop() == tag)
+            if self.open_tag:
+                self.stream.write(b">")
+                self.open_tag = False
+            string = "\n</%s>" % tag
+            self.stream.write(str.encode(string))
+        else:
+            self.stream.write(b"/>")
+            self.open_tag = False
+            self.current.pop()
+        return self
+
+    def add_text(self, text):
+        if self.open_tag:
+            self.stream.write(b">\n")
+            self.open_tag = False
+        self.stream.write(str.encode(text))
+        return self
+
+    def add_attributes(self, **kwargs):
+        assert self.open_tag
+        for key in kwargs:
+            st = ' %s="%s"' % (key, kwargs[key])
+            self.stream.write(str.encode(st))
+        return self
+
+# END BINARY *********************************************
 
 
 def start_tag(f, tag, indent_level, indent_char='  '):
@@ -87,6 +198,7 @@ class Vtk(object):
         # check if structured grid, vtk only supports structured grid
         assert (isinstance(self.modelgrid, StructuredGrid))
 
+        # cbd
         self.cbd_on = False
 
         # get ibound
@@ -95,7 +207,7 @@ class Vtk(object):
             ibound = np.ones(self.shape)
         else:
             ibound = self.modelgrid.idomain
-
+            # build cbd ibound
             if ibound is not None and hasattr(self.model, 'dis') and \
                     hasattr(self.model.dis, 'laycbd'):
 
@@ -139,9 +251,11 @@ class Vtk(object):
             assert a.shape == self.shape
         except AssertionError:
             return
-            # raise AssertionError
-        # if a.dtype == int:
+
+        a = np.where(a == self.nanval, np.nan, a)
         a = a.astype(float)
+        # idxs = np.argwhere(a == self.nanval)
+
         # add array to self.arrays
         self.arrays[name] = a
         return
@@ -301,6 +415,217 @@ class Vtk(object):
         self.arrays.clear()
         return
 
+    def write_binary(self, output_file):
+
+        """
+
+        :param output_file: vtk output file
+        :return: outputs binary .vtu file
+
+        # timeval not yet supported in binary
+
+        """
+
+        # make sure file ends with vtu
+        assert output_file.lower().endswith(".vtu")
+
+        if self.verbose:
+            print('writing binary vtk file')
+
+        xml = BinaryXml(output_file)
+        offset = 0
+        grid_type = 'UnstructuredGrid'
+
+        # get the active data cells based on the data arrays and ibound
+        actwcells3d = self._configure_data_arrays()
+        actwcells = actwcells3d.ravel()
+
+        # get the indexes of the active cells
+        idxs = np.argwhere(actwcells != 0).ravel()
+
+        # get the verts and iverts to be output
+        verts = [self.verts[idx] for idx in idxs]
+        iverts = self._build_iverts(verts)
+
+        # check if there is data to be written out
+        if len(verts) == 0:
+            # if not cannot write binary .vtu file
+            return
+
+        # get the total number of cells and vertices
+        ncells = len(iverts)
+        npoints = ncells * 8
+
+        if self.verbose:
+            print('Writing vtk file: ' + output_file)
+            print('Number of point is {}, Number of cells is {}\n'.format(
+                npoints, ncells))
+
+        # format verts and iverts
+        verts = np.array(verts)
+        verts.reshape(npoints, 3)
+        iverts = np.ascontiguousarray(iverts, np.float64)
+
+        # write xml file info
+        xml.open_element("VTKFile"). \
+            add_attributes(type=grid_type, version="1.0",
+                           byte_order=self._get_byte_order(),
+                           header_type="UInt64")
+        # unstructured grid
+        xml.open_element(grid_type)
+
+        # piece
+        xml.open_element('Piece')
+        xml.add_attributes(NumberOfPoints=npoints, NumberOfCells=ncells)
+
+        # points
+        xml.open_element('Points')
+
+        xml.open_element('DataArray')
+        xml.add_attributes(Name='points', NumberOfComponents='3',
+                           type='Float64',
+                           format='appended', offset=offset)
+
+        # calculate the offset of the start of the next piece of data
+        # offset is calculated from beginning of data section
+        points_size = verts.size * verts[0].dtype.itemsize
+        offset += points_size + 8
+
+        xml.close_element('DataArray')
+
+        xml.close_element('Points')
+
+        # cells
+        xml.open_element('Cells')
+
+        # connectivity
+        xml.open_element('DataArray')
+        xml.add_attributes(Name='connectivity', NumberOfComponents='1',
+                           type='Float64',
+                           format='appended', offset=offset)
+        conn_size = iverts.size * iverts[0].dtype.itemsize
+        offset += conn_size + 8
+
+        xml.close_element('DataArray')
+
+        xml.open_element('DataArray')
+        xml.add_attributes(Name='offsets', NumberOfComponents='1',
+                           type='Float64',
+                           format='appended', offset=offset)
+        offsets_size = iverts.shape[0] * iverts[0].dtype.itemsize
+        offset += offsets_size + 8
+
+        xml.close_element('DataArray')
+
+        xml.open_element('DataArray')
+        xml.add_attributes(Name='types', NumberOfComponents='1',
+                           type='Float64',
+                           format='appended', offset=offset)
+        types_size = iverts.shape[0] * iverts[0].dtype.itemsize
+        offset += types_size + 8
+
+        xml.close_element('DataArray')
+
+        xml.close_element('Cells')
+
+        xml.open_element('CellData')
+        xml.add_attributes(Scalars='scalars')
+
+        # format data arrays and store for later output
+        processed_arrays = []
+        for name, a in self.arrays.items():
+            a = a.ravel()[idxs]
+            xml.open_element('DataArray')
+            xml.add_attributes(Name=name, NumberOfComponents='1',
+                               type='Float64',
+                               format='appended', offset=offset)
+            a = np.ascontiguousarray(a, np.float64)
+            processed_arrays.append([a, a.size * a[0].dtype.itemsize])
+            offset += processed_arrays[-1][-1] + 8
+            xml.close_element('DataArray')
+
+        xml.close_element('CellData')
+
+        # for data array point scalars
+        if self.point_scalars:
+
+            xml.open_element('PointData')
+            xml.add_attributes(Scalars='scalars')
+
+            # get output point arrays
+            # loop through stored arrays
+            for name, a in self.arrays.items():
+                # get the array values onto vertices
+                verts_info = self.get_3d_vertex_connectivity(
+                    actwcells=actwcells3d, zvalues=a)
+                # get values
+                point_values_dict = verts_info[2]
+                a = np.array([point_values_dict[cellid] for cellid in
+                              sorted(point_values_dict.keys())]).ravel()
+
+                xml.open_element('DataArray')
+                xml.add_attributes(Name=name, NumberOfComponents='1',
+                                   type='Float64',
+                                   format='appended', offset=offset)
+                a = np.ascontiguousarray(a, np.float64)
+                processed_arrays.append([a, a.size * a[0].dtype.itemsize])
+                offset += processed_arrays[-1][-1] + 8
+
+                xml.close_element('DataArray')
+            xml.close_element('PointData')
+
+        # end piece
+        xml.close_element('Piece')
+
+        # end unstructured grid
+        xml.close_element('UnstructuredGrid')
+
+        # build data section
+        xml.open_element("AppendedData").add_attributes(
+            encoding="raw").add_text("_")
+
+        xml.write_size(points_size)
+        # format verts for output
+        verts_x = np.ascontiguousarray(np.ravel(verts[:, :, 0]),
+                                       np.float64)
+        verts_y = np.ascontiguousarray(np.ravel(verts[:, :, 1]),
+                                       np.float64)
+        verts_z = np.ascontiguousarray(np.ravel(verts[:, :, 2]),
+                                       np.float64)
+        # write coordinates
+        xml.write_coord_arrays(verts_x, verts_y, verts_z)
+
+        # write iverts
+        xml.write_size(conn_size)
+        rav_iverts = np.ascontiguousarray(np.ravel(iverts), np.float64)
+        xml.write_array(rav_iverts)
+
+        xml.write_size(offsets_size)
+        data = np.empty((iverts.shape[0]), np.float64)
+        icount = 0
+        for index, row in enumerate(iverts):
+            icount += len(row)
+            data[index] = icount
+        xml.write_array(data)
+
+        # write cell types (11)
+        xml.write_size(types_size)
+        data = np.empty((iverts.shape[0]), np.float64)
+        data.fill(self.cell_type)
+        xml.write_array(data)
+
+        # write out the array scalars and array point scalars
+        for a, block_size in processed_arrays:
+            xml.write_size(block_size)
+            xml.write_array(a)
+
+        # end xml
+        xml.close_element("AppendedData")
+        xml.close_element('VTKFile')
+        xml.close()
+        # clear arrays
+        self.arrays.clear()
+
     def _configure_data_arrays(self):
         """
         Compares all the stored arrays int the vtk class along with the
@@ -423,6 +748,7 @@ class Vtk(object):
         return vertsdict, ivertsdict, zvertsdict
 
     def extendedDataArray(self, dataArray):
+
         if dataArray.shape[0] == self.nlay+1:
             dataArray = dataArray
         else:
@@ -445,12 +771,19 @@ class Vtk(object):
                             neighList.append(dataArray[lay, index[0],
                                                        index[1]])
                     neighList = np.array(neighList)
-                    if neighList[neighList > self.nanval].shape[0] > 0:
-                        headMean = neighList[neighList > self.nanval].mean()
+                    if neighList[neighList != self.nanval].shape[0] > 0:
+                        headMean = neighList[neighList != self.nanval].mean()
                     else:
                         headMean = self.nanval
                     matrix[lay, row, col] = headMean
         return matrix
+
+    @staticmethod
+    def _get_byte_order():
+        if sys.byteorder == "little":
+            return "LittleEndian"
+        else:
+            return "BigEndian"
 
     @staticmethod
     def write_data_array(f, indent_level, arrayName, arrayValues,
@@ -553,9 +886,9 @@ def _get_names(in_list):
     return ot_list
 
 
-def export_cbc(model, cbcfile, otfolder, precision='single', kstplist=None,
-               kperlist=None, keylist=None, smooth=False, point_scalars=False,
-               nanval=-1e+20):
+def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
+               kstplist=None, kperlist=None, keylist=None, smooth=False,
+               point_scalars=False, binary=False):
     """
 
     Exports cell by cell file to vtk
@@ -564,12 +897,14 @@ def export_cbc(model, cbcfile, otfolder, precision='single', kstplist=None,
     :param cbcfile: the cell by cell file
     :param otfolder: output folder to write the data to
     :param precision: bindary file precision
+    :param nanval: the no data value
     :param kstplist: list of timesteps to be written
     :param kperlist: list of stress periods to be writeen
     :param keylist: list of flow term names to be output
     :param smooth: If true a smooth surface will be output
     :param point_scalars: If True point scalar values will be written
-    :param nanval: the no data value
+    :param binary: if True the output .vtu file will be binary, defualt is
+    False.
 
     """
 
@@ -669,7 +1004,10 @@ def export_cbc(model, cbcfile, otfolder, precision='single', kstplist=None,
                     vtk.add_array(name.strip(), array)  # need to adjust for
 
             # write the vtk data to the output file
-            vtk.write(otfile)
+            if binary:
+                vtk.write_binary(otfile)
+            else:
+                vtk.write(otfile)
             count += 1
     # finish writing the pvd file
     pvdfile.write("""  </Collection>
@@ -679,22 +1017,26 @@ def export_cbc(model, cbcfile, otfolder, precision='single', kstplist=None,
     return
 
 
-def export_heads(model, hdsfile, otfolder, kstplist=None, kperlist=None,
-                 smooth=False, point_scalars=False, nanval=-1e+20):
+def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstplist=None,
+                 kperlist=None, smooth=False, point_scalars=False,
+                 binary=False):
     """
     Exports heads to vtk files by timestep and stressperiod
 
     :param model: the model instance
     :param hdsfile: the binary heads file
     :param otfolder: the output folder to write the .vtu files
+    :param nanval: The no data value
     :param kstplist: list of time steps to output
     :param kperlist: list of stress periods to output
     :param smooth: If set to True a smooth surface will be output
     :param point_scalars: If set to True the heads will be written to the
     vertices as point scalars as well as cell values
-    :param nanval: The no data value
+    :param binary: if True the output .vtu file will be binary, defualt is
+    False.
     :return: Heads will be written to files named by stress period and
     timestep to the otfolder
+
     """
 
     # setup output folder
@@ -740,7 +1082,10 @@ def export_heads(model, hdsfile, otfolder, kstplist=None, kperlist=None,
                 model.name, kper + 1, kstp + 1)
             otfile = os.path.join(otfolder, ot_base)
             # vtk.write(otfile, timeval=totim_dict[(kstp, kper)])
-            vtk.write(otfile)
+            if binary:
+                vtk.write_binary(otfile)
+            else:
+                vtk.write(otfile)
             pvdfile.write("""<DataSet timestep="{}" group="" part="0"
              file="{}"/>\n""".format(count, ot_base))
             count += 1
@@ -752,16 +1097,21 @@ def export_heads(model, hdsfile, otfolder, kstplist=None, kperlist=None,
 
 
 def export_array(model, array, output_folder, name, nanval=-1e+20,
-                 array2d=False, smooth=False, point_scalars=False):
+                 array2d=False, smooth=False, point_scalars=False,
+                 binary=False):
 
     """
 
     :param model: array the model belongs to
     :param array: array to be exported
-    :param arrayname: name of the array to be used in vtk file
+    :param name: name of the array to be used in vtk file
     :param output_folder: output folder to store the output .vtu file
     :param array2d: True if array is 2d
-    :nanval nan value
+    :param nanval nan value
+    :param smooth: If set to True a smooth surface will be output
+    :param point_scalars: If set to True the heads will be written to the
+    vertices as point scalars as well as cell values
+    :param binary: if Ture vtk will export as binary
     :return: outputs a .vtu file of array
 
     """
@@ -772,22 +1122,29 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars)
     vtk.add_array(name, array, array2d=array2d)
     otfile = os.path.join(output_folder, '{}.vtu'.format(name))
-    vtk.write(otfile)
+    if binary:
+        vtk.write_binary(otfile)
+    else:
+        vtk.write(otfile)
 
     return
 
 
 def export_transient(model, array, output_folder, name, nanval=-1e+20,
-                     array2d=False, smooth=False, point_scalars=False):
+                     array2d=False, smooth=False, point_scalars=False,
+                     binary=False):
 
     """
-
     :param model: model of transient array
     :param array: transient array to export
     :param name: name of the data
+    :param nanval: nan value
     :param output_folder: output folder location
     :param array2d: True if array is 2d
-    :param nanval: nan value
+    :param smooth: If set to True a smooth surface will be output
+    :param point_scalars: If set to True the heads will be written to the
+    vertices as point scalars as well as cell values
+    :param binary: if Ture vtk will export as binary
     :return: ouputs .vtu files of transient data to output folder
     """
 
@@ -820,8 +1177,10 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
 
             ot_name = '{}_0{}'.format(name, kper + 1)
             ot_file = os.path.join(output_folder, '{}.vtu'.format(ot_name))
-            vtk.write(ot_file, timeval=to_tim[kper])
-
+            if binary:
+                vtk.write_binary(ot_file)
+            else:
+                vtk.write(ot_file, timeval=to_tim[kper])
     return
 
 
@@ -840,7 +1199,8 @@ def trans_dict(in_dict, name, trans_array, array2d=False):
 
 
 def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
-                   nanval=-1e+20, smooth=False, point_scalars=False):
+                   nanval=-1e+20, smooth=False, point_scalars=False,
+                   binary=False):
 
     """
     Exports package to vtk
@@ -854,6 +1214,7 @@ def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
     :param smooth: If True the output will be a smooth represenation
     :param point_scalars: If True the package data will be written as point
     values as well as cell values.
+    :param binary: if Ture vtk will export as binary
     """
 
     # see if there is vtk object being supplied by export_model
@@ -964,7 +1325,10 @@ def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
         # write array data
         if len(vtk.arrays) > 0:
             ot_file = os.path.join(ot_folder, '{}.vtu'.format(pak_name))
-            vtk.write(ot_file)
+            if binary:
+                vtk.write_binary(ot_file)
+            else:
+                vtk.write(ot_file)
 
         # write transient data
         if vtk_trans_dict:
@@ -989,12 +1353,15 @@ def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
                         a = array.array
                     vtk.add_array(name, a, array.array2d)
                 # vtk.write(ot_file, timeval=time)
-                vtk.write(ot_file)
+                if binary:
+                    vtk.write_binary(ot_file)
+                else:
+                    vtk.write(ot_file)
     return
 
 
 def export_model(model, ot_folder, package_names=None, nanval=-1e+20,
-                 smooth=False, point_scalars=False):
+                 smooth=False, point_scalars=False, binary=False):
     """
 
     :param model: flopy model instance
@@ -1003,6 +1370,7 @@ def export_model(model, ot_folder, package_names=None, nanval=-1e+20,
     :param nanval: no data value
     :param smooth: smoothing
     :param point_scalars: If True array data will be written as point scalars
+    :param binary: if Ture vtk will export as binary
     as well as cell scalars
 
     """
@@ -1019,4 +1387,5 @@ def export_model(model, ot_folder, package_names=None, nanval=-1e+20,
 
     for pak_name in package_names:
         export_package(model, pak_name, ot_folder, vtkobj=vtk, nanval=nanval,
-                       smooth=smooth, point_scalars=point_scalars)
+                       smooth=smooth, point_scalars=point_scalars,
+                       binary=binary)

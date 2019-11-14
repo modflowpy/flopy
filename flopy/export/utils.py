@@ -374,6 +374,12 @@ def model_export(f, ml, fmt=None, **kwargs):
             For vtk, if set to True will create point scalar values along
             with cell values.
 
+        binary: bool
+            For vtk, if set to Ture will output binary .vtu files. Default
+            is False which exports standard text xml .vtu files.
+
+        nanval: For vtk, no data value
+
 
 
     """
@@ -406,8 +412,11 @@ def model_export(f, ml, fmt=None, **kwargs):
         # call vtk model export
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
+        binary = kwargs.get('binary', False)
+        nanval = kwargs.get('nanval', -1e20)
         vtk.export_model(ml, f, package_names=package_names, smooth=smooth,
-                         point_scalars=point_scalars)
+                         point_scalars=point_scalars, binary=binary,
+                         nanval=nanval)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -442,6 +451,12 @@ def package_export(f, pak, fmt=None, **kwargs):
         point_scalars: bool
             For vtk, if set to True will create point scalar values along
             with cell values.
+
+        binary: bool
+            For vtk, if set to Ture will output binary .vtu files. Default
+            is False which exports standard text xml .vtu files.
+
+        nanval: For vtk, no data value
 
     Returns
     -------
@@ -486,8 +501,11 @@ def package_export(f, pak, fmt=None, **kwargs):
         # call vtk array export to folder
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
+        binary = kwargs.get('binary', False)
+        nanval = kwargs.get('nanval', -1e20)
         vtk.export_package(pak.parent, pak.name, f, smooth=smooth,
-                           point_scalars=point_scalars)
+                           point_scalars=point_scalars, binary=binary,
+                           nanval=nanval)
 
 
     else:
@@ -708,6 +726,9 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         smooth: for vtk to output a smooth represenation of the model
         point_scalars: for vtk to output point value scalars as well as cell
         name: for vtk to set a specific name for array and output file
+        binary: bool
+            For vtk, if set to Ture will output binary .vtu files. Default
+            is False which exports standard text xml .vtu files.
 
     """
 
@@ -811,8 +832,10 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
         name = kwargs.get('name', t2d.name)
+        nanval = kwargs.get('nanval', -1e20)
         vtk.export_transient(t2d.model, t2d.array, f, name, smooth=smooth,
-                             point_scalars=point_scalars, array2d=True)
+                             point_scalars=point_scalars, array2d=True,
+                             nanval=nanval)
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
@@ -835,6 +858,9 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         smooth: for vtk to output a smooth represenation of the model
         point_scalars: for vtk to output point value scalars as well as cell
         name: for vtk to set a specific name for array and output file
+        binary: bool
+            For vtk, if set to Ture will output binary .vtu files. Default
+            is False which exports standard text xml .vtu files.
 
     """
 
@@ -957,12 +983,14 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
         name = kwargs.get('name', u3d.name)
-
+        binary = kwargs.get('binary', False)
+        nanval = kwargs.get('nanval', -1e20)
         if isinstance(name, list) or isinstance(name, tuple):
             name = name[0]
 
         vtk.export_array(u3d.model, u3d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars)
+                         point_scalars=point_scalars, binary=binary,
+                         nanval=nanval)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -986,6 +1014,9 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         smooth: for vtk to output a smooth represenation of the model
         point_scalars: for vtk to output point value scalars as well as cell
         name: for vtk to set a specific name for array and output file
+        binary: bool
+            For vtk, if set to Ture will output binary .vtu files. Default
+            is False which exports standard text xml .vtu files.
 
     """
     assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
@@ -1084,8 +1115,11 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
         name = kwargs.get('name', u2d.name)
+        binary = kwargs.get('binary', False)
+        nanval = kwargs.get('nanval', -1e20)
         vtk.export_array(u2d.model, u2d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars, array2d=True)
+                         point_scalars=point_scalars, array2d=True,
+                         binary=binary, nanval=nanval)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))

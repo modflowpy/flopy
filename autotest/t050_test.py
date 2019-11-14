@@ -10,6 +10,12 @@ if os.path.isdir(cpth):
     shutil.rmtree(cpth)
 os.makedirs(cpth)
 
+# binary output directory
+binot = os.path.join(cpth, 'bin')
+if os.path.isdir(binot):
+    shutil.rmtree(binot)
+os.makedirs(binot)
+
 
 def test_vtk_export_array2d():
     """Export 2d array"""
@@ -33,6 +39,9 @@ def test_vtk_export_array3d():
     # with point scalars
     m.upw.hk.export(os.path.join(cpth, 'array_3d_test'), fmt='vtk',
                     name='hk_points', point_scalars=True)
+    # binary test
+    m.upw.hk.export(os.path.join(binot, 'array_3d_test'), fmt='vtk',
+                    name='hk_points', point_scalars=True, binary=True)
 
     return
 
@@ -44,6 +53,10 @@ def test_vtk_transient_array_2d():
     namfile = 'freyberg.nam'
     m = flopy.modflow.Modflow.load(namfile, model_ws=mpath, verbose=False)
     m.rch.rech.export(os.path.join(cpth, 'transient_2d_test'), fmt='vtk')
+
+    # binary test
+    m.rch.rech.export(os.path.join(binot, 'transient_2d_test'), fmt='vtk',
+                      binary=True)
 
     return
 
@@ -62,6 +75,11 @@ def test_vtk_export_packages():
     m.bas6.export(os.path.join(cpth, 'BAS'), fmt='vtk', smooth=True)
     # transient package drain
     m.drn.export(os.path.join(cpth, 'DRN'), fmt='vtk')
+    # binary test
+    m.dis.export(os.path.join(binot, 'DIS'), fmt='vtk', binary=True)
+    # upw with point scalar output
+    m.upw.export(os.path.join(binot, 'UPW'), fmt='vtk', point_scalars=True,
+                 binary=True)
 
     return
 
@@ -80,13 +98,16 @@ def test_export_mf2005_vtk():
         m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
         m.export(os.path.join(cpth, m.name), fmt='vtk')
 
+        # binary test
+        m.export(os.path.join(binot, m.name), fmt='vtk', binary=True)
+
     return
 
 
 def test_vtk_mf6():
     mf6expth = os.path.join('..', 'examples', 'data', 'mf6')
     # test vtk mf6 export
-    mf6sims = ['test005_advgw_tidal', 'test045_lake1ss_table',
+    mf6sims = ['test045_lake1ss_table',
                'test036_twrihfb', 'test045_lake2tr', 'test006_2models_mvr']
     # mf6sims = ['test005_advgw_tidal']
     # mf6sims = ['test036_twrihfb']
@@ -119,16 +140,25 @@ def test_vtk_bindary_head_export():
                                    verbose=False)
     otfolder = os.path.join(cpth, 'freyberg_hds_test')
 
-    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
-                                                         1090])
+    vtk.export_heads(m, hdsfile, otfolder, nanval=-999.99, kperlist=[1, 200,
+                                                                     355,
+                                                                     455,
+                                                                     1090])
     # test with points
     vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
-                                                     1090], point_scalars=True)
+                                                     1090],
+                     point_scalars=True, nanval=-999.99)
 
     # test vtk export heads with smoothing and no point scalars
     vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
                                                      1090],
-                     point_scalars=False, smooth=True)
+                     point_scalars=False, smooth=True, nanval=-999.99)
+
+    # test binary output
+    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
+                                                     1090],
+                     point_scalars=False, smooth=True, binary=True,
+                     nanval=-999.99)
 
     return
 
@@ -146,6 +176,9 @@ def test_vtk_cbc():
 
     vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST'),
                    kperlist=[1, 2, 3], point_scalars=True)
+
+    vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST'),
+                   kperlist=[1, 2, 3], point_scalars=True, binary=True)
 
     return
 
