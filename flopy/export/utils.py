@@ -576,7 +576,7 @@ def mflist_export(f, mfl, **kwargs):
                         n = shapefile_utils.shape_attr_name(name, length=4)
                         aname = "{}{}{}".format(n, k + 1, int(kk) + 1)
                         array_dict[aname] = array[k]
-            shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
+            shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
@@ -693,7 +693,7 @@ def transient2d_export(f, t2d, **kwargs):
             name = '{}_{}'.format(shapefile_utils.shape_attr_name(u2d.name),
                                   kper + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
+        shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         # mask the array is defined by any row col with at lease
@@ -810,7 +810,7 @@ def array3d_export(f, u3d, **kwargs):
             name = '{}_{}'.format(
                 shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
             array_dict[name] = u2d.array
-        shapefile_utils.write_grid_shapefile2(f, modelgrid, array_dict)
+        shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
         var_name = u3d.name
@@ -940,7 +940,7 @@ def array2d_export(f, u2d, **kwargs):
 
     if isinstance(f, str) and f.lower().endswith(".shp"):
         name = shapefile_utils.shape_attr_name(u2d.name, keep_layer=True)
-        shapefile_utils.write_grid_shapefile2(f, modelgrid,
+        shapefile_utils.write_grid_shapefile(f, modelgrid,
                                              {name: u2d.array})
         return
 
@@ -1144,14 +1144,14 @@ def export_array(modelgrid, filename, a, nodata=-9999,
         print('wrote {}'.format(filename))
 
     elif filename.lower().endswith(".shp"):
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         epsg = kwargs.get('epsg', None)
         prj = kwargs.get('prj', None)
         if epsg is None and prj is None:
             epsg = modelgrid.epsg
-        write_grid_shapefile2(filename, modelgrid, array_dict={fieldname: a},
-                              nan_val=nodata,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, modelgrid, array_dict={fieldname: a},
+                             nan_val=nodata,
+                             epsg=epsg, prj=prj)
 
 
 def export_contours(modelgrid, filename, contours,

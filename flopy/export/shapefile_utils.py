@@ -25,20 +25,6 @@ def import_shapefile():
                         "importing shapefile - try pip install pyshp")
 
 
-def shapefile_version(sf):
-    """
-    Return the shapefile major version number
-    Parameters
-    ----------
-    sf : shapefile package
-
-    Returns
-    -------
-    int
-    """
-    return int(sf.__version__.split('.')[0])
-
-
 def write_gridlines_shapefile(filename, mg):
     """
     Write a polyline shapefile of the grid lines - a lightweight alternative
@@ -56,11 +42,7 @@ def write_gridlines_shapefile(filename, mg):
 
     """
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-    else:
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
+    wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     if isinstance(mg, SpatialReference):
         grid_lines = mg.get_grid_lines()
@@ -73,116 +55,38 @@ def write_gridlines_shapefile(filename, mg):
     for i, line in enumerate(grid_lines):
         wr.poly([line])
         wr.record(i)
-    if sfv < 2:
-        wr.save(filename)
-    else:
-        wr.close()
+
+    wr.close()
     return
 
 
-def write_grid_shapefile(filename, mg, array_dict, nan_val=None):  # -1.0e9):
+def write_grid_shapefile(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
+                         epsg=None, prj=None):
     """
-    Write a grid shapefile array_dict attributes.
+    Method to write a shapefile of gridded input data
 
     Parameters
     ----------
-    filename : string
-        name of the shapefile to write
-    mg : model grid instance
-        object for model grid
+    filename : str
+        shapefile file name path
+    mg : flopy.discretization.Grid object
+        flopy model grid
     array_dict : dict
-       Dictionary of name and 2D array pairs.  Additional 2D arrays to add as
-       attributes to the grid shapefile.
+        dictionary of model input arrays
+    nan_val : float
+        value to fill nans
+    epsg : str, int
+        epsg code
+    prj : str
+        projection file name path
 
     Returns
     -------
     None
 
     """
-
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-    else:
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
-    if isinstance(mg, SpatialReference):
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning)
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-    elif mg.grid_type == 'structured':
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-    elif mg.grid_type == 'vertex':
-        wr.field("node", "N", 10, 0)
-    else:
-        raise Exception('Grid type {} not supported.'.format(mg.grid_type))
-
-    arrays = []
-    names = list(array_dict.keys())
-    names.sort()
-    # for name,array in array_dict.items():
-    for name in names:
-        array = array_dict[name]
-        if array.ndim == 3:
-            assert array.shape[0] == 1
-            array = array[0, :, :]
-        assert array.shape == (mg.nrow, mg.ncol)
-        if array.dtype in [np.float, np.float32, np.float64]:
-            array[np.where(np.isnan(array))] = nan_val
-        else:
-            j = 2
-        # if array.dtype in [np.int, np.int32, np.int64]:
-        #    wr.field(name, "N", 18, 0)
-        # else:
-        #    wr.field(name, "F", 18, 12)
-        wr.field(name, *get_pyshp_field_info(array.dtype.name))
-        arrays.append(array)
-
-    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
-        for i in range(mg.nrow):
-            for j in range(mg.ncol):
-                try:
-                    pts = mg.get_cell_vertices(i, j)
-                except AttributeError:
-                    # support old style SR object
-                    pts = mg.get_vertices(i, j)
-
-                wr.poly([pts])
-                rec = [i + 1, j + 1]
-                for array in arrays:
-                    rec.append(array[i, j])
-                wr.record(*rec)
-    elif mg.grid_type == 'vertex':
-        for i in range(mg.ncpl):
-            pts = mg.get_cell_vertices(i)
-
-            wr.poly([pts])
-            rec = [i + 1]
-            for array in arrays:
-                rec.append(array[i])
-            wr.record(*rec)
-
-    # close or write the file
-    if sfv < 2:
-        wr.save(filename)
-    else:
-        wr.close()
-    print('wrote {}'.format(filename))
-    return
-
-
-def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
-                          epsg=None, prj=None):
-    shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        w = shapefile.Writer(shapeType=shapefile.POLYGON)
-    else:
-        w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
     if isinstance(mg, SpatialReference):
@@ -201,55 +105,55 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     else:
         raise Exception('Grid type {} not supported.'.format(mg.grid_type))
 
-    # set up the attribute fields
+    # set up the attribute fields and arrays of attributes
     if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         names = ['node', 'row', 'column'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
         dtypes = [('node', np.dtype('int')),
                   ('row', np.dtype('int')),
                   ('column', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
-    elif mg.grid_type == 'vertex':
-        names = ['node'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
-        dtypes = [('node', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
-
-    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
-                 dtypes}
-    for n in names:
-        w.field(n, *fieldinfo[n])
-
-    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
-        # set-up array of attributes of shape ncells x nattributes
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[3:]]
         node = list(range(1, mg.ncol * mg.nrow + 1))
         col = list(range(1, mg.ncol + 1)) * mg.nrow
         row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
         at = np.vstack(
             [node, row, col] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
-        if at.dtype in [np.float, np.float32, np.float64]:
-            at[np.isnan(at)] = nan_val
+            [array_dict[name].ravel() for name in names[3:]]).transpose()
+
+        names = enforce_10ch_limit(names)
+
     elif mg.grid_type == 'vertex':
-        # set-up array of attributes of shape ncells x nattributes
+        names = ['node'] + list(array_dict.keys())
+        dtypes = [('node', np.dtype('int'))] + \
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[1:]]
         node = list(range(1, mg.ncpl + 1))
         at = np.vstack(
             [node] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
+            [array_dict[name].ravel() for name in names[1:]]).transpose()
+
+        names = enforce_10ch_limit(names)
+
+    # flag nan values and explicitly set the dtypes
     if at.dtype in [np.float, np.float32, np.float64]:
         at[np.isnan(at)] = nan_val
+    at = np.array([tuple(i) for i in at], dtype=dtypes)
+
+    # write field information
+    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
+                 dtypes}
+    for n in names:
+        w.field(n, *fieldinfo[n])
 
     for i, r in enumerate(at):
+        # check if polygon is closed, if not close polygon for QGIS
+        if verts[i][-1] != verts[i][0]:
+            verts[i] = verts[i] + [verts[i][0]]
         w.poly([verts[i]])
         w.record(*r)
 
     # close
-    if sfv < 2:
-        w.save(filename)
-    else:
-        w.close()
+    w.close()
     print('wrote {}'.format(filename))
     # write the projection file
     write_prj(filename, mg, epsg, prj)
@@ -407,7 +311,7 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile2(filename, grid, array_dict)
+    write_grid_shapefile(filename, grid, array_dict)
     epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
     write_prj(filename, grid, epsg, prj)
@@ -592,13 +496,9 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
         except AttributeError:
             continue
 
-    # set up for pyshp 1 or 2
+    # set up for pyshp 2
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        w = shapefile.Writer(shapeType=geomtype)
-    else:
-        w = shapefile.Writer(shpname, shapeType=geomtype)
+    w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
 
     # set up the attribute fields
@@ -622,23 +522,12 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     elif geomtype == shapefile.POINT:
         # pyshp version 2.x w.point() method can only take x and y
         # code will need to be refactored in order to write POINTZ
-        # shapes with the z attribute.  The pyshp version 1.x
-        # method w.point() took a z attribute, but only wrote it if
-        # the shapeType was shapefile.POINTZ, which it is not for
-        # flopy, even if the point is 3D.
-        if sfv < 2:
-            for i, r in enumerate(ralist):
-                w.point(*geoms[i].pyshp_parts)
-                w.record(*r)
-        else:
-            for i, r in enumerate(ralist):
-                w.point(*geoms[i].pyshp_parts[:2])
-                w.record(*r)
+        # shapes with the z attribute.
+        for i, r in enumerate(ralist):
+            w.point(*geoms[i].pyshp_parts[:2])
+            w.record(*r)
 
-    if sfv < 2:
-        w.save(shpname)
-    else:
-        w.close()
+    w.close()
     write_prj(shpname, mg, epsg, prj)
     print('wrote {}'.format(shpname))
     return

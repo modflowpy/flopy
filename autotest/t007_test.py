@@ -262,43 +262,72 @@ def test_export_output():
 def test_write_shapefile():
     from flopy.discretization import StructuredGrid
     from flopy.export.shapefile_utils import shp2recarray
-    from flopy.export.shapefile_utils import write_grid_shapefile, write_grid_shapefile2
+    from flopy.export.shapefile_utils import write_grid_shapefile
 
     sg = StructuredGrid(delr=np.ones(10) *1.1,  # cell spacing along model rows
                         delc=np.ones(10) *1.1,  # cell spacing along model columns
                         epsg=26715)
-    outshp1 = os.path.join(tpth, 'junk.shp')
-    outshp2 = os.path.join(tpth, 'junk2.shp')
-    write_grid_shapefile(outshp1, sg, array_dict={})
-    write_grid_shapefile2(outshp2, sg, array_dict={})
+    outshp = os.path.join(tpth, 'junk.shp')
+    write_grid_shapefile(outshp, sg, array_dict={})
 
     # test that vertices aren't getting altered by writing shapefile
-    for outshp in [outshp1, outshp2]:
-        # check that pyshp reads integers
-        # this only check that row/column were recorded as "N"
-        # not how they will be cast by python or numpy
-        import shapefile as sf
-        sfobj = sf.Reader(outshp)
-        for f in sfobj.fields:
-            if f[0] == 'row' or f[0] == 'column':
-                assert f[1] == 'N'
-        recs = list(sfobj.records())
-        for r in recs[0]:
-            assert isinstance(r, int)
+    # check that pyshp reads integers
+    # this only check that row/column were recorded as "N"
+    # not how they will be cast by python or numpy
+    import shapefile as sf
+    sfobj = sf.Reader(outshp)
+    for f in sfobj.fields:
+        if f[0] == 'row' or f[0] == 'column':
+            assert f[1] == 'N'
+    recs = list(sfobj.records())
+    for r in recs[0]:
+        assert isinstance(r, int)
 
-        # check that row and column appear as integers in recarray
-        ra = shp2recarray(outshp)
-        assert np.issubdtype(ra.dtype['row'], np.integer)
-        assert np.issubdtype(ra.dtype['column'], np.integer)
+    # check that row and column appear as integers in recarray
+    ra = shp2recarray(outshp)
+    assert np.issubdtype(ra.dtype['row'], np.integer)
+    assert np.issubdtype(ra.dtype['column'], np.integer)
 
-        try: # check that fiona reads integers
-            import fiona
-            with fiona.open(outshp) as src:
-                meta = src.meta
-                assert 'int' in meta['schema']['properties']['row']
-                assert 'int' in meta['schema']['properties']['column']
-        except:
-            pass
+    try: # check that fiona reads integers
+        import fiona
+        with fiona.open(outshp) as src:
+            meta = src.meta
+            assert 'int' in meta['schema']['properties']['row']
+            assert 'int' in meta['schema']['properties']['column']
+    except:
+        pass
+
+
+def test_shapefile_polygon_closed():
+    import os
+    import flopy
+    try:
+        import shapefile
+    except:
+        return
+
+    xll, yll = 468970, 3478635
+    xur, yur = 681010, 3716462
+
+    spacing = 2000
+
+    ncol = int((xur - xll) / spacing)
+    nrow = int((yur - yll) / spacing)
+    print(nrow, ncol)
+
+    m = flopy.modflow.Modflow("test.nam", proj4_str="EPSG:32614", xll=xll,
+                              yll=yll)
+
+    flopy.modflow.ModflowDis(m, delr=spacing, delc=spacing, nrow=nrow,
+                             ncol=ncol)
+
+    shp_file = os.path.join(spth, "test_polygon.shp")
+    m.dis.export(shp_file)
+
+    shp = shapefile.Reader(shp_file)
+    for shape in shp.iterShapes():
+        if len(shape.points) != 5:
+            raise AssertionError("Shapefile polygon is not closed!")
 
 
 def test_export_array():
@@ -1331,4 +1360,5 @@ if __name__ == '__main__':
     #test_tricontour_NaN()
     #test_export_contourf()
     #test_sr()
+    # test_shapefile_polygon_closed()
     pass
