@@ -577,7 +577,7 @@ def test_mg():
     ms.modelgrid.set_coord_info()
 
     xll, yll = 321., 123.
-    angrot = 20
+    angrot = 20.
     ms.modelgrid = flopy.discretization.StructuredGrid(delc=ms.dis.delc.array,
                                                        delr=ms.dis.delr.array,
                                                        xoff=xll, yoff=xll,
