@@ -1002,7 +1002,8 @@ class MFFileAccessList(MFFileAccess):
                                          len(self._last_line_info):]:
                             if arr_line_len <= data_index:
                                 break
-                            if arr_line[data_index][0] == '#':
+                            if len(arr_line[data_index]) > 0 and \
+                                    arr_line[data_index][0] == '#':
                                 break
                             elif data_item.name == 'aux':
                                 data_index, self._data_line = \
