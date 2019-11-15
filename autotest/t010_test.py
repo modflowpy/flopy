@@ -122,7 +122,7 @@ def load_sfr_isfropt_icalc(isfropt, icalc):
     pth = os.path.join("..", "examples", "data", "sfr_test")
     nam = "sfrtest{}{}.nam".format(isfropt, icalc)
     ml = flopy.modflow.Modflow.load(nam, check=False, model_ws=pth,
-                                    exe_name="mfnwt.exe")
+                                    exe_name="mfnwt")
     sfr = ml.get_package("SFR")
     if sfr is None:
         raise AssertionError()
