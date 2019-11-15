@@ -99,6 +99,8 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of [intersecting a FloPy model grid object with a shapefile](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb).
 
++ An overview of [intersecting a FloPy model grid object with a raster](../examples/Notebooks/flopy3_raster_intersection.ipynb).
+
 
 
 #### ***Parameter Estimation examples***

@@ -1,5 +1,23 @@
 import numpy as np
 
+try:
+    import rasterio
+except ImportError:
+    rasterio = None
+
+if rasterio is not None:
+    from rasterio.crs import CRS
+    from rasterio.mask import mask
+    from rasterio.plot import show
+    from rasterio.plot import show_hist
+
+try:
+    import affine
+except ImportError:
+    affine = None
+
+if affine is not None:
+    from affine import Affine
 
 class Raster(object):
     """
@@ -44,9 +62,15 @@ class Raster(object):
 
     def __init__(self, array, bands, crs, transform,
                  nodataval, driver="GTiff", rio_ds=None):
-        import rasterio
-        import affine
-        from rasterio.crs import CRS
+        if rasterio is None:
+            print('"Raster(): error " +'
+                  '"importing rasterio - try pip install rasterio"')
+            return None
+
+        if affine is None:
+            print('"Raster(): error " +'
+                  '"importing affine - try pip install affine"')
+            return None
 
         self._array = array
         self._bands = bands
@@ -373,7 +397,10 @@ class Raster(object):
 
         else:
             # crop from user supplied points using numpy
-            from affine import Affine
+            if rasterio is None:
+                print('"Raster().crop(): error " +'
+                      '"importing affine - try pip install affine"')
+                return None
 
             mask = self._intersection(polygon, invert)
 
@@ -468,7 +495,6 @@ class Raster(object):
             tuple : (arr_dict, raster_crp_meta)
 
         """
-        from rasterio.mask import mask
 
         if isinstance(polygon, list) or isinstance(polygon, np.ndarray):
             from shapely import geometry
@@ -645,7 +671,10 @@ class Raster(object):
             output raster .tif file name
 
         """
-        import rasterio
+        if rasterio is None:
+            print('"Raster().write(): error " +'
+                  '"importing rasterio - try pip install rasterio"')
+            return None
 
         if not name.endswith(".tif"):
             name += ".tif"
@@ -669,7 +698,11 @@ class Raster(object):
             Raster object
 
         """
-        import rasterio
+        if rasterio is None:
+            print('"Raster().load(): error " +'
+                  '"importing rasterio - try pip install rasterio"')
+            return None
+
         dataset = rasterio.open(raster)
         array = dataset.read()
         bands = dataset.indexes
@@ -699,7 +732,10 @@ class Raster(object):
             ax : matplotlib.pyplot.axes
 
         """
-        from rasterio.plot import show
+        if rasterio is None:
+            print('"Raster().plot(): error " +'
+                  '"importing rasterio - try pip install rasterio"')
+            return None
 
         if self._dataset is not None:
             ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
@@ -745,7 +781,10 @@ class Raster(object):
             ax : matplotlib.pyplot.axes
 
         """
-        from rasterio.plot import show_hist
+        if rasterio is None:
+            print('"Raster().histogram(): error " +'
+                  '"importing rasterio - try pip install rasterio"')
+            return None
 
         if "alpha" not in kwargs:
             kwargs["alpha"] = 0.3

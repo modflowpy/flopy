@@ -202,6 +202,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                              |
 | `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                        |
 | `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                      |
+| `Raster()` in `flopy.utils.Raster`                                                   | **rasterio** and **affine**                        |
 
 
 How to Cite
