@@ -880,7 +880,7 @@ class ModflowSfr2(Package):
                         # ATL: not sure exactly how isfropt logic functions for this
                         # dataset 6d description suggests that this line isn't read for isfropt > 1
                         # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput:  # or isfropt <= 1:
+                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(
@@ -1726,15 +1726,20 @@ class ModflowSfr2(Package):
             f_sfr.write(fmts[3].format(width) + ' ')
             if icalc <= 0:
                 f_sfr.write(fmts[4].format(depth) + ' ')
-        elif self.isfropt in [2, 3] and icalc <= 1:
-            if i > 0:
-                pass
-            else:
+        elif self.isfropt in [2, 3]:
+            if icalc <= 0:
                 f_sfr.write(fmts[3].format(width) + ' ')
-                if icalc <= 0:
-                    f_sfr.write(fmts[4].format(depth) + ' ')
+                f_sfr.write(fmts[4].format(depth) + ' ')
+            elif icalc == 1:
+                if i > 0:
+                    pass
+                else:
+                    f_sfr.write(fmts[3].format(width) + ' ')
+            else:
+                pass
+
         else:
-            pass
+            return
         f_sfr.write('\n')
 
     def write_file(self, filename=None):
@@ -1795,7 +1800,8 @@ class ModflowSfr2(Package):
                     nseg = self.segment_data[i].nseg[j]
                     if icalc == 2:
                         # or isfropt <= 1:
-                        if i == 0 or self.nstrm > 0 and not self.reachinput:
+                        if i == 0 or self.nstrm > 0 and \
+                                not self.reachinput or self.isfropt <=1:
                             for k in range(2):
                                 for d in self.channel_geometry_data[i][nseg][
                                     k]:
@@ -3039,12 +3045,12 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-        width = line.pop(
-            0)  # depth is not read if icalc == 1; see table in online guide
-        thts = _pop_item(line)
-        thti = _pop_item(line)
-        eps = _pop_item(line)
-        if isfropt == 5:
+            # depth is not read if icalc == 1; see table in online guide
+            width = line.pop(0)
+            thts = _pop_item(line)
+            thti = _pop_item(line)
+            eps = _pop_item(line)
+        if isfropt == 5 and per == 0:
             uhc = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc >= 2:
         hcond = line.pop(0)
@@ -3067,13 +3073,19 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         width = line.pop(0)
         if icalc <= 0:
             depth = line.pop(0)
-    elif isfropt in [2, 3] and icalc <= 1:
-        if per > 0:
-            pass
-        else:
+    elif isfropt in [2, 3]:
+        if icalc <= 0:
             width = line.pop(0)
-            if icalc <= 0:
-                depth = line.pop(0)
+            depth = line.pop(0)
+
+        elif icalc == 1:
+            if per > 0:
+                pass
+            else:
+                width = line.pop(0)
+
+        else:
+            pass
     else:
         pass
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
