@@ -200,6 +200,8 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)  |
 | `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                              |
+| `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                        |
+| `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                      |
 
 
 How to Cite

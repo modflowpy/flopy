@@ -95,6 +95,12 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + [Exporting 2-D arrays as rasters or contour shapefiles](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
 
+#### ***Intersection examples***
+
++ An overview of [intersecting a FloPy model grid object with a shapefile](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb).
+
+
+
 #### ***Parameter Estimation examples***
 
 + An overview of the FloPy [parameter estimation capabilities](../examples/Notebooks/flopy3_PEST.ipynb).
