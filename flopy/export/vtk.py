@@ -958,7 +958,7 @@ def _get_names(in_list):
 
 
 def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
-               kstplist=None, kperlist=None, keylist=None, smooth=False,
+               kstpkper=None, text=None, smooth=False,
                point_scalars=False, binary=False):
     """
 
@@ -977,12 +977,12 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         binary file precision, default is 'single'
     nanval : scalar
         no data value
-    kstplist : list
-        list of timesteps
-    kperlist : list
-        list of stress periods
-    keylist : list
-        list of flow term names
+    kstpkper : tuple of ints or list of tuple of ints
+        A tuple containing the time step and stress period (kstp, kper).
+        The kstp and kper values are zero based.
+    text : str or list of str
+        The text identifier for the record.  Examples include
+        'RIVER LEAKAGE', 'STORAGE', 'FLOW RIGHT FACE', etc.
     smooth : bool
         If true a smooth surface will be output, default is False
     point_scalars : bool
@@ -1023,18 +1023,33 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     imeth_dict = {record: imeth for (record, imeth) in zip(records,
                                                            cbb.imethlist)}
     # get list of packages to export
-    if not keylist:
+    if text is not None:
+        # build keylist
+        if isinstance(text, str):
+            keylist = [text]
+        elif isinstance(text, list):
+            keylist = text
+        else:
+            raise Exception('text must be type str or list of str')
+    else:
         keylist = records
 
-    if not kperlist:
-        kperlist = list(set([x[1] for x in cbb.get_kstpkper() if x[1] > -1]))
-    else:
-        kperlist = [kper - 1 for kper in kperlist]
+    if kstpkper is not None:
+        if isinstance(kstpkper, tuple):
+            kstplist = [kstpkper[0]]
+            kperlist = [kstpkper[1]]
+        elif isinstance(kstpkper, list):
+            kstpkper_list = list(map(list, zip(*kstpkper)))
+            kstplist = kstpkper_list[0]
+            kperlist = kstpkper_list[1]
 
-    if not kstplist:
-        kstplist = list(set([x[0] for x in cbb.get_kstpkper() if x[0] > -1]))
+        else:
+            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+                            'of tuples')
+
     else:
-        kstplist = [kstp - 1 for kstp in kstplist]
+        kperlist = list(set([x[1] for x in cbb.get_kstpkper() if x[1] > -1]))
+        kstplist = list(set([x[0] for x in cbb.get_kstpkper() if x[0] > -1]))
 
     # get model name
     model_name = model.name
@@ -1104,8 +1119,8 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     return
 
 
-def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstplist=None,
-                 kperlist=None, smooth=False, point_scalars=False,
+def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
+                 smooth=False, point_scalars=False,
                  binary=False):
     """
 
@@ -1122,10 +1137,9 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstplist=None,
         output folder to write the data
     nanval : scalar
         no data value, default value is -1e20
-    kstplist : list
-        list of timesteps
-    kperlist : list
-        list of stress periods
+    kstpkper : tuple of ints or list of tuple of ints
+        A tuple containing the time step and stress period (kstp, kper).
+        The kstp and kper values are zero based.
     smooth : bool
         If true a smooth surface will be output, default is False
     point_scalars : bool
@@ -1149,22 +1163,26 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstplist=None,
          byte_order="LittleEndian"
          compressor="vtkZLibDataCompressor">
   <Collection>\n""")
-    # get teh ehads
+    # get the heads
     hds = HeadFile(hdsfile)
 
-    # get the model time
-    # totim_dict = dict(zip(hds.get_kstpkper(), model.dis.get_totim()))
+    if kstpkper is not None:
+        if isinstance(kstpkper, tuple):
+            kstplist = [kstpkper[0]]
+            kperlist = [kstpkper[1]]
 
-    # set up time step and stress periods for output
-    if not kperlist:
+        elif isinstance(kstpkper, list):
+            kstpkper_list = list(map(list, zip(*kstpkper)))
+            kstplist = kstpkper_list[0]
+            kperlist = kstpkper_list[1]
+
+        else:
+            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+                            'of tuples')
+
+    else:
         kperlist = list(set([x[1] for x in hds.get_kstpkper() if x[1] > -1]))
-    else:
-        kperlist = [kper - 1 for kper in kperlist]
-
-    if not kstplist:
         kstplist = list(set([x[0] for x in hds.get_kstpkper() if x[0] > -1]))
-    else:
-        kstplist = [kstp - 1 for kstp in kstplist]
 
     # set upt the vtk
     vtk = Vtk(model, smooth=smooth, point_scalars=point_scalars, nanval=nanval)

@@ -127,7 +127,7 @@ def test_vtk_mf6():
     return
 
 
-def test_vtk_bindary_head_export():
+def test_vtk_binary_head_export():
 
     """test vet export of heads"""
 
@@ -138,27 +138,40 @@ def test_vtk_bindary_head_export():
 
     m = flopy.modflow.Modflow.load('freyberg.nam', model_ws=freyberg_pth,
                                    verbose=False)
-    otfolder = os.path.join(cpth, 'freyberg_hds_test')
+    otfolder = os.path.join(cpth, 'heads_test')
 
-    vtk.export_heads(m, hdsfile, otfolder, nanval=-999.99, kperlist=[1, 200,
-                                                                     355,
-                                                                     455,
-                                                                     1090])
+    vtk.export_heads(m, hdsfile, otfolder, nanval=-999.99, kstpkper=[(0, 0),
+                                                                     (0, 199),
+                                                                     (0, 354),
+                                                                     (0, 454),
+                                                                     (0,
+                                                                      1089)])
     # test with points
-    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
-                                                     1090],
+    otfolder = os.path.join(cpth, 'heads_test_1')
+    vtk.export_heads(m, hdsfile, otfolder,
+                     kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0,
+                                                                      1089)],
                      point_scalars=True, nanval=-999.99)
 
     # test vtk export heads with smoothing and no point scalars
-    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
-                                                     1090],
+    otfolder = os.path.join(cpth, 'heads_test_2')
+    vtk.export_heads(m, hdsfile, otfolder,
+                     kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0,
+                                                                      1089)],
                      point_scalars=False, smooth=True, nanval=-999.99)
 
     # test binary output
-    vtk.export_heads(m, hdsfile, otfolder, kperlist=[1, 200, 355, 455,
-                                                     1090],
+    otfolder = os.path.join(cpth, 'heads_test_3')
+    vtk.export_heads(m, hdsfile, otfolder,
+                     kstpkper=[(0, 0), (0, 199), (0, 354), (0, 454), (0,
+                                                                      1089)],
                      point_scalars=False, smooth=True, binary=True,
                      nanval=-999.99)
+
+    otfolder = os.path.join(cpth, 'heads_test_4')
+    vtk.export_heads(m, hdsfile, otfolder, kstpkper=(0, 0),
+                     point_scalars=False,
+                     smooth=True, binary=True, nanval=-999.99)
 
     return
 
@@ -166,21 +179,29 @@ def test_vtk_bindary_head_export():
 def test_vtk_cbc():
     # test mf 2005 freyberg
     freyberg_cbc = os.path.join('..', 'examples', 'data',
-                        'freyberg_multilayer_transient', 'freyberg.cbc')
+                                'freyberg_multilayer_transient',
+                                'freyberg.cbc')
 
     freyberg_mpth = os.path.join('..', 'examples', 'data',
-                         'freyberg_multilayer_transient')
+                                 'freyberg_multilayer_transient')
 
     m = flopy.modflow.Modflow.load('freyberg.nam', model_ws=freyberg_mpth,
                                    verbose=False)
 
     vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST'),
-                   kperlist=[1, 2, 3], point_scalars=True)
+                   kstpkper=[(0, 0), (0, 1), (0, 2)], point_scalars=True)
 
-    vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST'),
-                   kperlist=[1, 2, 3], point_scalars=True, binary=True)
+    vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth, 'freyberg_CBCTEST_bin'),
+                   kstpkper=[(0, 0), (0, 1), (0, 2)], point_scalars=True,
+                   binary=True)
+
+    vtk.export_cbc(m, freyberg_cbc, os.path.join(cpth,
+                                                 'freyberg_CBCTEST_bin2'),
+                   kstpkper=(0, 0), text='CONSTANT HEAD',
+                   point_scalars=True,  binary=True)
 
     return
+
 
 if __name__ == '__main__':
     test_vtk_export_array2d()
@@ -189,5 +210,5 @@ if __name__ == '__main__':
     test_vtk_export_packages()
     test_export_mf2005_vtk()
     test_vtk_mf6()
-    test_vtk_bindary_head_export()
+    test_vtk_binary_head_export()
     test_vtk_cbc()
