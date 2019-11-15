@@ -95,6 +95,8 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + [Exporting 2-D arrays as rasters or contour shapefiles](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
 
++ An overview of FloPy [Visualization Toolkit (vtk)](../examples/Notebooks/flopy3_vtk_export.ipynb) export capabilities.
+
 #### ***Intersection examples***
 
 + An overview of [intersecting a FloPy model grid object with a shapefile](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb).

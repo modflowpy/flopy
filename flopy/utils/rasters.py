@@ -19,6 +19,15 @@ except ImportError:
 if affine is not None:
     from affine import Affine
 
+try:
+    import scipy
+except ImportError:
+    scipy = None
+
+if scipy is not None:
+    from scipy.interpolate import griddata
+
+
 class Raster(object):
     """
     The Raster object is used for cropping, sampling raster values,
@@ -336,7 +345,10 @@ class Raster(object):
         -------
             np.array
         """
-        from scipy.interpolate import griddata
+        if scipy is None:
+            print('"Raster().resample_to_grid(): error " +'
+                  '"importing scipy - try pip install scipy"')
+
         data_shape = xc.shape
         xc = xc.flatten()
         yc = yc.flatten()
@@ -438,7 +450,7 @@ class Raster(object):
             ymii = np.min(yind)
             ymai = np.max(yind)
 
-            crp_mask = mask[ymii:ymai+1, xmii:xmai+1]
+            crp_mask = mask[ymii:ymai + 1, xmii:xmai + 1]
             nodata = self._meta["nodata"]
             if not isinstance(nodata, float) and not isinstance(nodata, int):
                 try:
@@ -449,7 +461,7 @@ class Raster(object):
 
             arr_dict = {}
             for band, arr in self.__arr_dict.items():
-                t = arr[ymii:ymai+1, xmii:xmai+1]
+                t = arr[ymii:ymai + 1, xmii:xmai + 1]
                 t[~crp_mask] = nodata
                 arr_dict[band] = t
 
@@ -458,8 +470,8 @@ class Raster(object):
             # adjust xmin, ymax back to appropriate grid locations
             xd = abs(self._meta["transform"][0])
             yd = abs(self._meta["transform"][4])
-            xmin -= xd/2.
-            ymax += yd/2.
+            xmin -= xd / 2.
+            ymax += yd / 2.
 
             # step 6: update metadata including a new Affine
             self._meta["height"] = crp_mask.shape[0]
@@ -613,7 +625,7 @@ class Raster(object):
         for i in range(num):
 
             tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * \
-                   (yc - polygon[i][1]) / (polygon[j][1] - polygon[i][1])
+                  (yc - polygon[i][1]) / (polygon[j][1] - polygon[i][1])
 
             comp = np.where(((polygon[i][1] > yc) ^ (polygon[j][1] > yc))
                             & (xc < tmp))
