@@ -25,6 +25,16 @@ np_to_struct = {'int8': 'b',
 
 
 class BinaryXml:
+    """
+    Helps write binary vtk files
+
+    Parameters
+    ----------
+
+    file_path : str
+        output file path
+
+    """
     def __init__(self, file_path):
         self.stream = open(file_path, "wb")
         self.open_tag = False
@@ -47,8 +57,8 @@ class BinaryXml:
         # ravel in fortran order
         dd = np.ravel(data, order='F')
 
-        data_format = self.byte_order + str(data.size) + \
-                      np_to_struct[data.dtype.name]
+        data_format = self.byte_order + str(data.size) + np_to_struct[
+            data.dtype.name]
         binary_data = struct.pack(data_format, *dd)
         self.stream.write(binary_data)
 
@@ -154,20 +164,33 @@ def _get_basic_modeltime(perlen_list):
 
 
 class Vtk(object):
+    """
+    Class to build VTK object for exporting flopy vtk
+
+    Parameters
+    ----------
+
+    model : MFModel
+        flopy model instance
+    verbose : bool
+        if True, stdout is verbose
+    nanval : float
+        no data value, default is -1e20
+    smooth : bool
+        If True will create smooth output surface
+    point_scalars : bool
+        if True will output point scalar values, this will set smooth to True.
+
+    Attributes
+    ----------
+
+    arrays : dict
+        Stores data arrays added to VTK object
+
+    """
 
     def __init__(self, model, verbose=None, nanval=-1e+20, smooth=False,
                  point_scalars=False):
-
-        """
-        Make Vtk object for exporting flopy vtk
-
-        :param model: flopy model instance
-        :param verbose: if True, stdout is verbose
-        :param nanval: no data value
-        :param smooth: if True will create a smooth output surface
-        :param point_scalars: if True will output poin scalar values,
-        this will set smooth to True.
-        """
 
         if point_scalars:
             smooth = True
@@ -230,9 +253,16 @@ class Vtk(object):
         """
 
         Adds an array to the vtk object
-        :param name: name of the array
-        :param a: the array to be added to the vtk object
-        :param array2d: True if the array is 2d
+
+        Parameters
+        ----------
+
+        name : str
+            name of the array
+        a : flopy array
+            the array to be added to the vtk object
+        array2d : bool
+            True if the array is 2d
 
         """
 
@@ -262,11 +292,18 @@ class Vtk(object):
 
     def write(self, output_file, timeval=None):
         """
-        writes the arrays from self.arrays to vtk file
 
-        :param output_file: output file name to write the vtk data
-        :param timeval: model time value to be stored in the time section of
-        the vtk file
+        writes the stored arrays to vtk file
+
+        Parameters
+        ----------
+
+        output_file : str
+            output file name to write the vtk data
+
+        timeval : scalar
+            model time value to be stored in the time section of the vtk
+            file, default is None
         """
 
         # make sure file ends with vtu
@@ -419,10 +456,13 @@ class Vtk(object):
 
         """
 
-        :param output_file: vtk output file
-        :return: outputs binary .vtu file
+        outputs binary .vtu file
 
-        # timeval not yet supported in binary
+        Parameters
+        ----------
+
+        output_file : str
+            vtk output file
 
         """
 
@@ -628,9 +668,8 @@ class Vtk(object):
 
     def _configure_data_arrays(self):
         """
-        Compares all the stored arrays int the vtk class along with the
-        ibound to figure out what cells and points need to be written to the
-        output vtk file.
+        Compares arrays and active cells to find where active data
+        exists, and what cells to output.
         """
 
         # get 1d shape
@@ -660,12 +699,28 @@ class Vtk(object):
         return ot_idx_array
 
     def get_3d_vertex_connectivity(self, actwcells=None, zvalues=None):
+
         """
 
-        :param actwcells: array of where data exists
-        :param zvalues: array of values to be used instead of the zvalues of
-        the vertices.  This allows point scalars to be interpolated.
-        :return: dictionaries of verts, iverts, and zvalues
+        Builds x,y,z vertices
+
+        Parameters
+        ----------
+        actwcells : array
+            array of where data exists
+        zvalues: array
+            array of values to be used instead of the zvalues of
+            the vertices.  This allows point scalars to be interpolated.
+
+        Returns
+        -------
+        vertsdict : dict
+            dictionary of verts
+        ivertsdict : dict
+            dictionary of iverts
+        zvertsdict : dict
+            dictionary of zverts
+
         """
         # set up active cells
         if actwcells is None:
@@ -792,11 +847,18 @@ class Vtk(object):
 
         Writes the data array to the output vtk file
 
-        :param f: output vtk file
-        :param indent_level: current indent of the xml
-        :param arrayName: name of the output array
-        :param arrayValues: the data array being output
-        :param actWCells: array of the active cells
+        Parameters
+        ----------
+        f : file object
+            output vtk file
+        indent_level : int
+            current indent of the xml
+        arrayName : str
+            name of the output array
+        arrayValues : array
+            the data array being output
+        actWCells : array
+            array of the active cells
 
         """
 
@@ -856,8 +918,17 @@ class Vtk(object):
 
         Builds the iverts based on the vertices being output
 
-        :param verts: vertices being output
-        :return: iverts for output
+        Parameters
+        ----------
+        verts : array
+            vertices being output
+
+        Returns
+        -------
+
+        iverts : array
+            array of ivert values
+
         """
         ncells = len(verts)
         npoints = ncells * 8
@@ -893,18 +964,32 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
 
     Exports cell by cell file to vtk
 
-    :param model: the flopy model instance
-    :param cbcfile: the cell by cell file
-    :param otfolder: output folder to write the data to
-    :param precision: bindary file precision
-    :param nanval: the no data value
-    :param kstplist: list of timesteps to be written
-    :param kperlist: list of stress periods to be writeen
-    :param keylist: list of flow term names to be output
-    :param smooth: If true a smooth surface will be output
-    :param point_scalars: If True point scalar values will be written
-    :param binary: if True the output .vtu file will be binary, defualt is
-    False.
+    Parameters
+    ----------
+
+    model : flopy model instance
+        the flopy model instance
+    cbcfile : str
+        the cell by cell file
+    otfolder : str
+        output folder to write the data
+    precision : str:
+        binary file precision, default is 'single'
+    nanval : scalar
+        no data value
+    kstplist : list
+        list of timesteps
+    kperlist : list
+        list of stress periods
+    keylist : list
+        list of flow term names
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
 
     """
 
@@ -991,8 +1076,10 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
 
                         addarray = True
                     else:
-                        raise Exception('Data type not currenlty supported '
+                        raise Exception('Data type not currently supported '
                                         'for cbc output')
+                        # print('Data type not currently supported '
+                        #       'for cbc output')
 
                 if addarray:
 
@@ -1021,21 +1108,31 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstplist=None,
                  kperlist=None, smooth=False, point_scalars=False,
                  binary=False):
     """
-    Exports heads to vtk files by timestep and stressperiod
 
-    :param model: the model instance
-    :param hdsfile: the binary heads file
-    :param otfolder: the output folder to write the .vtu files
-    :param nanval: The no data value
-    :param kstplist: list of time steps to output
-    :param kperlist: list of stress periods to output
-    :param smooth: If set to True a smooth surface will be output
-    :param point_scalars: If set to True the heads will be written to the
-    vertices as point scalars as well as cell values
-    :param binary: if True the output .vtu file will be binary, defualt is
-    False.
-    :return: Heads will be written to files named by stress period and
-    timestep to the otfolder
+    Exports binary head file to vtk
+
+    Parameters
+    ----------
+
+    model : MFModel
+        the flopy model instance
+    hdsfile : str
+        binary heads file
+    otfolder : str
+        output folder to write the data
+    nanval : scalar
+        no data value, default value is -1e20
+    kstplist : list
+        list of timesteps
+    kperlist : list
+        list of stress periods
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
 
     """
 
@@ -1102,17 +1199,30 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
 
     """
 
-    :param model: array the model belongs to
-    :param array: array to be exported
-    :param name: name of the array to be used in vtk file
-    :param output_folder: output folder to store the output .vtu file
-    :param array2d: True if array is 2d
-    :param nanval nan value
-    :param smooth: If set to True a smooth surface will be output
-    :param point_scalars: If set to True the heads will be written to the
-    vertices as point scalars as well as cell values
-    :param binary: if Ture vtk will export as binary
-    :return: outputs a .vtu file of array
+    Export array to vtk
+
+    Parameters
+    ----------
+
+    model : flopy model instance
+        the flopy model instance
+    array : flopy array
+        flopy 2d or 3d array
+    output_folder : str
+        output folder to write the data
+    name : str
+        name of array
+    nanval : scalar
+        no data value, default value is -1e20
+    array2d : bool
+        True if array is 2d, default is False
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
 
     """
 
@@ -1133,19 +1243,33 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
 def export_transient(model, array, output_folder, name, nanval=-1e+20,
                      array2d=False, smooth=False, point_scalars=False,
                      binary=False):
-
     """
-    :param model: model of transient array
-    :param array: transient array to export
-    :param name: name of the data
-    :param nanval: nan value
-    :param output_folder: output folder location
-    :param array2d: True if array is 2d
-    :param smooth: If set to True a smooth surface will be output
-    :param point_scalars: If set to True the heads will be written to the
-    vertices as point scalars as well as cell values
-    :param binary: if Ture vtk will export as binary
-    :return: ouputs .vtu files of transient data to output folder
+
+    Export transient 2d array to vtk
+
+    Parameters
+    ----------
+
+    model : MFModel
+        the flopy model instance
+    array : Transient instance
+        flopy transient array
+    output_folder : str
+        output folder to write the data
+    name : str
+        name of array
+    nanval : scalar
+        no data value, default value is -1e20
+    array2d : bool
+        True if array is 2d, default is False
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
+
     """
 
     if not os.path.exists(output_folder):
@@ -1205,16 +1329,28 @@ def export_package(pak_model, pak_name, ot_folder, vtkobj=None,
     """
     Exports package to vtk
 
-    :param pak_model: the model of the package
-    :param pak_name: the name of the package
-    :param ot_folder: the folder to output the package data
-    :param vtkobj: a vtk object (allows export_package to be called from
-    export_model)
-    :param nanval: no data value
-    :param smooth: If True the output will be a smooth represenation
-    :param point_scalars: If True the package data will be written as point
-    values as well as cell values.
-    :param binary: if Ture vtk will export as binary
+    Parameters
+    ----------
+
+    pak_model : flopy model instance
+        the model of the package
+    pak_name : str
+        the name of the package
+    ot_folder : str
+        output folder to write the data
+    vtkobj : VTK instance
+        a vtk object (allows export_package to be called from
+        export_model)
+    nanval : scalar
+        no data value, default value is -1e20
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
+
     """
 
     # see if there is vtk object being supplied by export_model
@@ -1364,14 +1500,23 @@ def export_model(model, ot_folder, package_names=None, nanval=-1e+20,
                  smooth=False, point_scalars=False, binary=False):
     """
 
-    :param model: flopy model instance
-    :param ot_folder: output folder
-    :param package_names: list ofpackage names to be exported
-    :param nanval: no data value
-    :param smooth: smoothing
-    :param point_scalars: If True array data will be written as point scalars
-    :param binary: if Ture vtk will export as binary
-    as well as cell scalars
+    model : flopy model instance
+        flopy model
+    ot_folder : str
+        output folder
+    package_names : list
+        list of package names to be exported
+    nanval : scalar
+        no data value, default value is -1e20
+    array2d : bool
+        True if array is 2d, default is False
+    smooth : bool
+        If true a smooth surface will be output, default is False
+    point_scalars : bool
+        If True point scalar values will be written, default is False
+    binary : bool
+        if True the output .vtu file will be binary, default is
+        False.
 
     """
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars)

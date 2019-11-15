@@ -727,7 +727,7 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         point_scalars: for vtk to output point value scalars as well as cell
         name: for vtk to set a specific name for array and output file
         binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
+            For vtk, if set to True will output binary .vtu files. Default
             is False which exports standard text xml .vtu files.
 
     """
