@@ -1,0 +1,6 @@
+LIST  2  sfrtest.lst
+BAS6  8  sfrtest.bas
+DIS   9  sfrtest.dis
+UPW  10  sfrtest.upw
+SFR  11  sfrtest20.sfr
+NWT  12  sfrtest.nwt
