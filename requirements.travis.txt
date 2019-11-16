@@ -7,3 +7,5 @@ pyproj
 pyshp
 pandas
 scipy
+rasterio
+affine

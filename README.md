@@ -204,7 +204,8 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                        |
 | `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                      |
 | `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**            |
-
+| `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                        |
+| `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                        |
 
 How to Cite
 -----------------------------------------------

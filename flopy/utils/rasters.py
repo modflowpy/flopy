@@ -5,28 +5,20 @@ try:
 except ImportError:
     rasterio = None
 
-if rasterio is not None:
-    from rasterio.crs import CRS
-    from rasterio.mask import mask
-    from rasterio.plot import show
-    from rasterio.plot import show_hist
-
 try:
     import affine
 except ImportError:
     affine = None
-
-if affine is not None:
-    from affine import Affine
 
 try:
     import scipy
 except ImportError:
     scipy = None
 
-if scipy is not None:
-    from scipy.interpolate import griddata
-
+try:
+    import shapely
+except ImportError:
+    shapely = None
 
 class Raster(object):
     """
@@ -72,14 +64,16 @@ class Raster(object):
     def __init__(self, array, bands, crs, transform,
                  nodataval, driver="GTiff", rio_ds=None):
         if rasterio is None:
-            print('"Raster(): error " +'
-                  '"importing rasterio - try pip install rasterio"')
-            return None
+            msg = 'Raster(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.crs import CRS
 
         if affine is None:
-            print('"Raster(): error " +'
-                  '"importing affine - try pip install affine"')
-            return None
+            msg = 'Raster(): error ' + \
+                  'importing affine - try "pip install affine"'
+            raise ImportError(msg)
 
         self._array = array
         self._bands = bands
@@ -346,8 +340,10 @@ class Raster(object):
             np.array
         """
         if scipy is None:
-            print('"Raster().resample_to_grid(): error " +'
-                  '"importing scipy - try pip install scipy"')
+            print('Raster().resample_to_grid(): error ' + \
+                  'importing scipy - try "pip install scipy"')
+        else:
+            from scipy.interpolate import griddata
 
         data_shape = xc.shape
         xc = xc.flatten()
@@ -410,9 +406,18 @@ class Raster(object):
         else:
             # crop from user supplied points using numpy
             if rasterio is None:
-                print('"Raster().crop(): error " +'
-                      '"importing affine - try pip install affine"')
-                return None
+                msg = 'Raster().crop(): error ' + \
+                      'importing rasterio try "pip install rasterio"'
+                raise ImportError(msg)
+            else:
+                from rasterio.mask import mask
+
+            if affine is None:
+                msg = 'Raster(),crop(): error ' + \
+                      'importing affine - try "pip install affine"'
+                raise ImportError(msg)
+            else:
+                from affine import Affine
 
             mask = self._intersection(polygon, invert)
 
@@ -507,9 +512,22 @@ class Raster(object):
             tuple : (arr_dict, raster_crp_meta)
 
         """
+        if rasterio is None:
+            msg = 'Raster()._sample_rio_dataset(): error ' + \
+                  'importing rasterio try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.mask import mask
+
+        if shapely is None:
+            msg = 'Raster()._sample_rio_dataset(): error ' + \
+                  'importing shapely - try "pip install shapely"'
+            raise ImportError(msg)
+        else:
+            from shapely import geometry
+
 
         if isinstance(polygon, list) or isinstance(polygon, np.ndarray):
-            from shapely import geometry
             shapes = [geometry.Polygon([[x, y] for x, y in polygon])]
 
         else:
@@ -555,7 +573,12 @@ class Raster(object):
             mask : np.ndarray (dtype = bool)
 
         """
-        from shapely import geometry
+        if shapely is None:
+            msg = 'Raster()._intersection(): error ' + \
+                  'importing shapely try "pip install shapely"'
+            raise ImportError(msg)
+        else:
+            from shapely import geometry
 
         # step 1: check the data type in shapes
         if isinstance(polygon, geometry.Polygon):
@@ -684,9 +707,9 @@ class Raster(object):
 
         """
         if rasterio is None:
-            print('"Raster().write(): error " +'
-                  '"importing rasterio - try pip install rasterio"')
-            return None
+            msg = 'Raster().write(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
 
         if not name.endswith(".tif"):
             name += ".tif"
@@ -711,9 +734,9 @@ class Raster(object):
 
         """
         if rasterio is None:
-            print('"Raster().load(): error " +'
-                  '"importing rasterio - try pip install rasterio"')
-            return None
+            msg = 'Raster().load(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
 
         dataset = rasterio.open(raster)
         array = dataset.read()
@@ -745,9 +768,11 @@ class Raster(object):
 
         """
         if rasterio is None:
-            print('"Raster().plot(): error " +'
-                  '"importing rasterio - try pip install rasterio"')
-            return None
+            msg = 'Raster().plot(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.plot import show
 
         if self._dataset is not None:
             ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
@@ -794,9 +819,11 @@ class Raster(object):
 
         """
         if rasterio is None:
-            print('"Raster().histogram(): error " +'
-                  '"importing rasterio - try pip install rasterio"')
-            return None
+            msg = 'Raster().histogram(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.plot import show_hist
 
         if "alpha" not in kwargs:
             kwargs["alpha"] = 0.3

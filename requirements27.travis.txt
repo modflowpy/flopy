@@ -8,3 +8,6 @@ pyshp
 enum34
 pandas
 requests
+scipy
+rasterio
+affine
