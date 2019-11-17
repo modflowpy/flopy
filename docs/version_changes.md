@@ -2,8 +2,6 @@ FloPy Changes
 -----------------------------------------------
 ### Version 3.2.13
 
-### Version 3.2.13: _target release date 11/15/2019_
-
 * ModflowFlwob: Variable `irefsp` is now a zero-based integer (#596)
 * ModflowFlwob: Added a load method and increased precision of `toffset` when writing to file (#598)
 * New feature GridIntersect (#610): The GridIntersect object allows the user to intersect shapes (Points, LineStrings and Polygons) with a MODFLOW grid. These intersections return a numpy.recarray containing the intersection information, i.e. cell IDs, lengths or areas, and a shapely representation of the intersection results. Grids can be structured or vertex grids. Two intersections methods are implemented: `"structured"` and `"strtree"`: the former accelerates intersections with structured grids. The latter is more flexible and also works for vertex grids. The GridIntersect class is available through `flopy.utils.gridintersect`. The functionality requires the Shapely module. See the [example notebook](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb) for an overview of this new feature.
@@ -38,7 +36,7 @@ FloPy Changes
     * Close opened files after loading, to reduce `ResourceWarning` messages (#673)
     * Fix bugs related to flake8's F821 "undefined name 'name'", which includes issues related to Mt3dPhc, ModflowSfr2, ModflowDe4, ListBudget, and ModflowSms (#686)
     * Fix bugs related to flake8's F811 "redefinition of unused 'name'" (#688)
-    * Fix bugs related to flake8's W605 "invalid escape sequence '\s'" (or similar) (#700)
+    * Fix bugs related to flake8's W605 "invalid escape sequence '\\s'" (or similar) (#700)
     * Fix EpsgReference class behavior with JSON user files (#702)
     * Fix ModflowSfr2 read write logic for all combinations of isfropt and icalc
     * IRCH array of the Recharge Package is now a zero-based variable, which means an IRCH value of 0 corresponds to the top model layer (#715)

@@ -1,8 +1,5 @@
 import numpy as np
-import sys
 
-# if sys.version_info[0] == 2:
-#     ModuleNotFoundError = ImportError
 from .geometry import transform
 
 try:

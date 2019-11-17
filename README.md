@@ -216,7 +216,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.13: U.S. Geological Survey Software Release, 15 November 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.13: U.S. Geological Survey Software Release, 17 November 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources
@@ -240,3 +240,4 @@ shall the fact of release constitute any such warranty. Furthermore, the
 software is released on condition that neither the USGS nor the U.S. Government
 shall be held liable for any damages resulting from its authorized or
 unauthorized use.
+
