@@ -253,6 +253,10 @@ class ModflowRiv(Package):
 
         return dtype
 
+    @staticmethod
+    def get_sfac_columns():
+        return ['cond']
+
     def ncells(self):
         # Return the  maximum number of cells that have river
         # (developed for MT3DMS SSM package)

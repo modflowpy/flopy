@@ -251,7 +251,7 @@ class MfList(DataInterface, DataListInterface):
             use_free = self.list_free_format
         else:
             use_free = True
-            if self.package.parent.bas6 is not None:
+            if self.package.parent.has_package('bas6'):
                 use_free = self.package.parent.bas6.ifrefm
             # mt3d list data is fixed format
             if 'mt3d' in self.package.parent.version.lower():
@@ -451,7 +451,7 @@ class MfList(DataInterface, DataListInterface):
         # create list of dataframes for each stress period
         # each with index of k, i, j
         dfs = []
-        for per in range(self._model.nper):
+        for per in self.data.keys():
             recs = self.data[per]
             if recs is None or recs is 0:
                 # add an empty dataframe if a stress period is
@@ -463,7 +463,6 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                # dfi = dfi.set_index(names)
                 dfg = dfi.groupby(names)
                 count = dfg[varnames[0]].count().rename('n')
                 if (count > 1).values.any():
@@ -695,13 +694,15 @@ class MfList(DataInterface, DataListInterface):
 
             if kper_vtype == np.recarray:
                 name = f.name
-                f.close()
-                f = open(name, 'ab+')
-                # print(f)
-                self.__tofile(f, kper_data)
-                f.close()
-                f = open(name, 'a')
-                # print(f)
+                if self.__binary or not numpy114:
+                    f.close()
+                    # switch file append mode to binary
+                    with open(name, 'ab+') as f:
+                        self.__tofile(f, kper_data)
+                    # continue back to non-binary
+                    f = open(name, 'a')
+                else:
+                    self.__tofile(f, kper_data)
             elif kper_vtype == str:
                 f.write('         open/close ' + kper_data)
                 if self.__binary:

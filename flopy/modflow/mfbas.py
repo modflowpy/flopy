@@ -302,9 +302,11 @@ class ModflowBas(Package):
             ncol = None
 
         # open the file if not already open
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -339,7 +341,8 @@ class ModflowBas(Package):
         # dataset 4 -- strt
         strt = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'strt',
                            ext_unit_dict)
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

@@ -9,7 +9,6 @@ from __future__ import print_function
 import abc
 import sys
 import os
-import subprocess as sp
 import shutil
 import threading
 import warnings
@@ -19,6 +18,7 @@ if sys.version_info > (3, 0):
 else:
     import Queue
 from datetime import datetime
+from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
 from flopy import utils, discretization
@@ -65,6 +65,14 @@ class ModelInterface(object):
     def __init__(self):
         self._mg_resync = True
         self._modelgrid = None
+
+    def update_modelgrid(self):
+        if self._modelgrid is not None:
+            self._modelgrid = Grid(proj4=self._modelgrid.proj4,
+                                   xoff=self._modelgrid.xoffset,
+                                   yoff=self._modelgrid.yoffset,
+                                   angrot=self._modelgrid.angrot)
+        self._mg_resync = True
 
     @property
     @abc.abstractmethod
@@ -195,6 +203,7 @@ class BaseModel(ModelInterface):
         self.heading = ''
         self.exe_name = exe_name
         self._verbose = verbose
+        self.external_path = None
         self.external_extension = 'ref'
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
@@ -220,13 +229,13 @@ class BaseModel(ModelInterface):
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           DeprecationWarning)
 
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
-        self._modelgrid = Grid(proj4=proj4_str, xoff=xll, yoff=yll,
-                               angrot=rotation)
+        self._modelgrid = Grid(proj4=self._proj4_str, xoff=xll, yoff=yll,
+                               angrot=self._rotation)
         self._modeltime = None
 
         # Model file information
@@ -318,7 +327,7 @@ class BaseModel(ModelInterface):
         if self.get_package("BCF6") is not None:
             return self.get_package("BCF6").laycon.array
         if self.get_package("UPW") is not None:
-            return self.get_package("UPW").laycon.array
+            return self.get_package("UPW").laytyp.array
 
         return None
 
@@ -396,9 +405,24 @@ class BaseModel(ModelInterface):
         return next_unit
 
     def export(self, f, **kwargs):
-        # for pak in self.packagelist:
-        #    f = pak.export(f)
-        # return f
+        """
+        Method to export a model to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from .export import utils
         return utils.model_export(f, self, **kwargs)
 
@@ -485,6 +509,9 @@ class BaseModel(ModelInterface):
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
+        if item == 'output_packages' or not hasattr(self, 'output_packages'):
+            raise AttributeError(item)
+
         if item == 'sr':
             if self.dis is not None:
                 return self.dis.sr
@@ -500,8 +527,16 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-
-        return self.get_package(item)
+        #return self.get_package(item)
+        # to avoid infinite recursion
+        if item == "_packagelist" or item == "packagelist":
+            raise AttributeError(item)
+        pckg = self.get_package(item)
+        if pckg is not None or item in self.mfnam_packages:
+            return pckg
+        if item == 'modelgrid':
+            return
+        raise AttributeError(item)
 
     def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
                           pop_key=True):
@@ -915,14 +950,17 @@ class BaseModel(ModelInterface):
         ----------
 
         """
-        s = ''
+        lines = []
         for p in self.packagelist:
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s += '{:14s} {:5d}  '.format(p.name[i], p.unit_number[i]) + \
-                     '{:s} {:s}\n'.format(p.file_name[i], p.extra[i])
-        return s
+                s = '{:14s} {:5d}  {}'.format(
+                        p.name[i], p.unit_number[i], p.file_name[i])
+                if p.extra[i]:
+                    s += ' ' + p.extra[i]
+                lines.append(s)
+        return '\n'.join(lines) + '\n'
 
     def has_package(self, name):
         """
@@ -1125,12 +1163,10 @@ class BaseModel(ModelInterface):
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
     def __setattr__(self, key, value):
-
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
             super(BaseModel, self).__setattr__(key, value)
-
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
@@ -1160,7 +1196,6 @@ class BaseModel(ModelInterface):
             else:
                 raise Exception("cannot set start_datetime -"
                                 "ModflowDis not found")
-
         else:
             super(BaseModel, self).__setattr__(key, value)
 
@@ -1499,9 +1534,10 @@ def run_model(exe_name, namefile, model_ws='./',
     report : boolean, optional
         Save stdout lines to a list (buff) which is returned
         by the method . (default is False).
-    normal_msg : str
+    normal_msg : str or list
         Normal termination message used to determine if the
-        run terminated normally. (default is 'normal termination')
+        run terminated normally. More than one message can be provided using
+        a list. (Default is 'normal termination')
     use_async : boolean
         asynchronously read model stdout and report with timestamps.  good for
         models that take long time to run.  not good for models that run
@@ -1519,12 +1555,11 @@ def run_model(exe_name, namefile, model_ws='./',
     success = False
     buff = []
 
-    # convert normal_msg to lower case for comparison
+    # convert normal_msg to a list of lower case str for comparison
     if isinstance(normal_msg, str):
-        normal_msg = [normal_msg.lower()]
-    elif isinstance(normal_msg, list):
-        for idx, s in enumerate(normal_msg):
-            normal_msg[idx] = s.lower()
+        normal_msg = [normal_msg]
+    for idx, s in enumerate(normal_msg):
+        normal_msg[idx] = s.lower()
 
     # Check to make sure that program and namefile exist
     exe = which(exe_name)
@@ -1568,24 +1603,31 @@ def run_model(exe_name, namefile, model_ws='./',
         for t in cargs:
             argv.append(t)
 
+    if sys.version_info[0:2] == (2, 7) and sys.platform != 'win32':
+        # Python 2.7 workaround for non-Windows
+        close_fds = True
+    else:
+        close_fds = False  # default
+
     # run the model with Popen
-    proc = sp.Popen(argv,
-                    stdout=sp.PIPE, stderr=sp.STDOUT, cwd=model_ws)
+    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws,
+                 close_fds=close_fds)
 
     if not use_async:
         while True:
-            line = proc.stdout.readline()
-            c = line.decode('utf-8')
-            if c != '':
+            line = proc.stdout.readline().decode('utf-8')
+            if line == '' and proc.poll() is not None:
+                break
+            if line:
                 for msg in normal_msg:
-                    if msg in c.lower():
+                    if msg in line.lower():
                         success = True
                         break
-                c = c.rstrip('\r\n')
+                line = line.rstrip('\r\n')
                 if not silent:
-                    print('{}'.format(c))
-                if report == True:
-                    buff.append(c)
+                    print(line)
+                if report:
+                    buff.append(line)
             else:
                 break
         return success, buff
@@ -1629,10 +1671,11 @@ def run_model(exe_name, namefile, model_ws='./',
     proc.stdout.close()
 
     for line in buff:
-        if normal_msg in line:
-            print("success")
-            success = True
-            break
+        for msg in normal_msg:
+            if msg in line.lower():
+                print("success")
+                success = True
+                break
 
     if pause:
         input('Press Enter to continue...')

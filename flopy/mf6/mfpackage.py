@@ -928,6 +928,7 @@ class MFBlock(object):
                                       inspect.stack()[0][3], type_,
                                       value_, traceback_, message,
                                       self._simulation_data.debug)
+
         # write data sets
         for key, dataset in self.datasets.items():
             try:
@@ -1194,7 +1195,6 @@ class MFPackage(PackageContainer, PackageInterface):
         if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
-                self.parent._mg_resync = True
                 try:
                     if isinstance(attribute, mfdatalist.MFList):
                         attribute.set_data(value, autofill=True)
@@ -1740,6 +1740,24 @@ class MFPackage(PackageContainer, PackageInterface):
                                 self._filename)
 
     def export(self, f, **kwargs):
+        """
+        Method to export a package to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from flopy import export
         return export.utils.package_export(f, self, **kwargs)
 
@@ -1797,32 +1815,19 @@ class MFChildPackages(object):
         self._cpparent = parent
         self._pkg_type = pkg_type
         self._package_class = package_class
-        self._inattr = False
-
-    def __getattribute__(self, name):
-        if name == '_MFChildPackages_packages' or name == \
-                '_MFChildPackages_inattr' or name == '_packages' or \
-                name == '_inattr':
-            return super(MFChildPackages, self).__getattribute__(name)
-
-        if self._inattr is not None and not self._inattr:
-            if self._packages and hasattr(self._packages[0], name):
-                self._inattr = True
-                item = getattr(self._packages[0], name)
-                self._inattr = False
-                return item
-        return super(MFChildPackages, self).__getattribute__(name)
 
     def __getattr__(self, attr):
-        if attr == '_MFChildPackages_inattr' or attr == '_inattr':
-            return None
+        if '_packages' in self.__dict__ and len(self._packages) > 0 and \
+                hasattr(self._packages[0], attr):
+            item = getattr(self._packages[0], attr)
+            return item
         raise AttributeError(attr)
 
     def __getitem__(self, k):
         if isinstance(k, int):
             if k < len(self._packages):
                 return self._packages[k]
-        raise Exception('Package index {} does not exist.'.format(k))
+        raise ValueError('Package index {} does not exist.'.format(k))
 
     def __setattr__(self, key, value):
         if key != '_packages' and key != '_model' and key != '_cpparent' and \

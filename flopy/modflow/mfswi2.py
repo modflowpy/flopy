@@ -480,9 +480,11 @@ class ModflowSwi2(Package):
         if model.verbose:
             sys.stdout.write('loading swi2 package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -663,6 +665,9 @@ class ModflowSwi2(Package):
                 jj = int(t[3]) - 1
                 obslrc.append([kk, ii, jj])
                 nobs = len(obsname)
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

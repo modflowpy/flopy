@@ -60,7 +60,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
           CELL2D blocks below are not read. NVERT and the accompanying VERTICES
           and CELL2D blocks should be specified for most simulations. If the
           XT3D or SAVE_SPECIFIC_DISCHARGE options are specified in the NPF
-          Package, these this information is required.
+          Package, then this information is required.
     top : [double]
         * top (double) is the top elevation for each cell in the model grid.
     bot : [double]
@@ -198,16 +198,17 @@ class ModflowGwfdisu(mfpackage.MFPackage):
            ["block connectiondata", "name iac", "type integer",
             "shape (nodes)", "reader readarray"],
            ["block connectiondata", "name ja", "type integer",
-            "shape (nja)", "reader readarray", "numeric_index true"],
+            "shape (nja)", "reader readarray", "numeric_index true",
+            "jagged_array iac"],
            ["block connectiondata", "name ihc", "type integer",
-            "shape (nja)", "reader readarray"],
+            "shape (nja)", "reader readarray", "jagged_array iac"],
            ["block connectiondata", "name cl12", "type double precision",
-            "shape (nja)", "reader readarray"],
+            "shape (nja)", "reader readarray", "jagged_array iac"],
            ["block connectiondata", "name hwva", "type double precision",
-            "shape (nja)", "reader readarray"],
+            "shape (nja)", "reader readarray", "jagged_array iac"],
            ["block connectiondata", "name angldegx",
             "type double precision", "optional true", "shape (nja)",
-            "reader readarray"],
+            "reader readarray", "jagged_array iac"],
            ["block vertices", "name vertices", "type recarray iv xv yv",
             "reader urword", "optional false"],
            ["block vertices", "name iv", "type integer", "in_record true",

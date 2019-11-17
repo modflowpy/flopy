@@ -282,7 +282,9 @@ class SpatialReference(object):
                 units = "feet"
             return units
         except:
-            print('   could not parse units from {}'.format(self.proj4_str))
+            if self.proj4_str is not None:
+                print('   could not parse units from {}'.format(
+                    self.proj4_str))
 
     @property
     def units(self):
@@ -933,11 +935,11 @@ class SpatialReference(object):
 
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         if epsg is None and prj is None:
             epsg = self.epsg
-        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
+                             epsg=epsg, prj=prj)
 
     def get_vertices(self, i, j):
         """Get vertices for a single cell or sequence if i, j locations."""
@@ -1143,14 +1145,14 @@ class SpatialReference(object):
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
-            from ..export.shapefile_utils import write_grid_shapefile2
+            from ..export.shapefile_utils import write_grid_shapefile
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             if epsg is None and prj is None:
                 epsg = self.epsg
-            write_grid_shapefile2(filename, self, array_dict={fieldname: a},
-                                  nan_val=nodata,
-                                  epsg=epsg, prj=prj)
+            write_grid_shapefile(filename, self, array_dict={fieldname: a},
+                                 nan_val=nodata,
+                                 epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
                         fieldname='level', epsg=None, prj=None,
@@ -1931,6 +1933,9 @@ class crs(object):
     """
 
     def __init__(self, prj=None, esri_wkt=None, epsg=None):
+        warnings.warn(
+            "crs has been deprecated. Use CRS in shapefile_utils instead.",
+            category=DeprecationWarning)
         self.wktstr = None
         if prj is not None:
             with open(prj) as fprj:
@@ -1971,6 +1976,7 @@ class crs(object):
             proj = 'longlat'
 
         # datum
+        datum = None
         if 'NAD' in self.datum.lower() or \
                 'north' in self.datum.lower() and \
                 'america' in self.datum.lower():
@@ -1983,6 +1989,7 @@ class crs(object):
             datum = 'wgs84'
 
         # ellipse
+        ellps = None
         if '1866' in self.spheroid_name:
             ellps = 'clrk66'
         elif 'grs' in self.spheroid_name.lower():

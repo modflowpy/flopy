@@ -433,7 +433,7 @@ class ModelGrid(object):
 
     def get_connections_array(self):
         if self.grid_type() == DiscretizationType.DISU:
-            return np.arange(1, self.num_connections() + 1, 1, np.int)
+            return np.arange(1, self.num_connections() + 1, 1, np.int32)
         else:
             except_str = 'ERROR: Can not get connections arrays for model ' \
                          '"{}" Only DISU (unstructured) grids ' \
@@ -443,10 +443,10 @@ class ModelGrid(object):
 
     def get_horizontal_cross_section_dim_arrays(self):
         if self.grid_type() == DiscretizationType.DIS:
-            return [np.arange(1, self.num_rows() + 1, 1, np.int),
-                    np.arange(1, self.num_columns() + 1, 1, np.int)]
+            return [np.arange(1, self.num_rows() + 1, 1, np.int32),
+                    np.arange(1, self.num_columns() + 1, 1, np.int32)]
         elif self.grid_type() == DiscretizationType.DISV:
-            return [np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
+            return [np.arange(1, self.num_cells_per_layer() + 1, 1, np.int32)]
         elif self.grid_type() == DiscretizationType.DISU:
             except_str = 'ERROR: Can not get horizontal plane arrays for ' \
                          'model "{}" DISU grid.  DISU grids do not support ' \
@@ -464,23 +464,23 @@ class ModelGrid(object):
 
     def get_model_dim_arrays(self):
         if self.grid_type() == DiscretizationType.DIS:
-            return [np.arange(1, self.num_layers() + 1, 1, np.int),
-                    np.arange(1, self.num_rows() + 1, 1, np.int),
-                    np.arange(1, self.num_columns() + 1, 1, np.int)]
+            return [np.arange(1, self.num_layers() + 1, 1, np.int32),
+                    np.arange(1, self.num_rows() + 1, 1, np.int32),
+                    np.arange(1, self.num_columns() + 1, 1, np.int32)]
         elif self.grid_type() == DiscretizationType.DISV:
-            return [np.arange(1, self.num_layers() + 1, 1, np.int),
-                    np.arange(1, self.num_cells_per_layer() + 1, 1, np.int)]
+            return [np.arange(1, self.num_layers() + 1, 1, np.int32),
+                    np.arange(1, self.num_cells_per_layer() + 1, 1, np.int32)]
         elif self.grid_type() == DiscretizationType.DISU:
-            return [np.arange(1, self.num_cells() + 1, 1, np.int)]
+            return [np.arange(1, self.num_cells() + 1, 1, np.int32)]
 
     def get_row_array(self):
-        return np.arange(1, self.num_rows() + 1, 1, np.int)
+        return np.arange(1, self.num_rows() + 1, 1, np.int32)
 
     def get_column_array(self):
-        return np.arange(1, self.num_columns() + 1, 1, np.int)
+        return np.arange(1, self.num_columns() + 1, 1, np.int32)
 
     def get_layer_array(self):
-        return np.arange(1, self.num_layers() + 1, 1, np.int)
+        return np.arange(1, self.num_layers() + 1, 1, np.int32)
 
     def get_horizontal_cross_section_dim_names(self):
         if self.grid_type() == DiscretizationType.DIS:

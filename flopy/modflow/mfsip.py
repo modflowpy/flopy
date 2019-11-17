@@ -194,9 +194,11 @@ class ModflowSip(Package):
         if model.verbose:
             sys.stdout.write('loading sip package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -227,8 +229,8 @@ class ModflowSip(Package):
             wseed = float(line[30:40].strip())
             iprsip = int(line[40:50].strip())
 
-        # close the open file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

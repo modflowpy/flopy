@@ -64,7 +64,7 @@ class Dfn(object):
         self.common = os.path.join(self.dfndir, 'common.dfn')
         # FIX: Transport - multi packages are hard coded
         self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
-                              'gwfrch': 0,
+                              'gwfrch': 0, 'gwfwel': 0,
                               'gwfdrn': 0, 'gwfriv': 0, 'utlobs': 0,
                               'utlts': 0, 'utltas': 0}
 
@@ -778,6 +778,8 @@ class MFDataItemStructure(object):
         self.construct_data = None
         self.parameter_name = None
         self.one_per_pkg = False
+        self.jagged_array = None
+
 
     def set_value(self, line, common):
         arr_line = line.strip().split()
@@ -920,6 +922,8 @@ class MFDataItemStructure(object):
                 self.parameter_name = arr_line[1]
             elif arr_line[0] == 'one_per_pkg':
                 self.one_per_pkg = bool(arr_line[1])
+            elif arr_line[0] == 'jagged_array':
+                self.jagged_array = arr_line[1]
 
     def get_type_string(self):
         return '[{}]'.format(self.type_string)
@@ -1205,7 +1209,6 @@ class MFDataStructure(object):
         self.name_length = len(self.name)
         self.is_aux = data_item.is_aux
         self.is_boundname = data_item.is_boundname
-        self.is_mname = data_item.is_mname
         self.name_list = data_item.name_list
         self.python_name = data_item.python_name
         self.longname = data_item.longname
@@ -1241,6 +1244,13 @@ class MFDataStructure(object):
         else:
             self.expected_data_items[data_item.name] = len(
                 self.expected_data_items)
+
+    @property
+    def is_mname(self):
+        for item in self.data_item_structures:
+            if item.is_mname:
+                return True
+        return False
 
     def get_item(self, item_name):
         for item in self.data_item_structures:
@@ -1595,9 +1605,9 @@ class MFDataStructure(object):
                 else:
                     if numpy_type:
                         if var_type[0] == DatumType.double_precision:
-                            return np.float
+                            return np.float64
                         elif var_type[0] == DatumType.integer:
-                            return np.int
+                            return np.int32
                         else:
                             return np.object
                     else:

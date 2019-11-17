@@ -71,7 +71,13 @@ def np001():
 
     # model tests
     test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
-                            exe_name=exe_name, sim_ws=run_folder)
+                            exe_name=exe_name, sim_ws=run_folder,
+                            continue_=True, memory_print_option='summary')
+    name = test_sim.name_file
+    assert name.continue_.get_data() == True
+    assert name.nocheck.get_data() == None
+    assert name.memory_print_option.get_data() == 'summary'
+
     kwargs = {}
     kwargs['bad_kwarg'] = 20
     try:
@@ -305,7 +311,12 @@ def np002():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=run_folder)
+                       sim_ws=run_folder, nocheck=True)
+    name = sim.name_file
+    assert name.continue_.get_data() == None
+    assert name.nocheck.get_data() == True
+    assert name.memory_print_option.get_data() == None
+
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)
@@ -880,6 +891,38 @@ def test005_advgw_tidal():
     outfile = os.path.join(run_folder, 'head_compare.dat')
     assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
                                 outfile=outfile)
+
+    # test rename all
+    model.rename_all_packages('new_name')
+    assert model.name_file.filename == 'new_name.nam'
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == 'new_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'new_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'new_name.dis')
+    assert os.path.exists(dis_file)
+
+    sim.rename_all_packages('all_files_same_name')
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == \
+                   'all_files_same_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    assert sim._tdis_file.filename == 'all_files_same_name.tdis'
+    for ims_file in sim._ims_files.values():
+        assert ims_file.filename == 'all_files_same_name.ims'
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'all_files_same_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'all_files_same_name.dis')
+    assert os.path.exists(dis_file)
+    tdis_file = os.path.join(run_folder, 'all_files_same_name.tdis')
+    assert os.path.exists(tdis_file)
 
     # clean up
     sim.delete_output_files()

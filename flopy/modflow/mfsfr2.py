@@ -18,6 +18,18 @@ try:
 except:
     pd = False
 
+try:
+    from numpy.lib import NumpyVersion
+    numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
+except ImportError:
+    numpy114 = False
+if numpy114:
+    # use numpy's floating-point formatter (Dragon4)
+    default_float_format = '{!s}'
+else:
+    # single-precision floats have ~7.2 decimal digits
+    default_float_format = '{:.8g}'
+
 
 class ModflowSfr2(Package):
     """
@@ -80,7 +92,7 @@ class ModflowSfr2(Package):
         Output Control (see Harbaugh and others, 2000, pages 52-55). If
         ipakcb = 0, leakage values will not be printed or saved. Printing to
         the listing file (ipakcb < 0) is not supported.
-    istcsb2 : integer
+    istcb2 : integer
         An integer value used as a flag for writing to a separate formatted
         file all information on inflows and outflows from each reach; on
         stream depth, width, and streambed conductance; and on head difference
@@ -370,6 +382,7 @@ class ModflowSfr2(Package):
                          unit_number=units, extra=extra, filenames=fname)
 
         self.url = 'sfr2.htm'
+        self._graph = None # dict of routing connections
 
         # Dataset 0
         self.heading = '# {} package for '.format(self.name[0]) + \
@@ -483,14 +496,14 @@ class ModflowSfr2(Package):
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
         if np.diff(self.reach_data.iseg).max() != 0 and \
-                np.diff(self.all_segments.nseg).max() != 0 \
-                and np.diff(self.all_segments.outseg).max() != 0:
-            if len(self.all_segments) == 1:
+                np.max(list(set(self.graph.keys()))) != 0 \
+                and np.max(list(set(self.graph.values()))) != 0:
+            if len(self.graph) == 1:
                 self.segment_data[0]['nseg'] = 1
                 self.reach_data['iseg'] = 1
 
             consistent_seg_numbers = len(set(self.reach_data.iseg).difference(
-                set(self.all_segments.nseg))) == 0
+                set(self.graph.keys()))) == 0
             if not consistent_seg_numbers:
                 warnings.warn(
                     "Inconsistent segment numbers of reach_data and segment_data")
@@ -583,43 +596,11 @@ class ModflowSfr2(Package):
         return ds5
 
     @property
-    def all_segments(self):
-        """
-        Method to get a list of all segments in the simulation,
-        since all segments do not have to be active in a given stress
-        period
-
-        returns:
-        -------
-        ra : (np.recarray)
-            recarray contains a single entry of segment data for each stream segment
-        """
-
-        ra = self.get_empty_segment_data(self.nss)
-        i = 0
-        for _, recarray in sorted(self.segment_data.items()):
-            if i == self.nss:
-                break
-            else:
-                for rec in recarray:
-                    if rec.nseg in ra.nseg:
-                        pass
-                    else:
-                        ra[i] = rec
-                        i += 1
-
-                    if i == self.nss:
-                        break
-        return ra
-
-    @property
     def graph(self):
-        graph = dict(
-            zip(self.all_segments.nseg, self.all_segments.outseg))
-        outlets = set(graph.values()).difference(
-            set(graph.keys()))  # including lakes
-        graph.update({o: 0 for o in outlets})
-        return graph
+        """Dictionary of routing connections between segments."""
+        if self._graph is None:
+            self._graph = self._make_graph()
+        return self._graph
 
     @property
     def paths(self):
@@ -630,9 +611,10 @@ class ModflowSfr2(Package):
         nseg = np.array(sorted(self._paths.keys()), dtype=int)
         nseg = nseg[nseg > 0].copy()
         outseg = np.array([self._paths[k][1] for k in nseg])
-        sd = self.all_segments
-        if not np.array_equal(nseg, sd.nseg) or not np.array_equal(outseg,
-                                                                   sd.outseg):
+        existing_nseg = sorted(list(self.graph.keys()))
+        existing_outseg = [self.graph[k] for k in existing_nseg]
+        if not np.array_equal(nseg, existing_nseg) or \
+                not np.array_equal(outseg, existing_outseg):
             self._set_paths()
         return self._paths
 
@@ -643,6 +625,17 @@ class ModflowSfr2(Package):
         else:
             msg = 'ModflowSfr2.df: pandas not available'
             raise ImportError(msg)
+
+    def _make_graph(self):
+        # get all segments and their outseg
+        graph = {}
+        for recarray in self.segment_data.values():
+            graph.update(dict(zip(recarray['nseg'], recarray['outseg'])))
+
+        outlets = set(graph.values()).difference(
+            set(graph.keys()))  # including lakes
+        graph.update({o: 0 for o in outlets if o != 0})
+        return graph
 
     def _set_paths(self):
         graph = self.graph
@@ -768,9 +761,11 @@ class ModflowSfr2(Package):
             nper = model.nper
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # Item 0 -- header
         while True:
             line = f.readline()
@@ -865,20 +860,27 @@ class ModflowSfr2(Package):
                     icalc = dataset_6a[1]
                     # link dataset 6d, 6e by nseg of dataset_6a
                     temp_nseg = dataset_6a[0]
-                    dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-                    dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-
+                    # datasets 6b and 6c aren't read under the conditions below
+                    # see table under description of dataset 6c,
+                    # in the MODFLOW Online Guide for a description
+                    # of this logic
+                    # https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm
+                    dataset_6b, dataset_6c = (0,) * 9, (0,) * 9
+                    if not (isfropt in [2, 3] and icalc == 1 and i > 1) and \
+                            not (isfropt in [1, 2, 3] and icalc >= 2):
+                        dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
+                        dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
                     current[j] = dataset_6a + dataset_6b + dataset_6c
 
                     if icalc == 2:
                         # ATL: not sure exactly how isfropt logic functions for this
                         # dataset 6d description suggests that this line isn't read for isfropt > 1
                         # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput:  # or isfropt <= 1:
+                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(
@@ -908,6 +910,9 @@ class ModflowSfr2(Package):
 
             else:
                 continue
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None
@@ -973,6 +978,7 @@ class ModflowSfr2(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.sfr2.check()
         """
+        self._graph = None  # remake routing graph from segment data
         chk = check(self, verbose=verbose, level=level)
         chk.for_nans()
         chk.numbering()
@@ -1176,10 +1182,6 @@ class ModflowSfr2(Package):
         self.reach_data.sort(order=['iseg', 'ireach'])
         reach_data = self.reach_data
         segment_data = list(set(self.reach_data.iseg))# self.segment_data[0]
-        # ireach = []
-        # for iseg in segment_data.nseg:
-        #    nreaches = np.sum(reach_data.iseg == iseg)
-        #    ireach += list(range(1, nreaches + 1))
         reach_counts = np.bincount(reach_data.iseg)[1:]
         reach_counts = dict(zip(range(1, len(reach_counts) + 1),
                                 reach_counts))
@@ -1336,6 +1338,7 @@ class ModflowSfr2(Package):
                              self.segment_data[0].nseg)
         isasegment = isasegment | (self.segment_data[0].outseg < 0)
         self.segment_data[0]['outseg'][~isasegment] = 0.
+        self._graph = None
 
     def renumber_segments(self):
         """
@@ -1348,11 +1351,8 @@ class ModflowSfr2(Package):
         r : dictionary mapping old segment numbers to new
         """
 
-        segments = self.all_segments
-        segments.sort(order="nseg")
-        # get renumbering info from per=0
-        nseg = segments.nseg
-        outseg = segments.outseg
+        nseg = sorted(list(self.graph.keys()))
+        outseg = [self.graph[k] for k in nseg]
 
         # explicitly fix any gaps in the numbering
         # (i.e. from removing segments)
@@ -1400,6 +1400,7 @@ class ModflowSfr2(Package):
             assert not np.any(inds)
             assert len(self.segment_data[per]['nseg']) == \
                    self.segment_data[per]['nseg'].max()
+        self._graph = None # reset routing dict
 
         # renumber segments in reach_data
         self.reach_data['iseg'] = [r.get(s, s) for s in self.reach_data.iseg]
@@ -1628,8 +1629,8 @@ class ModflowSfr2(Package):
         for idx in ['k', 'i', 'j', 'node']:
             if (idx in columns):
                 d[idx] += 1
-        d = d[columns]
-        formats = _fmt_string(d)[:-1] + '\n'
+        d = d[columns]  # data columns sorted
+        formats = _fmt_string(d) + '\n'
         for rec in d:
             f_sfr.write(formats.format(*rec))
 
@@ -1725,15 +1726,20 @@ class ModflowSfr2(Package):
             f_sfr.write(fmts[3].format(width) + ' ')
             if icalc <= 0:
                 f_sfr.write(fmts[4].format(depth) + ' ')
-        elif self.isfropt in [2, 3] and icalc <= 1:
-            if i > 0:
-                pass
-            else:
+        elif self.isfropt in [2, 3]:
+            if icalc <= 0:
                 f_sfr.write(fmts[3].format(width) + ' ')
-                if icalc <= 0:
-                    f_sfr.write(fmts[4].format(depth) + ' ')
+                f_sfr.write(fmts[4].format(depth) + ' ')
+            elif icalc == 1:
+                if i > 0:
+                    pass
+                else:
+                    f_sfr.write(fmts[3].format(width) + ' ')
+            else:
+                pass
+
         else:
-            pass
+            return
         f_sfr.write('\n')
 
     def write_file(self, filename=None):
@@ -1794,7 +1800,8 @@ class ModflowSfr2(Package):
                     nseg = self.segment_data[i].nseg[j]
                     if icalc == 2:
                         # or isfropt <= 1:
-                        if i == 0 or self.nstrm > 0 and not self.reachinput:
+                        if i == 0 or self.nstrm > 0 and \
+                                not self.reachinput or self.isfropt <=1:
                             for k in range(2):
                                 for d in self.channel_geometry_data[i][nseg][
                                     k]:
@@ -1978,10 +1985,10 @@ class check:
             self.sr = self.sfr.parent.modelgrid.sr
         except AttributeError:
             self.sr = self.sfr.parent.sr
+            self.mg = None
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
-        self.all_segments = sfrpackage.all_segments
         self.verbose = verbose
         self.level = level
         self.passed = []
@@ -2202,7 +2209,7 @@ class check:
 
         # check reach connections for proximity
         if self.mg is not None or self.mg is not None:
-            rd = self.sfr.reach_data
+            rd = self.sfr.reach_data.copy()
             rd.sort(order=['reachID'])
             try:
                 xcentergrid, ycentergrid, zc = self.mg.get_cellcenters()
@@ -2827,51 +2834,35 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     return names
 
 
-def _fmt_string(array, float_format='{!s}'):
-    fmt_string = ''
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
+def _fmt_string_list(array, float_format=default_float_format):
+    fmt_list = []
+    for name in array.dtype.names:
+        vtype = array.dtype[name].str[1].lower()
         if vtype == 'v':
             continue
         if vtype == 'i':
-            fmt_string += '{:.0f} '
+            fmt_list.append('{:d}')
         elif vtype == 'f':
-            fmt_string += '{} '.format(float_format)
+            fmt_list.append(float_format)
         elif vtype == 'o':
-            fmt_string += '{} '
+            float_format = '{!s}'
         elif vtype == 's':
-            raise Exception("MfList error: '\str\' type found it dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
+            raise ValueError(
+                "'str' type found in dtype for {!r}. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type".format(name))
         else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+            raise ValueError(
+                "unknown dtype for {!r}: {!r}".format(name, vtype))
+    return fmt_list
 
 
-def _fmt_string_list(array, float_format='{!s}'):
-    fmt_string = []
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
-        if vtype == 'v':
-            continue
-        if (vtype == 'i'):
-            fmt_string += ['{:.0f}']
-        elif (vtype == 'f'):
-            fmt_string += [float_format]
-        elif (vtype == 'o'):
-            fmt_string += ['{}']
-        elif (vtype == 's'):
-            raise Exception("MfList error: '\str\' type found it dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
-        else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+def _fmt_string(array, float_format=default_float_format):
+    return ' '.join(_fmt_string_list(array, float_format))
 
 
-def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
+def _print_rec_array(array, cols=None, delimiter=' ',
+                     float_format=default_float_format):
     """
     Print out a numpy record array to string, with column names.
 
@@ -3054,12 +3045,12 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-        width = line.pop(
-            0)  # depth is not read if icalc == 1; see table in online guide
-        thts = _pop_item(line)
-        thti = _pop_item(line)
-        eps = _pop_item(line)
-        if isfropt == 5:
+            # depth is not read if icalc == 1; see table in online guide
+            width = line.pop(0)
+            thts = _pop_item(line)
+            thti = _pop_item(line)
+            eps = _pop_item(line)
+        if isfropt == 5 and per == 0:
             uhc = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc >= 2:
         hcond = line.pop(0)
@@ -3082,13 +3073,19 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         width = line.pop(0)
         if icalc <= 0:
             depth = line.pop(0)
-    elif isfropt in [2, 3] and icalc <= 1:
-        if per > 0:
-            pass
-        else:
+    elif isfropt in [2, 3]:
+        if icalc <= 0:
             width = line.pop(0)
-            if icalc <= 0:
-                depth = line.pop(0)
+            depth = line.pop(0)
+
+        elif icalc == 1:
+            if per > 0:
+                pass
+            else:
+                width = line.pop(0)
+
+        else:
+            pass
     else:
         pass
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
@@ -3096,6 +3093,7 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
 
 def find_path(graph, start, end=0, path=()):
 
+    graph = graph.copy()
     path = list(path) + [start]
     if start == end:
         return path

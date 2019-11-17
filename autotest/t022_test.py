@@ -376,19 +376,18 @@ def test_swr_binary_obs(ipos=5):
         for idx in range(ntimes):
             df = sobj.get_dataframe(idx=idx, timeunit='S')
             assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-            assert df.shape == (1, nobs+1), 'data shape is not (1, 9)'
+            assert df.shape == (1, nobs + 1), 'data shape is not (1, 10)'
 
         for time in times:
             df = sobj.get_dataframe(totim=time, timeunit='S')
             assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-            assert df.shape == (1, 9), 'data shape is not (1, 9)'
+            assert df.shape == (1, nobs + 1), 'data shape is not (1, 10)'
 
-        df = h.get_dataframe(timeunit='D')
+        df = sobj.get_dataframe(timeunit='S')
         assert isinstance(df, pd.DataFrame), 'A DataFrame was not returned'
-        assert df.shape == (101, 9), 'data shape is not (101, 9)'
-    except:
+        assert df.shape == (336, nobs + 1), 'data shape is not (336, 10)'
+    except ImportError:
         print('pandas not available...')
-        pass
 
     return
 

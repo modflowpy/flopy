@@ -4,11 +4,12 @@ Test shapefile stuff
 import os
 import shutil
 import numpy as np
+import sys
 import flopy
 from flopy.utils.geometry import Polygon
-from flopy.export.shapefile_utils import recarray2shp, shp2recarray
+from flopy.export.shapefile_utils import recarray2shp, shp2recarray, \
+    EpsgReference, CRS
 from flopy.export.netcdf import NetCdf
-from flopy.utils.reference import getprj, epsgRef
 
 mpth = os.path.join('temp', 't032')
 # make the directory if it does not exist
@@ -27,11 +28,15 @@ def test_polygon_from_ij():
                                    nlay=2, delr=100, delc=100,
                                    top=3, botm=botm, model=m)
 
-    ncdf = NetCdf('toy.model.nc', m)
+    fname = os.path.join(mpth, 'toy.model.nc')
+    ncdf = NetCdf(fname, m)
     ncdf.write()
 
-    m.export('toy_model_two.nc')
-    dis.export('toy_model_dis.nc')
+    fname = os.path.join(mpth, 'toy_model_two.nc')
+    m.export(fname)
+
+    fname = os.path.join(mpth, 'toy_model_dis.nc')
+    dis.export(fname)
 
     mg = m.modelgrid
     mg.set_coord_info(xoff=mg._xul_to_xll(600000.0, -45.0),
@@ -53,7 +58,7 @@ def test_polygon_from_ij():
     assert np.abs(geoms[0].bounds[-1] - 5169292.893203464) < 1e-4
     fpth = os.path.join(mpth, 'test.shp')
     recarray2shp(recarray, geoms, fpth, epsg=26715)
-    ep = epsgRef()
+    ep = EpsgReference()
     prj = ep.to_dict()
     assert 26715 in prj
     fpth = os.path.join(mpth, 'test.prj')
@@ -72,28 +77,42 @@ def test_polygon_from_ij():
     assert True
 
 
-def test_epsgref():
-    ep = epsgRef()
+def test_epsgreference():
+    ep = EpsgReference()
     ep.reset()
+    ep.show()
 
-    getprj(32614)  # WGS 84 / UTM zone 14N
+    prjtxt = CRS.getprj(32614) # WGS 84 / UTM zone 14N
+    if prjtxt is None:
+        print("unable to retrieve CRS prj txt")
+        return
+    if sys.version_info[0] == 2:
+        prjtxt = prjtxt.encode('ascii')
+    assert isinstance(prjtxt, str),type(prjtxt)
     prj = ep.to_dict()
     assert 32614 in prj
+    ep.show()
 
     ep.add(9999, 'junk')
     prj = ep.to_dict()
     assert 9999 in prj
+    assert ep.get(9999) == 'junk'
+    ep.show()
 
     ep.remove(9999)
     prj = ep.to_dict()
     assert 9999 not in prj
+    ep.show()
+
+    assert ep.get(9999) is None
 
     ep.reset()
     prj = ep.to_dict()
     assert len(prj) == 0
+    ep.show()
 
 
 if __name__ == '__main__':
     #test_polygon_from_ij()
-    #test_epsgref()
+    test_epsgreference()
     pass

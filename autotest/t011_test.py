@@ -4,8 +4,13 @@ Some basic tests for mflistfile.py module (not super rigorous)
 """
 
 import os
+import sys
 import flopy
 import numpy as np
+from nose.tools import raises
+
+if sys.version_info[0] == 2:
+    FileNotFoundError = IOError
 
 
 def test_mflistfile():
@@ -55,6 +60,36 @@ def test_mflistfile():
 
     return
 
+def test_mflist_reducedpumping():
+    '''
+    test reading reduced pumping data from list file
+    '''
+    pth = os.path.join('..', 'examples', 'data', 'mfusg_test',
+                       '03B_conduit_unconfined', 'output')
+    list_file = os.path.join(pth, 'ex3B.lst')
+    mflist = flopy.utils.MfusgListBudget(list_file)
+    assert isinstance(mflist.get_reduced_pumping(), np.recarray)
+    
+    return
+
+@raises(AssertionError) 
+def test_mflist_reducedpumping_fail():
+    '''
+    test failure for reading reduced pumping data from list file
+    '''
+    pth = os.path.join('..', 'examples', 'data', 'mfusg_test',
+                       '03A_conduit_unconfined', 'output')
+    list_file = os.path.join(pth, 'ex3A.lst')
+    # Catch before flopy to avoid masking file not found assert
+    if not os.path.isfile(list_file):
+        msg = '{} {}'.format(list_file, 'not found')
+        raise FileNotFoundError(msg)
+    mflist = flopy.utils.MfusgListBudget(list_file)
+    mflist.get_reduced_pumping()
+    
+    return
 
 if __name__ == '__main__':
     test_mflistfile()
+    test_mflist_reducedpumping()
+    test_mflist_reducedpumping_fail()

@@ -243,6 +243,7 @@ class Mt3dms(BaseModel):
         self.ftlfilename = ftlfilename
         self.ftlfree = ftlfree
         self.ftlunit = ftlunit
+        self.free_format = None
 
         # Check whether specified ftlfile exists in model directory; if not,
         # warn user
@@ -414,7 +415,7 @@ class Mt3dms(BaseModel):
                 angrot = 0.0
 
         self._modelgrid.set_coord_info(xoff, yoff, angrot, epsg, proj4)
-
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property
@@ -553,6 +554,10 @@ class Mt3dms(BaseModel):
             Filetype(s) to load (e.g. ['btn', 'adv'])
             (default is None, which means that all will be loaded)
 
+        forgive : bool, optional
+            Option to raise exceptions on package load failure, which can be
+            useful for debugging. Default False.
+
         modflowmodel : flopy.modflow.mf.Modflow
             This is a flopy Modflow model object upon which this Mt3dms
             model is based. (the default is None)
@@ -654,7 +659,7 @@ class Mt3dms(BaseModel):
         if mt.verbose:
             sys.stdout.write('   {:4s} package load...success\n'
                              .format(pck.name[0]))
-        ext_unit_dict.pop(btn_key)
+        ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
         poss_output_units = set(list(range(201, 201+ncomp)) +
@@ -691,7 +696,7 @@ class Mt3dms(BaseModel):
                 if item.filetype in load_only:
                     if forgive:
                         try:
-                            pck = item.package.load(item.filename, mt,
+                            pck = item.package.load(item.filehandle, mt,
                                                     ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if mt.verbose:
@@ -705,7 +710,7 @@ class Mt3dms(BaseModel):
                                         .format(item.filetype, o))
                             files_not_loaded.append(item.filename)
                     else:
-                        pck = item.package.load(item.filename, mt,
+                        pck = item.package.load(item.filehandle, mt,
                                                 ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if mt.verbose:
@@ -746,9 +751,10 @@ class Mt3dms(BaseModel):
         for key in mt.pop_key_list:
             try:
                 mt.remove_external(unit=key)
-                if key != btn_key:  # btn_key already popped above
-                    ext_unit_dict.pop(key)
-            except:
+                item = ext_unit_dict.pop(key)
+                if hasattr(item.filehandle, 'close'):
+                    item.filehandle.close()
+            except KeyError:
                 if mt.verbose:
                     sys.stdout.write(
                         "Warning: external file unit "

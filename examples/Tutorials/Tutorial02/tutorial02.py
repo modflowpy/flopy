@@ -150,7 +150,7 @@ for iplot, time in enumerate(mytimes):
     lc = modelmap.plot_grid()
     qm = modelmap.plot_bc('GHB', alpha=0.5)
     cs = modelmap.contour_array(head, levels=levels)
-    plt.clabel(cs, inline=1, fontsize=10, fmt='%1.1f', zorder=11)
+    plt.clabel(cs, inline=1, fontsize=10, fmt='%1.1f')
     quiver = modelmap.plot_discharge(frf, fff, head=head)
 
 

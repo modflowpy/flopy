@@ -167,6 +167,7 @@ class MFFileAccessArray(MFFileAccess):
     def write_binary_file(self, data, fname, text, modelgrid=None,
                           modeltime=None, stress_period=0,
                           precision='double', write_multi_layer=False):
+        data = self._resolve_cellid_numbers_to_file(data)
         fd = self._open_ext_file(fname, binary=True, write=True)
         if write_multi_layer:
             for layer, value in enumerate(data):
@@ -254,31 +255,7 @@ class MFFileAccessArray(MFFileAccess):
                 self.structure.name, inspect.stack()[0][3], type_,
                 value_, traceback_, message,
                 self._simulation_data.debug)
-        current_size = 0
-        for data_item in MultiListIter(data, True):
-            if data_item[2] and current_size > 0:
-                # new list/dimension, add appropriate formatting to
-                # the file
-                fd.write('\n')
-            fd.write('{} '.format(to_string(data_item[0], data_type,
-                                            self._simulation_data,
-                                            self._data_dimensions)))
-            current_size += 1
-        if current_size != data_size:
-            message = 'Not enough data for "{}" provided for file' \
-                      ' {}.  Expected data size is {}, actual data ' \
-                      'size is' \
-                      '{}.'.format(self.structure.path, fd.name,
-                                   data_size, current_size)
-            type_, value_, traceback_ = sys.exc_info()
-            fd.close()
-            raise MFDataException(
-                self._data_dimensions.structure.get_model(),
-                self._data_dimensions.structure.get_package(),
-                self._data_dimensions.structure.path,
-                'storing external data', self.structure.name,
-                inspect.stack()[0][3], type_, value_, traceback_,
-                message, self._simulation_data.debug)
+        fd.write(self.get_data_string(data, data_type, ''))
         fd.close()
 
     def read_binary_data_from_file(self, fname, data_shape, data_size,
@@ -289,7 +266,7 @@ class MFFileAccessArray(MFFileAccess):
         numpy_type, name = self.datum_to_numpy_type(data_type)
         header_dtype = bf.BinaryHeader.set_dtype(
             bintype=self._get_bintype(modelgrid),
-            precision=name)
+            precision='double')
         if read_multi_layer and len(data_shape) > 1:
             all_data = np.empty(data_shape, numpy_type)
             headers = []
@@ -308,10 +285,70 @@ class MFFileAccessArray(MFFileAccess):
             fd.close()
             return bin_data
 
+    def get_data_string(self, data, data_type, data_indent=''):
+        layer_data_string = ['{}'.format(data_indent)]
+        line_data_count = 0
+        indent_str = self._simulation_data.indent_string
+        data_iter = datautil.PyListUtil.next_item(data)
+        is_cellid = self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid
+
+        jag_arr = self.structure.data_item_structures[0].jagged_array
+        jagged_def = None
+        jagged_def_index = 0
+        if jag_arr is not None:
+            # get jagged array definition
+            jagged_def_path = self._path[0:-1] + (jag_arr,)
+            if jagged_def_path in self._simulation_data.mfdata:
+                jagged_def = self._simulation_data.mfdata[jagged_def_path].array
+
+        for item, last_item, new_list, nesting_change in data_iter:
+            # increment data/layer counts
+            line_data_count += 1
+            try:
+                data_lyr = to_string(item, data_type,
+                                     self._simulation_data,
+                                     self._data_dimensions, is_cellid)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                comment = 'Could not convert data "{}" of type "{}" to a ' \
+                          'string.'.format(item, data_type)
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'converting data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, comment,
+                                      self._simulation_data.debug, ex)
+            layer_data_string[-1] = '{}{}{}'.format(layer_data_string[-1],
+                                                    indent_str,
+                                                    data_lyr)
+
+            if jagged_def is not None:
+                if line_data_count == jagged_def[jagged_def_index]:
+                    layer_data_string.append('{}'.format(data_indent))
+                    line_data_count = 0
+                    jagged_def_index += 1
+            else:
+                if self._simulation_data.wrap_multidim_arrays and \
+                        (line_data_count == self._simulation_data.
+                            max_columns_of_data or last_item):
+                    layer_data_string.append('{}'.format(data_indent))
+                    line_data_count = 0
+        if len(layer_data_string) > 0:
+            # clean up the text at the end of the array
+            layer_data_string[-1] = layer_data_string[-1].strip()
+        if len(layer_data_string) == 1:
+            return '{}{}\n'.format(data_indent, layer_data_string[0].rstrip())
+        else:
+            return '\n'.join(layer_data_string)
+
     def _read_binary_file_layer(self, fd, fname, header_dtype, numpy_type,
                                 data_size, data_shape):
         header_data = np.fromfile(fd, dtype=header_dtype, count=1)
         data = np.fromfile(fd, dtype=numpy_type, count=data_size)
+        data = self._resolve_cellid_numbers_from_file(data)
         if data.size != data_size:
             message = 'Binary file {} does not contain expected data. ' \
                       'Expected array size {} but found size ' \
@@ -364,6 +401,7 @@ class MFFileAccessArray(MFFileAccess):
                 self._simulation_data.debug)
 
         data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
+        data_out = self._resolve_cellid_numbers_from_file(data_out)
         if close_file:
             fd.close()
 
@@ -585,6 +623,24 @@ class MFFileAccessArray(MFFileAccess):
                                       value_, traceback_, comment,
                                       self._simulation_data.debug, ex)
 
+    def _is_cellid_or_numeric_index(self):
+        if self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid:
+            return True
+        return False
+
+    def _resolve_cellid_numbers_to_file(self, data):
+        if self._is_cellid_or_numeric_index():
+            return abs(data) + 1
+        else:
+            return data
+
+    def _resolve_cellid_numbers_from_file(self, data):
+        if self._is_cellid_or_numeric_index():
+            return abs(data) - 1
+        else:
+            return data
+
     def _resolve_data_shape(self, data, layer_shape, storage):
         try:
             dimensions = storage.get_data_dimensions(layer_shape)
@@ -678,10 +734,7 @@ class MFFileAccessList(MFFileAccess):
         return np.array(data_list, dtype=header)
 
     def _get_header(self, modelgrid, precision):
-        if precision.lower() == 'double':
-            np_flt_type = np.float64
-        else:
-            np_flt_type = np.float32
+        np_flt_type = np.float64
         header = []
         int_cellid_indexes = {}
         ext_cellid_indexes = {}
@@ -703,7 +756,7 @@ class MFFileAccessList(MFFileAccess):
                 if aux_var_names is not None:
                     for aux_var_name in aux_var_names[0]:
                         if aux_var_name.lower() != 'auxiliary':
-                            header.append((aux_var_name, np.float64))
+                            header.append((aux_var_name, np_flt_type))
                             ext_index += 1
         return header, int_cellid_indexes, ext_cellid_indexes
 
@@ -773,15 +826,21 @@ class MFFileAccessList(MFFileAccess):
         self._temp_dict = {}
         self._last_line_info = []
         store_data = False
-        simple_line = False
         struct = self.structure
+        self.simple_line = \
+            len(self._data_dimensions.package_dim.get_tsnames()) == 0 and \
+            not struct.is_mname
+        for data_item in struct.data_item_structures:
+            if data_item.optional and data_item.name != 'boundname' and \
+                    data_item.name != 'aux':
+                self.simple_line = False
         if current_line is None:
             current_line = file_handle.readline()
         arr_line = PyListUtil.split_data_line(current_line)
         line_num = 0
 
         try:
-            simple_line, data_line = self._load_list_line(
+            data_line = self._load_list_line(
                 storage, arr_line, line_num, data_loaded, True,
                 current_key=current_key, data_line=data_line)[1:]
             line_num += 1
@@ -848,6 +907,9 @@ class MFFileAccessList(MFFileAccess):
 
         # loop until end of block
         line = ' '
+        optional_line_info = []
+        line_info_processed = False
+        data_structs = struct.data_item_structures
         while line != '':
             line = file_handle.readline()
             arr_line = PyListUtil.split_data_line(line)
@@ -883,7 +945,20 @@ class MFFileAccessList(MFFileAccess):
                                                                True)
                             storage.data_dimensions.unlock()
                             return data_rec
-            if simple_line and struct.num_optional == 0:
+            if self.simple_line:
+                line_len = len(self._last_line_info)
+                if struct.num_optional > 0 and not line_info_processed:
+                    line_info_processed = True
+                    for index, data_item in \
+                            enumerate(struct.data_item_structures):
+                        if index < line_len:
+                            if data_item.optional:
+                                self._last_line_info = \
+                                    self._last_line_info[:index]
+                                line_len = len(self._last_line_info)
+                                optional_line_info.append(data_item)
+                        else:
+                            optional_line_info.append(data_item)
                 if MFComment.is_comment(arr_line,
                                         True):
                     arr_line.insert(0, '\n')
@@ -893,18 +968,14 @@ class MFFileAccessList(MFFileAccess):
                     self._data_line = ()
                     cellid_index = 0
                     cellid_tuple = ()
+                    data_index = 0
                     for index, entry in enumerate(self._last_line_info):
                         for sub_entry in entry:
                             if sub_entry[1] is not None:
-                                data_structs = struct.data_item_structures
                                 if sub_entry[2] > 0:
                                     # is a cellid
-                                    cell_num = convert_data(
-                                            arr_line[sub_entry[0]],
-                                            self._data_dimensions,
-                                            sub_entry[1],
-                                            data_structs[index])
-                                    cellid_tuple += (cell_num - 1,)
+                                    cellid_tuple += \
+                                        (int(arr_line[sub_entry[0]]) - 1,)
                                     # increment index
                                     cellid_index += 1
                                     if cellid_index == sub_entry[2]:
@@ -921,13 +992,47 @@ class MFFileAccessList(MFFileAccess):
                                             data_structs[index]),)
                             else:
                                 self._data_line += (None,)
-                    data_loaded.append(self._data_line)
+                            data_index = sub_entry[0]
+                    arr_line_len = len(arr_line)
+                    if arr_line_len > data_index + 1:
+                        # more data on the end of the line. see if it can
+                        # be loaded as optional data
+                        data_index += 1
+                        for data_item in struct.data_item_structures[
+                                         len(self._last_line_info):]:
+                            if arr_line_len <= data_index:
+                                break
+                            if len(arr_line[data_index]) > 0 and \
+                                    arr_line[data_index][0] == '#':
+                                break
+                            elif data_item.name == 'aux':
+                                data_index, self._data_line = \
+                                    self._process_aux(
+                                        storage, arr_line, arr_line_len,
+                                        data_item, data_index, None,
+                                        current_key, self._data_line,
+                                        False)[0:2]
+                            elif data_item.name == 'boundnames' and \
+                                    self._data_dimensions.package_dim.\
+                                    boundnames():
+                                self._data_line += (convert_data(
+                                    arr_line[data_index],
+                                    self._data_dimensions,
+                                    data_item.type,
+                                    data_item),)
+                    if arr_line_len > data_index + 1:
+                        # FEATURE: Keep number of white space characters used
+                        # in comments section
+                        storage.comments[line_num] = MFComment(
+                            ' '.join(arr_line[data_index + 1:]), struct.path,
+                            self._simulation_data, line_num)
 
+                    data_loaded.append(self._data_line)
             else:
                 try:
                     data_line = self._load_list_line(
                         storage, arr_line, line_num, data_loaded, False,
-                        current_key=current_key, data_line=data_line)[2]
+                        current_key=current_key, data_line=data_line)[1]
                 except Exception as ex:
                     comment = 'Unable to process line {} of data list: ' \
                               '"{}"'.format(line_num + 1, line)
@@ -958,7 +1063,6 @@ class MFFileAccessList(MFFileAccess):
         data_item_ks = None
         struct = self.structure
         org_data_line = data_line
-        simple_line = True
         # only initialize if we are at the start of a new line
         if data_index_start == 0:
             data_set = struct
@@ -967,7 +1071,7 @@ class MFFileAccessList(MFFileAccess):
             # determine if at end of block
             if arr_line and arr_line[0][:3].upper() == 'END':
                 self.enabled = True
-                return 0, simple_line, data_line
+                return 0, data_line
         data_index = data_index_start
         arr_line_len = len(arr_line)
         if MFComment.is_comment(arr_line, True) and data_index_start == 0:
@@ -992,16 +1096,16 @@ class MFFileAccessList(MFFileAccess):
                             not storage.in_model:
                         if data_item.type == DatumType.keyword:
                             data_index += 1
-                            simple_line = False
+                            self.simple_line = False
                         elif data_item.type == DatumType.record:
                             # this is a record within a record, recurse into
                             # _load_line to load it
-                            data_index, simple_line, data_line = \
+                            data_index, data_line = \
                                 self._load_list_line(
                                     storage, arr_line, line_num, data_loaded,
                                     build_type_list, current_key, data_index,
                                     data_item, False, data_line=data_line)
-                            simple_line = False
+                            self.simple_line = False
                         elif data_item.name != 'boundname' or \
                                 self._data_dimensions.package_dim.boundnames():
                             if data_item.optional and data == '#':
@@ -1053,7 +1157,7 @@ class MFFileAccessList(MFFileAccess):
                                 data = arr_line[data_index]
                                 repeat_count += 1
                                 if data_item.type == DatumType.keystring:
-                                    simple_line = False
+                                    self.simple_line = False
                                     if repeat_count <= 1:  # only process the
                                         # keyword on the first repeat find
                                         #  data item associated with correct
@@ -1212,14 +1316,14 @@ class MFFileAccessList(MFFileAccess):
                                     # keep reading data until eoln
                                     more_data_expected = \
                                         (data_index < arr_line_len)
-                                simple_line = simple_line and \
+                                self.simple_line = self.simple_line and \
                                         not unknown_repeats and \
-                                        len(data_item.shape) == 0
+                                        (len(data_item.shape) == 0 or
+                                         data_item.is_cellid)
                     var_index += 1
 
             # populate unused optional variables with None type
             for data_item in data_set.data_item_structures[var_index:]:
-                simple_line = False
                 if data_item.name == 'aux':
                     data_line = self._process_aux(
                         storage, arr_line, arr_line_len, data_item, data_index,
@@ -1241,10 +1345,11 @@ class MFFileAccessList(MFFileAccess):
                             ' '.join(arr_line[data_index+1:]), struct.path,
                             self._simulation_data, line_num)
                 data_loaded.append(data_line)
-        return data_index, simple_line, data_line
+        return data_index, data_line
 
-    def _process_aux(self, storage, arr_line, arr_line_len, data_item, data_index,
-                     var_index, current_key, data_line):
+    def _process_aux(self, storage, arr_line, arr_line_len, data_item,
+                     data_index, var_index, current_key, data_line,
+                     add_to_last_line=True):
         aux_var_names = self._data_dimensions.package_dim.get_aux_variables()
         more_data_expected = False
         if aux_var_names is not None:
@@ -1255,23 +1360,25 @@ class MFFileAccessList(MFFileAccess):
                         data_index, more_data_expected, data_line = \
                             self._append_data_list(
                                 storage, data_item, None, 0, data_index,
-                                var_index, 1, current_key, data_line)[0:3]
+                                var_index, 1, current_key, data_line,
+                                add_to_last_line)[0:3]
                     else:
                         # read in aux variables
                         data_index, more_data_expected, data_line = \
                             self._append_data_list(
                                 storage, data_item, arr_line, arr_line_len,
                                 data_index, var_index, 0, current_key,
-                                data_line)[0:3]
+                                data_line, add_to_last_line)[0:3]
         return data_index, data_line, more_data_expected
 
     def _append_data_list(self, storage, data_item, arr_line, arr_line_len,
                           data_index, var_index, repeat_count, current_key,
-                          data_line):
+                          data_line, add_to_last_line=True):
         # append to a 2-D list which will later be converted to a numpy
         # rec array
         struct = self.structure
-        self._last_line_info.append([])
+        if add_to_last_line:
+            self._last_line_info.append([])
         if data_item.is_cellid or (data_item.possible_cellid and
                                    storage._validate_cellid(
                                        arr_line, data_index)):
@@ -1299,8 +1406,10 @@ class MFFileAccessList(MFFileAccess):
                 # special case where cellid is 'none', store as tuple of
                 # 'none's
                 cellid_tuple = ('none',) * cellid_size
-                self._last_line_info[-1].append([data_index, DatumType.string,
-                                                 cellid_size])
+                if add_to_last_line:
+                    self._last_line_info[-1].append([data_index,
+                                                     data_item.type,
+                                                     cellid_size])
                 new_index = data_index + 1
             else:
                 # handle regular cellid
@@ -1344,8 +1453,10 @@ class MFFileAccessList(MFFileAccess):
                                                   self._data_dimensions,
                                                   data_item.type)
                     cellid_tuple = cellid_tuple + (int(data_converted) - 1,)
-                    self._last_line_info[-1].append([index, DatumType.integer,
-                                                     cellid_size])
+                    if add_to_last_line:
+                        self._last_line_info[-1].append([index,
+                                                         data_item.type,
+                                                         cellid_size])
                 new_index = data_index + cellid_size
             data_line = data_line + (cellid_tuple,)
             if data_item.shape is not None and len(data_item.shape) > 0 and \
@@ -1361,7 +1472,8 @@ class MFFileAccessList(MFFileAccess):
         else:
             if arr_line is None:
                 data_converted = None
-                self._last_line_info[-1].append([data_index, None, 0])
+                if add_to_last_line:
+                    self._last_line_info[-1].append([data_index, None, 0])
             else:
                 if arr_line[data_index].lower() in \
                         self._data_dimensions.package_dim.get_tsnames():
@@ -1370,15 +1482,17 @@ class MFFileAccessList(MFFileAccess):
                     # override recarray data type to support writing
                     # string values
                     storage.override_data_type(var_index, object)
-                    self._last_line_info[-1].append([data_index,
-                                                     DatumType.string, 0])
+                    if add_to_last_line:
+                        self._last_line_info[-1].append([data_index,
+                                                         DatumType.string, 0])
                 else:
                     data_converted = convert_data(arr_line[data_index],
                                                   self._data_dimensions,
                                                   data_item.type,
                                                   data_item)
-                    self._last_line_info[-1].append([data_index,
-                                                     data_item.type, 0])
+                    if add_to_last_line:
+                        self._last_line_info[-1].append([data_index,
+                                                         data_item.type, 0])
             data_line = data_line + (data_converted,)
             more_data_expected, unknown_repeats = \
                 storage.resolve_shape_list(

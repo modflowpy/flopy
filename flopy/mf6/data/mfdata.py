@@ -2,7 +2,7 @@ from operator import itemgetter
 import sys
 import inspect
 from ..mfbase import MFDataException, MFInvalidTransientBlockHeaderException, \
-                     FlopyException
+                     FlopyException, VerbosityLevel
 from ..data.mfstructure import DatumType
 from ..coordinates.modeldimensions import DataDimensions, DiscretizationType
 from ...datbase import DataInterface, DataType
@@ -151,9 +151,12 @@ class MFTransient(object):
                                  'nper).')
         nper = self._simulation_data.mfdata[('tdis', 'dimensions', 'nper')]
         if not (sp_num <= nper.get_data()):
-            raise FlopyException('Stress period value sp_num ({}) is greater '
-                                 'than the number of stress periods defined '
-                                 'in nper.'.format(sp_num))
+            if self._simulation_data.verbosity_level.value >= \
+                    VerbosityLevel.normal.value:
+                print('WARNING: Stress period value {} in package {} is '
+                      'greater than the number of stress periods defined '
+                      'in nper.'.format(sp_num + 1,
+                                        self.structure.get_package()))
         return True
 
 
@@ -448,7 +451,10 @@ class MFMultiDimVar(MFData):
         if storage.data_structure_type != DataStructureType.recarray:
             int_format.append('FACTOR')
             if layer_storage.factor is not None:
-                int_format.append(str(layer_storage.factor))
+                if data_type == DatumType.integer:
+                    int_format.append(str(int(layer_storage.factor)))
+                else:
+                    int_format.append(str(layer_storage.factor))
             else:
                 if data_type == DatumType.double_precision:
                     int_format.append('1.0')
@@ -475,8 +481,12 @@ class MFMultiDimVar(MFData):
         ext_format = ['OPEN/CLOSE', "'{}'".format(ext_file_path)]
         if storage.data_structure_type != DataStructureType.recarray:
             if layer_storage.factor is not None:
+                data_type = self.structure.get_datum_type(return_enum_type=True)
                 ext_format.append('FACTOR')
-                ext_format.append(str(layer_storage.factor))
+                if data_type == DatumType.integer:
+                    ext_format.append(str(int(layer_storage.factor)))
+                else:
+                    ext_format.append(str(layer_storage.factor))
         if layer_storage.binary:
             ext_format.append('(BINARY)')
         if layer_storage.iprn is not None:

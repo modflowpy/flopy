@@ -178,8 +178,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 raise Exception("MfList: something bad happened")
 
         for name, arr in arrays.items():
-            cnt = np.zeros(shape, dtype=np.float)
-            #print(name,kper)
+            cnt = np.zeros(shape, dtype=np.float64)
             for sp_rec in sarr:
                 if sp_rec is not None:
                     for rec in sp_rec:

@@ -193,6 +193,10 @@ class ModflowChd(Package):
         return dtype
 
     @staticmethod
+    def get_sfac_columns():
+        return ['shead', 'ehead']
+
+    @staticmethod
     def load(f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.

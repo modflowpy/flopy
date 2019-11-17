@@ -51,10 +51,22 @@ class UnstructuredGrid(Grid):
             else:
                 msg = ('Length of iverts must equal ncpl.sum '
                        '({} {})'.format(len(iverts), ncpl))
-                assert len(iverts) == ncpl.sum(), msg
+                assert len(iverts) == np.sum(ncpl), msg
                 assert np.array(self.xcellcenters).shape[0] == self.ncpl
                 assert np.array(self.ycellcenters).shape[0] == self.ncpl
 
+    @property
+    def is_valid(self):
+        if self._nodes is not None:
+            return True
+        return False
+
+    @property
+    def is_complete(self):
+        if self._nodes is not None and \
+                super(UnstructuredGrid, self).is_complete:
+            return True
+        return False
 
     @property
     def grid_type(self):

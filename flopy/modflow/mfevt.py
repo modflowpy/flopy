@@ -139,7 +139,7 @@ class ModflowEvt(Package):
         self.surf = Transient2d(model, (nrow, ncol), np.float32,
                                 surf, name='surf')
         self.evtr = Transient2d(model, (nrow, ncol), np.float32,
-                                evtr, name='etvr')
+                                evtr, name='evtr')
         self.exdp = Transient2d(model, (nrow, ncol), np.float32,
                                 exdp, name='exdp')
         self.ievt = Transient2d(model, (nrow, ncol), np.int32,
@@ -226,9 +226,11 @@ class ModflowEvt(Package):
         if model.verbose:
             sys.stdout.write('loading evt package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # Dataset 0 -- header
         while True:
             line = f.readline()
@@ -330,6 +332,9 @@ class ModflowEvt(Package):
                                     ext_unit_dict)
                     current_ievt = t
                 ievt[iper] = current_ievt
+
+        if openfile:
+            f.close()
 
         # create evt object
         args = {}

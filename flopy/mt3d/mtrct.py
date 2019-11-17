@@ -421,7 +421,8 @@ class Mt3dRct(Package):
             sys.stdout.write('loading rct package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -580,8 +581,8 @@ class Mt3dRct(Package):
                     if model.verbose:
                         print('   RC2{} {}'.format(icomp, u3d))
 
-        # Close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

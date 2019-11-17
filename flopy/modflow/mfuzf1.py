@@ -341,7 +341,7 @@ class ModflowUzf1(Package):
                  surfdep=1.0,
                  iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
                  thtr=0.15, thti=0.20,
-                 specifythtr=0, specifythti=0, nosurfleak=0,
+                 specifythtr=False, specifythti=False, nosurfleak=False,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
                  nwt_11_fmt=False,
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
@@ -445,12 +445,12 @@ class ModflowUzf1(Package):
                           " please provide a flopy.utils.OptionBlock object"
                           " to the options argument", DeprecationWarning)
         self.nwt_11_fmt = nwt_11_fmt
-        self.specifythtr = specifythtr
-        self.specifythti = specifythti
-        self.nosurfleak = nosurfleak
-        self.specifysurfk = specifysurfk
-        self.rejectsurfk = rejectsurfk
-        self.seepsurfk = seepsurfk
+        self.specifythtr = bool(specifythtr)
+        self.specifythti = bool(specifythti)
+        self.nosurfleak = bool(nosurfleak)
+        self.specifysurfk = bool(specifysurfk)
+        self.rejectsurfk = bool(rejectsurfk)
+        self.seepsurfk = bool(seepsurfk)
         self.etsquare = False
         self.smoothfact = None
         if etsquare is not None:
@@ -514,7 +514,7 @@ class ModflowUzf1(Package):
         if abs(iuzfopt) in [0, 1]:
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
 
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk,
                                 name='surfk')
 
@@ -680,7 +680,7 @@ class ModflowUzf1(Package):
             f_uzf.write(self.vks.get_file_entry())
 
         # Dataset 4b modflow 2005 v. 1.12 and modflow-nwt v. 1.1
-        if self.seepsurfk:
+        if self.seepsurfk or self.specifysurfk:
             f_uzf.write(self.surfk.get_file_entry())
 
         if self.iuzfopt > 0:
@@ -769,9 +769,11 @@ class ModflowUzf1(Package):
         if model.verbose:
             sys.stdout.write('loading uzf package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             # can't use next() because util2d uses readline()
@@ -783,8 +785,14 @@ class ModflowUzf1(Package):
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # dataset 1a
-        specifythtr, specifythti, nosurfleak = False, False, False
-        etsquare, netflux, rejectsurfk, seepsurfk = None, None, False, False
+        specifythtr = False
+        specifythti = False
+        nosurfleak = False
+        specifysurfk = False
+        etsquare = None
+        netflux = None
+        rejectsurfk = False
+        seepsurfk = False
         options = None
         if model.version == 'mfnwt' and 'options' in line.lower():
             options = OptionBlock.load_options(f, ModflowUzf1)
@@ -807,6 +815,7 @@ class ModflowUzf1(Package):
             nosurfleak = options.nosurfleak
             rejectsurfk = options.rejectsurfk
             seepsurfk = options.seepsurfk
+            specifysurfk = options.specifysurfk
 
             if options.etsquare:
                 etsquare = options.smoothfact
@@ -845,7 +854,7 @@ class ModflowUzf1(Package):
             load_util2d('vks', np.float32)
 
         # dataset 4b
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             load_util2d('surfk', np.float32)
 
         if iuzfopt > 0:
@@ -882,26 +891,26 @@ class ModflowUzf1(Package):
             nuzf1 = pop_item(line, int)
 
             # dataset 10
-            if nuzf1 > 0:
+            if nuzf1 >= 0:
                 load_util2d('finf', np.float32, per=per)
 
             if ietflg > 0:
                 # dataset 11
                 line = line_parse(f.readline())
                 nuzf2 = pop_item(line, int)
-                if nuzf2 > 0:
+                if nuzf2 >= 0:
                     # dataset 12
                     load_util2d('pet', np.float32, per=per)
                 # dataset 13
                 line = line_parse(f.readline())
                 nuzf3 = pop_item(line, int)
-                if nuzf3 > 0:
+                if nuzf3 >= 0:
                     # dataset 14
                     load_util2d('extdp', np.float32, per=per)
                 # dataset 15
                 line = line_parse(f.readline())
                 nuzf4 = pop_item(line, int)
-                if nuzf4 > 0:
+                if nuzf4 >= 0:
                     # dataset 16
                     load_util2d('extwc', np.float32, per=per)
 
@@ -943,6 +952,7 @@ class ModflowUzf1(Package):
                            specifythtr=specifythtr, specifythti=specifythti,
                            nosurfleak=nosurfleak, etsquare=etsquare,
                            netflux=netflux, seepsurfk=seepsurfk,
+                           specifysurfk=specifysurfk,
                            rejectsurfk=rejectsurfk,
                            unitnumber=unitnumber,
                            filenames=filenames, options=options, **arrays)
@@ -988,7 +998,8 @@ def _parse8(line):
     iuzcol = None
     iuzopt = 0
     line = line_parse(line)
-    if len(line) > 1:
+    if((len(line) > 1 and not int(line[0]) < 0) or
+       (len(line) > 1 and line[1].isdigit())):
         iuzrow = pop_item(line, int) - 1
         iuzcol = pop_item(line, int) - 1
         iftunit = pop_item(line, int)

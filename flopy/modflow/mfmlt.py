@@ -154,9 +154,11 @@ class ModflowMlt(Package):
         if model.verbose:
             sys.stdout.write('loading mult package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -202,6 +204,9 @@ class ModflowMlt(Package):
                 t = ModflowMlt.mult_function(mult_dict, line)
             mult_dict[mltnam] = t
 
+        if openfile:
+            f.close()
+
         # set package unit number
         unitnumber = None
         filenames = [None]
@@ -223,7 +228,7 @@ class ModflowMlt(Package):
 
         """
         t = line.strip().split()
-        basename = t.pop(0).lower()
+        basename = t.pop(0).lower()[0:10]
         multarray = mult_dict[basename]
         try:
             multarray = multarray.array.copy()
@@ -234,7 +239,7 @@ class ModflowMlt(Package):
             if len(t) < 2:
                 break
             op = t.pop(0)
-            multname = t.pop(0)
+            multname = t.pop(0)[0:10]
             try:
                 atemp = mult_dict[multname.lower()].array
             except:

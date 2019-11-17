@@ -103,13 +103,13 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           to a GWF cell, then an auxiliary variable should be used to reduce
           the surface area of the UZF cell with the AUXMULTNAME option.
     ntrailwaves : integer
-        * ntrailwaves (integer) is the number of trailing waves. NTRAILWAVES
-          has a default value of 7 and can be increased to lower mass balance
-          error in the unsaturated zone.
+        * ntrailwaves (integer) is the number of trailing waves. A recommended
+          value of 7 can be used for NTRAILWAVES. This value can be increased
+          to lower mass balance error in the unsaturated zone.
     nwavesets : integer
-        * nwavesets (integer) is the number of UZF cells specified. NWAVESETS
-          has a default value of 40 and can be increased if more waves are
-          required to resolve variations in water content within the
+        * nwavesets (integer) is the number of wave sets. A recommended value
+          of 40 can be used for NWAVESETS. This value can be increased if more
+          waves are required to resolve variations in water content within the
           unsaturated zone.
     packagedata : [iuzno, cellid, landflag, ivertcon, surfdep, vks, thtr, thts,
       thti, eps, boundname]

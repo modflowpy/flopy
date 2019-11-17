@@ -660,7 +660,8 @@ class Mt3dBtn(Package):
         >>> btn = flopy.mt3d.Mt3dBtn.load('test.btn', mt)
 
         """
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -690,6 +691,8 @@ class Mt3dBtn(Package):
         AltWTSorb = False
         if m_arr[
             0].strip().isdigit() is not True:  # If m_arr[0] is not a digit, it is a keyword
+            if model.verbose:
+                print('   loading optional keywords: {}'.format(line.strip()))
             for i in range(0, len(m_arr)):
                 if m_arr[i].upper() == "MODFLOWSTYLEARRAYS":
                     MFStyleArr = True
@@ -705,8 +708,10 @@ class Mt3dBtn(Package):
                     NoWetDryPrint = True
                 if m_arr[i].upper() == "OMITDRYCELLBUDGET":
                     OmitDryBud = True
-                if m_arr[i].upper() == "AltWTSorb":
+                if m_arr[i].upper() == "ALTWTSORB":
                     AltWTSorb = True
+        elif model.verbose:
+            print('   optional keywords not identifed/loaded')
 
         # A3
         if model.verbose:
@@ -882,7 +887,7 @@ class Mt3dBtn(Package):
                 i = int(line[10:20])
                 j = int(line[20:30])
                 obs.append([k, i, j])
-            obs = np.array(obs)
+            obs = np.array(obs) - 1
             if model.verbose:
                 print('   OBS {}'.format(obs))
 
@@ -943,8 +948,8 @@ class Mt3dBtn(Package):
             print('   TTSMULT {}'.format(ttsmult))
             print('   TTSMAX {}'.format(ttsmax))
 
-        # Close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None
@@ -954,7 +959,11 @@ class Mt3dBtn(Package):
                 model.get_ext_dict_attr(ext_unit_dict,
                                         filetype=Mt3dBtn.ftype())
 
-        btn = Mt3dBtn(model, nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
+        btn = Mt3dBtn(model, MFStyleArr=MFStyleArr, DRYCell=DRYCell,
+                      Legacy99Stor=Legacy99Stor, FTLPrint=FTLPrint,
+                      NoWetDryPrint=NoWetDryPrint, OmitDryBud=OmitDryBud,
+                      AltWTSorb=AltWTSorb,
+                      nlay=nlay, nrow=nrow, ncol=ncol, nper=nper,
                       ncomp=ncomp, mcomp=mcomp, tunit=tunit,
                       laycon=laycon, delr=delr, delc=delc, htop=htop, dz=dz,
                       lunit=lunit, munit=munit, prsity=prsity, icbund=icbund,

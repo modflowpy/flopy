@@ -40,7 +40,7 @@ def load_check_sfr(i, mfnam, model_ws, checker_output_path):
     m = flopy.modflow.Modflow.load(mfnam, model_ws=model_ws)
     m.model_ws = checker_output_path
     checker_outfile = os.path.join(tpth, 'SFRcheck_{}.txt'.format(m.name))
-    
+
     chk = m.sfr.check(checker_outfile, level=1)
 
     if i == 1:
@@ -59,7 +59,7 @@ def test_sfrcheck():
     m.model_ws= cpth
     fpth = 'SFRchecker_results.txt'
     m.sfr.check(fpth, level=0)
-    
+
     # test checks without modifications
     chk = check(m.sfr)
     chk.numbering()
@@ -73,15 +73,15 @@ def test_sfrcheck():
         assert test in chk.passed
     chk.slope()
     assert 'minimum slope' in chk.passed
-    
+
     # create gaps in segment numbering
     m.sfr.segment_data[0]['nseg'][-1] += 1
     m.sfr.reach_data['ireach'][3] += 1
-    
+
     # create circular routing instance
-    m.sfr.segment_data[0]['outseg'][1] = 1
-    m.sfr.segment_data[0]['outseg']
-    
+    m.sfr.segment_data[0]['outseg'][0] = 1
+    m.sfr._graph = None  # weak, but the above shouldn't happen
+
     chk = check(m.sfr)
     chk.numbering()
     assert 'continuity in segment and reach numbering' in chk.errors
@@ -111,15 +111,42 @@ def test_sfrcheck():
     chk.elevations()
     assert 'maximum streambed top' in chk.warnings
     assert True
-    
+
 
 def test_sfrloadcheck():
     for i, case in sfr_items.items():
         yield load_check_sfr, i, case['mfnam'], path, cpth
 
 
+def load_sfr_isfropt_icalc(isfropt, icalc):
+    pth = os.path.join("..", "examples", "data", "sfr_test")
+    nam = "sfrtest{}{}.nam".format(isfropt, icalc)
+    ml = flopy.modflow.Modflow.load(nam, check=False, model_ws=pth,
+                                    exe_name="mfnwt")
+    sfr = ml.get_package("SFR")
+    if sfr is None:
+        raise AssertionError()
+
+    ml.change_model_ws(tpth)
+    ml.write_input()
+    success = ml.run_model()[0]
+    if not success:
+        raise AssertionError("sfrtest{}{}.nam".format(isfropt, icalc) +
+                             "is broken, please fix SFR 6a, 6bc logic!")
+
+
+def test_isfropt_icalc():
+    # test all valid combinations of isfropt and icalc
+    for isfropt in range(6):
+        for icalc in range(5):
+            yield load_sfr_isfropt_icalc, isfropt, icalc
+
 
 if __name__ == '__main__':
     test_sfrcheck()
     for i, case in sfr_items.items():
         load_check_sfr(i, case['mfnam'], path, cpth)
+
+    for isfropt in range(6):
+        for icalc in range(5):
+            load_sfr_isfropt_icalc(isfropt, icalc)

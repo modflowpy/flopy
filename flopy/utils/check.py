@@ -82,7 +82,7 @@ class check:
 
         # allow for instantiation with model or package
         # if isinstance(package, BaseModel): didn't work
-        if package.parent is not None:
+        if hasattr(package, 'parent'):
             self.model = package.parent
             self.prefix = '{} PACKAGE DATA VALIDATION'.format(package.name[0])
         else:
@@ -569,9 +569,9 @@ def _fmt_string_list(array, float_format='{}'):
         elif (vtype == 'o'):
             fmt_string += ['{}']
         elif (vtype == 's'):
-            raise Exception("MfList error: '\str\' type found it dtype." + \
+            raise Exception("MfList error: 'str' type found in dtype." + \
                             " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
+                            "recarray to file - change to 'object' type")
         else:
             raise Exception("MfList.fmt_string error: unknown vtype " + \
                             "in dtype:" + vtype)

@@ -30,6 +30,8 @@ def test_mt3d_multispecies():
     sconc3 = np.random.random((nrow, ncol))
     btn = flopy.mt3d.Mt3dBtn(mt, ncomp=ncomp, sconc=1., sconc2=2.,
                              sconc3=sconc3, sconc5=5.)
+    # check obs I/O
+    mt.btn.obs = np.array([[0, 2, 300], [0, 1, 250]])
     crch32 = np.random.random((nrow, ncol))
     cevt33 = np.random.random((nrow, ncol))
     ssm = flopy.mt3d.Mt3dSsm(mt, crch=1., crch2=2., crch3={2:crch32}, crch5=5.,
@@ -49,6 +51,8 @@ def test_mt3d_multispecies():
     # Load the MT3D model into mt2 and then write it out
     fname = modelname + '.nam'
     mt2 = flopy.mt3d.Mt3dms.load(fname, model_ws=testpth, verbose=True)
+    # check obs I/O
+    assert np.all(mt.btn.obs == mt2.btn.obs)
     mt2.name = modelname2
     mt2.write_input()
 

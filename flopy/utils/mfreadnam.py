@@ -179,11 +179,15 @@ def parsenamefile(namfilename, packages, verbose=True):
                 idx = lownams.index(bname.lower())
                 fname = os.path.join(dn, fls[idx])
         # open the file
-        openmode = 'r'
+        kwargs = {}
         if ftype == 'DATA(BINARY)':
             openmode = 'rb'
+        else:
+            openmode = 'r'
+            if sys.version_info[0] > 2:
+                kwargs['errors'] = 'replace'
         try:
-            filehandle = open(fname, openmode)
+            filehandle = open(fname, openmode, **kwargs)
         except IOError:
             if verbose:
                 print('could not set filehandle to {0:s}'.format(fpath))

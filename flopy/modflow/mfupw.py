@@ -331,9 +331,11 @@ class ModflowUpw(Package):
             print(msg)
             model.version = 'mfnwt'
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -478,6 +480,9 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'vkcb',
                                              parm_dict, findlayer=k)
                 vkcb[k] = t
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

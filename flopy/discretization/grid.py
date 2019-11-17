@@ -162,12 +162,31 @@ class Grid(object):
     # access to basic grid properties
     ###################################
     def __repr__(self):
-        s = "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; ". \
-            format(self.xoffset, self.yoffset, self.angrot)
-        s += "proj4_str:{0}; ".format(self.proj4)
-        s += "units:{0}; ".format(self.units)
-        s += "lenuni:{0}; ".format(self.lenuni)
-        return s
+        items = []
+        if self.xoffset is not None and self.yoffset is not None \
+                and self.angrot is not None:
+            items += [
+                "xll:" + str(self.xoffset),
+                "yll:" + str(self.yoffset),
+                "rotation:" + str(self.angrot)]
+        if self.proj4 is not None:
+            items.append("proj4_str:" + str(self.proj4))
+        if self.units is not None:
+            items.append("units:" + str(self.units))
+        if self.lenuni is not None:
+            items.append("lenuni:" + str(self.lenuni))
+        return '; '.join(items)
+
+    @property
+    def is_valid(self):
+        return True
+
+    @property
+    def is_complete(self):
+        if self._top is not None and self._botm is not None and \
+                self._idomain is not None:
+            return True
+        return False
 
     @property
     def grid_type(self):
@@ -230,11 +249,11 @@ class Grid(object):
 
     @property
     def top(self):
-        return self._top
+        return copy.deepcopy(self._top)
 
     @property
     def botm(self):
-        return self._botm
+        return copy.deepcopy(self._botm)
 
     @property
     def top_botm(self):
@@ -251,7 +270,7 @@ class Grid(object):
 
     @property
     def idomain(self):
-        return self._idomain
+        return copy.deepcopy(self._idomain)
 
     @property
     def shape(self):

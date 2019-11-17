@@ -414,14 +414,14 @@ class ModflowLgr(BaseModel):
 
     @staticmethod
     def load(f, version='mflgr', exe_name='mflgr.exe', verbose=False,
-             model_ws='.', load_only=None, forgive=True, check=True):
+             model_ws='.', load_only=None, forgive=False, check=True):
         """
         Load an existing model.
 
         Parameters
         ----------
-        f : MODFLOW name file
-            File to load.
+        f : filename or file handle
+            MODFLOW name file to load.
 
         model_ws : model workspace path
 
@@ -448,7 +448,8 @@ class ModflowLgr(BaseModel):
         else:
             modelname = f
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = os.path.join(model_ws, f)
             f = open(filename, 'r')
 
@@ -587,6 +588,9 @@ class ModflowLgr(BaseModel):
             children.append(Modflow.load(cn, verbose=verbose, model_ws=cws,
                                          load_only=load_only, forgive=forgive,
                                          check=check))
+
+        if openfile:
+            f.close()
 
         lgr = ModflowLgr(version=version, exe_name=exe_name,
                          modelname=modelname, model_ws=model_ws,

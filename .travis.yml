@@ -6,20 +6,21 @@ services:
 - xvfb
 matrix:
   include:
-  - env: TVER=PY27
+  - env: RUN_TYPE=test
     python: 2.7
-  - env: TVER=PY35
+  - env: RUN_TYPE=test
     python: 3.5
-  - env: TVER=PY36
+  - env: RUN_TYPE=test
     python: 3.6
-  - env: TVER=PY37
+  - env: RUN_TYPE=test
     python: 3.7
-  - env: TVER=PY37N
+  - env: RUN_TYPE=misc
     python: 3.7
-  - env: TVER=PY37D
-    python: 3.7-dev
-  allow_failures:
-  - env: TVER=PY37D
+# - env: RUN_TYPE=test
+#   python: 3.8-dev
+# allow_failures:
+# - env: RUN_TYPE=test
+#   python: 3.8-dev
 cache:
   pip: true
   directories:
@@ -32,7 +33,6 @@ addons:
     packages:
     - gfortran-8
     - g++-8
-    - python-pip
     - libhdf5-serial-dev
     - netcdf-bin
     - libnetcdf-dev
@@ -40,49 +40,11 @@ addons:
     - libgdal-dev
 env:
   global:
-  - NO_NET=1
-install:
-- if [[ ! -d "$HOME/.local/bin" ]]; then mkdir "$HOME/.local/bin"; fi
-- export PATH="$HOME/.local/bin:$PATH"
-- ln -fs /usr/bin/gfortran-8 "$HOME/.local/bin/gfortran" && gfortran --version
-- ls -l /usr/bin/gfortran-8
-- ln -fs /usr/bin/gcc-8 "$HOME/.local/bin/gcc" && gcc --version
-- ls -l /usr/bin/gcc-8
-- ln -fs /usr/bin/g++-8 "$HOME/.local/bin/g++" && g++ --version
-- ls -l /usr/bin/g++-8
-- export CXX="g++"
-- if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install -r requirements27.travis.txt;
-  echo requests version1; python -c "import requests; print(requests.__version__)";
-  else pip install -r requirements.travis.txt; fi
-- pip install https://github.com/modflowpy/pymake/zipball/master
-- pip install --upgrade jupyter
-- pip install nbconvert
-- pip install nose-timer
-- pip install coveralls
-- pip install pylint
-script:
-- export PYTHONPATH=$PYTHONPATH:.
-- echo python path; python -c "from __future__ import print_function; import sys;
-  print(sys.path)"
-- python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
-- echo flopy version; python -c "from __future__ import print_function; import flopy;
-  print(flopy.__version__)"
-- echo numpy version; python -c "import numpy; print(numpy.version.version)"
-- echo pandas version; python -c "import pandas as pd; print(pd.__version__)"
-- echo pyshp; python -c "import shapefile; print(shapefile.__version__)"
-- echo nosetests version; nosetests --version
-- echo jupyter version; jupyter --version
-- echo jupyter runtime directory; jupyter --runtime-dir
-- echo pylint version; pylint --version
-- nosetests -v build_exes.py --with-id --with-timer -w ./autotest
-- if [[ $TVER == PY37N ]]; then nosetests -v autotest_scripts.py --with-id --with-timer
-  -w ./autotest --with-coverage --cover-package=flopy; nosetests -v autotest_notebooks.py
-  --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy; else
-  nosetests -v --with-id --with-timer -w ./autotest --with-coverage --cover-package=flopy;
-  fi
-after_success:
-- coveralls
-- if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then pylint --errors-only ./flopy; fi
+  - PYTHONPATH=$PYTHONPATH:.
+install: ./travis/install.sh
+before_script: ./travis/before_script.sh
+script: ./travis/script.sh
+after_success: coveralls
 notifications:
   slack:
     secure: mwy5srgrEc1TWc5x0sOTGxVoSWSHYj8afkVyGtgVonI4b+816BIW0qLy7SIX46vtR+oexXoAWsYXmgNwItFWIDhP6uNN1o5yyVIU7WI68Y3k8KpdfNC90d2HIH3TIxdIR1ezrATOWDAGoG3lnprAI6I3zVVUga4EwUMnwc+/GoK3qluxp/0yEK114n2j7LuAXOzCgyuaaelPLrDwTo8ZIWLKaV3yg5oM/mYpP2PGbYsnvs+FpAfMN9GkEGzgDgATNs+O455s1Dx1cdxtgJVw91b74Fc+eOlk4Ywrdg6PcQYeHFLehSxXDkCkLYSjktDRvX07Dlg9CG3nr5y1RBB2p33L73A1kLUjEfvZB9yaYm3Pow9PxUDJcb//GAQauWiQZQw84mfHVqer3HBA8S5AwcWMHPUo2/9jfkyT7+tOAghUYLt2LdKnTXrf8ZFSG1NN4aR8RMUyxHFaXgVrCbWy35wl59fgoUY3q6IzNVjgobkJGeapVOeqiut2UHB6b6lNDEGoGr9dLcpB09IYEIDpVq5bqnflC3ZuihlzQS/k/EW/L2StFN3xIg7RumuEwvkhsOHxoeWcbfmQreGBwWrp2jP5Sl8q8Ymu2WcO4F6r3sC+9VaK8nEWR/CHurnnBsGqH6Inng00Y6cRp4gP1R9zIJNpxz51spZbspFAEzMpst4=

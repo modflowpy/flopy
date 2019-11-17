@@ -74,6 +74,8 @@ class MFModel(PackageContainer, ModelInterface):
         sets the file path to the model folder and updates all model file paths
     is_valid : () : boolean
         checks the validity of the model and all of its packages
+    rename_all_packages : (name : string)
+        renames all packages in the model
 
     See Also
     --------
@@ -174,7 +176,13 @@ class MFModel(PackageContainer, ModelInterface):
             Package object of type :class:`flopy.pakbase.Package`
 
         """
-        return self.get_package(item)
+        if item == 'name_file' or not hasattr(self, 'name_file'):
+            raise AttributeError(item)
+
+        package = self.get_package(item)
+        if package is not None:
+            return package
+        raise AttributeError(item)
 
     def __repr__(self):
         return self._get_data_str(True)
@@ -271,7 +279,6 @@ class MFModel(PackageContainer, ModelInterface):
     def modelgrid(self):
         if not self._mg_resync:
             return self._modelgrid
-
         if self.get_grid_type() == DiscretizationType.DIS:
             dis = self.get_package('dis')
             if not hasattr(dis, '_init_complete'):
@@ -392,7 +399,7 @@ class MFModel(PackageContainer, ModelInterface):
         self._modelgrid.set_coord_info(xorig, yorig, angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
-
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property
@@ -438,7 +445,7 @@ class MFModel(PackageContainer, ModelInterface):
         return None
 
     @property
-    def hnoflow(self):
+    def hnoflo(self):
         return None
 
     @property
@@ -460,7 +467,8 @@ class MFModel(PackageContainer, ModelInterface):
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
                   model_nam_file='modflowtest.nam', mtype='gwf', version='mf6',
-                  exe_name='mf6.exe', strict=True, model_rel_path='.'):
+                  exe_name='mf6.exe', strict=True, model_rel_path='.',
+                  load_only=None):
         """
         Load an existing model.
 
@@ -486,6 +494,14 @@ class MFModel(PackageContainer, ModelInterface):
             strict mode when loading files
         model_rel_path : string
             relative path of model folder to simulation folder
+        load_only : list
+            list of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. the discretization packages will load regardless of this
+            setting. subpackages, like time series and observations, will also
+            load regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc', 'my_well_package_1']
+
         Returns
         -------
         model : MFModel
@@ -498,6 +514,10 @@ class MFModel(PackageContainer, ModelInterface):
                        version=version, exe_name=exe_name,
                        add_to_simulation=False, structure=structure,
                        model_rel_path=model_rel_path)
+
+        # build case consistent load_only dictionary for quick lookups
+        load_only = instance._load_only_dict(load_only)
+
         # load name file
         instance.name_file.load(strict)
 
@@ -520,9 +540,19 @@ class MFModel(PackageContainer, ModelInterface):
         sim_struct = mfstructure.MFStructure().sim_struct
         instance._ftype_num_dict = {}
         for ftype, fname, pname in packages_ordered:
+            ftype_orig = ftype
             ftype = ftype[0:-1].lower()
             if ftype in structure.package_struct_objs or ftype in \
               sim_struct.utl_struct_objs:
+                if load_only is not None and not \
+                        instance._in_pkg_list(priority_packages, ftype_orig,
+                                              pname) \
+                        and not instance._in_pkg_list(load_only, ftype_orig,
+                                                      pname):
+                    if simulation.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('    skipping package {}...'.format(ftype))
+                    continue
                 if model_rel_path and model_rel_path != '.':
                     # strip off model relative path from the file path
                     filemgr = simulation.simulation_data.mfpath
@@ -589,7 +619,7 @@ class MFModel(PackageContainer, ModelInterface):
 
         Returns
         -------
-        grid type : DiscritizationType
+        grid type : DiscretizationType
         """
         package_recarray = self.name_file.packages
         structure = mfstructure.MFStructure()
@@ -827,6 +857,19 @@ class MFModel(PackageContainer, ModelInterface):
             # remove child packages
             for child_package in child_package_list:
                 self._remove_package_from_dictionaries(child_package)
+
+    def rename_all_packages(self, name):
+        package_type_count = {}
+        self.name_file.filename = '{}.nam'.format(name)
+        for package in self.packagelist:
+            if package.package_type not in package_type_count:
+                package.filename = '{}.{}'.format(name, package.package_type)
+                package_type_count[package.package_type] = 1
+            else:
+                package_type_count[package.package_type] += 1
+                package.filename = '{}_{}.{}'.format(
+                    name, package_type_count[package.package_type],
+                    package.package_type)
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):

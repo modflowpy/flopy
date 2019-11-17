@@ -141,7 +141,7 @@ class ModflowRch(Package):
                                 rech, name='rech_')
         if self.nrchop == 2:
             self.irch = Transient2d(model, (nrow, ncol), np.int32,
-                                    irch + 1,
+                                    irch,
                                     name='irch_')
         else:
             self.irch = None
@@ -287,10 +287,21 @@ class ModflowRch(Package):
             f_rch = open(self.fn_path, 'w')
         f_rch.write('{0:s}\n'.format(self.heading))
         f_rch.write('{0:10d}{1:10d}\n'.format(self.nrchop, self.ipakcb))
+
+        if self.nrchop == 2:
+            irch = {}
+            for kper,u2d in self.irch.transient_2ds.items():
+                irch[kper] = u2d.array + 1
+            irch = Transient2d(self.parent
+                               ,self.irch.shape,
+                               self.irch.dtype,
+                               irch,
+                               self.irch.name)
+
         for kper in range(nper):
             inrech, file_entry_rech = self.rech.get_kper_entry(kper)
             if self.nrchop == 2:
-                inirch, file_entry_irch = self.irch.get_kper_entry(kper)
+                inirch, file_entry_irch = irch.get_kper_entry(kper)
             else:
                 inirch = -1
             f_rch.write('{0:10d}{1:10d} # {2:s}\n'.format(inrech,
@@ -344,9 +355,11 @@ class ModflowRch(Package):
         if model.verbose:
             sys.stdout.write('loading rch package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -424,8 +437,12 @@ class ModflowRch(Package):
                         print(txt)
                     t = Util2d.load(f, model, (nrow, ncol), np.int32, 'irch',
                                     ext_unit_dict)
-                    current_irch = t
+                    current_irch = Util2d(model,(nrow, ncol), np.int32,
+                                          t.array - 1, "irch")
                 irch[iper] = current_irch
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None
