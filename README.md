@@ -117,7 +117,7 @@ FloPy requires **Python** 3.5 (or higher).
 
 **Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher) and **enum34** for **Python** 3.5 (or higher).
+FloPy requires **NumPy** 1.9 (or higher).
 
 
 **For base and Anaconda Python distributions:**
