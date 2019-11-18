@@ -35,15 +35,15 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 + An overview of FloPy capabilities for exporting two-dimensional array data as a binary file is given in the [flopy3_save_binary_data_file](../examples/Notebooks/flopy3_save_binary_data_file.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_Modpath6_example](../examples/Notebooks/flopy3_Modpath6_example.ipynb) Notebook.
++ An overview of FloPy capabilities to create MODPATH 6 models and plot MODPATH 6 results is given in the [flopy3_modpath6_example](../examples/Notebooks/flopy3_modpath6_example.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_Modpath7_create_simulation](../examples/Notebooks/flopy3_Modpath7_create_simulation.ipynb) Notebook.
++ An overview of FloPy capabilities to create simple forward and backtracking MODPATH 7 models using the `Modpath7.create_mp7()` method and plot MODPATH 7 pathline and endpoint results is given in the [flopy3_modpath7_create_simulation](../examples/Notebooks/flopy3_modpath7_create_simulation.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_Modpath7_structured_example](../examples/Notebooks/flopy3_Modpath7_structured_example.ipynb) Notebook.
++ An overview of FloPy capabilities to create MODPATH 7 models for structured MODFLOW-2005 and MODFLOW 6 models and plot MODPATH 7 results is given in the [flopy3_modpath7_structured_example](../examples/Notebooks/flopy3_modpath7_structured_example.ipynb) Notebook.
 
-+ An overview of FloPy capabilities to create MODPATH 7 models for unstructured MODFLOW 6 models (DISV) and plot MODPATH 7 results is given in the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook. The notebook includes an example of using GRIDGEN to create a DISV discretization for MODFLOW 6.
++ An overview of FloPy capabilities to create MODPATH 7 models for unstructured MODFLOW 6 models (DISV) and plot MODPATH 7 results is given in the [flopy3_modpath7_unstructured_example](../examples/Notebooks/flopy3_modpath7_unstructured_example.ipynb) Notebook. The notebook includes an example of using GRIDGEN to create a DISV discretization for MODFLOW 6.
 
-+ An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook. See the [flopy3_Modpath7_unstructured_example](../examples/Notebooks/flopy3_Modpath7_unstructured_example.ipynb) Notebook for an example of using GRIDGEN to create an unstructured DISV quadtree discretization for MODFLOW 6.
++ An overview of using FloPy and GRIDGEN to creating layered quadtree grids for MODFLOW-USG is given in the [flopy3_gridgen](../examples/Notebooks/flopy3_gridgen.ipynb) Notebook. See the [flopy3_modpath7_unstructured_example](../examples/Notebooks/flopy3_modpath7_unstructured_example.ipynb) Notebook for an example of using GRIDGEN to create an unstructured DISV quadtree discretization for MODFLOW 6.
 
 + The [lake example](../examples/Notebooks/flopy3_lake_example.ipynb), a very simple FloPy example of steady flow in a square model with a fixed head cell in the middle (representing a lake) in a 10-layer model.
 
@@ -85,7 +85,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 	* apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
 	* any other analysis where a distribution of transmissivity is needed for a specified vertical interval of the model.
 
-+ An overview of utilities for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
++ An overview of utilities for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_modflow_postprocessing_example.ipynb).
 
 #### ***Export examples***
 
@@ -94,6 +94,16 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 + An overview of the FloPy model [shapefile export capabilities](../examples/Notebooks/flopy3_shapefile_export.ipynb).
 
 + [Exporting 2-D arrays as rasters or contour shapefiles](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
+
++ An overview of FloPy [Visualization Toolkit (vtk)](../examples/Notebooks/flopy3_vtk_export.ipynb) export capabilities.
+
+#### ***Intersection examples***
+
++ An overview of [intersecting a FloPy model grid object with a shapefile](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb).
+
++ An overview of [intersecting a FloPy model grid object with a raster](../examples/Notebooks/flopy3_raster_intersection.ipynb).
+
+
 
 #### ***Parameter Estimation examples***
 
