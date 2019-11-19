@@ -219,10 +219,7 @@ def test_uzf_surfk():
 
 
 def test_read_write_nwt_options():
-    if sys.version_info[0] > 2:
-        from io import StringIO
-    else:
-        from cStringIO import StringIO
+    from io import StringIO
 
     from flopy.modflow import ModflowWel, ModflowUzf1, ModflowSfr2
     from flopy.utils.optionblock import OptionBlock

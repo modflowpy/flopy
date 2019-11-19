@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 from ..discretization import StructuredGrid, UnstructuredGrid
 from ..utils import geometry
 
@@ -899,9 +898,8 @@ class PlotMapView(object):
 
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
-            if sys.version_info[0] > 2:
-                if isinstance(kon, bytes):
-                    kon = kon.decode()
+            if isinstance(kon, bytes):
+                kon = kon.decode()
             if isinstance(kon, str):
                 if kon.lower() == 'all':
                     kon = -1
@@ -1046,9 +1044,8 @@ class PlotMapView(object):
         if 'layer' in kwargs:
             kon = kwargs.pop('layer')
 
-            if sys.version_info[0] > 2:
-                if isinstance(kon, bytes):
-                    kon = kon.decode()
+            if isinstance(kon, bytes):
+                kon = kon.decode()
 
             if isinstance(kon, str):
                 if kon.lower() == 'all':

@@ -306,14 +306,9 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
 
 def get_url_text(url, error_msg=None):
     """
-    Get text from a url, using either python 3 or 2.
+    Get text from a url.
     """
-    try:
-        # For Python 3.0 and later
-        from urllib.request import urlopen
-    except ImportError:
-        # Fall back to Python 2's urllib2
-        from urllib2 import urlopen
+    from urllib.request import urlopen
     try:
         urlobj = urlopen(url)
         text = urlobj.read().decode()
