@@ -9,8 +9,6 @@ from __future__ import print_function
 
 import abc
 import os
-import sys
-import platform
 import webbrowser as wb
 
 import numpy as np
@@ -680,12 +678,7 @@ class Package(PackageInterface):
         openfile = not hasattr(f, 'read')
         if openfile:
             filename = f
-            if platform.system().lower() == 'windows' and \
-                    sys.version_info[0] < 3:
-                import io
-                f = io.open(filename, 'r')
-            else:
-                f = open(filename, 'r')
+            f = open(filename, 'r')
         elif hasattr(f, 'name'):
             filename = f.name
         else:

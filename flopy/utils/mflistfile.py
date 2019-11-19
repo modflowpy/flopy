@@ -8,15 +8,11 @@ recarrays, which can then be easily plotted.
 import collections
 import os
 import re
-import sys
 from datetime import timedelta
 import numpy as np
 import errno
 
 from ..utils.utils_def import totim_to_datetime
-
-if sys.version_info[0] == 2:
-    FileNotFoundError = IOError
 
 
 class ListBudget(object):
@@ -52,10 +48,7 @@ class ListBudget(object):
         assert os.path.exists(file_name), "file_name {0} not found".format(
             file_name)
         self.file_name = file_name
-        if sys.version_info[0] == 2:
-            self.f = open(file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(file_name, 'r', encoding='ascii', errors='replace')
+        self.f = open(file_name, 'r', encoding='ascii', errors='replace')
 
         self.tssp_lines = 0
 
@@ -281,11 +274,7 @@ class ListBudget(object):
             return None
 
         # reopen the file
-        if sys.version_info[0] == 2:
-            self.f = open(self.file_name, 'r')
-        elif sys.version_info[0] == 3:
-            self.f = open(self.file_name, 'r', encoding='ascii',
-                          errors='replace')
+        self.f = open(self.file_name, 'r', encoding='ascii', errors='replace')
         units = units.lower()
         if not units == 'seconds' and not units == 'minutes' and not units == 'hours':
             raise (

@@ -184,8 +184,7 @@ def parsenamefile(namfilename, packages, verbose=True):
             openmode = 'rb'
         else:
             openmode = 'r'
-            if sys.version_info[0] > 2:
-                kwargs['errors'] = 'replace'
+            kwargs['errors'] = 'replace'
         try:
             filehandle = open(fname, openmode, **kwargs)
         except IOError:

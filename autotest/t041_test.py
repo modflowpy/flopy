@@ -2,7 +2,6 @@
 Test the observation process load and write
 """
 import os
-import sys
 import shutil
 import numpy as np
 import flopy
@@ -276,10 +275,7 @@ def test_multilayerhob_prfail():
 
 
 def test_multilayerhob_pr_multiline():
-    if sys.version_info[0] > 2:
-        from io import StringIO
-    else:
-        from cStringIO import StringIO
+    from io import StringIO
 
     problem_hob = ["2 4 7",
                    "1 1",
