@@ -453,9 +453,9 @@ class MfList(DataInterface, DataListInterface):
         dfs = []
         for per in self.data.keys():
             recs = self.data[per]
-            if recs is None or recs is 0:
+            if recs is None or len(recs) == 0:
                 # add an empty dataframe if a stress period is
-                # set to 0 (e.g. no pumping during a predevelopment
+                # empty (e.g. no pumping during a predevelopment
                 # period)
                 columns = names + list(['{}{}'.format(c, per)
                                         for c in varnames])

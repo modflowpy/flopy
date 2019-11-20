@@ -357,10 +357,10 @@ def _reshape_binary_data(data, dtype=None):
     data = np.array(data)
     if dtype is None:
         return data
-    elif dtype is 'V':
+    elif dtype == 'V':
         nodes = len(data[0][0][0])
         data.shape = (time, -1, nodes)
-    elif dtype is 'U':
+    elif dtype == 'U':
         data.shape = (time, -1)
     else:
         err = "Invalid dtype flag supplied, valid are dtype='U', dtype='V'"
