@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from .mfdis import get_layer
 from ..utils import check
-from ..utils.flopy_io import line_parse, pop_item
+from ..utils.flopy_io import line_parse, pop_item, get_next_line
 from ..utils import MfList
 from ..utils.recarray_utils import create_empty_recarray
 
@@ -1213,7 +1213,7 @@ class ModflowMnw2(Package):
 
         # dataset 0 (header)
         while True:
-            line = next(f)
+            line = get_next_line(f)
             if line[0] != '#':
                 break
         # dataset 1
@@ -1237,19 +1237,21 @@ class ModflowMnw2(Package):
         itmp = []
         for per in range(0, nper):
             # dataset 3
-            itmp_per = int(line_parse(next(f))[0])
+            itmp_per = int(line_parse(get_next_line(f))[0])
             # dataset4
             # dict might be better here to only load submitted values
             if itmp_per > 0:
                 current_4 = ModflowMnw2.get_empty_stress_period_data(itmp_per,
                                                                      aux_names=option)
                 for i in range(itmp_per):
-                    wellid, qdes, capmult, cprime, xyz = _parse_4a(next(f),
-                                                                   mnw,
-                                                                   gwt=gwt)
+                    wellid, qdes, capmult, cprime, xyz = _parse_4a(
+                        get_next_line(f),
+                        mnw,
+                        gwt=gwt)
                     hlim, qcut, qfrcmn, qfrcmx = 0, 0, 0, 0
                     if mnw[wellid].qlimit < 0:
-                        hlim, qcut, qfrcmn, qfrcmx = _parse_4b(next(f))
+                        hlim, qcut, qfrcmn, qfrcmx = _parse_4b(
+                            get_next_line(f))
                     # update package stress period data table
                     ndw = node_data[node_data.wellid == wellid]
                     kij = [ndw.k[0], ndw.i[0], ndw.j[0]]
@@ -1695,15 +1697,16 @@ def _parse_2(f):
 
     """
     # dataset 2a
-    line = line_parse(next(f))
+    line = line_parse(get_next_line(f))
     if len(line) > 2:
-        warnings.warn('MNW2: {}\nExtra items in Dataset 2a!' + \
-                      'Check for WELLIDs with space but not enclosed in quotes.'.format(
-                          line))
-    wellid = pop_item(line)
+        warnings.warn('MNW2: {}\n'.format(line) + \
+                      'Extra items in Dataset 2a!' + \
+                      'Check for WELLIDs with space ' + \
+                      'but not enclosed in quotes.')
+    wellid = pop_item(line).upper()
     nnodes = pop_item(line, int)
     # dataset 2b
-    line = line_parse(next(f))
+    line = line_parse(get_next_line(f))
     losstype = pop_item(line)
     pumploc = pop_item(line, int)
     qlimit = pop_item(line, int)
@@ -1719,14 +1722,15 @@ def _parse_2(f):
         zip(['rw', 'rskin', 'kskin', 'B', 'C', 'P', 'cwc'], [0] * 7))
     if losstype.lower() != 'none':
         # update d2dw items
-        d2dw.update(_parse_2c(next(f), losstype))  # dict of values for well
+        d2dw.update(
+            _parse_2c(get_next_line(f), losstype))  # dict of values for well
         for k, v in d2dw.items():
             if v > 0:
                 d2d[k].append(v)
     # dataset 2d
     pp = 1  # partial penetration flag
     for i in range(np.abs(nnodes)):
-        line = line_parse(next(f))
+        line = line_parse(get_next_line(f))
         if nnodes > 0:
             d2d['k'].append(pop_item(line, int) - 1)
             d2d['i'].append(pop_item(line, int) - 1)
@@ -1752,7 +1756,7 @@ def _parse_2(f):
     pumpcol = None
     zpump = None
     if pumploc != 0:
-        line = line_parse(next(f))
+        line = line_parse(get_next_line(f))
         if pumploc > 0:
             pumplay = pop_item(line, int)
             pumprow = pop_item(line, int)
@@ -1767,7 +1771,7 @@ def _parse_2(f):
     if qlimit > 0:
         # Only specify dataset 2f if the value of Qlimit in dataset 2b is positive.
         # Do not enter fractions as percentages.
-        line = line_parse(next(f))
+        line = line_parse(get_next_line(f))
         hlim = pop_item(line, float)
         qcut = pop_item(line, int)
         if qcut != 0:
@@ -1781,7 +1785,7 @@ def _parse_2(f):
     if pumpcap > 0:
         # The number of additional data points on the curve (and lines in dataset 2h)
         # must correspond to the value of PUMPCAP for this well (where PUMPCAP <= 25).
-        line = line_parse(next(f))
+        line = line_parse(get_next_line(f))
         hlift = pop_item(line, float)
         liftq0 = pop_item(line, float)
         liftqmax = pop_item(line, float)
@@ -1796,7 +1800,7 @@ def _parse_2(f):
         # The discharge value for the last data point in the sequence
         # must be less than the value of LIFTqmax.
         for i in range(len(pumpcap)):
-            line = line_parse(next(f))
+            line = line_parse(get_next_line(f))
             liftn = pop_item(line, float)
             qn = pop_item(line, float)
 
@@ -1875,7 +1879,7 @@ def _parse_4a(line, mnw, gwt=False):
     capmult = 0
     cprime = 0
     line = line_parse(line)
-    wellid = pop_item(line)
+    wellid = pop_item(line).upper()
     pumpcap = mnw[wellid].pumpcap
     qdes = pop_item(line, float)
     if pumpcap > 0:

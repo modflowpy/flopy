@@ -66,6 +66,29 @@ def line_strip(line):
     return line.replace(',', ' ')
 
 
+def get_next_line(f):
+    """
+    Get the next line from a file that is not a blank line
+
+    Parameters
+    ----------
+    f : filehandle
+        filehandle to a open file
+
+    Returns
+    -------
+    line : string
+        next non-empty line in a open file
+
+
+    """
+    while True:
+        line = f.readline().rstrip()
+        if len(line) > 0:
+            break
+    return line
+
+
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
