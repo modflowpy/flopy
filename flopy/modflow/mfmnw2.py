@@ -18,11 +18,11 @@ class Mnw(object):
 
     Parameters
     ----------
-    wellid : int
+    wellid : str or int
         is the name of the well. This is a unique alphanumeric identification
         label for each well. The text string is limited to 20 alphanumeric
         characters. If the name of the well includes spaces, then enclose the
-        name in quotes.
+        name in quotes. Flopy converts wellid string to lower case.
     nnodes : int
         is the number of cells (nodes) associated with this well.
         NNODES normally is > 0, but for the case of a vertical borehole,
@@ -355,6 +355,8 @@ class Mnw(object):
         self.aux = None if mnwpackage is None else mnwpackage.aux
 
         # dataset 2a
+        if isinstance(wellid, str):
+            wellid = wellid.lower()
         self.wellid = wellid
         self.nnodes = nnodes
         # dataset 2b
