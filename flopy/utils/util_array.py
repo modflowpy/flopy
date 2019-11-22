@@ -2081,7 +2081,7 @@ class Util2d(DataInterface):
                 locat = -1 * np.abs(locat)
         if locat is None:
             locat = 0
-        if locat is 0:
+        if locat == 0:
             fformat = ''
         if self.dtype == np.int32:
             cr = '{0:>10.0f}{1:>10.0f}{2:>19s}{3:>10.0f} #{4}\n' \
