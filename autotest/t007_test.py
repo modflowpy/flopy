@@ -545,6 +545,32 @@ def test_sr():
         raise AssertionError()
 
 
+def test_dis_sr():
+    import flopy
+    import numpy as np
+
+    delr = 640
+    delc = 640
+    nrow = np.ceil(59040. / delc).astype(int)
+    ncol = np.ceil(33128. / delr).astype(int)
+    nlay = 3
+
+    xul = 2746975.089
+    yul = 1171446.45
+    rotation = -39
+    bg = flopy.modflow.Modflow(modelname='base')
+    dis = flopy.modflow.ModflowDis(bg, nlay=nlay, nrow=nrow, ncol=ncol,
+                                   delr=delr, delc=delc, lenuni=1,
+                                   rotation=rotation, xul=xul, yul=yul,
+                                   proj4_str='epsg:2243')
+
+    if abs(dis.sr.xul - xul) > 0.01:
+        raise AssertionError()
+
+    if abs(dis.sr.yul - yul) > 0.01:
+        raise AssertionError()
+
+
 def test_mg():
     import flopy
     from flopy.utils import geometry
