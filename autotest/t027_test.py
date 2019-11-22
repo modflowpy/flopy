@@ -325,10 +325,14 @@ mnw2 103 mymnw2.mnw2"""
 
     wellids2 = list(spd['wellid'])
     emsg = 'incorrect keys returned from load mnw2 stress period data'
+    for wellid, wellid2 in zip(wellids, wellids2):
+        emsg += '\n    {} -- {}'.format(wellid, wellid2)
     assert wellids2 == wellids, emsg
 
     rates2 = list(spd['qdes'])
     emsg = 'incorrect qdes rates returned from load mnw2 stress period data'
+    for rate, rate2 in zip(rates, rates2):
+        emsg += '\n    {} -- {}'.format(rate, rate2)
     assert rates2 == rates, emsg
 
     return
