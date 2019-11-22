@@ -337,7 +337,7 @@ class Mnw(object):
 
     def __init__(self, wellid,
                  nnodes=1, nper=1,
-                 losstype="SKIN", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
+                 losstype="skin", pumploc=0, qlimit=0, ppflag=0, pumpcap=0,
                  rw=1, rskin=2, kskin=10,
                  B=None, C=0, P=2., cwc=None, pp=1,
                  k=0, i=0, j=0, ztop=0, zbotm=0,
@@ -358,7 +358,7 @@ class Mnw(object):
         self.wellid = wellid
         self.nnodes = nnodes
         # dataset 2b
-        self.losstype = losstype
+        self.losstype = losstype.lower()
         self.pumploc = pumploc
         self.qlimit = qlimit
         self.ppflag = ppflag
@@ -416,6 +416,10 @@ class Mnw(object):
         if node_data is not None:
             for n in node_data.dtype.names:
                 self.node_data[n] = node_data[n]
+                # convert strings to lower case
+                if isinstance(n, str):
+                    for idx, v in enumerate(self.node_data[n]):
+                        self.node_data[n][idx] = self.node_data[n][idx]
 
         # build recarray of node data from MNW2 input file
         if node_data is None:
@@ -527,7 +531,7 @@ class Mnw(object):
 
         if node_data is not None:
             nnodes = Mnw.get_nnodes(node_data)
-            losstype = node_data.losstype[0]
+            losstype = node_data.losstype[0].lower()
             ppflag = node_data.ppflag[0]
             pumploc = node_data.pumploc[0]
             qlimit = node_data.qlimit[0]
@@ -536,7 +540,7 @@ class Mnw(object):
         # get names based on mnw2obj attribute values
         else:
             nnodes = mnw2obj.nnodes
-            losstype = mnw2obj.losstype
+            losstype = mnw2obj.losstype.lower()
             ppflag = mnw2obj.ppflag
             pumploc = mnw2obj.pumploc
             qlimit = mnw2obj.qlimit
@@ -1699,11 +1703,11 @@ def _parse_2(f):
     # dataset 2a
     line = line_parse(get_next_line(f))
     if len(line) > 2:
-        warnings.warn('MNW2: {}\n'.format(line) + \
-                      'Extra items in Dataset 2a!' + \
-                      'Check for WELLIDs with space ' + \
+        warnings.warn('MNW2: {}\n'.format(line) +
+                      'Extra items in Dataset 2a!' +
+                      'Check for WELLIDs with space ' +
                       'but not enclosed in quotes.')
-    wellid = pop_item(line).upper()
+    wellid = pop_item(line).lower()
     nnodes = pop_item(line, int)
     # dataset 2b
     line = line_parse(get_next_line(f))
@@ -1879,7 +1883,7 @@ def _parse_4a(line, mnw, gwt=False):
     capmult = 0
     cprime = 0
     line = line_parse(line)
-    wellid = pop_item(line).upper()
+    wellid = pop_item(line).lower()
     pumpcap = mnw[wellid].pumpcap
     qdes = pop_item(line, float)
     if pumpcap > 0:

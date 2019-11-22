@@ -243,6 +243,88 @@ def test_export():
     # need to add shapefile test
 
 
+def test_blank_lines():
+    mnw2str = """3 50 0
+EB-33 -3
+SKIN -1 0 0 0
+0.375 0.667 50
+ 0 -1 1 1
+-1 -2 1 1
+-2 -3 1 1
+-3
+eb-35 3
+SKIN 0 0 0 0
+0.375 1.0 50
+1 1 1 83 24
+2 1 1
+3 1 1
+
+EB-36 -2
+SKIN -1 0 0 0
+.375 1.0 50
+ 0 -1 1 1
+-1 -2 1 1
+-2
+
+3
+EB-33 -11229.2
+EB-35 -534.72
+
+eb-36 -534.72
+
+"""
+    fpth = os.path.join(cpth, 'mymnw2.mnw2')
+    f = open(fpth, 'w')
+    f.write(mnw2str)
+    f.close()
+
+    disstr = """ 3 1 1 1 4 1
+ 0 0 0
+constant 1
+constant 1
+constant  0 top of model
+constant -1 bottom of layer 1
+constant -2 bottom of layer 2
+constant -3 bottom of layer 3
+ 1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
+"""
+
+    fpth = os.path.join(cpth, 'mymnw2.dis')
+    f = open(fpth, 'w')
+    f.write(disstr)
+    f.close()
+
+    namstr = """lst  101 mymnw2.lst
+dis  102 mymnw2.dis
+mnw2 103 mymnw2.mnw2"""
+
+    fpth = os.path.join(cpth, 'mymnw2.nam')
+    f = open(fpth, 'w')
+    f.write(namstr)
+    f.close()
+
+    m = flopy.modflow.Modflow.load('mymnw2.nam', model_ws=cpth,
+                                   verbose=True, check=False)
+    mnw2 = m.mnw2
+    wellids = ['eb-33', 'eb-35', 'eb-36']
+    rates = [np.float32(-11229.2), np.float32(-534.72), np.float32(-534.72)]
+
+    emsg = 'incorrect keys returned from load mnw2'
+    assert list(mnw2.mnw.keys()) == wellids, emsg
+
+    spd = mnw2.stress_period_data[0]
+
+    wellids2 = list(spd['wellid'])
+    emsg = 'incorrect keys returned from load mnw2 stress period data'
+    assert wellids2 == wellids, emsg
+
+    rates2 = list(spd['qdes'])
+    emsg = 'incorrect qdes rates returned from load mnw2 stress period data'
+    assert rates2 == rates, emsg
+
+    return
+
+
 def test_checks():
     """t027 test MNW2 Package checks in FloPy"""
     m = flopy.modflow.Modflow.load('MNW2-Fig28.nam', model_ws=mf2005pth,
@@ -253,10 +335,13 @@ def test_checks():
         chk.summary_array.desc)
 
 
+
+
 if __name__ == '__main__':
     #test_line_parse()
     #test_load()
-    #test_make_package()
+    test_blank_lines()
+    test_make_package()
     #test_export()
     #test_checks()
     test_mnw1_load_write()
