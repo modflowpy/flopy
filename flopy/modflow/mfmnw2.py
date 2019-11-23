@@ -1455,7 +1455,8 @@ class ModflowMnw2(Package):
         node_data = ModflowMnw2.get_empty_node_data(len(mnwobj_node_data))
 
         for ix, node in enumerate(mnwobj_node_data):
-            node_data[ix] = node
+            for jx, name in enumerate(node_data.dtype.names):
+                node_data[name][ix] = node[jx]
 
         self.node_data = node_data
 

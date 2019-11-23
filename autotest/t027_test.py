@@ -157,11 +157,10 @@ def test_make_package():
     m4.write_input()
 
     # make the package from the objects
+    # reuse second per pumping for last stress period
     mnw2fromobj = flopy.modflow.ModflowMnw2(model=m4, mnwmax=2,
                                             mnw=mnw2_4.mnw,
-                                            itmp=[2, 2, -1],
-                                            # reuse second per pumping for last stress period
-                                            )
+                                            itmp=[2, 2, -1])
     # verify that the two input methods produce the same results
     assert np.array_equal(mnw2_4.stress_period_data[1],
                           mnw2fromobj.stress_period_data[1])
@@ -318,8 +317,9 @@ mnw2 103 mymnw2.mnw2"""
     wellids = ['eb-33', 'eb-35', 'eb-36']
     rates = [np.float32(-11229.2), np.float32(-534.72), np.float32(-534.72)]
 
+    wellids2 = sorted(list(mnw2.mnw.keys()))
     emsg = 'incorrect keys returned from load mnw2'
-    assert list(mnw2.mnw.keys()) == wellids, emsg
+    assert wellids2 == wellids, emsg
 
     spd = mnw2.stress_period_data[0]
 
