@@ -211,6 +211,8 @@ class ModflowDis(Package):
         xll = None
         yll = None
         mg = model.modelgrid
+        if rotation is not None:
+            mg.set_coord_info(xoff=None, yoff=None, angrot=rotation)
         if xul is not None:
             xll = mg._xul_to_xll(xul)
         if yul is not None:
