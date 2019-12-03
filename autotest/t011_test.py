@@ -4,13 +4,9 @@ Some basic tests for mflistfile.py module (not super rigorous)
 """
 
 import os
-import sys
 import flopy
 import numpy as np
 from nose.tools import raises
-
-if sys.version_info[0] == 2:
-    FileNotFoundError = IOError
 
 
 def test_mflistfile():

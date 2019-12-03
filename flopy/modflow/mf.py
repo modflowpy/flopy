@@ -6,11 +6,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 
 import os
 import flopy
-import sys
-if sys.version_info[0] == 2:
-    from inspect import getargspec as getfullargspec
-else:
-    from inspect import getfullargspec
+from inspect import getfullargspec
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam

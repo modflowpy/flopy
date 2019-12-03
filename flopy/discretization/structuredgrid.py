@@ -386,11 +386,11 @@ class StructuredGrid(Grid):
     # Exporting
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         if epsg is None and prj is None:
             epsg = self.epsg
-        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
+                             epsg=epsg, prj=prj)
 
 
 if __name__ == "__main__":

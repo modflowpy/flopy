@@ -7,10 +7,12 @@ class SfrFile():
 
     Parameters
     ----------
-    filename : string
+    filename : str
         Name of the sfr output file
-    verbose : bool
-        Write information to the screen.  Default is False.
+    geometries : any
+        Ignored
+    verbose : any
+        Ignored
 
     Attributes
     ----------
@@ -23,6 +25,8 @@ class SfrFile():
 
     Notes
     -----
+    Indexing starts at one for: layer, row, column, segment, reach.
+    Indexing starts at zero for: i, j, k, and kstpkper.
 
     Examples
     --------
@@ -46,41 +50,49 @@ class SfrFile():
         try:
             import pandas as pd
             self.pd = pd
-        except:
+        except ImportError:
             print('This method requires pandas')
             self.pd = None
             return
 
-        # get the number of rows to skip at top
+        # get the number of rows to skip at top, and the number of data columns
         self.filename = filename
-        self.sr, self.ncol = self.get_skiprows_ncols()
-        self.names = ["layer", "row", "column", "segment", "reach",
-                      "Qin", "Qaquifer", "Qout", "Qovr",
-                      "Qprecip", "Qet",
-                      "stage", "depth", "width", "Cond"]
-        self._set_names()  # ensure correct number of column names
+        evaluated_format = False
+        has_gradient = False
+        has_delUzstor = False
+        with open(self.filename) as f:
+            for i, line in enumerate(f):
+                if 'GRADIENT' in line:
+                    has_gradient = True
+                if 'CHNG. UNSAT.' in line:
+                    has_delUzstor = True
+                items = line.strip().split()
+                if len(items) > 0 and items[0].isdigit():
+                    evaluated_format = True
+                    self.sr = i
+                    self.ncol = len(items)
+                    break
+        if not evaluated_format:
+            raise ValueError(
+                'could not evaluate format of {!r} for SfrFile'
+                .format(self.filename))
+        # all outputs start with the same 15 columns
+        self.names = [
+            'layer', 'row', 'column', 'segment', 'reach',
+            'Qin', 'Qaquifer', 'Qout', 'Qovr', 'Qprecip', 'Qet',
+            'stage', 'depth', 'width', 'Cond']
+        if has_gradient and has_delUzstor:
+            raise ValueError(
+                "column 16 should be either 'gradient' or 'Qwt', not both")
+        elif has_gradient:
+            self.names.append('gradient')
+        elif has_delUzstor:
+            self.names += ['Qwt', 'delUzstor']
+            if self.ncol == 18:
+                self.names.append('gw_head')
         self.times = self.get_times()
         self.geoms = None  # not implemented yet
         self._df = None
-
-    def get_skiprows_ncols(self):
-        """
-        Get the number of rows to skip at the top of the SFR output file.
-
-        Returns
-        -------
-        i : int
-            Number of lines to skip at the top of the SFR output file
-        ncols : int
-            Number of columns in the SFR output file
-
-        """
-        with open(self.filename) as input:
-            for i, line in enumerate(input):
-                line = line.strip().split()
-                if len(line) > 0 and line[0].isdigit():
-                    ncols = len(line)
-                    return i, ncols
 
     def get_times(self):
         """
@@ -100,21 +112,6 @@ class SfrFile():
                     kper, kstp = int(line[3]) - 1, int(line[5]) - 1
                     kstpkper.append((kstp, kper))
         return kstpkper
-
-    def _set_names(self):
-        """
-        Pad column names so that correct number is used (otherwise Pandas
-        read_csv may drop columns)
-
-        Returns
-        -------
-        None
-
-        """
-        if len(self.names) < self.ncol:
-            n = len(self.names)
-            for i in range(n, self.ncol):
-                self.names.append('col{}'.format(i + 1))
 
     @property
     def df(self):
@@ -163,14 +160,12 @@ class SfrFile():
 
         # add time, reachID, and reach geometry (if it exists)
         self.nstrm = self.get_nstrm(df)
-        per = []
-        timestep = []
         dftimes = []
         times = self.get_times()
-        newper = df.segment.diff().values < 0
+        newper = df.segment.diff().fillna(0).values < 0
         kstpkper = times.pop(0)
-        for np in newper:
-            if np:
+        for per in newper:
+            if per:
                 kstpkper = times.pop(0)
             dftimes.append(kstpkper)
         df['kstpkper'] = dftimes

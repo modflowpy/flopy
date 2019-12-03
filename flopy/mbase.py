@@ -12,12 +12,10 @@ import os
 import shutil
 import threading
 import warnings
+import queue as Queue
 
-if sys.version_info > (3, 0):
-    import queue as Queue
-else:
-    import Queue
 from datetime import datetime
+from shutil import which
 from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
@@ -26,10 +24,6 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-if sys.version_info >= (3, 3):
-    from shutil import which
-else:
-    from distutils.spawn import find_executable as which
 
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -1603,15 +1597,8 @@ def run_model(exe_name, namefile, model_ws='./',
         for t in cargs:
             argv.append(t)
 
-    if sys.version_info[0:2] == (2, 7) and sys.platform != 'win32':
-        # Python 2.7 workaround for non-Windows
-        close_fds = True
-    else:
-        close_fds = False  # default
-
     # run the model with Popen
-    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws,
-                 close_fds=close_fds)
+    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws)
 
     if not use_async:
         while True:

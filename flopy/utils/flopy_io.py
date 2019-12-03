@@ -66,6 +66,29 @@ def line_strip(line):
     return line.replace(',', ' ')
 
 
+def get_next_line(f):
+    """
+    Get the next line from a file that is not a blank line
+
+    Parameters
+    ----------
+    f : filehandle
+        filehandle to a open file
+
+    Returns
+    -------
+    line : string
+        next non-empty line in a open file
+
+
+    """
+    while True:
+        line = f.readline().rstrip()
+        if len(line) > 0:
+            break
+    return line
+
+
 def line_parse(line):
     """
     Convert a line of text into to a list of values.  This handles the
@@ -306,14 +329,9 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
 
 def get_url_text(url, error_msg=None):
     """
-    Get text from a url, using either python 3 or 2.
+    Get text from a url.
     """
-    try:
-        # For Python 3.0 and later
-        from urllib.request import urlopen
-    except ImportError:
-        # Fall back to Python 2's urllib2
-        from urllib2 import urlopen
+    from urllib.request import urlopen
     try:
         urlobj = urlopen(url)
         text = urlobj.read().decode()

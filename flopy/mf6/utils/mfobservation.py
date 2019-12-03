@@ -304,16 +304,16 @@ class Observations:
 
         # create list of datetimes
         t0 = dt.datetime(year, month, day, hour, minute, second)
-        if unit is 'Y':
+        if unit == 'Y':
             dtlist = [dt.datetime(int(year + time), month, day, hour, minute,
                                   second) for time in times]
-        elif unit is 'D':
+        elif unit == 'D':
             dtlist = [t0+dt.timedelta(days=time) for time in times]
-        elif unit is 'H':
+        elif unit == 'H':
             dtlist = [t0+dt.timedelta(hours=time) for time in times]
-        elif unit is 'M':
+        elif unit == 'M':
             dtlist = [t0+dt.timedelta(minutes=time) for time in times]
-        elif unit is 'S':
+        elif unit == 'S':
             dtlist = [t0+dt.timedelta(seconds=time) for time in times]
         else:
             raise TypeError('invalid time unit supplied')

@@ -935,11 +935,11 @@ class SpatialReference(object):
 
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         if epsg is None and prj is None:
             epsg = self.epsg
-        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
+                             epsg=epsg, prj=prj)
 
     def get_vertices(self, i, j):
         """Get vertices for a single cell or sequence if i, j locations."""
@@ -1145,14 +1145,14 @@ class SpatialReference(object):
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
-            from ..export.shapefile_utils import write_grid_shapefile2
+            from ..export.shapefile_utils import write_grid_shapefile
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             if epsg is None and prj is None:
                 epsg = self.epsg
-            write_grid_shapefile2(filename, self, array_dict={fieldname: a},
-                                  nan_val=nodata,
-                                  epsg=epsg, prj=prj)
+            write_grid_shapefile(filename, self, array_dict={fieldname: a},
+                                 nan_val=nodata,
+                                 epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
                         fieldname='level', epsg=None, prj=None,

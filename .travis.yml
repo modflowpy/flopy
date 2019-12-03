@@ -6,21 +6,19 @@ services:
 - xvfb
 matrix:
   include:
-  - env: RUN_TYPE=test
-    python: 2.7
+  - env: RUN_TYPE=misc
+    python: 3.7
   - env: RUN_TYPE=test
     python: 3.5
   - env: RUN_TYPE=test
     python: 3.6
   - env: RUN_TYPE=test
     python: 3.7
-  - env: RUN_TYPE=misc
-    python: 3.7
-# - env: RUN_TYPE=test
-#   python: 3.8-dev
+  - env: RUN_TYPE=test
+    python: 3.8
 # allow_failures:
 # - env: RUN_TYPE=test
-#   python: 3.8-dev
+#   python: 3.8
 cache:
   pip: true
   directories:

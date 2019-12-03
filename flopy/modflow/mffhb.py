@@ -91,7 +91,7 @@ class ModflowFhb(Package):
         The simplest form is a list of lists with the FHB flow boundaries.
         This gives the form of::
 
-            ds5 =
+            ds7 =
             [
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)],
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)],

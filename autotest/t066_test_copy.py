@@ -1,6 +1,5 @@
 """Test copying of flopy objects.
 """
-import sys
 import os
 import copy
 import inspect
@@ -108,9 +107,14 @@ def package_is_copy(pk1, pk2):
         elif type(v) == bool:
             if not v == v2:
                 return False
-        elif type(v) in [str, int, float, dict, list]:
+        elif type(v) in [str, int, float, dict]:
             if v != v2:
                 return False
+        elif type(v) == list:
+            for item, item2 in zip(v, v2):
+                if not isinstance(item, mf6.mfpackage.MFPackage):
+                    if item != item2:
+                        return False
         elif isinstance(v, ModelInterface):
             # weak, but calling model_eq would result in recursion
             if v.__repr__() != v2.__repr__():
@@ -185,8 +189,6 @@ def list_is_copy(mflist1, mflist2):
 
 
 def test_mf2005_copy():
-    if sys.version_info[0] < 3:
-        return
     path = '../examples/data/freyberg_multilayer_transient/freyberg.nam'
     model_ws, namefile = os.path.split(path)
     m = fm.Modflow.load(namefile, model_ws=model_ws)
@@ -197,8 +199,6 @@ def test_mf2005_copy():
 
 
 def test_mf6_copy():
-    if sys.version_info[0] < 3:
-        return
     sim_ws = '../examples/data/mf6/test045_lake2tr'
     sim = mf6.MFSimulation.load('mfsim.nam', 'mf6', sim_ws=sim_ws)
     m = sim.get_model('lakeex2a')

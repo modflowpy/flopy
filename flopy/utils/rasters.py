@@ -1,5 +1,24 @@
 import numpy as np
 
+try:
+    import rasterio
+except ImportError:
+    rasterio = None
+
+try:
+    import affine
+except ImportError:
+    affine = None
+
+try:
+    import scipy
+except ImportError:
+    scipy = None
+
+try:
+    import shapely
+except ImportError:
+    shapely = None
 
 class Raster(object):
     """
@@ -44,9 +63,17 @@ class Raster(object):
 
     def __init__(self, array, bands, crs, transform,
                  nodataval, driver="GTiff", rio_ds=None):
-        import rasterio
-        import affine
-        from rasterio.crs import CRS
+        if rasterio is None:
+            msg = 'Raster(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.crs import CRS
+
+        if affine is None:
+            msg = 'Raster(): error ' + \
+                  'importing affine - try "pip install affine"'
+            raise ImportError(msg)
 
         self._array = array
         self._bands = bands
@@ -312,7 +339,12 @@ class Raster(object):
         -------
             np.array
         """
-        from scipy.interpolate import griddata
+        if scipy is None:
+            print('Raster().resample_to_grid(): error ' + \
+                  'importing scipy - try "pip install scipy"')
+        else:
+            from scipy.interpolate import griddata
+
         data_shape = xc.shape
         xc = xc.flatten()
         yc = yc.flatten()
@@ -373,7 +405,19 @@ class Raster(object):
 
         else:
             # crop from user supplied points using numpy
-            from affine import Affine
+            if rasterio is None:
+                msg = 'Raster().crop(): error ' + \
+                      'importing rasterio try "pip install rasterio"'
+                raise ImportError(msg)
+            else:
+                from rasterio.mask import mask
+
+            if affine is None:
+                msg = 'Raster(),crop(): error ' + \
+                      'importing affine - try "pip install affine"'
+                raise ImportError(msg)
+            else:
+                from affine import Affine
 
             mask = self._intersection(polygon, invert)
 
@@ -411,7 +455,7 @@ class Raster(object):
             ymii = np.min(yind)
             ymai = np.max(yind)
 
-            crp_mask = mask[ymii:ymai+1, xmii:xmai+1]
+            crp_mask = mask[ymii:ymai + 1, xmii:xmai + 1]
             nodata = self._meta["nodata"]
             if not isinstance(nodata, float) and not isinstance(nodata, int):
                 try:
@@ -422,7 +466,7 @@ class Raster(object):
 
             arr_dict = {}
             for band, arr in self.__arr_dict.items():
-                t = arr[ymii:ymai+1, xmii:xmai+1]
+                t = arr[ymii:ymai + 1, xmii:xmai + 1]
                 t[~crp_mask] = nodata
                 arr_dict[band] = t
 
@@ -431,8 +475,8 @@ class Raster(object):
             # adjust xmin, ymax back to appropriate grid locations
             xd = abs(self._meta["transform"][0])
             yd = abs(self._meta["transform"][4])
-            xmin -= xd/2.
-            ymax += yd/2.
+            xmin -= xd / 2.
+            ymax += yd / 2.
 
             # step 6: update metadata including a new Affine
             self._meta["height"] = crp_mask.shape[0]
@@ -468,10 +512,22 @@ class Raster(object):
             tuple : (arr_dict, raster_crp_meta)
 
         """
-        from rasterio.mask import mask
+        if rasterio is None:
+            msg = 'Raster()._sample_rio_dataset(): error ' + \
+                  'importing rasterio try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.mask import mask
+
+        if shapely is None:
+            msg = 'Raster()._sample_rio_dataset(): error ' + \
+                  'importing shapely - try "pip install shapely"'
+            raise ImportError(msg)
+        else:
+            from shapely import geometry
+
 
         if isinstance(polygon, list) or isinstance(polygon, np.ndarray):
-            from shapely import geometry
             shapes = [geometry.Polygon([[x, y] for x, y in polygon])]
 
         else:
@@ -517,7 +573,12 @@ class Raster(object):
             mask : np.ndarray (dtype = bool)
 
         """
-        from shapely import geometry
+        if shapely is None:
+            msg = 'Raster()._intersection(): error ' + \
+                  'importing shapely try "pip install shapely"'
+            raise ImportError(msg)
+        else:
+            from shapely import geometry
 
         # step 1: check the data type in shapes
         if isinstance(polygon, geometry.Polygon):
@@ -587,7 +648,7 @@ class Raster(object):
         for i in range(num):
 
             tmp = polygon[i][0] + (polygon[j][0] - polygon[i][0]) * \
-                   (yc - polygon[i][1]) / (polygon[j][1] - polygon[i][1])
+                  (yc - polygon[i][1]) / (polygon[j][1] - polygon[i][1])
 
             comp = np.where(((polygon[i][1] > yc) ^ (polygon[j][1] > yc))
                             & (xc < tmp))
@@ -645,7 +706,10 @@ class Raster(object):
             output raster .tif file name
 
         """
-        import rasterio
+        if rasterio is None:
+            msg = 'Raster().write(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
 
         if not name.endswith(".tif"):
             name += ".tif"
@@ -669,7 +733,11 @@ class Raster(object):
             Raster object
 
         """
-        import rasterio
+        if rasterio is None:
+            msg = 'Raster().load(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+
         dataset = rasterio.open(raster)
         array = dataset.read()
         bands = dataset.indexes
@@ -699,7 +767,12 @@ class Raster(object):
             ax : matplotlib.pyplot.axes
 
         """
-        from rasterio.plot import show
+        if rasterio is None:
+            msg = 'Raster().plot(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.plot import show
 
         if self._dataset is not None:
             ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
@@ -745,7 +818,12 @@ class Raster(object):
             ax : matplotlib.pyplot.axes
 
         """
-        from rasterio.plot import show_hist
+        if rasterio is None:
+            msg = 'Raster().histogram(): error ' + \
+                  'importing rasterio - try "pip install rasterio"'
+            raise ImportError(msg)
+        else:
+            from rasterio.plot import show_hist
 
         if "alpha" not in kwargs:
             kwargs["alpha"] = 0.3
