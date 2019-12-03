@@ -107,9 +107,9 @@ class MFModel(PackageContainer, ModelInterface):
             self.structure = simulation.register_model(self, model_type,
                                                        modelname,
                                                        model_nam_file)
-            self.set_model_relative_path(model_rel_path)
         else:
             self.structure = structure
+        self.set_model_relative_path(model_rel_path)
         self.exe_name = exe_name
         self.dimensions = modeldimensions.ModelDimensions(self.name,
                                                           self.simulation_data)
