@@ -103,11 +103,11 @@ class MFModel(PackageContainer, ModelInterface):
         if model_nam_file is None:
             model_nam_file = '{}.nam'.format(modelname)
 
-        self.set_model_relative_path(model_rel_path)
         if add_to_simulation:
             self.structure = simulation.register_model(self, model_type,
                                                        modelname,
                                                        model_nam_file)
+            self.set_model_relative_path(model_rel_path)
         else:
             self.structure = structure
         self.exe_name = exe_name
