@@ -433,14 +433,14 @@ class ModflowUpw(Package):
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
             if 'vk' not in par_types and 'vani' not in par_types:
-                key = 'vka'
+                key = 'vk'
                 if layvka[k] != 0:
                     key = 'vani'
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, key,
                                 ext_unit_dict)
             else:
                 line = f.readline()
-                key = 'vka'
+                key = 'vk'
                 if 'vani' in par_types:
                     key = 'vani'
                 t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict,
