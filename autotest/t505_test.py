@@ -93,6 +93,7 @@ def np001():
     kwargs['xul'] = 20.5
     good_model = ModflowGwf(test_sim, modelname=model_name,
                             model_nam_file='{}.nam'.format(model_name),
+                            model_rel_path='model_folder',
                             **kwargs)
 
     # create simulation
