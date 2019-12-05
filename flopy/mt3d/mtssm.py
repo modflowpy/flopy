@@ -700,6 +700,9 @@ class Mt3dSsm(Package):
                 current['i'] -= 1
                 current['j'] -= 1
                 current = current.view(np.recarray)
+            elif nss < 0 and iper != 0:
+                # point sinks/sources of specified concentration reused from last stress period
+                current = stress_period_data[iper - 1]
             stress_period_data[iper] = current
 
         if openfile:
