@@ -1270,7 +1270,7 @@ class ModflowMnw2(Package):
                                        hlim, qcut, qfrcmn, qfrcmx] + xyz)
                 stress_period_data[per] = current_4
             elif itmp_per == 0:  # no active mnws this stress period
-                continue
+                pass
             else:
                 # copy pumping rates from previous stress period
                 mnw[wellid].stress_period_data[per] = \
