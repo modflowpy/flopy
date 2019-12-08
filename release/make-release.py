@@ -238,7 +238,9 @@ def update_readme_markdown(vmajor, vminor, vmicro):
             if not is_approved:
                 sb = ' &mdash; release candidate'
             line = '[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., ' + \
-                   'White, J.T., Starn, J.J., and Fienen, M.N., ' + \
+                   'White, J.T., Leaf, A.T., Paulinski, S.R, Larsen, J.D., ' + \
+                   'Toews, M.W., Morway, E.D, Bellino, J.C., Starn, J.J., ' + \
+                   'and Fienen, M.N., ' + \
                    '{}, '.format(now.year) + \
                    'FloPy v{}{}: '.format(version, sb) + \
                    'U.S. Geological Survey Software Release, ' + \
