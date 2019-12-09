@@ -221,10 +221,11 @@ class Grid(object):
         proj4 = None
         if self._proj4 is not None:
             if "epsg" in self._proj4.lower():
-                if "init" not in self._proj4.lower():
-                    proj4 = "+init=" + self._proj4
-                else:
-                    proj4 = self._proj4
+                proj4 = self._proj4
+                # if "init" not in self._proj4.lower():
+                #     proj4 = "+init=" + self._proj4
+                # else:
+                #     proj4 = self._proj4
                 # set the epsg if proj4 specifies it
                 tmp = [i for i in self._proj4.split() if
                        'epsg' in i.lower()]
@@ -232,7 +233,8 @@ class Grid(object):
             else:
                 proj4 = self._proj4
         elif self.epsg is not None:
-            proj4 = '+init=epsg:{}'.format(self.epsg)
+            # proj4 = '+init=epsg:{}'.format(self.epsg)
+            proj4 = 'epsg:{}'.format(self.epsg)
         return proj4
 
     @proj4.setter

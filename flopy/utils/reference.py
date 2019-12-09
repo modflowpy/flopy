@@ -213,10 +213,11 @@ class SpatialReference(object):
         proj4_str = None
         if self._proj4_str is not None:
             if "epsg" in self._proj4_str.lower():
-                if "init" not in self._proj4_str.lower():
-                    proj4_str = "+init=" + self._proj4_str
-                else:
-                    proj4_str = self._proj4_str
+                proj4_str = self._proj4_str
+                # if "init" not in self._proj4_str.lower():
+                #     proj4_str = "+init=" + self._proj4_str
+                # else:
+                #     proj4_str = self._proj4_str
                 # set the epsg if proj4 specifies it
                 tmp = [i for i in self._proj4_str.split() if
                        'epsg' in i.lower()]
@@ -224,7 +225,8 @@ class SpatialReference(object):
             else:
                 proj4_str = self._proj4_str
         elif self.epsg is not None:
-            proj4_str = '+init=epsg:{}'.format(self.epsg)
+            # proj4_str = '+init=epsg:{}'.format(self.epsg)
+            proj4_str = 'epsg:{}'.format(self.epsg)
         return proj4_str
 
     @property
@@ -2195,7 +2197,8 @@ def get_spatialreference(epsg, text='esriwkt'):
     # epsg code not listed on spatialreference.org
     # may still work with pyproj
     elif text == 'epsg':
-        return '+init=epsg:{}'.format(epsg)
+        #return '+init=epsg:{}'.format(epsg)
+        return 'epsg:{}'.format(epsg)
 
 
 def getproj4(epsg):

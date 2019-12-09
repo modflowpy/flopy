@@ -188,7 +188,8 @@ class NetCdf(object):
 
         proj4_str = self.model_grid.proj4
         if proj4_str is None:
-            proj4_str = '+init=epsg:4326'
+            # proj4_str = '+init=epsg:4326'
+            proj4_str = 'epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
@@ -630,8 +631,8 @@ class NetCdf(object):
 
         proj4_str = self.proj4_str
 
-        if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
-            proj4_str = "+init=" + proj4_str
+        # if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
+        #     proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {0}".format(proj4_str))
         try:
             self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
