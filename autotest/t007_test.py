@@ -670,7 +670,6 @@ def test_epsgs():
     msg = 'sr.epsg is not 102733 ({})'.format(sr.epsg)
     assert sr.epsg == 102733, msg
 
-    # if not "proj4_str:+init=epsg:102733" in sr.__repr__():
     t_value = sr.__repr__()
     msg = 'proj4_str:epsg:102733 not in sr.__repr__(): ({})'.format(t_value)
     if not 'proj4_str:epsg:102733' in t_value:
@@ -683,7 +682,6 @@ def test_epsgs():
     msg = 'grid_mapping_name is not latitude_longitude: {}'.format(t_value)
     assert t_value == 'latitude_longitude', msg
 
-    # if not "proj4_str:+init=epsg:4326" in sr.__repr__():
     t_value = sr.__repr__()
     msg = 'proj4_str:epsg:4326 not in sr.__repr__(): ({})'.format(t_value)
     if not 'proj4_str:epsg:4326' in t_value:

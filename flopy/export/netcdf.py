@@ -188,7 +188,6 @@ class NetCdf(object):
 
         proj4_str = self.model_grid.proj4
         if proj4_str is None:
-            # proj4_str = '+init=epsg:4326'
             proj4_str = 'epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
@@ -632,8 +631,6 @@ class NetCdf(object):
         proj4_str = self.proj4_str
         print('initialize_geometry::proj4_str = {}'.format(proj4_str))
 
-        # if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
-        #     proj4_str = "+init=" + proj4_str
         self.log("building grid crs using proj4 string: {}".format(proj4_str))
         try:
             self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
@@ -657,7 +654,6 @@ class NetCdf(object):
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
-        # nc_crs = Proj(init=self.nc_epsg_str)
         nc_crs = Proj(self.nc_epsg_str)
         print('initialize_geometry::nc_crs = {}'.format(nc_crs))
 
@@ -709,15 +705,15 @@ class NetCdf(object):
             import netCDF4
         except Exception as e:
             self.logger.warn("error importing netCDF module")
-            raise Exception(
-                "NetCdf error importing netCDF4 module:\n" + str(e))
+            msg = "NetCdf error importing netCDF4 module:\n" + str(e)
+            raise Exception(msg)
 
         # open the file for writing
         try:
             self.nc = netCDF4.Dataset(self.output_filename, "w")
         except Exception as e:
-            raise Exception(
-                "error creating netcdf dataset:\n{0}".format(str(e)))
+            msg = "error creating netcdf dataset:\n{}".format(str(e))
+            raise Exception(msg)
 
         # write some attributes
         self.log("setting standard attributes")

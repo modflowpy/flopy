@@ -818,7 +818,6 @@ class CRS(object):
         # epsg code not listed on spatialreference.org
         # may still work with pyproj
         elif text == 'epsg':
-            # return '+init=epsg:{}'.format(epsg)
             return 'epsg:{}'.format(epsg)
 
     @staticmethod
