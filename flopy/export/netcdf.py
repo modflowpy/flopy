@@ -630,6 +630,7 @@ class NetCdf(object):
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
         proj4_str = self.proj4_str
+        print('initialize_geometry::proj4_str = {}'.format(proj4_str))
 
         # if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
         #     proj4_str = "+init=" + proj4_str
@@ -640,6 +641,9 @@ class NetCdf(object):
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))
             raise Exception("error building grid crs:\n{0}".format(str(e)))
+
+        print('initialize_geometry::self.grid_crs = {}'.format(self.grid_crs))
+
         self.log("building grid crs using proj4 string: {}".format(proj4_str))
 
         vmin, vmax = self.model_grid.botm.min(), \
@@ -655,6 +659,8 @@ class NetCdf(object):
         # Transform to a known CRS
         # nc_crs = Proj(init=self.nc_epsg_str)
         nc_crs = Proj(self.nc_epsg_str)
+        print('initialize_geometry::nc_crs = {}'.format(nc_crs))
+
         self.log("projecting grid cell center arrays " + \
                  "from {} to {}".format(str(self.grid_crs.srs),
                                         str(nc_crs.srs)))
