@@ -640,7 +640,7 @@ class NetCdf(object):
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))
             raise Exception("error building grid crs:\n{0}".format(str(e)))
-        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
+        self.log("building grid crs using proj4 string: {}".format(proj4_str))
 
         vmin, vmax = self.model_grid.botm.min(), \
                      self.model_grid.top.max()
@@ -653,10 +653,11 @@ class NetCdf(object):
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
-        nc_crs = Proj(init=self.nc_epsg_str)
+        # nc_crs = Proj(init=self.nc_epsg_str)
+        nc_crs = Proj(self.nc_epsg_str)
         self.log("projecting grid cell center arrays " + \
-                 "from {0} to {1}".format(str(self.grid_crs.srs),
-                                          str(nc_crs.srs)))
+                 "from {} to {}".format(str(self.grid_crs.srs),
+                                        str(nc_crs.srs)))
         try:
             self.xs, self.ys = transform(self.grid_crs, nc_crs, xs, ys)
         except Exception as e:
@@ -755,8 +756,8 @@ class NetCdf(object):
         crs.inverse_flattening = self.nc_inverse_flat
         self.log("setting CRS info")
 
-        attribs = {"units": "{0} since {1}".format(self.time_units,
-                                                   self.start_datetime),
+        attribs = {"units": "{} since {}".format(self.time_units,
+                                                 self.start_datetime),
                    "standard_name": "time",
                    "long_name": NC_LONG_NAMES.get("time", "time"),
                    "calendar": "gregorian",
@@ -1051,8 +1052,8 @@ class NetCdf(object):
         try:
             from numpydoc.docscrape import NumpyDocString
         except Exception as e:
-            raise Exception(
-                "NetCdf error importing numpydoc module:\n" + str(e))
+            msg = 'NetCdf error importing numpydoc module:\n' + str(e)
+            raise Exception(msg)
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""

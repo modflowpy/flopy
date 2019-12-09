@@ -10,8 +10,6 @@ import numpy as np
 import warnings
 import flopy
 
-calling_prog = os.path.basename(sys.executable).lower()
-
 pth = os.path.join('..', 'examples', 'data', 'mf2005_test')
 namfiles = [namfile for namfile in os.listdir(pth) if namfile.endswith('.nam')]
 # skip = ["MNW2-Fig28.nam", "testsfr2.nam", "testsfr2_tab.nam"]
@@ -76,7 +74,6 @@ def export_netcdf(m):
         import pyproj
     except:
         return
-
     fnc = m.export(os.path.join(npth, m.name + '.nc'))
     fnc.write()
     fnc_name = os.path.join(npth, m.name + '.nc')
@@ -763,7 +760,6 @@ def test_dynamic_xll_yll():
     msg = "rotation should not affect xul ({})".format(t_value)
     assert t_value < 1e-6, msg
 
-
     t_value = np.abs(sr4.yul - (yul + 21.))
     msg = "rotation should not affect yul ({})".format(t_value)
     assert t_value < 1e-6, msg
@@ -1365,15 +1361,8 @@ def test_shapefile_export_modelgrid_override():
 
 def test_netcdf():
     for namfile in namfiles:
-        if 'python' in calling_prog:
-            export_mf2005_netcdf(namfile)
-        elif 'nosetests' in calling_prog:
-            call_yield(export_mf2005_netcdf, namfile)
+        yield export_mf2005_netcdf, namfile
     return
-
-
-def call_yield(fn, arg):
-    yield fn, arg
 
 
 def build_netcdf():
@@ -1468,11 +1457,19 @@ def test_export_contourf():
     assert os.path.isfile(filename), 'did not create contourf shapefile'
     return
 
-
-if __name__ == '__main__':
+def main():
     # test_shapefile()
     # test_shapefile_ibound()
-    test_netcdf()
+
+    test_netcdf_classmethods()
+
+    for namfile in namfiles:
+        export_mf2005_netcdf(namfile)
+        export_shapefile(namfile)
+
+    for namfile in namfiles[0:2]:
+        export_shapefile_modelgrid_override(namfile)
+
     # test_netcdf_overloads()
     # test_netcdf_classmethods()
     # build_netcdf()
@@ -1505,4 +1502,8 @@ if __name__ == '__main__':
     # test_export_contourf()
     # test_sr()
     # test_shapefile_polygon_closed()
-    pass
+
+
+if __name__ == '__main__':
+
+    main()
