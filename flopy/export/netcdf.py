@@ -633,7 +633,7 @@ class NetCdf(object):
 
         # if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
         #     proj4_str = "+init=" + proj4_str
-        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
+        self.log("building grid crs using proj4 string: {}".format(proj4_str))
         try:
             self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
 
