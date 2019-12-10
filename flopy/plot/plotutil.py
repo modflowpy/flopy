@@ -1198,6 +1198,8 @@ class PlotUtilities(object):
             if key in kwargs:
                 defaults[key] = kwargs.pop(key)
 
+        plotarray = plotarray.astype(float)
+
         # test if this is vertex or structured grid
         if model is not None:
             grid_type = model.modelgrid.grid_type
