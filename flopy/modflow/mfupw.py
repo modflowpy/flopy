@@ -390,8 +390,7 @@ class ModflowUpw(Package):
         laywet = np.empty((nlay,), dtype=np.int32)
         laywet = read1d(f, laywet)
 
-        # Item 7: WETFCT, IWETIT, IHDWET
-        iwetit = None
+        # check that LAYWET is 0 for all layers
         iwetdry = laywet.sum()
         if iwetdry > 0:
             raise Exception('LAYWET should be 0 for UPW')
