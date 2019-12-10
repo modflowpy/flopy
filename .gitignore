@@ -61,16 +61,14 @@ flopy/.idea
 
 examples/Notebooks/data
 examples/Notebooks/temp
-examples/Notebooks/.ipynb_checkpoints
 examples/FAQ/temp
-examples/FAQ/.ipynb_checkpoints
 examples/Testing/.idea
 examples/Testing/data
-examples/Testing/.ipynb_checkpoints
 examples/scripts/data
 examples/groundwater_paper/Notebooks/temp
-examples/groundwater_paper/Notebooks/.ipynb_checkpoints
 
+# ignore all .ipynb_checkpoints
+.ipynb_checkpoints
 
 autotest/*.bin
 autotest/*.dat
