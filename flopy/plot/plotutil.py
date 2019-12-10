@@ -1827,6 +1827,9 @@ class UnstructuredPlotUtilities(object):
                             continue
                         elif i in vdict[cell]:
                             continue
+                        elif np.isnan(i[0]) or np.isinf(i[0]) \
+                                or np.isinf(i[1]) or np.isnan(i[1]):
+                            continue
                         else:
                             vdict[cell].append(i)
                 else:
@@ -1839,6 +1842,9 @@ class UnstructuredPlotUtilities(object):
                         elif i[1] < ymin or i[1] > ymax:
                             continue
                         elif i in t:
+                            continue
+                        elif np.isnan(i[0]) or np.isinf(i[0]) \
+                                or np.isinf(i[1]) or np.isnan(i[1]):
                             continue
                         else:
                             t.append(i)
