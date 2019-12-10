@@ -251,11 +251,12 @@ class ModflowUpw(Package):
         # Item 0: text
         f_upw.write('{}\n'.format(self.heading))
         # Item 1: IBCFCB, HDRY, NPLPF
-        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'.format(self.ipakcb,
-                                                                   self.hdry,
-                                                                   self.npupw,
-                                                                   self.iphdry,
-                                                                   self.options))
+        f_upw.write('{0:10d}{1:10.3G}{2:10d}{3:10d}{4:s}\n'
+                    .format(self.ipakcb,
+                            self.hdry,
+                            self.npupw,
+                            self.iphdry,
+                            self.options))
         # LAYTYP array
         f_upw.write(self.laytyp.string)
         # LAYAVG array
@@ -276,7 +277,7 @@ class ModflowUpw(Package):
             if self.chani[k] < 1:
                 f_upw.write(self.hani[k].get_file_entry())
             f_upw.write(self.vka[k].get_file_entry())
-            if transient == True:
+            if transient is True:
                 f_upw.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f_upw.write(self.sy[k].get_file_entry())
@@ -390,7 +391,7 @@ class ModflowUpw(Package):
         laywet = read1d(f, laywet)
 
         # Item 7: WETFCT, IWETIT, IHDWET
-        wetfct, iwetit, ihdwet = None, None, None
+        iwetit = None
         iwetdry = laywet.sum()
         if iwetdry > 0:
             raise Exception('LAYWET should be 0 for UPW')
@@ -410,7 +411,7 @@ class ModflowUpw(Package):
         vkcb = [0] * nlay
         # load by layer
         for k in range(nlay):
-            
+
             # hk
             if model.verbose:
                 print('   loading hk layer {0:3d}...'.format(k + 1))
@@ -422,7 +423,7 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), 'hk', parm_dict,
                                          findlayer=k)
             hk[k] = t
-            
+
             # hani
             if chani[k] < 1:
                 if model.verbose:
@@ -435,13 +436,13 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'hani',
                                              parm_dict, findlayer=k)
                 hani[k] = t
-            
+
             # vka
             if model.verbose:
                 print('   loading vka layer {0:3d}...'.format(k + 1))
             key = 'vk'
             if layvka[k] != 0:
-                    key = 'vani'
+                key = 'vani'
             if 'vk' not in par_types and 'vani' not in par_types:
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, key,
                                 ext_unit_dict)
@@ -450,10 +451,10 @@ class ModflowUpw(Package):
                 t = mfpar.parameter_fill(model, (nrow, ncol), key, parm_dict,
                                          findlayer=k)
             vka[k] = t
-            
+
             # storage properties
             if transient:
-                
+
                 # ss
                 if model.verbose:
                     print('   loading ss layer {0:3d}...'.format(k + 1))
@@ -465,7 +466,7 @@ class ModflowUpw(Package):
                     t = mfpar.parameter_fill(model, (nrow, ncol), 'ss',
                                              parm_dict, findlayer=k)
                 ss[k] = t
-                
+
                 # sy
                 if laytyp[k] != 0:
                     if model.verbose:
@@ -479,7 +480,7 @@ class ModflowUpw(Package):
                         t = mfpar.parameter_fill(model, (nrow, ncol), 'sy',
                                                  parm_dict, findlayer=k)
                     sy[k] = t
-            
+
             # vkcb
             if model.get_package('DIS').laycbd[k] > 0:
                 if model.verbose:
