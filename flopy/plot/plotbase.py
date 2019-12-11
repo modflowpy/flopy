@@ -371,10 +371,10 @@ class PlotCrossSection(object):
         # Plot the list locations, change this to self.mg.shape
         if self.mg.grid_type == "vertex":
             plotarray = np.zeros((self.mg.nlay, self.mg.ncpl), dtype=np.int)
+            plotarray[idx] = 1
         else:
             plotarray = np.zeros((self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=np.int)
-
-        plotarray[idx] = 1
+            plotarray[idx[0], idx[1], idx[2]] = 1
 
         plotarray = np.ma.masked_equal(plotarray, 0)
         if color is None:
@@ -470,7 +470,7 @@ class PlotCrossSection(object):
         if self.direction == 'x':
             qx[idx] = spdis['qx']
         elif self.direction == 'y':
-            qx[idx] = spdis['qy']
+            qx[idx] = spdis['qy'] * -1
         else:
             err_msg = 'plot_specific_discharge does not ' \
                       'support arbitrary cross-sections'
@@ -663,7 +663,7 @@ class PlotCrossSection(object):
 
             ib = ib.ravel()
             qx = qx.ravel()
-            qy = qy.ravel()
+            qy = qy.ravel() * -1
             qz = qz.ravel()
 
             temp = []

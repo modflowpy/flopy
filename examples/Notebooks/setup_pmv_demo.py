@@ -6,64 +6,7 @@ import sys
 
 
 def run():
-    # run installed version of flopy or add local path
-    try:
-        import flopy
-    except:
-        fpth = os.path.abspath(os.path.join('..', '..'))
-        sys.path.append(fpth)
-        import flopy
-
-    # Set name of MODFLOW exe
-    #  assumes executable is in users path statement
-    version = 'mf2005'
-    exe_name = 'mf2005'
-    exe_mp = 'mp6'
-    if platform.system() == 'Windows':
-        exe_name += '.exe'
-        exe_mp += '.exe'
-    mfexe = exe_name
-
-    # Set the paths
-    loadpth = os.path.join('..', 'data', 'freyberg')
-    modelpth = os.path.join('data')
-
-    # make sure modelpth directory exists
-    if not os.path.exists(modelpth):
-        os.makedirs(modelpth)
-
-    ml = flopy.modflow.Modflow.load('freyberg.nam', model_ws=loadpth,
-                                    exe_name=exe_name, version=version)
-    ml.change_model_ws(new_pth=modelpth)
-    ml.write_input()
-    success, buff = ml.run_model()
-    if not success:
-        print('Something bad happened.')
-    files = ['freyberg.hds', 'freyberg.cbc']
-    for f in files:
-        if os.path.isfile(os.path.join(modelpth, f)):
-            msg = 'Output file located: {}'.format(f)
-            print(msg)
-        else:
-            errmsg = 'Error. Output file cannot be found: {}'.format(f)
-            print(errmsg)
-
-    mp = flopy.modpath.Modpath('freybergmp', exe_name=exe_mp, modflowmodel=ml, model_ws=modelpth)
-    mpbas = flopy.modpath.ModpathBas(mp, hnoflo=ml.bas6.hnoflo, hdry=ml.lpf.hdry,
-                                     ibound=ml.bas6.ibound.array, prsity=0.2, prsityCB=0.2)
-    sim = mp.create_mpsim(trackdir='forward', simtype='endpoint', packages='RCH')
-    mp.write_input()
-    mp.run_model()
-
-    mpp = flopy.modpath.Modpath('freybergmpp', exe_name=exe_mp, modflowmodel=ml, model_ws=modelpth)
-    mpbas = flopy.modpath.ModpathBas(mpp, hnoflo=ml.bas6.hnoflo, hdry=ml.lpf.hdry,
-                                     ibound=ml.bas6.ibound.array, prsity=0.2, prsityCB=0.2)
-    sim = mpp.create_mpsim(trackdir='backward', simtype='pathline', packages='WEL')
-    mpp.write_input()
-    mpp.run_model()
-
-
-    ## load and run second example
+    ## load and run vertex grid example
     # run installed version of flopy or add local path
     try:
         import flopy
@@ -170,6 +113,7 @@ def run():
 
     # node property flow
     npf = flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=[('xt3d')],
+                                  save_specific_discharge=True,
                                   icelltype=[1, 0, 0],
                                   k=[50.0, 0.01, 200.0],
                                   k33=[10., 0.01, 20.])
