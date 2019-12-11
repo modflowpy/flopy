@@ -239,6 +239,8 @@ class Mt3dSsm(Package):
                         break
                 except KeyError:
                     continue
+                except AttributeError:
+                    continue
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()
