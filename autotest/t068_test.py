@@ -5,6 +5,7 @@ Test MT3D model creation and file writing
 import os
 import warnings
 import flopy
+import numpy as np
 
 
 def test_mt3d_ssm_with_nodata_in_1st_sp():
