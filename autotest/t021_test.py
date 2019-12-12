@@ -48,6 +48,32 @@ def test_single_mflist_entry_load():
     assert mm.wel.stress_period_data
     mm.write_input()
 
+
+def test_mflist_add_record():
+    ml = flopy.modflow.Modflow()
+    _ = flopy.modflow.ModflowDis(ml, nper=2)
+    wel = flopy.modflow.ModflowWel(ml)
+    assert len(wel.stress_period_data.data) == 0
+
+    wel.stress_period_data.add_record(0, [0, 1, 2], [1.0])
+    assert len(wel.stress_period_data.data) == 1
+    wel_dtype = [('k', int), ('i', int), ('j', int), ('flux', np.float32)]
+    check0 = np.array([(0, 1, 2, 1.0)], dtype=wel_dtype)
+    np.testing.assert_array_equal(wel.stress_period_data[0], check0)
+
+    wel.stress_period_data.add_record(0, [0, 1, 1], [8.0])
+    assert len(wel.stress_period_data.data) == 1
+    check0 = np.array([(0, 1, 2, 1.0), (0, 1, 1, 8.0)], dtype=wel_dtype)
+    np.testing.assert_array_equal(wel.stress_period_data[0], check0)
+
+    wel.stress_period_data.add_record(1, [0, 1, 1], [5.0])
+    assert len(wel.stress_period_data.data) == 2
+    check1 = np.array([(0, 1, 1, 5.0)], dtype=wel_dtype)
+    np.testing.assert_array_equal(wel.stress_period_data[0], check0)
+    np.testing.assert_array_equal(wel.stress_period_data[1], check1)
+
+
 if __name__ == '__main__':
     test_mflist_external()
     test_single_mflist_entry_load()
+    test_mflist_add_record()
