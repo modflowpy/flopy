@@ -229,12 +229,13 @@ class Mt3dSsm(Package):
 
             # Do not assume first key (stress period 0) has data, it may
             # not.  Cycle through stress periods looking for one w/ data
-            for i in range(nper):
-                if i in self.stress_period_data.data:
-                    self.mxss += np.sum(
-                        self.stress_period_data.data[i].itype == -1)
-                    self.mxss += np.sum(
-                        self.stress_period_data.data[i].itype == -15)
+            if self.stress_period_data is not None:
+                for i in range(nper):
+                    if i in self.stress_period_data.data:
+                        self.mxss += np.sum(
+                            self.stress_period_data.data[i].itype == -1)
+                        self.mxss += np.sum(
+                            self.stress_period_data.data[i].itype == -15)
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()
