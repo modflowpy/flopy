@@ -277,7 +277,7 @@ class ModflowUpw(Package):
             if self.chani[k] < 1:
                 f_upw.write(self.hani[k].get_file_entry())
             f_upw.write(self.vka[k].get_file_entry())
-            if transient is True:
+            if transient:
                 f_upw.write(self.ss[k].get_file_entry())
                 if self.laytyp[k] != 0:
                     f_upw.write(self.sy[k].get_file_entry())
