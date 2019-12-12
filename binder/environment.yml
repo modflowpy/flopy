@@ -20,5 +20,4 @@ dependencies:
   - rasterio>=1.0
   - rasterstats
   - pyshp
-  - hydrofunctions
   - pip

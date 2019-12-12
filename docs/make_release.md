@@ -4,11 +4,13 @@ Instructions for making a FloPy release
 ## Make a release branch from develop
 
 1.  Make a release branch from develop (*e.g.* `release3.2.10`)
-2.  Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running: 
+2.  Update MODFLOW 6 dfn files in the repository and MODFLOW 6 package classes by running:
 
     ```
     python -c 'import flopy; flopy.mf6.utils.generate_classes(branch="master", backup=False)'
     ```
+
+    Evaluate if there are any changes that seem to reduce MODFLOW 6 functionality before committing changes on the release branch.
 
 
 ## Update the release version number
@@ -58,6 +60,41 @@ Instructions for making a FloPy release
 3.  Make release on [GitHub website](https://github.com/modflowpy/flopy/releases). Add version changes for [current release](https://github.com/modflowpy/flopy/blob/develop/docs/version_changes.md) from to release text. Publish release.
 
 
+## Update flopy-feedstock for conda install
+
+1.  Download the `*.tar.gz` file for the current release from the [GitHub website](https://github.com/modflowpy/flopy/releases).
+
+2.  Calculate the sha256 checksum for the `*.tar.gz` using:
+
+    ```
+    openssl sha256 flopy-version.tar.gz
+    ```
+
+    from a terminal.
+
+3.  Pull upstream [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock) into local copy of the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) repo:
+
+    ```
+    cd /Users/jdhughes/Documents/Development/flopy-feedstock_git
+    git fetch upstream
+    git checkout master
+    git reset --hard upstream/master
+    git push origin master --force
+    ```
+
+4.  Rerender the repo using `conda-smithy` (make sure `conda-smithy` is installed using conda):
+
+    ```
+    conda smithy rerender
+    ```
+
+4.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
+
+5.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
+
+6.  Make pull request to [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock)
+
+
 ## Update PyPi
 
 1.  Make sure `pypandoc` and `twine` are installed using:
@@ -75,7 +112,7 @@ Instructions for making a FloPy release
     conda install pypandoc
     conda install twine
     ```
- 
+
 3.  Create the source zip file in a terminal using:
 
     ```
@@ -88,42 +125,6 @@ Instructions for making a FloPy release
     twine upload dist/flopy-version.zip
     ```
 
-
-## Update flopy-feedstock for conda install
-
-1.  Download the `*.tar.gz` file for the current release from the [GitHub website](https://github.com/modflowpy/flopy/releases).
-
-2.  Calculate the sha256 checksum for the `*.tar.gz` using:
-  
-    ```
-    openssl sha256 flopy-version.tar.gz
-    ```
-
-    from a terminal.
-
-3.  Pull upstream [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock) into local copy of the [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock) repo:
-
-    ```
-    cd /Users/jdhughes/Documents/Development/flopy-feedstock_git
-    git fetch upstream
-    git checkout master
-    git reset --hard upstream/master  
-    git push origin master --force     
-    ```
-
-4.  Rerender the repo using `conda-smithy` (make sure `conda-smithy` is installed using conda):
-
-    ```
-    conda smithy rerender
-    ```
-
-4.  Update the version number in `{% set version = "3.2.7" %}` and sha256 in the [flopy-feedstock fork meta.yaml](https://github.com/jdhughes-usgs/flopy-feedstock/blob/master/recipe/meta.yaml) file.
-
-5.  Commit changes and push to [flopy-feedstock fork](https://github.com/jdhughes-usgs/flopy-feedstock).
-
-6.  Make pull request to [flopy-feedstock](https://github.com/conda-forge/flopy-feedstock)
-
-
 ## Sync develop and master branches
 
 1.  Merge the `master` branch into the `develop` branch.
@@ -134,8 +135,7 @@ Instructions for making a FloPy release
 
     ```
     python make-release.py
-    ```    
+    ```
 4.  Commit and push the modified `develop` branch.
-    
-    
-    
+
+

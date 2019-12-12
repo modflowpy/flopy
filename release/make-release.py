@@ -13,10 +13,10 @@ from collections import OrderedDict
 # as the path if the file is in the root repository directory
 paths = ['../flopy', '../',
          '../docs', '../docs',
-         '../', '../']
+         '../', '../', '../docs']
 files = ['version.py', 'README.md',
          'USGS_release.md', 'PyPi_release.md',
-         'code.json', 'DISCLAIMER.md']
+         'code.json', 'DISCLAIMER.md', 'notebook_examples.md']
 
 # check that there are the same number of entries in files and paths
 if len(paths) != len(files):
@@ -53,6 +53,16 @@ constitute any such warranty. The software is provided on the condition that
 neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
 '''
+
+# author list for software citation
+# author should be defined LastName FirstName MiddleInitial
+# MiddleInitial can be absent. Use spaces instead of commas to separate
+# LastName, FirstName, and MiddleInitial.
+authors = ['Bakker Mark', 'Post Vincent', 'Langevin Christian D',
+           'Hughes Joseph D', 'White Jeremy T', 'Leaf Andrew T',
+           'Paulinski Scott R', 'Larsen Joshua D', 'Toews Michael W',
+           'Morway Eric D', 'Bellino Jason C', 'Starn Jeffrey J',
+           'Fienen Michael N']
 
 
 def get_disclaimer():
@@ -114,6 +124,32 @@ def get_tag(v0, v1, v2):
     tag = '.'.join(tag_type)
     return tag
 
+def get_software_citation(version, is_approved):
+    now = datetime.datetime.now()
+    sb = ''
+    if not is_approved:
+        sb = ' &mdash; release candidate'
+    line = '['
+    for ipos, author in enumerate(authors):
+        if ipos > 0:
+            line += ', '
+        if ipos == len(authors) - 1:
+            line += 'and '
+        sv = author.split()
+        tauthor = '{}, {}.'.format(sv[0], sv[1][0])
+        if len(sv) > 2:
+            tauthor += ' {}.'.format(sv[2][0])
+        line += tauthor
+    line += ', {}, '.format(now.year) + \
+            'FloPy v{}{}: '.format(version, sb) + \
+            'U.S. Geological Survey Software Release, ' + \
+            '{}, '.format(now.strftime('%d %B %Y')) + \
+            'http://dx.doi.org/10.5066/F7BK19FH]' + \
+            '(http://dx.doi.org/10.5066/F7BK19FH)'
+
+    return line
+
+
 
 def update_version():
     try:
@@ -156,6 +192,9 @@ def update_version():
 
     # update README.md with new version information
     update_readme_markdown(vmajor, vminor, vmicro)
+
+    # update notebook_examples.md
+    update_notebook_examples_markdown()
 
     # update code.json
     update_codejson(vmajor, vminor, vmicro)
@@ -232,27 +271,21 @@ def update_readme_markdown(vmajor, vminor, vmicro):
                    'modflowpy/flopy/badge.svg?branch={})]'.format(branch) + \
                    '(https://coveralls.io/github/modflowpy/' + \
                    'flopy?branch={})'.format(branch)
+        elif '[Binder]' in line:
+            # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
+            line = '[![Binder](https://mybinder.org/badge_logo.svg)]' + \
+                   '(https://mybinder.org/v2/gh/modflowpy/flopy.git/' + \
+                   '{}'.format(branch) + ')'
         elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
-            now = datetime.datetime.now()
-            sb = ''
-            if not is_approved:
-                sb = ' &mdash; release candidate'
-            line = '[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., ' + \
-                   'White, J.T., Leaf, A.T., Paulinski, S.R., Larsen, J.D., ' + \
-                   'Toews, M.W., Morway, E.D., Bellino, J.C., Starn, J.J., ' + \
-                   'and Fienen, M.N., ' + \
-                   '{}, '.format(now.year) + \
-                   'FloPy v{}{}: '.format(version, sb) + \
-                   'U.S. Geological Survey Software Release, ' + \
-                   '{}, '.format(now.strftime('%d %B %Y')) + \
-                   'http://dx.doi.org/10.5066/F7BK19FH]' + \
-                   '(http://dx.doi.org/10.5066/F7BK19FH)'
+            line = get_software_citation(version, is_approved)
         elif 'Disclaimer' in line:
             line = disclaimer
             terminate = True
         f.write('{}\n'.format(line))
         if terminate:
             break
+
+
     f.close()
 
     # write disclaimer markdown file
@@ -262,6 +295,34 @@ def update_readme_markdown(vmajor, vminor, vmicro):
     f.close()
 
     return
+
+
+def update_notebook_examples_markdown():
+    # create disclaimer text
+    is_approved, disclaimer = get_disclaimer()
+
+    # define branch
+    if is_approved:
+        branch = 'master'
+    else:
+        branch = 'develop'
+
+    # read notebook_examples.md into memory
+    fpth = os.path.join(paths[6], files[6])
+    with open(fpth, 'r') as file:
+        lines = [line.rstrip() for line in file]
+
+    # rewrite notebook_examples.md
+    terminate = False
+    f = open(fpth, 'w')
+    for line in lines:
+        if '[Binder]' in line:
+            # [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
+            line = '[![Binder](https://mybinder.org/badge_logo.svg)]' + \
+                   '(https://mybinder.org/v2/gh/modflowpy/flopy.git/' + \
+                   '{}'.format(branch) + ')'
+        f.write('{}\n'.format(line))
+    f.close()
 
 
 def update_USGSmarkdown(vmajor, vminor, vmicro):
@@ -295,19 +356,13 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     f.write('---\n')
     f.write('title: FloPy Release Notes\n')
     f.write('author:\n')
-    f.write('    - Mark Bakker\n')
-    f.write('    - Vincent Post\n')
-    f.write('    - Christian D. Langevin\n')
-    f.write('    - Joseph D. Hughes\n')
-    f.write('    - Jeremy T. White\n')
-    f.write('    - Andrew T. Leaf\n')
-    f.write('    - Scott R. Paulinski\n')
-    f.write('    - Joshua D. Larsen\n')
-    f.write('    - Michael W. Toews\n')
-    f.write('    - Eric D. Morway\n')
-    f.write('    - Jason C. Bellino\n')
-    f.write('    - Jeffrey Starn\n')
-    f.write('    - Michael N. Fienen\n')
+    for author in authors:
+        sv = author.split()
+        tauthor = '{}'.format(sv[1])
+        if len(sv) > 2:
+            tauthor += ' {}.'.format(sv[2][0])
+        tauthor += ' {}'.format(sv[0])
+        f.write('    - {}\n'.format(tauthor))
     f.write('header-includes:\n')
     f.write('    - \\usepackage{fancyhdr}\n')
     f.write('    - \\usepackage{lastpage}\n')
@@ -330,6 +385,9 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
             writeline = False
         elif line == 'How to Cite':
             writeline = True
+        elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
+            writeline = True
+            line = get_software_citation(version, is_approved)
         elif line == 'MODFLOW Resources':
             writeline = False
         elif line == 'Disclaimer':
