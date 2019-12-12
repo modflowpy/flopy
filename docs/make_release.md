@@ -18,6 +18,11 @@ Instructions for making a FloPy release
 1.  Increment `major`, `minor`, and/or `micro` numbers in `flopy/version.py`, as appropriate.
 
 
+## Update the Software/Code citation for FloPy
+
+1. Update the `authors` list in `release/make-release.py` for the Software/Code citation for FloPy, if required.
+
+
 ## Build USGS release notes
 
 1.  Manually run `make-release.py` in the `release/` directory to update version information using:

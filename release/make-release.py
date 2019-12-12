@@ -27,6 +27,16 @@ if len(paths) != len(files):
 
 pak = 'flopy'
 
+# authors list for Software/Code citation for FloPy
+# author should be defined LastName FirstName MiddleInitial
+# MiddleInitial can be absent. Use spaces instead of commas to separate
+# LastName, FirstName, and MiddleInitial.
+authors = ['Bakker Mark', 'Post Vincent', 'Langevin Christian D',
+           'Hughes Joseph D', 'White Jeremy T', 'Leaf Andrew T',
+           'Paulinski Scott R', 'Larsen Joshua D', 'Toews Michael W',
+           'Morway Eric D', 'Bellino Jason C', 'Starn Jeffrey J',
+           'Fienen Michael N']
+
 approved = '''Disclaimer
 ----------
 
@@ -53,16 +63,6 @@ constitute any such warranty. The software is provided on the condition that
 neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
 '''
-
-# author list for software citation
-# author should be defined LastName FirstName MiddleInitial
-# MiddleInitial can be absent. Use spaces instead of commas to separate
-# LastName, FirstName, and MiddleInitial.
-authors = ['Bakker Mark', 'Post Vincent', 'Langevin Christian D',
-           'Hughes Joseph D', 'White Jeremy T', 'Leaf Andrew T',
-           'Paulinski Scott R', 'Larsen Joshua D', 'Toews Michael W',
-           'Morway Eric D', 'Bellino Jason C', 'Starn Jeffrey J',
-           'Fienen Michael N']
 
 
 def get_disclaimer():
@@ -124,6 +124,7 @@ def get_tag(v0, v1, v2):
     tag = '.'.join(tag_type)
     return tag
 
+
 def get_software_citation(version, is_approved):
     now = datetime.datetime.now()
     sb = ''
@@ -148,7 +149,6 @@ def get_software_citation(version, is_approved):
             '(http://dx.doi.org/10.5066/F7BK19FH)'
 
     return line
-
 
 
 def update_version():
@@ -284,7 +284,6 @@ def update_readme_markdown(vmajor, vminor, vmicro):
         f.write('{}\n'.format(line))
         if terminate:
             break
-
 
     f.close()
 
