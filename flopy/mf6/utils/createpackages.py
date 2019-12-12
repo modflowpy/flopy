@@ -280,12 +280,15 @@ def build_model_load(model_type):
                  "modelname='NewModel',\n             " \
                  "model_nam_file='modflowtest.nam', version='mf6',\n" \
                  "             exe_name='mf6.exe', strict=True, " \
-                 "model_rel_path='.'):\n        " \
+                 "model_rel_path='.',\n" \
+                 "             load_only=None):\n        " \
                  "return mfmodel.MFModel.load_base(simulation, structure, " \
                  "modelname,\n                                         " \
                  "model_nam_file, '{}', version,\n" \
-                 "                                         exe_name, strict, " \
-                 "model_rel_path)\n".format(model_type)
+                 "                                         exe_name, strict, "\
+                 "model_rel_path,\n" \
+                 "                                         load_only)" \
+                 "\n".format(model_type)
     return model_load, model_load_c
 
 
