@@ -1473,8 +1473,8 @@ class MFFileAccessList(MFFileAccess):
             if arr_line is None:
                 data_converted = None
                 if add_to_last_line:
-                    self._last_line_info[-1].append([data_index, data_item.type,
-                                                     0])
+                    self._last_line_info[-1].append([data_index,
+                                                     data_item.type, 0])
             else:
                 if arr_line[data_index].lower() in \
                         self._data_dimensions.package_dim.get_tsnames():
