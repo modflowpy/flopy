@@ -442,11 +442,11 @@ class MFModel(PackageContainer, ModelInterface):
 
     @property
     def hdry(self):
-        return None
+        return -1e30
 
     @property
     def hnoflo(self):
-        return None
+        return 1e30
 
     @property
     def laycbd(self):

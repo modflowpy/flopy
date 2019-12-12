@@ -195,6 +195,7 @@ class Mt3dSsm(Package):
         ncol = model.ncol
         nlay = model.nlay
         ncomp = model.ncomp
+        nper = model.nper
 
         # Create a list of SsmPackage (class defined above)
         self.__SsmPackages = []
@@ -225,11 +226,18 @@ class Mt3dSsm(Package):
         if mxss is None:
             # Need to calculate max number of sources and sinks
             self.mxss = 0
+            mxss_kper = 0
+
+            # Do not assume first key (stress period 0) has data, it may
+            # not.  Cycle through stress periods looking for one w/ data
             if self.stress_period_data is not None:
-                self.mxss += np.sum(
-                    self.stress_period_data.data[0].itype == -1)
-                self.mxss += np.sum(
-                    self.stress_period_data.data[0].itype == -15)
+                for i in range(nper):
+                    if i in self.stress_period_data.data:
+                        mxss_kper += np.sum(
+                            self.stress_period_data.data[i].itype == -1)
+                        mxss_kper += np.sum(
+                            self.stress_period_data.data[i].itype == -15)
+                    self.mxss = max(self.mxss, mxss_kper)
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()

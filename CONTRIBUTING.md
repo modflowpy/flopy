@@ -49,7 +49,7 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 - version of FloPy used
 - and most importantly - a use-case that fails (ideally an example that uses flopy to generate FloPy input files - see `t0**_test.py` python scripts in the `autotest/` directory)
 
-We will be insisting on a minimal minimal, complete, and verifiable example in order to save maintainers time and ultimately be able to fix more bugs. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
+We will be insisting on a minimal, complete, and verifiable example in order to save maintainers time and ultimately be able to fix more bugs. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
 
 Unfortunately, we are not able to investigate / fix bugs without a minimal, complete, and verifiable example, so if we don't hear back from you we are going to close an issue that doesn't have enough info to be reproduced.
 

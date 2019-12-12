@@ -493,16 +493,16 @@ def test021_twri():
     stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1, 10), drn_heads):
-        stress_period_data.append(((0, 7, col), head, 1.0))
+        stress_period_data.append(((0, 7, col), head, 1.0,
+                                   'name_{}'.format(col)))
     drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
-                                save_flows=True, maxbound=9,
+                                save_flows=True, maxbound=9, boundnames=True,
                                 stress_period_data=stress_period_data)
     rch_package = ModflowGwfrcha(model, readasarrays=True, fixed_cell=True,
                                  recharge={0: 0.00000003},
                                  auxiliary=[('iface', 'conc')], aux=auxdata)
 
     aux = rch_package.aux.get_data()
-
 
     stress_period_data = []
     layers = [2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -527,9 +527,12 @@ def test021_twri():
     model2 = sim2.get_model()
     ic2 = model2.get_package('ic')
     strt2 = ic2.strt.get_data()
+    drn2 = model2.get_package('drn')
+    drn_spd = drn2.stress_period_data.get_data()
     assert(strt2[0,0,0] == 0.0)
     assert(strt2[1,0,0] == 1.0)
     assert(strt2[2,0,0] == 2.0)
+    assert(drn_spd[0][1][3] == 'name_2')
 
     # compare output to expected results
     head_file = os.path.join(os.getcwd(), expected_head_file)
@@ -742,6 +745,7 @@ def test005_advgw_tidal():
                         ((0, 6, 7), 'river_stage_2', 1008.0, 36.2, None),
                         ((0, 6, 8), 'river_stage_2', 1009.0, 36.1),
                         ((0, 6, 9), 'river_stage_2', 1010.0, 36.0)]
+
     riv_period[0] = riv_period_array
     # riv time series
     ts_data = [(0.0, 40.0, 41.0), (1.0, 41.0, 41.5), (2.0, 43.0, 42.0),

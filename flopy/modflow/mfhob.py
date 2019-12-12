@@ -577,9 +577,9 @@ class HeadObservation(object):
             for key, value in self.mlay.items():
                 tot += value
             if not (np.isclose(tot, 1.0, rtol=0)):
-                msg = 'sum of dataset 4 proportions must equal 1.0 - ' + \
+                msg = ('sum of dataset 4 proportions must equal 1.0 - ' + \
                        'sum of dataset 4 proportions = {tot} for ' + \
-                       'observation name {obsname}.'.format(
+                       'observation name {obsname}.').format(
                            tot=tot,
                            obsname=self.obsname)
                 raise ValueError(msg)
