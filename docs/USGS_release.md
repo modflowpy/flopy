@@ -12,7 +12,7 @@ author:
     - Michael W. Toews
     - Eric D. Morway
     - Jason C. Bellino
-    - Jeffrey Starn
+    - Jeffrey J. Starn
     - Michael N. Fienen
 header-includes:
     - \usepackage{fancyhdr}
@@ -23,7 +23,7 @@ header-includes:
     - \fancyhead[CE, CO]{FloPy Release Notes}
     - \fancyfoot[LE, RO]{FloPy version 3.3.0}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{11/18/2019}
+    - \fancyfoot[RE, LO]{12/12/2019}
 geometry: margin=0.75in
 ---
 
@@ -56,7 +56,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.3.0 &mdash; release candidate: U.S. Geological Survey Software Release, 18 November 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2019, FloPy v3.3.0 &mdash; release candidate: U.S. Geological Survey Software Release, 12 December 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
