@@ -54,7 +54,7 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         * ndelaycells (integer) number of nodes used to discretize delay
           interbeds. If not specified, then a default value of 19 is assigned.
     compression_indices : boolean
-        * compression_indices (boolean) keyword to indicate that the the
+        * compression_indices (boolean) keyword to indicate that the
           recompression (CR) and compression (CC) indices are specified instead
           of the elastic specific storage (SSE) and inelastic specific storage
           (SSV) coefficients. If not specified, then elastic specific storage
@@ -79,7 +79,7 @@ class ModflowGwfcsub(mfpackage.MFPackage):
           SPECIFIED_INITIAL_DELAY_HEAD. If SPECIFIED_INITIAL_INTERBED_STATE is
           not specified then preconsolidation stress (head) and delay bed head
           values specified in the PACKAGEDATA block are relative to simulated
-          values if the first stress period is steady-state or initial stresses
+          values of the first stress period if steady-state or initial stresses
           and GWF heads if the first stress period is transient.
     specified_initial_preconsolidation_stress : boolean
         * specified_initial_preconsolidation_stress (boolean) keyword to
@@ -95,7 +95,7 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         * specified_initial_delay_head (boolean) keyword to indicate that
           absolute initial delay bed head will be specified for interbeds
           defined in the PACKAGEDATA block. If SPECIFIED_INITIAL_DELAY_HEAD and
-          SPECIFIED_INITIAL_INTERBED_STATE are not specified then delay bead
+          SPECIFIED_INITIAL_INTERBED_STATE are not specified then delay bed
           head values specified in the PACKAGEDATA block are relative to
           simulated values if the first stress period is steady-state or
           initial GWF heads if the first stress period is transient.
