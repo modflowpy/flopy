@@ -76,7 +76,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     nosetests -v t*_test.py
     ```
    Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages.
-   
+
 1. Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit). Adherence to these conventions
   is necessary because release notes are automatically generated from these messages.
@@ -195,6 +195,7 @@ The scope should be the name of the FloPy module/class affected (as perceived by
 
 There are currently a few exceptions to the "use module/class name" rule:
 
+* **release**: used when updating files prior to a release
 * **releasenotes**: used for updating the release notes
 * **readme**: used for updating the release notes in README.md
 * **changelog**: used for updating the release notes in CHANGELOG.md

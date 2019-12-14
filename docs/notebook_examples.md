@@ -5,7 +5,7 @@ Examples
 
 The following jupyter Notebooks contain examples for using FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models. The FloPy example notebooks can be opened and run using Pangeo by clicking on the launch binder link below.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/master)
 
 #### MODFLOW-2000, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, MODPATH, MT3DMS, MT3D-USGS, and SEAWAT
 
@@ -131,25 +131,17 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 
 #### Plotting examples
 
-+ An overview of the FloPy [map and cross-section plotting capabilities](../examples/Notebooks/flopy3_MapExample.ipynb).
++ An overview of the FloPy [map plotting capabilities](../examples/Notebooks/flopy3.3_PlotMapView.ipynb).
 
-+ An detailed overview of the updated FloPy [map plotting capabilities](../examples/Notebooks/flopy3_PlotMapView_demo.ipynb).
-
-+ An detailed overview of the updated FloPy [cross-section plotting capabilities](../examples/Notebooks/flopy3_PlotCrossSection_demo.ipynb).
++ An overview of the FloPy [cross-section plotting capabilities](../examples/Notebooks/flopy3.3_PlotCrossSection.ipynb).
 
 + An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_PlotArrayExample.ipynb)
-
-+ An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_mf6_plotting_freyberg.ipynb) for MODFLOW 6 models.
 
 + An overview of the FloPy  [vertex model grid (DISV) plotting method capabilities](../examples/Notebooks/flopy3_mf6_vertex_plotting.ipynb) for MODFLOW 6 models.
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
 + The [flopy3_shapefile_features](../examples/Notebooks/flopy3_shapefile_features.ipynb) Notebook illustrates some functionality in flopy for exchanging MODFLOW-related information with shapefiles, including convenience functions for working with shapefile data in numpy recarrays, some simple container objects for storing geographic information, and a demonstration of automatic writing of projection (.prj) files using EPSG codes.
-
-+ An overview of [plotting MODFLOW-USG unstructured grid data and model results](../examples/Notebooks/flopy3_UnstructuredGridPlotting.ipynb).
-
-+ An overview of [how to plot MODFLOW 6 results for a single GWF model](../examples/Notebooks/flopy3_mf6_BasicPlotting.ipynb).
 
 #### Additional MODFLOW examples
 
