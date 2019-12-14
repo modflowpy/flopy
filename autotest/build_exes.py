@@ -11,7 +11,7 @@ except:
 
 os.environ["TRAVIS"] = "1"
 
-download_version = '2.0'
+download_version = '3.0'
 
 # path where downloaded executables will be extracted
 exe_pth = 'exe_download'
