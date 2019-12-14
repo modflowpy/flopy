@@ -86,8 +86,6 @@ def test_epsgreference():
     if prjtxt is None:
         print("unable to retrieve CRS prj txt")
         return
-    if sys.version_info[0] == 2:
-        prjtxt = prjtxt.encode('ascii')
     assert isinstance(prjtxt, str),type(prjtxt)
     prj = ep.to_dict()
     assert 32614 in prj

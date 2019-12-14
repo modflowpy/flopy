@@ -1,7 +1,6 @@
 # Test binary and formatted data readers
 import os
 import shutil
-import sys
 import numpy as np
 import flopy
 from nose.tools import assert_raises
@@ -11,11 +10,6 @@ cpth = os.path.join('temp', 't017')
 if os.path.isdir(cpth):
     shutil.rmtree(cpth)
 os.makedirs(cpth)
-
-if sys.version_info[0] == 2:
-    closed_file_error_msg = 'I/O operation on closed file'
-else:
-    closed_file_error_msg = 'seek of closed file'
 
 
 def test_formattedfile_read():
@@ -102,7 +96,7 @@ def test_binaryfile_read_context():
 
     with assert_raises(ValueError) as e:
         h.get_data()
-    assert str(e.exception) == closed_file_error_msg, str(e.exception)
+    assert str(e.exception) == 'seek of closed file', str(e.exception)
 
 
 def test_cellbudgetfile_read_context():
@@ -116,7 +110,7 @@ def test_cellbudgetfile_read_context():
 
     with assert_raises(ValueError) as e:
         v.get_data(text='DRAINS')
-    assert str(e.exception) == closed_file_error_msg, str(e.exception)
+    assert str(e.exception) == 'seek of closed file', str(e.exception)
 
 
 def test_cellbudgetfile_read():

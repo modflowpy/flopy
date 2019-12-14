@@ -1,12 +1,12 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.13
+### Version 3.3.0
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=master)](https://travis-ci.org/modflowpy/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=master)](https://coveralls.io/github/modflowpy/flopy?branch=master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/app/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)[![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/modflowpy/flopy.git/master)
-
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/app/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/master)
 
 Introduction
 -----------------------------------------------
@@ -112,12 +112,12 @@ Installation
 
 **Python versions:**
 
-FloPy requires **Python** 2.7 or **Python** 3.5 (or higher). **<span style="color:red" style="text-decoration:underline">Support for Python versions < 3.5 will be dropped in the next version of FloPy (version 3.3.0)</span>**
+FloPy requires **Python** 3.5 (or higher).
 
 
 **Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher) and **enum34** for **Python** 2.7 or **Python** 3.3.
+FloPy requires **NumPy** 1.9 (or higher).
 
 
 **For base and Anaconda Python distributions:**
@@ -216,7 +216,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.13: U.S. Geological Survey Software Release, 17 November 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2019, FloPy v3.3.0: U.S. Geological Survey Software Release, 14 December 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

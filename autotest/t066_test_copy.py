@@ -1,6 +1,5 @@
 """Test copying of flopy objects.
 """
-import sys
 import os
 import copy
 import inspect
@@ -190,8 +189,6 @@ def list_is_copy(mflist1, mflist2):
 
 
 def test_mf2005_copy():
-    if sys.version_info[0] < 3:
-        return
     path = '../examples/data/freyberg_multilayer_transient/freyberg.nam'
     model_ws, namefile = os.path.split(path)
     m = fm.Modflow.load(namefile, model_ws=model_ws)
@@ -202,8 +199,6 @@ def test_mf2005_copy():
 
 
 def test_mf6_copy():
-    if sys.version_info[0] < 3:
-        return
     sim_ws = '../examples/data/mf6/test045_lake2tr'
     sim = mf6.MFSimulation.load('mfsim.nam', 'mf6', sim_ws=sim_ws)
     m = sim.get_model('lakeex2a')

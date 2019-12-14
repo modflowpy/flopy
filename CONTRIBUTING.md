@@ -49,7 +49,7 @@ We want to fix all the issues as soon as possible, but before fixing a bug we ne
 - version of FloPy used
 - and most importantly - a use-case that fails (ideally an example that uses flopy to generate FloPy input files - see `t0**_test.py` python scripts in the `autotest/` directory)
 
-We will be insisting on a minimal minimal, complete, and verifiable example in order to save maintainers time and ultimately be able to fix more bugs. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
+We will be insisting on a minimal, complete, and verifiable example in order to save maintainers time and ultimately be able to fix more bugs. We understand that sometimes it might be hard to extract essentials bits of code from a larger code-base but we really need to isolate the problem before we can fix it.
 
 Unfortunately, we are not able to investigate / fix bugs without a minimal, complete, and verifiable example, so if we don't hear back from you we are going to close an issue that doesn't have enough info to be reproduced.
 
@@ -76,7 +76,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     nosetests -v t*_test.py
     ```
    Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages.
-   
+
 1. Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit). Adherence to these conventions
   is necessary because release notes are automatically generated from these messages.
@@ -195,6 +195,7 @@ The scope should be the name of the FloPy module/class affected (as perceived by
 
 There are currently a few exceptions to the "use module/class name" rule:
 
+* **release**: used when updating files prior to a release
 * **releasenotes**: used for updating the release notes
 * **readme**: used for updating the release notes in README.md
 * **changelog**: used for updating the release notes in CHANGELOG.md

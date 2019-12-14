@@ -2,6 +2,7 @@
 test MNW1 and MNW2 packages
 """
 import sys
+
 sys.path.insert(0, '..')
 import shutil
 import os
@@ -15,6 +16,7 @@ if not os.path.isdir(cpth):
     os.makedirs(cpth)
 mf2005pth = os.path.join('..', 'examples', 'data', 'mnw2_examples')
 mnw1_path = os.path.join('..', 'examples', 'data', 'mf2005_test')
+
 
 def test_line_parse():
     """t027 test line_parse method in MNW2 Package class"""
@@ -50,6 +52,7 @@ def test_load():
         mnw2_2.stress_period_data[0].qdes - mnw2_3.stress_period_data[
             0].qdes).min() < 0.01
 
+
 def test_mnw1_load_write():
     m = flopy.modflow.Modflow.load('mnw1.nam', model_ws=mnw1_path,
                                    load_only=['mnw1'],
@@ -66,10 +69,11 @@ def test_mnw1_load_write():
     m.mnw1.fn_path = cpth + '/mnw1.mnw'
     m.mnw1.write_file()
     m2 = flopy.modflow.Modflow.load('mnw1.nam', model_ws=cpth,
-                                   load_only=['mnw1'],
-                                   verbose=True, forgive=False)
+                                    load_only=['mnw1'],
+                                    verbose=True, forgive=False)
     for k, v in m.mnw1.stress_period_data.data.items():
         assert np.array_equal(v, m2.mnw1.stress_period_data[k])
+
 
 def test_make_package():
     """t027 test make MNW2 Package"""
@@ -82,7 +86,8 @@ def test_make_package():
         [(0, 1, 1, 9.5, 7.1, 'well1', 'skin', -1, 0, 0, 0, 1.0, 2.0, 5.0, 6.2),
          (1, 1, 1, 7.1, 5.1, 'well1', 'skin', -1, 0, 0, 0, 0.5, 2.0, 5.0, 6.2),
          (
-         2, 3, 3, 9.1, 3.7, 'well2', 'skin', -1, 0, 0, 0, 1.0, 2.0, 5.0, 4.1)],
+             2, 3, 3, 9.1, 3.7, 'well2', 'skin', -1, 0, 0, 0, 1.0, 2.0, 5.0,
+             4.1)],
         dtype=[('index', '<i8'), ('i', '<i8'), ('j', '<i8'),
                ('ztop', '<f8'), ('zbotm', '<f8'),
                ('wellid', 'O'), ('losstype', 'O'), ('pumploc', '<i8'),
@@ -95,11 +100,11 @@ def test_make_package():
                                              ('wellid', 'O'),
                                              ('qdes', '<i8')]).view(
         np.recarray),
-                          1: np.array(
-                              [(2, 1, 'well1', 100), (3, 1, 'well2', 1000)],
-                              dtype=[('index', '<i8'), ('per', '<i8'),
-                                     ('wellid', 'O'), ('qdes', '<i8')]).view(
-                              np.recarray)}
+        1: np.array(
+            [(2, 1, 'well1', 100), (3, 1, 'well2', 1000)],
+            dtype=[('index', '<i8'), ('per', '<i8'),
+                   ('wellid', 'O'), ('qdes', '<i8')]).view(
+            np.recarray)}
 
     mnw2_4 = flopy.modflow.ModflowMnw2(model=m4, mnwmax=2, nodtot=3,
                                        node_data=node_data,
@@ -130,11 +135,11 @@ def test_make_package():
                                              ('wellid', 'O'),
                                              ('qdes', '<i8')]).view(
         np.recarray),
-                          1: np.array(
-                              [(2, 1, 'well1', 100), (3, 1, 'well2', 1000)],
-                              dtype=[('index', '<i8'), ('per', '<i8'),
-                                     ('wellid', 'O'), ('qdes', '<i8')]).view(
-                              np.recarray)}
+        1: np.array(
+            [(2, 1, 'well1', 100), (3, 1, 'well2', 1000)],
+            dtype=[('index', '<i8'), ('per', '<i8'),
+                   ('wellid', 'O'), ('qdes', '<i8')]).view(
+            np.recarray)}
 
     mnw2_4 = flopy.modflow.ModflowMnw2(model=m4, mnwmax=2, nodtot=3,
                                        node_data=node_data,
@@ -152,11 +157,10 @@ def test_make_package():
     m4.write_input()
 
     # make the package from the objects
+    # reuse second per pumping for last stress period
     mnw2fromobj = flopy.modflow.ModflowMnw2(model=m4, mnwmax=2,
                                             mnw=mnw2_4.mnw,
-                                            itmp=[2, 2, -1],
-                                            # reuse second per pumping for last stress period
-                                            )
+                                            itmp=[2, 2, -1])
     # verify that the two input methods produce the same results
     assert np.array_equal(mnw2_4.stress_period_data[1],
                           mnw2fromobj.stress_period_data[1])
@@ -200,17 +204,20 @@ def test_mnw2_create_file():
             node_data.loc[j, 'qcut'] = 0
 
         wl = flopy.modflow.mfmnw2.Mnw(wellids[i],
-                  nnodes=nlayers[i],
-                  nper=len(stress_period_data.index),
-                  node_data=node_data.to_records(index=False),
-                  stress_period_data=stress_period_data.to_records(index=False))
+                                      nnodes=nlayers[i],
+                                      nper=len(stress_period_data.index),
+                                      node_data=node_data.to_records(
+                                          index=False),
+                                      stress_period_data=stress_period_data.to_records(
+                                          index=False))
 
         wells.append(wl)
 
     mnw2 = flopy.modflow.ModflowMnw2(model=mf,
                                      mnwmax=len(wells),
                                      mnw=wells,
-                                     itmp=list((np.ones((len(stress_period_data.index)))
+                                     itmp=list((np.ones(
+                                         (len(stress_period_data.index)))
                                                 * len(wellids)).astype(int)))
 
     if len(mnw2.node_data) != 6:
@@ -237,10 +244,107 @@ def test_export():
         fpth = os.path.join(cpth, 'MNW2-Fig28.nc')
         nc = netCDF4.Dataset(fpth)
         assert np.array_equal(nc.variables['mnw2_qdes'][:, 0, 29, 40],
-                              np.array([0., -10000., -10000.], dtype='float32'))
+                              np.array([0., -10000., -10000.],
+                                       dtype='float32'))
         assert np.sum(nc.variables['mnw2_rw'][:, :, 29, 40]) - 5.1987 < 1e-4
 
     # need to add shapefile test
+
+
+def test_blank_lines():
+    mnw2str = """3 50 0
+EB-33 -3
+SKIN -1 0 0 0
+0.375 0.667 50
+ 0 -1 1 1
+-1 -2 1 1
+-2 -3 1 1
+-3
+eb-35 3
+SKIN 0 0 0 0
+0.375 1.0 50
+1 1 1 83 24
+2 1 1
+3 1 1
+
+EB-36 -2
+SKIN -1 0 0 0
+.375 1.0 50
+ 0 -1 1 1
+-1 -2 1 1
+-2
+
+3
+EB-33 -11229.2
+EB-35 -534.72
+
+eb-36 -534.72
+
+"""
+    fpth = os.path.join(cpth, 'mymnw2.mnw2')
+    f = open(fpth, 'w')
+    f.write(mnw2str)
+    f.close()
+
+    disstr = """ 3 1 1 1 4 1
+ 0 0 0
+constant 1
+constant 1
+constant  0 top of model
+constant -1 bottom of layer 1
+constant -2 bottom of layer 2
+constant -3 bottom of layer 3
+ 1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
+"""
+
+    fpth = os.path.join(cpth, 'mymnw2.dis')
+    f = open(fpth, 'w')
+    f.write(disstr)
+    f.close()
+
+    namstr = """lst  101 mymnw2.lst
+dis  102 mymnw2.dis
+mnw2 103 mymnw2.mnw2"""
+
+    fpth = os.path.join(cpth, 'mymnw2.nam')
+    f = open(fpth, 'w')
+    f.write(namstr)
+    f.close()
+
+    m = flopy.modflow.Modflow.load('mymnw2.nam', model_ws=cpth,
+                                   verbose=True, check=False)
+    mnw2 = m.mnw2
+    wellids = ['eb-33', 'eb-35', 'eb-36']
+    rates = [np.float32(-11229.2), np.float32(-534.72), np.float32(-534.72)]
+
+    wellids2 = sorted(list(mnw2.mnw.keys()))
+    emsg = 'incorrect keys returned from load mnw2'
+    assert wellids2 == wellids, emsg
+
+    spd = mnw2.stress_period_data[0]
+
+    wellids2 = list(spd['wellid'])
+    emsg = 'incorrect keys returned from load mnw2 stress period data'
+    for wellid, wellid2 in zip(wellids, wellids2):
+        emsg += '\n    {} -- {}'.format(wellid, wellid2)
+    assert wellids2 == wellids, emsg
+
+    rates2 = list(spd['qdes'])
+    emsg = 'incorrect qdes rates returned from load mnw2 stress period data'
+    for rate, rate2 in zip(rates, rates2):
+        emsg += '\n    {} -- {}'.format(rate, rate2)
+    assert rates2 == rates, emsg
+
+    return
+
+
+def test_make_well():
+    w1 = flopy.modflow.Mnw(wellid='Case-1')
+
+    emsg = 'did not correctly convert well id to lower case'
+    assert w1.wellid == 'case-1', emsg
+
+    return
 
 
 def test_checks():
@@ -254,11 +358,13 @@ def test_checks():
 
 
 if __name__ == '__main__':
-    #test_line_parse()
-    #test_load()
-    #test_make_package()
-    #test_export()
-    #test_checks()
+    # test_line_parse()
+    # test_load()
+    test_make_well()
+    test_blank_lines()
+    test_make_package()
+    # test_export()
+    # test_checks()
     test_mnw1_load_write()
     test_mnw2_create_file()
     pass

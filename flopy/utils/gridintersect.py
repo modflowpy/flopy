@@ -567,7 +567,7 @@ class GridIntersect:
             return np.recarray(0, names=["cellids", "vertices",
                                          "lengths", "ixshapes"],
                                formats=["O", "O", "f8", "O"])
-        if lineclip.geom_type is 'MultiLineString':  # there are multiple lines
+        if lineclip.geom_type == 'MultiLineString':  # there are multiple lines
             nodelist, lengths, vertices = [], [], []
             ixshapes = []
             for ls in lineclip:

@@ -1,7 +1,7 @@
 # flopy version file automatically created using...make-release.py
-# created on...November 17, 2019 06:52:09
+# created on...December 14, 2019 12:51:02
 
 major = 3
-minor = 2
-micro = 13
+minor = 3
+micro = 0
 __version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)

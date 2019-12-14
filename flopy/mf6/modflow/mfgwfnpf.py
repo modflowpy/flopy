@@ -74,6 +74,14 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block
           of the DISU Package; ANGLDEGX must also be specified for the GWF
           Exchange as an auxiliary variable.
+    k22overk : boolean
+        * k22overk (boolean) keyword to indicate that specified K22 is a ratio
+          of K22 divided by K. If this option is specified, then the K22 array
+          entered in the NPF Package will be multiplied by K after being read.
+    k33overk : boolean
+        * k33overk (boolean) keyword to indicate that specified K33 is a ratio
+          of K33 divided by K. If this option is specified, then the K33 array
+          entered in the NPF Package will be multiplied by K after being read.
     icelltype : [integer]
         * icelltype (integer) flag for each cell that specifies how saturated
           thickness is treated. 0 means saturated thickness is held constant;
@@ -95,10 +103,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           must have a K value greater than zero.
     k22 : [double]
         * k22 (double) is the hydraulic conductivity of the second ellipsoid
-          axis; for an unrotated case this is the hydraulic conductivity in the
-          y direction. If K22 is not included in the GRIDDATA block, then K22
-          is set equal to K. For a regular MODFLOW grid (DIS Package is used)
-          in which no rotation angles are specified, K22 is the hydraulic
+          axis (or the ratio of K22/K if the K22OVERK option is specified); for
+          an unrotated case this is the hydraulic conductivity in the y
+          direction. If K22 is not included in the GRIDDATA block, then K22 is
+          set equal to K. For a regular MODFLOW grid (DIS Package is used) in
+          which no rotation angles are specified, K22 is the hydraulic
           conductivity along columns in the y direction. For an unstructured
           DISU grid, the user must assign principal x and y axes and provide
           the angle for each cell face relative to the assigned x direction.
@@ -106,10 +115,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           greater than zero.
     k33 : [double]
         * k33 (double) is the hydraulic conductivity of the third ellipsoid
-          axis; for an unrotated case, this is the vertical hydraulic
-          conductivity. When anisotropy is applied, K33 corresponds to the K33
-          tensor component. All included cells (IDOMAIN :math:`>` 0) must have
-          a K33 value greater than zero.
+          axis (or the ratio of K33/K if the K33OVERK option is specified); for
+          an unrotated case, this is the vertical hydraulic conductivity. When
+          anisotropy is applied, K33 corresponds to the K33 tensor component.
+          All included cells (IDOMAIN :math:`>` 0) must have a K33 value
+          greater than zero.
     angle1 : [double]
         * angle1 (double) is a rotation angle of the hydraulic conductivity
           tensor in degrees. The angle represents the first of three sequential
@@ -227,6 +237,10 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name save_specific_discharge", "type keyword",
             "reader urword", "optional true"],
+           ["block options", "name k22overk", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name k33overk", "type keyword",
+            "reader urword", "optional true"],
            ["block griddata", "name icelltype", "type integer",
             "shape (nodes)", "valid", "reader readarray", "layered true",
             "optional", "default_value 0"],
@@ -255,10 +269,10 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, save_flows=None,
                  alternative_cell_averaging=None, thickstrt=None,
                  cvoptions=None, perched=None, rewet_record=None,
-                 xt3doptions=None, save_specific_discharge=None, icelltype=0,
-                 k=1.0, k22=None, k33=None, angle1=None, angle2=None,
-                 angle3=None, wetdry=None, filename=None, pname=None,
-                 parent_file=None):
+                 xt3doptions=None, save_specific_discharge=None, k22overk=None,
+                 k33overk=None, icelltype=0, k=1.0, k22=None, k33=None,
+                 angle1=None, angle2=None, angle3=None, wetdry=None,
+                 filename=None, pname=None, parent_file=None):
         super(ModflowGwfnpf, self).__init__(model, "npf", filename, pname,
                                             loading_package, parent_file)
 
@@ -273,6 +287,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         self.xt3doptions = self.build_mfdata("xt3doptions", xt3doptions)
         self.save_specific_discharge = self.build_mfdata(
             "save_specific_discharge", save_specific_discharge)
+        self.k22overk = self.build_mfdata("k22overk", k22overk)
+        self.k33overk = self.build_mfdata("k33overk", k33overk)
         self.icelltype = self.build_mfdata("icelltype", icelltype)
         self.k = self.build_mfdata("k", k)
         self.k22 = self.build_mfdata("k22", k22)

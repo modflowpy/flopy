@@ -27,7 +27,7 @@ How to Cite
 
 *Software/Code citation for FloPy:*
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.13: U.S. Geological Survey Software Release, 17 November 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2019, FloPy v3.3.0: U.S. Geological Survey Software Release, 14 December 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -45,12 +45,12 @@ unauthorized use.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.2.13:
+To install FloPy version 3.3.0:
 ```
 pip install flopy
 ```
 
-To update to FloPy version 3.2.13:
+To update to FloPy version 3.3.0:
 ```
 pip install flopy --upgrade
 ```

@@ -30,6 +30,9 @@ class ModflowNam(mfpackage.MFPackage):
           only the total memory for each simulation component. ALL means print
           information for each variable stored in the memory manager. NONE is
           default if MEMORY_PRINT_OPTION is not specified.
+    maxerrors : integer
+        * maxerrors (integer) maximum number of errors that will be stored and
+          printed.
     tdis6 : string
         * tdis6 (string) is the name of the Temporal Discretization (TDIS)
           Input File.
@@ -82,6 +85,8 @@ class ModflowNam(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name memory_print_option", "type string",
             "reader urword", "optional true"],
+           ["block options", "name maxerrors", "type integer",
+            "reader urword", "optional true"],
            ["block timing", "name tdis6", "preserve_case true",
             "type string", "reader urword", "optional"],
            ["block models", "name models",
@@ -120,9 +125,10 @@ class ModflowNam(mfpackage.MFPackage):
             "in_record true", "shape (:)", "tagged false", "reader urword"]]
 
     def __init__(self, simulation, loading_package=False, continue_=None,
-                 nocheck=None, memory_print_option=None, tdis6=None,
-                 models=None, exchanges=None, mxiter=None, solutiongroup=None,
-                 filename=None, pname=None, parent_file=None):
+                 nocheck=None, memory_print_option=None, maxerrors=None,
+                 tdis6=None, models=None, exchanges=None, mxiter=None,
+                 solutiongroup=None, filename=None, pname=None,
+                 parent_file=None):
         super(ModflowNam, self).__init__(simulation, "nam", filename, pname,
                                          loading_package, parent_file)
 
@@ -131,6 +137,7 @@ class ModflowNam(mfpackage.MFPackage):
         self.nocheck = self.build_mfdata("nocheck", nocheck)
         self.memory_print_option = self.build_mfdata("memory_print_option",
                                                      memory_print_option)
+        self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
         self.tdis6 = self.build_mfdata("tdis6", tdis6)
         self.models = self.build_mfdata("models", models)
         self.exchanges = self.build_mfdata("exchanges", exchanges)

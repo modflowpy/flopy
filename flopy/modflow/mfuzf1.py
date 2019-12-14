@@ -776,9 +776,7 @@ class ModflowUzf1(Package):
 
         # dataset 0 -- header
         while True:
-            # can't use next() because util2d uses readline()
             line = f.readline()
-            # (can't mix iteration types in python 2)
             if line[0] != '#':
                 break
         # determine problem dimensions

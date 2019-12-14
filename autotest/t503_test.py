@@ -11,8 +11,9 @@ def download_mf6_distribution():
     """
 
     # set url
-    dirname = 'mf6.0.3'
-    url = 'https://water.usgs.gov/ogw/modflow/{0}.zip'.format(dirname)
+    dirname = 'mf6.1.0'
+    url = 'https://water.usgs.gov/water-resources/software/' + \
+          'MODFLOW-6/{0}.zip'.format(dirname)
 
     # create folder for mf6 distribution download
     cpth = os.getcwd()
@@ -117,4 +118,3 @@ if __name__ == '__main__':
 
     # or to run just test, pass the example name into runmodel
     #runmodel('ex30-vilhelmsen-gf')
-    

@@ -614,10 +614,7 @@ class ModflowLak(Package):
         openfile = not hasattr(f, 'read')
         if openfile:
             filename = f
-            if sys.version_info[0] == 2:
-                f = open(filename, 'r')
-            elif sys.version_info[0] == 3:
-                f = open(filename, 'r', errors='replace')
+            f = open(filename, 'r', errors='replace')
 
         # dataset 0 -- header
         while True:

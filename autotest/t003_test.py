@@ -44,6 +44,20 @@ def test_loadtwrip():
     assert ml.load_fail is False
 
     return
+    
+    
+def test_loadtwrip_upw():
+    cwd = os.getcwd()
+    pth = os.path.join('..', 'examples', 'data', 'parameters')
+    assert (os.path.isdir(pth))
+    os.chdir(pth)
+    namefile = 'twrip_upw.nam'
+    ml = flopy.modflow.Modflow.load(namefile, verbose=True)
+    os.chdir(cwd)
+    assert isinstance(ml, flopy.modflow.Modflow)
+    assert ml.load_fail is False
+
+    return
 
 
 def test_loadoc():
@@ -116,3 +130,4 @@ if __name__ == '__main__':
     test_loadfreyberg()
     test_loadoahu()
     test_loadtwrip()
+    test_loadtwrip_upw()
