@@ -85,7 +85,7 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 	* apportion boundary fluxes (e.g. from an analytic element model) among model layers based on transmissivity.
 	* any other analysis where a distribution of transmissivity is needed for a specified vertical interval of the model.
 
-+ An overview of utilities for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_modflow_postprocessing_example.ipynb).
++ An overview of utilities for [post-processing head results from MODFLOW](../examples/Notebooks/flopy3_Modflow_postprocessing_example.ipynb).
 
 #### ***Export examples***
 
@@ -136,8 +136,6 @@ The following jupyter Notebooks contain examples for using FloPy pre- and post-p
 + An overview of the FloPy [cross-section plotting capabilities](../examples/Notebooks/flopy3.3_PlotCrossSection.ipynb).
 
 + An overview of the FloPy  [model input and output data `plot()` method capabilities](../examples/Notebooks/flopy3_PlotArrayExample.ipynb)
-
-+ An overview of the FloPy  [vertex model grid (DISV) plotting method capabilities](../examples/Notebooks/flopy3_mf6_vertex_plotting.ipynb) for MODFLOW 6 models.
 
 + An overview of SWR1 Process Output Processing and Plotting is given in the [flopy3_LoadSWRBinaryData](../examples/Notebooks/flopy3_LoadSWRBinaryData.ipynb) Notebook.
 
