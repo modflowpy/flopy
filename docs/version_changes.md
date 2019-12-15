@@ -1,5 +1,20 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.3.0
+
+* Dropped support for python 2.7
+* Switched from [pangeo binder](https://aws-uswest2-binder.pangeo.io/) binder to [mybinder.org binder](https://mybinder.org)
+* Added support for MODFLOW 6 Skeletal Compaction and Subsidence (CSUB) package
+
+* Bug fixes:
+
+    * Fix issue in MNW2 when the input file had spaced between lines in Dataset 2. [#736](https://github.com/modflowpy/flopy/pull/736)
+    * Fix issue in MNW2 when the input file uses wellids with inconsistent cases in Dataset 2 and 4. Internally the MNW2 will convert all wellids to lower case strings. [#736](https://github.com/modflowpy/flopy/pull/736)
+    * Fix issue with VertexGrid plotting errors, squeeze proper dimension for head output, in `PlotMapView` and `PlotCrossSection`
+    * Fix issue in `PlotUtilities._plot_array_helper` mask MODFLOW-6 no flow and dry cells before plotting
+    * Removed assumption that transient SSM data appears in the first stress period [#754](https://github.com/modflowpy/flopy/issues/754) [#756](https://github.com/modflowpy/flopy/issues/754).  Fix includes a new autotest ([t068_test_ssm.py](https://github.com/modflowpy/flopy/blob/develop/autotest/t068_test_ssm.py)) that adds transient concentration data after the first stress period.
+    * Fix issues with add_record method for MfList [#758](https://github.com/modflowpy/flopy/pull/758)
+
 ### Version 3.2.13
 
 * ModflowFlwob: Variable `irefsp` is now a zero-based integer (#596)
@@ -14,7 +29,7 @@ FloPy Changes
 * SfrFile detects additional columns (#708)
 * Add a `default_float_format` property to mfsfr2, which is string formatted by NumPy versions > 1.14.0, or `{:.8g}` for older NumPy versions (#710)
 * Support for pyshp 1.2.1 dropped, pyshp 2.1.0 support maintained
-* Improved VTK export capabilities.  Added export for VTK at array level, package level, and model level.  Added binary head file export and cell by cell file export.  Added the ability to export point scalars in addition to cell scalars, and added smooth surface generation.  VTK export now supports writing transient data as well as exporting to binary .vtu files.  
+* Improved VTK export capabilities.  Added export for VTK at array level, package level, and model level.  Added binary head file export and cell by cell file export.  Added the ability to export point scalars in addition to cell scalars, and added smooth surface generation.  VTK export now supports writing transient data as well as exporting to binary .vtu files.
 * Support for copying model and package instances with `copy.deepcopy()`
 * Added link to Binder on [README](README.md) and [notebooks_examples](../examples/docs/notebook_examples.md) markdown documents. Binder provides an environment that runs and interactively serves the FloPy Jupyter notebooks.
 
@@ -160,7 +175,7 @@ FloPy Changes
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
 * Added SFR2 package functionality
-	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.
 * Bug fixes:
     * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
     * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
@@ -185,7 +200,7 @@ FloPy Changes
 	*  `.assign_layers()` method
 	* additional error checks and bug fixes
 * Added `SpatialReference` / GIS export functionality:
-	*  GeoTiff export option to `SpatialReference.export_array`   
+	*  GeoTiff export option to `SpatialReference.export_array`
 	*  `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile
 	*  inverse option added to `SpatialReference.transform`
 	*  automatic reading of spatial reference info from .nam or usgs.model.reference files
@@ -228,7 +243,7 @@ FloPy Changes
 	* shapefile export of MODPATH Pathline and Endpoint data
 	* Modpath.create_mpsim() supports MNW2
 	* creation of MODPATH StartingLocations files
-	* Easy subsetting of endpoint and pathline results to destination cells of interest  
+	* Easy subsetting of endpoint and pathline results to destination cells of interest
 * New ZoneBudget class provides ZONEBUDGET functionality:
     * reads a CellBudgetFile and accumulates flows by zone
     * pass `kstpkper` or `totim` keyword arguments to retrieve a subset of available times in the CellBudgetFile
@@ -362,4 +377,4 @@ FloPy is significantly different from earlier versions of FloPy (previously host
 
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 
-* MODFLOW parameter support has been added to the `load()` methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the `load()` methods. MODFLOW parameters are not supported in `write()` methods.  
+* MODFLOW parameter support has been added to the `load()` methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the `load()` methods. MODFLOW parameters are not supported in `write()` methods.

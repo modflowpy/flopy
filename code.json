@@ -1,6 +1,6 @@
 [
     {
-        "status": "Release Candidate",
+        "status": "Production",
         "languages": [
             "python"
         ],
@@ -31,7 +31,7 @@
         "laborHours": -1,
         "version": "3.3.0",
         "date": {
-            "metadataLastUpdated": "2019-12-12"
+            "metadataLastUpdated": "2019-12-14"
         },
         "organization": "U.S. Geological Survey",
         "permissions": {
