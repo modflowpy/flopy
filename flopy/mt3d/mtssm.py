@@ -682,12 +682,13 @@ class Mt3dSsm(Package):
                 print('   loading NSS...')
             line = f.readline()
             nss = int(line[0:10])
+            if model.verbose:
+                print('   NSS {}'.format(nss))
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
-                print(
-                    '   loading KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)...')
-            current = 0
+                print('   loading KSS, ISS, JSS, CSS, ITYPE, '
+                      '(CSSMS(n),n=1,NCOMP)...')
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):
@@ -708,7 +709,10 @@ class Mt3dSsm(Package):
                 current['i'] -= 1
                 current['j'] -= 1
                 current = current.view(np.recarray)
-            stress_period_data[iper] = current
+                stress_period_data[iper] = current
+            elif nss == 0:
+                stress_period_data[iper] = nss
+
 
         if openfile:
             f.close()

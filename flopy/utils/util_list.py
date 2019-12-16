@@ -228,6 +228,8 @@ class MfList(DataInterface, DataListInterface):
     def get_itmp(self, kper):
         if kper not in list(self.__data.keys()):
             return None
+        if self.__vtype[kper] is None:
+            return -1
         # If an external file, have to load it
         if self.__vtype[kper] == str:
             return self.__fromfile(self.__data[kper]).shape[0]
@@ -338,6 +340,9 @@ class MfList(DataInterface, DataListInterface):
                     self.__cast_int(kper, d)
                 elif isinstance(d, str):
                     self.__cast_str(kper, d)
+                elif d is None:
+                    self.__data[kper] = -1
+                    self.__vtype[kper] = None
                 else:
                     raise Exception("MfList error: unsupported data type: " +
                                     str(type(d)) + " at kper " +
@@ -374,9 +379,6 @@ class MfList(DataInterface, DataListInterface):
             self.__data[kper] = 0
             self.__vtype[kper] = None
         else:
-            if kper == 0:
-                raise Exception("MfList error: dict integer value for " + \
-                                "kper 0 for cannot be negative")
             self.__data[kper] = -1
             self.__vtype[kper] = None
 

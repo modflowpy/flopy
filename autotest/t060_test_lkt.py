@@ -9,7 +9,7 @@ import numpy as np
 import flopy
 
 # make the working directory
-tpth = os.path.join('temp', 't057')
+tpth = os.path.join('temp', 't060')
 if not os.path.isdir(tpth):
     os.makedirs(tpth)
 
@@ -25,7 +25,8 @@ def test_lkt_with_multispecies():
     mtexe = 'mt3dusgs'
     
     # Instantiate MODFLOW object in flopy
-    mf = flopy.modflow.Modflow(modelname=modelname, exe_name=mfexe, model_ws=modelpth, version='mfnwt')
+    mf = flopy.modflow.Modflow(modelname=modelname, exe_name=mfexe,
+                               model_ws=modelpth, version='mfnwt')
     
     Lx = 27500.0 
     Ly = 22000.0
@@ -58,8 +59,10 @@ def test_lkt_with_multispecies():
     iprnwt = 1       
     ibotav = 1       
     
-    nwt = flopy.modflow.ModflowNwt(mf, headtol=headtol, fluxtol=fluxtol, maxiterout=maxiterout,
-                                   thickfact=thickfact, linmeth=linmeth, iprnwt=iprnwt, ibotav=ibotav,
+    nwt = flopy.modflow.ModflowNwt(mf, headtol=headtol,
+                                   fluxtol=fluxtol, maxiterout=maxiterout,
+                                   thickfact=thickfact, linmeth=linmeth,
+                                   iprnwt=iprnwt, ibotav=ibotav,
                                    options='SIMPLE')
     
     ## Instantiate discretization (DIS) package for MODFLOW-NWT
@@ -124,16 +127,17 @@ def test_lkt_with_multispecies():
     
     # Create the discretization object
     # itmuni = 4 (days); lenuni = 2 (meters)
-    dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, nper=1, delr=delr, delc=delc,
-                                   top=top1, botm=botm, laycbd=0, itmuni=4, lenuni=2,
-                                   steady=Steady, nstp=nstp, tsmult=tsmult, perlen=perlen) 
+    dis = flopy.modflow.ModflowDis(mf, nlay, nrow, ncol, nper=1,
+                                   delr=delr, delc=delc,
+                                   top=top1, botm=botm, laycbd=0,
+                                   itmuni=4, lenuni=2,
+                                   steady=Steady, nstp=nstp, tsmult=tsmult,
+                                   perlen=perlen)
     
     ## Instantiate upstream weighting (UPW) flow package for MODFLOW-NWT
     
     # UPW parameters 
-    # UPW must be instantiated after DIS.  Otherwise, during the mf.write_input() procedures,   
-    # flopy will crash.
-    
+
     # First line of UPW input is: IUPWCB HDRY NPUPW IPHDRY 
     hdry = -1.e+30
     iphdry = 0
@@ -141,7 +145,7 @@ def test_lkt_with_multispecies():
     # Next variables are: LAYTYP, LAYAVG, CHANI, LAYVKA, LAYWET
     laytyp = [1, 1, 1]  # >0: convertible
     layavg = 0          #  0: harmonic mean
-    chani = 1.0         # >0: CHANI is the horizontal anisotropy for the entire layer
+    chani = 1.0         # >0: CHANI is the horizontal anis for entire layer
     layvka = 0          # =0: indicates VKA is vertical hydraulic conductivity
     laywet = 0          # Always set equal to zero in UPW package
     hk = 3.172E-03
@@ -150,8 +154,10 @@ def test_lkt_with_multispecies():
     ss = 0.00001
     sy = 0.30
     
-    upw = flopy.modflow.ModflowUpw(mf, laytyp=laytyp, layavg=layavg, chani=chani, layvka=layvka,
-                                   laywet=laywet, ipakcb=53, hdry=hdry, iphdry=iphdry, hk=hk, 
+    upw = flopy.modflow.ModflowUpw(mf, laytyp=laytyp, layavg=layavg,
+                                   chani=chani, layvka=layvka,
+                                   laywet=laywet, ipakcb=53, hdry=hdry,
+                                   iphdry=iphdry, hk=hk,
                                    vka=vka, ss=ss, sy=sy)
     
     ## Instantiate basic (BAS or BA6) package for MODFLOW-NWT
@@ -482,21 +488,30 @@ def test_lkt_with_multispecies():
                      [0.0, 0.0, 0.0, 0.0],
                      [0.0, 0.0, 0.0, 0.0]]}
     
-    lak = flopy.modflow.ModflowLak(mf, nlakes=nlakes, ipakcb=ipakcb, theta=theta,
-                                    nssitr=nssitr, sscncr=sscncr, surfdep=surfdep,
-                                    stages=stages, stage_range=stage_range, lakarr=lkarr,
-                                    bdlknc=bdlknc, flux_data=flux_data, unit_number=16)
+    lak = flopy.modflow.ModflowLak(mf, nlakes=nlakes, ipakcb=ipakcb,
+                                   theta=theta,
+                                    nssitr=nssitr, sscncr=sscncr,
+                                   surfdep=surfdep,
+                                    stages=stages, stage_range=stage_range,
+                                   lakarr=lkarr,
+                                    bdlknc=bdlknc, flux_data=flux_data,
+                                   unit_number=16)
     
-    ## Instantiate linkage with mass transport routing (LMT) package for MODFLOW-NWT (generates linker file)
+    ## Instantiate linkage with mass transport routing (LMT) package
+    # for MODFLOW-NWT (generates linker file)
     
-    lmt = flopy.modflow.ModflowLmt(mf, output_file_name='lkttest.ftl', output_file_header='extended',
-                                   output_file_format='formatted', package_flows = ['lak'])
+    lmt = flopy.modflow.ModflowLmt(mf, output_file_name='lkttest.ftl',
+                                   output_file_header='extended',
+                                   output_file_format='formatted',
+                                   package_flows = ['lak'])
     
     
     ## Now work on MT3D-USGS file creation
     
-    mt = flopy.mt3d.Mt3dms(modflowmodel=mf, modelname=modelname, model_ws=modelpth,
-                           version='mt3d-usgs', namefile_ext='mtnam', exe_name=mtexe,
+    mt = flopy.mt3d.Mt3dms(modflowmodel=mf, modelname=modelname,
+                           model_ws=modelpth,
+                           version='mt3d-usgs', namefile_ext='mtnam',
+                           exe_name=mtexe,
                            ftlfilename='lkttest.ftl', ftlfree=True)
     
     ## Instantiate basic transport (BTN) package for MT3D-USGS
@@ -523,8 +538,10 @@ def test_lkt_with_multispecies():
     
     btn = flopy.mt3d.Mt3dBtn(mt, lunit=lunit, ncomp=ncomp, mcomp=mcomp,
                              sconc=sconc, prsity=prsity, cinact=cinact, 
-                             laycon=laycon, thkmin=thkmin, nprs=nprs, nprobs=nprobs, 
-                             chkmas=True,nprmas=nprmas, perlen=perlen, dt0=dt0, 
+                             laycon=laycon, thkmin=thkmin, nprs=nprs,
+                             nprobs=nprobs,
+                             chkmas=True,nprmas=nprmas, perlen=perlen,
+                             dt0=dt0,
                              nstp=nstp, tsmult=tsmult, mxstrn=mxstrn, 
                              ttsmult=ttsmult, ttsmax=ttsmax, sconc2=sconc2)
     
@@ -538,7 +555,8 @@ def test_lkt_with_multispecies():
     adv = flopy.mt3d.Mt3dAdv(mt, mixelm=mixelm, percel=percel, mxpart=mxpart, 
                              nadvfd=nadvfd)
     
-    ## Instantiate generalized conjugate gradient solver (GCG) package for MT3D-USGS
+    ## Instantiate generalized conjugate gradient solver (GCG)
+    # package for MT3D-USGS
     
     mxiter =  1
     iter1  = 50
@@ -572,7 +590,8 @@ def test_lkt_with_multispecies():
     
     lkt = flopy.mt3d.Mt3dLkt(mt, nlkinit=nlkinit, mxlkbc=mxlkbc, icbclk=icbclk,
                              ietlak=ietlak, coldlak=coldlak, 
-                             lk_stress_period_data=lkt_flux_data, coldlak2=coldlak2)
+                             lk_stress_period_data=lkt_flux_data,
+                             coldlak2=coldlak2)
     
     mf.write_input()
     mt.write_input()
