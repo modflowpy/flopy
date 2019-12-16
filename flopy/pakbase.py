@@ -809,6 +809,7 @@ class Package(PackageInterface):
         # read data for every stress period
         bnd_output = None
         stress_period_data = {}
+        current = None
         for iper in range(nper):
             if model.verbose:
                 msg = '   loading ' + str(pak_type) + \
@@ -843,7 +844,10 @@ class Package(PackageInterface):
                     current['node'] -= 1
                 bnd_output = np.recarray.copy(current)
             else:
-                bnd_output = np.recarray.copy(current)
+                if current is None:
+                    bnd_output = None
+                else:
+                    bnd_output = np.recarray.copy(current)
 
             for iparm in range(itmpp):
                 line = f.readline()

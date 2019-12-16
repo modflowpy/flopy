@@ -616,7 +616,7 @@ class Mt3dSsm(Package):
                                       array_free_format=False)
                     kwargs[name] = {0: t2d}
 
-        stress_period_data = {}
+        stress_period_data = {0: None}
 
         for iper in range(nper):
 
@@ -708,7 +708,7 @@ class Mt3dSsm(Package):
                 current['i'] -= 1
                 current['j'] -= 1
                 current = current.view(np.recarray)
-            stress_period_data[iper] = current
+                stress_period_data[iper] = current
 
         if openfile:
             f.close()
