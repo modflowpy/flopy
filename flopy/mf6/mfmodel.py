@@ -899,16 +899,29 @@ class MFModel(PackageContainer, ModelInterface):
             path = package.parent_file.path + (package.package_type,)
         else:
             path = (self.name, package.package_type)
-
-        if add_to_package_list and path in self._package_paths and not \
-                set_package_name and package.package_name in \
-                self.package_name_dict:
-            # package of this type with this name already exists, replace it
-            if self.simulation_data.verbosity_level.value >= \
-                    VerbosityLevel.normal.value:
-                print('WARNING: Package with name {} already exists. '
-                      'Replacing existing package.'.format(package.package_name))
-            self.remove_package(self.package_name_dict[package.package_name])
+        package_struct = \
+            self.structure.get_package_struct(package.package_type)
+        if add_to_package_list and path in self._package_paths:
+            if not package_struct.multi_package_support:
+                # package of this type already exists, replace it
+                self.remove_package(package.package_type)
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: Package with type {} already exists. '
+                          'Replacing existing package'
+                          '.'.format(package.package_type))
+            elif not set_package_name and package.package_name in \
+                    self.package_name_dict:
+                # package of this type with this name already
+                # exists, replace it
+                self.remove_package(
+                    self.package_name_dict[package.package_name])
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print(
+                        'WARNING: Package with name {} already exists. '
+                        'Replacing existing package'
+                        '.'.format(package.package_name))
 
         # make sure path is unique
         if path in self._package_paths:
@@ -922,8 +935,6 @@ class MFModel(PackageContainer, ModelInterface):
         if package.package_type.lower() == 'nam':
             return path, self.structure.name_file_struct_obj
 
-        package_struct = \
-          self.structure.get_package_struct(package.package_type)
         if set_package_name:
             # produce a default package name
             if package_struct is not None and \
