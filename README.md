@@ -208,6 +208,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**            |
 | `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                        |
 | `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                        |
+| `Triangle().add_polygon()` in `flopy.utils.Triangle`                                            | **shapely**                                        |
 
 How to Cite
 -----------------------------------------------

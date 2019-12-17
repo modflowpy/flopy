@@ -5,6 +5,10 @@ from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
 from ..plot.plotutil import plot_cvfd
 
+try:
+    import shapely
+except ImportError:
+    shapely = None
 
 class Triangle(object):
     """
@@ -53,14 +57,24 @@ class Triangle(object):
 
         Parameters
         ----------
-        polygon : list
-            polygon is a list of (x, y) points
+        polygon : list/shapely.geometry.polygon.Polygon
+            if type is list, polygon is a list of (x, y) points
 
         Returns
         -------
         None
 
         """
+        if shapely is not None:
+            from shapely.geometry.polygon import Polygon
+            # if the type of polygon is a shapely Polygon object, deconstruct into points
+            if type(polygon) is Polygon:
+                poly = []
+                for x, y in zip(polygon.boundary.xy[0],
+                                polygon.boundary.xy[1]):
+                    poly.append((float(x), float(y)))
+                polygon = poly
+
         self._polygons.append(polygon)
         return
 
