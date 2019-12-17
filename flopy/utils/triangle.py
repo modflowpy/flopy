@@ -69,7 +69,7 @@ class Triangle(object):
             from shapely.geometry.polygon import Polygon
             # if the type of polygon is a shapely Polygon object,
             # deconstruct into points
-            if type(polygon) is Polygon:
+            if isinstance(polygon, Polygon):
                 poly = []
                 for x, y in zip(polygon.boundary.xy[0],
                                 polygon.boundary.xy[1]):
