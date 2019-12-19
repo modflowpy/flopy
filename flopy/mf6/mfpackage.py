@@ -93,17 +93,31 @@ class MFBlockHeader(object):
         self.data_items.append(new_data)
 
     def is_same_header(self, block_header):
-        if len(self.data_items) == 0 or \
-                        len(block_header.variable_strings) == 0:
-            return True
-        typ_obj = self.data_items[0].structure.data_item_structures[0].type_obj
-        if typ_obj == int or typ_obj == float:
-            if self.variable_strings[0] == block_header.variable_strings[0]:
-                return True
-            else:
+        if len(self.variable_strings) > 0:
+            if len(self.variable_strings) != \
+                    len(block_header.variable_strings):
                 return False
-        else:
+            else:
+                for sitem, oitem in zip(self.variable_strings,
+                                        block_header.variable_strings):
+                    if sitem != oitem:
+                        return False
             return True
+        elif len(self.data_items) > 0 and \
+                len(block_header.variable_strings) > 0:
+            typ_obj = self.data_items[0].structure.data_item_structures[0].\
+                type_obj
+            if typ_obj == int or typ_obj == float:
+                if self.variable_strings[0] == \
+                        block_header.variable_strings[0]:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+        elif len(self.data_items) == len(block_header.variable_strings):
+            return True
+        return False
 
     def get_comment(self):
         if self.simulation_data is None:
