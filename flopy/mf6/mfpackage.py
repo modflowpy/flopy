@@ -108,11 +108,8 @@ class MFBlockHeader(object):
             typ_obj = self.data_items[0].structure.data_item_structures[0].\
                 type_obj
             if typ_obj == int or typ_obj == float:
-                if self.variable_strings[0] == \
-                        block_header.variable_strings[0]:
-                    return True
-                else:
-                    return False
+                return bool(self.variable_strings[0] == \
+                        block_header.variable_strings[0])
             else:
                 return True
         elif len(self.data_items) == len(block_header.variable_strings):
