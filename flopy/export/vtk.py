@@ -1543,7 +1543,7 @@ def export_model(model, ot_folder, package_names=None, nanval=-1e+20,
         if not isinstance(package_names, list):
             package_names = [package_names]
     else:
-        package_names = [pak.name[0] for pak in ml.packagelist]
+        package_names = [pak.name[0] for pak in model.packagelist]
 
     if not os.path.exists(ot_folder):
         os.mkdir(ot_folder)
