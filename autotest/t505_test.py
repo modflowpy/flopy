@@ -929,6 +929,28 @@ def test005_advgw_tidal():
     tdis_file = os.path.join(run_folder, 'all_files_same_name.tdis')
     assert os.path.exists(tdis_file)
 
+    # load simulation
+    sim_load = MFSimulation.load(sim.name, 'mf6', exe_name,
+                                 sim.simulation_data.mfpath.get_sim_path(),
+                                 verbosity_level=0)
+    model = sim_load.get_model()
+    # confirm ghb obs data has two blocks with correct file names
+    ghb = model.get_package('ghb')
+    obs = ghb.obs
+    obs_data = obs.continuous.get_data()
+    found_flows = False
+    found_obs = False
+    for key, value in obs_data.items():
+        if key.lower() == 'ghb_flows.csv':
+            # there should be only one
+            assert not found_flows
+            found_flows = True
+        if key.lower() == 'ghb_obs.csv':
+            # there should be only one
+            assert not found_obs
+            found_obs = True
+    assert found_flows and found_obs
+
     # clean up
     sim.delete_output_files()
 
