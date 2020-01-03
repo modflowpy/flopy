@@ -206,6 +206,44 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
             raise Exception(estr)
 
 
+def _add_output_nc_zonebudget_variable(f, array, var_name,
+                                       logger=None):
+    """
+    Method to add zonebudget output data to netcdf file
+
+    Parameters
+    ----------
+    f : NetCdf object
+    times : list
+        list of times
+    array : np.ndarray
+        zonebudget output budget group array
+    var_name : str
+        variable name
+    logger : None or Logger
+        logger instance
+
+    """
+    if logger:
+        logger.log("creating array for {}".format(var_name))
+
+    mn = np.min(array)
+    mx = np.max(array)
+
+    precision_str = "f4"
+    units = "{}^3".format(f.grid_units)
+    attribs = {"long_name": var_name}
+    attribs["coordinates"] = "time zone"
+    attribs["min"] = mn
+    attribs["max"] = mx
+    attribs['units'] = units
+    dim_tuple = ('time', "zone")
+
+    var = f.create_group_variable('zonebudget', var_name, attribs,
+                                  precision_str, dim_tuple)
+
+    var[:] = array
+
 def output_helper(f, ml, oudic, **kwargs):
     """
     Export model outputs using the model spatial reference info.
@@ -242,6 +280,8 @@ def output_helper(f, ml, oudic, **kwargs):
     if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
+
+    zonebudget = oudic.pop("zonebud", None)
     # ISSUE - need to round the totims in each output file instance so
     # that they will line up
     for key in oudic.keys():
@@ -334,6 +374,18 @@ def output_helper(f, ml, oudic, **kwargs):
                     logger.lraise(estr)
                 else:
                     raise Exception(estr)
+
+        if zonebudget is not None:
+            try:
+                f.initialize_group("zonebudget", dimensions=('time', 'zone'),
+                                   dimension_data={'time': zonebudget.time,
+                                                   'zone': zonebudget.zones})
+            except AttributeError:
+                pass
+
+            for text, array in zonebudget.arrays.items():
+                _add_output_nc_zonebudget_variable(f, array, text, logger)
+
 
     else:
         if logger:
