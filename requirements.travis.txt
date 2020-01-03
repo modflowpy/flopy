@@ -1,6 +1,7 @@
 appdirs
 matplotlib
 netcdf4
+h5py
 fiona ; python_version < '3.8'
 descartes
 pyproj
