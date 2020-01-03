@@ -13,3 +13,4 @@ fi
 pip install https://github.com/modflowpy/pymake/zipball/master
 pip install shapely[vectorize]
 pip install coveralls nose-timer
+pip install --no-binary rasterio rasterio
