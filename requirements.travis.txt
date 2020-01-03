@@ -1,6 +1,6 @@
 appdirs
 matplotlib
-netcdf4 != 1.5.3
+netcdf4
 fiona ; python_version < '3.8'
 descartes
 pyproj
