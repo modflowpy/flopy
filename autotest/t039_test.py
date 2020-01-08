@@ -310,7 +310,7 @@ def test_zonebudget_output_to_netcdf():
     # test with modflow6/zonebudget6
     sim_ws = os.path.join("..", "examples", 'data',
                           'mf6', 'test005_advgw_tidal')
-    hds = "AdvGW_tidal.hds"
+    hds = "advgw_tidal.hds"
     nam = "mfsim"
     zon = "zonebudget6.csv"
     ncf_name = zon + ".nc"
