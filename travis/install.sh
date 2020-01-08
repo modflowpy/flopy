@@ -6,6 +6,7 @@ pip install --upgrade pip
 pip install -r requirements.travis.txt
 pip install --no-binary rasterio rasterio
 pip install --upgrade numpy
+pip install --upgrade coverage
 if [ "${RUN_TYPE}" = "misc" ]; then
   pip install flake8 pylint pylint-exit
   pip install jupyter nbconvert
