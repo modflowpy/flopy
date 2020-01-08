@@ -306,7 +306,7 @@ def test_zonebudget_output_to_netcdf():
     export_dict = {"hds": hds}
     ncfobj = output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
     zb.export(ncfobj, ml)
-    
+
     # test with modflow6/zonebudget6
     sim_ws = os.path.join("..", "examples", 'data',
                           'mf6', 'test005_advgw_tidal')
@@ -317,7 +317,7 @@ def test_zonebudget_output_to_netcdf():
 
     zone_array = np.ones((3, 15, 10), dtype=int)
     zone_array = np.add.accumulate(zone_array, axis=0)
-    sim = MFSimulation.load(nam, sim_ws=sim_ws)
+    sim = MFSimulation.load(nam, sim_ws=sim_ws, exe_name='mf6')
     sim.set_sim_path(outpth)
     sim.write_simulation()
     sim.run_simulation()
@@ -337,14 +337,14 @@ def test_zonebudget_output_to_netcdf():
 
 if __name__ == '__main__':
     # test_compare2mflist_mlt()
-    #test_compare2zonebudget()
-    #test_zonbud_aliases()
-    #test_zonbud_to_csv()
-    #test_zonbud_math()
-    #test_zonbud_copy()
-    #test_zonbud_readwrite_zbarray()
-    #test_zonbud_get_record_names()
-    #test_dataframes()
-    #test_get_budget()
-    #test_get_model_shape()
+    test_compare2zonebudget()
+    test_zonbud_aliases()
+    test_zonbud_to_csv()
+    test_zonbud_math()
+    test_zonbud_copy()
+    test_zonbud_readwrite_zbarray()
+    test_zonbud_get_record_names()
+    test_dataframes()
+    test_get_budget()
+    test_get_model_shape()
     test_zonebudget_output_to_netcdf()
