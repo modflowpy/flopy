@@ -6,11 +6,11 @@ pip install --upgrade pip
 pip install -r requirements.travis.txt
 pip install --no-binary rasterio rasterio
 pip install --upgrade numpy
-pip install --upgrade coverage
 if [ "${RUN_TYPE}" = "misc" ]; then
   pip install flake8 pylint pylint-exit
   pip install jupyter nbconvert
 fi
 pip install https://github.com/modflowpy/pymake/zipball/master
 pip install shapely[vectorize]
+pip install coverage==5.0.1
 pip install coveralls nose-timer
