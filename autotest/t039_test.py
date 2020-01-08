@@ -232,15 +232,119 @@ def test_get_model_shape():
     return
 
 
+def test_zonebudget_output_to_netcdf():
+    from flopy.utils import HeadFile, ZoneBudgetOutput
+    from flopy.modflow import Modflow
+    from flopy.mf6 import MFSimulation
+    from flopy.export.utils import output_helper
+
+    model_ws = os.path.join("..", "examples", "data",
+                            "freyberg_multilayer_transient")
+    zb_ws = os.path.join("..", "examples", "data", "zonbud_examples")
+
+    hds = "freyberg.hds"
+    nam = "freyberg.nam"
+    zon = "zonef_mlt.zbr"
+
+    hds = HeadFile(os.path.join(model_ws, hds))
+    ml = Modflow.load(nam, model_ws=model_ws)
+    zone_array = read_zbarray(os.path.join(zb_ws, zon))
+
+    # test with standard zonebudget output
+    zbout = "freyberg_mlt.txt"
+    ncf_name = zbout + ".nc"
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
+    vdf = zb.volumetric_flux()
+
+    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
+
+    export_dict = {"hds": hds,
+                   "zonebud": netobj}
+
+    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
+
+    # test with zonebudget csv 1 output
+    zbout = "freyberg_mlt.1.csv"
+    ncf_name = zbout + ".nc"
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
+
+    netobj = zb.dataframe_to_netcdf_fmt(zb.dataframe)
+
+    export_dict = {"hds": hds,
+                   "zonebud": netobj}
+
+    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
+
+    # test with zonebudget csv 2 output
+    zbout = "freyberg_mlt.2.csv"
+    ncf_name = zbout + ".nc"
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
+    vdf = zb.volumetric_flux(extrapolate_kper=True)
+
+    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
+
+    export_dict = {"hds": hds,
+                   "zonebud": netobj}
+
+    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
+
+    # test built in export function
+    zbout = "freyberg_mlt.2.csv"
+    ncf_name = zbout + ".bi1" + ".nc"
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
+    zb.export(os.path.join(outpth, ncf_name), ml)
+
+    # test built in export function with NetCdf output object
+    zbout = "freyberg_mlt.2.csv"
+    ncf_name = zbout + ".bi2" + ".nc"
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zbout), ml.dis, zone_array)
+    export_dict = {"hds": hds}
+    ncfobj = output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
+    zb.export(ncfobj, ml)
+    
+    # test with modflow6/zonebudget6
+    sim_ws = os.path.join("..", "examples", 'data',
+                          'mf6', 'test005_advgw_tidal')
+    hds = "AdvGW_tidal.hds"
+    nam = "mfsim"
+    zon = "zonebudget6.csv"
+    ncf_name = zon + ".nc"
+
+    zone_array = np.ones((3, 15, 10), dtype=int)
+    zone_array = np.add.accumulate(zone_array, axis=0)
+    sim = MFSimulation.load(nam, sim_ws=sim_ws)
+    sim.set_sim_path(outpth)
+    sim.write_simulation()
+    sim.run_simulation()
+    hds = HeadFile(os.path.join(outpth, hds))
+
+    ml = sim.get_model("gwf_1")
+
+    zb = ZoneBudgetOutput(os.path.join(zb_ws, zon), sim.tdis, zone_array)
+    vdf = zb.volumetric_flux()
+
+    netobj = zb.dataframe_to_netcdf_fmt(vdf, flux=False)
+    export_dict = {"hds": hds,
+                   "zbud": netobj}
+
+    output_helper(os.path.join(outpth, ncf_name), ml, export_dict)
+
+
 if __name__ == '__main__':
     # test_compare2mflist_mlt()
-    test_compare2zonebudget()
-    test_zonbud_aliases()
-    test_zonbud_to_csv()
-    test_zonbud_math()
-    test_zonbud_copy()
-    test_zonbud_readwrite_zbarray()
-    test_zonbud_get_record_names()
-    test_dataframes()
-    test_get_budget()
-    test_get_model_shape()
+    #test_compare2zonebudget()
+    #test_zonbud_aliases()
+    #test_zonbud_to_csv()
+    #test_zonbud_math()
+    #test_zonbud_copy()
+    #test_zonbud_readwrite_zbarray()
+    #test_zonbud_get_record_names()
+    #test_dataframes()
+    #test_get_budget()
+    #test_get_model_shape()
+    test_zonebudget_output_to_netcdf()

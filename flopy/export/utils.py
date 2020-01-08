@@ -2,7 +2,8 @@ from __future__ import print_function
 import json
 import os
 import numpy as np
-from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
+from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile, \
+    ZBNetOutput
 from ..mbase import BaseModel, ModelInterface
 from ..pakbase import PackageInterface
 from ..datbase import DataType, DataInterface, DataListInterface
@@ -123,35 +124,48 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
     array = np.zeros((len(times), shape3d[0], shape3d[1], shape3d[2]),
                      dtype=np.float32)
     array[:] = np.NaN
-    for i, t in enumerate(times):
-        if t in out_obj.recordarray["totim"]:
-            try:
-                if text:
-                    a = out_obj.get_data(totim=t, full3D=True, text=text)
-                    if isinstance(a, list):
-                        a = a[0]
-                else:
-                    a = out_obj.get_data(totim=t)
-            except Exception as e:
-                estr = "error getting data for {0} at time {1}:{2}".format(
-                    var_name + text.decode().strip().lower(), t, str(e))
-                if logger:
-                    logger.warn(estr)
-                else:
-                    print(estr)
-                continue
-            if mask_array3d is not None and a.shape == mask_array3d.shape:
-                a[mask_array3d] = np.NaN
-            try:
-                array[i, :, :, :] = a.astype(np.float32)
-            except Exception as e:
-                estr = "error assigning {0} data to array for time {1}:{2}".format(
-                    var_name + text.decode().strip().lower(), t, str(e))
-                if logger:
-                    logger.warn(estr)
-                else:
-                    print(estr)
-                continue
+
+    if isinstance(out_obj, ZBNetOutput):
+        a = np.asarray(out_obj.zone_array, dtype=np.float32)
+        if mask_array3d is not None:
+            a[mask_array3d] = np.NaN
+        for i, _ in enumerate(times):
+            array[i, :, :, :] = a
+
+    else:
+        for i, t in enumerate(times):
+            if t in out_obj.recordarray["totim"]:
+                try:
+                    if text:
+                        a = out_obj.get_data(totim=t, full3D=True, text=text)
+                        if isinstance(a, list):
+                            a = a[0]
+                    else:
+                        a = out_obj.get_data(totim=t)
+                except Exception as e:
+                    estr = "error getting data for {0} at time" \
+                           " {1}:{2}".format(var_name +
+                                             text.decode().strip().lower(),
+                                             t, str(e))
+                    if logger:
+                        logger.warn(estr)
+                    else:
+                        print(estr)
+                    continue
+                if mask_array3d is not None and a.shape == mask_array3d.shape:
+                    a[mask_array3d] = np.NaN
+                try:
+                    array[i, :, :, :] = a.astype(np.float32)
+                except Exception as e:
+                    estr = "error assigning {0} data to array for time" \
+                           " {1}:{2}".format(var_name +
+                                             text.decode().strip().lower(),
+                                             t, str(e))
+                    if logger:
+                        logger.warn(estr)
+                    else:
+                        print(estr)
+                    continue
 
     if logger:
         logger.log("creating array for {0}".format(
@@ -206,7 +220,7 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
             raise Exception(estr)
 
 
-def _add_output_nc_zonebudget_variable(f, array, var_name,
+def _add_output_nc_zonebudget_variable(f, array, var_name, flux,
                                        logger=None):
     """
     Method to add zonebudget output data to netcdf file
@@ -220,6 +234,8 @@ def _add_output_nc_zonebudget_variable(f, array, var_name,
         zonebudget output budget group array
     var_name : str
         variable name
+    flux : bool
+        flag for flux data or volumetric data
     logger : None or Logger
         logger instance
 
@@ -231,7 +247,10 @@ def _add_output_nc_zonebudget_variable(f, array, var_name,
     mx = np.max(array)
 
     precision_str = "f4"
-    units = "{}^3".format(f.grid_units)
+    if flux:
+        units = "{}^3/{}".format(f.grid_units, f.time_units)
+    else:
+        units = "{}^3".format(f.grid_units)
     attribs = {"long_name": var_name}
     attribs["coordinates"] = "time zone"
     attribs["min"] = mn
@@ -268,7 +287,7 @@ def output_helper(f, ml, oudic, **kwargs):
         casts down double precision to single precision for netCDF files
 
     """
-    assert isinstance(ml, BaseModel)
+    assert isinstance(ml, (BaseModel, ModelInterface))
     assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger", None)
     stride = kwargs.pop("stride", 1)
@@ -281,7 +300,16 @@ def output_helper(f, ml, oudic, **kwargs):
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
 
-    zonebudget = oudic.pop("zonebud", None)
+    zonebud = None
+    zbkey = None
+    for key, value in oudic.items():
+        if isinstance(value, ZBNetOutput):
+            zbkey = key
+            break
+
+    if zbkey is not None:
+        zonebud = oudic.pop(zbkey)
+
     # ISSUE - need to round the totims in each output file instance so
     # that they will line up
     for key in oudic.keys():
@@ -295,6 +323,13 @@ def output_helper(f, ml, oudic, **kwargs):
         for t in df.recordarray["totim"]:
             if t not in times:
                 times.append(t)
+
+    if zonebud is not None and not oudic:
+        if isinstance(f, NetCdf):
+            times = f.time_values_arg
+        else:
+            times = zonebud.time
+
     assert len(times) > 0
     times.sort()
 
@@ -304,6 +339,8 @@ def output_helper(f, ml, oudic, **kwargs):
     for t in times:
         keep = True
         for filename, df in oudic.items():
+            if isinstance(df, ZBNetOutput):
+                continue
             if t not in df.recordarray["totim"]:
                 keep = False
                 break
@@ -311,6 +348,7 @@ def output_helper(f, ml, oudic, **kwargs):
             common_times.append(t)
         else:
             skipped_times.append(t)
+
     assert len(common_times) > 0
     if len(skipped_times) > 0:
         if logger:
@@ -329,15 +367,15 @@ def output_helper(f, ml, oudic, **kwargs):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
     if isinstance(f, NetCdf) or isinstance(f, dict):
-        shape3d = (ml.nlay, ml.nrow, ml.ncol)
+        shape3d = (ml.modelgrid.nlay, ml.modelgrid.nrow, ml.modelgrid.ncol)
         mask_array3d = None
-        if ml.bas6:
-            mask_vals.append(ml.bas6.hnoflo)
-            mask_array3d = ml.bas6.ibound.array == 0
-        if ml.bcf6:
-            mask_vals.append(ml.bcf6.hdry)
-        if ml.lpf:
-            mask_vals.append(ml.lpf.hdry)
+        if ml.hdry is not None:
+            mask_vals.append(ml.hdry)
+        if ml.hnoflo is not None:
+            mask_vals.append(ml.hnoflo)
+
+        if ml.modelgrid.idomain is not None:
+            mask_array3d = ml.modelgrid.idomain == 0
 
         for filename, out_obj in oudic.items():
             filename = filename.lower()
@@ -375,18 +413,25 @@ def output_helper(f, ml, oudic, **kwargs):
                 else:
                     raise Exception(estr)
 
-        if zonebudget is not None:
+        if zonebud is not None:
             try:
-                f.initialize_group("zonebudget", dimensions=('time', 'zone'),
-                                   dimension_data={'time': zonebudget.time,
-                                                   'zone': zonebudget.zones})
+                f.initialize_group("zonebudget",
+                                   dimensions=('time', 'zone'),
+                                   dimension_data={'time': zonebud.time,
+                                                   'zone': zonebud.zones})
             except AttributeError:
                 pass
 
-            for text, array in zonebudget.arrays.items():
-                _add_output_nc_zonebudget_variable(f, array, text, logger)
+            for text, array in zonebud.arrays.items():
+                _add_output_nc_zonebudget_variable(f, array, text,
+                                                   zonebud.flux,
+                                                   logger)
 
-
+            # todo: write the zone array to standard output
+            _add_output_nc_variable(f, times, shape3d, zonebud,
+                                    "budget_zones", logger=logger,
+                                    mask_vals=mask_vals,
+                                    mask_array3d=mask_array3d)
     else:
         if logger:
             logger.lraise("unrecognized export argument:{0}".format(f))
