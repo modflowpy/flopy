@@ -514,7 +514,7 @@ class MFFileAccessArray(MFFileAccess):
             try:
                 storage.store_internal([convert_data(
                     arr_line[1], self._data_dimensions, self.structure.type,
-                    di_struct)], layer, const=True, multiplier=[1.0])
+                    di_struct)], layer, const=True)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -867,7 +867,7 @@ class MFFileAccessList(MFFileAccess):
                             convert_data(arr_line[1], self._data_dimensions,
                                          struct.data_item_structures[1].type,
                                          struct.data_item_structures[0]),
-                            0, const=True, multiplier=[1.0])
+                            0, const=True)
                     else:
                         data_rec = storage._build_recarray(arr_line[1], None,
                                                            True)

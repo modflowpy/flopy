@@ -341,7 +341,8 @@ class Mt3dms(BaseModel):
         self._model_time = ModelTime(data_frame,
                                      self.mf.dis.itmuni_dict[
                                          self.mf.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property

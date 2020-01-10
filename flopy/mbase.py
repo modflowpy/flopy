@@ -158,6 +158,81 @@ class ModelInterface(object):
             'must define verbose in child '
             'class to use this base class')
 
+    @abc.abstractmethod
+    def check(self, f=None, verbose=True, level=1):
+        raise NotImplementedError(
+            'must define check in child '
+            'class to use this base class')
+
+    def _check(self, chk, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+        summarize : bool
+            Boolean flag used to determine if summary of results is written
+            to the screen
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+
+        # check instance for model-level check
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1,
+                                             checktype=chk.__class__)
+
+        # model level checks
+        # solver check
+        if self.version in chk.solver_packages.keys():
+            solvers = set(chk.solver_packages[self.version]).intersection(
+                set(self.packagelist))
+            if not solvers:
+                chk._add_to_summary('Error', desc='\r    No solver package',
+                                    package='model')
+            elif len(list(solvers)) > 1:
+                for s in solvers:
+                    chk._add_to_summary('Error',
+                                        desc='\r    Multiple solver packages',
+                                        package=s)
+            else:
+                chk.passed.append('Compatible solver package')
+
+        # add package check results to model level check summary
+        for k, r in results.items():
+            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
+                chk.summary_array = np.append(chk.summary_array,
+                                              r.summary_array).view(
+                    np.recarray)
+                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
+                               for psd in r.passed]
+        chk.summarize()
+        return chk
+
 
 class BaseModel(ModelInterface):
     """
@@ -1367,29 +1442,6 @@ class BaseModel(ModelInterface):
 
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
-        results = {}
-
-        for p in self.packagelist:
-            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
-                results[p.name[0]] = p.check(f=None, verbose=False,
-                                             level=level - 1)
-
-        # model level checks
-        # solver check
-        if self.version in chk.solver_packages.keys():
-            solvers = set(chk.solver_packages[self.version]).intersection(
-                set(self.get_package_list()))
-            if not solvers:
-                chk._add_to_summary('Error', desc='\r    No solver package',
-                                    package='model')
-            elif len(list(solvers)) > 1:
-                for s in solvers:
-                    chk._add_to_summary('Error',
-                                        desc='\r    Multiple solver packages',
-                                        package=s)
-            else:
-                chk.passed.append('Compatible solver package')
-
         # check for unit number conflicts
         package_units = {}
         duplicate_units = {}
@@ -1408,16 +1460,7 @@ class BaseModel(ModelInterface):
         else:
             chk.passed.append('Unit number conflicts')
 
-        # add package check results to model level check summary
-        for k, r in results.items():
-            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
-                chk.summary_array = np.append(chk.summary_array,
-                                              r.summary_array).view(
-                    np.recarray)
-                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
-                               for psd in r.passed]
-        chk.summarize()
-        return chk
+        return self._check(chk, level)
 
     def plot(self, SelPackList=None, **kwargs):
         """
