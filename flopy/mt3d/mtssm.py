@@ -617,6 +617,7 @@ class Mt3dSsm(Package):
                     kwargs[name] = {0: t2d}
 
         stress_period_data = {}
+        current_crch = []
 
         for iper in range(nper):
 
@@ -637,7 +638,7 @@ class Mt3dSsm(Package):
                     print('   loading CRCH...')
                 t = Util2d.load(f, model, (nrow, ncol), np.float32, 'crch',
                                 ext_unit_dict, array_format="mt3d")
-                crch[iper] = t
+                current_crch = t
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
@@ -649,6 +650,7 @@ class Mt3dSsm(Package):
                                         array_format="mt3d")
                         crchicomp = kwargs[name]
                         crchicomp[iper] = t
+            crch[iper] = current_crch
 
             # Item D5: INCEVT
             incevt = -1
