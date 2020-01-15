@@ -1276,7 +1276,9 @@ class MFPackage(PackageContainer, PackageInterface):
         return self._data_list
 
     def check(self, f=None, verbose=True, level=1, checktype=None):
-        return super(MFPackage, self).check(f, verbose, level, mf6check)
+        if checktype is None:
+            checktype = mf6check
+        return super(MFPackage, self).check(f, verbose, level, checktype)
 
     def _get_nan_exclusion_list(self):
         excl_list = []

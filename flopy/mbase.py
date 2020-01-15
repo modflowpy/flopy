@@ -164,6 +164,30 @@ class ModelInterface(object):
             'must define check in child '
             'class to use this base class')
 
+    def get_package_list(self, ftype=None):
+        """
+        Get a list of all the package names.
+
+        Parameters
+        ----------
+        ftype : str
+            Type of package, 'RIV', 'LPF', etc.
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
+        val = []
+        for pp in (self.packagelist):
+            if ftype is None:
+                val.append(pp.name[0].upper())
+            elif pp.package_type.lower() == ftype:
+                val.append(pp.name[0].upper())
+        return val
+
     def _check(self, chk, level=1):
         """
         Check model data for common errors.
@@ -210,7 +234,7 @@ class ModelInterface(object):
         # solver check
         if self.version in chk.solver_packages.keys():
             solvers = set(chk.solver_packages[self.version]).intersection(
-                set(self.packagelist))
+                set(self.get_package_list()))
             if not solvers:
                 chk._add_to_summary('Error', desc='\r    No solver package',
                                     package='model')
@@ -1077,30 +1101,6 @@ class BaseModel(ModelInterface):
             if pp.name[0].upper() == name:
                 return pp
         return None
-
-    def get_package_list(self, ftype=None):
-        """
-        Get a list of all the package names.
-
-        Parameters
-        ----------
-        ftype : str
-            Type of package, 'RIV', 'LPF', etc.
-
-        Returns
-        -------
-        val : list of strings
-            Can be used to see what packages are in the model, and can then
-            be used with get_package to pull out individual packages.
-
-        """
-        val = []
-        for pp in (self.packagelist):
-            if ftype is None:
-                val.append(pp.name[0].upper())
-            elif pp.package_type.lower() == ftype:
-                val.append(pp.name[0].upper())
-        return val
 
     def set_version(self, version):
         self.version = version.lower()

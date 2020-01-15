@@ -148,7 +148,8 @@ class ModflowRch(Package):
         self.np = 0
         self.parent.add_package(self)
 
-    def check(self, f=None, verbose=True, level=1, RTmin=2e-8, RTmax=2e-4):
+    def check(self, f=None, verbose=True, level=1, RTmin=2e-8, RTmax=2e-4,
+              checktype=None):
         """
         Check package data for common errors.
 
@@ -182,7 +183,7 @@ class ModflowRch(Package):
         >>> m.rch.check()
 
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
         if self.parent.bas6 is not None:
             active = self.parent.bas6.ibound.array.sum(axis=0) != 0
         else:

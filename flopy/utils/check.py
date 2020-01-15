@@ -93,7 +93,10 @@ class check:
             self.prefix = '{} MODEL DATA VALIDATION SUMMARY'.format(
                 self.model.name)
         self.package = package
-        self.structured = (self.model.modelgrid.grid_type == 'structured')
+        if 'structured' in self.model.__dict__:
+            self.structured = self.model.structured
+        else:
+            self.structured = (self.model.modelgrid.grid_type == 'structured')
         self.verbose = verbose
         self.level = level
         self.passed = []
@@ -382,15 +385,15 @@ class check:
         """
         mg = self.model.modelgrid
         if mg.grid_type == 'structured':
-            inds = (mg.nlay, mg.nrow, mg.ncol)
+            inds = (mg.nlay_nocbd, mg.nrow, mg.ncol)
         elif mg.grid_type == 'vertex':
             inds = (mg.nlay, mg.ncpl)
         else:
             inds = mg.nnodes
             include_cbd = False
 
-        if 'BAS6' in self.model.packagelist:
-            if 'DIS' in self.model.packagelist:
+        if 'BAS6' in self.model.get_package_list():
+            if 'DIS' in self.model.get_package_list():
                 dis = self.model.dis
             else:
                 dis = self.model.disu

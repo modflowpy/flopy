@@ -55,9 +55,15 @@ class StructuredGrid(Grid):
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
+            if nlay is not None and nlay < len(botm):
+                self.__nlay_nocbd = nlay
+            else:
+                self.__nlay_nocbd = len(botm)
+
             self.__nlay = len(botm)
         else:
             self.__nlay = nlay
+            self.__nlay_nocbd = nlay
 
     ####################
     # Properties
@@ -74,6 +80,10 @@ class StructuredGrid(Grid):
                 super(StructuredGrid, self).is_complete:
             return True
         return False
+
+    @property
+    def nlay_nocbd(self):
+        return self.__nlay_nocbd
 
     @property
     def nlay(self):

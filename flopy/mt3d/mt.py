@@ -356,11 +356,13 @@ class Mt3dms(BaseModel):
             delr = self.btn.delr.array
             top = self.btn.htop.array
             botm = np.subtract(top, self.btn.dz.array.cumsum(axis=0))
+            nlay = self.btn.nlay
         else:
             delc = self.mf.dis.delc.array
             delr = self.mf.dis.delr.array
             top = self.mf.dis.top.array
             botm = self.mf.dis.botm.array
+            nlay = self.mf.nlay
             if self.mf.bas6 is not None:
                 ibound = self.mf.bas6.ibound.array
             else:
@@ -375,7 +377,8 @@ class Mt3dms(BaseModel):
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,
                                          yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+                                         angrot=self._modelgrid.angrot,
+                                         nlay=nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset

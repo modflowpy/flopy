@@ -190,7 +190,7 @@ class PackageInterface(object):
                             # cell bottoms -- also checks for nan values
                             elev_name = chk.bc_stage_names[self.name[0]]
                             mg = self.parent.modelgrid
-                            botms = mg.botm.array[inds]
+                            botms = mg.botm[inds]
                             test = spdata[elev_name] < botms
                             en = 'BC elevation below cell bottom'
                             chk.stress_period_data_values(spdata,

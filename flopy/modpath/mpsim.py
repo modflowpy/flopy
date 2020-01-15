@@ -128,7 +128,7 @@ class ModpathSim(Package):
 
         self.parent.add_package(self)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check package data for common errors.
 
@@ -153,7 +153,7 @@ class ModpathSim(Package):
         Examples
         --------
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
 
         # MODPATH apparently produces no output if stoptime > last timepoint
         if self.options_dict['StopOption'] == 3 and self.options_dict[

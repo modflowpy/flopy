@@ -640,7 +640,7 @@ class ModflowDis(Package):
                 f_dis.write(' {0:3s}\n'.format('TR'))
         f_dis.close()
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check dis package data for zero and negative thicknesses.
 
@@ -669,7 +669,7 @@ class ModflowDis(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
 
         # make ibound of same shape as thicknesses/botm for quasi-3D models
         active = chk.get_active(include_cbd=True)
