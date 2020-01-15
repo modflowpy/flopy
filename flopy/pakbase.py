@@ -171,10 +171,7 @@ class PackageInterface(object):
         chk.summarize()
         return chk
 
-    def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):
-        chk = self._get_check(f, verbose, level, checktype)
-        active = chk.get_active()
-
+    def _get_kparams(self):
         # build model specific parameter lists
         kparams_all = {'hk': 'horizontal hydraulic conductivity',
                        'vka': 'vertical hydraulic conductivity',
@@ -182,6 +179,7 @@ class PackageInterface(object):
                        'k22': 'hydraulic conductivity second axis',
                        'k33': 'vertical hydraulic conductivity'}
         kparams = {}
+        vka_param = None
         for kp, name in kparams_all.items():
             if kp in self.__dict__:
                 kparams[kp] = name
@@ -199,6 +197,14 @@ class PackageInterface(object):
             vka = None
         if vka is not None:
             vka = vka.copy()
+        return kparams, hk, vka, vka_param
+
+    def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):
+        chk = self._get_check(f, verbose, level, checktype)
+        active = chk.get_active()
+
+        # build model specific parameter lists
+        kparams, hk, vka, vka_param = self._get_kparams()
 
         # check for zero or negative values of hydraulic conductivity,
         # anisotropy, and quasi-3D confining beds
