@@ -1,9 +1,7 @@
 import sys
 
 from ..utils.flopy_io import line_parse, pop_item
-
 from ..pakbase import Package
-from ..utils import check
 
 
 class ModflowMnwi(Package):

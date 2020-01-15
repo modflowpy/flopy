@@ -14,7 +14,7 @@ import warnings
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, check
+from ..utils import Util2d, Util3d
 from ..utils.reference import SpatialReference, TemporalReference
 from ..utils.flopy_io import line_parse
 

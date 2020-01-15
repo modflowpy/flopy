@@ -12,7 +12,7 @@ import re
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d, check, get_neighbors
+from ..utils import Util3d, get_neighbors
 
 
 class ModflowBas(Package):

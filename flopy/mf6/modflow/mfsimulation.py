@@ -5,7 +5,6 @@ import sys
 import inspect
 import collections
 import os.path
-import numpy as np
 from ...mbase import run_model
 from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
     PackageContainerType, MFDataException, FlopyException, \
@@ -17,7 +16,6 @@ from ..utils import binaryfile_utils
 from ..utils import mfobservation
 from ..modflow import mfnam, mfims, mftdis, mfgwfgnc, mfgwfmvr
 from ..data.mfdatautil import MFComment
-from ...utils import check
 
 
 class SimulationDict(collections.OrderedDict):

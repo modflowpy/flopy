@@ -9,7 +9,7 @@ MODFLOW Guide
 """
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, check
+from ..utils import Util3d
 
 
 class ModpathSim(Package):

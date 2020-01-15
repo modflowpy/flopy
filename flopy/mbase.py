@@ -247,7 +247,7 @@ class ModelInterface(object):
                 chk.passed.append('Compatible solver package')
 
         # add package check results to model level check summary
-        for k, r in results.items():
+        for r in results.values():
             if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
                 chk.summary_array = np.append(chk.summary_array,
                                               r.summary_array).view(

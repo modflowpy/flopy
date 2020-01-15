@@ -92,7 +92,8 @@ class PackageInterface(object):
                    '{} values above checker threshold of {}'
                    .format(name, mx), 'Warning')
 
-    def _confined_layer_check(self, chk):
+    @staticmethod
+    def _confined_layer_check(chk):
         return
 
     def _other_xpf_checks(self, chk, active):
@@ -119,7 +120,8 @@ class PackageInterface(object):
                                    chk.property_threshold_values['vkcb'],
                                    'quasi-3D confining bed Kv')
 
-    def _get_nan_exclusion_list(self):
+    @staticmethod
+    def _get_nan_exclusion_list():
         return []
 
     def _get_check(self, f, verbose, level, checktype):
@@ -262,7 +264,7 @@ class PackageInterface(object):
             if self.name[0] in ['UPW', 'LPF']:
                 storage_coeff = 'STORAGECOEFFICIENT' in self.options or \
                     ('storagecoefficient' in self.__dict__ and
-                     self.storagecoefficient.get_data() == True)
+                     self.storagecoefficient.get_data())
                 self._check_storage(chk, storage_coeff)
             chk.summarize()
         elif self.package_type.upper() in ['STO']:

@@ -260,8 +260,8 @@ class check:
         isnan = np.array([np.isnan(stress_period_data[c])
                           for c in stress_period_data.dtype.names
                           if not (stress_period_data.dtype[c].name
-                                  == 'object') and not
-                          c in nan_excl_list]).transpose()
+                                  == 'object') and c not in
+                          nan_excl_list]).transpose()
         if np.any(isnan):
             row_has_nan = np.any(isnan, axis=1)
             sa = self._list_spd_check_violations(stress_period_data,

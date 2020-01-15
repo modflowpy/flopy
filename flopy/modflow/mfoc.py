@@ -11,7 +11,6 @@ import os
 import sys
 
 from ..pakbase import Package
-from ..utils import check
 
 
 class ModflowOc(Package):

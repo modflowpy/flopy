@@ -11,7 +11,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util2d, Transient2d, check
+from ..utils import Util2d, Transient2d
 from ..modflow.mfparbc import ModflowParBc as mfparbc
 from ..utils.flopy_io import line_parse
 
