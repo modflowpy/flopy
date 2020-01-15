@@ -130,6 +130,112 @@ class PackageInterface(object):
         else:
             return check(self, f=f, verbose=verbose, level=level)
 
+    def _check_oc(self, f=None, verbose=True, level=1, checktype=None):
+        spd_inds_valid = True
+        chk = self._get_check(f, verbose, level, checktype)
+        spd = getattr(self, 'stress_period_data')
+        nan_exclusion_list = self._get_nan_exclusion_list()
+        for per in spd.data.keys():
+            if isinstance(spd.data[per], np.recarray):
+                spdata = self.stress_period_data.data[per]
+                inds = chk._get_cell_inds(spdata)
+
+                # General BC checks
+                # check for valid cell indices
+                spd_inds_valid = \
+                    chk._stress_period_data_valid_indices(spdata)
+
+                # first check for and list nan values
+                chk._stress_period_data_nans(spdata, nan_exclusion_list)
+
+                if spd_inds_valid:
+                    # next check for BCs in inactive cells
+                    chk._stress_period_data_inactivecells(spdata)
+
+                    # More specific BC checks
+                    # check elevations in the ghb, drain, and riv packages
+                    if self.name[0] in check.bc_stage_names.keys():
+                        # check that bc elevations are above model
+                        # cell bottoms -- also checks for nan values
+                        elev_name = chk.bc_stage_names[self.name[0]]
+                        mg = self.parent.modelgrid
+                        botms = mg.botm[inds]
+                        test = spdata[elev_name] < botms
+                        en = 'BC elevation below cell bottom'
+                        chk.stress_period_data_values(spdata,
+                                                      test,
+                                                      col=elev_name,
+                                                      error_name=en,
+                                                      error_type='Error')
+
+        chk.summarize()
+        return chk
+
+    def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):
+        chk = self._get_check(f, verbose, level, checktype)
+        active = chk.get_active()
+
+        # build model specific parameter lists
+        kparams_all = {'hk': 'horizontal hydraulic conductivity',
+                       'vka': 'vertical hydraulic conductivity',
+                       'k': 'horizontal hydraulic conductivity',
+                       'k22': 'hydraulic conductivity second axis',
+                       'k33': 'vertical hydraulic conductivity'}
+        kparams = {}
+        for kp, name in kparams_all.items():
+            if kp in self.__dict__:
+                kparams[kp] = name
+        if 'hk' in self.__dict__:
+            hk = self.hk.array.copy()
+        else:
+            hk = self.k.array.copy()
+        if 'vka' in self.__dict__ and self.layvka.sum() > 0:
+            vka = self.vka.array
+            vka_param = kparams.pop('vka')
+        elif 'k33' in self.__dict__:
+            vka = self.k33.array
+            vka_param = kparams.pop('k33')
+        else:
+            vka = None
+        if vka is not None:
+            vka = vka.copy()
+
+        # check for zero or negative values of hydraulic conductivity,
+        # anisotropy, and quasi-3D confining beds
+        for kp, name in kparams.items():
+            if self.__dict__[kp].array is not None:
+                chk.values(self.__dict__[kp].array,
+                           active & (self.__dict__[kp].array <= 0),
+                           'zero or negative {} values'.format(name),
+                           'Error')
+
+        if 'hani' in self.__dict__:
+            self._other_xpf_checks(chk, active)
+
+        # check for unusually high or low values of hydraulic conductivity
+        # convert vertical anisotropy to Kv for checking
+        if vka is not None:
+            if 'layvka' in self.__dict__:
+                for l in range(vka.shape[0]):
+                    vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
+            self._check_thresholds(chk, vka, active,
+                                   chk.property_threshold_values['vka'],
+                                   vka_param)
+
+        for kp, name in kparams.items():
+            if self.__dict__[kp].array is not None:
+                self._check_thresholds(chk, self.__dict__[kp].array,
+                                       active,
+                                       chk.property_threshold_values[kp],
+                                       name)
+        if self.name[0] in ['UPW', 'LPF']:
+            storage_coeff = 'STORAGECOEFFICIENT' in self.options or \
+                            ('storagecoefficient' in self.__dict__ and
+                             self.storagecoefficient.get_data())
+            self._check_storage(chk, storage_coeff)
+        chk.summarize()
+        return chk
+
     def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check package data for common errors.
@@ -147,6 +253,9 @@ class PackageInterface(object):
         level : int
             Check method analysis level. If level=0, summary checks are
             performed. If level=1, full checks are performed.
+        checktype : check
+            Checker type to be used. By default class check is used from
+            check.py.
 
         Returns
         -------
@@ -164,109 +273,11 @@ class PackageInterface(object):
 
         if self.has_stress_period_data and self.name[0] != 'OC' and \
                 self.package_type.upper() != 'OC':
-            spd_inds_valid = True
-            chk = self._get_check(f, verbose, level, checktype)
-            spd = getattr(self, 'stress_period_data')
-            nan_exclusion_list = self._get_nan_exclusion_list()
-            for per in spd.data.keys():
-                if isinstance(spd.data[per], np.recarray):
-                    spdata = self.stress_period_data.data[per]
-                    inds = chk._get_cell_inds(spdata)
-
-                    # General BC checks
-                    # check for valid cell indices
-                    spd_inds_valid = \
-                        chk._stress_period_data_valid_indices(spdata)
-
-                    # first check for and list nan values
-                    chk._stress_period_data_nans(spdata, nan_exclusion_list)
-
-                    if spd_inds_valid:
-                        # next check for BCs in inactive cells
-                        chk._stress_period_data_inactivecells(spdata)
-
-                        # More specific BC checks
-                        # check elevations in the ghb, drain, and riv packages
-                        if self.name[0] in check.bc_stage_names.keys():
-                            # check that bc elevations are above model
-                            # cell bottoms -- also checks for nan values
-                            elev_name = chk.bc_stage_names[self.name[0]]
-                            mg = self.parent.modelgrid
-                            botms = mg.botm[inds]
-                            test = spdata[elev_name] < botms
-                            en = 'BC elevation below cell bottom'
-                            chk.stress_period_data_values(spdata,
-                                                          test,
-                                                          col=elev_name,
-                                                          error_name=en,
-                                                          error_type='Error')
-
-            chk.summarize()
+            chk = self._check_oc(f, verbose, level, checktype)
         # check property values in upw and lpf packages
         elif self.name[0] in ['UPW', 'LPF'] or \
                 self.package_type.upper() in ['NPF']:
-            chk = self._get_check(f, verbose, level, checktype)
-            active = chk.get_active()
-
-            # build model specific parameter lists
-            kparams_all = {'hk': 'horizontal hydraulic conductivity',
-                           'vka': 'vertical hydraulic conductivity',
-                           'k': 'horizontal hydraulic conductivity',
-                           'k22': 'hydraulic conductivity second axis',
-                           'k33': 'vertical hydraulic conductivity'}
-            kparams = {}
-            for kp, name in kparams_all.items():
-                if kp in self.__dict__:
-                    kparams[kp] = name
-            if 'hk' in self.__dict__:
-                hk = self.hk.array.copy()
-            else:
-                hk = self.k.array.copy()
-            if 'vka' in self.__dict__ and self.layvka.sum() > 0:
-                vka = self.vka.array
-                vka_param = kparams.pop('vka')
-            elif 'k33' in self.__dict__:
-                vka = self.k33.array
-                vka_param = kparams.pop('k33')
-            else:
-                vka = None
-            if vka is not None:
-                vka = vka.copy()
-
-            # check for zero or negative values of hydraulic conductivity,
-            # anisotropy, and quasi-3D confining beds
-            for kp, name in kparams.items():
-                if self.__dict__[kp].array is not None:
-                    chk.values(self.__dict__[kp].array,
-                               active & (self.__dict__[kp].array <= 0),
-                               'zero or negative {} values'.format(name),
-                               'Error')
-
-            if 'hani' in self.__dict__:
-                self._other_xpf_checks(chk, active)
-
-            # check for unusually high or low values of hydraulic conductivity
-            # convert vertical anisotropy to Kv for checking
-            if vka is not None:
-                if 'layvka' in self.__dict__:
-                    for l in range(vka.shape[0]):
-                        vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
-                self._check_thresholds(chk, vka, active,
-                                       chk.property_threshold_values['vka'],
-                                       vka_param)
-
-            for kp, name in kparams.items():
-                if self.__dict__[kp].array is not None:
-                    self._check_thresholds(chk, self.__dict__[kp].array,
-                                           active,
-                                           chk.property_threshold_values[kp],
-                                           name)
-            if self.name[0] in ['UPW', 'LPF']:
-                storage_coeff = 'STORAGECOEFFICIENT' in self.options or \
-                    ('storagecoefficient' in self.__dict__ and
-                     self.storagecoefficient.get_data())
-                self._check_storage(chk, storage_coeff)
-            chk.summarize()
+            chk = self._check_flowp(f, verbose, level, checktype)
         elif self.package_type.upper() in ['STO']:
             chk = self._get_check(f, verbose, level, checktype)
             storage_coeff = self.storagecoefficient.get_data()
