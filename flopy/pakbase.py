@@ -316,11 +316,6 @@ class PackageInterface(object):
                     if active[ishape]:
                         active[ishape] = iconvert[ishape] > 0 or \
                                          iconvert[ishape] < 0
-                #for l in self.iconvert.array:
-                #    print(l)
-                #inds = np.array(
-                #    [True if l > 0 or l < 0
-                #     else False for l in self.iconvert.array])
             chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
                        'zero or negative specific yield values', 'Error')
             self._check_thresholds(chk, sarrays['sy'], active,
