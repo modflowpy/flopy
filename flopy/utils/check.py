@@ -61,9 +61,12 @@ class check:
     package_check_levels = {'sfr': 1}
 
     property_threshold_values = {'hk': (1e-11, 1e5),
+                                 'k': (1e-11, 1e5),
+                                 'k22': (1e-11, 1e5),
                                  # after Schwartz and Zhang, table 4.4
                                  'hani': None,
                                  'vka': (1e-11, 1e5),
+                                 'k33': (1e-11, 1e5),
                                  'vkcb': (1e-11, 1e5),
                                  'ss': (1e-6, 1e-2),
                                  'sy': (0.01, 0.5)}
@@ -90,7 +93,10 @@ class check:
             self.prefix = '{} MODEL DATA VALIDATION SUMMARY'.format(
                 self.model.name)
         self.package = package
-        self.structured = self.model.structured
+        if 'structured' in self.model.__dict__:
+            self.structured = self.model.structured
+        else:
+            self.structured = (self.model.modelgrid.grid_type == 'structured')
         self.verbose = verbose
         self.level = level
         self.passed = []
@@ -207,24 +213,7 @@ class check:
         return txt
 
     def _get_summary_array(self, array=None):
-
-        if self.structured:
-            # include node column for structured grids (useful for indexing)
-            dtype = np.dtype([('type', np.object),
-                              ('package', np.object),
-                              ('k', np.int),
-                              ('i', np.int),
-                              ('j', np.int),
-                              ('value', np.float),
-                              ('desc', np.object)
-                              ])
-        else:
-            dtype = np.dtype([('type', np.object),
-                              ('package', np.object),
-                              ('node', np.int),
-                              ('value', np.float),
-                              ('desc', np.object)
-                              ])
+        dtype = self._get_dtype()
         if array is None:
             return np.recarray((0), dtype=dtype)
         ra = recarray(array, dtype)
@@ -249,25 +238,10 @@ class check:
 
     def _stress_period_data_valid_indices(self, stress_period_data):
         """Check that stress period data inds are valid for model grid."""
-        spd_inds_valid = True
-        if self.model.has_package('DIS') and \
-                {'k', 'i', 'j'}.intersection(
-                    set(stress_period_data.dtype.names)) != {'k', 'i', 'j'}:
-            self._add_to_summary(type='Error',
-                                 desc='\r    Stress period data missing k, i, j for structured grid.')
-            spd_inds_valid = False
-        elif self.model.has_package('DISU') and \
-                'node' not in stress_period_data.dtype.names:
-            self._add_to_summary(type='Error',
-                                 desc='\r    Stress period data missing node number for unstructured grid.')
-            spd_inds_valid = False
+        spd_inds_valid = self._has_cell_indices(stress_period_data)
 
         # check for BCs indices that are invalid for grid
-        inds = (stress_period_data.k,
-                stress_period_data.i,
-                stress_period_data.j) if self.structured else (
-            stress_period_data.node)
-
+        inds = self._get_cell_inds(stress_period_data)
         isvalid = self.isvalid(inds)
         if not np.all(isvalid):
             sa = self._list_spd_check_violations(stress_period_data, ~isvalid,
@@ -281,12 +255,13 @@ class check:
             self.append_passed('BC indices valid')
         return spd_inds_valid
 
-    def _stress_period_data_nans(self, stress_period_data):
+    def _stress_period_data_nans(self, stress_period_data, nan_excl_list):
         """Check for and list any nans in stress period data."""
         isnan = np.array([np.isnan(stress_period_data[c])
                           for c in stress_period_data.dtype.names
-                          if not isinstance(stress_period_data.dtype[c],
-                                            np.object)]).transpose()
+                          if not (stress_period_data.dtype[c].name
+                                  == 'object') and c not in
+                          nan_excl_list]).transpose()
         if np.any(isnan):
             row_has_nan = np.any(isnan, axis=1)
             sa = self._list_spd_check_violations(stress_period_data,
@@ -302,10 +277,12 @@ class check:
     def _stress_period_data_inactivecells(self, stress_period_data):
         """Check for and list any stress period data in cells with ibound=0."""
         spd = stress_period_data
-        inds = (spd.k, spd.i, spd.j) if self.structured else (spd.node)
+        inds = self._get_cell_inds(spd)
         msg = 'BC in inactive cell'
-        if 'BAS6' in self.model.get_package_list():
-            ibnd = self.package.parent.bas6.ibound.array[inds]
+
+        idomain = self.model.modelgrid.idomain
+        if idomain is not None:
+            ibnd = idomain[inds]
 
             if np.any(ibnd == 0):
                 sa = self._list_spd_check_violations(stress_period_data,
@@ -326,15 +303,12 @@ class check:
         name, k,i,j indices, values, and description of error for each row in
         stress_period_data where criteria=True.
         """
-        inds_col = ['k', 'i', 'j'] if self.structured else ['node']
+        inds_col = self._get_cell_inds_names()
         # inds = stress_period_data[criteria][inds_col]\
         #    .reshape(stress_period_data[criteria].shape + (-1,))
         # inds = np.atleast_2d(np.squeeze(inds.tolist()))
         inds = stress_period_data[criteria]
-        a = inds[inds_col[0]]
-        if len(inds_col) > 1:
-            for n in inds_col[1:]:
-                a = np.concatenate((a, inds[n]))
+        a = self._get_cellid_cols(inds, inds_col)
         inds = a.view(int)
         inds = inds.reshape(stress_period_data[criteria].shape + (-1,))
 
@@ -346,6 +320,14 @@ class check:
         en = [error_name] * len(v)
         tp = [error_type] * len(v)
         return self._get_summary_array(np.column_stack([tp, pn, inds, v, en]))
+
+    @staticmethod
+    def _get_cellid_cols(inds, inds_col):
+        a = inds[inds_col[0]]
+        if len(inds_col) > 1:
+            for n in inds_col[1:]:
+                a = np.concatenate((a, inds[n]))
+        return a
 
     def append_passed(self, message):
         """Add a check to the passed list if it isn't already in there."""
@@ -371,16 +353,18 @@ class check:
         if isinstance(inds, np.ndarray):
             inds = [inds]
 
-        if 'DIS' in self.model.get_package_list() and len(inds) == 3:
-            dis = self.model.dis
-            k = inds[0] < dis.nlay
-            i = inds[1] < dis.nrow
-            j = inds[2] < dis.ncol
-            return k | i | j
-
-        elif 'DISU' in self.model.get_package_list() and len(inds) == 1:
-            return inds < self.model.disu.nodes
-
+        mg = self.model.modelgrid
+        if mg.grid_type == 'structured' and len(inds) == 3:
+            k = inds[0] < mg.nlay
+            i = inds[1] < mg.nrow
+            j = inds[2] < mg.ncol
+            return k & i & j
+        elif mg.grid_type == 'vertex' and len(inds) == 2:
+            lay = inds[0] < mg.nlay
+            cpl = inds[1] < mg.ncpl
+            return lay & cpl
+        elif mg.grid_type == 'unstructured' and len(inds) == 1:
+            return inds[0] < mg.nnodes
         else:
             return np.zeros(inds[0].shape, dtype=bool)
 
@@ -399,15 +383,21 @@ class check:
         active : 3-D boolean array
             True where active.
         """
-        if 'DIS' in self.model.get_package_list():
-            dis = self.model.dis
-            inds = (dis.nlay, dis.nrow, dis.ncol)
+        mg = self.model.modelgrid
+        if mg.grid_type == 'structured':
+            inds = (mg.nlay_nocbd, mg.nrow, mg.ncol)
+        elif mg.grid_type == 'vertex':
+            inds = (mg.nlay, mg.ncpl)
         else:
-            dis = self.model.disu
-            inds = dis.nodes
+            inds = mg.nnodes
             include_cbd = False
 
         if 'BAS6' in self.model.get_package_list():
+            if 'DIS' in self.model.get_package_list():
+                dis = self.model.dis
+            else:
+                dis = self.model.disu
+
             # make ibound of same shape as thicknesses/botm for quasi-3D models
             if include_cbd and dis.laycbd.sum() > 0:
                 ncbd = np.sum(dis.laycbd.array > 0)
@@ -557,6 +547,48 @@ class check:
             if self.f is not None:
                 print('  see {} for details.\n'.format(self.summaryfile))
 
+    # start of older model specific code
+    def _has_cell_indices(self, stress_period_data):
+        if self.model.has_package('DIS') and \
+                {'k', 'i', 'j'}.intersection(
+                    set(stress_period_data.dtype.names)) != {'k', 'i', 'j'}:
+            self._add_to_summary(type='Error',
+                                 desc='\r    Stress period data missing k, '
+                                      'i, j for structured grid.')
+            return False
+        elif self.model.has_package('DISU') and \
+                'node' not in stress_period_data.dtype.names:
+            self._add_to_summary(type='Error',
+                                 desc='\r    Stress period data missing '
+                                      'node number for unstructured grid.')
+            return False
+        return True
+
+    def _get_cell_inds(self, spd):
+        return (spd.k, spd.i, spd.j) if self.structured else (spd.node)
+
+    def _get_cell_inds_names(self):
+        return ['k', 'i', 'j'] if self.structured else ['node']
+
+    def _get_dtype(self):
+        if self.structured:
+            # include node column for structured grids (useful for indexing)
+            return np.dtype([('type', np.object),
+                              ('package', np.object),
+                              ('k', np.int),
+                              ('i', np.int),
+                              ('j', np.int),
+                              ('value', np.float),
+                              ('desc', np.object)
+                              ])
+        else:
+            return np.dtype([('type', np.object),
+                              ('package', np.object),
+                              ('node', np.int),
+                              ('value', np.float),
+                              ('desc', np.object)
+                              ])
+
 
 def _fmt_string_list(array, float_format='{}'):
     fmt_string = []
@@ -616,7 +648,8 @@ def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
 def fields_view(arr, fields):
     """
     creates view of array that only contains the fields in fields.
-    http://stackoverflow.com/questions/15182381/how-to-return-a-view-of-several-columns-in-numpy-structured-array
+    http://stackoverflow.com/questions/15182381/how-to-return-a-view-of-
+    several-columns-in-numpy-structured-array
     """
     dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
     return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
@@ -635,7 +668,8 @@ def get_neighbors(a):
     -------
     neighbors : 4-D array
         Array of neighbors, where axis 0 contains the 6 neighboring
-        values for each value in a, and subsequent axes are in layer, row, column order.
+        values for each value in a, and subsequent axes are in layer, row,
+        column order.
         Nan is returned for values at edges.
     """
     nk, ni, nj = a.shape
@@ -649,3 +683,95 @@ def get_neighbors(a):
                            tmp[1:-1, 1:-1, :-2].ravel(),  # j-1
                            tmp[1:-1, 1:-1, 2:].ravel()])  # j+1
     return neighbors.reshape(6, nk, ni, nj)
+
+
+class mf6check(check):
+    def __init__(self, package, f=None, verbose=True, level=1,
+                 property_threshold_values={}):
+        super(mf6check, self).__init__(package, f, verbose, level,
+                                       property_threshold_values)
+        if hasattr(package, 'model_or_sim'):
+            self.model = package.model_or_sim
+
+    @staticmethod
+    def _get_cellid_cols(inds, inds_col):
+        a = inds[inds_col[0]]
+        return np.asarray(a.tolist())
+
+
+    def _get_cell_inds(self, spd):
+        hnames = ()
+        if 'cellid' in spd.dtype.names:
+            cellid = spd.cellid
+        elif 'cellid1' in spd.dtype.names:
+            cellid = spd.cellid1
+        else:
+            return None
+
+        for item in zip(*cellid):
+            hnames += (np.ndarray(shape=(len(item),),
+                                  buffer=np.array(item), dtype=np.int32),)
+        return hnames
+
+    def _get_dtype(self):
+        mg = self.model.modelgrid
+        if mg.grid_type == 'structured':
+            return np.dtype([('type', np.object),
+                              ('package', np.object),
+                              ('k', np.int),
+                              ('i', np.int),
+                              ('j', np.int),
+                              ('value', np.float),
+                              ('desc', np.object)
+                              ])
+        elif mg.grid_type == 'vertex':
+            return np.dtype([('type', np.object),
+                              ('package', np.object),
+                              ('lay', np.int),
+                              ('cell', np.int),
+                              ('value', np.float),
+                              ('desc', np.object)
+                              ])
+        else:
+            return np.dtype([('type', np.object),
+                              ('package', np.object),
+                              ('node', np.int),
+                              ('value', np.float),
+                              ('desc', np.object)
+                              ])
+
+    def _has_cell_indices(self, stress_period_data):
+        mg = self.model.modelgrid
+        if mg.grid_type == 'structured' or mg.grid_type == 'vertex' or \
+                mg.grid_type == 'unstructured':
+            if 'cellid' not in set(stress_period_data.dtype.names) and \
+                    'cellid1' not in set(stress_period_data.dtype.names):
+                self._add_to_summary(type='Error',
+                                     desc='\r    Stress period data missing '
+                                          'cellid.')
+                return False
+        return True
+
+    def _get_cell_inds_names(self):
+        return ['cellid']
+
+    def get_active(self, include_cbd=False):
+        """Returns a boolean array of active cells for the model.
+
+        Parameters
+        ----------
+        include_cbd : boolean
+            Does not apply to MF6 models, always false.
+
+        Returns
+        -------
+        active : 3-D boolean array
+            True where active.
+        """
+        mg = self.model.modelgrid
+        idomain = mg.idomain
+        if idomain is None:
+            return np.ones(shape=mg.shape, dtype=bool)
+        else:
+            id_active_zero = idomain - np.ones(shape=mg.shape, dtype=np.int32)
+            return np.invert(np.ma.make_mask(id_active_zero, shrink=False))

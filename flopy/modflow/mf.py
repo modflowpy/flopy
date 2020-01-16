@@ -244,7 +244,8 @@ class Modflow(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -278,7 +279,8 @@ class Modflow(BaseModel):
                                              epsg=self._modelgrid.epsg,
                                              xoff=self._modelgrid.xoffset,
                                              yoff=self._modelgrid.yoffset,
-                                             angrot=self._modelgrid.angrot)
+                                             angrot=self._modelgrid.angrot,
+                                             nlay=self.dis.nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset

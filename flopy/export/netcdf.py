@@ -197,7 +197,8 @@ class NetCdf(object):
         self.z_positive = z_positive
         if self.grid_units is None:
             self.grid_units = "unspecified"
-        assert self.grid_units in ["feet", "meters", "unspecified"], \
+        assert self.grid_units in ["feet", "meters", "unspecified",
+                                   "undefined"], \
             "unsupported length units: " + self.grid_units
 
         self.time_units = self.model_time.time_units
