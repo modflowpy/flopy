@@ -590,30 +590,22 @@ class Mt3dSsm(Package):
 
         crch = None
         if 't' in frch.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='crch', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "crch" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         cevt = None
         if 't' in fevt.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='cevt', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             cevt = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "cevt" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         stress_period_data = {}
