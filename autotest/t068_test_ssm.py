@@ -144,9 +144,35 @@ def test_none_spdtype():
         success, buff = mf.run_model(report=True)
         assert success
 
+def test_ssm_readwrite():
+    # Instantiate MODFLOW model
+    mf = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(mf, nlay=10, nrow=118, ncol=153,
+                                   nper=100, delr=100, delc=100, perlen=1)
+    bas = flopy.modflow.ModflowBas(mf)
+    
+    # Instantiate MT3D model
+    mt = flopy.mt3d.Mt3dms(modflowmodel=mf, modelname='tran_v1', 
+                           version='mt3d-usgs')
+    btn = flopy.mt3d.Mt3dBtn(mt)
+    
+    print(os.getcwd())
+    
+    # Point to ssm file for test load and write
+    pth = os.path.join('..','examples','data','ssm_load_test')
+    fl = os.path.join(pth, 'tran_v1_b1.ssm')
+    
+    # Check that example input file with no data specified for crch works
+    # (file comes from: https://github.com/modflowpy/flopy/issues/743)
+    ssm = flopy.mt3d.Mt3dSsm.load(fl, mt)
+    
+    # Ensure file is writeable
+    ssm.write_file()
+
 
 if __name__ == '__main__':
     test_mt3d_ssm_with_nodata_in_1st_sp()
     test_none_spdtype()
+    test_ssm_readwrite()
 
 

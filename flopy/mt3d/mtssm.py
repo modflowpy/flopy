@@ -590,9 +590,10 @@ class Mt3dSsm(Package):
 
         crch = None
         if 't' in frch.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='crch', locat=0,
-                              array_free_format=False)
+            #t2d = Transient2d(model, (nrow, ncol), np.float32,
+            #                  0.0, name='crch', locat=0,
+            #                  array_free_format=False)
+            t2d = 0.
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
