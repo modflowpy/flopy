@@ -12,5 +12,4 @@ if [ "${RUN_TYPE}" = "misc" ]; then
 fi
 pip install https://github.com/modflowpy/pymake/zipball/master
 pip install shapely[vectorize]
-pip install coverage==5.0.1
 pip install coveralls nose-timer
