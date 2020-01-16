@@ -11,7 +11,6 @@ import os
 import sys
 
 from ..pakbase import Package
-from ..utils import check
 
 
 class ModflowOc(Package):
@@ -313,7 +312,7 @@ class ModflowOc(Package):
 
         self.parent.add_package(self)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check package data for common errors.
 
@@ -343,7 +342,7 @@ class ModflowOc(Package):
         >>> m.oc.check()
 
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
         dis = self.parent.get_package('DIS')
         if dis is None:
             dis = self.parent.get_package('DISU')

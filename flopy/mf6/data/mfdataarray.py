@@ -32,6 +32,17 @@ class MFArray(MFMultiDimVar):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
+    Attributes
+    ----------
+    data_type : DataType
+        type of data stored in the scalar
+    plotable : bool
+        if the scalar is plotable
+    dtype : numpy.dtype
+        the scalar's numpy data type
+    data : variable
+        calls get_data with default parameters
+
     Methods
     -------
     new_simulation : (sim_data : MFSimulationData)
@@ -369,8 +380,6 @@ class MFArray(MFMultiDimVar):
 
     def store_as_external_file(self, external_file_path, multiplier=None,
                                layer=None, binary=False):
-        if multiplier is None:
-            multiplier = [1.0]
         if isinstance(layer, int):
             layer = (layer,)
         storage = self._get_storage_obj()
@@ -378,6 +387,8 @@ class MFArray(MFMultiDimVar):
             self._set_storage_obj(self._new_storage(False, True))
             storage = self._get_storage_obj()
         ds_index = self._resolve_layer_index(layer)
+        if multiplier is None:
+            multiplier = [storage.get_default_mult()]
 
         try:
             # move data to file
@@ -428,6 +439,10 @@ class MFArray(MFMultiDimVar):
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
 
+    @property
+    def data(self):
+        return self.get_data()
+
     def get_data(self, layer=None, apply_mult=False, **kwargs):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
@@ -454,11 +469,11 @@ class MFArray(MFMultiDimVar):
         return None
 
     def set_data(self, data, multiplier=None, layer=None):
-        if multiplier is None:
-            multiplier = [1.0]
         self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
+        if multiplier is None:
+            multiplier = [self._get_storage_obj().get_default_mult()]
         if isinstance(layer, int):
             layer = (layer,)
         if isinstance(data, str):
@@ -992,8 +1007,6 @@ class MFTransientArray(MFArray, MFTransient):
             return None
 
     def set_data(self, data, multiplier=None, layer=None, key=None):
-        if multiplier is None:
-            multiplier = [1.0]
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for

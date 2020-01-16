@@ -949,7 +949,7 @@ class ModflowSfr2(Package):
                            unit_number=unitnumber, filenames=filenames,
                            options=options)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check sfr2 package data for common errors.
 

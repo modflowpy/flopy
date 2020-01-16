@@ -96,11 +96,16 @@ class UnstructuredGrid(Grid):
     @property
     def ncpl(self):
         if self._ncpl is None:
-            return len(self._iverts)
+            if self._iverts is None:
+                return None
+            else:
+                return len(self._iverts)
         return self._ncpl
 
     @property
     def shape(self):
+        if self.ncpl is None:
+            return self.nnodes
         if isinstance(self.ncpl, (list, np.ndarray)):
             return self.nlay, self.ncpl[0]
         else:
