@@ -145,8 +145,11 @@ def test_none_spdtype():
         assert success
 
 def test_ssm_readwrite():
+
     # Instantiate MODFLOW model
     mf = flopy.modflow.Modflow()
+
+    # These dimensions work for the SSM file to be loaded
     dis = flopy.modflow.ModflowDis(mf, nlay=10, nrow=118, ncol=153,
                                    nper=100, delr=100, delc=100, perlen=1)
     bas = flopy.modflow.ModflowBas(mf)
@@ -156,8 +159,6 @@ def test_ssm_readwrite():
                            version='mt3d-usgs')
     btn = flopy.mt3d.Mt3dBtn(mt)
     
-    print(os.getcwd())
-    
     # Point to ssm file for test load and write
     pth = os.path.join('..','examples','data','ssm_load_test')
     fl = os.path.join(pth, 'tran_v1_b1.ssm')
@@ -165,10 +166,19 @@ def test_ssm_readwrite():
     # Check that example input file with no data specified for crch works
     # (file comes from: https://github.com/modflowpy/flopy/issues/743)
     ssm = flopy.mt3d.Mt3dSsm.load(fl, mt)
-    
+
+    # Change to dedicated work directory
+    cwd = os.getcwd()
+    if not os.path.exists(os.path.join('temp','t068_ssm_write')):
+        os.makedirs(os.path.join('temp','t068_ssm_write'))
+
+    os.chdir(os.path.join('temp','t068_ssm_write'))
+
     # Ensure file is writeable
     ssm.write_file()
 
+    # Return to starting directory
+    os.chdir(cwd)
 
 if __name__ == '__main__':
     test_mt3d_ssm_with_nodata_in_1st_sp()
