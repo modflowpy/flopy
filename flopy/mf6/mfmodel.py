@@ -860,7 +860,8 @@ class MFModel(PackageContainer, ModelInterface):
                 for item in package_data:
                     if item[1] != package._filename:
                         if new_rec_array is None:
-                            new_rec_array = np.rec.array(item, package_data.dtype)
+                            new_rec_array = np.rec.array([item.tolist()],
+                                                         package_data.dtype)
                         else:
                             new_rec_array = np.hstack((item, new_rec_array))
             except:
