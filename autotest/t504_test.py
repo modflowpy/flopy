@@ -49,7 +49,7 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0)
+                            verbosity_level=0, verify_data=True)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -150,7 +150,8 @@ def test003_gwfs_disv():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -235,7 +236,7 @@ def test005_advgw_tidal():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=2)
+                            verbosity_level=2, verify_data=True)
 
     # test obs/ts package interface
     model = sim.get_model(model_name)
@@ -321,7 +322,8 @@ def test006_gwf3():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     model = sim.get_model()
     disu = model.get_package('disu')
@@ -460,7 +462,8 @@ def test045_lake1ss_table():
     expected_head_file_b = os.path.join(expected_output_folder, 'lakeex1b_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -532,7 +535,7 @@ def test006_2models_mvr():
     expected_head_file_bb = os.path.join(expected_output_folder, 'model2_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -685,7 +688,8 @@ def test001e_uzf_3lay():
     expected_head_file_b = os.path.join(expected_output_folder, 'test001e_UZF_3lay_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -766,7 +770,8 @@ def test045_lake2tr():
                                         'lakeex2a_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # write simulation to new location
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -824,7 +829,8 @@ def test036_twrihfb():
     expected_head_file_b = os.path.join(expected_output_folder, 'twrihfb2015_output_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data = True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -890,7 +896,8 @@ def test027_timeseriestest():
     expected_head_file_b = os.path.join(expected_output_folder, 'timeseriestest_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)

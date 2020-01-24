@@ -353,6 +353,8 @@ class MFSimulation(PackageContainer):
         simulation name file
     _tdis_file
         simulation tdis file
+    sim_package_list
+        list of all "simulation level" packages
 
     Methods
     -------
@@ -599,7 +601,7 @@ class MFSimulation(PackageContainer):
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
              sim_ws='.', strict=True, verbosity_level=1, load_only=None,
-             verify_data=True):
+             verify_data=False):
         """Load an existing model.
 
         Parameters
@@ -801,7 +803,74 @@ class MFSimulation(PackageContainer):
                 ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
+        if verify_data:
+            instance.check()
         return instance
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+        # check instance for simulation-level check
+        chk_list = []
+
+        # check models
+        for model in self._models.values():
+            print('Checking model "{}"...'.format(model.name))
+            chk_list.append(model.check(f, verbose, level))
+
+        print('Checking for missing simulation packages...')
+        if self._tdis_file is None:
+            if chk_list:
+                chk_list[0]._add_to_summary(
+                    'Error', desc='\r    No tdis package', package='model')
+            print('Error: no tdis package')
+        if len(self._ims_files) == 0:
+            if chk_list:
+                chk_list[0]._add_to_summary(
+                    'Error', desc='\r    No solver package', package='model')
+            print('Error: no ims package')
+        return chk_list
+
+    @property
+    def sim_package_list(self):
+        package_list = []
+        if self._tdis_file is not None:
+            package_list.append(self._tdis_file)
+        for sim_package in self._ims_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._exchange_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._mover_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._other_files.values():
+            package_list.append(sim_package)
+        return package_list
 
     def load_package(self, ftype, fname, pname, strict, ref_path,
                      dict_package_name=None, parent_package=None):

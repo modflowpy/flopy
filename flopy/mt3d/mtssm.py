@@ -590,30 +590,22 @@ class Mt3dSsm(Package):
 
         crch = None
         if 't' in frch.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='crch', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "crch" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         cevt = None
         if 't' in fevt.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='cevt', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             cevt = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "cevt" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         stress_period_data = {}
@@ -682,12 +674,13 @@ class Mt3dSsm(Package):
                 print('   loading NSS...')
             line = f.readline()
             nss = int(line[0:10])
+            if model.verbose:
+                print('   NSS {}'.format(nss))
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
-                print(
-                    '   loading KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)...')
-            current = 0
+                print('   loading KSS, ISS, JSS, CSS, ITYPE, '
+                      '(CSSMS(n),n=1,NCOMP)...')
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):
@@ -708,7 +701,10 @@ class Mt3dSsm(Package):
                 current['i'] -= 1
                 current['j'] -= 1
                 current = current.view(np.recarray)
-            stress_period_data[iper] = current
+                stress_period_data[iper] = current
+            elif nss == 0:
+                stress_period_data[iper] = nss
+
 
         if openfile:
             f.close()

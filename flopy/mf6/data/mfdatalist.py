@@ -34,6 +34,17 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
+    Attributes
+    ----------
+    data_type : DataType
+        type of data stored in the scalar
+    plotable : bool
+        if the scalar is plotable
+    dtype : numpy.dtype
+        the scalar's numpy data type
+    data : variable
+        calls get_data with default parameters
+
     Methods
     -------
     new_simulation : (sim_data : MFSimulationData)
@@ -928,6 +939,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             stress_period = 1
         self._data_storage[transient_key] = \
             super(MFTransientList, self)._new_storage(stress_period)
+
+    @property
+    def data(self):
+        return self.get_data()
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
