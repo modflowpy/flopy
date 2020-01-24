@@ -602,15 +602,16 @@ def create_packages():
             mparent_init_string = '        super(Modflow{}, self)' \
                                  '.__init__('.format(model_name.capitalize())
             spaces = ' ' * len(mparent_init_string)
-            mparent_init_string = "{}simulation, model_type='gwf6',\n{}" \
+            mparent_init_string = "{}simulation, model_type='{}6',\n{}" \
                                   "modelname=modelname,\n{}" \
                                   "model_nam_file=model_nam_file,\n{}" \
                                   "version=version, exe_name=exe_name,\n{}" \
                                   "model_rel_path=model_rel_path,\n{}" \
                                   "**kwargs" \
-                                  ")\n".format(mparent_init_string, spaces,
+                                  ")\n".format(mparent_init_string, model_name,
+                                               spaces,
                                                spaces, spaces, spaces, spaces)
-            load_txt, doc_text = build_model_load('gwf')
+            load_txt, doc_text = build_model_load(model_name)
             package_string = '{}\n{}\n\n\n{}{}\n{}\n{}\n{}{}\n{}\n\n{}'.format(
                 comment_string, nam_import_string, class_def_string,
                 doc_string.get_doc_string(True), doc_text, class_var_string,
