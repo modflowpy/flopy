@@ -9,11 +9,9 @@ from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  # read1d,
 from ..export.shapefile_utils import shp2recarray
 from ..mbase import which
-from ..export.shapefile_utils import import_shapefile, shapefile_version
+from ..export.shapefile_utils import import_shapefile
 
 shapefile = import_shapefile()
-sfv = shapefile_version(shapefile)
-
 
 # todo
 # creation of line and polygon shapefiles from features (holes!)
@@ -60,39 +58,27 @@ def features_to_shapefile(features, featuretype, filename):
         raise Exception('Unrecognized feature type: {}'.format(featuretype))
 
     if featuretype.lower() == 'line':
-        if sfv < 2:
-            wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-        else:
-            wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
             wr.line(line)
             wr.record(i)
 
     elif featuretype.lower() == 'point':
-        if sfv < 2:
-            wr = shapefile.Writer(shapeType=shapefile.POINT)
-        else:
-            wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
+        wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
             wr.point(point[0], point[1])
             wr.record(i)
 
     elif featuretype.lower() == 'polygon':
-        if sfv < 2:
-            wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-        else:
-            wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
             wr.poly(polygon)
             wr.record(i)
 
-    if sfv < 2:
-        wr.save(filename)
-    else:
-        wr.close()
+    wr.close()
     return
 
 
@@ -149,12 +135,13 @@ class Gridgen(object):
             self.nlay = self.dis.nlay.get_data()
             self.nrow = self.dis.nrow.get_data()
             self.ncol = self.dis.ncol.get_data()
-            self.sr = self.dis._model_or_sim.sr
+            self.modelgrid = self.dis.parent.modelgrid
         else:
             self.nlay = self.dis.nlay
             self.nrow = self.dis.nrow
             self.ncol = self.dis.ncol
-            self.sr = self.dis.parent.sr
+            self.modelgrid = self.dis.parent.modelgrid
+
         self.nodes = 0
         self.nja = 0
         self.nodelay = np.zeros((self.nlay), dtype=np.int)
@@ -423,10 +410,10 @@ class Gridgen(object):
 
         """
         vts = self.get_vertices(nodenumber)
-        xmin = vts[0][0]
-        xmax = vts[1][0]
-        ymin = vts[2][1]
-        ymax = vts[0][1]
+        xmin = min(vts[0][0], vts[1][0], vts[2][0], vts[3][0])
+        xmax = max(vts[0][0], vts[1][0], vts[2][0], vts[3][0])
+        ymin = min(vts[0][1], vts[1][1], vts[2][1], vts[3][1])
+        ymax = max(vts[0][1], vts[1][1], vts[2][1], vts[3][1])
         return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
     def export(self, verbose=False):
@@ -1286,7 +1273,7 @@ class Gridgen(object):
 
         """
 
-        gridprops = self.get_gridprops()
+        gridprops = self.get_gridprops_disu6()
         f = open(fname, 'w')
 
         # opts
@@ -1337,7 +1324,7 @@ class Gridgen(object):
             # celldata -- not optimized for redundant vertices yet
             f.write('BEGIN CELL2D\n')
             iv = 1
-            for n in range(nodes):
+            for n in range(gridprops['nodes']):
                 xc, yc = self.get_center(n)
                 s = '  {} {} {} {} {} {} {} {}\n'.format(n + 1, xc, yc, 4, iv,
                                                          iv + 1, iv + 2,
@@ -1580,21 +1567,18 @@ class Gridgen(object):
         return s
 
     def _mfgrid_block(self):
-        # Need to adjust offsets and rotation because gridgen rotates around
-        # lower left corner, whereas flopy rotates around upper left.
-        # gridgen rotation is counter clockwise, whereas flopy rotation is
-        # clock wise.  Crazy.
-        xll = self.sr.xul
-        yll = self.sr.yul - self.sr.yedge[0]
-        xllrot, yllrot = self.sr.rotate(xll, yll, self.sr.rotation,
-                                        xorigin=self.sr.xul,
-                                        yorigin=self.sr.yul)
+        # flopy modelgrid object uses same xoff, yoff, and rotation convention
+        # as gridgen
+
+        xoff = self.modelgrid.xoffset
+        yoff = self.modelgrid.yoffset
+        angrot = self.modelgrid.angrot
 
         s = ''
         s += 'BEGIN MODFLOW_GRID basegrid' + '\n'
-        s += '  ROTATION_ANGLE = {}\n'.format(self.sr.rotation)
-        s += '  X_OFFSET = {}\n'.format(xllrot)
-        s += '  Y_OFFSET = {}\n'.format(yllrot)
+        s += '  ROTATION_ANGLE = {}\n'.format(angrot)
+        s += '  X_OFFSET = {}\n'.format(xoff)
+        s += '  Y_OFFSET = {}\n'.format(yoff)
         s += '  NLAY = {}\n'.format(self.nlay)
         s += '  NROW = {}\n'.format(self.nrow)
         s += '  NCOL = {}\n'.format(self.ncol)
@@ -1627,12 +1611,12 @@ class Gridgen(object):
             np.savetxt(fname, top)
 
         # bot
-        botm = self.dis.botm
+        botm = self.dis.botm.array
         for k in range(self.nlay):
             if isinstance(self.dis, ModflowGwfdis):
                 bot = botm[k]
             else:
-                bot = botm[k].array
+                bot = botm[k]
             if bot.min() == bot.max():
                 s += '  BOTTOM LAYER {} = CONSTANT {}\n'.format(k + 1,
                                                                 bot.min())

@@ -37,10 +37,13 @@ from .mflistfile import MfListBudget, MfusgListBudget, SwtListBudget, \
 from .check import check, get_neighbors
 from .utils_def import FlopyBinaryData, totim_to_datetime
 from .flopy_io import read_fixed_var, write_fixed_var
-from .zonbud import ZoneBudget, read_zbarray, write_zbarray
+from .zonbud import ZoneBudget, read_zbarray, write_zbarray, \
+    ZoneBudgetOutput, ZBNetOutput
 from .mfgrdfile import MfGrdFile
 from .postprocessing import get_transmissivities
 from .sfroutputfile import SfrFile
 from .recarray_utils import create_empty_recarray, ra_slice
 from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
+from .rasters import Raster
+from .gridintersect import GridIntersect,ModflowGridIndices

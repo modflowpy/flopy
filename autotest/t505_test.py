@@ -71,7 +71,13 @@ def np001():
 
     # model tests
     test_sim = MFSimulation(sim_name=test_ex_name, version='mf6',
-                            exe_name=exe_name, sim_ws=run_folder)
+                            exe_name=exe_name, sim_ws=run_folder,
+                            continue_=True, memory_print_option='summary')
+    name = test_sim.name_file
+    assert name.continue_.get_data()
+    assert name.nocheck.get_data() is None
+    assert name.memory_print_option.get_data() == 'summary'
+
     kwargs = {}
     kwargs['bad_kwarg'] = 20
     try:
@@ -87,6 +93,7 @@ def np001():
     kwargs['xul'] = 20.5
     good_model = ModflowGwf(test_sim, modelname=model_name,
                             model_nam_file='{}.nam'.format(model_name),
+                            model_rel_path='model_folder',
                             **kwargs)
 
     # create simulation
@@ -282,8 +289,25 @@ def np001():
                                     stress_period_data=well_spd)
     except MFDataException:
         error_occurred = True
-
     assert error_occurred
+
+    # test error checking
+    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=1,
+                                timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                stress_period_data=[((100, 0, 0), np.nan,
+                                                     'drn_1'), ((0, 0, 0),
+                                                    10.0)])
+    npf_package = ModflowGwfnpf(model, save_flows=True,
+                                alternative_cell_averaging='logarithmic',
+                                icelltype=1, k=100001.0, k33=1e-12)
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert 'drn_1 package: invalid BC index' in summary
+    assert 'npf package: vertical hydraulic conductivity values below ' \
+           'checker threshold of 1e-11' in summary
+    assert 'npf package: horizontal hydraulic conductivity values above ' \
+           'checker threshold of 100000.0' in summary
     return
 
 
@@ -305,7 +329,12 @@ def np002():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=run_folder)
+                       sim_ws=run_folder, nocheck=True)
+    name = sim.name_file
+    assert name.continue_.get_data() == None
+    assert name.nocheck.get_data() == True
+    assert name.memory_print_option.get_data() == None
+
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=2,
                                perioddata=tdis_rc)
@@ -379,8 +408,8 @@ def np002():
         sim.run_simulation()
 
         sim2 = MFSimulation.load(sim_ws=run_folder)
-        model = sim2.get_model(model_name)
-        npf_package = model.get_package('npf')
+        model_ = sim2.get_model(model_name)
+        npf_package = model_.get_package('npf')
         k = npf_package.k.array
 
         # get expected results
@@ -413,6 +442,20 @@ def np002():
 
         # clean up
         sim.delete_output_files()
+
+    # test error checking
+    sto_package = ModflowGwfsto(model, save_flows=True, iconvert=1,
+                                ss=0.00000001, sy=0.6)
+    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True,
+                                maxbound=1, stress_period_data=[((0, 0, 0),
+                                                                 np.nan)])
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert 'sto package: specific storage values below ' \
+           'checker threshold of 1e-06' in summary
+    assert 'sto package: specific yield values above ' \
+           'checker threshold of 0.5' in summary
+    assert 'Not a number' in summary
 
     return
 
@@ -481,16 +524,16 @@ def test021_twri():
     stress_period_data = []
     drn_heads = [0.0, 0.0, 10.0, 20.0, 30.0, 50.0, 70.0, 90.0, 100.0]
     for col, head in zip(range(1, 10), drn_heads):
-        stress_period_data.append(((0, 7, col), head, 1.0))
+        stress_period_data.append(((0, 7, col), head, 1.0,
+                                   'name_{}'.format(col)))
     drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
-                                save_flows=True, maxbound=9,
+                                save_flows=True, maxbound=9, boundnames=True,
                                 stress_period_data=stress_period_data)
     rch_package = ModflowGwfrcha(model, readasarrays=True, fixed_cell=True,
                                  recharge={0: 0.00000003},
                                  auxiliary=[('iface', 'conc')], aux=auxdata)
 
     aux = rch_package.aux.get_data()
-
 
     stress_period_data = []
     layers = [2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -515,9 +558,12 @@ def test021_twri():
     model2 = sim2.get_model()
     ic2 = model2.get_package('ic')
     strt2 = ic2.strt.get_data()
+    drn2 = model2.get_package('drn')
+    drn_spd = drn2.stress_period_data.get_data()
     assert(strt2[0,0,0] == 0.0)
     assert(strt2[1,0,0] == 1.0)
     assert(strt2[2,0,0] == 2.0)
+    assert(drn_spd[0][1][3] == 'name_2')
 
     # compare output to expected results
     head_file = os.path.join(os.getcwd(), expected_head_file)
@@ -730,6 +776,7 @@ def test005_advgw_tidal():
                         ((0, 6, 7), 'river_stage_2', 1008.0, 36.2, None),
                         ((0, 6, 8), 'river_stage_2', 1009.0, 36.1),
                         ((0, 6, 9), 'river_stage_2', 1010.0, 36.0)]
+
     riv_period[0] = riv_period_array
     # riv time series
     ts_data = [(0.0, 40.0, 41.0), (1.0, 41.0, 41.5), (2.0, 43.0, 42.0),
@@ -881,8 +928,67 @@ def test005_advgw_tidal():
     assert pymake.compare_heads(None, None, files1=head_file, files2=head_new,
                                 outfile=outfile)
 
+    # test rename all
+    model.rename_all_packages('new_name')
+    assert model.name_file.filename == 'new_name.nam'
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == 'new_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'new_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'new_name.dis')
+    assert os.path.exists(dis_file)
+
+    sim.rename_all_packages('all_files_same_name')
+    package_type_dict = {}
+    for package in model.packagelist:
+        if not package.package_type in package_type_dict:
+            assert package.filename == \
+                   'all_files_same_name.{}'.format(package.package_type)
+            package_type_dict[package.package_type] = 1
+    assert sim._tdis_file.filename == 'all_files_same_name.tdis'
+    for ims_file in sim._ims_files.values():
+        assert ims_file.filename == 'all_files_same_name.ims'
+    sim.write_simulation()
+    name_file = os.path.join(run_folder, 'all_files_same_name.nam')
+    assert os.path.exists(name_file)
+    dis_file = os.path.join(run_folder, 'all_files_same_name.dis')
+    assert os.path.exists(dis_file)
+    tdis_file = os.path.join(run_folder, 'all_files_same_name.tdis')
+    assert os.path.exists(tdis_file)
+
+    # load simulation
+    sim_load = MFSimulation.load(sim.name, 'mf6', exe_name,
+                                 sim.simulation_data.mfpath.get_sim_path(),
+                                 verbosity_level=0)
+    model = sim_load.get_model()
+    # confirm ghb obs data has two blocks with correct file names
+    ghb = model.get_package('ghb')
+    obs = ghb.obs
+    obs_data = obs.continuous.get_data()
+    found_flows = False
+    found_obs = False
+    for key, value in obs_data.items():
+        if key.lower() == 'ghb_flows.csv':
+            # there should be only one
+            assert not found_flows
+            found_flows = True
+        if key.lower() == 'ghb_obs.csv':
+            # there should be only one
+            assert not found_obs
+            found_obs = True
+    assert found_flows and found_obs
+
     # clean up
     sim.delete_output_files()
+
+    # check packages
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert summary == ''
 
     return
 

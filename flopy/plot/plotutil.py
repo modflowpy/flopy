@@ -1198,6 +1198,8 @@ class PlotUtilities(object):
             if key in kwargs:
                 defaults[key] = kwargs.pop(key)
 
+        plotarray = plotarray.astype(float)
+
         # test if this is vertex or structured grid
         if model is not None:
             grid_type = model.modelgrid.grid_type
@@ -1223,6 +1225,18 @@ class PlotUtilities(object):
         else:
             grid_type = "structured"
 
+        ib = None
+        if modelgrid is not None:
+            if modelgrid.idomain is not None:
+                ib = modelgrid.idomain
+
+        else:
+            if ib is None:
+                try:
+                    ib = model.modelgrid.idomain
+                except:
+                    pass
+
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2 and grid_type == "structured":
             plotarray = plotarray.reshape((1, plotarray.shape[0],
@@ -1241,7 +1255,7 @@ class PlotUtilities(object):
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
             pmv = PlotMapView(ax=axes[idx], model=model,
-                             modelgrid=modelgrid, layer=k)
+                              modelgrid=modelgrid, layer=k)
             if defaults['pcolor']:
                 cm = pmv.plot_array(plotarray[k],
                                     masked_values=defaults['masked_values'],
@@ -1266,19 +1280,9 @@ class PlotUtilities(object):
             if defaults['grid']:
                 pmv.plot_grid(ax=axes[idx])
 
-            ib = None
             if defaults['inactive']:
-                if modelgrid is not None:
-                    if modelgrid.idomain is not None:
-                        ib = modelgrid.idomain
-                        pmv.plot_inactive(ibound=ib, ax=axes[idx])
-
-                if ib is None:
-                    try:
-                        ib = model.modelgrid.idomain
-                        pmv.plot_inactive(ibound=ib, ax=axes[idx])
-                    except:
-                        pass
+                if ib is not None:
+                    pmv.plot_inactive(ibound=ib, ax=axes[idx])
 
         if len(axes) == 1:
             axes = axes[0]
@@ -1827,6 +1831,9 @@ class UnstructuredPlotUtilities(object):
                             continue
                         elif i in vdict[cell]:
                             continue
+                        elif np.isnan(i[0]) or np.isinf(i[0]) \
+                                or np.isinf(i[1]) or np.isnan(i[1]):
+                            continue
                         else:
                             vdict[cell].append(i)
                 else:
@@ -1839,6 +1846,9 @@ class UnstructuredPlotUtilities(object):
                         elif i[1] < ymin or i[1] > ymax:
                             continue
                         elif i in t:
+                            continue
+                        elif np.isnan(i[0]) or np.isinf(i[0]) \
+                                or np.isinf(i[1]) or np.isnan(i[1]):
                             continue
                         else:
                             t.append(i)

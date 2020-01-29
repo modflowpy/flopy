@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 
 try:
     import pymake
-except:
+except ImportError:
     print('could not import pymake')
+    pymake = False
 
 cpth = os.path.join('temp', 't049')
 # delete the directory if it exists
@@ -32,12 +33,11 @@ def test_modpath():
     pth = os.path.join('..', 'examples', 'data', 'freyberg')
     mfnam = 'freyberg.nam'
 
-    run = rung
-    try:
-        import pymake
+    if pymake:
+        run = rung
         lpth = os.path.join(cpth, os.path.splitext(mfnam)[0])
         pymake.setup(os.path.join(pth, mfnam), lpth)
-    except:
+    else:
         run = False
         lpth = pth
 

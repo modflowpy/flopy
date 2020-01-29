@@ -380,7 +380,8 @@ class ModflowPcgn(Package):
         if model.verbose:
             sys.stdout.write('loading pcgn package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -486,8 +487,8 @@ class ModflowPcgn(Package):
             rate_c = None
             ipunit = None
 
-        # close the open file
-        f.close()
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

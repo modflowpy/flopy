@@ -124,10 +124,10 @@ class Mt3dUzt(Package):
     --------
 
     >>> import flopy
-    >>> import os
-    >>> mt = flopy.mt3d.Mt3dms.load('Keat_UZF_mt.nam',
-    ... exe_name = 'mt3d-usgs_1.0.00.exe',
-    ... model_ws = r'C:\temp\Keating_UZF', load_only='btn')
+    >>> datadir = 'examples/data/mt3d_test/mfnwt_mt3dusgs/keat_uzf'
+    >>> mt = flopy.mt3d.Mt3dms.load(
+    ...     'Keat_UZF_mt.nam', exe_name='mt3d-usgs_1.0.00.exe',
+    ...     model_ws=datadir, load_only='btn')
     >>> uzt = flopy.mt3d.Mt3dUzt('Keat_UZF.uzt', mt)
 
     """
@@ -381,7 +381,8 @@ class Mt3dUzt(Package):
             print('loading uzt package file...\n')
 
         # Open file if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -599,6 +600,9 @@ class Mt3dUzt(Package):
                               '{0:5d}'.format(iper) + ' in kper ' \
                                                       '{0:5d}'.format(
                             iper + 1))
+
+        if openfile:
+            f.close()
 
         unitnumber = None
         filenames = [None, None]

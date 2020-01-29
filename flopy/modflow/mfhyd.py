@@ -228,22 +228,13 @@ class ModflowHyd(Package):
 
         # write dataset 2
         for idx in range(self.nhyd):
-            if sys.version_info[0] == 3:
-                f.write('{} '.format(self.obsdata['pckg'][idx].decode()))
-                f.write('{} '.format(self.obsdata['arr'][idx].decode()))
-                f.write('{} '.format(self.obsdata['intyp'][idx].decode()))
-                f.write('{} '.format(self.obsdata['klay'][idx] + 1))
-                f.write('{} '.format(self.obsdata['xl'][idx]))
-                f.write('{} '.format(self.obsdata['yl'][idx]))
-                f.write('{} '.format(self.obsdata['hydlbl'][idx].decode()))
-            else:
-                f.write('{} '.format(self.obsdata['pckg'][idx]))
-                f.write('{} '.format(self.obsdata['arr'][idx]))
-                f.write('{} '.format(self.obsdata['intyp'][idx]))
-                f.write('{} '.format(self.obsdata['klay'][idx] + 1))
-                f.write('{} '.format(self.obsdata['xl'][idx]))
-                f.write('{} '.format(self.obsdata['yl'][idx]))
-                f.write('{} '.format(self.obsdata['hydlbl'][idx]))
+            f.write('{} '.format(self.obsdata['pckg'][idx].decode()))
+            f.write('{} '.format(self.obsdata['arr'][idx].decode()))
+            f.write('{} '.format(self.obsdata['intyp'][idx].decode()))
+            f.write('{} '.format(self.obsdata['klay'][idx] + 1))
+            f.write('{} '.format(self.obsdata['xl'][idx]))
+            f.write('{} '.format(self.obsdata['yl'][idx]))
+            f.write('{} '.format(self.obsdata['hydlbl'][idx].decode()))
             f.write('\n')
 
         # close hydmod file
@@ -299,7 +290,8 @@ class ModflowHyd(Package):
         if model.verbose:
             sys.stdout.write('loading hydmod package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -327,8 +319,8 @@ class ModflowHyd(Package):
             obs['yl'][idx] = float(t[5])
             obs['hydlbl'][idx] = t[6].strip()
 
-        # close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

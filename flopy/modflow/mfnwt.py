@@ -374,14 +374,18 @@ class ModflowNwt(Package):
             print(msg)
             model.version = 'mfnwt'
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
-        # dataset 0 -- header
 
         # dataset 0 -- header
         flines = [line.strip() for line in f.readlines() if
                   not line.strip().startswith('#')]
+
+        if openfile:
+            f.close()
+
         line = flines.pop(0)
 
         # dataset 1

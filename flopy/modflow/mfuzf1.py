@@ -514,7 +514,7 @@ class ModflowUzf1(Package):
         if abs(iuzfopt) in [0, 1]:
             self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
 
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk,
                                 name='surfk')
 
@@ -680,7 +680,7 @@ class ModflowUzf1(Package):
             f_uzf.write(self.vks.get_file_entry())
 
         # Dataset 4b modflow 2005 v. 1.12 and modflow-nwt v. 1.1
-        if self.seepsurfk:
+        if self.seepsurfk or self.specifysurfk:
             f_uzf.write(self.surfk.get_file_entry())
 
         if self.iuzfopt > 0:
@@ -769,14 +769,14 @@ class ModflowUzf1(Package):
         if model.verbose:
             sys.stdout.write('loading uzf package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
-            # can't use next() because util2d uses readline()
             line = f.readline()
-            # (can't mix iteration types in python 2)
             if line[0] != '#':
                 break
         # determine problem dimensions
@@ -852,7 +852,7 @@ class ModflowUzf1(Package):
             load_util2d('vks', np.float32)
 
         # dataset 4b
-        if seepsurfk:
+        if seepsurfk or specifysurfk:
             load_util2d('surfk', np.float32)
 
         if iuzfopt > 0:
@@ -889,26 +889,26 @@ class ModflowUzf1(Package):
             nuzf1 = pop_item(line, int)
 
             # dataset 10
-            if nuzf1 > 0:
+            if nuzf1 >= 0:
                 load_util2d('finf', np.float32, per=per)
 
             if ietflg > 0:
                 # dataset 11
                 line = line_parse(f.readline())
                 nuzf2 = pop_item(line, int)
-                if nuzf2 > 0:
+                if nuzf2 >= 0:
                     # dataset 12
                     load_util2d('pet', np.float32, per=per)
                 # dataset 13
                 line = line_parse(f.readline())
                 nuzf3 = pop_item(line, int)
-                if nuzf3 > 0:
+                if nuzf3 >= 0:
                     # dataset 14
                     load_util2d('extdp', np.float32, per=per)
                 # dataset 15
                 line = line_parse(f.readline())
                 nuzf4 = pop_item(line, int)
-                if nuzf4 > 0:
+                if nuzf4 >= 0:
                     # dataset 16
                     load_util2d('extwc', np.float32, per=per)
 

@@ -1,8 +1,10 @@
 appdirs
 matplotlib
 netcdf4
-fiona
+fiona ; python_version < '3.8'
 descartes
 pyproj
 pyshp
 pandas
+scipy
+affine

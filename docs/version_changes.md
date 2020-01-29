@@ -1,8 +1,62 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.3.0
+
+* Dropped support for python 2.7
+* Switched from [pangeo binder](https://aws-uswest2-binder.pangeo.io/) binder to [mybinder.org binder](https://mybinder.org)
+* Added support for MODFLOW 6 Skeletal Compaction and Subsidence (CSUB) package
+
+* Bug fixes:
+
+    * Fix issue in MNW2 when the input file had spaced between lines in Dataset 2. [#736](https://github.com/modflowpy/flopy/pull/736)
+    * Fix issue in MNW2 when the input file uses wellids with inconsistent cases in Dataset 2 and 4. Internally the MNW2 will convert all wellids to lower case strings. [#736](https://github.com/modflowpy/flopy/pull/736)
+    * Fix issue with VertexGrid plotting errors, squeeze proper dimension for head output, in `PlotMapView` and `PlotCrossSection`
+    * Fix issue in `PlotUtilities._plot_array_helper` mask MODFLOW-6 no flow and dry cells before plotting
+    * Removed assumption that transient SSM data appears in the first stress period [#754](https://github.com/modflowpy/flopy/issues/754) [#756](https://github.com/modflowpy/flopy/issues/754).  Fix includes a new autotest ([t068_test_ssm.py](https://github.com/modflowpy/flopy/blob/develop/autotest/t068_test_ssm.py)) that adds transient concentration data after the first stress period.
+    * Fix issues with add_record method for MfList [#758](https://github.com/modflowpy/flopy/pull/758)
+
 ### Version 3.2.13
 
-New features and bug fixes being made on develop for the 3.2.13 release should be described [here](https://github.com/modflowpy/flopy/wiki/FloPy-version-3.2.13-release-candidate-changes).
+* ModflowFlwob: Variable `irefsp` is now a zero-based integer (#596)
+* ModflowFlwob: Added a load method and increased precision of `toffset` when writing to file (#598)
+* New feature GridIntersect (#610): The GridIntersect object allows the user to intersect shapes (Points, LineStrings and Polygons) with a MODFLOW grid. These intersections return a numpy.recarray containing the intersection information, i.e. cell IDs, lengths or areas, and a shapely representation of the intersection results. Grids can be structured or vertex grids. Two intersections methods are implemented: `"structured"` and `"strtree"`: the former accelerates intersections with structured grids. The latter is more flexible and also works for vertex grids. The GridIntersect class is available through `flopy.utils.gridintersect`. The functionality requires the Shapely module. See the [example notebook](../examples/Notebooks/flopy3_grid_intersection_demo.ipynb) for an overview of this new feature.
+* New feature `Raster` (#634): The Raster object allows the user to load raster files (Geotiff, arc ascii, .img) and sample points, sample polygons, create cross sections, crop, and resample raster data to a Grid.  Cropping has been implemented using a modified version of the ray casting algorithm for speed purposes. Resampling a raster can be performed with structured, vertex, and unstructured Grids. Rasters will return a numpy array of resampled data in the same shape as the Grid. The Raster class is available by calling `flopy.utils.Raster`. The functionality requires rasterio, affine, and scipy. See the ([example notebook](../examples/Notebooks/flopy3_raster_intersection.ipynb)) for an overview of this feature.
+* Modify NAM and MFList output files to remove excessive whitespace (#622, #722)
+* Deprecate `crs` class from `flopy.utils.reference` in favor of `CRS` class from `flopy.export.shapefile_utils` (#608)
+* New feature in `PlotCrossSection` (#660). Added a `geographic_coords` parameter flag to `PlotCrossSection` which allows the user to plot cross sections with geographic coordinates on the x-axis. The default behavior is to plot distance along cross sectional line on the x-axis. See the ([example notebook](../examples/Notebooks/flopy3_PlotCrossSection_demo.ipynb)) for an overview of this feature.
+* New feature with binaryfile readers, including `HeadFile` and `CellBudgetFile` (#669): [`with` statement](https://docs.python.org/3/reference/compound_stmts.html#with) is supported to open files for reading in a context manager, which automatically close when done or if an exception is raised.
+* Improved the flopy list reader for MODFLOW stress packages (for mf2005, mfnwt, etc.), which may use SFAC to scale certain columns depending on the package.  The list reading now supports reading from external files, in addition to open/close.  The (binary) option is also supported for both open/close and external.  This new list reader is used for reading standard stress package lists and also lists used to create parameters.  The new list reader should be consistent with MODFLOW behavior.
+* SfrFile detects additional columns (#708)
+* Add a `default_float_format` property to mfsfr2, which is string formatted by NumPy versions > 1.14.0, or `{:.8g}` for older NumPy versions (#710)
+* Support for pyshp 1.2.1 dropped, pyshp 2.1.0 support maintained
+* Improved VTK export capabilities.  Added export for VTK at array level, package level, and model level.  Added binary head file export and cell by cell file export.  Added the ability to export point scalars in addition to cell scalars, and added smooth surface generation.  VTK export now supports writing transient data as well as exporting to binary .vtu files.
+* Support for copying model and package instances with `copy.deepcopy()`
+* Added link to Binder on [README](README.md) and [notebooks_examples](../examples/docs/notebook_examples.md) markdown documents. Binder provides an environment that runs and interactively serves the FloPy Jupyter notebooks.
+
+* Bug fixes:
+
+    * When using the default `iuzfbnd=None` in the `__init__` routine of mtuzt.py, instantiation of IUZBND was generating a 3D array instead of a 2D array.  Now generates a 2D array
+    * ModflowSfr2 `__init__` was being slowed considerably by the `ModflowSfr2.all_segments` property method. Modified the `ModflowSfr2.graph` property method that describes routing connections between segments to handle cases where segments aren't listed in stress period 0.
+    * Ensure disordered fields in `reach_data` (Dataset 2) can be supported in `ModflowSfr2` and written to MODFLOW SFR input files.
+    * When loading a MF model with UZF active, item 8 ("`[IUZROW]` `[IUZCOL]` `IFTUNIT` `[IUZOPT]`") wasn't processed correctly when a user comment appeared at the end of the line
+    * MODFLOW-6 DISU JA arrays are now treated as zero-based cell IDs. JA, IHC, CL12 are outputted as jagged arrays.
+    * Models with multiple MODFLOW-6 WEL packages now load and save correctly.
+    * Exporting individual array and list data to a shapefile was producing an invalid attribute error. Attribute reference has been fixed.
+    * Fix UnboundLocalError and typo with `flopy.export.shapefile_utils.CRS` class (#608)
+    * Fix Python 2.7 issue with `flopy.export.utils.export_contourf` (#625)
+    * When loading a MT3D-USGS model, keyword options (if used) were ignored (#649)
+    * When loading a modflow model, spatial reference information was not being passed to the SpatialReference class (#659)
+    * Fix specifysurfk option in UZF, ModflowUZF1 read and write surfk variable
+    * Fix minor errors in flopy gridgen wrapper
+    * Close opened files after loading, to reduce `ResourceWarning` messages (#673)
+    * Fix bugs related to flake8's F821 "undefined name 'name'", which includes issues related to Mt3dPhc, ModflowSfr2, ModflowDe4, ListBudget, and ModflowSms (#686)
+    * Fix bugs related to flake8's F811 "redefinition of unused 'name'" (#688)
+    * Fix bugs related to flake8's W605 "invalid escape sequence '\\s'" (or similar) (#700)
+    * Fix EpsgReference class behavior with JSON user files (#702)
+    * Fix ModflowSfr2 read write logic for all combinations of isfropt and icalc
+    * IRCH array of the Recharge Package is now a zero-based variable, which means an IRCH value of 0 corresponds to the top model layer (#715)
+    * MODFLOW lists were not always read correctly if they used the SFAC or binary options or were used to define parameters (#683)
+    * Changed VDF Package density limiter defaults to zero (#646)
 
 ### Version 3.2.12
 
@@ -47,7 +101,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 * Added modflow-nwt options support for `ModflowWel`, `ModflowSfr2`, and `ModflowUzf1` via the `OptionBlock` class.
 
 * Bug fixes:
-    * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS. 
+    * Removed variable MXUZCON from `mtuzt.py` that was present during the development of MT3D-USGS, but was not included in the release version of MT3D-USGS.
     * Now account for UZT -> UZT2 changes with the release of MT3D-USGS 1.0.1.  Use of UZT is no longer supported.
     * Fixed bug in `mfuzf1.py` when reading and writing `surfk` when `specifysurfk = True`.
     * Fixed bug in `ModflowStr.load()`, utility would fail to load when comments were present.
@@ -121,12 +175,12 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 * Added `has_package(name)` method to see if a package exists. This feature goes nicely with `get_package(name)` method.
 * Added `set_model_units()` method to change model units for all files created by a model. This method can be useful when creating MODFLOW-LGR models from scratch.
 * Added SFR2 package functionality
-	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.  
+	* `export_inlets` method to write shapefile showing locations where external flows are entering the stream network.
 * Bug fixes:
     * Installation: Added dfn files required by MODFLOW 6 functionality to MANIFEST.in so that they are included in the distribution.
     * SFR2 package: Fixed issue reading transient data when `ISFOPT` is 4 or 5 for the first stress period.
 
-		
+
 ### Version 3.2.7
 * Added beta support for MODFLOW 6 See [here](./mf6.md) for more information.
 * Added support for retrieving time series from binary cell-by-cell files. Cell-by-cell time series are accessed in the same way they are accessed for heads and concentrations but a text string is required.
@@ -139,20 +193,20 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 * Added a new `flopy.utils.HeadUFile` Class (located in binaryfile.py) for reading unstructured head files from MODFLOW-USG.  The `.get_data()` method for this class returns a list of one-dimensional head arrays for each layer.
 * Added metadata.acdd class to fetch model metadata from ScienceBase.gov and manage CF/ACDD-complaint metadata for NetCDF export
 * Added sparse export option for boundary condition stress period data, where only cells for that B.C. are exported (for example, `package.stress_period_data.export('stuff.shp', sparse=True)`)
-* Added additional SFR2 package functionality: 
+* Added additional SFR2 package functionality:
 	*  `.export_linkages()` and `.export_outlets()` methods to export routing linkages and outlets
 	*  sparse shapefile export, where only cells with SFR reaches are included
 	*  `.plot_path()` method to plot streambed elevation profile along sequence of segments
 	*  `.assign_layers()` method
 	* additional error checks and bug fixes
 * Added `SpatialReference` / GIS export functionality:
-	*  GeoTiff export option to `SpatialReference.export_array`   
-	*  `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile 
+	*  GeoTiff export option to `SpatialReference.export_array`
+	*  `SpatialReference.export_array_contours`: contours an array and then exports contours to shapefile
 	*  inverse option added to `SpatialReference.transform`
 	*  automatic reading of spatial reference info from .nam or usgs.model.reference files
-* Modified node numbers in SFR package and `ModflowDis.get_node()` from one- to zero-based. 
-* Modified HYDMOD package `klay` variable from one- to zero-based. 
-* Added `.get_layer()` method to DIS package. 
+* Modified node numbers in SFR package and `ModflowDis.get_node()` from one- to zero-based.
+* Modified HYDMOD package `klay` variable from one- to zero-based.
+* Added `.get_layer()` method to DIS package.
 * Added `.get_saturated_thickness()` and `.get_gradients()` methods
 * Bug fixes:
     * OC package: Fixed bug when printing and saving data for select stress periods and timesteps. In previous versions, OC data was repeated until respecified.
@@ -161,13 +215,13 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
     * BTN package: Fixed bug in obs.
     * LPF package: Fixed bug regarding when HANI is read and written.
     * UZF package: added support for MODFLOW NWT options block; fixed issue with loading files with thti/thtr options
-    * SFR package: fixed bug with segment renumbering, issues with reading transient text file output, 
+    * SFR package: fixed bug with segment renumbering, issues with reading transient text file output,
     * Fixed issues with dynamic setting of `SpatialReference` parameters
     * NWT package: forgive missing value for MXITERXMD
     * MNW2 package: fix bug where ztop and zbotm were written incorrectly in `get_allnode_data()`. This was not affecting writing of these variables, only their values in this summary array.
     * PCGN package: fixed bug writing package.
     * Fixed issue in `Util2d` when non-integer `cnstnt` passed.
-    
+
 
 ### Version 3.2.6
 * Added functionality to read binary grd file for unstructured grids.
@@ -189,7 +243,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 	* shapefile export of MODPATH Pathline and Endpoint data
 	* Modpath.create_mpsim() supports MNW2
 	* creation of MODPATH StartingLocations files
-	* Easy subsetting of endpoint and pathline results to destination cells of interest  
+	* Easy subsetting of endpoint and pathline results to destination cells of interest
 * New ZoneBudget class provides ZONEBUDGET functionality:
     * reads a CellBudgetFile and accumulates flows by zone
     * pass `kstpkper` or `totim` keyword arguments to retrieve a subset of available times in the CellBudgetFile
@@ -223,7 +277,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 ### Version 3.2.5
 * Added support for LAK and GAGE packages - full load and write functionality supported.
 * Added support for MNW2 package. Load and write of .mnw2 package files supported. Support for .mnwi, or the results files (.qsu, .byn) not yet implemented.
-* Improved support for changing the output format of arrays and variables written to MODFLOW input files. 
+* Improved support for changing the output format of arrays and variables written to MODFLOW input files.
 * Restructured SEAWAT support so that packages can be added directly to the SEAWAT model, in addition to the approach of adding a modflow model and a mt3d model.  Can now load a SEAWAT model.
 * Added load support for MT3DMS Reactions package
 * Added multi-species support for MT3DMS Reactions package
@@ -238,7 +292,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
   * BTN observation locations must now be entered in zero-based indices (a 1 is now added to the index values written to btn file)
   * Uploaded supporting files for SFR example notebook; fixed issue with segment_data submitted as array (instead of dict) and as 0d array(s).
   * Fixed CHD Package so that it now supports options, and therefore, auxiliary variables can be specified.
-  * Fixed loading BTN save times when numbers are touching. 
+  * Fixed loading BTN save times when numbers are touching.
 
 ### Version 3.2.4
 * Added basic model checking functionality (`.check()`).
@@ -265,7 +319,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 
 ### Version 3.2.3
 * Added template creation support for several packages for used with PEST (and UCODE).
- 
+
 * Added support for the SEAWAT viscosity (VSC) package.
 
 * Added support for the MODFLOW Stream (STR), Streamflow-Routing (SFR2), Subsidence (SUB), and Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers (SWT) Packages.
@@ -307,7 +361,7 @@ New features and bug fixes being made on develop for the 3.2.13 release should b
 
 * Full support for all Output Control (OC) options including DDREFERENCE, SAVE IBOUND, and layer lists. All Output Control Input is specified using words. Output Control Input using numeric codes is still available in the ModflowOc88 class. The ModflowOc88 class is currently deprecated and no longer actively maintained.
 
-* Added support for standard MULT package FUNCTION and EXPRESSION functionality are supported. MODFLOW parameters are not supported in `write()` methods. 
+* Added support for standard MULT package FUNCTION and EXPRESSION functionality are supported. MODFLOW parameters are not supported in `write()` methods.
 
 ### Version 3.0
 
@@ -323,4 +377,4 @@ FloPy is significantly different from earlier versions of FloPy (previously host
 
 * *load()* methods have been developed for all of the standard MODFLOW packages and a few less used packages (*e.g.* SWI2).
 
-* MODFLOW parameter support has been added to the `load()` methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the `load()` methods. MODFLOW parameters are not supported in `write()` methods.  
+* MODFLOW parameter support has been added to the `load()` methods. MULT, PVAL, and ZONE packages are now supported and parameter data are converted to arrays in the `load()` methods. MODFLOW parameters are not supported in `write()` methods.

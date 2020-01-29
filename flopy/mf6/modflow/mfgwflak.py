@@ -295,6 +295,14 @@ class ModflowGwflak(mfpackage.MFPackage):
                   a TIMESERIESFILE entry (see the "Time-Variable Input"
                   section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value.
+            inflow : [string]
+                * inflow (string) real or character value that defines the
+                  volumetric inflow rate :math:`(L^3 T^{-1})` for the lake. If
+                  the Options block includes a TIMESERIESFILE entry (see the
+                  "Time-Variable Input" section), values can be obtained from a
+                  time series by entering the time-series name in place of a
+                  numeric value. By default, inflow rates are zero for each
+                  lake.
             withdrawal : [string]
                 * withdrawal (string) real or character value that defines the
                   maximum withdrawal rate :math:`(L^3 T^{-1})` for the lake.
@@ -561,7 +569,7 @@ class ModflowGwflak(mfpackage.MFPackage):
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
            ["block period", "name laksetting",
-            "type keystring status stage rainfall evaporation runoff "
+            "type keystring status stage rainfall evaporation runoff inflow "
             "withdrawal auxiliaryrecord",
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block period", "name status", "type string", "shape",
@@ -576,6 +584,9 @@ class ModflowGwflak(mfpackage.MFPackage):
             "tagged true", "in_record true", "reader urword",
             "time_series true"],
            ["block period", "name runoff", "type string", "shape",
+            "tagged true", "in_record true", "reader urword",
+            "time_series true"],
+           ["block period", "name inflow", "type string", "shape",
             "tagged true", "in_record true", "reader urword",
             "time_series true"],
            ["block period", "name withdrawal", "type string", "shape",

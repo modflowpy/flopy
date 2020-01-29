@@ -162,11 +162,31 @@ class Grid(object):
     # access to basic grid properties
     ###################################
     def __repr__(self):
-        return (
-            "xll:{0:<.10G}; yll:{1:<.10G}; rotation:{2:<G}; proj4_str:{3}; "
-            "units:{4}; lenuni:{5}"
-            .format(self.xoffset, self.yoffset, self.angrot, self.proj4,
-                    self.units, self.lenuni))
+        items = []
+        if self.xoffset is not None and self.yoffset is not None \
+                and self.angrot is not None:
+            items += [
+                "xll:" + str(self.xoffset),
+                "yll:" + str(self.yoffset),
+                "rotation:" + str(self.angrot)]
+        if self.proj4 is not None:
+            items.append("proj4_str:" + str(self.proj4))
+        if self.units is not None:
+            items.append("units:" + str(self.units))
+        if self.lenuni is not None:
+            items.append("lenuni:" + str(self.lenuni))
+        return '; '.join(items)
+
+    @property
+    def is_valid(self):
+        return True
+
+    @property
+    def is_complete(self):
+        if self._top is not None and self._botm is not None and \
+                self._idomain is not None:
+            return True
+        return False
 
     @property
     def grid_type(self):
@@ -201,10 +221,7 @@ class Grid(object):
         proj4 = None
         if self._proj4 is not None:
             if "epsg" in self._proj4.lower():
-                if "init" not in self._proj4.lower():
-                    proj4 = "+init=" + self._proj4
-                else:
-                    proj4 = self._proj4
+                proj4 = self._proj4
                 # set the epsg if proj4 specifies it
                 tmp = [i for i in self._proj4.split() if
                        'epsg' in i.lower()]
@@ -212,7 +229,7 @@ class Grid(object):
             else:
                 proj4 = self._proj4
         elif self.epsg is not None:
-            proj4 = '+init=epsg:{}'.format(self.epsg)
+            proj4 = 'epsg:{}'.format(self.epsg)
         return proj4
 
     @proj4.setter
@@ -229,11 +246,11 @@ class Grid(object):
 
     @property
     def top(self):
-        return self._top
+        return copy.deepcopy(self._top)
 
     @property
     def botm(self):
-        return self._botm
+        return copy.deepcopy(self._botm)
 
     @property
     def top_botm(self):
@@ -250,7 +267,7 @@ class Grid(object):
 
     @property
     def idomain(self):
-        return self._idomain
+        return copy.deepcopy(self._idomain)
 
     @property
     def shape(self):

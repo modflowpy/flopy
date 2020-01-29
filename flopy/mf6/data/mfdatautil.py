@@ -601,7 +601,7 @@ class ListTemplateGenerator(TemplateGenerator):
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))
         if boundnames:
-            type_list.append(('boundnames', object))
+            type_list.append(('boundname', object))
 
         if timeseries:
             # fix type list to make all types objects

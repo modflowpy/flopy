@@ -147,5 +147,41 @@ def test_mfnwt_run():
     return
 
 
+def test_irch():
+    import os
+    import flopy
+    org_model_ws = os.path.join("..","examples","data","freyberg_multilayer_transient")
+    nam_file = "freyberg.nam"
+    m = flopy.modflow.Modflow.load(nam_file,model_ws=org_model_ws,check=False,forgive=False,
+                                   verbose=True)
+    irch = {}
+    for kper in range(m.nper):
+        arr = np.random.randint(0,m.nlay,size=(m.nrow,m.ncol))
+        irch[kper] = arr
+
+    m.remove_package("RCH")
+    flopy.modflow.ModflowRch(m,rech=0.1,irch=irch,nrchop=2)
+
+    for kper in range(m.nper):
+        arr = irch[kper]
+        aarr = m.rch.irch[kper].array
+        d = arr - aarr
+        assert np.abs(d).sum() == 0
+
+
+    new_model_ws = "temp"
+    m.change_model_ws(new_model_ws)
+    m.write_input()
+    mm = flopy.modflow.Modflow.load(nam_file,model_ws="temp",forgive=False,verbose=True,
+                                    check=False)
+    for kper in range(m.nper):
+        arr = irch[kper]
+        aarr = mm.rch.irch[kper].array
+        d = arr - aarr
+        assert np.abs(d).sum() == 0
+
+
+
 if __name__ == '__main__':
-    test_mfnwt_run()
+   # test_mfnwt_run()
+    test_irch()

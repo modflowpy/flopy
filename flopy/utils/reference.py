@@ -213,10 +213,7 @@ class SpatialReference(object):
         proj4_str = None
         if self._proj4_str is not None:
             if "epsg" in self._proj4_str.lower():
-                if "init" not in self._proj4_str.lower():
-                    proj4_str = "+init=" + self._proj4_str
-                else:
-                    proj4_str = self._proj4_str
+                proj4_str = self._proj4_str
                 # set the epsg if proj4 specifies it
                 tmp = [i for i in self._proj4_str.split() if
                        'epsg' in i.lower()]
@@ -224,7 +221,7 @@ class SpatialReference(object):
             else:
                 proj4_str = self._proj4_str
         elif self.epsg is not None:
-            proj4_str = '+init=epsg:{}'.format(self.epsg)
+            proj4_str = 'epsg:{}'.format(self.epsg)
         return proj4_str
 
     @property
@@ -935,11 +932,11 @@ class SpatialReference(object):
 
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         if epsg is None and prj is None:
             epsg = self.epsg
-        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
+                             epsg=epsg, prj=prj)
 
     def get_vertices(self, i, j):
         """Get vertices for a single cell or sequence if i, j locations."""
@@ -1145,14 +1142,14 @@ class SpatialReference(object):
             print('wrote {}'.format(filename))
 
         elif filename.lower().endswith(".shp"):
-            from ..export.shapefile_utils import write_grid_shapefile2
+            from ..export.shapefile_utils import write_grid_shapefile
             epsg = kwargs.get('epsg', None)
             prj = kwargs.get('prj', None)
             if epsg is None and prj is None:
                 epsg = self.epsg
-            write_grid_shapefile2(filename, self, array_dict={fieldname: a},
-                                  nan_val=nodata,
-                                  epsg=epsg, prj=prj)
+            write_grid_shapefile(filename, self, array_dict={fieldname: a},
+                                 nan_val=nodata,
+                                 epsg=epsg, prj=prj)
 
     def export_contours(self, filename, contours,
                         fieldname='level', epsg=None, prj=None,
@@ -2195,7 +2192,7 @@ def get_spatialreference(epsg, text='esriwkt'):
     # epsg code not listed on spatialreference.org
     # may still work with pyproj
     elif text == 'epsg':
-        return '+init=epsg:{}'.format(epsg)
+        return 'epsg:{}'.format(epsg)
 
 
 def getproj4(epsg):

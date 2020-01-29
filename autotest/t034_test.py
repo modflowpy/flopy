@@ -219,15 +219,13 @@ def test_uzf_surfk():
 
 
 def test_read_write_nwt_options():
-    if sys.version_info[0] > 2:
-        from io import StringIO
-    else:
-        from cStringIO import StringIO
+    from io import StringIO
 
     from flopy.modflow import ModflowWel, ModflowUzf1, ModflowSfr2
     from flopy.utils.optionblock import OptionBlock
 
     welstr = "OPTIONS\nSPECIFY 0.5 10\nTABFILES 2 28\nEND\n"
+    welstr2 = "OPTIONS\nSPECIFY 0.3\nTABFILES 2 28\nEND\n"
     uzfstr = "OPTIONS\nSPECIFYTHTR\nSPECIFYTHTI\nNOSURFLEAK\n" \
              "SPECIFYSURFK\nSEEPSURFK\nETSQUARE 0.7\nNETFLUX 10 20\n" \
              "SAVEFINF\nEND\n"
@@ -235,25 +233,31 @@ def test_read_write_nwt_options():
              "LOSSFACTOR 0.5\nSTRHC1KH 0.1\nSTRHC1KV 0.2\nEND\n"
 
     welopt = OptionBlock.load_options(StringIO(welstr), ModflowWel)
+    welopt2 = OptionBlock.load_options(StringIO(welstr2), ModflowWel)
     uzfopt = OptionBlock.load_options(StringIO(uzfstr), ModflowUzf1)
     sfropt = OptionBlock.load_options(StringIO(sfrstr), ModflowSfr2)
 
     assert repr(welopt) == welstr
+    assert repr(welopt2) == welstr2
     assert repr(uzfopt) == uzfstr
     assert repr(sfropt) == sfrstr
 
     welopt.write_options(os.path.join(cpth, "welopt.txt"))
+    welopt2.write_options(os.path.join(cpth, "welopt2.txt"))
     uzfopt.write_options(os.path.join(cpth, 'uzfopt.txt'))
     sfropt.write_options(os.path.join(cpth, 'sfropt.txt'))
 
     welopt = OptionBlock.load_options(os.path.join(cpth, "welopt.txt"),
                                       ModflowWel)
+    welopt2 = OptionBlock.load_options(os.path.join(cpth, "welopt2.txt"),
+                                       ModflowWel)
     uzfopt = OptionBlock.load_options(os.path.join(cpth, 'uzfopt.txt'),
                                       ModflowUzf1)
     sfropt = OptionBlock.load_options(os.path.join(cpth, "sfropt.txt"),
                                       ModflowSfr2)
 
     assert repr(welopt) == welstr
+    assert repr(welopt2) == welstr2
     assert repr(uzfopt) == uzfstr
     assert repr(sfropt) == sfrstr
 

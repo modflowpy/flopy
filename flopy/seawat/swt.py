@@ -90,6 +90,9 @@ class Seawat(BaseModel):
         self.version_types = {'seawat': 'SEAWAT'}
         self.set_version(version)
         self.lst = SeawatList(self, listunit=listunit)
+        self.glo = None
+        self._mf = None
+        self._mt = None
 
         # If a MODFLOW model was passed in, then add its packages
         self.mf = self
@@ -152,7 +155,8 @@ class Seawat(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -160,7 +164,7 @@ class Seawat(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.bas6 is not None:
+        if self.has_package('bas6'):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
@@ -175,7 +179,8 @@ class Seawat(BaseModel):
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,
                                          yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+                                         angrot=self._modelgrid.angrot,
+                                         nlay=self.dis.nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -193,6 +198,7 @@ class Seawat(BaseModel):
         self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @property
@@ -424,11 +430,11 @@ class Seawat(BaseModel):
                     verbose=verbose)
 
         mf = Modflow.load(f, version='mf2k', exe_name=None, verbose=verbose,
-                          model_ws=model_ws, load_only=load_only, forgive=True,
-                          check=False)
+                          model_ws=model_ws, load_only=load_only,
+                          forgive=False, check=False)
 
         mt = Mt3dms.load(f, version='mt3dms', exe_name=None, verbose=verbose,
-                         model_ws=model_ws, forgive=True)
+                         model_ws=model_ws, forgive=False)
 
         # set listing and global files using mf objects
         ms.lst = mf.lst

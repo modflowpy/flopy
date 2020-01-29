@@ -152,15 +152,17 @@ class ModflowSwr1(Package):
             sys.stdout.write('loading swr1 process file...\n')
 
         # todo: everything
-        if not hasattr(f, 'read'):
+
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
         print(
             'Warning: load method not completed. default swr1 object created.')
 
-        # close open file
-        f.close()
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None

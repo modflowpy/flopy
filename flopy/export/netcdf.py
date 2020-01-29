@@ -122,9 +122,13 @@ class NetCdf(object):
         (default 'down')
     verbose : if True, stdout is verbose.  If str, then a log file
         is written to the verbose file
-    forgive: what to do if a duplicate variable name is being created.  If
+    forgive : what to do if a duplicate variable name is being created.  If
         True, then the newly requested var is skipped.  If False, then
         an exception is raised.
+    **kwargs : keyword arguments
+        modelgrid : flopy.discretization.Grid instance
+            user supplied model grid which will be used in lieu of the model
+            object modelgrid for netcdf production
 
     Notes
     -----
@@ -136,7 +140,7 @@ class NetCdf(object):
 
     def __init__(self, output_filename, model, time_values=None,
                  z_positive='up', verbose=None, prj=None, logger=None,
-                 forgive=False):
+                 forgive=False, **kwargs):
 
         assert output_filename.lower().endswith(".nc")
         if verbose is None:
@@ -156,6 +160,8 @@ class NetCdf(object):
 
         self.model = model
         self.model_grid = model.modelgrid
+        if "modelgrid" in kwargs:
+            self.model_grid = kwargs.pop("modelgrid")
         self.model_time = model.modeltime
         if prj is not None:
             self.model_grid.proj4 = prj
@@ -182,7 +188,7 @@ class NetCdf(object):
 
         proj4_str = self.model_grid.proj4
         if proj4_str is None:
-            proj4_str = '+init=epsg:4326'
+            proj4_str = 'epsg:4326'
             self.log(
                 'Warning: model has no coordinate reference system specified. '
                 'Using default proj4 string: {}'.format(proj4_str))
@@ -190,8 +196,8 @@ class NetCdf(object):
         self.grid_units = self.model_grid.units
         self.z_positive = z_positive
         if self.grid_units is None:
-            self.grid_units = "unspecified"
-        assert self.grid_units in ["feet", "meters", "unspecified"], \
+            self.grid_units = "undefined"
+        assert self.grid_units in ["feet", "meters", "undefined"], \
             "unsupported length units: " + self.grid_units
 
         self.time_units = self.model_time.time_units
@@ -623,17 +629,19 @@ class NetCdf(object):
             raise Exception("NetCdf error importing pyproj module:\n" + str(e))
 
         proj4_str = self.proj4_str
+        print('initialize_geometry::proj4_str = {}'.format(proj4_str))
 
-        if "epsg" in proj4_str.lower() and "init" not in proj4_str.lower():
-            proj4_str = "+init=" + proj4_str
-        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
+        self.log("building grid crs using proj4 string: {}".format(proj4_str))
         try:
             self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
 
         except Exception as e:
             self.log("error building grid crs:\n{0}".format(str(e)))
             raise Exception("error building grid crs:\n{0}".format(str(e)))
-        self.log("building grid crs using proj4 string: {0}".format(proj4_str))
+
+        print('initialize_geometry::self.grid_crs = {}'.format(self.grid_crs))
+
+        self.log("building grid crs using proj4 string: {}".format(proj4_str))
 
         vmin, vmax = self.model_grid.botm.min(), \
                      self.model_grid.top.max()
@@ -646,10 +654,12 @@ class NetCdf(object):
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
-        nc_crs = Proj(init=self.nc_epsg_str)
+        nc_crs = Proj(self.nc_epsg_str)
+        print('initialize_geometry::nc_crs = {}'.format(nc_crs))
+
         self.log("projecting grid cell center arrays " + \
-                 "from {0} to {1}".format(str(self.grid_crs.srs),
-                                          str(nc_crs.srs)))
+                 "from {} to {}".format(str(self.grid_crs.srs),
+                                        str(nc_crs.srs)))
         try:
             self.xs, self.ys = transform(self.grid_crs, nc_crs, xs, ys)
         except Exception as e:
@@ -694,16 +704,16 @@ class NetCdf(object):
         try:
             import netCDF4
         except Exception as e:
-            self.logger.warn("error importing netCDF module")
-            raise Exception(
-                "NetCdf error importing netCDF4 module:\n" + str(e))
+             self.logger.warn("error importing netCDF module")
+             msg = "NetCdf error importing netCDF4 module:\n" + str(e)
+             raise Exception(msg)
 
         # open the file for writing
         try:
             self.nc = netCDF4.Dataset(self.output_filename, "w")
         except Exception as e:
-            raise Exception(
-                "error creating netcdf dataset:\n{0}".format(str(e)))
+            msg = "error creating netcdf dataset:\n{}".format(str(e))
+            raise Exception(msg)
 
         # write some attributes
         self.log("setting standard attributes")
@@ -748,8 +758,8 @@ class NetCdf(object):
         crs.inverse_flattening = self.nc_inverse_flat
         self.log("setting CRS info")
 
-        attribs = {"units": "{0} since {1}".format(self.time_units,
-                                                   self.start_datetime),
+        attribs = {"units": "{} since {}".format(self.time_units,
+                                                 self.start_datetime),
                    "standard_name": "time",
                    "long_name": NC_LONG_NAMES.get("time", "time"),
                    "calendar": "gregorian",
@@ -874,12 +884,192 @@ class NetCdf(object):
         exp._CoordinateAxes = "layer"
         return
 
+    def initialize_group(self, group="timeseries", dimensions=("time",),
+                         attributes=None, dimension_data=None):
+        """
+        Method to initialize a new group within a netcdf file. This group
+        can have independent dimensions from the global dimensions
+
+        Parameters:
+        ----------
+        name : str
+            name of the netcdf group
+        dimensions : tuple
+            data dimension names for group
+        dimension_shape : tuple
+            tuple of data dimension lengths
+        attributes : dict
+            nested dictionary of {dimension : {attributes}} for each netcdf
+            group dimension
+        dimension_data : dict
+            dictionary of {dimension : [data]} for each netcdf group dimension
+
+        """
+        if attributes is None:
+            attributes = {}
+
+        if dimension_data is None:
+            dimension_data = {}
+
+        if self.nc is None:
+            self.initialize_file()
+
+        if group in self.nc.groups:
+            raise AttributeError("{} group already initialized".format(group))
+
+        self.log("creating netcdf group {}".format(group))
+        self.nc.createGroup(group)
+        self.log("{} group created".format(group))
+
+        self.log("creating {} group dimensions".format(group))
+        for ix, dim in enumerate(dimensions):
+            if dim == "time":
+                if "time" not in dimension_data:
+                    time_values = np.cumsum(self.model_time.perlen)
+                else:
+                    time_values = dimension_data["time"]
+
+                self.nc.groups[group].createDimension(dim,
+                                                      len(time_values))
+
+            else:
+                if dim not in dimension_data:
+                    raise AssertionError("{} information must be supplied "
+                                         "to dimension data".format(dim))
+                else:
+
+                    self.nc.groups[group].createDimension(
+                        dim,
+                        len(dimension_data[dim]))
+
+        self.log("created {} group dimensions".format(group))
+
+        dim_names = tuple([i for i in dimensions if i != "time"])
+        for dim in dimensions:
+            if dim.lower() == "time":
+                if "time" not in attributes:
+                    attribs = {"units": "{} since {}".format(self.time_units,
+                                                         self.start_datetime),
+                               "standard_name": "time",
+                               "long_name": NC_LONG_NAMES.get("time", "time"),
+                               "calendar": "gregorian",
+                               "Axis": "Y",
+                               "_CoordinateAxisType": "Time"}
+                else:
+                    attribs = attributes["time"]
+
+                time = self.create_group_variable(group, "time", attribs,
+                                                  precision_str="f8",
+                                                  dimensions=("time",))
+
+                time[:] = np.asarray(time_values)
+
+            elif dim.lower() == "zone":
+                if 'zone' not in attributes:
+                    attribs = {"units": "N/A",
+                               "standard_name": "zone",
+                               "long_name": "zonebudget zone",
+                               "Axis": "X",
+                               "_CoordinateAxisType": "Zone"}
+
+                else:
+                    attribs = attributes['zone']
+
+                zone = self.create_group_variable(group, "zone", attribs,
+                                                  precision_str="i4",
+                                                  dimensions=('zone',))
+                zone[:] = np.asarray(dimension_data['zone'])
+
+            else:
+                attribs = attributes[dim]
+                var = self.create_group_variable(group, dim, attribs,
+                                                 precision_str="f8",
+                                                 dimensions=dim_names)
+                var[:] = np.asarray(dimension_data[dim])
+
     @staticmethod
     def normalize_name(name):
         return name.replace('.', '_').replace(' ', '_').replace('-', '_')
 
+    def create_group_variable(self, group, name, attributes, precision_str,
+                              dimensions=("time",)):
+        """
+        Create a new group variable in the netcdf object
+
+        Parameters
+        ----------
+        name : str
+            the name of the variable
+        attributes : dict
+            attributes to add to the new variable
+        precision_str : str
+            netcdf-compliant string. e.g. f4
+        dimensions : tuple
+            which dimensions the variable applies to
+            default : ("time","layer","x","y")
+        group : str
+            which netcdf group the variable goes in
+            default : None which creates the variable in root
+
+        Returns
+        -------
+        nc variable
+
+        Raises
+        ------
+        AssertionError if precision_str not right
+        AssertionError if variable name already in netcdf object
+        AssertionError if one of more dimensions do not exist
+
+        """
+        name = self.normalize_name(name)
+
+        if name in STANDARD_VARS and \
+                name in self.nc.groups[group].variables.keys():
+            return
+
+        if name in self.nc.groups[group].variables.keys():
+            if self.forgive:
+                self.logger.warn(
+                    "skipping duplicate {} group variable: {}".format(group,
+                                                                      name))
+                return
+            else:
+                raise Exception("duplicate {} group variable name: {}"
+                                .format(group, name))
+
+        self.log("creating group {} variable: {}".format(group, name))
+
+        if precision_str not in PRECISION_STRS:
+            raise AssertionError("netcdf.create_variable() error: precision "
+                                 "string {} not in {}".format(precision_str,
+                                                              PRECISION_STRS))
+
+        if group not in self.nc.groups:
+            raise AssertionError("netcdf group `{}` must be created before "
+                                 "variables can be added to it".format(group))
+
+        self.var_attr_dict["{}/{}".format(group, name)] = attributes
+
+        var = self.nc.groups[group].createVariable(name, precision_str,
+                                                   dimensions,
+                                                   fill_value=self.fillvalue,
+                                                   zlib=True)
+
+        for k, v in attributes.items():
+            try:
+                var.setncattr(k, v)
+            except:
+                self.logger.warn("error setting attribute" + \
+                                 "{} for group {} variable {}".format(k,
+                                                                      group,
+                                                                      name))
+        self.log("creating group {} variable: {}".format(group, name))
+
+        return var
+
     def create_variable(self, name, attributes, precision_str='f4',
-                        dimensions=("time", "layer")):
+                        dimensions=("time", "layer"), group=None):
         """
         Create a new variable in the netcdf object
 
@@ -894,6 +1084,9 @@ class NetCdf(object):
         dimensions : tuple
             which dimensions the variable applies to
             default : ("time","layer","x","y")
+        group : str
+            which netcdf group the variable goes in
+            default : None which creates the variable in root
 
         Returns
         -------
@@ -1044,8 +1237,8 @@ class NetCdf(object):
         try:
             from numpydoc.docscrape import NumpyDocString
         except Exception as e:
-            raise Exception(
-                "NetCdf error importing numpydoc module:\n" + str(e))
+            msg = 'NetCdf error importing numpydoc module:\n' + str(e)
+            raise Exception(msg)
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""

@@ -6,11 +6,7 @@ mf module.  Contains the ModflowGlobal, ModflowList, and Modflow classes.
 
 import os
 import flopy
-import sys
-if sys.version_info[0] == 2:
-    from inspect import getargspec as getfullargspec
-else:
-    from inspect import getfullargspec
+from inspect import getfullargspec
 from ..mbase import BaseModel
 from ..pakbase import Package
 from ..utils import mfreadnam
@@ -248,7 +244,8 @@ class Modflow(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -256,7 +253,7 @@ class Modflow(BaseModel):
         if not self._mg_resync:
             return self._modelgrid
 
-        if self.bas6 is not None:
+        if self.has_package('bas6'):
             ibound = self.bas6.ibound.array
         else:
             ibound = None
@@ -282,7 +279,8 @@ class Modflow(BaseModel):
                                              epsg=self._modelgrid.epsg,
                                              xoff=self._modelgrid.xoffset,
                                              yoff=self._modelgrid.yoffset,
-                                             angrot=self._modelgrid.angrot)
+                                             angrot=self._modelgrid.angrot,
+                                             nlay=self.dis.nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -300,10 +298,12 @@ class Modflow(BaseModel):
         self._modelgrid.set_coord_info(xoff, yoff, self._modelgrid.angrot,
                                        self._modelgrid.epsg,
                                        self._modelgrid.proj4)
+        self._mg_resync = not self._modelgrid.is_complete
         return self._modelgrid
 
     @modelgrid.setter
     def modelgrid(self, value):
+        self._mg_resync = False
         self._modelgrid = value
 
     @property
@@ -427,14 +427,17 @@ class Modflow(BaseModel):
         f_nam.write('{}'.format(self.get_name_file_entries()))
 
         # write the external files
-        for u, f, b in zip(self.external_units, self.external_fnames,
-                           self.external_binflag):
+        for u, f, b, o in zip(self.external_units, self.external_fnames,
+                              self.external_binflag, self.external_output):
             if u == 0:
                 continue
-            # fr = os.path.relpath(f, self.model_ws)
+            replace_text = ''
+            if o:
+                replace_text = 'REPLACE'
             if b:
                 f_nam.write(
-                    'DATA(BINARY)   {0:5d}  '.format(u) + f + ' REPLACE\n')
+                    'DATA(BINARY)   {0:5d}  '.format(u) + f +
+                     replace_text + '\n')
             else:
                 f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
@@ -598,7 +601,7 @@ class Modflow(BaseModel):
 
     @staticmethod
     def load(f, version='mf2005', exe_name='mf2005.exe', verbose=False,
-             model_ws='.', load_only=None, forgive=True, check=True):
+             model_ws='.', load_only=None, forgive=False, check=True):
         """
         Load an existing MODFLOW model.
 
@@ -726,14 +729,14 @@ class Modflow(BaseModel):
         if dis_key is None:
             raise KeyError('discretization entry not found in nam file')
         disnamdata = ext_unit_dict[dis_key]
-        dis = disnamdata.package.load(disnamdata.filename, ml,
+        dis = disnamdata.package.load(disnamdata.filehandle, ml,
                                       ext_unit_dict=ext_unit_dict,
                                       check=False)
         files_successfully_loaded.append(disnamdata.filename)
         if ml.verbose:
             print('   {:4s} package load...success'.format(dis.name[0]))
         assert ml.pop_key_list.pop() == dis_key
-        ext_unit_dict.pop(dis_key)
+        ext_unit_dict.pop(dis_key).filehandle.close()
 
         dis.start_datetime = ml._start_datetime
 
@@ -772,11 +775,11 @@ class Modflow(BaseModel):
                     if forgive:
                         try:
                             if "check" in package_load_args:
-                                item.package.load(item.filename, ml,
+                                item.package.load(item.filehandle, ml,
                                                   ext_unit_dict=ext_unit_dict,
                                                   check=False)
                             else:
-                                item.package.load(item.filename, ml,
+                                item.package.load(item.filehandle, ml,
                                                   ext_unit_dict=ext_unit_dict)
                             files_successfully_loaded.append(item.filename)
                             if ml.verbose:
@@ -793,11 +796,11 @@ class Modflow(BaseModel):
                             files_not_loaded.append(item.filename)
                     else:
                         if "check" in package_load_args:
-                            item.package.load(item.filename, ml,
+                            item.package.load(item.filehandle, ml,
                                               ext_unit_dict=ext_unit_dict,
                                               check=False)
                         else:
-                            item.package.load(item.filename, ml,
+                            item.package.load(item.filehandle, ml,
                                               ext_unit_dict=ext_unit_dict)
                         files_successfully_loaded.append(item.filename)
                         if ml.verbose:
@@ -838,7 +841,9 @@ class Modflow(BaseModel):
         for key in ml.pop_key_list:
             try:
                 ml.remove_external(unit=key)
-                ext_unit_dict.pop(key)
+                item = ext_unit_dict.pop(key)
+                if hasattr(item.filehandle, 'close'):
+                    item.filehandle.close()
             except KeyError:
                 if ml.verbose:
                     msg = 'Warning: external file unit {} '.format(key) + \

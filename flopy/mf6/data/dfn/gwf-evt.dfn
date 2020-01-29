@@ -140,8 +140,8 @@ name surf_rate_specified
 type keyword
 reader urword
 optional true
-longname specify evapotranspiration rate at ET surface
-description indicates that the evapotranspiration rate at the ET surface will be specified as PETM0 in list input. 
+longname specify proportion of evapotranspiration rate at ET surface
+description indicates that the proportion of the evapotranspiration rate at the ET surface will be specified as PETM0 in list input.
 
 # --------------------- gwf evt dimensions ---------------------
 

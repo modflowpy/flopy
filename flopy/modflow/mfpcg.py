@@ -230,9 +230,11 @@ class ModflowPcg(Package):
         if model.verbose:
             sys.stdout.write('loading pcg package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -305,8 +307,8 @@ class ModflowPcg(Package):
             if damp < 0.:
                 dampt = float(line[70:80].strip())
 
-        # close the open file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

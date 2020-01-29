@@ -1,11 +1,14 @@
 
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
-### Version 3.2.13 &mdash; release candidate
+### Version 3.3.1 &mdash; release candidate
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/app/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
 
 Introduction
 -----------------------------------------------
@@ -111,12 +114,12 @@ Installation
 
 **Python versions:**
 
-FloPy requires **Python** 2.7 or **Python** 3.3 (or higher)
+FloPy requires **Python** 3.5 (or higher).
 
 
 **Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher) and **enum34** for **Python** 2.7 or **Python** 3.3.
+FloPy requires **NumPy** 1.9 (or higher).
 
 
 **For base and Anaconda Python distributions:**
@@ -200,7 +203,11 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                 |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)  |
 | `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                              |
-
+| `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                        |
+| `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                      |
+| `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**            |
+| `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                        |
+| `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                        |
 
 How to Cite
 -----------------------------------------------
@@ -211,7 +218,7 @@ How to Cite
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C.D., Hughes, J.D., White, J.T., Starn, J.J., and Fienen, M.N., 2019, FloPy v3.2.13 &mdash; release candidate: U.S. Geological Survey Software Release, 01 June 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2019, FloPy v3.3.1 &mdash; release candidate: U.S. Geological Survey Software Release, 15 December 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 MODFLOW Resources

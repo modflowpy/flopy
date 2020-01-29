@@ -1,4 +1,4 @@
-import os
+import os, copy
 
 import numpy as np
 
@@ -49,7 +49,7 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0)
+                            verbosity_level=0, verify_data=True)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -150,7 +150,8 @@ def test003_gwfs_disv():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -235,7 +236,7 @@ def test005_advgw_tidal():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=2)
+                            verbosity_level=2, verify_data=True)
 
     # test obs/ts package interface
     model = sim.get_model(model_name)
@@ -248,6 +249,11 @@ def test005_advgw_tidal():
     assert(digits == 10)
     names = ghb.ts.time_series_namerecord.get_data()
     assert(names[0][0] == 'tides')
+
+    # add a stress period beyond nper
+    spd = ghb.stress_period_data.get_data()
+    spd[20] = copy.deepcopy(spd[9])
+    ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -316,7 +322,8 @@ def test006_gwf3():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     model = sim.get_model()
     disu = model.get_package('disu')
@@ -455,7 +462,8 @@ def test045_lake1ss_table():
     expected_head_file_b = os.path.join(expected_output_folder, 'lakeex1b_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -527,7 +535,7 @@ def test006_2models_mvr():
     expected_head_file_bb = os.path.join(expected_output_folder, 'model2_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -622,6 +630,43 @@ def test006_2models_mvr():
         # clean up
         sim.delete_output_files()
 
+    # test load_only
+    model_package_check = ['ic', 'maw', 'npf', 'oc']
+    load_only_lists = [['ic6', 'npf6', 'oc', 'gwf6-gwf6', 'ims'],
+                       ['ic', 'maw', 'npf', 'gwf-gwf', 'ims'],
+                       ['ic', 'maw6', 'npf']]
+    for load_only in load_only_lists:
+        sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth,
+                                load_only=load_only)
+        for model_name in model_names:
+            model = sim.get_model(model_name)
+            for package in model_package_check:
+                assert (package in model.package_type_dict or
+                        package in sim.package_type_dict) == \
+                       (package in load_only or '{}6'.format(package) in
+                        load_only)
+        assert (len(sim._exchange_files) > 0) == ('gwf6-gwf6' in load_only or
+                                                  'gwf-gwf' in load_only)
+        assert (len(sim._ims_files) > 0) == ('ims6' in load_only or
+                                             'ims' in load_only)
+
+    # load package by name
+    load_only_list = ['ic6', 'maw', 'npf_p1', 'oc_p2', 'ims']
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth,
+                            load_only=load_only_list)
+    model_parent = sim.get_model('parent')
+    model_child = sim.get_model('child')
+    assert 'oc' not in model_parent.package_type_dict
+    assert 'oc' in model_child.package_type_dict
+    assert 'npf' in model_parent.package_type_dict
+    assert 'npf' not in model_child.package_type_dict
+
+    if run:
+        # test running a runnable load_only case
+        sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth,
+                                load_only=load_only_lists[0])
+        assert sim.run_simulation()[0]
+
     return
 
 
@@ -643,7 +688,8 @@ def test001e_uzf_3lay():
     expected_head_file_b = os.path.join(expected_output_folder, 'test001e_UZF_3lay_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -684,6 +730,25 @@ def test001e_uzf_3lay():
         outfile = os.path.join(save_folder, 'head_compare.dat')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
 
+    # test load_only
+    model_package_check = ['chd', 'ic', 'npf', 'oc', 'sto', 'uzf']
+    load_only_lists = [['chd6', 'ic6', 'ims', 'npf6', 'obs', 'oc', 'sto'],
+                       ['chd6', 'ims', 'npf6', 'obs', 'oc', 'sto', 'uzf6'],
+                       ['chd', 'ic', 'npf', 'obs', 'sto'],
+                       ['ic6', 'ims', 'obs6', 'oc6']]
+    for load_only in load_only_lists:
+        sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                                load_only=load_only)
+        model = sim.get_model()
+        for package in model_package_check:
+            assert (package in model.package_type_dict) == \
+                   (package in load_only or '{}6'.format(package) in load_only)
+    if run:
+        # test running a runnable load_only case
+        sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                                load_only=load_only_lists[0])
+        assert sim.run_simulation()[0]
+
 
 def test045_lake2tr():
     # init paths
@@ -699,11 +764,14 @@ def test045_lake2tr():
         os.makedirs(save_folder)
 
     expected_output_folder = os.path.join(pth, 'expected_output')
-    expected_head_file_a = os.path.join(expected_output_folder, 'lakeex2a_unch.hds')
-    expected_head_file_b = os.path.join(expected_output_folder, 'lakeex2a_adj.hds')
+    expected_head_file_a = os.path.join(expected_output_folder,
+                                        'lakeex2a_unch.hds')
+    expected_head_file_b = os.path.join(expected_output_folder,
+                                        'lakeex2a_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # write simulation to new location
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -761,7 +829,8 @@ def test036_twrihfb():
     expected_head_file_b = os.path.join(expected_output_folder, 'twrihfb2015_output_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data = True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -827,7 +896,8 @@ def test027_timeseriestest():
     expected_head_file_b = os.path.join(expected_output_folder, 'timeseriestest_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -868,12 +938,12 @@ def test027_timeseriestest():
 
 
 if __name__ == '__main__':
-    test006_gwf3()
     test001a_tharmonic()
     test001e_uzf_3lay()
     test003_gwfs_disv()
     test005_advgw_tidal()
     test006_2models_mvr()
+    test006_gwf3()
     test027_timeseriestest()
     test036_twrihfb()
     test045_lake1ss_table()

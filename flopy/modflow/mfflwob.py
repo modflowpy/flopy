@@ -389,7 +389,8 @@ class ModflowFlwob(Package):
         if model.verbose:
             sys.stdout.write('loading flwob package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -483,8 +484,8 @@ class ModflowFlwob(Package):
         column = np.array(column) - 1
         factor = np.array(factor)
 
-        # close the file
-        f.close()
+        if openfile:
+            f.close()
 
         # get ext_unit_dict if none passed
         if ext_unit_dict is None:

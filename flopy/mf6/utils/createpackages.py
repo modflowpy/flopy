@@ -280,12 +280,15 @@ def build_model_load(model_type):
                  "modelname='NewModel',\n             " \
                  "model_nam_file='modflowtest.nam', version='mf6',\n" \
                  "             exe_name='mf6.exe', strict=True, " \
-                 "model_rel_path='.'):\n        " \
+                 "model_rel_path='.',\n" \
+                 "             load_only=None):\n        " \
                  "return mfmodel.MFModel.load_base(simulation, structure, " \
                  "modelname,\n                                         " \
                  "model_nam_file, '{}', version,\n" \
-                 "                                         exe_name, strict, " \
-                 "model_rel_path)\n".format(model_type)
+                 "                                         exe_name, strict, "\
+                 "model_rel_path,\n" \
+                 "                                         load_only)" \
+                 "\n".format(model_type)
     return model_load, model_load_c
 
 
@@ -599,15 +602,16 @@ def create_packages():
             mparent_init_string = '        super(Modflow{}, self)' \
                                  '.__init__('.format(model_name.capitalize())
             spaces = ' ' * len(mparent_init_string)
-            mparent_init_string = "{}simulation, model_type='gwf6',\n{}" \
+            mparent_init_string = "{}simulation, model_type='{}6',\n{}" \
                                   "modelname=modelname,\n{}" \
                                   "model_nam_file=model_nam_file,\n{}" \
                                   "version=version, exe_name=exe_name,\n{}" \
                                   "model_rel_path=model_rel_path,\n{}" \
                                   "**kwargs" \
-                                  ")\n".format(mparent_init_string, spaces,
+                                  ")\n".format(mparent_init_string, model_name,
+                                               spaces,
                                                spaces, spaces, spaces, spaces)
-            load_txt, doc_text = build_model_load('gwf')
+            load_txt, doc_text = build_model_load(model_name)
             package_string = '{}\n{}\n\n\n{}{}\n{}\n{}\n{}{}\n{}\n\n{}'.format(
                 comment_string, nam_import_string, class_def_string,
                 doc_string.get_doc_string(True), doc_text, class_var_string,

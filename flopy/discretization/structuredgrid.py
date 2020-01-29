@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from .grid import Grid, CachedData
 
@@ -54,13 +55,36 @@ class StructuredGrid(Grid):
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
+            if nlay is not None and nlay < len(botm):
+                self.__nlay_nocbd = nlay
+            else:
+                self.__nlay_nocbd = len(botm)
+
             self.__nlay = len(botm)
         else:
             self.__nlay = nlay
+            self.__nlay_nocbd = nlay
 
     ####################
     # Properties
     ####################
+    @property
+    def is_valid(self):
+        if self.__delc is not None and self.__delr is not None:
+            return True
+        return False
+
+    @property
+    def is_complete(self):
+        if self.__delc is not None and self.__delr is not None and \
+                super(StructuredGrid, self).is_complete:
+            return True
+        return False
+
+    @property
+    def nlay_nocbd(self):
+        return self.__nlay_nocbd
+
     @property
     def nlay(self):
         return self.__nlay
@@ -87,11 +111,11 @@ class StructuredGrid(Grid):
 
     @property
     def delc(self):
-        return self.__delc
+        return copy.deepcopy(self.__delc)
 
     @property
     def delr(self):
-        return self.__delr
+        return copy.deepcopy(self.__delr)
 
     @property
     def xyzvertices(self):
@@ -372,11 +396,11 @@ class StructuredGrid(Grid):
     # Exporting
     def write_shapefile(self, filename='grid.shp', epsg=None, prj=None):
         """Write a shapefile of the grid with just the row and column attributes"""
-        from ..export.shapefile_utils import write_grid_shapefile2
+        from ..export.shapefile_utils import write_grid_shapefile
         if epsg is None and prj is None:
             epsg = self.epsg
-        write_grid_shapefile2(filename, self, array_dict={}, nan_val=-1.0e9,
-                              epsg=epsg, prj=prj)
+        write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
+                             epsg=epsg, prj=prj)
 
 
 if __name__ == "__main__":
@@ -410,8 +434,6 @@ if __name__ == "__main__":
     #extent = t.extent
     grid = t.grid_lines
 
-    #print('break')
-
     t.use_ref_coords = True
     sr_x = t.xvertices
     sr_y = t.yvertices
@@ -422,4 +444,3 @@ if __name__ == "__main__":
     print(sr_grid)
     #t.plot_grid_lines()
     #plt.show()
-    #print('break')

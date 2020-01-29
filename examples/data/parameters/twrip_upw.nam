@@ -1,0 +1,14 @@
+LIST   2  twrip_upw.lst
+BAS6   3  twrip.ba6
+PVAL   4  twrip_upw.pval
+UPW   11  twrip_upw.upw
+WEL   12  twrip.wel
+DRN   13  twrip.drn
+RCH   18  twrip.rch
+NWT   19  twrip_upw.nwt
+OC    22  twrip.oc
+MULT   8  twrip.mlt
+ZONE   9  twrip_upw.zon
+DIS   10  twrip.dis
+DATA  101 twrip.ib1.ref
+DATA  102 rchzones.ref

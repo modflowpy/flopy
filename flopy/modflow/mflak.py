@@ -518,6 +518,8 @@ class ModflowLak(Package):
             itmp2 = 0
             if kper in ds9_keys:
                 itmp2 = 1
+            elif len(ds9_keys) > 0:
+                itmp2 = -1
             if isinstance(self.lwrt, list):
                 tmplwrt = self.lwrt[kper]
             else:
@@ -609,12 +611,10 @@ class ModflowLak(Package):
         if model.verbose:
             sys.stdout.write('loading lak package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
-            if sys.version_info[0] == 2:
-                f = open(filename, 'r')
-            elif sys.version_info[0] == 3:
-                f = open(filename, 'r', errors='replace')
+            f = open(filename, 'r', errors='replace')
 
         # dataset 0 -- header
         while True:
@@ -786,6 +786,9 @@ class ModflowLak(Package):
                         tds.append(0.)
                     ds9[n] = tds
                 flux_data[iper] = ds9
+
+        if openfile:
+            f.close()
 
         # convert lake data to Transient3d objects
         lake_loc = Transient3d(model, (nlay, nrow, ncol), np.int32,

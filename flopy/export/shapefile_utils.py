@@ -7,6 +7,8 @@ import json
 import numpy as np
 import os
 import warnings
+from collections import OrderedDict
+
 from ..datbase import DataType, DataInterface
 from ..utils import Util3d, SpatialReference
 
@@ -21,20 +23,6 @@ def import_shapefile():
     except Exception as e:
         raise Exception("io.to_shapefile(): error " +
                         "importing shapefile - try pip install pyshp")
-
-
-def shapefile_version(sf):
-    """
-    Return the shapefile major version number
-    Parameters
-    ----------
-    sf : shapefile package
-
-    Returns
-    -------
-    int
-    """
-    return int(sf.__version__.split('.')[0])
 
 
 def write_gridlines_shapefile(filename, mg):
@@ -54,11 +42,7 @@ def write_gridlines_shapefile(filename, mg):
 
     """
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        wr = shapefile.Writer(shapeType=shapefile.POLYLINE)
-    else:
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
+    wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
     wr.field("number", "N", 18, 0)
     if isinstance(mg, SpatialReference):
         grid_lines = mg.get_grid_lines()
@@ -71,116 +55,38 @@ def write_gridlines_shapefile(filename, mg):
     for i, line in enumerate(grid_lines):
         wr.poly([line])
         wr.record(i)
-    if sfv < 2:
-        wr.save(filename)
-    else:
-        wr.close()
+
+    wr.close()
     return
 
 
-def write_grid_shapefile(filename, mg, array_dict, nan_val=None):  # -1.0e9):
+def write_grid_shapefile(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
+                         epsg=None, prj=None):
     """
-    Write a grid shapefile array_dict attributes.
+    Method to write a shapefile of gridded input data
 
     Parameters
     ----------
-    filename : string
-        name of the shapefile to write
-    mg : model grid instance
-        object for model grid
+    filename : str
+        shapefile file name path
+    mg : flopy.discretization.Grid object
+        flopy model grid
     array_dict : dict
-       Dictionary of name and 2D array pairs.  Additional 2D arrays to add as
-       attributes to the grid shapefile.
+        dictionary of model input arrays
+    nan_val : float
+        value to fill nans
+    epsg : str, int
+        epsg code
+    prj : str
+        projection file name path
 
     Returns
     -------
     None
 
     """
-
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        wr = shapefile.Writer(shapeType=shapefile.POLYGON)
-    else:
-        wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
-    if isinstance(mg, SpatialReference):
-        warnings.warn(
-            "SpatialReference has been deprecated. Use StructuredGrid"
-            " instead.",
-            category=DeprecationWarning)
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-    elif mg.grid_type == 'structured':
-        wr.field("row", "N", 10, 0)
-        wr.field("column", "N", 10, 0)
-    elif mg.grid_type == 'vertex':
-        wr.field("node", "N", 10, 0)
-    else:
-        raise Exception('Grid type {} not supported.'.format(mg.grid_type))
-
-    arrays = []
-    names = list(array_dict.keys())
-    names.sort()
-    # for name,array in array_dict.items():
-    for name in names:
-        array = array_dict[name]
-        if array.ndim == 3:
-            assert array.shape[0] == 1
-            array = array[0, :, :]
-        assert array.shape == (mg.nrow, mg.ncol)
-        if array.dtype in [np.float, np.float32, np.float64]:
-            array[np.where(np.isnan(array))] = nan_val
-        else:
-            j = 2
-        # if array.dtype in [np.int, np.int32, np.int64]:
-        #    wr.field(name, "N", 18, 0)
-        # else:
-        #    wr.field(name, "F", 18, 12)
-        wr.field(name, *get_pyshp_field_info(array.dtype.name))
-        arrays.append(array)
-
-    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
-        for i in range(mg.nrow):
-            for j in range(mg.ncol):
-                try:
-                    pts = mg.get_cell_vertices(i, j)
-                except AttributeError:
-                    # support old style SR object
-                    pts = mg.get_vertices(i, j)
-
-                wr.poly([pts])
-                rec = [i + 1, j + 1]
-                for array in arrays:
-                    rec.append(array[i, j])
-                wr.record(*rec)
-    elif mg.grid_type == 'vertex':
-        for i in range(mg.ncpl):
-            pts = mg.get_cell_vertices(i)
-
-            wr.poly([pts])
-            rec = [i + 1]
-            for array in arrays:
-                rec.append(array[i])
-            wr.record(*rec)
-
-    # close or write the file
-    if sfv < 2:
-        wr.save(filename)
-    else:
-        wr.close()
-    print('wrote {}'.format(filename))
-    return
-
-
-def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
-                          epsg=None, prj=None):
-    shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        w = shapefile.Writer(shapeType=shapefile.POLYGON)
-    else:
-        w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
+    w = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
     w.autoBalance = 1
 
     if isinstance(mg, SpatialReference):
@@ -199,55 +105,55 @@ def write_grid_shapefile2(filename, mg, array_dict, nan_val=np.nan,  # -1.0e9,
     else:
         raise Exception('Grid type {} not supported.'.format(mg.grid_type))
 
-    # set up the attribute fields
+    # set up the attribute fields and arrays of attributes
     if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
         names = ['node', 'row', 'column'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
         dtypes = [('node', np.dtype('int')),
                   ('row', np.dtype('int')),
                   ('column', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
-    elif mg.grid_type == 'vertex':
-        names = ['node'] + list(array_dict.keys())
-        names = enforce_10ch_limit(names)
-        dtypes = [('node', np.dtype('int'))] + \
-                 [(enforce_10ch_limit([name])[0], arr.dtype)
-                  for name, arr in array_dict.items()]
-
-    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
-                 dtypes}
-    for n in names:
-        w.field(n, *fieldinfo[n])
-
-    if isinstance(mg, SpatialReference) or mg.grid_type == 'structured':
-        # set-up array of attributes of shape ncells x nattributes
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[3:]]
         node = list(range(1, mg.ncol * mg.nrow + 1))
         col = list(range(1, mg.ncol + 1)) * mg.nrow
         row = sorted(list(range(1, mg.nrow + 1)) * mg.ncol)
         at = np.vstack(
             [node, row, col] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
-        if at.dtype in [np.float, np.float32, np.float64]:
-            at[np.isnan(at)] = nan_val
+            [array_dict[name].ravel() for name in names[3:]]).transpose()
+
+        names = enforce_10ch_limit(names)
+
     elif mg.grid_type == 'vertex':
-        # set-up array of attributes of shape ncells x nattributes
+        names = ['node'] + list(array_dict.keys())
+        dtypes = [('node', np.dtype('int'))] + \
+                 [(enforce_10ch_limit([name])[0], array_dict[name].dtype)
+                  for name in names[1:]]
         node = list(range(1, mg.ncpl + 1))
         at = np.vstack(
             [node] +
-            [arr.ravel() for arr in array_dict.values()]).transpose()
+            [array_dict[name].ravel() for name in names[1:]]).transpose()
+
+        names = enforce_10ch_limit(names)
+
+    # flag nan values and explicitly set the dtypes
     if at.dtype in [np.float, np.float32, np.float64]:
         at[np.isnan(at)] = nan_val
+    at = np.array([tuple(i) for i in at], dtype=dtypes)
+
+    # write field information
+    fieldinfo = {name: get_pyshp_field_info(dtype.name) for name, dtype in
+                 dtypes}
+    for n in names:
+        w.field(n, *fieldinfo[n])
 
     for i, r in enumerate(at):
+        # check if polygon is closed, if not close polygon for QGIS
+        if verts[i][-1] != verts[i][0]:
+            verts[i] = verts[i] + [verts[i][0]]
         w.poly([verts[i]])
         w.record(*r)
 
     # close
-    if sfv < 2:
-        w.save(filename)
-    else:
-        w.close()
+    w.close()
     print('wrote {}'.format(filename))
     # write the projection file
     write_prj(filename, mg, epsg, prj)
@@ -274,6 +180,14 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
        Additional 2D arrays to add as attributes to the shapefile.
        (default is None)
 
+    **kwargs : keyword arguments
+        modelgrid : fp.modflow.Grid object
+            if modelgrid is supplied, user supplied modelgrid is used in lieu
+            of the modelgrid attached to the modflow model object
+        epsg : int
+            epsg projection information
+        prj : str
+            user supplied prj file
 
     Returns
     -------
@@ -297,7 +211,11 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    grid = ml.modelgrid
+    if "modelgrid" in kwargs:
+        grid = kwargs.pop("modelgrid")
+    else:
+        grid = ml.modelgrid
+
     if grid.grid_type == 'USG-Unstructured':
         raise Exception('Flopy does not support exporting to shapefile from '
                         'and MODFLOW-USG unstructured grid.')
@@ -393,10 +311,10 @@ def model_attributes_to_shapefile(filename, ml, package_names=None,
                                 array_dict[name] = arr
 
     # write data arrays to a shapefile
-    write_grid_shapefile2(filename, ml.modelgrid, array_dict)
+    write_grid_shapefile(filename, grid, array_dict)
     epsg = kwargs.get('epsg', None)
     prj = kwargs.get('prj', None)
-    write_prj(filename, ml.modelgrid, epsg, prj)
+    write_prj(filename, grid, epsg, prj)
 
 
 def shape_attr_name(name, length=6, keep_layer=False):
@@ -578,13 +496,9 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
         except AttributeError:
             continue
 
-    # set up for pyshp 1 or 2
+    # set up for pyshp 2
     shapefile = import_shapefile()
-    sfv = shapefile_version(shapefile)
-    if sfv < 2:
-        w = shapefile.Writer(shapeType=geomtype)
-    else:
-        w = shapefile.Writer(shpname, shapeType=geomtype)
+    w = shapefile.Writer(shpname, shapeType=geomtype)
     w.autoBalance = 1
 
     # set up the attribute fields
@@ -608,23 +522,12 @@ def recarray2shp(recarray, geoms, shpname='recarray.shp', mg=None,
     elif geomtype == shapefile.POINT:
         # pyshp version 2.x w.point() method can only take x and y
         # code will need to be refactored in order to write POINTZ
-        # shapes with the z attribute.  The pyshp version 1.x
-        # method w.point() took a z attribute, but only wrote it if
-        # the shapeType was shapefile.POINTZ, which it is not for
-        # flopy, even if the point is 3D.
-        if sfv < 2:
-            for i, r in enumerate(ralist):
-                w.point(*geoms[i].pyshp_parts)
-                w.record(*r)
-        else:
-            for i, r in enumerate(ralist):
-                w.point(*geoms[i].pyshp_parts[:2])
-                w.record(*r)
+        # shapes with the z attribute.
+        for i, r in enumerate(ralist):
+            w.point(*geoms[i].pyshp_parts[:2])
+            w.record(*r)
 
-    if sfv < 2:
-        w.save(shpname)
-    else:
-        w.close()
+    w.close()
     write_prj(shpname, mg, epsg, prj)
     print('wrote {}'.format(shpname))
     return
@@ -860,7 +763,7 @@ class CRS(object):
             epsg code for coordinate system
         addlocalreference : boolean
             adds the projection file text associated with epsg to a local
-            database, epsgref.py, located in site-packages.
+            database, epsgref.json, located in the user's data directory.
         Returns
         -------
         prj : str
@@ -868,12 +771,7 @@ class CRS(object):
 
         """
         epsgfile = EpsgReference()
-        wktstr = None
-        try:
-            from epsgref import prj
-            wktstr = prj.get(epsg)
-        except:
-            epsgfile.make()
+        wktstr = epsgfile.get(epsg)
         if wktstr is None:
             wktstr = CRS.get_spatialreference(epsg, text=text)
         if addlocalreference and wktstr is not None:
@@ -920,7 +818,7 @@ class CRS(object):
         # epsg code not listed on spatialreference.org
         # may still work with pyproj
         elif text == 'epsg':
-            return '+init=epsg:{}'.format(epsg)
+            return 'epsg:{}'.format(epsg)
 
     @staticmethod
     def getproj4(epsg):
@@ -942,9 +840,12 @@ class CRS(object):
 
 class EpsgReference:
     """
-    Sets up a local database of projection file text referenced by epsg code.
-    The database is located in the site packages folder in epsgref.py, which
-    contains a dictionary, prj, of projection file text keyed by epsg value.
+    Sets up a local database of text representations of coordinate reference
+    systems, keyed by EPSG code.
+
+    The database is epsgref.json, located in the user's data directory. If
+    optional 'appdirs' package is available, this is in the platform-dependent
+    user directory, otherwise in the user's 'HOME/.flopy' directory.
     """
 
     def __init__(self):
@@ -962,54 +863,62 @@ class EpsgReference:
         dbname = 'epsgref.json'
         self.location = os.path.join(datadir, dbname)
 
-    def _remove_pyc(self):
-        try:  # get rid of pyc file
-            os.remove(self.location + 'c')
-        except:
-            msg = 'could not remove {}'.format(self.location + 'c')
-            print(msg)
+    def to_dict(self):
+        """
+        returns dict with EPSG code integer key, and WKT CRS text
+        """
+        data = OrderedDict()
+        if os.path.exists(self.location):
+            with open(self.location, 'r') as f:
+                loaded_data = json.load(f, object_pairs_hook=OrderedDict)
+            # convert JSON key from str to EPSG integer
+            for key, value in loaded_data.items():
+                try:
+                    data[int(key)] = value
+                except ValueError:
+                    data[key] = value
+        return data
 
-    def make(self):
-        if not os.path.exists(self.location):
-            newfile = open(self.location, 'w')
-            newfile.write('prj = {}\n')
-            newfile.close()
+    def _write(self, data):
+        with open(self.location, 'w') as f:
+            json.dump(data, f, indent=0)
+            f.write('\n')
 
     def reset(self, verbose=True):
         if os.path.exists(self.location):
+            if verbose:
+                print('Resetting {}'.format(self.location))
             os.remove(self.location)
-        self._remove_pyc()
-        self.make()
-        if verbose:
-            print('Resetting {}'.format(self.location))
+        elif verbose:
+            print('{} does not exist, no reset required'.format(self.location))
 
     def add(self, epsg, prj):
-        """add an epsg code to epsgref.py"""
-        data = {}
+        """
+        add an epsg code to epsgref.json
+        """
+        data = self.to_dict()
         data[epsg] = prj
-        with open(self.location, 'w') as epsgfile:
-            json.dump(data, epsgfile, indent=0)
-            epsgfile.write('\n')
+        self._write(data)
+
+    def get(self, epsg):
+        """
+        returns prj from a epsg code, otherwise None if not found
+        """
+        data = self.to_dict()
+        return data.get(epsg)
 
     def remove(self, epsg):
         """
-        removes an epsg entry from epsgref.py
+        removes an epsg entry from epsgref.json
         """
-        from epsgref import prj
-        self.reset(verbose=False)
-        if epsg in prj.keys():
-            del prj[epsg]
-        for epsg, prj in prj.items():
-            self.add(epsg, prj)
+        data = self.to_dict()
+        if epsg in data:
+            del data[epsg]
+            self._write(data)
 
     @staticmethod
     def show():
-        try:
-            from importlib import reload
-        except ImportError:
-            from imp import reload
-        import epsgref
-        from epsgref import prj
-        reload(epsgref)
+        ep = EpsgReference()
+        prj = ep.to_dict()
         for k, v in prj.items():
             print('{}:\n{}\n'.format(k, v))

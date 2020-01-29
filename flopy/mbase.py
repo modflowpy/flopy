@@ -12,12 +12,10 @@ import os
 import shutil
 import threading
 import warnings
+import queue as Queue
 
-if sys.version_info > (3, 0):
-    import queue as Queue
-else:
-    import Queue
 from datetime import datetime
+from shutil import which
 from subprocess import Popen, PIPE, STDOUT
 import copy
 import numpy as np
@@ -26,10 +24,6 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-if sys.version_info >= (3, 3):
-    from shutil import which
-else:
-    from distutils.spawn import find_executable as which
 
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
@@ -65,6 +59,14 @@ class ModelInterface(object):
     def __init__(self):
         self._mg_resync = True
         self._modelgrid = None
+
+    def update_modelgrid(self):
+        if self._modelgrid is not None:
+            self._modelgrid = Grid(proj4=self._modelgrid.proj4,
+                                   xoff=self._modelgrid.xoffset,
+                                   yoff=self._modelgrid.yoffset,
+                                   angrot=self._modelgrid.angrot)
+        self._mg_resync = True
 
     @property
     @abc.abstractmethod
@@ -156,6 +158,105 @@ class ModelInterface(object):
             'must define verbose in child '
             'class to use this base class')
 
+    @abc.abstractmethod
+    def check(self, f=None, verbose=True, level=1):
+        raise NotImplementedError(
+            'must define check in child '
+            'class to use this base class')
+
+    def get_package_list(self, ftype=None):
+        """
+        Get a list of all the package names.
+
+        Parameters
+        ----------
+        ftype : str
+            Type of package, 'RIV', 'LPF', etc.
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
+        val = []
+        for pp in (self.packagelist):
+            if ftype is None:
+                val.append(pp.name[0].upper())
+            elif pp.package_type.lower() == ftype:
+                val.append(pp.name[0].upper())
+        return val
+
+    def _check(self, chk, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+        summarize : bool
+            Boolean flag used to determine if summary of results is written
+            to the screen
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+
+        # check instance for model-level check
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1,
+                                             checktype=chk.__class__)
+
+        # model level checks
+        # solver check
+        if self.version in chk.solver_packages.keys():
+            solvers = set(chk.solver_packages[self.version]).intersection(
+                set(self.get_package_list()))
+            if not solvers:
+                chk._add_to_summary('Error', desc='\r    No solver package',
+                                    package='model')
+            elif len(list(solvers)) > 1:
+                for s in solvers:
+                    chk._add_to_summary('Error',
+                                        desc='\r    Multiple solver packages',
+                                        package=s)
+            else:
+                chk.passed.append('Compatible solver package')
+
+        # add package check results to model level check summary
+        for r in results.values():
+            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
+                chk.summary_array = np.append(chk.summary_array,
+                                              r.summary_array).view(
+                    np.recarray)
+                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
+                               for psd in r.passed]
+        chk.summarize()
+        return chk
+
 
 class BaseModel(ModelInterface):
     """
@@ -195,6 +296,7 @@ class BaseModel(ModelInterface):
         self.heading = ''
         self.exe_name = exe_name
         self._verbose = verbose
+        self.external_path = None
         self.external_extension = 'ref'
         if model_ws is None: model_ws = os.getcwd()
         if not os.path.exists(model_ws):
@@ -220,13 +322,13 @@ class BaseModel(ModelInterface):
             warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
                           DeprecationWarning)
 
-        rotation = kwargs.pop("rotation", 0.0)
-        proj4_str = kwargs.pop("proj4_str", None)
+        self._rotation = kwargs.pop("rotation", 0.0)
+        self._proj4_str = kwargs.pop("proj4_str", None)
         self._start_datetime = kwargs.pop("start_datetime", "1-1-1970")
 
         # build model discretization objects
-        self._modelgrid = Grid(proj4=proj4_str, xoff=xll, yoff=yll,
-                               angrot=rotation)
+        self._modelgrid = Grid(proj4=self._proj4_str, xoff=xll, yoff=yll,
+                               angrot=self._rotation)
         self._modeltime = None
 
         # Model file information
@@ -396,9 +498,24 @@ class BaseModel(ModelInterface):
         return next_unit
 
     def export(self, f, **kwargs):
-        # for pak in self.packagelist:
-        #    f = pak.export(f)
-        # return f
+        """
+        Method to export a model to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from .export import utils
         return utils.model_export(f, self, **kwargs)
 
@@ -485,6 +602,9 @@ class BaseModel(ModelInterface):
         using self.dis.delr, self.dis.delc, and self.dis.lenuni before being
         returned
         """
+        if item == 'output_packages' or not hasattr(self, 'output_packages'):
+            raise AttributeError(item)
+
         if item == 'sr':
             if self.dis is not None:
                 return self.dis.sr
@@ -500,8 +620,16 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-
-        return self.get_package(item)
+        #return self.get_package(item)
+        # to avoid infinite recursion
+        if item == "_packagelist" or item == "packagelist":
+            raise AttributeError(item)
+        pckg = self.get_package(item)
+        if pckg is not None or item in self.mfnam_packages:
+            return pckg
+        if item == 'modelgrid':
+            return
+        raise AttributeError(item)
 
     def get_ext_dict_attr(self, ext_unit_dict=None, unit=None, filetype=None,
                           pop_key=True):
@@ -974,30 +1102,6 @@ class BaseModel(ModelInterface):
                 return pp
         return None
 
-    def get_package_list(self, ftype=None):
-        """
-        Get a list of all the package names.
-
-        Parameters
-        ----------
-        ftype : str
-            Type of package, 'RIV', 'LPF', etc.
-
-        Returns
-        -------
-        val : list of strings
-            Can be used to see what packages are in the model, and can then
-            be used with get_package to pull out individual packages.
-
-        """
-        val = []
-        for pp in (self.packagelist):
-            if ftype is None:
-                val.append(pp.name[0].upper())
-            elif pp.package_type.lower() == ftype:
-                val.append(pp.name[0].upper())
-        return val
-
     def set_version(self, version):
         self.version = version.lower()
 
@@ -1128,12 +1232,10 @@ class BaseModel(ModelInterface):
             p.fn_path = os.path.join(self.model_ws, p.file_name[0])
 
     def __setattr__(self, key, value):
-
         if key == "free_format_input":
             # if self.bas6 is not None:
             #    self.bas6.ifrefm = value
             super(BaseModel, self).__setattr__(key, value)
-
         elif key == "name":
             self._set_name(value)
         elif key == "model_ws":
@@ -1163,7 +1265,6 @@ class BaseModel(ModelInterface):
             else:
                 raise Exception("cannot set start_datetime -"
                                 "ModflowDis not found")
-
         else:
             super(BaseModel, self).__setattr__(key, value)
 
@@ -1341,29 +1442,6 @@ class BaseModel(ModelInterface):
 
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
-        results = {}
-
-        for p in self.packagelist:
-            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
-                results[p.name[0]] = p.check(f=None, verbose=False,
-                                             level=level - 1)
-
-        # model level checks
-        # solver check
-        if self.version in chk.solver_packages.keys():
-            solvers = set(chk.solver_packages[self.version]).intersection(
-                set(self.get_package_list()))
-            if not solvers:
-                chk._add_to_summary('Error', desc='\r    No solver package',
-                                    package='model')
-            elif len(list(solvers)) > 1:
-                for s in solvers:
-                    chk._add_to_summary('Error',
-                                        desc='\r    Multiple solver packages',
-                                        package=s)
-            else:
-                chk.passed.append('Compatible solver package')
-
         # check for unit number conflicts
         package_units = {}
         duplicate_units = {}
@@ -1382,16 +1460,7 @@ class BaseModel(ModelInterface):
         else:
             chk.passed.append('Unit number conflicts')
 
-        # add package check results to model level check summary
-        for k, r in results.items():
-            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
-                chk.summary_array = np.append(chk.summary_array,
-                                              r.summary_array).view(
-                    np.recarray)
-                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
-                               for psd in r.passed]
-        chk.summarize()
-        return chk
+        return self._check(chk, level)
 
     def plot(self, SelPackList=None, **kwargs):
         """
@@ -1571,15 +1640,8 @@ def run_model(exe_name, namefile, model_ws='./',
         for t in cargs:
             argv.append(t)
 
-    if sys.version_info[0:2] == (2, 7) and sys.platform != 'win32':
-        # Python 2.7 workaround for non-Windows
-        close_fds = True
-    else:
-        close_fds = False  # default
-
     # run the model with Popen
-    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws,
-                 close_fds=close_fds)
+    proc = Popen(argv, stdout=PIPE, stderr=STDOUT, cwd=model_ws)
 
     if not use_async:
         while True:

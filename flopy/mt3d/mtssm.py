@@ -195,6 +195,7 @@ class Mt3dSsm(Package):
         ncol = model.ncol
         nlay = model.nlay
         ncomp = model.ncomp
+        nper = model.nper
 
         # Create a list of SsmPackage (class defined above)
         self.__SsmPackages = []
@@ -225,11 +226,18 @@ class Mt3dSsm(Package):
         if mxss is None:
             # Need to calculate max number of sources and sinks
             self.mxss = 0
+            mxss_kper = 0
+
+            # Do not assume first key (stress period 0) has data, it may
+            # not.  Cycle through stress periods looking for one w/ data
             if self.stress_period_data is not None:
-                self.mxss += np.sum(
-                    self.stress_period_data.data[0].itype == -1)
-                self.mxss += np.sum(
-                    self.stress_period_data.data[0].itype == -15)
+                for i in range(nper):
+                    if i in self.stress_period_data.data:
+                        mxss_kper += np.sum(
+                            self.stress_period_data.data[i].itype == -1)
+                        mxss_kper += np.sum(
+                            self.stress_period_data.data[i].itype == -15)
+                    self.mxss = max(self.mxss, mxss_kper)
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()
@@ -488,7 +496,8 @@ class Mt3dSsm(Package):
             sys.stdout.write('loading ssm package file...\n')
 
         # Open file, if necessary
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -581,30 +590,22 @@ class Mt3dSsm(Package):
 
         crch = None
         if 't' in frch.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='crch', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "crch" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         cevt = None
         if 't' in fevt.lower():
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              0.0, name='cevt', locat=0,
-                              array_free_format=False)
+            t2d = 0.
             cevt = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "cevt" + str(icomp)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      0.0, name=name, locat=0,
-                                      array_free_format=False)
+                    t2d = 0.
                     kwargs[name] = {0: t2d}
 
         stress_period_data = {}
@@ -673,12 +674,13 @@ class Mt3dSsm(Package):
                 print('   loading NSS...')
             line = f.readline()
             nss = int(line[0:10])
+            if model.verbose:
+                print('   NSS {}'.format(nss))
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
-                print(
-                    '   loading KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)...')
-            current = 0
+                print('   loading KSS, ISS, JSS, CSS, ITYPE, '
+                      '(CSSMS(n),n=1,NCOMP)...')
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):
@@ -699,7 +701,13 @@ class Mt3dSsm(Package):
                 current['i'] -= 1
                 current['j'] -= 1
                 current = current.view(np.recarray)
-            stress_period_data[iper] = current
+                stress_period_data[iper] = current
+            elif nss == 0:
+                stress_period_data[iper] = nss
+
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

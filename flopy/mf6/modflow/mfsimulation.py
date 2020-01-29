@@ -1,15 +1,14 @@
-"""
-mfsimulation module.  contains the MFSimulation class
+"""mfsimulation module. contains the MFSimulation class."""
 
-
-"""
-import errno, sys, inspect
+import errno
+import sys
+import inspect
 import collections
 import os.path
 from ...mbase import run_model
 from ..mfbase import PackageContainer, MFFileMgmt, ExtFileAction, \
-                     PackageContainerType, MFDataException, FlopyException, \
-                     VerbosityLevel
+    PackageContainerType, MFDataException, FlopyException, \
+    VerbosityLevel
 from ..mfpackage import MFPackage
 from ..data.mfstructure import DatumType
 from ..data import mfstructure
@@ -20,9 +19,9 @@ from ..data.mfdatautil import MFComment
 
 
 class SimulationDict(collections.OrderedDict):
-    """
-    Class containing custom dictionary for MODFLOW simulations.  Behaves as an
-    OrderedDict with some additional features described below.
+    """Class containing custom dictionary for MODFLOW simulations.
+
+    Behaves as an OrderedDict with some additional features described below.
 
     Parameters
     ----------
@@ -31,29 +30,49 @@ class SimulationDict(collections.OrderedDict):
 
     Methods
     -------
-    output_keys : (print_keys: boolean) : list
-        returns a list of output data keys the dictionary supports for output
+    find_in_path : (key_path : string, key_leaf : string) : MFData, int
+        attempt to find key_leaf in a partial key path key_path
+    output_keys : (print_keys : boolean) : list
+        return a list of output data keys the dictionary supports for output
         data, print_keys allows those keys to be printed to output.
     input_keys : ()
-        prints all input data keys
+        print all input data keys
     observation_keys : ()
-        prints observation keys
+        print observation keys
     keys : ()
         print all keys, input and output
     plot : (key : string, **kwargs)
-        plots data with key 'key' using **kwargs for plot options
+        plot data with key 'key' using **kwargs for plot options
     shapefile : (key : string, **kwargs)
         create shapefile from data with key 'key' and with additional fields
         in **kwargs
+    rename_all_packages : (name : string)
+        rename all packages in the simulation and associated models
+
     """
-    def __init__(self, path, *args):
-        self._path = path
+
+    def __init__(self, path=None):
+        """Define the __init__ method.
+
+        Parameters:
+            path (string): File-like path used as dictionary key
+
+        """
         collections.OrderedDict.__init__(self)
+        self._path = path
 
     def __getitem__(self, key):
-        # check if the key refers to a binary output file, or an observation
-        # output file, if so override the dictionary request and call output
-        #  requester classes
+        """Define the __getitem__ magic method.
+
+        Parameters:
+            key (string): Part or all of a dictionary key
+
+        Returns:
+            MFData or numpy.ndarray
+
+        """
+        if key == '_path' or not hasattr(self, '_path'):
+            raise AttributeError(key)
 
         # FIX: Transport - Include transport output files
         if key[1] in ('CBC', 'HDS', 'DDN', 'UCN'):
@@ -64,13 +83,33 @@ class SimulationDict(collections.OrderedDict):
             val = mfobservation.MFObservation(self, self._path, key)
             return val.data
 
-        val = collections.OrderedDict.__getitem__(self, key)
-        return val
+        if key in self:
+            val = collections.OrderedDict.__getitem__(self, key)
+            return val
+        return AttributeError(key)
 
     def __setitem__(self, key, val):
+        """Define the __setitem__ magic method.
+
+        Parameters:
+            key (string): Dictionary key
+            val (MFData): MFData to store in dictionary
+
+        """
         collections.OrderedDict.__setitem__(self, key, val)
 
     def find_in_path(self, key_path, key_leaf):
+        """Attempt to find key_leaf in a partial key path key_path.
+
+        Parameters:
+            key_path (string): partial path to the data
+            key_leaf (string): name of the data
+
+        Returns:
+            MFData: Data found at the path.
+            int: Data index
+
+        """
         key_path_size = len(key_path)
         for key, item in self.items():
             if key[:key_path_size] == key_path:
@@ -90,21 +129,48 @@ class SimulationDict(collections.OrderedDict):
         return None, None
 
     def output_keys(self, print_keys=True):
+        """Return a list of output data keys.
+
+        Parameters:
+            print_keys (bool): print keys to console
+
+        Returns:
+            list: keys for requesting binary output
+
+        """
         # get keys to request binary output
         x = binaryfile_utils.MFOutputRequester.getkeys(self, self._path,
                                                        print_keys=print_keys)
         return [key for key in x.dataDict]
 
     def input_keys(self):
+        """Return a list of input data keys.
+
+        Returns:
+            list: input data keys
+
+        """
         # get keys to request input ie. package data
         for key in self:
             print(key)
 
     def observation_keys(self):
+        """Return a list of observation keys.
+
+        Returns:
+            list: observation keys
+
+        """
         # get keys to request observation file output
         mfobservation.MFObservationRequester.getkeys(self, self._path)
 
     def keys(self):
+        """Return a list of all keys.
+
+        Returns:
+            list: all keys
+
+        """
         # overrides the built in keys to print all keys, input and output
         self.input_keys()
         try:
@@ -119,8 +185,7 @@ class SimulationDict(collections.OrderedDict):
 
 
 class MFSimulationData(object):
-    """
-    Class containing MODFLOW simulation data and file formatting data.
+    """Class containing MODFLOW simulation data and file formatting data.
 
     Parameters
     ----------
@@ -156,8 +221,16 @@ class MFSimulationData(object):
         dictionary containing discretization information for each model
     mfdata : SimulationDict
         custom dictionary containing all model data for the simulation
+
     """
+
     def __init__(self, path):
+        """Define the __init__ method.
+
+        Parameters:
+            path (string): File-like path to simulation
+
+        """
         # --- formatting variables ---
         self.indent_string = '  '
         self.constant_formatting = ['constant', '']
@@ -170,6 +243,7 @@ class MFSimulationData(object):
         self.fast_write = True
         self.comments_on = False
         self.auto_set_sizes = True
+        self.verify_data = True
         self.debug = False
         self.verbose = True
         self.verbosity_level = VerbosityLevel.normal
@@ -191,24 +265,44 @@ class MFSimulationData(object):
         self.referenced_files = collections.OrderedDict()
 
     def set_sci_note_upper_thres(self, value):
+        """Set threshold number.
+
+        Sets threshold number where any number larger than threshold
+        is represented in scientific notation.
+
+        Parameters:
+            value (float): threshold value
+
+        """
         self._sci_note_upper_thres = value
         self._update_str_format()
 
     def set_sci_note_lower_thres(self, value):
+        """Set threshold number.
+
+        Sets threshold number where any number smaller than threshold
+        is represented in scientific notation.
+
+        Parameters:
+            value (float): threshold value
+
+        """
         self._sci_note_lower_thres = value
         self._update_str_format()
 
     def _update_str_format(self):
+        """Update floating point formatting strings."""
         self.reg_format_str = '{:.%dE}' % \
-                               self.float_precision
+            self.float_precision
         self.sci_format_str = '{:%d.%df' \
                               '}' % (self.float_characters,
                                      self.float_precision)
 
 
 class MFSimulation(PackageContainer):
-    """
-    MODFLOW Simulation Class.  Entry point into any MODFLOW simulation.
+    """Entry point into any MODFLOW simulation.
+
+    MFSimulation is used to load, build, and/or save a MODFLOW6 simulation.
 
     Parameters
     ----------
@@ -223,32 +317,44 @@ class MFSimulation(PackageContainer):
     verbosity_level : int
         verbosity level of standard output
             0 : no standard output
-            1 : standard error/warning messages with some informational messages
+            1 : standard error/warning messages with some informational
+                messages
             2 : verbose mode with full error/warning/informational messages.
                 this is ideal for debugging
+    continue_ : bool
+        sets the continue option in the simulation name file. the continue
+        option is a keyword flag to indicate that the simulation should
+        continue even if one or more solutions do not converge.
+    nocheck : bool
+         sets the nocheck option in the simulation name file. the nocheck
+         option is a keyword flag to indicate that the model input check
+         routines should not be called prior to each time step. checks
+         are performed by default.
+    memory_print_option : str
+         sets memory_print_option in the simulation name file.
+         memory_print_option is a flag that controls printing of detailed
+         memory manager usage to the end of the simulation list file.  NONE
+         means do not print detailed information. SUMMARY means print only
+         the total memory for each simulation component. ALL means print
+         information for each variable stored in the memory manager. NONE is
+         default if memory_print_option is not specified.
 
     Attributes
     ----------
     sim_name : string
         name of the simulation
-    models : OrderedDict
+    _models : OrderedDict
         all models in the simulation
-    exchanges : list
+    _exchange_files : list
         all exchange packages in the simulation
-    imsfiles : list
+    _ims_files : list
         all ims packages in the simulation
-    mfdata : OrderedDict
-        all variables defined in the simulation.  the key for a variable is
-        defined as a tuple.  for "simulation level" packages the tuple
-        starts with the package type, followed by the block name, followed
-        by the variable name ("TDIS", "DIMENSIONS", "nper").  for "model level"
-        packages the tuple starts with the model name, followed by the package
-        name, followed by the block name, followed by the variable name (
-        "MyModelName", "DIS6", "OPTIONS", "length_units").
     name_file : MFPackage
         simulation name file
-    tdis_file
+    _tdis_file
         simulation tdis file
+    sim_package_list
+        list of all "simulation level" packages
 
     Methods
     -------
@@ -281,21 +387,57 @@ class MFSimulation(PackageContainer):
     is_valid : () : boolean
         checks the validity of the solution and all of its models and packages
 
-    See Also
-    --------
-
-    Notes
-    -----
-
     Examples
     --------
-
-    >>> s = flopy6.mfsimulation.load('my simulation', 'simulation.nam')
+    >>> s = MFSimulation.load('my simulation', 'simulation.nam')
 
     """
-    def __init__(self, sim_name='sim', version='mf6',
-                 exe_name='mf6.exe', sim_ws='.',
-                 verbosity_level=1):
+
+    def __init__(self, sim_name='sim', version='mf6', exe_name='mf6.exe',
+                 sim_ws='.', verbosity_level=1, continue_=None,
+                 nocheck=None, memory_print_option=None):
+        """Initialization.
+
+        __init__ is used to initialize a simulation object
+
+        Parameters:
+            sim_name : string
+                name of the simulation.
+            version : string
+                MODFLOW version
+            exe_name : string
+                relative path to MODFLOW executable from the simulation
+                working folder
+            sim_ws : string
+                path to simulation working folder
+            verbosity_level : int
+                verbosity level of standard output
+                    0 : no standard output
+                    1 : standard error/warning messages with some
+                        informational messages
+                    2 : verbose mode with full error/warning/informational
+                        messages. this is ideal for debugging
+            continue_ : bool
+                sets the continue option in the simulation name file. the
+                continue option is a keyword flag to indicate that the
+                simulation should continue even if one or more solutions do
+                not converge.
+            nocheck : bool
+                 sets the nocheck option in the simulation name file. the
+                 nocheckoption is a keyword flag to indicate that the model
+                 input check routines should not be called prior to each time
+                 step. checks are performed by default.
+            memory_print_option : str
+                 sets memory_print_option in the simulation name file.
+                 memory_print_option is a flag that controls printing of
+                 detailed memory manager usage to the end of the simulation
+                 list file.  NONE means do not print detailed information.
+                 SUMMARY means print only the total memory for each
+                 simulation component. ALL means print information for each
+                 variable stored in the memory manager. NONE is default if
+                 memory_print_option is not specified.
+
+        """
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level)
@@ -320,6 +462,7 @@ class MFSimulation(PackageContainer):
         self._mover_files = {}
         self._other_files = collections.OrderedDict()
         self.structure = fpdata.sim_struct
+        self.model_type = None
 
         self._exg_file_num = {}
         self._gnc_file_num = 0
@@ -328,7 +471,9 @@ class MFSimulation(PackageContainer):
         self.simulation_data.mfpath.set_last_accessed_path()
 
         # build simulation name file
-        self.name_file = mfnam.ModflowNam(self, filename='mfsim.nam')
+        self.name_file = mfnam.ModflowNam(
+            self, filename='mfsim.nam', continue_=continue_, nocheck=nocheck,
+            memory_print_option=memory_print_option)
 
         # try to build directory structure
         sim_path = self.simulation_data.mfpath.get_sim_path()
@@ -347,8 +492,9 @@ class MFSimulation(PackageContainer):
         self.valid = False
 
     def __getattr__(self, item):
-        """
-        __getattr__ - used to allow for getting models and packages as if
+        """Override __getattr__ to allow retrieving models.
+
+        __getattr__ is used to allow for getting models and packages as if
         they are attributes
 
         Parameters
@@ -364,6 +510,8 @@ class MFSimulation(PackageContainer):
             :class:flopy6.mfpackage
 
         """
+        if item == 'valid' or not hasattr(self, 'valid'):
+            raise AttributeError(item)
 
         models = []
         if item in self.structure.model_types:
@@ -375,14 +523,34 @@ class MFSimulation(PackageContainer):
         if len(models) > 0:
             return models
         elif item in self._models:
-            return self.get_model(item)
+            model = self.get_model(item)
+            if model is not None:
+                return model
+            raise AttributeError(item)
         else:
-            return self.get_package(item)
+            package = self.get_package(item)
+            if package is not None:
+                return package
+            raise AttributeError(item)
 
     def __repr__(self):
+        """Override __repr__ to print custom string.
+
+        Returns:
+            repr string : str
+                string describing object
+
+        """
         return self._get_data_str(True)
 
     def __str__(self):
+        """Override __str__ to print custom string.
+
+        Returns:
+            str string : str
+                string describing object
+
+        """
         return self._get_data_str(False)
 
     def _get_data_str(self, formal):
@@ -422,16 +590,19 @@ class MFSimulation(PackageContainer):
 
     @property
     def model_names(self):
-        """
-        Returns a list of model names associated with this simulation
+        """Return a list of model names associated with this simulation.
+
+        Returns:
+            list: list of model names
+
         """
         return self._models.keys()
 
     @classmethod
     def load(cls, sim_name='modflowsim', version='mf6', exe_name='mf6.exe',
-             sim_ws='.', strict=True, verbosity_level=1):
-        """
-        Load an existing model.
+             sim_ws='.', strict=True, verbosity_level=1, load_only=None,
+             verify_data=False):
+        """Load an existing model.
 
         Parameters
         ----------
@@ -453,20 +624,35 @@ class MFSimulation(PackageContainer):
                     messages
                 2 : verbose mode with full error/warning/informational
                     messages.  this is ideal for debugging
+        load_only : list
+            list of package abbreviations or package names corresponding to
+            packages that flopy will load. default is None, which loads all
+            packages. the discretization packages will load regardless of this
+            setting. subpackages, like time series and observations, will also
+            load regardless of this setting.
+            example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
+        verify_data : bool
+            verify data when it is loaded. this can slow down loading
+
         Returns
         -------
         sim : MFSimulation object
 
         Examples
         --------
-        >>> s = flopy6.mfsimulation.load('my simulation')
+        >>> s = flopy.mf6.mfsimulation.load('my simulation')
+
         """
         # initialize
         instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level)
         verbosity_level = instance.simulation_data.verbosity_level
+        instance.simulation_data.verify_data = verify_data
 
         if verbosity_level.value >= VerbosityLevel.normal.value:
             print('loading simulation...')
+
+        # build case consistent load_only dictionary for quick lookups
+        load_only = instance._load_only_dict(load_only)
 
         # load simulation name file
         if verbosity_level.value >= VerbosityLevel.normal.value:
@@ -508,7 +694,7 @@ class MFSimulation(PackageContainer):
             instance._models[item[2]] = model_obj.load(
                 instance,
                 instance.structure.model_struct_objs[item[0].lower()], item[2],
-                name_file, version, exe_name, strict, path)
+                name_file, version, exe_name, strict, path, load_only)
 
         # load exchange packages and dependent packages
         try:
@@ -525,18 +711,26 @@ class MFSimulation(PackageContainer):
             try:
                 exch_data = exchange_recarray.get_data()
             except MFDataException as mfde:
-                message = 'Error occurred while loading exchange names from the ' \
-                          'simulation name file.'
+                message = 'Error occurred while loading exchange names from ' \
+                          'the simulation name file.'
                 raise MFDataException(mfdata_except=mfde,
                                       model=instance.name,
                                       package='nam',
                                       message=message)
             for exgfile in exch_data:
+                if load_only is not None and not \
+                        instance._in_pkg_list(load_only, exgfile[0],
+                                              exgfile[2]):
+                    if instance.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('    skipping package {}..'
+                              '.'.format(exgfile[0].lower()))
+                    continue
                 # get exchange type by removing numbers from exgtype
                 exchange_type = ''.join([char for char in exgfile[0] if
                                          not char.isdigit()]).upper()
                 # get exchange number for this type
-                if not exchange_type in instance._exg_file_num:
+                if exchange_type not in instance._exg_file_num:
                     exchange_file_num = 0
                     instance._exg_file_num[exchange_type] = 1
                 else:
@@ -592,6 +786,15 @@ class MFSimulation(PackageContainer):
                                   message=message)
         for solution_group in solution_group_dict.values():
             for solution_info in solution_group:
+                if load_only is not None and \
+                        not instance._in_pkg_list(load_only,
+                                                  solution_info[0],
+                                                  solution_info[2]):
+                    if instance.simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.normal.value:
+                        print('    skipping package {}..'
+                              '.'.format(solution_info[0].lower()))
+                    continue
                 ims_file = mfims.ModflowIms(instance, filename=solution_info[1],
                                             pname=solution_info[2])
                 if verbosity_level.value >= VerbosityLevel.normal.value:
@@ -600,12 +803,78 @@ class MFSimulation(PackageContainer):
                 ims_file.load(strict)
 
         instance.simulation_data.mfpath.set_last_accessed_path()
+        if verify_data:
+            instance.check()
         return instance
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+        # check instance for simulation-level check
+        chk_list = []
+
+        # check models
+        for model in self._models.values():
+            print('Checking model "{}"...'.format(model.name))
+            chk_list.append(model.check(f, verbose, level))
+
+        print('Checking for missing simulation packages...')
+        if self._tdis_file is None:
+            if chk_list:
+                chk_list[0]._add_to_summary(
+                    'Error', desc='\r    No tdis package', package='model')
+            print('Error: no tdis package')
+        if len(self._ims_files) == 0:
+            if chk_list:
+                chk_list[0]._add_to_summary(
+                    'Error', desc='\r    No solver package', package='model')
+            print('Error: no ims package')
+        return chk_list
+
+    @property
+    def sim_package_list(self):
+        package_list = []
+        if self._tdis_file is not None:
+            package_list.append(self._tdis_file)
+        for sim_package in self._ims_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._exchange_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._mover_files.values():
+            package_list.append(sim_package)
+        for sim_package in self._other_files.values():
+            package_list.append(sim_package)
+        return package_list
 
     def load_package(self, ftype, fname, pname, strict, ref_path,
                      dict_package_name=None, parent_package=None):
-        """
-        loads a package from a file
+        """Load a package from a file.
 
         Parameters
         ----------
@@ -624,8 +893,6 @@ class MFSimulation(PackageContainer):
         parent_package : MFPackage
             parent package
 
-        Examples
-        --------
         """
         if ftype == 'gnc':
             if fname not in self._ghost_node_files:
@@ -636,11 +903,9 @@ class MFSimulation(PackageContainer):
                     package_abbr = 'GWF'
                 # build package name and package
                 gnc_name = '{}-GNC_{}'.format(package_abbr, self._gnc_file_num)
-                ghost_node_file = mfgwfgnc.ModflowGwfgnc(self, filename=fname,
-                                                         pname=gnc_name,
-                                                         parent_file=
-                                                         parent_package,
-                                                         loading_package=True)
+                ghost_node_file = mfgwfgnc.ModflowGwfgnc(
+                    self, filename=fname, pname=gnc_name,
+                    parent_file=parent_package, loading_package=True)
                 ghost_node_file.load(strict)
                 self._ghost_node_files[fname] = ghost_node_file
                 self._gnc_file_num += 1
@@ -687,18 +952,14 @@ class MFSimulation(PackageContainer):
             return package
 
     def register_ims_package(self, ims_file, model_list):
-        """
-        registers an ims package with the simulation
+        """Register an ims package with the simulation.
 
         Parameters
-        ----------
-        ims_file : MFPackage
-            ims package to register
-        model_list : list of strings
-            list of models using the ims package to be registered
+            ims_file : MFPackage
+                ims package to register
+            model_list : list of strings
+                list of models using the ims package to be registered
 
-        Examples
-        --------
         """
         if isinstance(model_list, str):
             model_list = [model_list]
@@ -773,7 +1034,8 @@ class MFSimulation(PackageContainer):
                 if self.name_file.mxiter.get_data(solution_group_num) is None:
                     self.name_file.mxiter.add_transient_key(solution_group_num)
 
-                # associate any models in the model list to this simulation file
+                # associate any models in the model list to this
+                # simulation file
                 version_string = mfstructure.MFStructure().get_version_string()
                 ims_pkg = 'ims{}'.format(version_string)
                 new_record = [ims_pkg, ims_file.filename]
@@ -790,23 +1052,52 @@ class MFSimulation(PackageContainer):
                                           package='nam',
                                           message=message)
 
+    @staticmethod
+    def _rename_package_group(group_dict, name):
+        package_type_count = {}
+        for package in group_dict.values():
+            if package.package_type not in package_type_count:
+                package.filename = '{}.{}'.format(name, package.package_type)
+                package_type_count[package.package_type] = 1
+            else:
+                package_type_count[package.package_type] += 1
+                package.filename = '{}_{}.{}'.format(
+                    name, package_type_count[package.package.package_type],
+                    package.package_type)
+
+    def rename_all_packages(self, name):
+        """Rename all packages with name as prefix.
+
+        Parameters:
+            name (str): prefix of name
+
+        """
+        if self._tdis_file is not None:
+            self._tdis_file.filename = '{}.{}'.format(
+                name, self._tdis_file.package_type)
+
+        self._rename_package_group(self._exchange_files, name)
+        self._rename_package_group(self._ims_files, name)
+        self._rename_package_group(self._ghost_node_files, name)
+        self._rename_package_group(self._mover_files, name)
+        self._rename_package_group(self._other_files, name)
+        for model in self._models.values():
+            model.rename_all_packages(name)
+
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths,
                          silent=False):
-        """
-        writes the simulation to files
+        """Write the simulation to files.
 
         Parameters
-        ----------
-        ext_file_action : ExtFileAction
-            defines what to do with external files when the simulation path
-            has changed.  defaults to copy_relative_paths which copies only
-            files with relative paths, leaving files defined by absolute
-            paths fixed.
-        silent : bool
-            writes out the simulation in silent mode (verbosity_level = 0)
-        Examples
-        --------
+            ext_file_action : ExtFileAction
+                defines what to do with external files when the simulation path
+                has changed.  defaults to copy_relative_paths which copies only
+                files with relative paths, leaving files defined by absolute
+                paths fixed.
+            silent : bool
+                writes out the simulation in silent mode (verbosity_level = 0)
+
         """
         saved_verb_lvl = self.simulation_data.verbosity_level
         if silent:
@@ -852,8 +1143,8 @@ class MFSimulation(PackageContainer):
                             VerbosityLevel.normal.value:
                         print('  writing gnc package {}...'.format(
                             self._ghost_node_files[gnc_file]._get_pname()))
-                    self._ghost_node_files[gnc_file].write(ext_file_action=
-                                                           ext_file_action)
+                    self._ghost_node_files[gnc_file].write(
+                        ext_file_action=ext_file_action)
                 else:
                     if self.simulation_data.verbosity_level.value >= \
                             VerbosityLevel.normal.value:
@@ -877,8 +1168,8 @@ class MFSimulation(PackageContainer):
                             VerbosityLevel.normal.value:
                         print('  writing mvr package {}...'.format(
                             self._mover_files[mvr_file]._get_pname()))
-                    self._mover_files[mvr_file].write(ext_file_action=
-                                                      ext_file_action)
+                    self._mover_files[mvr_file].write(
+                        ext_file_action=ext_file_action)
                 else:
                     if self.simulation_data.verbosity_level.value >= \
                             VerbosityLevel.normal.value:
@@ -922,13 +1213,45 @@ class MFSimulation(PackageContainer):
             self.simulation_data.verbosity_level = saved_verb_lvl
 
     def set_sim_path(self, path):
+        """Return a list of output data keys.
+
+        Parameters:
+            print_keys (bool): print keys to console
+
+        Returns:
+            list: keys for requesting binary output
+
+        """
         self.simulation_data.mfpath.set_sim_path(path)
 
     def run_simulation(self, silent=None, pause=False, report=False,
                        normal_msg='normal termination',
                        use_async=False, cargs=None):
-        """
-        Run the simulation.
+        """Run the simulation.
+
+        Parameters:
+            silent (bool):
+                run in silent mode
+            pause (bool):
+                pause at end of run
+            report (bool):
+                save stdout lines to a list (buff)
+            normal_msg (str or list):
+                Normal termination message used to determine if the run
+                terminated normally. More than one message can be provided
+                using a list. (default is 'normal termination')
+            use_async : (boolean)
+                asynchronously read model stdout and report with timestamps.
+                good for models that take long time to run.  not good for
+                models that run really fast
+            cargs : (str or list of strings)
+                additional command line arguments to pass to the executable.
+                default is None
+        Returns:
+            (success, buff)
+                success : boolean
+                buff : list of lines of stdout
+
         """
         if silent is None:
             if self.simulation_data.verbosity_level.value >= \
@@ -942,9 +1265,7 @@ class MFSimulation(PackageContainer):
                          normal_msg=normal_msg, use_async=use_async, cargs=cargs)
 
     def delete_output_files(self):
-        """
-        Delete simulation output files.
-        """
+        """Delete simulation output files."""
         output_req = binaryfile_utils.MFOutputRequester
         output_file_keys = output_req.getkeys(self.simulation_data.mfdata,
                                               self.simulation_data.mfpath,
@@ -954,6 +1275,12 @@ class MFSimulation(PackageContainer):
                 os.remove(path)
 
     def remove_package(self, package_name):
+        """Remove a package.
+
+        Parameters:
+            package_name (str): name of package to be removed
+
+        """
         if isinstance(package_name, MFPackage):
             packages = [package_name]
         else:
@@ -972,51 +1299,53 @@ class MFSimulation(PackageContainer):
                 del self._ghost_node_files[package.filename]
             if package.filename in self._mover_files:
                 del self._mover_files[package.filename]
-            if package.filename in self._other_files :
+            if package.filename in self._other_files:
                 del self._other_files[package.filename]
 
             self._remove_package(package)
 
     @property
     def model_dict(self):
+        """Return a dictionary of models.
+
+        Returns:
+            model dict : dict
+                dictionary of models
+
+        """
         return self._models.copy()
 
     def get_model(self, model_name=None):
+        """Load an existing model.
+
+        Parameters:
+            model_name : string
+                name of model to get
+
+        Returns:
+            model : MFModel
+
         """
-        Load an existing model.
+        if len(self._models) == 0:
+            return None
 
-        Parameters
-        ----------
-        model_name : string
-            name of model to get
-
-        Returns
-        -------
-        model : MFModel
-
-        Examples
-        --------
-        """
         if model_name is None:
             for model in self._models.values():
                 return model
-        return self._models[model_name]
+        if model_name in self._models:
+            return self._models[model_name]
+        return None
 
     def get_exchange_file(self, filename):
-        """
-        get a specified exchange file
+        """Get a specified exchange file.
 
-        Parameters
-        ----------
-        filename : string
-            name of exchange file to get
+        Parameters:
+            filename : string
+                name of exchange file to get
 
-        Returns
-        -------
-        exchange package : MFPackage
+        Returns:
+            exchange package : MFPackage
 
-        Examples
-        --------
         """
         if filename in self._exchange_files:
             return self._exchange_files[filename]
@@ -1026,20 +1355,15 @@ class MFSimulation(PackageContainer):
             raise FlopyException(excpt_str)
 
     def get_mvr_file(self, filename):
-        """
-        get a specified mover file
+        """Get a specified mover file.
 
-        Parameters
-        ----------
-        filename : string
-            name of mover file to get
+        Parameters:
+            filename : string
+                name of mover file to get
 
-        Returns
-        -------
-        mover package : MFPackage
+        Returns:
+            mover package : MFPackage
 
-        Examples
-        --------
         """
         if filename in self._mover_files:
             return self._mover_files[filename]
@@ -1049,20 +1373,15 @@ class MFSimulation(PackageContainer):
             raise FlopyException(excpt_str)
 
     def get_gnc_file(self, filename):
-        """
-        get a specified gnc file
+        """Get a specified gnc file.
 
-        Parameters
-        ----------
-        filename : string
-            name of gnc file to get
+        Parameters:
+            filename : string
+                name of gnc file to get
 
-        Returns
-        -------
-        gnc package : MFPackage
+        Returns:
+            gnc package : MFPackage
 
-        Examples
-        --------
         """
         if filename in self._ghost_node_files:
             return self._ghost_node_files[filename]
@@ -1072,16 +1391,12 @@ class MFSimulation(PackageContainer):
             raise FlopyException(excpt_str)
 
     def register_exchange_file(self, package):
-        """
-        register an exchange package file with the simulation
+        """Register an exchange package file with the simulation.
 
-        Parameters
-        ----------
-        package : MFPackage
-            exchange package object to register
+        Parameters:
+            package : MFPackage
+                exchange package object to register
 
-        Examples
-        --------
         """
         if package.filename not in self._exchange_files:
             exgtype = package.exgtype
@@ -1151,26 +1466,21 @@ class MFSimulation(PackageContainer):
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
-        """
-        register a package file with the simulation
+        """Register a package file with the simulation.
 
-        Parameters
-        ----------
-        package : MFPackage
-            package to register
-        add_to_package_list : bool
-            add package to lookup list
-        set_package_name : bool
-            produce a package name for this package
-        set_package_filename : bool
-            produce a filename for this package
+        Parameters:
+            package : MFPackage
+                package to register
+            add_to_package_list : bool
+                add package to lookup list
+            set_package_name : bool
+                produce a package name for this package
+            set_package_filename : bool
+                produce a filename for this package
 
-        Returns
-        -------
-        (path : tuple, package structure : MFPackageStructure)
+        Returns:
+            (path : tuple, package structure : MFPackageStructure)
 
-        Examples
-        --------
         """
         package.container_type = [PackageContainerType.simulation]
         path = self._get_package_path(package)
@@ -1291,24 +1601,18 @@ class MFSimulation(PackageContainer):
             raise FlopyException(excpt_str)
 
     def register_model(self, model, model_type, model_name, model_namefile):
+        """Add a model to the simulation.
+
+        Parameters:
+            model : MFModel
+                model object to add to simulation
+            sln_group : string
+                solution group of model
+
+        Returns:
+            model_structure_object : MFModelStructure
+
         """
-        add a model to the simulation.
-
-        Parameters
-        ----------
-        model : MFModel
-            model object to add to simulation
-        sln_group : string
-            solution group of model
-
-        Returns
-        -------
-        model_structure_object : MFModelStructure
-
-        Examples
-        --------
-        """
-
         # get model structure from model type
         if model_type not in self.structure.model_struct_objs:
             message = 'Invalid model type: "{}".'.format(model_type)
@@ -1337,23 +1641,28 @@ class MFSimulation(PackageContainer):
         return self.structure.model_struct_objs[model_type]
 
     def get_ims_package(self, key):
+        """Add a model to the simulation.
+
+        Parameters:
+            key : str
+                ims package key
+
+        Returns:
+            ims_package : ModflowIms
+
+        """
         if key in self._ims_files:
             return self._ims_files[key]
         return None
 
     def remove_model(self, model_name):
+        """Remove a model from the simulation.
+
+        Parameters:
+            model_name : string
+                model name to remove from simulation
+
         """
-        remove a model from the simulation.
-
-        Parameters
-        ----------
-        model_name : string
-            model name to remove from simulation
-
-        Examples
-        --------
-        """
-
         # Remove model
         del self._models[model_name]
 
@@ -1361,18 +1670,13 @@ class MFSimulation(PackageContainer):
         # Update simulation name file
 
     def is_valid(self):
+        """Check all packages and models in the simulation to verify validity.
+
+        Returns:
+            valid : boolean
+                simulation validity
+
         """
-        check all packages and models in the simulation to verify validity
-
-        Returns
-        ----------
-        valid : boolean
-            simulation validity
-
-        Examples
-        --------
-        """
-
         # name file valid
         if not self.name_file.is_valid():
             return False
@@ -1493,18 +1797,17 @@ class MFSimulation(PackageContainer):
                         return True
         return False
 
-
     def plot(self, model_list=None, SelPackList=None, **kwargs):
-        """
+        """Plot simulation or models.
+
         Method to plot a whole simulation or a series of models
-        that are part of a simualtion
+        that are part of a simulation.
 
         Parameters:
             model_list: (list) list of model names to plot, if none
                 all models will be plotted
             SelPackList: (list) list of package names to plot, if none
                 all packages will be plotted
-
             kwargs:
                 filename_base : str
                     Base file name that will be used to automatically generate file
@@ -1522,9 +1825,9 @@ class MFSimulation(PackageContainer):
                 key : str
                     MfList dictionary key. (default is None)
 
-
         Returns:
              axes: (list) matplotlib.pyplot.axes objects
+
         """
         from flopy.plot.plotutil import PlotUtilities
 

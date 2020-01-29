@@ -9,8 +9,6 @@ from __future__ import print_function
 
 import abc
 import os
-import sys
-import platform
 import webbrowser as wb
 
 import numpy as np
@@ -19,6 +17,7 @@ from numpy.lib.recfunctions import stack_arrays
 from .modflow.mfparbc import ModflowParBc as mfparbc
 from .utils import Util2d, Util3d, Transient2d, MfList, check
 from .utils import OptionBlock
+from .utils.flopy_io import ulstrd
 
 
 class PackageInterface(object):
@@ -26,35 +25,35 @@ class PackageInterface(object):
     @abc.abstractmethod
     def name(self):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define name in child '
             'class to use this base class')
 
     @name.setter
     @abc.abstractmethod
     def name(self, name):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define name in child '
             'class to use this base class')
 
     @property
     @abc.abstractmethod
     def parent(self):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define parent in child '
             'class to use this base class')
 
     @parent.setter
     @abc.abstractmethod
     def parent(self, name):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define parent in child '
             'class to use this base class')
 
     @property
     @abc.abstractmethod
     def package_type(self):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define package_type in child '
             'class to use this base class')
 
     @property
@@ -62,13 +61,13 @@ class PackageInterface(object):
     def data_list(self):
         # [data_object, data_object, ...]
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define data_list in child '
             'class to use this base class')
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            'must define get_model_dim_arrays in child '
+            'must define export in child '
             'class to use this base class')
 
     @property
@@ -77,6 +76,270 @@ class PackageInterface(object):
         raise NotImplementedError(
             'must define plotable in child '
             'class to use this base class')
+
+    @property
+    def has_stress_period_data(self):
+        return self.__dict__.get('stress_period_data', None) is not None
+
+    @staticmethod
+    def _check_thresholds(chk, array, active, thresholds, name):
+        """Checks array against min and max threshold values."""
+        mn, mx = thresholds
+        chk.values(array, active & (array < mn),
+                   '{} values below checker threshold of {}'
+                   .format(name, mn), 'Warning')
+        chk.values(array, active & (array > mx),
+                   '{} values above checker threshold of {}'
+                   .format(name, mx), 'Warning')
+
+    @staticmethod
+    def _confined_layer_check(chk):
+        return
+
+    def _other_xpf_checks(self, chk, active):
+        # check for negative hani
+        chk.values(self.__dict__['hani'].array,
+                   active & (self.__dict__['hani'].array < 0),
+                   'negative horizontal anisotropy values', 'Error')
+
+        # check vkcb if there are any quasi-3D layers
+        if self.parent.dis.laycbd.sum() > 0:
+            # pad non-quasi-3D layers in vkcb array with ones so
+            # they won't fail checker
+            vkcb = self.vkcb.array.copy()
+            for l in range(self.vkcb.shape[0]):
+                if self.parent.dis.laycbd[l] == 0:
+                    # assign 1 instead of zero as default value that
+                    # won't violate checker
+                    # (allows for same structure as other checks)
+                    vkcb[l, :, :] = 1
+            chk.values(vkcb, active & (vkcb <= 0),
+                       'zero or negative quasi-3D confining bed Kv values',
+                       'Error')
+            self._check_thresholds(chk, vkcb, active,
+                                   chk.property_threshold_values['vkcb'],
+                                   'quasi-3D confining bed Kv')
+
+    @staticmethod
+    def _get_nan_exclusion_list():
+        return []
+
+    def _get_check(self, f, verbose, level, checktype):
+        if checktype is not None:
+            return checktype(self, f=f, verbose=verbose, level=level)
+        else:
+            return check(self, f=f, verbose=verbose, level=level)
+
+    def _check_oc(self, f=None, verbose=True, level=1, checktype=None):
+        spd_inds_valid = True
+        chk = self._get_check(f, verbose, level, checktype)
+        spd = getattr(self, 'stress_period_data')
+        nan_exclusion_list = self._get_nan_exclusion_list()
+        for per in spd.data.keys():
+            if isinstance(spd.data[per], np.recarray):
+                spdata = self.stress_period_data.data[per]
+                inds = chk._get_cell_inds(spdata)
+
+                # General BC checks
+                # check for valid cell indices
+                spd_inds_valid = \
+                    chk._stress_period_data_valid_indices(spdata)
+
+                # first check for and list nan values
+                chk._stress_period_data_nans(spdata, nan_exclusion_list)
+
+                if spd_inds_valid:
+                    # next check for BCs in inactive cells
+                    chk._stress_period_data_inactivecells(spdata)
+
+                    # More specific BC checks
+                    # check elevations in the ghb, drain, and riv packages
+                    if self.name[0] in check.bc_stage_names.keys():
+                        # check that bc elevations are above model
+                        # cell bottoms -- also checks for nan values
+                        elev_name = chk.bc_stage_names[self.name[0]]
+                        mg = self.parent.modelgrid
+                        botms = mg.botm[inds]
+                        test = spdata[elev_name] < botms
+                        en = 'BC elevation below cell bottom'
+                        chk.stress_period_data_values(spdata,
+                                                      test,
+                                                      col=elev_name,
+                                                      error_name=en,
+                                                      error_type='Error')
+
+        chk.summarize()
+        return chk
+
+    def _get_kparams(self):
+        # build model specific parameter lists
+        kparams_all = {'hk': 'horizontal hydraulic conductivity',
+                       'vka': 'vertical hydraulic conductivity',
+                       'k': 'horizontal hydraulic conductivity',
+                       'k22': 'hydraulic conductivity second axis',
+                       'k33': 'vertical hydraulic conductivity'}
+        kparams = {}
+        vka_param = None
+        for kp, name in kparams_all.items():
+            if kp in self.__dict__:
+                kparams[kp] = name
+        if 'hk' in self.__dict__:
+            hk = self.hk.array.copy()
+        else:
+            hk = self.k.array.copy()
+        if 'vka' in self.__dict__ and self.layvka.sum() > 0:
+            vka = self.vka.array
+            vka_param = kparams.pop('vka')
+        elif 'k33' in self.__dict__:
+            vka = self.k33.array
+            vka_param = kparams.pop('k33')
+        else:
+            vka = None
+        if vka is not None:
+            vka = vka.copy()
+        return kparams, hk, vka, vka_param
+
+    def _check_flowp(self, f=None, verbose=True, level=1, checktype=None):
+        chk = self._get_check(f, verbose, level, checktype)
+        active = chk.get_active()
+
+        # build model specific parameter lists
+        kparams, hk, vka, vka_param = self._get_kparams()
+
+        # check for zero or negative values of hydraulic conductivity,
+        # anisotropy, and quasi-3D confining beds
+        for kp, name in kparams.items():
+            if self.__dict__[kp].array is not None:
+                chk.values(self.__dict__[kp].array,
+                           active & (self.__dict__[kp].array <= 0),
+                           'zero or negative {} values'.format(name),
+                           'Error')
+
+        if 'hani' in self.__dict__:
+            self._other_xpf_checks(chk, active)
+
+        # check for unusually high or low values of hydraulic conductivity
+        # convert vertical anisotropy to Kv for checking
+        if vka is not None:
+            if 'layvka' in self.__dict__:
+                for l in range(vka.shape[0]):
+                    vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
+            self._check_thresholds(chk, vka, active,
+                                   chk.property_threshold_values['vka'],
+                                   vka_param)
+
+        for kp, name in kparams.items():
+            if self.__dict__[kp].array is not None:
+                self._check_thresholds(chk, self.__dict__[kp].array,
+                                       active,
+                                       chk.property_threshold_values[kp],
+                                       name)
+        if self.name[0] in ['UPW', 'LPF']:
+            storage_coeff = 'STORAGECOEFFICIENT' in self.options or \
+                            ('storagecoefficient' in self.__dict__ and
+                             self.storagecoefficient.get_data())
+            self._check_storage(chk, storage_coeff)
+        chk.summarize()
+        return chk
+
+    def check(self, f=None, verbose=True, level=1, checktype=None):
+        """
+        Check package data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a sting is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+        checktype : check
+            Checker type to be used. By default class check is used from
+            check.py.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.dis.check()
+
+        """
+        chk = None
+
+        if self.has_stress_period_data and self.name[0] != 'OC' and \
+                self.package_type.upper() != 'OC':
+            chk = self._check_oc(f, verbose, level, checktype)
+        # check property values in upw and lpf packages
+        elif self.name[0] in ['UPW', 'LPF'] or \
+                self.package_type.upper() in ['NPF']:
+            chk = self._check_flowp(f, verbose, level, checktype)
+        elif self.package_type.upper() in ['STO']:
+            chk = self._get_check(f, verbose, level, checktype)
+            storage_coeff = self.storagecoefficient.get_data()
+            if storage_coeff is None:
+                storage_coeff = False
+            self._check_storage(chk, storage_coeff)
+        else:
+            txt = 'check method not implemented for ' + \
+                  '{} Package.'.format(self.name[0])
+            if f is not None:
+                if isinstance(f, str):
+                    pth = os.path.join(self.parent.model_ws, f)
+                    f = open(pth, 'w')
+                    f.write(txt)
+                    f.close()
+            if verbose:
+                print(txt)
+        return chk
+
+    def _check_storage(self, chk, storage_coeff):
+        # only check storage if model is transient
+        if not np.all(self.parent.modeltime.steady_state):
+            active = chk.get_active()
+            # do the same for storage if the model is transient
+            sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
+            # convert to specific for checking
+            if storage_coeff:
+                desc = '\r    STORAGECOEFFICIENT option is ' + \
+                       'activated, storage values are read ' + \
+                       'storage coefficients'
+                chk._add_to_summary(type='Warning', desc=desc)
+
+            chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
+                       'zero or negative specific storage values', 'Error')
+            self._check_thresholds(chk, sarrays['ss'], active,
+                                   chk.property_threshold_values['ss'],
+                                   'specific storage')
+
+            # only check specific yield for convertible layers
+            if 'laytyp' in self.__dict__:
+                inds = np.array(
+                    [True if l > 0 or l < 0 and 'THICKSTRT' in self.options
+                     else False for l in self.laytyp])
+                sarrays['sy'] = sarrays['sy'][inds, :, :]
+                active = active[inds, :, :]
+            else:
+                iconvert = self.iconvert.array
+                for ishape in np.ndindex(active.shape):
+                    if active[ishape]:
+                        active[ishape] = iconvert[ishape] > 0 or \
+                                         iconvert[ishape] < 0
+            chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
+                       'zero or negative specific yield values', 'Error')
+            self._check_thresholds(chk, sarrays['sy'], active,
+                                   chk.property_threshold_values['sy'],
+                                   'specific yield')
 
 
 class Package(PackageInterface):
@@ -174,8 +437,6 @@ class Package(PackageInterface):
     def __setattr__(self, key, value):
         var_dict = vars(self)
         if key in list(var_dict.keys()):
-            if hasattr(self, 'parent'):
-                self.parent._mg_resync = True
             old_value = var_dict[key]
             if isinstance(old_value, Util2d):
                 value = Util2d(self.parent, old_value.shape,
@@ -264,6 +525,24 @@ class Package(PackageInterface):
         return dl
 
     def export(self, f, **kwargs):
+        """
+        Method to export a package to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from flopy import export
         return export.utils.package_export(f, self, **kwargs)
 
@@ -291,205 +570,30 @@ class Package(PackageInterface):
             newdtypes.append((str(field_name), field_type))
         return np.dtype(newdtypes)
 
-    def check(self, f=None, verbose=True, level=1):
+    @staticmethod
+    def get_sfac_columns():
         """
-        Check package data for common errors.
-
-        Parameters
-        ----------
-        f : str or file handle
-            String defining file name or file handle for summary file
-            of check method output. If a sting is passed a file handle
-            is created. If f is None, check method does not write
-            results to a summary file. (default is None)
-        verbose : bool
-            Boolean flag used to determine if check method results are
-            written to the screen
-        level : int
-            Check method analysis level. If level=0, summary checks are
-            performed. If level=1, full checks are performed.
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-
-        >>> import flopy
-        >>> m = flopy.modflow.Modflow.load('model.nam')
-        >>> m.dis.check()
+        This should be overriden for individual packages that support an
+        sfac multiplier for individual list columns
 
         """
-        chk = None
+        return []
 
-        if self.__dict__.get('stress_period_data', None) is not None \
-                and self.name[0] != 'OC':
-            spd_inds_valid = True
-            chk = check(self, f=f, verbose=verbose, level=level)
-            spd = getattr(self, 'stress_period_data')
-            for per in spd.data.keys():
-                if isinstance(spd.data[per], np.recarray):
-                    spdata = self.stress_period_data.data[per]
-                    inds = (spdata.k, spdata.i, spdata.j) \
-                        if self.parent.structured \
-                        else (spdata.node)
-
-                    # General BC checks
-                    # check for valid cell indices
-                    spd_inds_valid = \
-                        chk._stress_period_data_valid_indices(spdata)
-
-                    # first check for and list nan values
-                    chk._stress_period_data_nans(spdata)
-
-                    if spd_inds_valid:
-                        # next check for BCs in inactive cells
-                        chk._stress_period_data_inactivecells(spdata)
-
-                        # More specific BC checks
-                        # check elevations in the ghb, drain, and riv packages
-                        if self.name[0] in check.bc_stage_names.keys():
-                            # check that bc elevations are above model
-                            # cell bottoms -- also checks for nan values
-                            elev_name = chk.bc_stage_names[self.name[0]]
-                            botms = self.parent.dis.botm.array[inds]
-                            test = spdata[elev_name] < botms
-                            en = 'BC elevation below cell bottom'
-                            chk.stress_period_data_values(spdata,
-                                                          test,
-                                                          col=elev_name,
-                                                          error_name=en,
-                                                          error_type='Error')
-
-            chk.summarize()
-
-        # check property values in upw and lpf packages
-        elif self.name[0] in ['UPW', 'LPF']:
-
-            chk = check(self, f=f, verbose=verbose, level=level)
-            active = chk.get_active()
-
-            # check for confined layers above convertible layers
-            confined = False
-            thickstrt = False
-            for option in self.options:
-                if option.lower() == 'thickstrt':
-                    thickstrt = True
-            for i, l in enumerate(self.laytyp.array.tolist()):
-                if l == 0 or l < 0 and thickstrt:
-                    confined = True
-                    continue
-                if confined and l > 0:
-                    desc = '\r    LAYTYP: unconfined (convertible) ' + \
-                           'layer below confined layer'
-                    chk._add_to_summary(type='Warning', desc=desc)
-
-            # check for zero or negative values of hydraulic conductivity,
-            # anisotropy, and quasi-3D confining beds
-            kparams = {'hk': 'horizontal hydraulic conductivity',
-                       'vka': 'vertical hydraulic conductivity'}
-            for kp, name in kparams.items():
-                chk.values(self.__dict__[kp].array,
-                           active & (self.__dict__[kp].array <= 0),
-                           'zero or negative {} values'.format(name), 'Error')
-
-            # check for negative hani
-            chk.values(self.__dict__['hani'].array,
-                       active & (self.__dict__['hani'].array < 0),
-                       'negative horizontal anisotropy values', 'Error')
-
-            def check_thresholds(array, active, thresholds, name):
-                """Checks array against min and max threshold values."""
-                mn, mx = thresholds
-                chk.values(array, active & (array < mn),
-                           '{} values below checker threshold of {}'
-                           .format(name, mn), 'Warning')
-                chk.values(array, active & (array > mx),
-                           '{} values above checker threshold of {}'
-                           .format(name, mx), 'Warning')
-
-            # check for unusually high or low values of hydraulic conductivity
-            # convert vertical anisotropy to Kv for checking
-            if self.layvka.sum() > 0:
-                vka = self.vka.array.copy()
-                for l in range(vka.shape[0]):
-                    vka[l] *= self.hk.array[l] if self.layvka.array[
-                                                      l] != 0 else 1
-                check_thresholds(vka, active,
-                                 chk.property_threshold_values['vka'],
-                                 kparams.pop('vka'))
-
-            for kp, name in kparams.items():
-                check_thresholds(self.__dict__[kp].array, active,
-                                 chk.property_threshold_values[kp],
-                                 name)
-
-            # check vkcb if there are any quasi-3D layers
-            if self.parent.dis.laycbd.sum() > 0:
-                # pad non-quasi-3D layers in vkcb array with ones so
-                # they won't fail checker
-                vkcb = self.vkcb.array.copy()
-                for l in range(self.vkcb.shape[0]):
-                    if self.parent.dis.laycbd[l] == 0:
-                        # assign 1 instead of zero as default value that
-                        # won't violate checker
-                        # (allows for same structure as other checks)
-                        vkcb[l, :, :] = 1
-                chk.values(vkcb, active & (vkcb <= 0),
-                           'zero or negative quasi-3D confining bed Kv values',
-                           'Error')
-                check_thresholds(vkcb, active,
-                                 chk.property_threshold_values['vkcb'],
-                                 'quasi-3D confining bed Kv')
-
-            # only check storage if model is transient
-            if not np.all(self.parent.dis.steady.array):
-
-                # do the same for storage if the model is transient
-                sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
-                # convert to specific for checking
-                if 'STORAGECOEFFICIENT' in self.options:
-                    desc = '\r    STORAGECOEFFICIENT option is ' + \
-                           'activated, storage values are read ' + \
-                           'storage coefficients'
-                    chk._add_to_summary(type='Warning', desc=desc)
-                    tshape = (self.parent.nlay, self.parent.nrow,
-                              self.parent.ncol)
-                    sarrays['ss'].shape != tshape
-                    sarrays['sy'].shape != tshape
-
-                chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
-                           'zero or negative specific storage values', 'Error')
-                check_thresholds(sarrays['ss'], active,
-                                 chk.property_threshold_values['ss'],
-                                 'specific storage')
-
-                # only check specific yield for convertible layers
-                inds = np.array(
-                    [True if l > 0 or l < 0 and 'THICKSTRT' in self.options
-                     else False for l in self.laytyp])
-                sarrays['sy'] = sarrays['sy'][inds, :, :]
-                active = active[inds, :, :]
-                chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
-                           'zero or negative specific yield values', 'Error')
-                check_thresholds(sarrays['sy'], active,
-                                 chk.property_threshold_values['sy'],
-                                 'specific yield')
-            chk.summarize()
-
-        else:
-            txt = 'check method not implemented for ' + \
-                  '{} Package.'.format(self.name[0])
-            if f is not None:
-                if isinstance(f, str):
-                    pth = os.path.join(self.parent.model_ws, f)
-                    f = open(pth, 'w')
-                    f.write(txt)
-                    f.close()
-            if verbose:
-                print(txt)
-        return chk
+    def _confined_layer_check(self, chk):
+        # check for confined layers above convertible layers
+        confined = False
+        thickstrt = False
+        for option in self.options:
+            if option.lower() == 'thickstrt':
+                thickstrt = True
+        for i, l in enumerate(self.laytyp.array.tolist()):
+            if l == 0 or l < 0 and thickstrt:
+                confined = True
+                continue
+            if confined and l > 0:
+                desc = '\r    LAYTYP: unconfined (convertible) ' + \
+                       'layer below confined layer'
+                chk._add_to_summary(type='Warning', desc=desc)
 
     def level1_arraylist(self, idx, v, name, txt):
         ndim = v.ndim
@@ -651,14 +755,14 @@ class Package(PackageInterface):
             check = True
 
         # open the file if not already open
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
-            if platform.system().lower() == 'windows' and \
-                    sys.version_info[0] < 3:
-                import io
-                f = io.open(filename, 'r')
-            else:
-                f = open(filename, 'r')
+            f = open(filename, 'r')
+        elif hasattr(f, 'name'):
+            filename = f.name
+        else:
+            filename = '?'
 
         # set string from pak_type
         pak_type_str = str(pak_type).lower()
@@ -769,12 +873,15 @@ class Package(PackageInterface):
         elif 'flopy.modflow.mfchd.modflowchd'.lower() in pak_type_str:
             partype = ['shead', 'ehead']
 
+        # get the list columns that should be scaled with sfac
+        sfac_columns = pak_type.get_sfac_columns()
+
         # read parameter data
         if nppak > 0:
             dt = pak_type.get_empty(1, aux_names=aux_names,
                                     structured=model.structured).dtype
-            pak_parms = mfparbc.load(f, nppak, dt, model.verbose)
-            # pak_parms = mfparbc.load(f, nppak, len(dt.names))
+            pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict,
+                                     model.verbose)
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -782,6 +889,7 @@ class Package(PackageInterface):
         # read data for every stress period
         bnd_output = None
         stress_period_data = {}
+        current = None
         for iper in range(nper):
             if model.verbose:
                 msg = '   loading ' + str(pak_type) + \
@@ -806,69 +914,8 @@ class Package(PackageInterface):
             elif itmp > 0:
                 current = pak_type.get_empty(itmp, aux_names=aux_names,
                                              structured=model.structured)
-                for ibnd in range(itmp):
-                    line = f.readline()
-                    if "open/close" in line.lower():
-                        binary = False
-                        if '(binary)' in line.lower():
-                            binary = True
-                        # need to strip out existing path seps and
-                        # replace current-system path seps
-                        raw = line.strip().split()
-                        fname = raw[1]
-                        if '/' in fname:
-                            raw = fname.split('/')
-                        elif '\\' in fname:
-                            raw = fname.split('\\')
-                        else:
-                            raw = [fname]
-                        fname = os.path.join(*raw)
-                        oc_filename = os.path.join(model.model_ws, fname)
-                        msg = 'Package.load() error: open/close filename ' + \
-                              oc_filename + ' not found'
-                        assert os.path.exists(oc_filename), msg
-                        try:
-                            if binary:
-                                dtype2 = []
-                                for name in current.dtype.names:
-                                    dtype2.append((name, np.float32))
-                                dtype2 = np.dtype(dtype2)
-                                d = np.fromfile(oc_filename,
-                                                dtype=dtype2,
-                                                count=itmp)
-                                current = np.array(d, dtype=current.dtype)
-                            else:
-                                cd = current.dtype
-                                current = np.loadtxt(oc_filename).transpose()
-                                if current.ndim == 1:
-                                    current = np.atleast_2d(
-                                        current).transpose()
-                                current = np.core.records.fromarrays(current,
-                                                                     dtype=cd)
-                            current = current.view(np.recarray)
-                        except Exception as e:
-                            msg = 'Package.load() error loading ' + \
-                                  'open/close file ' + oc_filename + \
-                                  ': ' + str(e)
-                            raise Exception(msg)
-                        msg = 'Package.load() error: open/close ' + \
-                              'recarray from file ' + oc_filename + \
-                              ' shape (' + str(current.shape) + \
-                              ') does not match itmp: {:d}'.format(itmp)
-                        assert current.shape[0] == itmp, msg
-                        break
-                    try:
-                        t = line.strip().split()
-                        current[ibnd] = tuple(t[:len(current.dtype.names)])
-                    except:
-                        t = []
-                        for ivar in range(len(current.dtype.names)):
-                            istart = ivar * 10
-                            istop = istart + 10
-                            t.append(line[istart:istop])
-                        current[ibnd] = tuple(t[:len(current.dtype.names)])
-
-                # convert indices to zero-based
+                current = ulstrd(f, itmp, current, model, sfac_columns,
+                                 ext_unit_dict)
                 if model.structured:
                     current['k'] -= 1
                     current['i'] -= 1
@@ -877,7 +924,10 @@ class Package(PackageInterface):
                     current['node'] -= 1
                 bnd_output = np.recarray.copy(current)
             else:
-                bnd_output = np.recarray.copy(current)
+                if current is None:
+                    bnd_output = None
+                else:
+                    bnd_output = np.recarray.copy(current)
 
             for iparm in range(itmpp):
                 line = f.readline()
@@ -914,6 +964,7 @@ class Package(PackageInterface):
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
+                    t = tuple(t)
                     par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
 
                 if model.structured:
@@ -939,6 +990,9 @@ class Package(PackageInterface):
 
         dtype = pak_type.get_empty(0, aux_names=aux_names,
                                    structured=model.structured).dtype
+
+        if openfile:
+            f.close()
 
         # set package unit number
         filenames = [None, None]

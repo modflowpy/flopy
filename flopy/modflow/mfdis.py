@@ -14,7 +14,7 @@ import warnings
 import numpy as np
 
 from ..pakbase import Package
-from ..utils import Util2d, Util3d, check
+from ..utils import Util2d, Util3d
 from ..utils.reference import SpatialReference, TemporalReference
 from ..utils.flopy_io import line_parse
 
@@ -79,12 +79,16 @@ class ModflowDis(Package):
         single string is passed the package will be set to the string.
         Default is None.
     xul : float
-        x coordinate of upper left corner of the grid, default is None
+        x coordinate of upper left corner of the grid, default is None, which
+        means xul will be set to zero.
     yul : float
-        y coordinate of upper left corner of the grid, default is None
+        y coordinate of upper-left corner of the grid, default is None, which
+        means yul will be calculated as the sum of the delc array.  This
+        default, combined with the xul and rotation defaults will place the
+        lower-left corner of the grid at (0, 0).
     rotation : float
-        clockwise rotation (in degrees) of the grid about the upper left
-        corner. default is 0.0
+        counter-clockwise rotation (in degrees) of the grid about the lower-
+        left corner. default is 0.0
     proj4_str : str
         PROJ4 string that defines the projected coordinate system
         (e.g. '+proj=utm +zone=14 +datum=WGS84 +units=m +no_defs ').
@@ -207,16 +211,21 @@ class ModflowDis(Package):
         xll = None
         yll = None
         mg = model.modelgrid
+        if rotation is not None:
+            mg.set_coord_info(xoff=None, yoff=None, angrot=rotation)
         if xul is not None:
             xll = mg._xul_to_xll(xul)
         if yul is not None:
             yll = mg._yul_to_yll(yul)
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation, proj4=proj4_str)
 
+        xll = mg.xoffset
+        yll = mg.yoffset
+        rotation = mg.angrot
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
             self._sr = SpatialReference(self.delr, self.delc, self.lenuni,
-                                        xul=xul, yul=yul,
+                                        xll=xll, yll=yll,
                                         rotation=rotation or 0.0,
                                         proj4_str=proj4_str)
 
@@ -526,94 +535,6 @@ class ModflowDis(Package):
             """
         return get_layer(self, i, j, elev)
 
-    def read_from_cnf(self, cnf_file_name, n_per_line=0):
-        """
-        Read discretization information from an MT3D configuration file.
-
-        """
-
-        def getn(ii, jj):
-            if (jj == 0):
-                n = 1
-            else:
-                n = int(ii / jj)
-                if (ii % jj != 0):
-                    n = n + 1
-
-            return n
-
-        try:
-            f_cnf = open(cnf_file_name, 'r')
-
-            # nlay, nrow, ncol
-            line = f_cnf.readline()
-            s = line.split()
-            cnf_nlay = int(s[0])
-            cnf_nrow = int(s[1])
-            cnf_ncol = int(s[2])
-
-            # ncol column widths delr[c]
-            line = ''
-            for dummy in range(getn(cnf_ncol, n_per_line)):
-                line = line + f_cnf.readline()
-            cnf_delr = [float(s) for s in line.split()]
-
-            # nrow row widths delc[r]
-            line = ''
-            for dummy in range(getn(cnf_nrow, n_per_line)):
-                line = line + f_cnf.readline()
-            cnf_delc = [float(s) for s in line.split()]
-
-            # nrow * ncol htop[r, c]
-            line = ''
-            for dummy in range(getn(cnf_nrow * cnf_ncol, n_per_line)):
-                line = line + f_cnf.readline()
-            cnf_top = [float(s) for s in line.split()]
-            cnf_top = np.reshape(cnf_top, (cnf_nrow, cnf_ncol))
-
-            # nlay * nrow * ncol layer thickness dz[l, r, c]
-            line = ''
-            for dummy in range(
-                    getn(cnf_nlay * cnf_nrow * cnf_ncol, n_per_line)):
-                line = line + f_cnf.readline()
-            cnf_dz = [float(s) for s in line.split()]
-            cnf_dz = np.reshape(cnf_dz, (cnf_nlay, cnf_nrow, cnf_ncol))
-
-            # # read cinact and cdry
-            # # values are not used by dis so are not read
-            # line = f_cnf.readline()
-            # s = line.split()
-            # cinact, cdry = float(s[0]), float(s[1])
-
-            # close the MT3D configuration file
-            f_cnf.close()
-        finally:
-            self.nlay = cnf_nlay
-            self.nrow = cnf_nrow
-            self.ncol = cnf_ncol
-
-            self.delr = Util2d(model, (self.ncol,), np.float32, cnf_delr,
-                               name='delr', locat=self.unit_number[0])
-            self.delc = Util2d(model, (self.nrow,), np.float32, cnf_delc,
-                               name='delc', locat=self.unit_number[0])
-            self.top = Util2d(model, (self.nrow, self.ncol), np.float32,
-                              cnf_top, name='model_top',
-                              locat=self.unit_number[0])
-
-            cnf_botm = np.empty((self.nlay + sum(self.laycbd), self.nrow,
-                                 self.ncol))
-
-            # First model layer
-            cnf_botm[0:, :, :] = cnf_top - cnf_dz[0, :, :]
-            # All other layers
-            for l in range(1, self.nlay):
-                cnf_botm[l, :, :] = cnf_botm[l - 1, :, :] - cnf_dz[l, :, :]
-
-            self.botm = Util3d(model, (self.nlay + sum(self.laycbd),
-                                       self.nrow, self.ncol), np.float32,
-                               cnf_botm, 'botm',
-                               locat=self.unit_number[0])
-
     def gettop(self):
         """
         Get the top array.
@@ -719,7 +640,7 @@ class ModflowDis(Package):
                 f_dis.write(' {0:3s}\n'.format('TR'))
         f_dis.close()
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check dis package data for zero and negative thicknesses.
 
@@ -748,7 +669,7 @@ class ModflowDis(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.dis.check()
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
 
         # make ibound of same shape as thicknesses/botm for quasi-3D models
         active = chk.get_active(include_cbd=True)
@@ -852,9 +773,11 @@ class ModflowDis(Package):
         if model.verbose:
             sys.stdout.write('loading dis package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         header = ''
         while True:
@@ -992,6 +915,9 @@ class ModflowDis(Package):
             nstp.append(a2)
             tsmult.append(a3)
             steady.append(a4)
+
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

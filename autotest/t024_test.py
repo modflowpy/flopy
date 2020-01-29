@@ -40,6 +40,7 @@ def test_bcs_check():
     ibound[1, 1, 1] = 1  # fully isolated cell
     ibound[0:2, 4, 4] = 1  # cell connected vertically to one other cell
     bas = flopy.modflow.ModflowBas(mf, ibound=ibound)
+    mf._mg_resync = True
     chk = bas.check()
     assert chk.summary_array['desc'][0] == 'isolated cells in ibound array'
     assert chk.summary_array.i[0] == 1 and chk.summary_array.i[0] == 1 and \

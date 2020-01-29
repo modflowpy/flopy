@@ -12,7 +12,7 @@ import re
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import Util3d, check, get_neighbors
+from ..utils import Util3d, get_neighbors
 
 
 class ModflowBas(Package):
@@ -151,7 +151,7 @@ class ModflowBas(Package):
         else:
             super(ModflowBas, self).__setattr__(key, value)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check package data for common errors.
 
@@ -181,7 +181,7 @@ class ModflowBas(Package):
         >>> m.bas6.check()
 
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
 
         neighbors = get_neighbors(self.ibound.array)
         neighbors[
@@ -302,9 +302,11 @@ class ModflowBas(Package):
             ncol = None
 
         # open the file if not already open
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
         while True:
             line = f.readline()
@@ -339,7 +341,8 @@ class ModflowBas(Package):
         # dataset 4 -- strt
         strt = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'strt',
                            ext_unit_dict)
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

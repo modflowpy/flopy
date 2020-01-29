@@ -18,6 +18,18 @@ try:
 except:
     pd = False
 
+try:
+    from numpy.lib import NumpyVersion
+    numpy114 = NumpyVersion(np.__version__) >= '1.14.0'
+except ImportError:
+    numpy114 = False
+if numpy114:
+    # use numpy's floating-point formatter (Dragon4)
+    default_float_format = '{!s}'
+else:
+    # single-precision floats have ~7.2 decimal digits
+    default_float_format = '{:.8g}'
+
 
 class ModflowSfr2(Package):
     """
@@ -80,7 +92,7 @@ class ModflowSfr2(Package):
         Output Control (see Harbaugh and others, 2000, pages 52-55). If
         ipakcb = 0, leakage values will not be printed or saved. Printing to
         the listing file (ipakcb < 0) is not supported.
-    istcsb2 : integer
+    istcb2 : integer
         An integer value used as a flag for writing to a separate formatted
         file all information on inflows and outflows from each reach; on
         stream depth, width, and streambed conductance; and on head difference
@@ -749,9 +761,11 @@ class ModflowSfr2(Package):
             nper = model.nper
             nper = 1 if nper == 0 else nper  # otherwise iterations from 0, nper won't run
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # Item 0 -- header
         while True:
             line = f.readline()
@@ -846,20 +860,27 @@ class ModflowSfr2(Package):
                     icalc = dataset_6a[1]
                     # link dataset 6d, 6e by nseg of dataset_6a
                     temp_nseg = dataset_6a[0]
-                    dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-                    dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
-                                            isfropt,
-                                            reachinput, per=i)
-
+                    # datasets 6b and 6c aren't read under the conditions below
+                    # see table under description of dataset 6c,
+                    # in the MODFLOW Online Guide for a description
+                    # of this logic
+                    # https://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/sfr.htm
+                    dataset_6b, dataset_6c = (0,) * 9, (0,) * 9
+                    if not (isfropt in [2, 3] and icalc == 1 and i > 1) and \
+                            not (isfropt in [1, 2, 3] and icalc >= 2):
+                        dataset_6b = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
+                        dataset_6c = _parse_6bc(f.readline(), icalc, nstrm,
+                                                isfropt,
+                                                reachinput, per=i)
                     current[j] = dataset_6a + dataset_6b + dataset_6c
 
                     if icalc == 2:
                         # ATL: not sure exactly how isfropt logic functions for this
                         # dataset 6d description suggests that this line isn't read for isfropt > 1
                         # but description of icalc suggest that icalc=2 (8-point channel) can be used with any isfropt
-                        if i == 0 or nstrm > 0 and not reachinput:  # or isfropt <= 1:
+                        if i == 0 or nstrm > 0 and not reachinput or isfropt <= 1:
                             dataset_6d = []
                             for _ in range(2):
                                 dataset_6d.append(
@@ -889,6 +910,9 @@ class ModflowSfr2(Package):
 
             else:
                 continue
+
+        if openfile:
+            f.close()
 
         # determine specified unit number
         unitnumber = None
@@ -925,7 +949,7 @@ class ModflowSfr2(Package):
                            unit_number=unitnumber, filenames=filenames,
                            options=options)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check sfr2 package data for common errors.
 
@@ -1605,8 +1629,8 @@ class ModflowSfr2(Package):
         for idx in ['k', 'i', 'j', 'node']:
             if (idx in columns):
                 d[idx] += 1
-        d = d[columns]
-        formats = _fmt_string(d)[:-1] + '\n'
+        d = d[columns]  # data columns sorted
+        formats = _fmt_string(d) + '\n'
         for rec in d:
             f_sfr.write(formats.format(*rec))
 
@@ -1702,15 +1726,20 @@ class ModflowSfr2(Package):
             f_sfr.write(fmts[3].format(width) + ' ')
             if icalc <= 0:
                 f_sfr.write(fmts[4].format(depth) + ' ')
-        elif self.isfropt in [2, 3] and icalc <= 1:
-            if i > 0:
-                pass
-            else:
+        elif self.isfropt in [2, 3]:
+            if icalc <= 0:
                 f_sfr.write(fmts[3].format(width) + ' ')
-                if icalc <= 0:
-                    f_sfr.write(fmts[4].format(depth) + ' ')
+                f_sfr.write(fmts[4].format(depth) + ' ')
+            elif icalc == 1:
+                if i > 0:
+                    pass
+                else:
+                    f_sfr.write(fmts[3].format(width) + ' ')
+            else:
+                pass
+
         else:
-            pass
+            return
         f_sfr.write('\n')
 
     def write_file(self, filename=None):
@@ -1771,7 +1800,8 @@ class ModflowSfr2(Package):
                     nseg = self.segment_data[i].nseg[j]
                     if icalc == 2:
                         # or isfropt <= 1:
-                        if i == 0 or self.nstrm > 0 and not self.reachinput:
+                        if i == 0 or self.nstrm > 0 and \
+                                not self.reachinput or self.isfropt <=1:
                             for k in range(2):
                                 for d in self.channel_geometry_data[i][nseg][
                                     k]:
@@ -1955,6 +1985,7 @@ class check:
             self.sr = self.sfr.parent.modelgrid.sr
         except AttributeError:
             self.sr = self.sfr.parent.sr
+            self.mg = None
 
         self.reach_data = sfrpackage.reach_data
         self.segment_data = sfrpackage.segment_data
@@ -2803,51 +2834,35 @@ def _get_item2_names(nstrm, reachinput, isfropt, structured=False):
     return names
 
 
-def _fmt_string(array, float_format='{!s}'):
-    fmt_string = ''
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
+def _fmt_string_list(array, float_format=default_float_format):
+    fmt_list = []
+    for name in array.dtype.names:
+        vtype = array.dtype[name].str[1].lower()
         if vtype == 'v':
             continue
         if vtype == 'i':
-            fmt_string += '{:.0f} '
+            fmt_list.append('{:d}')
         elif vtype == 'f':
-            fmt_string += '{} '.format(float_format)
+            fmt_list.append(float_format)
         elif vtype == 'o':
-            fmt_string += '{} '
+            float_format = '{!s}'
         elif vtype == 's':
-            raise Exception("MfList error: '\str\' type found it dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
+            raise ValueError(
+                "'str' type found in dtype for {!r}. "
+                "This gives unpredictable results when "
+                "recarray to file - change to 'object' type".format(name))
         else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+            raise ValueError(
+                "unknown dtype for {!r}: {!r}".format(name, vtype))
+    return fmt_list
 
 
-def _fmt_string_list(array, float_format='{!s}'):
-    fmt_string = []
-    for field in array.dtype.descr:
-        vtype = field[1][1].lower()
-        if vtype == 'v':
-            continue
-        if (vtype == 'i'):
-            fmt_string += ['{:.0f}']
-        elif (vtype == 'f'):
-            fmt_string += [float_format]
-        elif (vtype == 'o'):
-            fmt_string += ['{}']
-        elif (vtype == 's'):
-            raise Exception("MfList error: '\str\' type found it dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to \'object\' type")
-        else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
-    return fmt_string
+def _fmt_string(array, float_format=default_float_format):
+    return ' '.join(_fmt_string_list(array, float_format))
 
 
-def _print_rec_array(array, cols=None, delimiter=' ', float_format='{:.6f}'):
+def _print_rec_array(array, cols=None, delimiter=' ',
+                     float_format=default_float_format):
     """
     Print out a numpy record array to string, with column names.
 
@@ -3030,12 +3045,12 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         else:
             thickm = line.pop(0)
             elevupdn = line.pop(0)
-        width = line.pop(
-            0)  # depth is not read if icalc == 1; see table in online guide
-        thts = _pop_item(line)
-        thti = _pop_item(line)
-        eps = _pop_item(line)
-        if isfropt == 5:
+            # depth is not read if icalc == 1; see table in online guide
+            width = line.pop(0)
+            thts = _pop_item(line)
+            thti = _pop_item(line)
+            eps = _pop_item(line)
+        if isfropt == 5 and per == 0:
             uhc = line.pop(0)
     elif isfropt in [0, 4, 5] and icalc >= 2:
         hcond = line.pop(0)
@@ -3058,13 +3073,19 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
         width = line.pop(0)
         if icalc <= 0:
             depth = line.pop(0)
-    elif isfropt in [2, 3] and icalc <= 1:
-        if per > 0:
-            pass
-        else:
+    elif isfropt in [2, 3]:
+        if icalc <= 0:
             width = line.pop(0)
-            if icalc <= 0:
-                depth = line.pop(0)
+            depth = line.pop(0)
+
+        elif icalc == 1:
+            if per > 0:
+                pass
+            else:
+                width = line.pop(0)
+
+        else:
+            pass
     else:
         pass
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc

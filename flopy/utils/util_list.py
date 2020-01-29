@@ -122,8 +122,8 @@ class MfList(DataInterface, DataListInterface):
         return True
 
     def get_empty(self, ncell=0):
-        d = np.zeros((ncell, len(self.dtype)), dtype=self.dtype)
-        d[:, :] = -1.0E+10
+        d = np.zeros(ncell, dtype=self.dtype)
+        d[:] = -1.0E+10
         return d
 
     def export(self, f, **kwargs):
@@ -228,6 +228,8 @@ class MfList(DataInterface, DataListInterface):
     def get_itmp(self, kper):
         if kper not in list(self.__data.keys()):
             return None
+        if self.__vtype[kper] is None:
+            return -1
         # If an external file, have to load it
         if self.__vtype[kper] == str:
             return self.__fromfile(self.__data[kper]).shape[0]
@@ -251,7 +253,7 @@ class MfList(DataInterface, DataListInterface):
             use_free = self.list_free_format
         else:
             use_free = True
-            if self.package.parent.bas6 is not None:
+            if self.package.parent.has_package('bas6'):
                 use_free = self.package.parent.bas6.ifrefm
             # mt3d list data is fixed format
             if 'mt3d' in self.package.parent.version.lower():
@@ -338,6 +340,9 @@ class MfList(DataInterface, DataListInterface):
                     self.__cast_int(kper, d)
                 elif isinstance(d, str):
                     self.__cast_str(kper, d)
+                elif d is None:
+                    self.__data[kper] = -1
+                    self.__vtype[kper] = None
                 else:
                     raise Exception("MfList error: unsupported data type: " +
                                     str(type(d)) + " at kper " +
@@ -374,9 +379,6 @@ class MfList(DataInterface, DataListInterface):
             self.__data[kper] = 0
             self.__vtype[kper] = None
         else:
-            if kper == 0:
-                raise Exception("MfList error: dict integer value for " + \
-                                "kper 0 for cannot be negative")
             self.__data[kper] = -1
             self.__vtype[kper] = None
 
@@ -453,9 +455,9 @@ class MfList(DataInterface, DataListInterface):
         dfs = []
         for per in self.data.keys():
             recs = self.data[per]
-            if recs is None or recs is 0:
+            if recs is None or len(recs) == 0:
                 # add an empty dataframe if a stress period is
-                # set to 0 (e.g. no pumping during a predevelopment
+                # empty (e.g. no pumping during a predevelopment
                 # period)
                 columns = names + list(['{}{}'.format(c, per)
                                         for c in varnames])
@@ -463,7 +465,6 @@ class MfList(DataInterface, DataListInterface):
                 dfi = dfi.set_index(names)
             else:
                 dfi = pd.DataFrame.from_records(recs)
-                # dfi = dfi.set_index(names)
                 dfg = dfi.groupby(names)
                 count = dfg[varnames[0]].count().rename('n')
                 if (count > 1).values.any():
@@ -500,20 +501,20 @@ class MfList(DataInterface, DataListInterface):
             "length of value arg != length of self dtype"
         # If we already have something for this kper, then add to it
         if kper in list(self.__data.keys()):
-            # If a 0 or -1, reset
             if self.vtype[kper] == int:
+                # If a 0 or -1, reset
                 self.__data[kper] = self.get_empty(1)
                 self.__vtype[kper] = np.recarray
-            # If filename, load into recarray
-            if self.vtype[kper] == str:
+            elif self.vtype[kper] == str:
+                # If filename, load into recarray
                 d = self.__fromfile(self.data[kper])
                 d.resize(d.shape[0], d.shape[1])
                 self.__data[kper] = d
                 self.__vtype[kper] = np.recarray
-            # Extend the recarray
-            if self.vtype[kper] == np.recarray:
-                shape = self.__data[kper].shape
-                self.__data[kper].resize(shape[0] + 1, shape[1])
+            elif self.vtype[kper] == np.recarray:
+                # Extend the recarray
+                self.__data[kper] = np.append(
+                    self.__data[kper], self.get_empty(1))
         else:
             self.__data[kper] = self.get_empty(1)
             self.__vtype[kper] = np.recarray

@@ -231,17 +231,19 @@ class ModflowPks(Package):
         if model.verbose:
             sys.stdout.write('loading pks package file...\n')
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
+
         # dataset 0 -- header
 
         msg = 3 * ' ' + \
               'Warning: load method not completed. default pks object created.'
         print(msg)
 
-        # close the open file
-        f.close()
+        if openfile:
+            f.close()
 
         # set package unit number
         unitnumber = None

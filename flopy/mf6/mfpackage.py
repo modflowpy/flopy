@@ -16,6 +16,7 @@ from .data import mfdataarray, mfdatalist, mfdatascalar
 from .coordinates import modeldimensions
 from ..pakbase import PackageInterface
 from .data.mfdatautil import MFComment
+from ..utils.check import mf6check
 
 
 class MFBlockHeader(object):
@@ -93,17 +94,28 @@ class MFBlockHeader(object):
         self.data_items.append(new_data)
 
     def is_same_header(self, block_header):
-        if len(self.data_items) == 0 or \
-                        len(block_header.variable_strings) == 0:
-            return True
-        typ_obj = self.data_items[0].structure.data_item_structures[0].type_obj
-        if typ_obj == int or typ_obj == float:
-            if self.variable_strings[0] == block_header.variable_strings[0]:
-                return True
-            else:
+        if len(self.variable_strings) > 0:
+            if len(self.variable_strings) != \
+                    len(block_header.variable_strings):
                 return False
-        else:
+            else:
+                for sitem, oitem in zip(self.variable_strings,
+                                        block_header.variable_strings):
+                    if sitem != oitem:
+                        return False
             return True
+        elif len(self.data_items) > 0 and \
+                len(block_header.variable_strings) > 0:
+            typ_obj = self.data_items[0].structure.data_item_structures[0].\
+                type_obj
+            if typ_obj == int or typ_obj == float:
+                return bool(self.variable_strings[0] == \
+                        block_header.variable_strings[0])
+            else:
+                return True
+        elif len(self.data_items) == len(block_header.variable_strings):
+            return True
+        return False
 
     def get_comment(self):
         if self.simulation_data is None:
@@ -1110,7 +1122,7 @@ class MFPackage(PackageContainer, PackageInterface):
     def __init__(self, model_or_sim, package_type, filename=None, pname=None,
                  loading_package=False, parent_file=None):
 
-        self._model_or_sim = model_or_sim
+        self.model_or_sim = model_or_sim
         self._data_list = []
         self._package_type = package_type
         if model_or_sim.type == 'Model' and package_type.lower() != 'nam':
@@ -1155,7 +1167,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
         if filename is None:
             self._filename = MFFileMgmt.string_to_file_path('{}.{}'.format(
-              self._model_or_sim.name, package_type))
+              self.model_or_sim.name, package_type))
         else:
             if not isinstance(filename, str):
                 message = 'Invalid fname parameter. Expecting type str. ' \
@@ -1195,7 +1207,6 @@ class MFPackage(PackageContainer, PackageInterface):
         if hasattr(self, name) and getattr(self, name) is not None:
             attribute = object.__getattribute__(self, name)
             if attribute is not None and isinstance(attribute, mfdata.MFData):
-                self.parent._mg_resync = True
                 try:
                     if isinstance(attribute, mfdatalist.MFList):
                         attribute.set_data(value, autofill=True)
@@ -1254,7 +1265,7 @@ class MFPackage(PackageContainer, PackageInterface):
 
     @property
     def plotable(self):
-        if self._model_or_sim.type == "Simulation":
+        if self.model_or_sim.type == "Simulation":
             return False
         else:
             return True
@@ -1264,15 +1275,29 @@ class MFPackage(PackageContainer, PackageInterface):
         # return [data_object, data_object, ...]
         return self._data_list
 
+    def check(self, f=None, verbose=True, level=1, checktype=None):
+        if checktype is None:
+            checktype = mf6check
+        return super(MFPackage, self).check(f, verbose, level, checktype)
+
+    def _get_nan_exclusion_list(self):
+        excl_list = []
+        if hasattr(self, 'stress_period_data'):
+            spd_struct = self.stress_period_data.structure
+            for item_struct in spd_struct.data_item_structures:
+                if item_struct.optional or item_struct.keystring_dict:
+                    excl_list.append(item_struct.name)
+        return excl_list
+
     def _get_data_str(self, formal, show_data=True):
         data_str = 'package_name = {}\nfilename = {}\npackage_type = {}' \
                    '\nmodel_or_simulation_package = {}' \
                    '\n{}_name = {}' \
                    '\n'.format(self._get_pname(), self._filename,
                                self.package_type,
-                               self._model_or_sim.type.lower(),
-                               self._model_or_sim.type.lower(),
-                               self._model_or_sim.name)
+                               self.model_or_sim.type.lower(),
+                               self.model_or_sim.type.lower(),
+                               self.model_or_sim.name)
         if self.parent_file is not None and formal:
             data_str = '{}parent_file = ' \
                        '{}\n\n'.format(data_str, self.parent_file._get_pname())
@@ -1398,16 +1423,16 @@ class MFPackage(PackageContainer, PackageInterface):
                                                   dataset.structure.name))
 
     def remove(self):
-        self._model_or_sim.remove_package(self)
+        self.model_or_sim.remove_package(self)
 
     def build_child_packages_container(self, pkg_type, filerecord):
         # get package class
         package_obj = self.package_factory(pkg_type,
-                                           self._model_or_sim.model_type)
+                                           self.model_or_sim.model_type)
         # create child package object
         child_pkgs_name = 'utl{}packages'.format(pkg_type)
         child_pkgs_obj = self.package_factory(child_pkgs_name, '')
-        child_pkgs = child_pkgs_obj(self._model_or_sim, self, pkg_type,
+        child_pkgs = child_pkgs_obj(self.model_or_sim, self, pkg_type,
                                     filerecord, None, package_obj)
         setattr(self, pkg_type, child_pkgs)
         self._child_package_groups[pkg_type] = child_pkgs
@@ -1421,8 +1446,8 @@ class MFPackage(PackageContainer, PackageInterface):
             child_path = package_group._next_default_file_path()
             # create new empty child package
             package_obj = self.package_factory(pkg_type,
-                                               self._model_or_sim.model_type)
-            package = package_obj(self._model_or_sim, filename=child_path,
+                                               self.model_or_sim.model_type)
+            package = package_obj(self.model_or_sim, filename=child_path,
                                   parent_file=self)
             assert hasattr(package, parameter_name)
 
@@ -1462,7 +1487,7 @@ class MFPackage(PackageContainer, PackageInterface):
                     self.blocks[block.name] = MFBlock(self._simulation_data,
                                                       self.dimensions, block,
                                                       self.path + (key,),
-                                                      self._model_or_sim, self)
+                                                      self.model_or_sim, self)
                 dataset_struct = block.data_structures[var_name]
                 var_path = self.path + (key, var_name)
                 ds = self.blocks[block.name].add_dataset(dataset_struct,
@@ -1741,6 +1766,24 @@ class MFPackage(PackageContainer, PackageInterface):
                                 self._filename)
 
     def export(self, f, **kwargs):
+        """
+        Method to export a package to netcdf or shapefile based on the
+        extension of the file name (.shp for shapefile, .nc for netcdf)
+
+        Parameters
+        ----------
+        f : str
+            filename
+        kwargs : keyword arguments
+            modelgrid : flopy.discretization.Grid instance
+                user supplied modelgrid which can be used for exporting
+                in lieu of the modelgrid associated with the model object
+
+        Returns
+        -------
+            None or Netcdf object
+
+        """
         from flopy import export
         return export.utils.package_export(f, self, **kwargs)
 
@@ -1798,32 +1841,19 @@ class MFChildPackages(object):
         self._cpparent = parent
         self._pkg_type = pkg_type
         self._package_class = package_class
-        self._inattr = False
-
-    def __getattribute__(self, name):
-        if name == '_MFChildPackages_packages' or name == \
-                '_MFChildPackages_inattr' or name == '_packages' or \
-                name == '_inattr':
-            return super(MFChildPackages, self).__getattribute__(name)
-
-        if self._inattr is not None and not self._inattr:
-            if self._packages and hasattr(self._packages[0], name):
-                self._inattr = True
-                item = getattr(self._packages[0], name)
-                self._inattr = False
-                return item
-        return super(MFChildPackages, self).__getattribute__(name)
 
     def __getattr__(self, attr):
-        if attr == '_MFChildPackages_inattr' or attr == '_inattr':
-            return None
+        if '_packages' in self.__dict__ and len(self._packages) > 0 and \
+                hasattr(self._packages[0], attr):
+            item = getattr(self._packages[0], attr)
+            return item
         raise AttributeError(attr)
 
     def __getitem__(self, k):
         if isinstance(k, int):
             if k < len(self._packages):
                 return self._packages[k]
-        raise Exception('Package index {} does not exist.'.format(k))
+        raise ValueError('Package index {} does not exist.'.format(k))
 
     def __setattr__(self, key, value):
         if key != '_packages' and key != '_model' and key != '_cpparent' and \

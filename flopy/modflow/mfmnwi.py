@@ -1,9 +1,7 @@
 import sys
 
 from ..utils.flopy_io import line_parse, pop_item
-
 from ..pakbase import Package
-from ..utils import check
 
 
 class ModflowMnwi(Package):
@@ -176,7 +174,8 @@ class ModflowMnwi(Package):
             # otherwise iterations from 0, nper won't run
             nper = 1 if nper == 0 else nper
 
-        if not hasattr(f, 'read'):
+        openfile = not hasattr(f, 'read')
+        if openfile:
             filename = f
             f = open(filename, 'r')
 
@@ -209,6 +208,9 @@ class ModflowMnwi(Package):
                 wellid_unit_qndflag_qhbflag_concflag.append(tmp)
                 if unit not in unique_units:
                     unique_units.append(unit)
+
+        if openfile:
+            f.close()
 
         for unit in unique_units:
             model.add_pop_key_list(unit)
@@ -243,7 +245,7 @@ class ModflowMnwi(Package):
                            extension='mnwi', unitnumber=unitnumber,
                            filenames=filenames)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check mnwi package data for common errors.
 
@@ -272,7 +274,7 @@ class ModflowMnwi(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.mnwi.check()
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
         if "MNW2" not in self.parent.get_package_list():
             desc = '\r    MNWI package present without MNW2 package.'
             chk._add_to_summary(type='Warning', value=0,
