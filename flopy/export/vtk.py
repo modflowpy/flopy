@@ -1001,7 +1001,7 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
 
     # set up the pvd file to make the output files time enabled
     pvdfile = open(
-        os.path.join(otfolder, '{}_Heads.pvd'.format(model.name)),
+        os.path.join(otfolder, '{}_CBC.pvd'.format(model.name)),
         'w')
 
     pvdfile.write("""<?xml version="1.0"?>
