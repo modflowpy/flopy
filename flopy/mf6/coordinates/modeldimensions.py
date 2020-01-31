@@ -336,6 +336,10 @@ class ModelDimensions(object):
         elif grid_type == DiscretizationType.DISU:
             self._model_grid = UnstructuredModelGrid(self.model_name,
                                                      self.simulation_data)
+        elif grid_type == DiscretizationType.DISL:
+            self._model_grid = ModelGrid(self.model_name,
+                                         self.simulation_data,
+                                         DiscretizationType.DISL)
         else:
             self._model_grid = ModelGrid(self.model_name,
                                          self.simulation_data,
