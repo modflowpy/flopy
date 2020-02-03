@@ -32,10 +32,10 @@ class VertexGrid(Grid):
         returns vertices for a single cell at cellid.
     """
 
-    def __init__(self, vertices=None, cell1d=None, cell2d=None, top=None,
+    def __init__(self, vertices=None, cell2d=None, top=None,
                  botm=None, idomain=None, lenuni=None, epsg=None, proj4=None,
                  prj=None, xoff=0.0, yoff=0.0, angrot=0.0, grid_type='vertex',
-                 nlay=None, ncpl=None):
+                 nlay=None, ncpl=None, cell1d=None):
         super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
                                          epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices

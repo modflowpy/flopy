@@ -389,7 +389,7 @@ class MFModel(PackageContainer, ModelInterface):
                                                  angrot=self._modelgrid.angrot)
             else:
                 self._modelgrid = VertexGrid(
-                    vertices=dis.vertices.array, cellxd=dis.cell1d.array,
+                    vertices=dis.vertices.array, cell1d=dis.cell1d.array,
                     top=dis.top.array, botm=dis.botm.array,
                     idomain=dis.idomain.array, lenuni=dis.length_units.array,
                     proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
