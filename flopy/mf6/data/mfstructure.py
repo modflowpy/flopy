@@ -65,8 +65,9 @@ class Dfn(object):
         # FIX: Transport - multi packages are hard coded
         self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
                               'gwfrch': 0, 'gwfwel': 0,
-                              'gwfdrn': 0, 'gwfriv': 0, 'utlobs': 0,
-                              'utlts': 0, 'utltas': 0}
+                              'gwfdrn': 0, 'gwfriv': 0, 'lnfcgeo': 0,
+                              'lnfrgeo': 0, 'lnfngeo':0,
+                              'utlobs': 0, 'utlts': 0, 'utltas': 0}
 
     def get_file_list(self):
         file_order = ['sim-nam',  # dfn completed  tex updated
@@ -77,6 +78,7 @@ class Dfn(object):
                       'gwf-dis',  # dfn completed  tex updated
                       'gwf-disv',  # dfn completed  tex updated
                       'gwf-disu',  # dfn completed  tex updated
+                      'lnf-disl',  # dfn completed  tex updated
                       'gwf-ic',  # dfn completed  tex updated
                       'gwf-npf',  # dfn completed  tex updated
                       'gwf-sto',  # dfn completed  tex updated
