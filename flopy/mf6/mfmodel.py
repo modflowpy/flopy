@@ -18,6 +18,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
+from ..utils.check import mf6check
 
 
 class MFModel(PackageContainer, ModelInterface):
@@ -365,7 +366,8 @@ class MFModel(PackageContainer, ModelInterface):
                 botm=dis.bot.array, idomain=idomain,
                 lenuni=dis.length_units.array, proj4=self._modelgrid.proj4,
                 epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
-                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot)
+                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot,
+                nodes=dis.nodes.get_data())
         else:
             return self._modelgrid
 
@@ -463,6 +465,40 @@ class MFModel(PackageContainer, ModelInterface):
     @verbose.setter
     def verbose(self, verbose):
         self._verbose = verbose
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+        # check instance for model-level check
+        chk = mf6check(self, f=f, verbose=verbose, level=level)
+
+        return self._check(chk, level)
 
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
@@ -800,7 +836,7 @@ class MFModel(PackageContainer, ModelInterface):
             if not isinstance(packages, list):
                 packages = [packages]
         for package in packages:
-            if package._model_or_sim.name != self.name:
+            if package.model_or_sim.name != self.name:
                 except_text = 'Package can not be removed from model {} ' \
                               'since it is ' \
                               'not part of '
@@ -824,7 +860,8 @@ class MFModel(PackageContainer, ModelInterface):
                 for item in package_data:
                     if item[1] != package._filename:
                         if new_rec_array is None:
-                            new_rec_array = np.rec.array(item, package_data.dtype)
+                            new_rec_array = np.rec.array([item.tolist()],
+                                                         package_data.dtype)
                         else:
                             new_rec_array = np.hstack((item, new_rec_array))
             except:

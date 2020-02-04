@@ -74,8 +74,8 @@ def np001():
                             exe_name=exe_name, sim_ws=run_folder,
                             continue_=True, memory_print_option='summary')
     name = test_sim.name_file
-    assert name.continue_.get_data() == True
-    assert name.nocheck.get_data() == None
+    assert name.continue_.get_data()
+    assert name.nocheck.get_data() is None
     assert name.memory_print_option.get_data() == 'summary'
 
     kwargs = {}
@@ -289,8 +289,25 @@ def np001():
                                     stress_period_data=well_spd)
     except MFDataException:
         error_occurred = True
-
     assert error_occurred
+
+    # test error checking
+    drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                save_flows=True, maxbound=1,
+                                timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                stress_period_data=[((100, 0, 0), np.nan,
+                                                     'drn_1'), ((0, 0, 0),
+                                                    10.0)])
+    npf_package = ModflowGwfnpf(model, save_flows=True,
+                                alternative_cell_averaging='logarithmic',
+                                icelltype=1, k=100001.0, k33=1e-12)
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert 'drn_1 package: invalid BC index' in summary
+    assert 'npf package: vertical hydraulic conductivity values below ' \
+           'checker threshold of 1e-11' in summary
+    assert 'npf package: horizontal hydraulic conductivity values above ' \
+           'checker threshold of 100000.0' in summary
     return
 
 
@@ -391,8 +408,8 @@ def np002():
         sim.run_simulation()
 
         sim2 = MFSimulation.load(sim_ws=run_folder)
-        model = sim2.get_model(model_name)
-        npf_package = model.get_package('npf')
+        model_ = sim2.get_model(model_name)
+        npf_package = model_.get_package('npf')
         k = npf_package.k.array
 
         # get expected results
@@ -425,6 +442,20 @@ def np002():
 
         # clean up
         sim.delete_output_files()
+
+    # test error checking
+    sto_package = ModflowGwfsto(model, save_flows=True, iconvert=1,
+                                ss=0.00000001, sy=0.6)
+    chd_package = ModflowGwfchd(model, print_input=True, print_flows=True,
+                                maxbound=1, stress_period_data=[((0, 0, 0),
+                                                                 np.nan)])
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert 'sto package: specific storage values below ' \
+           'checker threshold of 1e-06' in summary
+    assert 'sto package: specific yield values above ' \
+           'checker threshold of 0.5' in summary
+    assert 'Not a number' in summary
 
     return
 
@@ -953,6 +984,11 @@ def test005_advgw_tidal():
 
     # clean up
     sim.delete_output_files()
+
+    # check packages
+    chk = sim.check()
+    summary = '.'.join(chk[0].summary_array.desc)
+    assert summary == ''
 
     return
 

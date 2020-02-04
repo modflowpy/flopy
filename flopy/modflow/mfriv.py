@@ -10,7 +10,7 @@ MODFLOW Guide
 import sys
 import numpy as np
 from ..pakbase import Package
-from ..utils import MfList, check
+from ..utils import MfList
 from ..utils.recarray_utils import create_empty_recarray
 
 
@@ -173,7 +173,7 @@ class ModflowRiv(Package):
         self.stress_period_data = MfList(self, stress_period_data)
         self.parent.add_package(self)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check package data for common errors.
 
@@ -203,8 +203,9 @@ class ModflowRiv(Package):
         >>> m.riv.check()
 
         """
-        basechk = super(ModflowRiv, self).check(verbose=False)
-        chk = check(self, f=f, verbose=verbose, level=level)
+        basechk = super(ModflowRiv, self).check(verbose=False,
+                                                checktype=checktype)
+        chk = self._get_check(f, verbose, level, checktype)
         chk.summary_array = basechk.summary_array
 
         for per in self.stress_period_data.data.keys():
