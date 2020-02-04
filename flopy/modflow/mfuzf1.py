@@ -317,6 +317,8 @@ class ModflowUzf1(Package):
                              OptionBlock.simple_flag),
                             ("seepsurfk",
                              OptionBlock.simple_flag),
+                            ("capillaryuzet",
+                             OptionBlock.simple_flag),
                             ("etsquare",
                              {OptionBlock.dtype: np.bool_,
                               OptionBlock.nested: True,
@@ -343,9 +345,10 @@ class ModflowUzf1(Package):
                  thtr=0.15, thti=0.20,
                  specifythtr=False, specifythti=False, nosurfleak=False,
                  finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
+                 air_entry=0.0, h_root=0.0, rootact=0.0,
                  nwt_11_fmt=False,
                  specifysurfk=False, rejectsurfk=False, seepsurfk=False,
-                 etsquare=None, netflux=None, nuzgag=None,
+                 etsquare=None, netflux=None, capillaryuzet=False, nuzgag=None,
                  uzgag=None, extension='uzf', unitnumber=None,
                  filenames=None, options=None, surfk=0.1):
 
@@ -451,6 +454,7 @@ class ModflowUzf1(Package):
         self.specifysurfk = bool(specifysurfk)
         self.rejectsurfk = bool(rejectsurfk)
         self.seepsurfk = bool(seepsurfk)
+        self.capillaryuzet = bool(capillaryuzet)
         self.etsquare = False
         self.smoothfact = None
         if etsquare is not None:
@@ -554,6 +558,15 @@ class ModflowUzf1(Package):
                                      extdp, name='extdp')
             self.extwc = Transient2d(model, (nrow, ncol), np.float32,
                                      extwc, name='extwc')
+
+        if capillaryuzet and "nwt" in model.version:
+            self.air_entry = Transient2d(model, (nrow, ncol), np.float32,
+                                         air_entry, name="air_entry")
+            self.h_root = Transient2d(model, (nrow, ncol), np.float32,
+                                      h_root, name='h_root')
+            self.rootact = Transient2d(model, (nrow, ncol), np.float32,
+                                       rootact, name='rootact')
+
         self.parent.add_package(self)
 
     def __setattr__(self, key, value):
@@ -732,6 +745,11 @@ class ModflowUzf1(Package):
                 write_transient('extdp')
                 if self.iuzfopt > 0:
                     write_transient('extwc')
+            if self.capillaryuzet and 'nwt' in self.parent.version:
+                write_transient('air_entry')
+                write_transient('h_root')
+                write_transient('rootact')
+
         f_uzf.close()
 
     @staticmethod
@@ -787,6 +805,7 @@ class ModflowUzf1(Package):
         specifythti = False
         nosurfleak = False
         specifysurfk = False
+        capillaryuzet = False
         etsquare = None
         netflux = None
         rejectsurfk = False
@@ -814,6 +833,7 @@ class ModflowUzf1(Package):
             rejectsurfk = options.rejectsurfk
             seepsurfk = options.seepsurfk
             specifysurfk = options.specifysurfk
+            capillaryuzet = options.capillaryuzet
 
             if options.etsquare:
                 etsquare = options.smoothfact
@@ -826,9 +846,8 @@ class ModflowUzf1(Package):
 
         arrays = {'finf': {},
                   # datasets 10, 12, 14, 16 are lists of util2d arrays
-                  'pet': {},
-                  'extdp': {},
-                  'extwc': {}}
+                  'pet': {}, 'extdp': {}, 'extwc': {},
+                  'air_entry': {}, 'h_root': {}, 'rootact': {}}
 
         def load_util2d(name, dtype, per=None):
             print('   loading {} array...'.format(name))
@@ -912,6 +931,28 @@ class ModflowUzf1(Package):
                     # dataset 16
                     load_util2d('extwc', np.float32, per=per)
 
+                if capillaryuzet:
+                    # dataset 17
+                    line = line_parse(f.readline())
+                    nuzf5 = pop_item(line, int)
+                    if nuzf5 > 0:
+                        # dataset 18
+                        load_util2d('air_entry', np.float32, per=per)
+
+                    # dataset 19
+                    line = line_parse(f.readline())
+                    nuzf6 = pop_item(line, int)
+                    if nuzf6 > 0:
+                        # dataset 20
+                        load_util2d('h_root', np.float32, per=per)
+
+                    # dataset21
+                    line = line_parse(f.readline())
+                    nuzf7 = pop_item(line, int)
+                    if nuzf7 > 0:
+                        # dataset 22
+                        load_util2d('rootact', np.float32, per=per)
+
         # close the file
         f.close()
 
@@ -952,6 +993,7 @@ class ModflowUzf1(Package):
                            netflux=netflux, seepsurfk=seepsurfk,
                            specifysurfk=specifysurfk,
                            rejectsurfk=rejectsurfk,
+                           capillaryuzet=capillaryuzet,
                            unitnumber=unitnumber,
                            filenames=filenames, options=options, **arrays)
 
