@@ -452,7 +452,7 @@ class PlotMapView(object):
 
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+    def plot_bc(self, name=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
@@ -460,7 +460,7 @@ class PlotMapView(object):
 
         Parameters
         ----------
-        ftype : string
+        name : string
             Package name string ('WEL', 'GHB', etc.). (Default is None)
         package : flopy.modflow.Modflow package class instance
             flopy package class instance. (Default is None)
@@ -480,41 +480,66 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ftype' in kwargs and name is None:
+            name = kwargs.pop('ftype')
+
         # Find package to plot
         if package is not None:
             p = package
-            ftype = p.name[0]
+            name = p.name[0]
 
         elif self.model is not None:
-            if ftype is None:
+            if name is None:
                 raise Exception('ftype not specified')
-            ftype = ftype.upper()
-            p = self.model.get_package(ftype)
+            name = name.upper()
+            p = self.model.get_package(name)
 
         else:
             raise Exception('Cannot find package to plot')
 
         # trap for mf6 'cellid' vs mf2005 'k', 'i', 'j' convention
-        if p.parent.version == "mf6":
-            try:
-                mflist = p.stress_period_data.array[kper]
-            except Exception as e:
-                raise Exception("Not a list-style boundary package: " + str(e))
-            if mflist is None:
-                return
-            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+        if isinstance(p, list) or p.parent.version == "mf6":
+            if not isinstance(p, list):
+                p = [p]
+
+            idx = np.array([])
+            for pp in p:
+                if pp.package_type in ('lak', 'sfr', 'maw', 'uzf'):
+                    t = plotutil.advanced_package_bc_helper(pp, self.mg,
+                                                            kper)
+                else:
+                    try:
+                        mflist = pp.stress_period_data.array[kper]
+                    except Exception as e:
+                        raise Exception("Not a list-style boundary package: "
+                                        + str(e))
+                    if mflist is None:
+                        return
+
+                    t = np.array([list(i) for i in mflist['cellid']],
+                                     dtype=int).T
+
+                if len(idx) == 0:
+                    idx = np.copy(t)
+                else:
+                    idx = np.append(idx, t, axis=1)
+
         else:
             # modflow-2005 structured and unstructured grid
-            try:
-                mflist = p.stress_period_data[kper]
-            except Exception as e:
-                raise Exception("Not a list-style boundary package: " + str(e))
-            if mflist is None:
-                return
-            if len(self.mg.shape) == 3:
-                idx = [mflist['k'], mflist['i'], mflist['j']]
+            if p.package_type in ('uzf', 'lak'):
+                idx = plotutil.advanced_package_bc_helper(p, self.mg, kper)
             else:
-                idx = mflist['node']
+                try:
+                    mflist = p.stress_period_data[kper]
+                except Exception as e:
+                    raise Exception("Not a list-style boundary package: "
+                                    + str(e))
+                if mflist is None:
+                    return
+                if len(self.mg.shape) == 3:
+                    idx = [mflist['k'], mflist['i'], mflist['j']]
+                else:
+                    idx = mflist['node']
 
         nlay = self.mg.nlay
 
@@ -534,7 +559,7 @@ class PlotMapView(object):
         # set the colormap
         if color is None:
             # modflow 6 ftype fix, since multiple packages append _0, _1, etc:
-            key = ftype[:3].upper()
+            key = name[:3].upper()
             if key in plotutil.bc_color_dict:
                 c = plotutil.bc_color_dict[key]
             else:

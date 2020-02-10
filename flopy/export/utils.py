@@ -278,6 +278,10 @@ def output_helper(f, ml, oudic, **kwargs):
         modelgrid : flopy.discretizaiton.Grid
             user supplied model grid instance that will be used for export
             in lieu of the models model grid instance
+        mflay : int
+            zero based model layer which can be used in shapefile exporting
+        kper : int
+            zero based stress period which can be used for shapefile exporting
 
     Returns
     -------
@@ -294,6 +298,8 @@ def output_helper(f, ml, oudic, **kwargs):
     forgive = kwargs.pop("forgive", False)
     kwargs.pop("suffix", None)
     mask_vals = []
+    mflay = kwargs.pop('mflay', None)
+    kper = kwargs.pop('kper', None)
     if "masked_vals" in kwargs:
         mask_vals = kwargs.pop("masked_vals")
     if len(kwargs) > 0 and logger is not None:
@@ -427,11 +433,65 @@ def output_helper(f, ml, oudic, **kwargs):
                                                    zonebud.flux,
                                                    logger)
 
-            # todo: write the zone array to standard output
+            # write the zone array to standard output
             _add_output_nc_variable(f, times, shape3d, zonebud,
                                     "budget_zones", logger=logger,
                                     mask_vals=mask_vals,
                                     mask_array3d=mask_array3d)
+
+    elif isinstance(f, str) and f.endswith('.shp'):
+        attrib_dict = {}
+        for _, out_obj in oudic.items():
+
+            if isinstance(out_obj, HeadFile) or \
+                    isinstance(out_obj, FormattedHeadFile) or \
+                    isinstance(out_obj, UcnFile):
+                if isinstance(out_obj, UcnFile):
+                    attrib_name = 'conc'
+                else:
+                    attrib_name = 'head'
+                plotarray = np.atleast_3d(out_obj.get_alldata()
+                                          .transpose()).transpose()
+
+
+                for per in range(plotarray.shape[0]):
+                    for k in range(plotarray.shape[1]):
+                        if kper is not None and per != kper:
+                            continue
+                        if mflay is not None and k != mflay:
+                            continue
+                        name = attrib_name + '{}_{}'.format(per, k)
+                        attrib_dict[name] = plotarray[per][k]
+
+            elif isinstance(out_obj, CellBudgetFile):
+                names = out_obj.get_unique_record_names(decode=True)
+
+                for attrib_name in names:
+                    plotarray = np.atleast_3d(out_obj.get_data(
+                                              text=attrib_name,
+                                              full3D=True))
+
+                    attrib_name = attrib_name.strip()
+                    if attrib_name == "FLOW RIGHT FACE":
+                        attrib_name = 'FRF'
+                    elif attrib_name == "FLOW FRONT FACE":
+                        attrib_name = "FFF"
+                    elif attrib_name == "FLOW LOWER FACE":
+                        attrib_name = "FLF"
+                    else:
+                        pass
+                    for per in range(plotarray.shape[0]):
+                        for k in range(plotarray.shape[1]):
+                            if kper is not None and per != kper:
+                                continue
+                            if mflay is not None and k != mflay:
+                                continue
+                            name = attrib_name + '{}_{}'.format(per, k)
+                            attrib_dict[name] = plotarray[per][k]
+
+        if attrib_dict:
+            shapefile_utils.write_grid_shapefile(f, ml.modelgrid, attrib_dict)
+
     else:
         if logger:
             logger.lraise("unrecognized export argument:{0}".format(f))

@@ -288,8 +288,9 @@ except:
 
 
 bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'green', 'GHB': 'cyan', 'CHD': 'navy',
-                 'STR': 'purple', 'SFR': 'blue'}
+                 'RIV': 'teal', 'GHB': 'cyan', 'CHD': 'navy',
+                 'STR': 'purple', 'SFR': 'teal', 'UZF': 'peru',
+                 'LAK': 'royalblue'}
 
 
 class PlotException(Exception):
@@ -2749,4 +2750,35 @@ def _depreciated_dis_handler(modelgrid, dis):
     return modelgrid
 
 
+def advanced_package_bc_helper(pkg, modelgrid, kper):
+    """
+    Helper function for plotting boundary conditions from "advanced" packages
 
+    Parameters
+    ----------
+    pkg : flopy Package objects
+    modelgrid : flopy.discretization.Grid object
+
+    Returns
+    -------
+    """
+    if pkg.package_type in ('sfr', 'uzf'):
+        if pkg.parent.version == 'mf6':
+            mflist = pkg.packagedata.array
+            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+        else:
+            iuzfbnd = pkg.iuzfbnd.array
+            idx = np.where(iuzfbnd != 0)
+            idx = np.append([[0] * idx[-1].size], idx, axis=0)
+    elif pkg.package_type in ('lak', 'maw'):
+        if pkg.parent.version == "mf6":
+            mflist = pkg.connectiondata.array
+            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+        else:
+            lakarr = pkg.lakarr.array[kper]
+            idx = np.where(lakarr != 0)
+            idx = np.array(idx)
+    else:
+        raise NotImplementedError("Pkg {} not implemented for bc plotting"
+                                  .format(pkg.package_type))
+    return idx
