@@ -126,7 +126,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -243,7 +243,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -889,8 +889,9 @@ class PlotMapView(object):
             for ix, tup in enumerate(temp):
                 spdis[ix] = tup
 
-            self.plot_specific_discharge(spdis, istep=istep, jstep=jstep,
-                                         normalize=normalize, **kwargs)
+            return self.plot_specific_discharge(spdis, istep=istep,
+                                                jstep=jstep,
+                                                normalize=normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
