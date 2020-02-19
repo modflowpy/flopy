@@ -151,6 +151,9 @@ class PlotMapView(object):
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
 
+        # add NaN values to mask
+        plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -679,6 +682,12 @@ class PlotMapView(object):
                 else:
                     t = np.equal(plotarray, mval)
                     ismasked += t
+
+        # add NaN values to mask
+        if ismasked is None:
+            ismasked = np.isnan(plotarray)
+        else:
+            ismasked += np.isnan(plotarray)
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')

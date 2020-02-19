@@ -2410,6 +2410,10 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
         if masked_values is not None:
             for mval in masked_values:
                 a = np.ma.masked_equal(a, mval)
+
+        # add NaN values to mask
+        a = np.ma.masked_where(np.isnan(a), a)
+
         if edgecolor == 'scaled':
             pc.set_edgecolor('none')
         else:
