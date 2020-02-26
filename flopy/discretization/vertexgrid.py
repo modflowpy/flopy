@@ -127,7 +127,7 @@ class VertexGrid(Grid):
     @property
     def xyzcellcenters(self):
         """
-        Internal method to get cell centers and set to grid
+        Method to get cell centers and set to grid
         """
         cache_index = 'cellcenters'
         if cache_index not in self._cache_dict or \
@@ -141,10 +141,10 @@ class VertexGrid(Grid):
     @property
     def xyzvertices(self):
         """
-        Internal method to get model grid verticies
+        Method to get all grid vertices in a layer, arranged per cell
 
         Returns:
-            list of dimension ncpl by nvertices
+            list of size sum(nvertices per cell)
         """
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \

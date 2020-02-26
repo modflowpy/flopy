@@ -124,6 +124,11 @@ class StructuredGrid(Grid):
     @property
     def xyzvertices(self):
         """
+        Method to get all grid vertices in a layer
+
+        Returns:
+            []
+            2D array
         """
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \
@@ -152,6 +157,11 @@ class StructuredGrid(Grid):
 
     @property
     def xyedges(self):
+        """
+        Return a list of two 1D numpy arrays: one with the cell edge x
+        coordinate (size = ncol+1) and the other with the cell edge y
+        coordinate (size = nrow+1) in model space - not offset or rotated.
+        """
         cache_index = 'xyedges'
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:

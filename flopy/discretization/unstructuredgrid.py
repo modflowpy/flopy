@@ -146,7 +146,7 @@ class UnstructuredGrid(Grid):
     @property
     def xyzcellcenters(self):
         """
-        Internal method to get cell centers and set to grid
+        Method to get cell centers and set to grid
         """
         cache_index = 'cellcenters'
         if cache_index not in self._cache_dict or \
@@ -160,7 +160,7 @@ class UnstructuredGrid(Grid):
     @property
     def xyzvertices(self):
         """
-        Internal method to get model grid verticies
+        Method to get model grid verticies
 
         Returns:
             list of dimension ncpl by nvertices
