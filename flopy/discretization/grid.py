@@ -270,6 +270,11 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def nnodes(self):
+        raise NotImplementedError(
+            'must define nnodes in child class')
+
+    @property
     def shape(self):
         raise NotImplementedError(
             'must define extent in child '

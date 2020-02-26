@@ -1640,6 +1640,8 @@ class PlotUtilities(object):
     @staticmethod
     def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         """
+        DEPRECATED. Use postprocessing.get_specific_discharge() instead.
+
         Using the MODFLOW discharge, calculate the cell centered specific discharge
         by dividing by the flow width and then averaging to the cell center.
 
@@ -1666,6 +1668,11 @@ class PlotUtilities(object):
             Specific discharge arrays that have been interpolated to cell centers.
 
         """
+        import warnings
+        warnings.warn('centered_specific_discharge() has been deprecated. Use '
+                      'postprocessing.get_specific_discharge() instead.',
+                      DeprecationWarning)
+
         qx = None
         qy = None
         qz = None

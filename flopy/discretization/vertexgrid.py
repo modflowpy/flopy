@@ -83,6 +83,10 @@ class VertexGrid(Grid):
             return len(self._botm[0])
         else:
             return self._ncpl
+    
+    @property
+    def nnodes(self):
+        return self.nlay * self.ncpl
 
     @property
     def shape(self):

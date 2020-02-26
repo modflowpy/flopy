@@ -98,6 +98,10 @@ class StructuredGrid(Grid):
         return self.__ncol
 
     @property
+    def nnodes(self):
+        return self.__nlay * self.__nrow * self.__ncol
+
+    @property
     def shape(self):
         return self.__nlay, self.__nrow, self.__ncol
 
