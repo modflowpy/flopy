@@ -29,9 +29,9 @@ class UnstructuredGrid(Grid):
                  top=None, botm=None, idomain=None, lenuni=None,
                  ncpl=None, epsg=None, proj4=None, prj=None,
                  xoff=0., yoff=0., angrot=0., layered=True, nodes=None):
-        super(UnstructuredGrid, self).__init__(self.grid_type, top, botm, idomain,
-                                               lenuni, epsg, proj4, prj,
-                                               xoff, yoff, angrot)
+        super(UnstructuredGrid, self).__init__('unstructured', top, botm,
+                                               idomain, lenuni, epsg, proj4,
+                                               prj, xoff, yoff, angrot)
 
         self._vertices = vertices
         self._iverts = iverts
@@ -67,10 +67,6 @@ class UnstructuredGrid(Grid):
                 super(UnstructuredGrid, self).is_complete:
             return True
         return False
-
-    @property
-    def grid_type(self):
-        return "unstructured"
 
     @property
     def nlay(self):
