@@ -418,9 +418,176 @@ class PlotCrossSection(object):
 
         return patches
 
+    def plot_vector(self, vx, vy, vz, head=None, kstep=1, hstep=1,
+                    normalize=False, masked_values=None, **kwargs):
+        """
+        Plot a vector.
+
+        Parameters
+        ----------
+        vx : np.ndarray
+            x component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        vy : np.ndarray
+            y component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        vz : np.ndarray
+            y component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        head : numpy.ndarray
+            MODFLOW's head array.  If not provided, then the quivers will be
+            plotted in the cell center.
+        kstep : int
+            layer frequency to plot (default is 1)
+        hstep : int
+            horizontal frequency to plot (default is 1)
+        normalize : bool
+            boolean flag used to determine if vectors should be normalized
+            using the vector magnitude in each cell (default is False)
+        masked_values : iterable of floats
+            values to mask
+        kwargs : matplotlib.pyplot keyword arguments for the
+            plt.quiver method
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            result of the quiver function
+
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # this function does not support arbitrary cross-sections, so check it
+        arbitrary = False
+        if self.mg.grid_type == 'structured':
+            if not (self.direction == 'x' or self.direction == 'y'):
+                arbitrary = True
+        else:
+            # check within a tolerance
+            pts = self.pts
+            xuniform = [True if abs(pts.T[0, 0] - i) < 1
+                        else False for i in pts.T[0]]
+            yuniform = [True if abs(pts.T[1, 0] - i) < 1
+                        else False for i in pts.T[1]]
+            if not np.all(xuniform) and not np.all(yuniform):
+                arbitrary = True
+        if arbitrary:
+            err_msg = "plot_specific_discharge() does not " \
+                      "support arbitrary cross-sections"
+            raise AssertionError(err_msg)
+
+        # get the actual values to plot
+        if self.direction == 'x':
+            u_tmp = vx
+        elif self.direction == 'y':
+            u_tmp = -1. * vy
+        v_tmp = vz
+        if self.mg.grid_type == "structured":
+            if isinstance(head, np.ndarray):
+                zcentergrid = self.__cls.set_zcentergrid(head)
+            else:
+                zcentergrid = self.zcentergrid
+
+            if self.geographic_coords:
+                xcentergrid = self.__cls.geographic_xcentergrid
+            else:
+                xcentergrid = self.xcentergrid
+
+            if self.mg.nlay == 1:
+                x = []
+                z = []
+                for k in range(self.mg.nlay):
+                    for i in range(xcentergrid.shape[1]):
+                        x.append(xcentergrid[k, i])
+                        z.append(0.5 * (zcentergrid[k, i] + zcentergrid[k + 1, i]))
+                x = np.array(x).reshape((1, xcentergrid.shape[1]))
+                z = np.array(z).reshape((1, xcentergrid.shape[1]))
+            else:
+                x = xcentergrid
+                z = zcentergrid
+
+            u = []
+            v = []
+            xedge, yedge = self.mg.xyedges
+            for k in range(self.mg.nlay):
+                u.append(plotutil.cell_value_points(self.xpts, xedge,
+                                                    yedge, u_tmp[k, :, :]))
+                v.append(plotutil.cell_value_points(self.xpts, xedge,
+                                                    yedge, v_tmp[k, :, :]))
+            u = np.array(u)
+            v = np.array(v)
+            x = x[::kstep, ::hstep]
+            z = z[::kstep, ::hstep]
+            u = u[::kstep, ::hstep]
+            v = v[::kstep, ::hstep]
+
+            # upts and vpts has a value for the left and right
+            # sides of a cell. Sample every other value for quiver
+            u = u[:, ::2]
+            v = v[:, ::2]
+
+        else:
+            # kstep implementation for vertex grid
+            projpts = {key: value for key, value in self.__cls.projpts.items()
+                       if (key // self.mg.ncpl) % kstep == 0}
+
+            # set x and z centers
+            if isinstance(head, np.ndarray):
+                # pipe kstep to set_zcentergrid to assure consistent array size
+                zcenters = self.__cls.set_zcentergrid(np.ravel(head), kstep=kstep)
+            else:
+                zcenters = [np.mean(np.array(v).T[1]) for i, v
+                            in sorted(projpts.items())]
+
+            u = np.array([u_tmp.ravel()[cell] for cell in sorted(projpts)])
+
+            x = np.array([np.mean(np.array(v).T[0]) for i, v
+                          in sorted(projpts.items())])
+
+            z = np.ravel(zcenters)
+            v = np.array([v_tmp.ravel()[cell] for cell in sorted(projpts)])
+
+            x = x[::hstep]
+            z = z[::hstep]
+            u = u[::hstep]
+            v = v[::hstep]
+
+        # mask values
+        if masked_values is not None:
+            for mval in masked_values:
+                to_mask = np.logical_or(u==mval, v==mval)
+                u[to_mask] = np.nan
+                v[to_mask] = np.nan
+
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        # plot with quiver
+        quiver = ax.quiver(x, z, u, v, pivot=pivot, **kwargs)
+
+        return quiver
+
     def plot_specific_discharge(self, spdis, head=None, kstep=1,
                                 hstep=1, normalize=False, **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Use quiver to plot vectors.
 
         Parameters
@@ -449,6 +616,12 @@ class PlotCrossSection(object):
             Vectors
 
         """
+        import warnings
+        warnings.warn('plot_specific_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if 'pivot' in kwargs:
             pivot = kwargs.pop('pivot')
         else:
@@ -606,6 +779,9 @@ class PlotCrossSection(object):
                        head=None, kstep=1, hstep=1, normalize=False,
                        **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Use quiver to plot vectors.
 
         Parameters
@@ -636,6 +812,12 @@ class PlotCrossSection(object):
             Vectors
 
         """
+        import warnings
+        warnings.warn('plot_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if self.mg.grid_type != "structured":
             err_msg = "Use plot_specific_discharge for " \
                       "{} grids".format(self.mg.grid_type)

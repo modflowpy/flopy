@@ -342,6 +342,9 @@ def test_specific_discharge_default():
     return
 
 def test_specific_discharge_comprehensive():
+    import matplotlib.pyplot as plt
+    from matplotlib.quiver import Quiver
+
     # load and postprocess
     mf = flopy.modflow.Modflow.load(namfile_mf2005, check=False)
     qx, qy, qz = flopy.utils.postprocessing.get_specific_discharge(mf,
@@ -356,10 +359,63 @@ def test_specific_discharge_comprehensive():
     # overall check
     overall = np.nansum(qx) + np.nansum(qy) + np.nansum(qz)
     assert np.allclose(overall, -0.8086609840393066)
+
+    # plot discharge in map view
+    lay = 1
+    modelmap = flopy.plot.PlotMapView(model=mf, layer=lay)
+    quiver = modelmap.plot_vector(qx, qy, normalize=True,
+                                  masked_values=[qx[lay, 0, 0]],
+                                  color='orange')
+
+    # check plot
+    ax = modelmap.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Discharge vector was not drawn")
+    for col in ax.collections:
+        if not isinstance(col, Quiver):
+            raise AssertionError("Unexpected collection type")
+    assert np.sum(quiver.Umask) == 2
+    pos = np.sum(quiver.X) + np.sum(quiver.Y)
+    assert np.allclose(pos, 1600.)
+    val = np.sum(quiver.U) + np.sum(quiver.V)
+    assert np.allclose(val, 10.908548355102539)
+
+    # close figure
+    plt.close()
+
+    # plot discharge in cross-section view
+    hds = bf.HeadFile(hdsfile_mf2005, precision='single')
+    head = hds.get_data()
+    row = 0
+    xsect = flopy.plot.PlotCrossSection(model=mf, line={'row': row})
+    quiver = xsect.plot_vector(qx, qy, qz, head=head, normalize=True,
+                               masked_values=qx[0, row, :2], color='orange')
+
+    # check plot
+    ax = xsect.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Discharge vector was not drawn")
+    for col in ax.collections:
+        if not isinstance(col, Quiver):
+            raise AssertionError("Unexpected collection type")
+    assert np.sum(quiver.Umask) == 5
+    X = np.ma.masked_where(quiver.Umask, quiver.X)
+    Y = np.ma.masked_where(quiver.Umask, quiver.Y)
+    pos = X.sum() + Y.sum()
+    assert np.allclose(pos, -153.8352064441874)
+    U = np.ma.masked_where(quiver.Umask, quiver.U)
+    V = np.ma.masked_where(quiver.Umask, quiver.V)
+    val = U.sum() + V.sum()
+    assert np.allclose(val, -3.0916009226424395)
+
+    # # close figure
+    # plt.close()
     return
 
 def test_specific_discharge_mf6():
     from flopy.mf6.modflow.mfsimulation import MFSimulation
+    import matplotlib.pyplot as plt
+    from matplotlib.quiver import Quiver
 
     # build and run MODFLOW 6 model
     build_model_mf6()
@@ -379,6 +435,54 @@ def test_specific_discharge_mf6():
     # overall check
     overall = np.nansum(qx) + np.nansum(qy) + np.nansum(qz)
     assert np.allclose(overall, -2.5768726154495947)
+
+    # plot discharge in map view
+    lay = 1
+    modelmap = flopy.plot.PlotMapView(model=gwf, layer=lay)
+    quiver = modelmap.plot_vector(qx, qy, normalize=True)
+
+    # check plot
+    ax = modelmap.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Discharge vector was not drawn")
+    for col in ax.collections:
+        if not isinstance(col, Quiver):
+            raise AssertionError("Unexpected collection type")
+    assert np.sum(quiver.Umask) == 1
+    pos = np.sum(quiver.X) + np.sum(quiver.Y)
+    assert np.allclose(pos, 1600.)
+    val = np.sum(quiver.U) + np.sum(quiver.V)
+    assert np.allclose(val, 11.10085455942011)
+
+    # close figure
+    plt.close()
+
+    # plot discharge in cross-section view
+    hds = bf.HeadFile(hdsfile_mf6, precision='double')
+    head = hds.get_data()
+    row = 0
+    xsect = flopy.plot.PlotCrossSection(model=gwf, line={'row': row})
+    quiver = xsect.plot_vector(qx, qy, qz, head=head, normalize=True)
+
+    # check plot
+    ax = xsect.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Discharge vector was not drawn")
+    for col in ax.collections:
+        if not isinstance(col, Quiver):
+            raise AssertionError("Unexpected collection type")
+    assert np.sum(quiver.Umask) == 3
+    X = np.ma.masked_where(quiver.Umask, quiver.X)
+    Y = np.ma.masked_where(quiver.Umask, quiver.Y)
+    pos = X.sum() + Y.sum()
+    assert np.allclose(pos, -145.94665962387785)
+    U = np.ma.masked_where(quiver.Umask, quiver.U)
+    V = np.ma.masked_where(quiver.Umask, quiver.V)
+    val = U.sum() + V.sum()
+    assert np.allclose(val, -4.49596527119806)
+
+    # close figure
+    plt.close()
     return
 
 if __name__ == '__main__':
