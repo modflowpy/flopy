@@ -153,7 +153,7 @@ class ModflowOc(Package):
 
         """
         if unitnumber is None:
-            unitnumber = [ModflowOc.defaultunit(), 0, 0, 0, 0]
+            unitnumber = ModflowOc.defaultunit()
         elif isinstance(unitnumber, list):
             if len(unitnumber) < 5:
                 for idx in range(len(unitnumber), 6):
