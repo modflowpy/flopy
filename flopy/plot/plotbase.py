@@ -650,6 +650,8 @@ class PlotCrossSection(object):
             delc = self.mg.delc
             top = self.mg.top
             botm = self.mg.botm
+            if not np.all(self.active==1):
+                botm = botm[self.active==1]
             nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.

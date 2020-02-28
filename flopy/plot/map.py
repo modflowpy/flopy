@@ -847,6 +847,7 @@ class PlotMapView(object):
             laytyp = None
             hnoflo = 999.
             hdry = 999.
+            laycbd = None
 
             if self.model is not None:
                 if self.model.laytyp is not None:
@@ -857,12 +858,25 @@ class PlotMapView(object):
 
                 if self.model.hdry is not None:
                     hdry = self.model.hdry
+                
+                if self.model.laycbd is not None:
+                    laycbd = self.model.laycbd
 
             # If no access to head or laytyp, then calculate confined saturated
             # thickness by setting laytyp to zeros
             if head is None or laytyp is None:
                 head = np.zeros(botm.shape, np.float32)
                 laytyp = np.zeros((nlay,), dtype=np.int)
+            
+            if laycbd is not None and 1 in laycbd:
+                active = np.ones((nlay), dtype=np.int)
+                kon = 0
+                if len(laycbd) > 0:
+                    for k in range(len(laycbd)):
+                        if laycbd[k] > 0:
+                            kon += 1
+                            active[kon] = 0
+                botm = botm[active==1]
 
             # calculate the saturated thickness
             sat_thk = plotutil.PlotUtilities. \
