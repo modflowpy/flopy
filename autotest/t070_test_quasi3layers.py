@@ -84,6 +84,7 @@ def test_plotting_with_quasi3d_layers():
     mv.plot_ibound()
     mv.plot_bc('wel')
     mv.plot_discharge(frf,fff, head=head)
+    plt.close()
     
     # plot a cross-section
     plt.figure()
@@ -94,4 +95,5 @@ def test_plotting_with_quasi3d_layers():
     cs.plot_ibound()
     cs.plot_bc('wel')
     cs.plot_discharge(frf, fff, flf, head=head)
+    plt.close()
 
