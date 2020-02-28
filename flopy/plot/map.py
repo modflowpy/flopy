@@ -843,7 +843,6 @@ class PlotMapView(object):
             delc = self.mg.delc
             top = np.copy(self.mg.top)
             botm = np.copy(self.mg.botm)
-            nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.
             hdry = 999.
@@ -858,7 +857,7 @@ class PlotMapView(object):
 
                 if self.model.hdry is not None:
                     hdry = self.model.hdry
-                
+
                 if self.model.laycbd is not None:
                     laycbd = self.model.laycbd
 
@@ -866,16 +865,15 @@ class PlotMapView(object):
             # thickness by setting laytyp to zeros
             if head is None or laytyp is None:
                 head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((nlay,), dtype=np.int)
-            
+                laytyp = np.zeros((botm.shape[0],), dtype=np.int)
+
             if laycbd is not None and 1 in laycbd:
-                active = np.ones((nlay), dtype=np.int)
+                active = np.ones((botm.shape[0],), dtype=np.int)
                 kon = 0
-                if len(laycbd) > 0:
-                    for k in range(len(laycbd)):
-                        if laycbd[k] > 0:
-                            kon += 1
-                            active[kon] = 0
+                for cbd in laycbd:
+                    if cbd > 0:
+                        kon += 1
+                        active[kon] = 0
                 botm = botm[active==1]
 
             # calculate the saturated thickness
