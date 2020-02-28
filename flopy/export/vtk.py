@@ -203,13 +203,13 @@ class Vtk(object):
         self.model = model
         self.modelgrid = model.modelgrid
         self.arrays = {}
-        self.shape = (self.modelgrid.nlay, self.modelgrid.nrow,
-                      self.modelgrid.ncol)
-        self.shape2d = (self.shape[1], self.shape[2])
         self.nlay = self.modelgrid.nlay
+        if hasattr(self.model, 'dis') and hasattr(self.model.dis, 'laycbd'):
+            self.nlay = self.nlay + np.sum(self.model.dis.laycbd.array > 0)
         self.nrow = self.modelgrid.nrow
         self.ncol = self.modelgrid.ncol
-        self.ncol = self.modelgrid.ncol
+        self.shape = (self.nlay, self.nrow, self.ncol)
+        self.shape2d = (self.shape[1], self.shape[2])
         self.nanval = nanval
 
         self.cell_type = 11

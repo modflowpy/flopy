@@ -285,8 +285,6 @@ class _StructuredCrossSection(_CrossSection):
         nz = 0
         if self.mg.nlay == 1:
             for k in range(0, zpts.shape[0]):
-                if not self.active[k]:
-                    continue
                 nz += 1
                 nx = 0
                 for i in range(0, xpts.shape[0], 2):
