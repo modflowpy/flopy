@@ -13,6 +13,7 @@ import os
 import warnings
 import numpy as np
 from ..datbase import DataInterface, DataListInterface, DataType
+from ..utils.recarray_utils import create_empty_recarray
 
 try:
     from numpy.lib import NumpyVersion
@@ -122,8 +123,7 @@ class MfList(DataInterface, DataListInterface):
         return True
 
     def get_empty(self, ncell=0):
-        d = np.zeros(ncell, dtype=self.dtype)
-        d[:] = -1.0E+10
+        d = create_empty_recarray(ncell, self.dtype, default_value=-1.0E+10)
         return d
 
     def export(self, f, **kwargs):

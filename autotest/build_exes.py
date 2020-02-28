@@ -35,6 +35,8 @@ if not dotlocal:
 if dotlocal:
     bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
     bindir = os.path.abspath(bindir)
+    if not os.path.isdir(bindir):
+        os.makedirs(bindir)
 
 # write where the executables will be downloaded
 print('modflow executables will be downloaded to:\n\n    "{}"'.format(bindir))
@@ -140,7 +142,7 @@ def get_modflow_exes(pth='.', version='', platform=None):
 
 def get_exes_list():
     temp = os.listdir(exe_pth)
-    avail_targets = pymake.usgs_program_data.get_keys(current=True)
+    avail_targets = get_targets()
     targets = []
     for target in avail_targets:
         for tt in temp:
@@ -252,16 +254,37 @@ def copy_target(target, src):
 
 
 def list_json():
-    # build list_json command
-    fpth = os.path.join(bindir, 'code.json')
-    ljson = 'pymake.usgs_program_data.list_json(fpth="{}")'.format(fpth)
-
-    # build full command
-    cmd = "python -c 'from __future__ import print_function; " + \
-          "import pymake; {}'".format(ljson)
-
-    # run command
-    os.system(cmd)
+    # determine if json file in directory with downloaded files
+    json_file = None
+    for f in os.listdir(exe_pth):
+        if f.lower().endswith('.json'):
+            json_file = f
+            break
+    
+    if json_file is not None:
+        # get shell syntax utilities
+        import shlex    
+        shlex_obj = shlex.shlex()
+        e = shlex_obj.escape
+        q = shlex_obj.quotes
+        eq = shlex_obj.escapedquotes
+        
+        # build list_json command
+        fpth = os.path.abspath(os.path.join(bindir, 'code.json'))
+        if os.sep in e:
+            fpth = fpth.replace(os.sep, e[0] + os.sep)
+        quoted_fpth = '"' + fpth + '"'
+        if '"' in q:
+            quoted_fpth = quoted_fpth.replace('"', e[0] + '"')
+        ljson = 'pymake.usgs_program_data.list_json(fpth=' + quoted_fpth + ')'
+        
+        # build full command
+        cmd = 'python -c ' + eq[0] + 'from __future__ import print_function; ' + \
+                  'import pymake; ' + ljson + eq[0]
+    
+        # run command
+        os.system(cmd)
+        
     return
 
 
