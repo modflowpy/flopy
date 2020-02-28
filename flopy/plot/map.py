@@ -861,12 +861,6 @@ class PlotMapView(object):
                 if self.model.laycbd is not None:
                     laycbd = self.model.laycbd
 
-            # If no access to head or laytyp, then calculate confined saturated
-            # thickness by setting laytyp to zeros
-            if head is None or laytyp is None:
-                head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((botm.shape[0],), dtype=np.int)
-
             if laycbd is not None and 1 in laycbd:
                 active = np.ones((botm.shape[0],), dtype=np.int)
                 kon = 0
@@ -875,6 +869,12 @@ class PlotMapView(object):
                         kon += 1
                         active[kon] = 0
                 botm = botm[active==1]
+
+            # If no access to head or laytyp, then calculate confined saturated
+            # thickness by setting laytyp to zeros
+            if head is None or laytyp is None:
+                head = np.zeros(botm.shape, np.float32)
+                laytyp = np.zeros((botm.shape[0],), dtype=np.int)
 
             # calculate the saturated thickness
             sat_thk = plotutil.PlotUtilities. \
