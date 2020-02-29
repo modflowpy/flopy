@@ -1831,9 +1831,11 @@ class ModflowSfr2(Package):
         if isinstance(f, str) and f.lower().endswith(".shp"):
             from flopy.utils.geometry import Polygon
             from flopy.export.shapefile_utils import recarray2shp
-            verts = self.parent.sr.get_vertices(self.reach_data.i,
-                                                self.reach_data.j)
-            geoms = [Polygon(v) for v in verts]
+            geoms = []
+            for ix, i in enumerate(self.reach_data.i):
+                verts = self.parent.modelgrid.get_cell_vertices(
+                    i, self.reach_data.j[ix])
+                geoms.append(Polygon(verts))
             recarray2shp(self.reach_data, geoms, shpname=f, **kwargs)
         else:
             from flopy import export
