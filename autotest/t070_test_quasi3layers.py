@@ -77,7 +77,6 @@ def test_plotting_with_quasi3d_layers():
     # plot a map
     plt.figure()
     mv = flopy.plot.PlotMapView(model=mf,layer=1)
-    mv.plot_array(head)
     mv.plot_grid()
     mv.plot_array(head)
     mv.contour_array(head)

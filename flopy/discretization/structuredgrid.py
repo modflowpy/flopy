@@ -37,7 +37,8 @@ class StructuredGrid(Grid):
     """
     def __init__(self, delc=None, delr=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None):
+                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None,
+                 laycbd=None):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
                                              lenuni, epsg, proj4, prj, xoff,
                                              yoff, angrot)
@@ -55,12 +56,19 @@ class StructuredGrid(Grid):
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
-            if nlay is None:
-                self.__nlay = len(botm)
-            else:
+            if nlay is not None:
                 self.__nlay = nlay
+            else:
+                if laycbd is not None:
+                    self.__nlay = len(botm) - np.sum(laycbd>0)
+                else:
+                    self.__nlay = len(botm)
         else:
             self.__nlay = nlay
+        if laycbd is not None:
+            self.__laycbd = laycbd
+        else:
+            self.__laycbd = np.zeros(self.__nlay, dtype=int)
 
     ####################
     # Properties
@@ -177,9 +185,13 @@ class StructuredGrid(Grid):
                 # get z centers
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.
-                for l in range(1, self.__nlay):
-                    z[l, :, :] = (self._botm[l - 1, :, :] +
-                                  self._botm[l, :, :]) / 2.
+                ibs = np.arange(self.__nlay)
+                quasi3d = self.__laycbd!=0
+                if np.any(quasi3d):
+                    ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[:self.__nlay]
+                for l, ib in enumerate(ibs[1:], 1):
+                    z[l, :, :] = (self._botm[ib - 1, :, :] +
+                                  self._botm[ib, :, :]) / 2.
             else:
                 z = None
             if self._has_ref_coordinates:

@@ -280,7 +280,8 @@ class Modflow(BaseModel):
                                              xoff=self._modelgrid.xoffset,
                                              yoff=self._modelgrid.yoffset,
                                              angrot=self._modelgrid.angrot,
-                                             nlay=self.dis.nlay)
+                                             nlay=self.dis.nlay,
+                                             laycbd=self.dis.laycbd)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
