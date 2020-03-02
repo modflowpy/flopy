@@ -186,9 +186,9 @@ class StructuredGrid(Grid):
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.
                 ibs = np.arange(self.__nlay)
-                quasi3d = self.__laycbd!=0
+                quasi3d = [cbd !=0 for cbd in self.__laycbd]
                 if np.any(quasi3d):
-                    ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[:self.__nlay]
+                    ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[:self.__nlay - 1]
                 for l, ib in enumerate(ibs[1:], 1):
                     z[l, :, :] = (self._botm[ib - 1, :, :] +
                                   self._botm[ib, :, :]) / 2.
