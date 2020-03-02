@@ -385,7 +385,7 @@ class check:
         """
         mg = self.model.modelgrid
         if mg.grid_type == 'structured':
-            inds = (mg.nlay_nocbd, mg.nrow, mg.ncol)
+            inds = (mg.nlay, mg.nrow, mg.ncol)
         elif mg.grid_type == 'vertex':
             inds = (mg.nlay, mg.ncpl)
         else:
