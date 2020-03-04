@@ -68,7 +68,7 @@ def test001a_tharmonic():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_obj.list_records()
         budget_frf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
@@ -111,7 +111,7 @@ def test001a_tharmonic():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_frf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
         # compare output to expected results
@@ -166,7 +166,7 @@ def test003_gwfs_disv():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
@@ -381,7 +381,7 @@ def test006_gwf3():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
         jaentries = budget_fjf_valid.shape[-1]
         budget_fjf_valid.shape = (-1, jaentries)

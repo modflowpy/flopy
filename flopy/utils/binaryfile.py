@@ -529,6 +529,10 @@ class UcnFile(BinaryLayerFile):
         return
 
 
+class BudgetIndexError(Exception):
+    pass
+
+
 class CellBudgetFile(object):
     """
     CellBudgetFile Class.
@@ -564,7 +568,7 @@ class CellBudgetFile(object):
 
     """
 
-    def __init__(self, filename, precision='single', verbose=False, **kwargs):
+    def __init__(self, filename, precision='auto', verbose=False, **kwargs):
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
@@ -589,22 +593,6 @@ class CellBudgetFile(object):
         self.imethlist = []
         self.paknamlist = []
         self.nrecords = 0
-        h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
-                ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
-
-        if precision == 'single':
-            self.realtype = np.float32
-            ffmt = 'f4'
-        elif precision == 'double':
-            self.realtype = np.float64
-            ffmt = 'f8'
-        else:
-            raise Exception('Unknown precision specified: ' + precision)
-        h2dt0 = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
-                 ('totim', ffmt)]
-        h2dt = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
-                ('totim', ffmt), ('modelnam', 'a16'), ('paknam', 'a16'),
-                ('modelnam2', 'a16'), ('paknam2', 'a16')]
 
         self.dis = None
         self.sr = None
@@ -621,18 +609,25 @@ class CellBudgetFile(object):
             args = ','.join(kwargs.keys())
             raise Exception('LayerFile error: unrecognized kwargs: ' + args)
 
-        self.header1_dtype = np.dtype(h1dt)
-        self.header2_dtype0 = np.dtype(h2dt0)
-        self.header2_dtype = np.dtype(h2dt)
-        hdt = h1dt + h2dt
-        self.header_dtype = np.dtype(hdt)
+        if precision == 'auto':
+            success = self._set_precision('single')
+            if not success:
+                success = self._set_precision('double')
+            if not success:
+                s = "Budget precision could not be auto determined"
+                raise BudgetIndexError(s)
+        elif precision == 'single':
+            success = self._set_precision(precision)
+        elif precision == 'double':
+            success = self._set_precision(precision)
+        else:
+            raise Exception('Unknown precision specified: ' + precision)
 
-        # read through the file and build the pointer index
-        self._build_index()
+        if not success:
+            s = "Budget file could not be read using {} " \
+                "precision".format(precision)
+            raise Exception(s)
 
-        # allocate the value array
-        # self.value = np.empty((self.nlay, self.nrow, self.ncol),
-        #                      dtype=self.realtype)
         return
 
     def __enter__(self):
@@ -640,6 +635,60 @@ class CellBudgetFile(object):
 
     def __exit__(self, *exc):
         self.close()
+
+    def __reset(self):
+        """
+        Reset indexing lists when determining precision
+        """
+        self.file.seek(0, 0)
+        self.times = []
+        self.kstpkper = []
+        self.recordarray = []
+        self.iposheader = []
+        self.iposarray = []
+        self.textlist = []
+        self.imethlist = []
+        self.paknamlist = []
+        self.nrecords = 0
+
+    def _set_precision(self, precision='single'):
+        """
+        Method to set the budget precsion from a CBC file. Enables
+        Auto precision code to work
+
+        Parameters
+        ----------
+        precision : str
+            budget file precision (accepts 'single' or 'double')
+        """
+        success = True
+        h1dt = [('kstp', 'i4'), ('kper', 'i4'), ('text', 'a16'),
+                ('ncol', 'i4'), ('nrow', 'i4'), ('nlay', 'i4')]
+        if precision == 'single':
+            self.realtype = np.float32
+            ffmt = 'f4'
+        else:
+            self.realtype = np.float64
+            ffmt = 'f8'
+
+        h2dt0 = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
+                 ('totim', ffmt)]
+        h2dt = [('imeth', 'i4'), ('delt', ffmt), ('pertim', ffmt),
+                ('totim', ffmt), ('modelnam', 'a16'), ('paknam', 'a16'),
+                ('modelnam2', 'a16'), ('paknam2', 'a16')]
+        self.header1_dtype = np.dtype(h1dt)
+        self.header2_dtype0 = np.dtype(h2dt0)
+        self.header2_dtype = np.dtype(h2dt)
+        hdt = h1dt + h2dt
+        self.header_dtype = np.dtype(hdt)
+
+        try:
+            self._build_index()
+        except BudgetIndexError:
+            success = False
+            self.__reset()
+
+        return success
 
     def _totim_from_kstpkper(self, kstpkper):
         if self.dis is None:
@@ -667,6 +716,10 @@ class CellBudgetFile(object):
         Build the ordered dictionary, which maps the header information
         to the position in the binary file.
         """
+        asciiset = ' '
+        for i in range(33, 127):
+            asciiset += chr(i)
+
         header = self._get_header()
         self.nrow = header["nrow"]
         self.ncol = header["ncol"]
@@ -696,6 +749,16 @@ class CellBudgetFile(object):
             if kstpkper not in self.kstpkper:
                 self.kstpkper.append(kstpkper)
             if header['text'] not in self.textlist:
+                # check the precision of the file using text records
+                try:
+                    text = header['text']
+                    if isinstance(text, bytes):
+                        text = text.decode()
+                    for t in text:
+                        if t.upper() not in asciiset:
+                            raise Exception()
+                except:
+                    raise BudgetIndexError("Improper precision")
                 self.textlist.append(header['text'])
                 self.imethlist.append(header['imeth'])
             if header['paknam'] not in self.paknamlist:
