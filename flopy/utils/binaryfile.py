@@ -595,16 +595,30 @@ class CellBudgetFile(object):
         self.nrecords = 0
 
         self.dis = None
-        self.sr = None
+        self.modelgrid = None
         if 'model' in kwargs.keys():
             self.model = kwargs.pop('model')
-            self.sr = self.model.sr
+            self.modelgrid = self.model.modelgrid
             self.dis = self.model.dis
         if 'dis' in kwargs.keys():
             self.dis = kwargs.pop('dis')
-            self.sr = self.dis.parent.sr
+            self.modelgrid = self.dis.parent.modelgrid
         if 'sr' in kwargs.keys():
-            self.sr = kwargs.pop('sr')
+            from ..utils import SpatialReference, SpatialReferenceUnstructured
+            from ..discretization import StructuredGrid, UnstructuredGrid
+            sr = kwargs.pop('sr')
+            if isinstance(sr, SpatialReferenceUnstructured):
+                self.modelgrid = UnstructuredGrid(vertices=sr.verts,
+                                                  iverts=sr.iverts,
+                                                  xcenters=sr.xc,
+                                                  ycenters=sr.yc,
+                                                  ncpl=sr.ncpl)
+            else:
+                self.modelgrid = StructuredGrid(delc=sr.delc, delr=sr.delr,
+                                                xoff=sr.xll, yoff=sr.yll,
+                                                angrot=sr.rotation)
+        if 'modelgrid' in kwargs.keys():
+            self.modelgrid = kwargs.pop('modelgrid')
         if len(kwargs.keys()) > 0:
             args = ','.join(kwargs.keys())
             raise Exception('LayerFile error: unrecognized kwargs: ' + args)
@@ -1277,14 +1291,38 @@ class CellBudgetFile(object):
             result[idx, 0] = t
 
         for itim, k in enumerate(kk):
-            v = self.get_data(kstpkper=k, text=text, full3D=True)
-            # skip missing data - required for storage
-            if len(v) > 0:
-                v = v[0]
-                istat = 1
-                for k, i, j in kijlist:
-                    result[itim, istat] = v[k, i, j].copy()
-                    istat += 1
+            try:
+                v = self.get_data(kstpkper=k, text=text, full3D=True)
+                # skip missing data - required for storage
+                if len(v) > 0:
+                    v = v[0]
+                    istat = 1
+                    for k, i, j in kijlist:
+                        result[itim, istat] = v[k, i, j].copy()
+                        istat += 1
+            except ValueError:
+                v = self.get_data(kstpkper=k, text=text)
+                # skip missing data - required for storage
+                if len(v)> 0:
+                    if self.modelgrid is None:
+                        s = "A modelgrid instance must be provided during " \
+                            "instantiation to get IMETH=6 timeseries data"
+                        raise AssertionError(s)
+
+                    if self.modelgrid.grid_type == 'structured':
+                        ndx = [lrc[0] * (self.modelgrid.nrow *
+                                         self.modelgrid.ncol) +
+                               lrc[1] * self.modelgrid.ncol +
+                               (lrc[2] + 1) for lrc in kijlist]
+                    else:
+                        ndx = [lrc[0] * self.modelgrid.ncpl +
+                               (lrc[-1] + 1) for lrc in kijlist]
+
+                    for vv in v:
+                        field = vv.dtype.names[2]
+                        dix = np.where(np.isin(vv['node'], ndx))[0]
+                        if len(dix) > 0:
+                            result[itim, 1:] = vv[field][dix]
 
         return result
 
