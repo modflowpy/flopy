@@ -166,6 +166,7 @@ def test_sfr():
     if matplotlib is not None:
         assert isinstance(sfr.plot()[0],
                           matplotlib.axes.Axes)  # test the plot() method
+        matplotlib.pyplot.close()
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package
@@ -559,6 +560,7 @@ def test_sfr_plot():
     #sfr.plot(key='strtop')
     #plt.show()
     #assert True
+    #plt.close()
     pass
 
 

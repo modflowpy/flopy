@@ -24,6 +24,7 @@ def test_binaryfile_reference():
 
     if matplotlib is not None:
         assert isinstance(h.plot(), matplotlib.axes.Axes)
+        matplotlib.pyplot.close()
     return
 
 
@@ -36,6 +37,7 @@ def test_formattedfile_reference():
 
     if matplotlib is not None:
         assert isinstance(h.plot(masked_values=[6999.000]), matplotlib.axes.Axes)
+        matplotlib.pyplot.close()
     return
 
 

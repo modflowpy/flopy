@@ -1640,6 +1640,8 @@ class PlotUtilities(object):
     @staticmethod
     def centered_specific_discharge(Qx, Qy, Qz, delr, delc, sat_thk):
         """
+        DEPRECATED. Use postprocessing.get_specific_discharge() instead.
+
         Using the MODFLOW discharge, calculate the cell centered specific discharge
         by dividing by the flow width and then averaging to the cell center.
 
@@ -1666,6 +1668,11 @@ class PlotUtilities(object):
             Specific discharge arrays that have been interpolated to cell centers.
 
         """
+        import warnings
+        warnings.warn('centered_specific_discharge() has been deprecated. Use '
+                      'postprocessing.get_specific_discharge() instead.',
+                      DeprecationWarning)
+
         qx = None
         qy = None
         qz = None
@@ -2403,6 +2410,10 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
         if masked_values is not None:
             for mval in masked_values:
                 a = np.ma.masked_equal(a, mval)
+
+        # add NaN values to mask
+        a = np.ma.masked_where(np.isnan(a), a)
+
         if edgecolor == 'scaled':
             pc.set_edgecolor('none')
         else:

@@ -26,6 +26,7 @@ def test_str_plot():
                                    verbose=True)
     if matplotlib is not None:
         assert isinstance(m.str.plot()[0], matplotlib.axes.Axes)
+        matplotlib.pyplot.close()
 
 
 if __name__ == '__main__':
