@@ -1304,6 +1304,7 @@ def test_tricontour_NaN():
     from flopy.plot import PlotMapView
     import numpy as np
     from flopy.discretization import StructuredGrid
+    import matplotlib.pyplot as plt
 
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
@@ -1335,6 +1336,8 @@ def test_tricontour_NaN():
         if not np.allclose(lev, levels[ix]):
             raise AssertionError("TriContour NaN catch Failed")
 
+    plt.close()
+
 
 def test_get_vertices():
     from flopy.utils.reference import SpatialReference
@@ -1365,6 +1368,7 @@ def test_get_vertices():
 
 
 def test_vertex_model_dot_plot():
+    import matplotlib.pyplot as plt
     # load up the vertex example problem
     sim_name = "mfsim.nam"
     sim_path = "../examples/data/mf6/test003_gwftri_disv"
@@ -1374,13 +1378,16 @@ def test_vertex_model_dot_plot():
     disv_ml = disv_sim.get_model('gwf_1')
     ax = disv_ml.plot()
     assert ax
+    plt.close('all')
 
 
 def test_model_dot_plot():
+    import matplotlib.pyplot as plt
     loadpth = os.path.join('..', 'examples', 'data', 'secp')
     ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
     ax = ml.plot()
     assert ax
+    plt.close('all')
 
 
 def test_get_rc_from_node_coordinates():
@@ -1597,6 +1604,7 @@ def test_export_contourf():
     cs = plt.contourf(a)
     export_contourf(filename, cs)
     assert os.path.isfile(filename), 'did not create contourf shapefile'
+    plt.close()
     return
 
 def main():

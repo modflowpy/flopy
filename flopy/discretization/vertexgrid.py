@@ -34,9 +34,9 @@ class VertexGrid(Grid):
 
     def __init__(self, vertices=None, cell2d=None, top=None,
                  botm=None, idomain=None, lenuni=None, epsg=None, proj4=None,
-                 prj=None, xoff=0.0, yoff=0.0, angrot=0.0, grid_type='vertex',
+                 prj=None, xoff=0.0, yoff=0.0, angrot=0.0,
                  nlay=None, ncpl=None, cell1d=None):
-        super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
+        super(VertexGrid, self).__init__('vertex', top, botm, idomain, lenuni,
                                          epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
         self._cell1d = cell1d
@@ -83,6 +83,10 @@ class VertexGrid(Grid):
             return len(self._botm[0])
         else:
             return self._ncpl
+    
+    @property
+    def nnodes(self):
+        return self.nlay * self.ncpl
 
     @property
     def shape(self):
@@ -123,7 +127,7 @@ class VertexGrid(Grid):
     @property
     def xyzcellcenters(self):
         """
-        Internal method to get cell centers and set to grid
+        Method to get cell centers and set to grid
         """
         cache_index = 'cellcenters'
         if cache_index not in self._cache_dict or \
@@ -137,10 +141,10 @@ class VertexGrid(Grid):
     @property
     def xyzvertices(self):
         """
-        Internal method to get model grid verticies
+        Method to get all grid vertices in a layer, arranged per cell
 
         Returns:
-            list of dimension ncpl by nvertices
+            list of size sum(nvertices per cell)
         """
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \

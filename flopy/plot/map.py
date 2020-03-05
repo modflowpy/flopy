@@ -126,7 +126,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -150,6 +150,9 @@ class PlotMapView(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
+        # add NaN values to mask
+        plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -243,7 +246,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -680,6 +683,12 @@ class PlotMapView(object):
                     t = np.equal(plotarray, mval)
                     ismasked += t
 
+        # add NaN values to mask
+        if ismasked is None:
+            ismasked = np.isnan(plotarray)
+        else:
+            ismasked += np.isnan(plotarray)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -701,9 +710,96 @@ class PlotMapView(object):
 
         return contour_set
 
+    def plot_vector(self, vx, vy, istep=1, jstep=1, normalize=False,
+                    masked_values=None, **kwargs):
+        """
+        Plot a vector.
+
+        Parameters
+        ----------
+        vx : np.ndarray
+            x component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        vy : np.ndarray
+            y component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        istep : int
+            row frequency to plot (default is 1)
+        jstep : int
+            column frequency to plot (default is 1)
+        normalize : bool
+            boolean flag used to determine if vectors should be normalized
+            using the vector magnitude in each cell (default is False)
+        masked_values : iterable of floats
+            values to mask
+        kwargs : matplotlib.pyplot keyword arguments for the
+            plt.quiver method
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            result of the quiver function
+
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # get actual values to plot
+        if self.mg.grid_type == "structured":
+            x = self.mg.xcellcenters[::istep, ::jstep]
+            y = self.mg.ycellcenters[::istep, ::jstep]
+            u = vx[self.layer, ::istep, ::jstep]
+            v = vy[self.layer, ::istep, ::jstep]
+        else:
+            x = self.mg.xcellcenters[::istep]
+            y = self.mg.ycellcenters[::istep]
+            u = vx[self.layer, ::istep]
+            v = vy[self.layer, ::istep]
+
+        # if necessary, copy to avoid changing the passed values
+        if masked_values is not None or normalize:
+            import copy
+            u = copy.copy(u)
+            v = copy.copy(v)
+
+        # mask values
+        if masked_values is not None:
+            for mval in masked_values:
+                to_mask = np.logical_or(u==mval, v==mval)
+                u[to_mask] = np.nan
+                v[to_mask] = np.nan
+
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        # rotate and plot, offsets must be zero since
+        # these are vectors not locations
+        urot, vrot = geometry.rotate(u, v, 0., 0., self.mg.angrot_radians)
+
+        # plot with quiver
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+
+        return quiver
+
     def plot_specific_discharge(self, spdis, istep=1,
                                 jstep=1, normalize=False, **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Method to plot specific discharge from discharge vectors
         provided by the cell by cell flow output file. In MODFLOW-6
         this option is controled in the NPF options block. This method
@@ -726,6 +822,11 @@ class PlotMapView(object):
             quiver plot of discharge vectors
 
         """
+        warnings.warn('plot_specific_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if 'pivot' in kwargs:
             pivot = kwargs.pop('pivot')
         else:
@@ -794,6 +895,9 @@ class PlotMapView(object):
                        flf=None, head=None, istep=1, jstep=1,
                        normalize=False, **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Use quiver to plot vectors.
 
         Parameters
@@ -824,6 +928,11 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
+        warnings.warn('plot_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if self.mg.grid_type != "structured":
             err_msg = "Use plot_specific_discharge for " \
                       "{} grids".format(self.mg.grid_type)
@@ -901,8 +1010,9 @@ class PlotMapView(object):
             for ix, tup in enumerate(temp):
                 spdis[ix] = tup
 
-            self.plot_specific_discharge(spdis, istep=istep, jstep=jstep,
-                                         normalize=normalize, **kwargs)
+            return self.plot_specific_discharge(spdis, istep=istep,
+                                                jstep=jstep,
+                                                normalize=normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """
