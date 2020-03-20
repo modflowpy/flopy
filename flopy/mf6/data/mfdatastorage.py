@@ -1536,7 +1536,8 @@ class DataStorage(object):
                             cellid_size = model_grid.\
                                 get_num_spatial_coordinates()
                         if cellid_size != 1 and \
-                                len(data_line[index]) != cellid_size:
+                                len(data_line[index]) != cellid_size and \
+                                isinstance(data_line[index], int):
                             message = 'Cellid "{}" contains {} integer(s). ' \
                                       'Expected a cellid containing {} ' \
                                       'integer(s) for grid type' \

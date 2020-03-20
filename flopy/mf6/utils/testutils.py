@@ -122,18 +122,24 @@ def read_sfr_rec(sfr_file, cellid_size=3):
     sfrrecarray = []
     for line in fd:
         fd_spl = line.strip().split()
+        try:
+            cellid = make_int_tuple(fd_spl[1:1+cellid_size])
+            temp_size = cellid_size
+        except ValueError as ex:
+            cellid = fd_spl[1]
+            temp_size = 1
         sfrrecarray.append((int(fd_spl[0]) - 1,
-                            make_int_tuple(fd_spl[1:1+cellid_size]),
-                            float(fd_spl[cellid_size+1]),
-                            int(fd_spl[cellid_size+2]),
-                            float(fd_spl[cellid_size+3]),
-                            float(fd_spl[cellid_size+4]),
-                            float(fd_spl[cellid_size+5]),
-                            float(fd_spl[cellid_size+6]),
-                            float(fd_spl[cellid_size+7]),
-                            int(fd_spl[cellid_size+8]),
-                            float(fd_spl[cellid_size+9]),
-                            int(fd_spl[cellid_size+10])))
+                            cellid,
+                            float(fd_spl[temp_size+1]),
+                            int(fd_spl[temp_size+2]),
+                            float(fd_spl[temp_size+3]),
+                            float(fd_spl[temp_size+4]),
+                            float(fd_spl[temp_size+5]),
+                            float(fd_spl[temp_size+6]),
+                            float(fd_spl[temp_size+7]),
+                            int(fd_spl[temp_size+8]),
+                            float(fd_spl[temp_size+9]),
+                            int(fd_spl[temp_size+10])))
     fd.close()
     return sfrrecarray
 
