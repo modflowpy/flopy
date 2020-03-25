@@ -125,7 +125,7 @@ def read_sfr_rec(sfr_file, cellid_size=3):
         try:
             cellid = make_int_tuple(fd_spl[1:1+cellid_size])
             temp_size = cellid_size
-        except ValueError as ex:
+        except ValueError:
             cellid = fd_spl[1]
             temp_size = 1
         sfrrecarray.append((int(fd_spl[0]) - 1,
