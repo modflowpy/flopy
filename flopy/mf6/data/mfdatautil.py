@@ -124,9 +124,10 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
         if DatumUtil.is_int(val):
             return str(val + 1)
-        if len(val) > 0 and val[0] == 'none':
+        if len(val) > 0 and isinstance(val, str) and \
+                val.lower() == 'none':
             # handle case that cellid is 'none'
-            return val[0]
+            return val
         if is_cellid and \
                 data_dim.get_model_dim(None).model_name is not \
                 None:
@@ -148,8 +149,11 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
                     sim_data.debug)
 
         string_val = []
-        for item in val:
-            string_val.append(str(item + 1))
+        if isinstance(val, str):
+            string_val.append(val)
+        else:
+            for item in val:
+                string_val.append(str(item + 1))
         return ' '.join(string_val)
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
