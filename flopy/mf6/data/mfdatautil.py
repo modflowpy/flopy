@@ -124,16 +124,16 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
         if DatumUtil.is_int(val):
             return str(val + 1)
-        if len(val) > 0 and isinstance(val[0], str) and \
-                val[0].lower() == 'none':
+        if len(val) > 0 and isinstance(val, str) and \
+                val.lower() == 'none':
             # handle case that cellid is 'none'
-            return val[0]
+            return val
         if is_cellid and \
                 data_dim.get_model_dim(None).model_name is not \
                 None:
             model_grid = data_dim.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
-            if len(val) != cellid_size and not isinstance(val, str):
+            if len(val) != cellid_size:
                 message = 'Cellid "{}" contains {} integer(s). Expected a' \
                           ' cellid containing {} integer(s) for grid type' \
                           ' {}.'.format(val, len(val), cellid_size,
