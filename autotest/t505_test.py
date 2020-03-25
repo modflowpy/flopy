@@ -1734,7 +1734,6 @@ def test028_sfr():
                                 stress_period_data={0: wells, 1: [()]})
 
     # write simulation to new location
-    print(sim.simulation_data.mfpath.get_sim_path())
     sim.write_simulation()
 
     # run simulation
