@@ -357,6 +357,15 @@ class Vtk(object):
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (i.e., with cubic cells) will be saved as an
+                  'ImageData'.
+                * A rectilinear, non-regular grid will be saved as a
+                  'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
             if True the output file will be binary, default is False
 
@@ -367,7 +376,7 @@ class Vtk(object):
         Stores data arrays added to VTK object
     """
     def __init__(self, model, verbose=None, nanval=-1e+20, smooth=False,
-                 point_scalars=False, binary=False):
+                 point_scalars=False, vtk_grid_type='auto', binary=False):
 
         if point_scalars:
             smooth = True
@@ -422,9 +431,77 @@ class Vtk(object):
         self.verts, self.iverts, self.zverts = \
             self.get_3d_vertex_connectivity()
 
+        self.vtk_grid_type, self.file_extension = \
+            self._vtk_grid_type(vtk_grid_type)
+
         self.binary = binary
 
         return
+
+    def _vtk_grid_type(self, vtk_grid_type='auto'):
+        """
+        Determine the vtk grid type and corresponding file extension.
+
+        Parameters
+        ----------
+        vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
+
+        Returns
+        ----------
+        (vtk_grid_type, file_extension) : tuple of two strings
+        """
+        # if 'auto', determine the vtk grid type automatically
+        if vtk_grid_type == 'auto':
+            if self.modelgrid.grid_type == 'structured':
+                if self.modelgrid.is_regular():
+                    vtk_grid_type = 'ImageData'
+                elif self.modelgrid.is_rectilinear():
+                    vtk_grid_type = 'RectilinearGrid'
+                else:
+                    vtk_grid_type = 'UnstructuredGrid'
+            else:
+                vtk_grid_type = 'UnstructuredGrid'
+        # otherwise, check the validity of the passed vtk_grid_type
+        else:
+            allowable_types = ['ImageData', 'RectilinearGrid',
+                               'UnstructuredGrid']
+            if not any(vtk_grid_type in s for s in allowable_types):
+                raise ValueError('"' + vtk_grid_type + '" is not a correct '\
+                                 'vtk_grid_type.')
+            if (vtk_grid_type == 'ImageData' or \
+                vtk_grid_type == 'RectilinearGrid') and \
+                not self.modelgrid.grid_type == 'structured':
+                raise NotImplementedError('vtk_grid_type cannot be "' + \
+                                          vtk_grid_type + '" for a grid '\
+                                          'that is not structured')
+            if vtk_grid_type == 'ImageData' and \
+                not self.modelgrid.is_regular():
+                raise ValueError('vtk_grid_type cannot be "ImageData" for a '\
+                                 'non-regular grid spacing')
+            if vtk_grid_type == 'RectilinearGrid' and \
+                not self.modelgrid.is_rectilinear():
+                raise ValueError('vtk_grid_type cannot be "RectilinearGrid" '\
+                                 'for a non-rectilinear grid spacing')
+
+        # determine the file extension
+        if vtk_grid_type == 'ImageData':
+            file_extension = '.vti'
+        elif vtk_grid_type == 'RectilinearGrid':
+            file_extension = '.vtr'
+        # else vtk_grid_type == 'UnstructuredGrid'
+        else:
+            file_extension = '.vtu'
+
+        # return vtk grid type and file extension
+        return (vtk_grid_type, file_extension)
 
     def add_array(self, name, a, array2d=False):
         """
@@ -476,19 +553,19 @@ class Vtk(object):
             file, default is None
         """
         # output file
-        output_file = output_file + '.vtu'
+        output_file = output_file + self.file_extension
         if self.verbose:
-                print('Writing vtk file: ' + output_file)
+            print('Writing vtk file: ' + output_file)
 
         # initialize xml file
         if self.binary:
             xml = XmlWriterBinary(output_file)
         else:
             xml = XmlWriterAscii(output_file)
-        xml.add_attributes(type='UnstructuredGrid')
+        xml.add_attributes(type=self.vtk_grid_type)
 
         # grid type
-        xml.open_element('UnstructuredGrid')
+        xml.open_element(self.vtk_grid_type)
 
         # if time value write time section
         if timeval:
@@ -497,66 +574,121 @@ class Vtk(object):
                             NumberOfTuples='1', RangeMin='{0}', RangeMax='{0}')
             xml.close_element('FieldData')
 
-        # get the active data cells based on the data arrays and ibound
-        actwcells3d = self._configure_data_arrays()
+        if self.vtk_grid_type == 'UnstructuredGrid':
+            # get the active data cells based on the data arrays and ibound
+            actwcells3d = self._configure_data_arrays()
 
-        # get the verts and iverts to be output
-        verts, iverts, _ = \
-            self.get_3d_vertex_connectivity(actwcells=actwcells3d)
+            # get the verts and iverts to be output
+            verts, iverts, _ = \
+                self.get_3d_vertex_connectivity(actwcells=actwcells3d)
 
-        # check if there is data to be written out
-        if len(verts) == 0:
-            # if nothing, cannot write file
-            return
+            # check if there is data to be written out
+            if len(verts) == 0:
+                # if nothing, cannot write file
+                return
 
-        # get the total number of cells and vertices
-        ncells = len(iverts)
-        npoints = ncells * 8
-        if self.verbose:
-            print('Number of point is {}, Number of cells is {}\n'.format(
-                  npoints, ncells))
+            # get the total number of cells and vertices
+            ncells = len(iverts)
+            npoints = ncells * 8
+            if self.verbose:
+                print('Number of point is {}, Number of cells is {}\n'.format(
+                      npoints, ncells))
 
-        # piece
-        xml.open_element('Piece')
-        xml.add_attributes(NumberOfPoints=npoints, NumberOfCells=ncells)
+            # piece
+            xml.open_element('Piece')
+            xml.add_attributes(NumberOfPoints=npoints, NumberOfCells=ncells)
 
-        # points
-        xml.open_element('Points')
-        verts = np.array(list(verts.values()))
-        verts.reshape(npoints, 3)
-        xml.write_array(verts, Name='points', NumberOfComponents='3')
-        xml.close_element('Points')
+            # points
+            xml.open_element('Points')
+            verts = np.array(list(verts.values()))
+            verts.reshape(npoints, 3)
+            xml.write_array(verts, Name='points', NumberOfComponents='3')
+            xml.close_element('Points')
 
-        # cells
-        xml.open_element('Cells')
+            # cells
+            xml.open_element('Cells')
 
-        # connectivity
-        iverts = np.array(list(iverts.values()))
-        xml.write_array(iverts, Name='connectivity',
-                        NumberOfComponents='1')
+            # connectivity
+            iverts = np.array(list(iverts.values()))
+            xml.write_array(iverts, Name='connectivity',
+                            NumberOfComponents='1')
 
-        # offsets
-        offsets = np.empty((iverts.shape[0]), np.int32)
-        icount = 0
-        for index, row in enumerate(iverts):
-            icount += len(row)
-            offsets[index] = icount
-        xml.write_array(offsets, Name='offsets', NumberOfComponents='1')
+            # offsets
+            offsets = np.empty((iverts.shape[0]), np.int32)
+            icount = 0
+            for index, row in enumerate(iverts):
+                icount += len(row)
+                offsets[index] = icount
+            xml.write_array(offsets, Name='offsets', NumberOfComponents='1')
 
-        # types
-        types = np.full((iverts.shape[0]), self.cell_type, dtype=np.uint8)
-        xml.write_array(types, Name='types', NumberOfComponents='1')
+            # types
+            types = np.full((iverts.shape[0]), self.cell_type, dtype=np.uint8)
+            xml.write_array(types, Name='types', NumberOfComponents='1')
 
-        # end cells
-        xml.close_element('Cells')
+            # end cells
+            xml.close_element('Cells')
+
+        elif self.vtk_grid_type == 'ImageData':
+            # note: in vtk, "extent" actually means indices of grid lines
+            vtk_extent_str = '0' + ' ' + str(self.modelgrid.ncol) + ' ' + \
+                             '0' + ' ' + str(self.modelgrid.nrow) + ' ' + \
+                             '0' + ' ' + str(self.modelgrid.nlay)
+            xml.add_attributes(WholeExtent=vtk_extent_str)
+            grid_extent = self.modelgrid.xyzextent
+            vtk_origin_str = str(grid_extent[0]) + ' ' + \
+                             str(grid_extent[2]) + ' ' + \
+                             str(grid_extent[4])
+            xml.add_attributes(Origin=vtk_origin_str)
+            vtk_spacing_str = str(self.modelgrid.delr[0]) + ' ' + \
+                              str(self.modelgrid.delc[0]) + ' ' + \
+                              str(self.modelgrid.top[0, 0] -
+                                  self.modelgrid.botm[0, 0, 0])
+            xml.add_attributes(Spacing=vtk_spacing_str)
+
+            # piece
+            xml.open_element('Piece').add_attributes(Extent=vtk_extent_str)
+
+        elif self.vtk_grid_type == 'RectilinearGrid':
+            # note: in vtk, "extent" actually means indices of grid lines
+            vtk_extent_str = '0' + ' ' + str(self.modelgrid.ncol) + ' ' + \
+                             '0' + ' ' + str(self.modelgrid.nrow) + ' ' + \
+                             '0' + ' ' + str(self.modelgrid.nlay)
+            xml.add_attributes(WholeExtent=vtk_extent_str)
+
+            # piece
+            xml.open_element('Piece').add_attributes(Extent=vtk_extent_str)
+
+            # grid coordinates
+            xml.open_element('Coordinates')
+
+            # along x
+            xedges = self.modelgrid.xyedges[0]
+            xml.write_array(xedges, Name='coord_x', NumberOfComponents='1')
+
+            # along y
+            yedges = np.flip(self.modelgrid.xyedges[1])
+            xml.write_array(yedges, Name='coord_y', NumberOfComponents='1')
+
+            # along z
+            zedges = np.flip(self.modelgrid.zedges)
+            xml.write_array(zedges, Name='coord_z', NumberOfComponents='1')
+
+            # end coordinates
+            xml.close_element('Coordinates')
 
         # cell data
         xml.open_element('CellData')
 
         # loop through stored arrays
         for name, a in self.arrays.items():
-            xml.write_array(a, actwcells=actwcells3d, Name=name,
-                            NumberOfComponents='1')
+            if self.vtk_grid_type == 'UnstructuredGrid':
+                xml.write_array(a, actwcells=actwcells3d, Name=name,
+                                NumberOfComponents='1')
+            else:
+                # flip "a" so coordinates increase along with indices as in vtk
+                a = np.flip(a, axis=0)
+                a = np.flip(a, axis=1)
+                xml.write_array(a, Name=name, NumberOfComponents='1')
 
         # end cell data
         xml.close_element('CellData')
@@ -568,9 +700,16 @@ class Vtk(object):
             # loop through stored arrays
             for name, a in self.arrays.items():
                 # get the array values onto vertices
-                _, _, zverts = self.get_3d_vertex_connectivity(
-                             actwcells=actwcells3d, zvalues=a)
-                a = np.array(list(zverts.values()))
+                if self.vtk_grid_type == 'UnstructuredGrid':
+                    _, _, zverts = self.get_3d_vertex_connectivity(
+                                 actwcells=actwcells3d, zvalues=a)
+                    a = np.array(list(zverts.values()))
+                else:
+                    a = self.extendedDataArray(a)
+                    # flip "a" so coordinates increase along with indices as in
+                    # vtk
+                    a = np.flip(a, axis=0)
+                    a = np.flip(a, axis=1)
                 xml.write_array(a, Name=name, NumberOfComponents='1')
 
             # end point data
@@ -579,8 +718,8 @@ class Vtk(object):
         # end piece
         xml.close_element('Piece')
 
-        # end grid type
-        xml.close_element('UnstructuredGrid')
+        # end vtk_grid_type
+        xml.close_element(self.vtk_grid_type)
 
         # finalize and close xml file
         xml.final()
@@ -763,7 +902,7 @@ def _get_names(in_list):
 
 def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
                kstpkper=None, text=None, smooth=False, point_scalars=False,
-               binary=False):
+               vtk_grid_type='auto', binary=False):
     """
     Exports cell by cell file to vtk
 
@@ -791,6 +930,15 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -857,7 +1005,7 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     model_name = model.name
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              binary=binary)
+              vtk_grid_type=vtk_grid_type, binary=binary)
 
     # export data
     addarray = False
@@ -920,7 +1068,8 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
 
 
 def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
-                 smooth=False, point_scalars=False, binary=False):
+                 smooth=False, point_scalars=False, vtk_grid_type='auto',
+                 binary=False):
     """
     Exports binary head file to vtk
 
@@ -943,6 +1092,15 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -983,7 +1141,7 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
 
     # set upt the vtk
     vtk = Vtk(model, smooth=smooth, point_scalars=point_scalars, nanval=nanval,
-              binary=binary)
+              vtk_grid_type=vtk_grid_type, binary=binary)
 
     # output data
     count = 0
@@ -1008,7 +1166,7 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
 
 def export_array(model, array, output_folder, name, nanval=-1e+20,
                  array2d=False, smooth=False, point_scalars=False,
-                 binary=False):
+                 vtk_grid_type='auto', binary=False):
     """
     Export array to vtk
 
@@ -1032,6 +1190,15 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -1040,7 +1207,7 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
         os.mkdir(output_folder)
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              binary=binary)
+              vtk_grid_type=vtk_grid_type, binary=binary)
     vtk.add_array(name, array, array2d=array2d)
     otfile = os.path.join(output_folder, '{}'.format(name))
     vtk.write(otfile)
@@ -1050,7 +1217,7 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
 
 def export_transient(model, array, output_folder, name, nanval=-1e+20,
                      array2d=False, smooth=False, point_scalars=False,
-                     binary=False):
+                     vtk_grid_type='auto', binary=False):
     """
     Export transient 2d array to vtk
 
@@ -1074,6 +1241,15 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -1084,7 +1260,7 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
     to_tim = model.dis.get_totim()
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              binary=binary)
+              vtk_grid_type=vtk_grid_type, binary=binary)
 
     if name.endswith('_'):
         separator = ''
@@ -1131,7 +1307,7 @@ def trans_dict(in_dict, name, trans_array, array2d=False):
 
 def export_package(pak_model, pak_name, otfolder, vtkobj=None,
                    nanval=-1e+20, smooth=False, point_scalars=False,
-                   binary=False):
+                   vtk_grid_type='auto', binary=False):
     """
     Exports package to vtk
 
@@ -1154,6 +1330,15 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
 
@@ -1163,7 +1348,8 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
     if not vtkobj:
         # if not build one
         vtk = Vtk(pak_model, nanval=nanval, smooth=smooth,
-                  point_scalars=point_scalars, binary=binary)
+                  point_scalars=point_scalars, vtk_grid_type=vtk_grid_type,
+                  binary=binary)
     else:
         # otherwise use the vtk object that was supplied
         vtk = vtkobj
@@ -1297,7 +1483,8 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
 
 
 def export_model(model, otfolder, package_names=None, nanval=-1e+20,
-                 smooth=False, point_scalars=False, binary=False):
+                 smooth=False, point_scalars=False, vtk_grid_type='auto',
+                 binary=False):
     """
     Exports model to vtk
 
@@ -1319,11 +1506,20 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
     """
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              binary=binary)
+              vtk_grid_type=vtk_grid_type, binary=binary)
 
     if package_names is not None:
         if not isinstance(package_names, list):
@@ -1337,4 +1533,4 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
     for pak_name in package_names:
         export_package(model, pak_name, otfolder, vtkobj=vtk, nanval=nanval,
                        smooth=smooth, point_scalars=point_scalars,
-                       binary=binary)
+                       vtk_grid_type=vtk_grid_type, binary=binary)

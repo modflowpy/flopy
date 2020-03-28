@@ -215,6 +215,13 @@ def test_vtk_mf6():
             m = loaded_sim.get_model(mname)
             m.export(os.path.join(cpth, m.name), fmt='vtk')
 
+    # check one
+    filetocheck = os.path.join(cpth, 'twrihfb2015', 'npf.vtr')
+    # totalbytes = os.path.getsize(filetocheck)
+    # assert(totalbytes==21609)
+    nlines = count_lines_in_file(filetocheck)
+    assert(nlines==76)
+
     return
 
 
@@ -334,6 +341,101 @@ def test_vtk_cbc():
 
     return
 
+def test_vtk_vti():
+    # test mf 2005 ibs2k
+    mpth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    namfile = 'ibs2k.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False)
+    output_dir = os.path.join(cpth, m.name)
+    filenametocheck = 'DIS.vti'
+
+    # export and check
+    m.export(output_dir, fmt='vtk')
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    # totalbytes = os.path.getsize(filetocheck)
+    # assert(totalbytes==6322)
+    nlines = count_lines_in_file(filetocheck)
+    assert(nlines==21)
+
+    # with point scalar
+    m.export(output_dir + '_points', fmt='vtk', point_scalars=True)
+    filetocheck = os.path.join(output_dir + '_points', filenametocheck)
+    # totalbytes1 = os.path.getsize(filetocheck)
+    # assert(totalbytes1==16382)
+    nlines1 = count_lines_in_file(filetocheck)
+    assert(nlines1==38)
+
+    # with binary
+    m.export(output_dir + '_bin', fmt='vtk', binary=True)
+    filetocheck = os.path.join(output_dir + '_bin', filenametocheck)
+    # totalbytes2 = os.path.getsize(filetocheck)
+    # assert(totalbytes2==6537)
+    nlines2 = count_lines_in_file_bin(filetocheck)
+    assert(nlines2==18)
+
+    # force .vtr
+    filenametocheck = 'DIS.vtr'
+    m.export(output_dir, fmt='vtk', vtk_grid_type='RectilinearGrid')
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    # totalbytes3 = os.path.getsize(filetocheck)
+    # assert(totalbytes3==7146)
+    nlines3 = count_lines_in_file(filetocheck)
+    assert(nlines3==56)
+
+    # force .vtu
+    filenametocheck = 'DIS.vtu'
+    m.export(output_dir, fmt='vtk', vtk_grid_type='UnstructuredGrid')
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    # totalbytes4 = os.path.getsize(filetocheck)
+    # assert(totalbytes4==67065)
+    nlines4 = count_lines_in_file(filetocheck)
+    assert(nlines4==993)
+
+    return
+
+def test_vtk_vtr():
+    # test mf 2005 l1a2k
+    mpth = os.path.join('..', 'examples', 'data', 'mf2005_test')
+    namfile = 'l1a2k.nam'
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False)
+    output_dir = os.path.join(cpth, m.name)
+    filenametocheck = 'EVT_01.vtr'
+
+    # export and check
+    m.export(output_dir, fmt='vtk')
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    # totalbytes = os.path.getsize(filetocheck)
+    # assert(totalbytes==79953)
+    nlines = count_lines_in_file(filetocheck)
+    assert(nlines==87)
+
+    # with point scalar
+    m.export(output_dir + '_points', fmt='vtk', point_scalars=True)
+    filetocheck = os.path.join(output_dir + '_points', filenametocheck)
+    # totalbytes1 = os.path.getsize(filetocheck)
+    # assert(totalbytes1==182472)
+    nlines1 = count_lines_in_file(filetocheck)
+    assert(nlines1==121)
+
+    # with binary
+    m.export(output_dir + '_bin', fmt='vtk', binary=True)
+    filetocheck = os.path.join(output_dir + '_bin', filenametocheck)
+    # totalbytes2 = os.path.getsize(filetocheck)
+    # assert(totalbytes2==47778)
+    nlines2 = count_lines_in_file_bin(filetocheck)
+    assert(nlines2==28)
+
+    # force .vtu
+    filenametocheck = 'EVT_01.vtu'
+    m.export(output_dir, fmt='vtk', vtk_grid_type='UnstructuredGrid')
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    # totalbytes3 = os.path.getsize(filetocheck)
+    # assert(totalbytes3==78762)
+    nlines3 = count_lines_in_file(filetocheck)
+    assert(nlines3==1105)
+
+    return
+
 if __name__ == '__main__':
     test_vtk_export_array2d()
     test_vtk_export_array3d()
@@ -342,3 +444,5 @@ if __name__ == '__main__':
     test_vtk_mf6()
     test_vtk_binary_head_export()
     test_vtk_cbc()
+    test_vtk_vti()
+    test_vtk_vtr()

@@ -285,6 +285,12 @@ class Grid(object):
             'must define extent in child class')
 
     @property
+    def xyzextent(self):
+        return (np.min(self.xyzvertices[0]), np.max(self.xyzvertices[0]),
+                np.min(self.xyzvertices[1]), np.max(self.xyzvertices[1]),
+                np.min(self.xyzvertices[2]), np.max(self.xyzvertices[2]))
+
+    @property
     def grid_lines(self):
         raise NotImplementedError(
             'must define grid_lines in child class')

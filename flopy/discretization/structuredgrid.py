@@ -178,6 +178,23 @@ class StructuredGrid(Grid):
             return self._cache_dict[cache_index].data_nocopy
 
     @property
+    def zedges(self):
+        """
+        Return zedges for (column, row)==(0, 0).
+        """
+        cache_index = 'zedges'
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
+            zedge = np.concatenate((np.array([self.top[0, 0]]),
+                                    self.botm[:, 0, 0]))
+            self._cache_dict[cache_index] = \
+                CachedData(zedge)
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
+
+    @property
     def xyzcellcenters(self):
         """
         Return a list of two numpy one-dimensional float array one with
@@ -421,6 +438,57 @@ class StructuredGrid(Grid):
         write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
                              epsg=epsg, prj=prj)
 
+    def is_regular(self):
+        """
+        Test whether the grid spacing is regular or not (including in the
+        vertical direction).
+        """
+        # Relative tolerance to use in test
+        rel_tol = 1.e-5
+
+        # Regularity test in x direction
+        rel_diff_x = (self.delr - self.delr[0]) / self.delr[0]
+        is_regular_x = np.count_nonzero(rel_diff_x > rel_tol) == 0
+
+        # Regularity test in y direction
+        rel_diff_y = (self.delc - self.delc[0]) / self.delc[0]
+        is_regular_y = np.count_nonzero(rel_diff_y > rel_tol) == 0
+
+        # Regularity test in z direction
+        thickness = (self.top[0, 0] - self.botm[0, 0, 0])
+        rel_diff_z1 = (self.top - self.botm[0, :, :] - thickness) / thickness
+        failed = np.abs(rel_diff_z1) > rel_tol
+        is_regular_z = np.count_nonzero(failed) == 0
+        for k in range(self.nlay - 1):
+            rel_diff_zk = (self.botm[k, :, :] - self.botm[k + 1, :, :] -
+                           thickness) / thickness
+            failed = np.abs(rel_diff_zk) > rel_tol
+            is_regular_z = is_regular_z and np.count_nonzero(failed) == 0
+
+        return is_regular_x and is_regular_y and is_regular_z
+
+    def is_rectilinear(self):
+        """
+        Test whether the grid is rectilinear (it is always so in the x and
+        y directions, but not necessarily in the z direction).
+        """
+        # Relative tolerance to use in test
+        rel_tol = 1.e-5
+
+        # Rectilinearity test in z direction
+        thickness = (self.top[0, 0] - self.botm[0, 0, 0])
+        rel_diff_z1 = (self.top - self.botm[0, :, :] - thickness) / thickness
+        failed = np.abs(rel_diff_z1) > rel_tol
+        is_rectilinear_z = np.count_nonzero(failed) == 0
+        for k in range(self.nlay - 1):
+            thickness_k = (self.botm[k, 0, 0] - self.botm[k + 1, 0, 0])
+            rel_diff_zk = (self.botm[k, :, :] - self.botm[k + 1, :, :] -
+                           thickness_k) / thickness_k
+            failed = np.abs(rel_diff_zk) > rel_tol
+            is_rectilinear_z = is_rectilinear_z and \
+                               np.count_nonzero(failed) == 0
+
+        return is_rectilinear_z
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
