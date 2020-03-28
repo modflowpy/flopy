@@ -512,32 +512,17 @@ def model_export(f, ml, fmt=None, **kwargs):
         or dictionary of ....
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
-    fmt: str
-        output format flag. set to 'vtk' to export to vtk .vtu file
-
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
-         modelgrid: flopy.discretization.Grid
+        modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
         epsg : int
             epsg projection code
         prj : str
             prj file name
-
-        smooth: bool
-            For vtk, if set to True will output smooth surface
-
-        point_scalars: bool
-            For vtk, if set to True will create point scalar values along
-            with cell values.
-
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
-
-        nanval: For vtk, no data value
-
-
+        if fmt is set to 'vtk', parameters of vtk.export_model
 
     """
     assert isinstance(ml, ModelInterface)
@@ -567,13 +552,13 @@ def model_export(f, ml, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk model export
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_model(ml, f, package_names=package_names, smooth=smooth,
-                         point_scalars=point_scalars, binary=binary,
-                         nanval=nanval)
+        vtk.export_model(ml, f, package_names=package_names, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -591,8 +576,8 @@ def package_export(f, pak, fmt=None, **kwargs):
         output file name (ends in .shp for shapefile or .nc for netcdf)
     pak : flopy.pakbase.Package object
         package to export
-    fmt: str
-        output format flag. set to 'vtk' to export to vtk .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     ** kwargs : keword arguments
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
@@ -601,19 +586,7 @@ def package_export(f, pak, fmt=None, **kwargs):
             epsg projection code
         prj : str
             prj file name
-
-        smooth: bool
-            For vtk, if set to True will output smooth surface
-
-        point_scalars: bool
-            For vtk, if set to True will create point scalar values along
-            with cell values.
-
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
-
-        nanval: For vtk, no data value
+        if fmt is set to 'vtk', parameters of vtk.export_package
 
     Returns
     -------
@@ -656,14 +629,13 @@ def package_export(f, pak, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk array export to folder
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_package(pak.parent, pak.name, f, smooth=smooth,
-                           point_scalars=point_scalars, binary=binary,
-                           nanval=nanval)
-
+        vtk.export_package(pak.parent, pak.name, f, nanval=nanval,
+                           smooth=smooth, point_scalars=point_scalars,
+                           binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -874,18 +846,14 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
     f : str
         filename or existing export instance type (NetCdf only for now)
     u2d : Transient2d instance
-    fmt: set to 'vtk' to export a .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to True will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_transient
 
     """
 
@@ -986,13 +954,14 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         return f
 
     elif fmt == 'vtk':
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
         name = kwargs.get('name', t2d.name)
         nanval = kwargs.get('nanval', -1e20)
-        vtk.export_transient(t2d.model, t2d.array, f, name, smooth=smooth,
-                             point_scalars=point_scalars, array2d=True,
-                             nanval=nanval)
+        smooth = kwargs.get('smooth', False)
+        point_scalars = kwargs.get('point_scalars', False)
+        binary = kwargs.get('binary', False)
+        vtk.export_transient(t2d.model, t2d.array, f, name, nanval=nanval,
+                             smooth=smooth, point_scalars=point_scalars,
+                             array2d=True, binary=binary)
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
@@ -1006,18 +975,14 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
     f : str
         filename or existing export instance type (NetCdf only for now)
     u2d : Util3d instance
-    fmt: set to 'vtk' to export a .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
 
@@ -1137,17 +1102,17 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk array export to folder
+        name = kwargs.get('name', u3d.name)
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
-        name = kwargs.get('name', u3d.name)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
         if isinstance(name, list) or isinstance(name, tuple):
             name = name[0]
 
-        vtk.export_array(u3d.model, u3d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars, binary=binary,
-                         nanval=nanval)
+        vtk.export_array(u3d.model, u3d.array, f, name, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -1162,18 +1127,14 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
     f : str
         filename or existing export instance type (NetCdf only for now)
     u2d : Util2d instance
-    fmt: set to 'vtk' to export a .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
     assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
@@ -1269,14 +1230,14 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
     elif fmt == 'vtk':
 
         # call vtk array export to folder
+        name = kwargs.get('name', u2d.name)
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
-        name = kwargs.get('name', u2d.name)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_array(u2d.model, u2d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars, array2d=True,
-                         binary=binary, nanval=nanval)
+        vtk.export_array(u2d.model, u2d.array, f, name, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         array2d=True, binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
