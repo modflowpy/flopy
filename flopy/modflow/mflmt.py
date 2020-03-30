@@ -32,12 +32,14 @@ class ModflowLmt(Package):
         Header for the output file (default is 'extended')
     output_file_format : {'formatted', 'unformatted'}
         Format of the output file (default is 'unformatted')
-    package_flows : {'sfr', 'lak', 'uzf'}
+    package_flows : ['sfr', 'lak', 'uzf']
         Specifies which package flows should be added to the flow-transport
-        link (FTL) file. These values can quickly raise the file size, and
-        therefore the user must request there addition to the FTL file.
-        Default is not to add these terms to the FTL file by omitting the
-        keyword package_flows from the LMT input file.
+        link (FTL) file. The addition of these flags can quickly increase the
+        flow-transport link file size. Therefore, the user must specifically
+        request their amendment to the FTL file. Default is not to add these
+        terms to the FTL file by omitting the keyword package_flows from
+        the LMT input file. One or multiple strings can be passed as a list to
+        the argument.
     extension : string
         Filename extension (default is 'lmt6')
     unitnumber : int
