@@ -734,8 +734,7 @@ class ModflowStr(Package):
                                 for i in fmt6:
                                     istart += i
                                 tt = line[istart:].strip().split()
-                            for iaux in range(len(aux_names)):
-                                name = aux_names[iaux]
+                            for iaux, name in enumerate(aux_names):
                                 current[ibnd][name] = np.float32(tt[iaux])
 
                 # convert indices to zero-based
