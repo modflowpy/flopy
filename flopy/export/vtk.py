@@ -49,7 +49,7 @@ class XmlWriterInterface:
         self.open_tag = False
         self.current = []
         self.indent_level = 0
-        self.indent_char='  '
+        self.indent_char = '  '
 
         # open file and initialize
         self.f = self._open_file(file_path)
@@ -70,7 +70,7 @@ class XmlWriterInterface:
 
     def write_string(self, string):
         """
-        Write a string into the file.
+        Write a string to the file.
         """
         raise NotImplementedError('must define write_string in child class')
 
@@ -120,7 +120,7 @@ class XmlWriterInterface:
 
     def write_array(self, array, actwcells=None, **kwargs):
         """
-        Writes an array to the output vtk file.
+        Write an array to the file.
 
         Parameters
         ----------
@@ -167,13 +167,13 @@ class XmlWriterAscii(XmlWriterInterface):
 
     def write_string(self, string):
         """
-        Write a string into the file.
+        Write a string to the file.
         """
         self.f.write(string)
 
     def write_array(self, array, actwcells=None, **kwargs):
         """
-        Writes an array to the output vtk file.
+        Write an array to the file.
 
         Parameters
         ----------
@@ -199,11 +199,11 @@ class XmlWriterAscii(XmlWriterInterface):
                 array_lay_flat = array[lay][idx].flatten()
             else:
                 array_lay_flat = array[lay].flatten()
-            # replace NaN values by -1.e9 as there is a bug is Paraview when
+            # replace NaN values by -1e9 as there is a bug is Paraview when
             # reading NaN in ASCII mode
             # https://gitlab.kitware.com/paraview/paraview/issues/19042
             # this may be removed in the future if they fix the bug
-            array_lay_flat[np.isnan(array_lay_flat)] = -1.e9
+            array_lay_flat[np.isnan(array_lay_flat)] = -1e9
             s = ' '.join(['{}'.format(val) for val in array_lay_flat])
             self.write_line(s)
 
@@ -251,13 +251,13 @@ class XmlWriterBinary(XmlWriterInterface):
 
     def write_string(self, string):
         """
-        Write a string into the file.
+        Write a string to the file.
         """
         self.f.write(str.encode(string))
 
     def write_array(self, array, actwcells=None, **kwargs):
         """
-        Writes an array to the output vtk file.
+        Write an array to file.
 
         Parameters
         ----------
@@ -427,10 +427,6 @@ class Vtk(object):
 
         self.ibound = ibound
 
-        # build the model vertices
-        self.verts, self.iverts, self.zverts = \
-            self.get_3d_vertex_connectivity()
-
         self.vtk_grid_type, self.file_extension = \
             self._vtk_grid_type(vtk_grid_type)
 
@@ -529,13 +525,14 @@ class Vtk(object):
         except AssertionError:
             return
 
-        # assign nan where nanval or ibound==0
+        # set to nan where nanval or where ibound==0
+        # note np.where makes a copy of the array
         where_to_nan = np.logical_or(a==self.nanval, self.ibound==0)
         a = np.where(where_to_nan, np.nan, a)
 
-        # add a copy of the array to self.arrays
-        a = a.astype(float)
+        # add to self.arrays
         self.arrays[name] = a
+
         return
 
     def write(self, output_file, timeval=None):
@@ -743,12 +740,8 @@ class Vtk(object):
             array = self.arrays[name]
             # make array 1d
             a = array.ravel()
-            # find where no data
-            where_nan = np.isnan(a)
-            # where no data set to the class nan val
-            a[where_nan] = self.nanval
             # get the indexes where there is data
-            idxs = np.argwhere(a != self.nanval)
+            idxs = np.argwhere(np.logical_not(np.isnan(a)))
             # set the active array to 1
             ot_idx_array[idxs] = 1
 
@@ -872,7 +865,6 @@ class Vtk(object):
         for lay in range(self.nlay+1):
             for row in range(self.nrow+1):
                 for col in range(self.ncol+1):
-
                     indexList = [[row-1, col-1], [row-1, col], [row, col-1],
                                  [row, col]]
                     neighList = []
@@ -882,11 +874,7 @@ class Vtk(object):
                             neighList.append(dataArray[lay, index[0],
                                                        index[1]])
                     neighList = np.array(neighList)
-                    if neighList[neighList != self.nanval].shape[0] > 0:
-                        valMean = neighList[neighList != self.nanval].mean()
-                    else:
-                        valMean = self.nanval
-                    matrix[lay, row, col] = valMean
+                    matrix[lay, row, col] = np.nanmean(neighList)
         return matrix
 
 
