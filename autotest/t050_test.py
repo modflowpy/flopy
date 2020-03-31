@@ -1,4 +1,5 @@
 import shutil
+import numpy as np
 import os
 import flopy
 from flopy.export import vtk
@@ -341,6 +342,38 @@ def test_vtk_cbc():
 
     return
 
+def test_vtk_vector():
+    from flopy.utils import postprocessing as pp
+    # test mf 2005 freyberg
+    mpth = os.path.join('..', 'examples', 'data',
+                        'freyberg_multilayer_transient')
+    namfile = 'freyberg.nam'
+    cbcfile = os.path.join(mpth, 'freyberg.cbc')
+    m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False,
+                                   load_only=['dis', 'bas6'])
+    q = pp.get_specific_discharge(m, cbcfile=cbcfile)
+    output_dir = os.path.join(cpth, 'freyberg_vector')
+    filenametocheck = 'discharge.vtu'
+
+    # export and check with point scalar
+    vtk.export_vector(m, q, output_dir, 'discharge', point_scalars=True)
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    totalbytes = os.path.getsize(filetocheck)
+    # assert(totalbytes==2249214)
+    nlines = count_lines_in_file(filetocheck)
+    assert(nlines==10605)
+
+    # with point scalars and binary
+    vtk.export_vector(m, q, output_dir + '_bin', 'discharge', point_scalars=True,
+                      binary=True)
+    filetocheck = os.path.join(output_dir + '_bin', filenametocheck)
+    totalbytes1 = os.path.getsize(filetocheck)
+    # assert(totalbytes1==917033)
+    nlines1 = count_lines_in_file(filetocheck, binary=True)
+    assert(nlines1==2725)
+
+    return
+
 def test_vtk_vti():
     # test mf 2005 ibs2k
     mpth = os.path.join('..', 'examples', 'data', 'mf2005_test')
@@ -390,6 +423,25 @@ def test_vtk_vti():
     # assert(totalbytes4==67905)
     nlines4 = count_lines_in_file(filetocheck)
     assert(nlines4==993)
+
+    # vector
+    filenametocheck = 'T.vti'
+    T = (m.bcf6.tran.array, m.bcf6.tran.array, np.zeros(m.modelgrid.shape))
+    vtk.export_vector(m, T, output_dir, 'T', point_scalars=True)
+    filetocheck = os.path.join(output_dir, filenametocheck)
+    totalbytes5 = os.path.getsize(filetocheck)
+    # assert(totalbytes5==12621)
+    nlines5 = count_lines_in_file(filetocheck)
+    assert(nlines5==20)
+
+    # vector binary
+    vtk.export_vector(m, T, output_dir + '_bin', 'T', point_scalars=True,
+                      binary=True)
+    filetocheck = os.path.join(output_dir + '_bin', filenametocheck)
+    totalbytes6 = os.path.getsize(filetocheck)
+    # assert(totalbytes6==16716)
+    nlines6 = count_lines_in_file(filetocheck, binary=True)
+    assert(nlines6==18)
 
     return
 
@@ -444,5 +496,6 @@ if __name__ == '__main__':
     test_vtk_mf6()
     test_vtk_binary_head_export()
     test_vtk_cbc()
+    test_vtk_vector()
     test_vtk_vti()
     test_vtk_vtr()

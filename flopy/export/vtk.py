@@ -399,6 +399,7 @@ class Vtk(object):
 
         self.cell_type = 11
         self.arrays = {}
+        self.vectors = {}
 
         self.smooth = smooth
         self.point_scalars = point_scalars
@@ -499,9 +500,9 @@ class Vtk(object):
         # return vtk grid type and file extension
         return (vtk_grid_type, file_extension)
 
-    def add_array(self, name, a, array2d=False):
+    def _format_array(self, a, array2d=False):
         """
-        Adds an array to the vtk object
+        Format array for vtk output
 
         Parameters
         ----------
@@ -512,6 +513,10 @@ class Vtk(object):
             the array to be added to the vtk object
         array2d : bool
             True if the array is 2d
+
+        Return
+        ------
+        Formatted array (a copy is made)
         """
         # if array is 2d reformat to 3d array
         if array2d:
@@ -530,8 +535,55 @@ class Vtk(object):
         where_to_nan = np.logical_or(a==self.nanval, self.ibound==0)
         a = np.where(where_to_nan, np.nan, a)
 
+        return a
+
+    def add_array(self, name, a, array2d=False):
+        """
+        Adds an array to the vtk object
+
+        Parameters
+        ----------
+
+        name : str
+            name of the array
+        a : flopy array
+            the array to be added to the vtk object
+        array2d : bool
+            True if the array is 2d
+        """
+        # format array
+        a = self._format_array(a, array2d)
+
         # add to self.arrays
-        self.arrays[name] = a
+        if a is not None:
+            self.arrays[name] = a
+
+        return
+
+    def add_vector(self, name, v, array2d=False):
+        """
+        Adds a vector (i.e., a tuple of arrays) to the vtk object
+
+        Parameters
+        ----------
+
+        name : str
+            name of the vector
+        v : tuple of arrays
+            the vector to be added to the vtk object
+        array2d : bool
+            True if the vector components are 2d arrays
+        """
+        # format each component of the vector
+        vf = ()
+        for vcomp in v:
+            vcomp = self._format_array(vcomp, array2d=array2d)
+            if vcomp is None:
+                return
+            vf = vf + (vcomp,)
+
+        # add to self.vectors
+        self.vectors[name] = vf
 
         return
 
@@ -687,6 +739,23 @@ class Vtk(object):
                 a = np.flip(a, axis=1)
                 xml.write_array(a, Name=name, NumberOfComponents='1')
 
+        # loop through stored vectors
+        for name, v in self.vectors.items():
+            ncomp = len(v)
+            v_as_array = np.moveaxis(np.array(v), 0, -1)
+            if self.vtk_grid_type == 'UnstructuredGrid':
+                shape4d = actwcells3d.shape + (ncomp,)
+                actwcells4d = actwcells3d.reshape(actwcells3d.shape + (1,))
+                actwcells4d = np.broadcast_to(actwcells4d, shape4d)
+                xml.write_array(v_as_array, actwcells=actwcells4d, Name=name,
+                                NumberOfComponents=ncomp)
+            else:
+                # flip "v" so coordinates increase along with indices as in vtk
+                v_as_array = np.flip(v_as_array, axis=0)
+                v_as_array = np.flip(v_as_array, axis=1)
+                xml.write_array(v_as_array, Name=name,
+                                NumberOfComponents=ncomp)
+
         # end cell data
         xml.close_element('CellData')
 
@@ -707,7 +776,31 @@ class Vtk(object):
                     # vtk
                     a = np.flip(a, axis=0)
                     a = np.flip(a, axis=1)
+                # write to file
                 xml.write_array(a, Name=name, NumberOfComponents='1')
+
+            # loop through stored vectors
+            for name, v in self.vectors.items():
+                # get the vector values onto vertices
+                v_ext = ()
+                for vcomp in v:
+                    if self.vtk_grid_type == 'UnstructuredGrid':
+                        _, _, zverts = self.get_3d_vertex_connectivity(
+                                     actwcells=actwcells3d, zvalues=vcomp)
+                        vcomp = np.array(list(zverts.values()))
+                    else:
+                        vcomp = self.extendedDataArray(vcomp)
+                    v_ext = v_ext + (vcomp,)
+                # write to file
+                ncomp = len(v_ext)
+                v_ext_as_array = np.moveaxis(np.array(v_ext), 0, -1)
+                if self.vtk_grid_type != 'UnstructuredGrid':
+                    # flip "v" so coordinates increase along with indices as in
+                    # vtk
+                    v_ext_as_array = np.flip(v_ext_as_array, axis=0)
+                    v_ext_as_array = np.flip(v_ext_as_array, axis=1)
+                xml.write_array(v_ext_as_array, Name=name,
+                                NumberOfComponents=ncomp)
 
             # end point data
             xml.close_element('PointData')
@@ -723,6 +816,7 @@ class Vtk(object):
 
         # clear arrays
         self.arrays.clear()
+        self.vectors.clear()
 
     def _configure_data_arrays(self):
         """
@@ -744,6 +838,16 @@ class Vtk(object):
             idxs = np.argwhere(np.logical_not(np.isnan(a)))
             # set the active array to 1
             ot_idx_array[idxs] = 1
+
+        # loop through vectors
+        for name in self.vectors:
+            for vcomp in self.vectors[name]:
+                # make array 1d
+                a = vcomp.ravel()
+                # get the indexes where there is data
+                idxs = np.argwhere(np.logical_not(np.isnan(a)))
+                # set the active array to 1
+                ot_idx_array[idxs] = 1
 
         # reset the shape of the active data array
         ot_idx_array = ot_idx_array.reshape(self.shape)
@@ -1197,6 +1301,60 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
               vtk_grid_type=vtk_grid_type, binary=binary)
     vtk.add_array(name, array, array2d=array2d)
+    otfile = os.path.join(output_folder, '{}'.format(name))
+    vtk.write(otfile)
+
+    return
+
+
+def export_vector(model, vector, output_folder, name, nanval=-1e+20,
+                 array2d=False, smooth=False, point_scalars=False,
+                 vtk_grid_type='auto', binary=False):
+
+    """
+
+    Export vector (i.e., a tuple of arrays) to vtk
+
+    Parameters
+    ----------
+
+    model : flopy model instance
+        the flopy model instance
+    vector : tuple of arrays
+        vector to be exported
+    output_folder : str
+        output folder to write the data
+    name : str
+        name of vector
+    nanval : scalar
+        no data value, default value is -1e20
+    array2d : bool
+            True if the vector components are 2d arrays, default is False
+    smooth : bool
+        if True, will create smooth layer elevations, default is False
+    point_scalars : bool
+        if True, will also output array values at cell vertices, default is
+        False; note this automatically sets smooth to True
+    vtk_grid_type : str
+            Specific vtk_grid_type or 'auto'. Possible specific values are
+            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+            If 'auto', the grid type is automatically determined. Namely:
+                * A regular grid (in all three directions) will be saved as an
+                  'ImageData'.
+                * A rectilinear (in all three directions), non-regular grid
+                  will be saved as a 'RectilinearGrid'.
+                * Other grids will be saved as 'UnstructuredGrid'.
+    binary : bool
+        if True the output file will be binary, default is False
+
+    """
+
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
+    vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
+              vtk_grid_type=vtk_grid_type, binary=binary)
+    vtk.add_vector(name, vector, array2d=array2d)
     otfile = os.path.join(output_folder, '{}'.format(name))
     vtk.write(otfile)
 
