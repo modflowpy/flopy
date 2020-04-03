@@ -53,6 +53,7 @@ def test001a_tharmonic():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation(silent=True)
 
     model = sim.get_model(model_name)
@@ -181,8 +182,9 @@ def test003_gwfs_disv():
 
     # change some settings
     chd_head_left = model.get_package('CHD_LEFT')
-    chd_left_period = chd_head_left.stress_period_data.array
-    chd_left_period[0][4][1] = 15.0
+    chd_left_period = chd_head_left.stress_period_data.get_data(0)
+    chd_left_period[4][1] = 15.0
+    chd_head_left.stress_period_data.set_data(chd_left_period, 0)
 
     chd_head_right = model.get_package('CHD_RIGHT')
     chd_right_period = chd_head_right.stress_period_data
@@ -259,6 +261,7 @@ def test005_advgw_tidal():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -271,34 +274,6 @@ def test005_advgw_tidal():
         outfile = os.path.join(run_folder, 'head_compare.dat')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
 
-    # change some settings
-    """
-    hydchr = sim.simulation_data.mfdata[(model_name, 'HFB8', 'PERIOD', 'hydchr')]
-    hydchr[2] = 0.000002
-    hydchr[3] = 0.000003
-    hydchr[4] = 0.0000004
-    cond = sim.simulation_data.mfdata[(model_name, 'DRN8_1', 'PERIOD', 'cond')]
-    for index in range(0, len(cond)):
-        cond[index] = 2.1
-
-    # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
-    sim.write_simulation()
-
-    if run:
-        # run simulation
-        sim.run_simulation()
-
-        # get expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
-        head_obj = bf.HeadFile(head_file, precision='double')
-        head_valid = np.array(head_obj.get_alldata())
-
-        # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
-        head_new = os.path.join(save_folder, 'AdvGW_tidal.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
-    """
 
 def test006_gwf3():
     # init paths
@@ -338,6 +313,7 @@ def test006_gwf3():
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -541,6 +517,7 @@ def test006_2models_mvr():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -792,7 +769,7 @@ def test045_lake2tr():
     evt.rate.set_data([0.05], key=0)
 
     lak = model.get_package('lak')
-    lak_period = lak.lakeperioddata
+    lak_period = lak.perioddata
     lak_period_data = lak_period.get_data()
     lak_period_data[0][2][2] = '0.05'
     lak_period.set_data(lak_period_data[0], 0)
@@ -836,6 +813,7 @@ def test036_twrihfb():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -903,6 +881,7 @@ def test027_timeseriestest():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
