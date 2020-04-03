@@ -782,7 +782,6 @@ class MFDataItemStructure(object):
         self.one_per_pkg = False
         self.jagged_array = None
 
-
     def set_value(self, line, common):
         arr_line = line.strip().split()
         if len(arr_line) > 1:

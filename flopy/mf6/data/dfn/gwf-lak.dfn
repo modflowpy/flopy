@@ -601,33 +601,33 @@ longname stress period number
 description REPLACE iper {}
 
 block period
-name lakeperioddata
-type recarray lakeno laksetting
+name perioddata
+type recarray number laksetting
 shape
 reader urword
 longname
 description
 
 block period
-name lakeno
+name number
 type integer
 shape
 tagged false
 in_record true
 reader urword
-longname lake number for this entry
-description integer value that defines the lake number associated with the specified PERIOD data on the line. LAKENO must be greater than zero and less than or equal to NLAKES.
+longname lake or outlet number for this entry
+description integer value that defines the lake or outlet number associated with the specified PERIOD data on the line.  NUMBER must be greater than zero and less than or equal to NLAKES for a lake number and less than or equal to NOUTLETS for an outlet number.
 numeric_index true
 
 block period
 name laksetting
-type keystring status stage rainfall evaporation runoff inflow withdrawal auxiliaryrecord
+type keystring status stage rainfall evaporation runoff inflow withdrawal rate invert width slope rough auxiliaryrecord
 shape
 tagged false
 in_record true
 reader urword
 longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the LAKSETTING string include: STATUS, STAGE, RAINFALL, EVAPORATION, RUNOFFON, WITHDRAWAL, and AUXILIARY.
+description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the LAKSETTING string include both keywords for lake settings and keywords for outlet settings.  Keywords for lake settings include: STATUS, STAGE, RAINFALL, EVAPORATION, RUNOFF, INFLOW, WITHDRAWAL, and AUXILIARY.  Keywords for outlet settings include RATE, INVERT, WIDTH, SLOPE, and ROUGH.
 
 block period
 name status
@@ -692,7 +692,7 @@ in_record true
 reader urword
 time_series true
 longname inflow rate
-description real or character value that defines the volumetric inflow rate $(L^3 T^{-1})$ for the lake. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, inflow rates are zero for each lake.
+description real or character value that defines the volumetric inflow rate $(L^3 T^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. By default, inflow rates are zero for each lake.
 
 block period
 name withdrawal
@@ -704,75 +704,6 @@ reader urword
 time_series true
 longname maximum withdrawal rate
 description real or character value that defines the maximum withdrawal rate $(L^3 T^{-1})$ for the lake. Value must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
-
-block period
-name auxiliaryrecord
-type record auxiliary auxname auxval
-shape
-tagged
-in_record true
-reader urword
-longname
-description
-
-block period
-name auxiliary
-type keyword
-shape
-in_record true
-reader urword
-longname
-description keyword for specifying auxiliary variable.
-
-block period
-name auxname
-type string
-shape
-tagged false
-in_record true
-reader urword
-longname
-description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
-
-block period
-name auxval
-type double precision
-shape
-tagged false
-in_record true
-reader urword
-time_series true
-longname auxiliary variable value
-description value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
-
-block period
-name outletperioddata
-type recarray outletno outletsetting
-shape
-reader urword
-longname
-description
-
-block period
-name outletno
-type integer
-shape
-tagged false
-in_record true
-reader urword
-longname outlet number for this entry
-description integer value that defines the outlet number associated with the specified PERIOD data on the line. OUTLETNO must be greater than zero and less than or equal to NOUTLETS.
-numeric_index true
-
-block period
-name outletsetting
-type keystring rate invert width slope rough
-shape
-tagged false
-in_record true
-reader urword
-longname
-description line of information that is parsed into a keyword and values.  Keyword values that can be used to start the OUTLETSETTING string include: RATE, INVERT, WIDTH, SLOPE, and ROUGH.
 
 block period
 name rate
@@ -828,3 +759,43 @@ reader urword
 time_series true
 longname bed slope
 description real or character value that defines the bed slope for the lake outlet. A specified SLOPE value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO is MANNING. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+
+block period
+name auxiliaryrecord
+type record auxiliary auxname auxval
+shape
+tagged
+in_record true
+reader urword
+longname
+description
+
+block period
+name auxiliary
+type keyword
+shape
+in_record true
+reader urword
+longname
+description keyword for specifying auxiliary variable.
+
+block period
+name auxname
+type string
+shape
+tagged false
+in_record true
+reader urword
+longname
+description name for the auxiliary variable to be assigned AUXVAL.  AUXNAME must match one of the auxiliary variable names defined in the OPTIONS block. If AUXNAME does not match one of the auxiliary variable names defined in the OPTIONS block the data are ignored.
+
+block period
+name auxval
+type double precision
+shape
+tagged false
+in_record true
+reader urword
+time_series true
+longname auxiliary variable value
+description value for the auxiliary variable. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
