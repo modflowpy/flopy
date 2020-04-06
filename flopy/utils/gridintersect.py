@@ -168,9 +168,9 @@ class GridIntersect:
         if isinstance(self.mfgrid._cell2d, np.recarray):
             for icell in self.mfgrid._cell2d.icell2d:
                 points = []
-                for iv in self.mfgrid._cell2d[["icvert_0",
-                                               "icvert_1",
-                                               "icvert_2"]][icell]:
+                icverts = ["icvert_{}".format(i) for i in
+                           range(self.mfgrid._cell2d["ncvert"][icell])]
+                for iv in self.mfgrid._cell2d[icverts][icell]:
                     points.append((self.mfgrid._vertices.xv[iv],
                                    self.mfgrid._vertices.yv[iv]))
                 # close the polygon, if necessary
