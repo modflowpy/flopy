@@ -270,22 +270,30 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def nnodes(self):
+        raise NotImplementedError(
+            'must define nnodes in child class')
+
+    @property
     def shape(self):
         raise NotImplementedError(
-            'must define extent in child '
-            'class to use this base class')
+            'must define shape in child class')
 
     @property
     def extent(self):
         raise NotImplementedError(
-            'must define extent in child '
-            'class to use this base class')
+            'must define extent in child class')
+
+    @property
+    def xyzextent(self):
+        return (np.min(self.xyzvertices[0]), np.max(self.xyzvertices[0]),
+                np.min(self.xyzvertices[1]), np.max(self.xyzvertices[1]),
+                np.min(self.xyzvertices[2]), np.max(self.xyzvertices[2]))
 
     @property
     def grid_lines(self):
         raise NotImplementedError(
-            'must define get_cellcenters in child '
-            'class to use this base class')
+            'must define grid_lines in child class')
 
     @property
     def xcellcenters(self):
@@ -320,8 +328,7 @@ class Grid(object):
     @property
     def xyzvertices(self):
         raise NotImplementedError(
-            'must define xyzgrid in child '
-            'class to use this base class')
+            'must define xyzvertices in child class')
 
     #@property
     #def indices(self):

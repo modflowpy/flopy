@@ -280,7 +280,8 @@ class Modflow(BaseModel):
                                              xoff=self._modelgrid.xoffset,
                                              yoff=self._modelgrid.yoffset,
                                              angrot=self._modelgrid.angrot,
-                                             nlay=self.dis.nlay)
+                                             nlay=self.dis.nlay,
+                                             laycbd=self.dis.laycbd)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -682,6 +683,8 @@ class Modflow(BaseModel):
         if 'NWT' in ext_pkg_d or 'UPW' in ext_pkg_d:
             version = 'mfnwt'
         if 'GLOBAL' in ext_pkg_d:
+            if version != "mf2k":
+                ml.glo = ModflowGlobal(ml)
             version = 'mf2k'
         if 'SMS' in ext_pkg_d:
             version = 'mfusg'

@@ -61,7 +61,7 @@ def test_mf2000_p07():
     pth = os.path.join(pth2000, 'P07')
     namfile = 'p7mf2k.nam'
     mf = flopy.modflow.Modflow.load(namfile, model_ws=pth,
-                                    version='mf2k', verbose=True,
+                                    verbose=True,
                                     exe_name=mf2k_exe)
 
     cpth = os.path.join(newpth, 'P07_2K')

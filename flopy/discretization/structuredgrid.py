@@ -37,7 +37,8 @@ class StructuredGrid(Grid):
     """
     def __init__(self, delc=None, delr=None, top=None, botm=None, idomain=None,
                  lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None):
+                 yoff=0.0, angrot=0.0, nlay=None, nrow=None, ncol=None,
+                 laycbd=None):
         super(StructuredGrid, self).__init__('structured', top, botm, idomain,
                                              lenuni, epsg, proj4, prj, xoff,
                                              yoff, angrot)
@@ -55,15 +56,19 @@ class StructuredGrid(Grid):
             assert self.__nrow * self.__ncol == len(np.ravel(top))
         if botm is not None:
             assert self.__nrow * self.__ncol == len(np.ravel(botm[0]))
-            if nlay is not None and nlay < len(botm):
-                self.__nlay_nocbd = nlay
+            if nlay is not None:
+                self.__nlay = nlay
             else:
-                self.__nlay_nocbd = len(botm)
-
-            self.__nlay = len(botm)
+                if laycbd is not None:
+                    self.__nlay = len(botm) - np.sum(laycbd>0)
+                else:
+                    self.__nlay = len(botm)
         else:
             self.__nlay = nlay
-            self.__nlay_nocbd = nlay
+        if laycbd is not None:
+            self.__laycbd = laycbd
+        else:
+            self.__laycbd = np.zeros(self.__nlay, dtype=int)
 
     ####################
     # Properties
@@ -82,10 +87,6 @@ class StructuredGrid(Grid):
         return False
 
     @property
-    def nlay_nocbd(self):
-        return self.__nlay_nocbd
-
-    @property
     def nlay(self):
         return self.__nlay
 
@@ -96,6 +97,10 @@ class StructuredGrid(Grid):
     @property
     def ncol(self):
         return self.__ncol
+
+    @property
+    def nnodes(self):
+        return self.__nlay * self.__nrow * self.__ncol
 
     @property
     def shape(self):
@@ -120,6 +125,11 @@ class StructuredGrid(Grid):
     @property
     def xyzvertices(self):
         """
+        Method to get all grid vertices in a layer
+
+        Returns:
+            []
+            2D array
         """
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \
@@ -148,6 +158,11 @@ class StructuredGrid(Grid):
 
     @property
     def xyedges(self):
+        """
+        Return a list of two 1D numpy arrays: one with the cell edge x
+        coordinate (size = ncol+1) and the other with the cell edge y
+        coordinate (size = nrow+1) in model space - not offset or rotated.
+        """
         cache_index = 'xyedges'
         if cache_index not in self._cache_dict or \
                 self._cache_dict[cache_index].out_of_date:
@@ -157,6 +172,23 @@ class StructuredGrid(Grid):
                                     np.add.accumulate(self.delc)))
             self._cache_dict[cache_index] = \
                 CachedData([xedge, yedge])
+        if self._copy_cache:
+            return self._cache_dict[cache_index].data
+        else:
+            return self._cache_dict[cache_index].data_nocopy
+
+    @property
+    def zedges(self):
+        """
+        Return zedges for (column, row)==(0, 0).
+        """
+        cache_index = 'zedges'
+        if cache_index not in self._cache_dict or \
+                self._cache_dict[cache_index].out_of_date:
+            zedge = np.concatenate((np.array([self.top[0, 0]]),
+                                    self.botm[:, 0, 0]))
+            self._cache_dict[cache_index] = \
+                CachedData(zedge)
         if self._copy_cache:
             return self._cache_dict[cache_index].data
         else:
@@ -184,9 +216,13 @@ class StructuredGrid(Grid):
                 # get z centers
                 z = np.empty((self.__nlay, self.__nrow, self.__ncol))
                 z[0, :, :] = (self._top[:, :] + self._botm[0, :, :]) / 2.
-                for l in range(1, self.__nlay):
-                    z[l, :, :] = (self._botm[l - 1, :, :] +
-                                  self._botm[l, :, :]) / 2.
+                ibs = np.arange(self.__nlay)
+                quasi3d = [cbd !=0 for cbd in self.__laycbd]
+                if np.any(quasi3d):
+                    ibs[1:] = ibs[1:] + np.cumsum(quasi3d)[:self.__nlay - 1]
+                for l, ib in enumerate(ibs[1:], 1):
+                    z[l, :, :] = (self._botm[ib - 1, :, :] +
+                                  self._botm[ib, :, :]) / 2.
             else:
                 z = None
             if self._has_ref_coordinates:
@@ -402,6 +438,57 @@ class StructuredGrid(Grid):
         write_grid_shapefile(filename, self, array_dict={}, nan_val=-1.0e9,
                              epsg=epsg, prj=prj)
 
+    def is_regular(self):
+        """
+        Test whether the grid spacing is regular or not (including in the
+        vertical direction).
+        """
+        # Relative tolerance to use in test
+        rel_tol = 1.e-5
+
+        # Regularity test in x direction
+        rel_diff_x = (self.delr - self.delr[0]) / self.delr[0]
+        is_regular_x = np.count_nonzero(rel_diff_x > rel_tol) == 0
+
+        # Regularity test in y direction
+        rel_diff_y = (self.delc - self.delc[0]) / self.delc[0]
+        is_regular_y = np.count_nonzero(rel_diff_y > rel_tol) == 0
+
+        # Regularity test in z direction
+        thickness = (self.top[0, 0] - self.botm[0, 0, 0])
+        rel_diff_z1 = (self.top - self.botm[0, :, :] - thickness) / thickness
+        failed = np.abs(rel_diff_z1) > rel_tol
+        is_regular_z = np.count_nonzero(failed) == 0
+        for k in range(self.nlay - 1):
+            rel_diff_zk = (self.botm[k, :, :] - self.botm[k + 1, :, :] -
+                           thickness) / thickness
+            failed = np.abs(rel_diff_zk) > rel_tol
+            is_regular_z = is_regular_z and np.count_nonzero(failed) == 0
+
+        return is_regular_x and is_regular_y and is_regular_z
+
+    def is_rectilinear(self):
+        """
+        Test whether the grid is rectilinear (it is always so in the x and
+        y directions, but not necessarily in the z direction).
+        """
+        # Relative tolerance to use in test
+        rel_tol = 1.e-5
+
+        # Rectilinearity test in z direction
+        thickness = (self.top[0, 0] - self.botm[0, 0, 0])
+        rel_diff_z1 = (self.top - self.botm[0, :, :] - thickness) / thickness
+        failed = np.abs(rel_diff_z1) > rel_tol
+        is_rectilinear_z = np.count_nonzero(failed) == 0
+        for k in range(self.nlay - 1):
+            thickness_k = (self.botm[k, 0, 0] - self.botm[k + 1, 0, 0])
+            rel_diff_zk = (self.botm[k, :, :] - self.botm[k + 1, :, :] -
+                           thickness_k) / thickness_k
+            failed = np.abs(rel_diff_zk) > rel_tol
+            is_rectilinear_z = is_rectilinear_z and \
+                               np.count_nonzero(failed) == 0
+
+        return is_rectilinear_z
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt

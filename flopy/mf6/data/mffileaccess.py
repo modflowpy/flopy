@@ -945,6 +945,8 @@ class MFFileAccessList(MFFileAccess):
                                                                True)
                             storage.data_dimensions.unlock()
                             return data_rec
+            self.simple_line = self.simple_line \
+                               and self.structure.package_type != 'sfr'
             if self.simple_line:
                 line_len = len(self._last_line_info)
                 if struct.num_optional > 0 and not line_info_processed:

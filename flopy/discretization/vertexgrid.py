@@ -32,13 +32,14 @@ class VertexGrid(Grid):
         returns vertices for a single cell at cellid.
     """
 
-    def __init__(self, vertices=None, cell2d=None, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0,
-                 yoff=0.0, angrot=0.0, grid_type='vertex',
-                 nlay=None, ncpl=None):
-        super(VertexGrid, self).__init__(grid_type, top, botm, idomain, lenuni,
+    def __init__(self, vertices=None, cell2d=None, top=None,
+                 botm=None, idomain=None, lenuni=None, epsg=None, proj4=None,
+                 prj=None, xoff=0.0, yoff=0.0, angrot=0.0,
+                 nlay=None, ncpl=None, cell1d=None):
+        super(VertexGrid, self).__init__('vertex', top, botm, idomain, lenuni,
                                          epsg, proj4, prj, xoff, yoff, angrot)
         self._vertices = vertices
+        self._cell1d = cell1d
         self._cell2d = cell2d
         self._top = top
         self._botm = botm
@@ -52,30 +53,40 @@ class VertexGrid(Grid):
 
     @property
     def is_valid(self):
-        if self._vertices is not None and self._cell2d is not None:
+        if self._vertices is not None and (self._cell2d is not None or
+                self._cell1d is not None):
             return True
         return False
 
     @property
     def is_complete(self):
-        if self._vertices is not None and self._cell2d is not None and \
+        if self._vertices is not None and (self._cell2d is not None or
+                self._cell1d is not None) and \
                 super(VertexGrid, self).is_complete:
             return True
         return False
 
     @property
     def nlay(self):
-        if self._botm is not None:
+        if self._cell1d is not None:
+            return 1
+        elif self._botm is not None:
             return len(self._botm)
         else:
             return self._nlay
 
     @property
     def ncpl(self):
+        if self._cell1d is not None:
+            return len(self._cell1d)
         if self._botm is not None:
             return len(self._botm[0])
         else:
             return self._ncpl
+    
+    @property
+    def nnodes(self):
+        return self.nlay * self.ncpl
 
     @property
     def shape(self):
@@ -116,7 +127,7 @@ class VertexGrid(Grid):
     @property
     def xyzcellcenters(self):
         """
-        Internal method to get cell centers and set to grid
+        Method to get cell centers and set to grid
         """
         cache_index = 'cellcenters'
         if cache_index not in self._cache_dict or \
@@ -130,10 +141,10 @@ class VertexGrid(Grid):
     @property
     def xyzvertices(self):
         """
-        Internal method to get model grid verticies
+        Method to get all grid vertices in a layer, arranged per cell
 
         Returns:
-            list of dimension ncpl by nvertices
+            list of size sum(nvertices per cell)
         """
         cache_index = 'xyzgrid'
         if cache_index not in self._cache_dict or \
@@ -233,34 +244,62 @@ class VertexGrid(Grid):
         cache_index_cc = 'cellcenters'
         cache_index_vert = 'xyzgrid'
 
-        vertexdict = {v[0]: [v[1], v[2]]
-                      for v in self._vertices}
         xcenters = []
         ycenters = []
         xvertices = []
         yvertices = []
 
-        # build xy vertex and cell center info
-        for cell2d in self._cell2d:
-            cell2d = tuple(cell2d)
-            xcenters.append(cell2d[1])
-            ycenters.append(cell2d[2])
+        if self._cell1d is not None:
+            zcenters = []
+            zvertices = []
+            vertexdict = {v[0]: [v[1], v[2], v[3]]
+                          for v in self._vertices}
+            for cell1d in self._cell1d:
+                cell1d = tuple(cell1d)
+                xcenters.append(cell1d[1])
+                ycenters.append(cell1d[2])
+                zcenters.append(cell1d[3])
 
-            vert_number = []
-            for i in cell2d[4:]:
-                if i is not None:
-                    vert_number.append(int(i))
+                vert_number = []
+                for i in cell1d[3:]:
+                    if i is not None:
+                        vert_number.append(int(i))
 
-            xcellvert = []
-            ycellvert = []
-            for ix in vert_number:
-                xcellvert.append(vertexdict[ix][0])
-                ycellvert.append(vertexdict[ix][1])
-            xvertices.append(xcellvert)
-            yvertices.append(ycellvert)
+                xcellvert = []
+                ycellvert = []
+                zcellvert = []
+                for ix in vert_number:
+                    xcellvert.append(vertexdict[ix][0])
+                    ycellvert.append(vertexdict[ix][1])
+                    zcellvert.append(vertexdict[ix][2])
+                xvertices.append(xcellvert)
+                yvertices.append(ycellvert)
+                zvertices.append(zcellvert)
 
-        # build z cell centers
-        zvertices, zcenters = self._zcoords()
+        else:
+            vertexdict = {v[0]: [v[1], v[2]]
+                          for v in self._vertices}
+            # build xy vertex and cell center info
+            for cell2d in self._cell2d:
+                cell2d = tuple(cell2d)
+                xcenters.append(cell2d[1])
+                ycenters.append(cell2d[2])
+
+                vert_number = []
+                for i in cell2d[4:]:
+                    if i is not None:
+                        vert_number.append(int(i))
+
+                xcellvert = []
+                ycellvert = []
+                for ix in vert_number:
+                    xcellvert.append(vertexdict[ix][0])
+                    ycellvert.append(vertexdict[ix][1])
+                xvertices.append(xcellvert)
+                yvertices.append(ycellvert)
+
+            # build z cell centers
+            zvertices, zcenters = self._zcoords()
 
         if self._has_ref_coordinates:
             # transform x and y
@@ -270,7 +309,8 @@ class VertexGrid(Grid):
             # vertices are a list within a list
             for xcellvertices, ycellvertices in zip(xvertices, yvertices):
                 xcellvertices, \
-                ycellvertices = self.get_coords(xcellvertices, ycellvertices)
+                ycellvertices = self.get_coords(xcellvertices,
+                                                ycellvertices)
                 xvertxform.append(xcellvertices)
                 yvertxform.append(ycellvertices)
             xvertices = xvertxform

@@ -6,6 +6,7 @@ import flopy
 # Assign name and create modflow model object
 modelname = 'units'
 mf = flopy.modflow.Modflow(modelname, exe_name='mf2005', model_ws=os.path.join('data'))
+cbc_unit_nb = 1053
 
 # Model domain and grid definition
 Lx = 1000.
@@ -34,10 +35,10 @@ strt[:, :, -1] = 0.
 bas = flopy.modflow.ModflowBas(mf, ibound=ibound, strt=strt)
 
 # Add LPF package to the MODFLOW model
-lpf = flopy.modflow.ModflowLpf(mf, hk=10., vka=10.)
+lpf = flopy.modflow.ModflowLpf(mf, hk=10., vka=10., ipakcb=cbc_unit_nb)
 
 # add well
-wel = flopy.modflow.ModflowWel(mf, ipakcb=1053, stress_period_data={0:[0, 4, 4, -100.]})
+wel = flopy.modflow.ModflowWel(mf, ipakcb=cbc_unit_nb, stress_period_data={0:[0, 4, 4, -100.]})
 
 # Add OC package to the MODFLOW model
 spd = {(0, 0): ['print head', 'print budget', 'save head', 'save budget']}

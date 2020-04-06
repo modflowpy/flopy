@@ -163,6 +163,19 @@ def export_shapefile_modelgrid_override(namfile):
         raise Exception(msg)
 
 
+def test_output_helper_shapefile_export():
+    ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
+    name = 'freyberg.nam'
+
+    ml = flopy.modflow.Modflow.load(name, model_ws=ws)
+
+    head = flopy.utils.HeadFile(os.path.join(ws, 'freyberg.hds'))
+    cbc = flopy.utils.CellBudgetFile(os.path.join(ws, "freyberg.cbc"))
+    flopy.export.utils.output_helper(os.path.join('temp', 'test.shp'), ml,
+                                     {'HDS': head, 'cbc': cbc},
+                                     mflay=1, kper=10)
+
+
 def test_freyberg_export():
     from flopy.discretization import StructuredGrid
     namfile = 'freyberg.nam'
@@ -1119,10 +1132,179 @@ def test_modelgrid_with_PlotMapView():
     plt.close()
 
 
+def test_mapview_plot_bc():
+    from matplotlib.collections import QuadMesh, PatchCollection
+    import matplotlib.pyplot as plt
+
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join("..", "examples", "data", "mf6",
+                            "test003_gwfs_disv")
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+    ml6 = sim.get_model("gwf_1")
+    ml6.modelgrid.set_coord_info(angrot=-14)
+    mapview = flopy.plot.PlotMapView(model=ml6)
+    mapview.plot_bc('CHD')
+    ax = mapview.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, PatchCollection):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6', 'test045_lake2tr')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+
+    ml6 = sim.get_model("lakeex2a")
+    mapview = flopy.plot.PlotMapView(model=ml6)
+    mapview.plot_bc('LAK')
+    mapview.plot_bc("SFR")
+
+    ax = mapview.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, QuadMesh):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6',
+                            'test006_2models_mvr')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+
+    ml6 = sim.get_model("parent")
+    ml6c = sim.get_model('child')
+    ml6c.modelgrid.set_coord_info(xoff=700, yoff=0, angrot=0)
+
+    mapview = flopy.plot.PlotMapView(model=ml6)
+    mapview.plot_bc("MAW")
+
+    mapview2 = flopy.plot.PlotMapView(model=ml6c, ax=mapview.ax)
+    mapview2.plot_bc("MAW")
+    ax = mapview2.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, QuadMesh):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6',
+                            'test001e_UZF_3lay')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+    ml6 = sim.get_model("gwf_1")
+
+    mapview = flopy.plot.PlotMapView(model=ml6)
+    mapview.plot_bc("UZF")
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, QuadMesh):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+
+def test_crosssection_plot_bc():
+    from matplotlib.collections import PatchCollection
+    import matplotlib.pyplot as plt
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join("..", "examples", "data", "mf6",
+                            "test003_gwfs_disv")
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+    ml6 = sim.get_model("gwf_1")
+    xc = flopy.plot.PlotCrossSection(ml6, line={'line': ([0, 5.5],
+                                                         [10, 5.5])})
+    xc.plot_bc('CHD')
+    ax = xc.ax
+
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, PatchCollection):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6', 'test045_lake2tr')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+
+    ml6 = sim.get_model("lakeex2a")
+    xc = flopy.plot.PlotCrossSection(ml6, line={'row': 10})
+    xc.plot_bc('LAK')
+    xc.plot_bc("SFR")
+
+    ax = xc.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, PatchCollection):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6',
+                            'test006_2models_mvr')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+
+    ml6 = sim.get_model("parent")
+    xc = flopy.plot.PlotCrossSection(ml6, line={'column': 1})
+    xc.plot_bc("MAW")
+
+    ax = xc.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, PatchCollection):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+    sim_name = 'mfsim.nam'
+    sim_path = os.path.join('..', 'examples', 'data', 'mf6',
+                            'test001e_UZF_3lay')
+    sim = flopy.mf6.MFSimulation.load(sim_name=sim_name,
+                                      sim_ws=sim_path)
+    ml6 = sim.get_model("gwf_1")
+
+    xc = flopy.plot.PlotCrossSection(ml6, line={"row": 0})
+    xc.plot_bc("UZF")
+
+    ax = xc.ax
+    if len(ax.collections) == 0:
+        raise AssertionError("Boundary condition was not drawn")
+
+    for col in ax.collections:
+        if not isinstance(col, PatchCollection):
+            raise AssertionError("Unexpected collection type")
+    plt.close()
+
+
 def test_tricontour_NaN():
     from flopy.plot import PlotMapView
     import numpy as np
     from flopy.discretization import StructuredGrid
+    import matplotlib.pyplot as plt
 
     arr = np.random.rand(10, 10) * 100
     arr[-1, :] = np.nan
@@ -1154,6 +1336,8 @@ def test_tricontour_NaN():
         if not np.allclose(lev, levels[ix]):
             raise AssertionError("TriContour NaN catch Failed")
 
+    plt.close()
+
 
 def test_get_vertices():
     from flopy.utils.reference import SpatialReference
@@ -1184,6 +1368,7 @@ def test_get_vertices():
 
 
 def test_vertex_model_dot_plot():
+    import matplotlib.pyplot as plt
     # load up the vertex example problem
     sim_name = "mfsim.nam"
     sim_path = "../examples/data/mf6/test003_gwftri_disv"
@@ -1193,13 +1378,16 @@ def test_vertex_model_dot_plot():
     disv_ml = disv_sim.get_model('gwf_1')
     ax = disv_ml.plot()
     assert ax
+    plt.close('all')
 
 
 def test_model_dot_plot():
+    import matplotlib.pyplot as plt
     loadpth = os.path.join('..', 'examples', 'data', 'secp')
     ml = flopy.modflow.Modflow.load('secp.nam', model_ws=loadpth)
     ax = ml.plot()
     assert ax
+    plt.close('all')
 
 
 def test_get_rc_from_node_coordinates():
@@ -1258,43 +1446,6 @@ def test_netcdf_classmethods():
     assert len(diff) == 0, str(diff)
 
 
-# def test_netcdf_overloads():
-#     import os
-#     import flopy
-#     nam_file = "freyberg.nam"
-#     model_ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
-#     ml = flopy.modflow.Modflow.load(nam_file,model_ws=model_ws,check=False,
-#                                     verbose=False,load_only=[])
-#
-#     f = ml.export(os.path.join("temp","freyberg.nc"))
-#     fzero = flopy.export.NetCdf.zeros_like(f)
-#     assert fzero.nc.variables["model_top"][:].sum() == 0
-#     print(f.nc.variables["model_top"][0,:])
-#     fplus1 = f + 1
-#     assert fplus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] + 1
-#     assert (f + fplus1).nc.variables["model_top"][0,0] ==\
-#            f.nc.variables["model_top"][0,0] + \
-#            fplus1.nc.variables["model_top"][0,0]
-#
-#     fminus1 = f - 1
-#     assert fminus1.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] - 1
-#     assert (f - fminus1).nc.variables["model_top"][0,0]==\
-#            f.nc.variables["model_top"][0,0] - \
-#            fminus1.nc.variables["model_top"][0,0]
-#
-#     ftimes2 = f * 2
-#     assert ftimes2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] * 2
-#     assert (f * ftimes2).nc.variables["model_top"][0,0] ==\
-#             f.nc.variables["model_top"][0,0] * \
-#            ftimes2.nc.variables["model_top"][0,0]
-#
-#     fdiv2 = f / 2
-#     assert fdiv2.nc.variables["model_top"][0,0] == f.nc.variables["model_top"][0,0] / 2
-#     assert (f / fdiv2).nc.variables["model_top"][0,0] == \
-#          f.nc.variables["model_top"][0,0] / \
-#            fdiv2.nc.variables["model_top"][0,0]
-#
-#     assert f.nc.variables["ibound"][0,0,0] == 1
 def test_wkt_parse():
     """Test parsing of Coordinate Reference System parameters
     from well-known-text in .prj files."""
@@ -1453,20 +1604,20 @@ def test_export_contourf():
     cs = plt.contourf(a)
     export_contourf(filename, cs)
     assert os.path.isfile(filename), 'did not create contourf shapefile'
+    plt.close()
     return
 
 def main():
     # test_shapefile()
     # test_shapefile_ibound()
+    # test_netcdf_classmethods()
 
-    test_netcdf_classmethods()
+    # for namfile in namfiles:
+    #    export_mf2005_netcdf(namfile)
+    #    export_shapefile(namfile)
 
-    for namfile in namfiles:
-        export_mf2005_netcdf(namfile)
-        export_shapefile(namfile)
-
-    for namfile in namfiles[0:2]:
-        export_shapefile_modelgrid_override(namfile)
+    # for namfile in namfiles[0:2]:
+    #     export_shapefile_modelgrid_override(namfile)
 
     # test_netcdf_overloads()
     # test_netcdf_classmethods()
@@ -1480,7 +1631,7 @@ def main():
     # test_vertex_model_dot_plot()
     # test_sr_with_Map()
     # test_modelgrid_with_PlotMapView()
-    test_epsgs()
+    # test_epsgs()
     # test_sr_scaling()
     # test_read_usgs_model_reference()
     # test_dynamic_xll_yll()
@@ -1500,7 +1651,9 @@ def main():
     # test_export_contourf()
     # test_sr()
     # test_shapefile_polygon_closed()
-
+    test_mapview_plot_bc()
+    test_crosssection_plot_bc()
+    test_output_helper_shapefile_export()
 
 if __name__ == '__main__':
 

@@ -502,8 +502,8 @@ class Package(PackageInterface):
 
     @property
     def package_type(self):
-        if len(self.extension) > 0:
-            return self.extension[0]
+        if len(self.name) > 0:
+            return self.name[0].lower()
 
     @property
     def plotable(self):
