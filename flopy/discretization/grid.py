@@ -136,7 +136,11 @@ class Grid(object):
         LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
         self.use_ref_coords = True
         self._grid_type = grid_type
+        if top is not None:
+            top = top.astype(float)
         self._top = top
+        if botm is not None:
+            botm = botm.astype(float)
         self._botm = botm
         self._idomain = idomain
 
