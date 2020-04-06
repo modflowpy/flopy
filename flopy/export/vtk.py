@@ -395,6 +395,8 @@ class Vtk(object):
         self.ncol = self.modelgrid.ncol
         self.shape = (self.nlay, self.nrow, self.ncol)
         self.shape2d = (self.shape[1], self.shape[2])
+        self.shape_verts = (self.shape[0]+1, self.shape[1]+1, self.shape[2]+1)
+        self.shape_verts2d = (self.shape_verts[1], self.shape_verts[2])
         self.nanval = nanval
 
         self.cell_type = 11
@@ -403,6 +405,8 @@ class Vtk(object):
 
         self.smooth = smooth
         self.point_scalars = point_scalars
+        self.has_cell_data = False
+        self.has_point_data = False
 
         # check if structured grid, vtk only supports structured grid
         assert (isinstance(self.modelgrid, StructuredGrid))
@@ -437,7 +441,7 @@ class Vtk(object):
 
     def _vtk_grid_type(self, vtk_grid_type='auto'):
         """
-        Determine the vtk grid type and corresponding file extension.
+        Determines the vtk grid type and corresponding file extension.
 
         Parameters
         ----------
@@ -502,7 +506,7 @@ class Vtk(object):
 
     def _format_array(self, a, array2d=False):
         """
-        Format array for vtk output
+        Formats array for vtk output.
 
         Parameters
         ----------
@@ -516,30 +520,55 @@ class Vtk(object):
 
         Return
         ------
-        Formatted array (a copy is made)
+        Formatted array (note a copy is made)
         """
         # if array is 2d reformat to 3d array
         if array2d:
-            assert a.shape == self.shape2d
-            array = np.full(self.shape, self.nanval)
+            if a.shape == self.shape2d:
+                array = np.full(self.shape, self.nanval)
+            elif a.shape == self.shape_verts2d:
+                array = np.full(self.shape_verts, self.nanval)
+            else:
+                raise ValueError('Incompatible array size')
             array[0, :, :] = a
             a = array
 
-        try:
-            assert a.shape == self.shape
-        except AssertionError:
-            return
-
-        # set to nan where nanval or where ibound==0
-        # note np.where makes a copy of the array
-        where_to_nan = np.logical_or(a==self.nanval, self.ibound==0)
+        # deal with inactive cells
+        inactive3d = self.ibound==0
+        if a.shape == self.shape:
+            # set to nan where nanval or where ibound==0
+            where_to_nan = np.logical_or(a==self.nanval, inactive3d)
+            self.has_cell_data = True
+        elif a.shape == self.shape_verts:
+            # set to nan where ibound==0 at all 8 neighbors
+            where_to_nan = np.full(self.shape_verts, True)
+            where_to_nan[:-1, :-1, :-1] = inactive3d
+            where_to_nan[:-1, :-1, 1:] = np.logical_and(
+                where_to_nan[:-1, :-1, 1:], inactive3d)
+            where_to_nan[:-1, 1:, :-1] = np.logical_and(
+                where_to_nan[:-1, 1:, :-1], inactive3d)
+            where_to_nan[:-1, 1:, 1:] = np.logical_and(
+                where_to_nan[:-1, 1:, 1:], inactive3d)
+            where_to_nan[1:, :-1, :-1] = np.logical_and(
+                where_to_nan[1:, :-1, :-1], inactive3d)
+            where_to_nan[1:, :-1, 1:] = np.logical_and(
+                where_to_nan[1:, :-1, 1:], inactive3d)
+            where_to_nan[1:, 1:, :-1] = np.logical_and(
+                where_to_nan[1:, 1:, :-1], inactive3d)
+            where_to_nan[1:, 1:, 1:] = np.logical_and(
+                where_to_nan[1:, 1:, 1:], inactive3d)
+            self.has_point_data = True
+            self.smooth = True
+        else:
+            # incompatible size, skip this array
+            return None
         a = np.where(where_to_nan, np.nan, a)
 
         return a
 
     def add_array(self, name, a, array2d=False):
         """
-        Adds an array to the vtk object
+        Adds an array to the vtk object.
 
         Parameters
         ----------
@@ -548,6 +577,7 @@ class Vtk(object):
             name of the array
         a : flopy array
             the array to be added to the vtk object
+            shape should match either grid cells or grid vertices
         array2d : bool
             True if the array is 2d
         """
@@ -562,7 +592,7 @@ class Vtk(object):
 
     def add_vector(self, name, v, array2d=False):
         """
-        Adds a vector (i.e., a tuple of arrays) to the vtk object
+        Adds a vector (i.e., a tuple of arrays) to the vtk object.
 
         Parameters
         ----------
@@ -571,6 +601,7 @@ class Vtk(object):
             name of the vector
         v : tuple of arrays
             the vector to be added to the vtk object
+            shape of arrays should match either grid cells or grid vertices
         array2d : bool
             True if the vector components are 2d arrays
         """
@@ -629,7 +660,7 @@ class Vtk(object):
 
             # get the verts and iverts to be output
             verts, iverts, _ = \
-                self.get_3d_vertex_connectivity(actwcells=actwcells3d)
+                self._get_3d_vertex_connectivity(actwcells=actwcells3d)
 
             # check if there is data to be written out
             if len(verts) == 0:
@@ -725,81 +756,111 @@ class Vtk(object):
             # end coordinates
             xml.close_element('Coordinates')
 
-        # cell data
-        xml.open_element('CellData')
+        if self.has_cell_data:
+            # cell data
+            xml.open_element('CellData')
 
-        # loop through stored arrays
-        for name, a in self.arrays.items():
-            if self.vtk_grid_type == 'UnstructuredGrid':
-                xml.write_array(a, actwcells=actwcells3d, Name=name,
-                                NumberOfComponents='1')
-            else:
-                # flip "a" so coordinates increase along with indices as in vtk
-                a = np.flip(a, axis=0)
-                a = np.flip(a, axis=1)
-                xml.write_array(a, Name=name, NumberOfComponents='1')
+            # loop through stored arrays
+            for name, a in self.arrays.items():
+                if a.shape == self.shape_verts:
+                    # these are dealt with later
+                    continue
+                if self.vtk_grid_type == 'UnstructuredGrid':
+                    xml.write_array(a, actwcells=actwcells3d, Name=name,
+                                    NumberOfComponents='1')
+                else:
+                    # flip "a" so coordinates increase along with indices as in
+                    # vtk
+                    a = np.flip(a, axis=[0, 1])
+                    xml.write_array(a, Name=name, NumberOfComponents='1')
 
-        # loop through stored vectors
-        for name, v in self.vectors.items():
-            ncomp = len(v)
-            v_as_array = np.moveaxis(np.array(v), 0, -1)
-            if self.vtk_grid_type == 'UnstructuredGrid':
-                shape4d = actwcells3d.shape + (ncomp,)
-                actwcells4d = actwcells3d.reshape(actwcells3d.shape + (1,))
-                actwcells4d = np.broadcast_to(actwcells4d, shape4d)
-                xml.write_array(v_as_array, actwcells=actwcells4d, Name=name,
-                                NumberOfComponents=ncomp)
-            else:
-                # flip "v" so coordinates increase along with indices as in vtk
-                v_as_array = np.flip(v_as_array, axis=0)
-                v_as_array = np.flip(v_as_array, axis=1)
-                xml.write_array(v_as_array, Name=name,
-                                NumberOfComponents=ncomp)
+            # loop through stored vectors
+            for name, v in self.vectors.items():
+                if v[0].shape == self.shape_verts:
+                    # these are dealt with later
+                    continue
+                ncomp = len(v)
+                v_as_array = np.moveaxis(np.array(v), 0, -1)
+                if self.vtk_grid_type == 'UnstructuredGrid':
+                    shape4d = actwcells3d.shape + (ncomp,)
+                    actwcells4d = actwcells3d.reshape(actwcells3d.shape + (1,))
+                    actwcells4d = np.broadcast_to(actwcells4d, shape4d)
+                    xml.write_array(v_as_array, actwcells=actwcells4d,
+                                    Name=name, NumberOfComponents=ncomp)
+                else:
+                    # flip "v" so coordinates increase along with indices as in
+                    # vtk
+                    v_as_array = np.flip(v_as_array, axis=[0, 1])
+                    xml.write_array(v_as_array, Name=name,
+                                    NumberOfComponents=ncomp)
 
-        # end cell data
-        xml.close_element('CellData')
+            # end cell data
+            xml.close_element('CellData')
 
-        if self.point_scalars:
+        if self.point_scalars or self.has_point_data:
             # point data (i.e., values at vertices)
             xml.open_element('PointData')
 
             # loop through stored arrays
             for name, a in self.arrays.items():
-                # get the array values onto vertices
-                if self.vtk_grid_type == 'UnstructuredGrid':
-                    _, _, zverts = self.get_3d_vertex_connectivity(
-                                 actwcells=actwcells3d, zvalues=a)
-                    a = np.array(list(zverts.values()))
+                if a.shape == self.shape:
+                    if not self.point_scalars:
+                        continue
+                    # get the array values onto vertices
+                    if self.vtk_grid_type == 'UnstructuredGrid':
+                        _, _, averts = self._get_3d_vertex_connectivity(
+                            actwcells=actwcells3d, zvalues=a)
+                        a = np.array(list(averts.values()))
+                    else:
+                        a = self.modelgrid.array_at_verts(a)
+                        a = np.flip(a, axis=[0, 1])
                 else:
-                    a = self.extendedDataArray(a)
-                    # flip "a" so coordinates increase along with indices as in
-                    # vtk
-                    a = np.flip(a, axis=0)
-                    a = np.flip(a, axis=1)
-                # write to file
+                    if self.vtk_grid_type == 'UnstructuredGrid':
+                        # still need to do this to be consistent with
+                        # connectivity (i.e. 8 points for every cell)
+                        _, _, averts = self._get_3d_vertex_connectivity(
+                            actwcells=actwcells3d, zvalues=a)
+                        a = np.array(list(averts.values()))
+                    else:
+                        # flip "a" so coordinates increase along with indices
+                        # as in vtk
+                        a = np.flip(a, axis=[0, 1])
                 xml.write_array(a, Name=name, NumberOfComponents='1')
 
             # loop through stored vectors
             for name, v in self.vectors.items():
-                # get the vector values onto vertices
-                v_ext = ()
-                for vcomp in v:
-                    if self.vtk_grid_type == 'UnstructuredGrid':
-                        _, _, zverts = self.get_3d_vertex_connectivity(
-                                     actwcells=actwcells3d, zvalues=vcomp)
-                        vcomp = np.array(list(zverts.values()))
-                    else:
-                        vcomp = self.extendedDataArray(vcomp)
-                    v_ext = v_ext + (vcomp,)
+                if v[0].shape == self.shape:
+                    if not self.point_scalars:
+                        continue
+                    # get the vector values onto vertices
+                    v_verts = ()
+                    for vcomp in v:
+                        if self.vtk_grid_type == 'UnstructuredGrid':
+                            _, _, averts = self._get_3d_vertex_connectivity(
+                                actwcells=actwcells3d, zvalues=vcomp)
+                            vcomp = np.array(list(averts.values()))
+                        else:
+                            vcomp = self.modelgrid.array_at_verts(vcomp)
+                            vcomp = np.flip(vcomp, axis=[0, 1])
+                        v_verts = v_verts + (vcomp,)
+                    v = v_verts
+                else:
+                    v_verts = ()
+                    for vcomp in v:
+                        if self.vtk_grid_type == 'UnstructuredGrid':
+                            # still need to do this to be consistent with
+                            # connectivity (i.e. 8 points for every cell)
+                            _, _, averts = self._get_3d_vertex_connectivity(
+                                actwcells=actwcells3d, zvalues=vcomp)
+                            vcomp = np.array(list(averts.values()))
+                        else:
+                            vcomp = np.flip(vcomp, axis=[0, 1])
+                        v_verts = v_verts + (vcomp,)
+                    v = v_verts
                 # write to file
-                ncomp = len(v_ext)
-                v_ext_as_array = np.moveaxis(np.array(v_ext), 0, -1)
-                if self.vtk_grid_type != 'UnstructuredGrid':
-                    # flip "v" so coordinates increase along with indices as in
-                    # vtk
-                    v_ext_as_array = np.flip(v_ext_as_array, axis=0)
-                    v_ext_as_array = np.flip(v_ext_as_array, axis=1)
-                xml.write_array(v_ext_as_array, Name=name,
+                ncomp = len(v)
+                v_as_array = np.moveaxis(np.array(v), 0, -1)
+                xml.write_array(v_as_array, Name=name,
                                 NumberOfComponents=ncomp)
 
             # end point data
@@ -823,40 +884,61 @@ class Vtk(object):
         Compares arrays and active cells to find where active data
         exists, and what cells to output.
         """
-        # get 1d shape
+        # build 1d index array
         shape1d = self.shape[0] * self.shape[1] * self.shape[2]
-
-        # build index array
-        ot_idx_array = np.zeros(shape1d, dtype=np.int)
+        actwcells1d = np.zeros(shape1d, dtype=np.int)
+        if self.has_point_data:
+            shape1d_verts = self.shape_verts[0] * self.shape_verts[1] * \
+                self.shape_verts[2]
+            actwcells1d_verts = np.zeros(shape1d_verts, dtype=np.int)
 
         # loop through arrays
-        for name in self.arrays:
-            array = self.arrays[name]
+        for a in self.arrays.values():
             # make array 1d
-            a = array.ravel()
+            a1d = a.ravel()
             # get the indexes where there is data
-            idxs = np.argwhere(np.logical_not(np.isnan(a)))
+            idxs = np.argwhere(np.logical_not(np.isnan(a1d)))
             # set the active array to 1
-            ot_idx_array[idxs] = 1
+            if a.shape == self.shape:
+                actwcells1d[idxs] = 1
+            elif self.has_point_data:
+                actwcells1d_verts[idxs] = 1
 
         # loop through vectors
-        for name in self.vectors:
-            for vcomp in self.vectors[name]:
+        for v in self.vectors.values():
+            for vcomp in v:
                 # make array 1d
-                a = vcomp.ravel()
+                vcomp1d = vcomp.ravel()
                 # get the indexes where there is data
-                idxs = np.argwhere(np.logical_not(np.isnan(a)))
+                idxs = np.argwhere(np.logical_not(np.isnan(vcomp1d)))
                 # set the active array to 1
-                ot_idx_array[idxs] = 1
+                if vcomp.shape == self.shape:
+                    actwcells1d[idxs] = 1
+                elif self.has_point_data:
+                    actwcells1d_verts[idxs] = 1
 
-        # reset the shape of the active data array
-        ot_idx_array = ot_idx_array.reshape(self.shape)
+        # reshape to 3D array
+        actwcells3d = actwcells1d.reshape(self.shape)
+        if self.has_point_data:
+            actwcells3d_verts = actwcells1d_verts.reshape(self.shape_verts)
+            # activate cells that are neighbor of 8 active vertices
+            activate = np.full(self.shape, True)
+            activate[actwcells3d_verts[:-1, :-1, :-1] == 0] = False
+            activate[actwcells3d_verts[:-1, :-1, 1:] == 0] = False
+            activate[actwcells3d_verts[:-1, 1:, :-1] == 0] = False
+            activate[actwcells3d_verts[:-1, 1:, 1:] == 0] = False
+            activate[actwcells3d_verts[1:, :-1, :-1] == 0] = False
+            activate[actwcells3d_verts[1:, :-1, 1:] == 0] = False
+            activate[actwcells3d_verts[1:, 1:, :-1] == 0] = False
+            activate[actwcells3d_verts[1:, 1:, 1:] == 0] = False
+            activate[self.ibound==0] = False
+            actwcells3d[activate] = 1
 
-        return ot_idx_array
+        return actwcells3d
 
-    def get_3d_vertex_connectivity(self, actwcells=None, zvalues=None):
+    def _get_3d_vertex_connectivity(self, actwcells=None, zvalues=None):
         """
-        Builds x,y,z vertices
+        Builds x,y,z vertices.
 
         Parameters
         ----------
@@ -888,10 +970,14 @@ class Vtk(object):
         # if smoothing interpolate the z values
         if self.smooth:
             if zvalues is not None:
-                # use the given data array values
-                zVertices = self.extendedDataArray(zvalues)
+                if zvalues.shape==self.shape:
+                    # interpolate using the given values
+                    zVertices = self.modelgrid.array_at_verts(zvalues)
+                else:
+                    # in this case the given values are already at vertices
+                    zVertices = zvalues
             else:
-                zVertices = self.extendedDataArray(self.modelgrid.top_botm)
+                zVertices = self.modelgrid.zverts_smooth
         else:
             zVertices = None
 
@@ -954,32 +1040,6 @@ class Vtk(object):
                         ivertsdict[cellid] = ivert
                         zvertsdict[cellid] = zverts
         return vertsdict, ivertsdict, zvertsdict
-
-    def extendedDataArray(self, dataArray):
-
-        if dataArray.shape[0] == self.nlay+1:
-            dataArray = dataArray
-        else:
-            listArray = [dataArray[0]]
-            for lay in range(dataArray.shape[0]):
-                listArray.append(dataArray[lay])
-            dataArray = np.stack(listArray)
-
-        matrix = np.zeros([self.nlay+1, self.nrow+1, self.ncol+1])
-        for lay in range(self.nlay+1):
-            for row in range(self.nrow+1):
-                for col in range(self.ncol+1):
-                    indexList = [[row-1, col-1], [row-1, col], [row, col-1],
-                                 [row, col]]
-                    neighList = []
-                    for index in indexList:
-                        if index[0] in range(self.nrow) and index[1] in \
-                                range(self.ncol):
-                            neighList.append(dataArray[lay, index[0],
-                                                       index[1]])
-                    neighList = np.array(neighList)
-                    matrix[lay, row, col] = np.nanmean(neighList)
-        return matrix
 
 
 def _get_names(in_list):
