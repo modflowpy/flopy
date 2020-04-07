@@ -557,9 +557,11 @@ def model_export(f, ml, fmt=None, **kwargs):
         point_scalars = kwargs.get('point_scalars', False)
         vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
         binary = kwargs.get('binary', False)
+        kpers = kwargs.get('kpers', None)
         vtk.export_model(ml, f, package_names=package_names, nanval=nanval,
                          smooth=smooth, point_scalars=point_scalars,
-                         vtk_grid_type=vtk_grid_type, binary=binary)
+                         vtk_grid_type=vtk_grid_type, binary=binary,
+                         kpers=kpers)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -635,9 +637,11 @@ def package_export(f, pak, fmt=None, **kwargs):
         point_scalars = kwargs.get('point_scalars', False)
         vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
         binary = kwargs.get('binary', False)
+        kpers = kwargs.get('kpers', None)
         vtk.export_package(pak.parent, pak.name, f, nanval=nanval,
                            smooth=smooth, point_scalars=point_scalars,
-                           vtk_grid_type=vtk_grid_type, binary=binary)
+                           vtk_grid_type=vtk_grid_type, binary=binary,
+                           kpers=kpers)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -962,10 +966,11 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         point_scalars = kwargs.get('point_scalars', False)
         vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
         binary = kwargs.get('binary', False)
+        kpers = kwargs.get('kpers', None)
         vtk.export_transient(t2d.model, t2d.array, f, name, nanval=nanval,
                              smooth=smooth, point_scalars=point_scalars,
                              array2d=True, vtk_grid_type=vtk_grid_type,
-                             binary=binary)
+                             binary=binary, kpers=kpers)
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 

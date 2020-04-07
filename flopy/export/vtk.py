@@ -1439,7 +1439,7 @@ def export_vector(model, vector, output_folder, name, nanval=-1e+20,
 
 def export_transient(model, array, output_folder, name, nanval=-1e+20,
                      array2d=False, smooth=False, point_scalars=False,
-                     vtk_grid_type='auto', binary=False):
+                     vtk_grid_type='auto', binary=False, kpers=None):
     """
     Export transient 2d array to vtk
 
@@ -1474,6 +1474,9 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
                 * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
     """
 
     if not os.path.exists(output_folder):
@@ -1489,8 +1492,13 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
     else:
         separator = '_'
 
+    if kpers is None:
+        kpers = range(array.shape[0])
+    else:
+        assert (isinstance(kpers, list) or isinstance(kpers, np.ndarray))
+
     if array2d:
-        for kper in range(array.shape[0]):
+        for kper in kpers:
 
             t2d_array_kper = array[kper]
             t2d_array_kper_shape = t2d_array_kper.shape
@@ -1504,7 +1512,7 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
             vtk.write(otfile, timeval=to_tim[kper])
 
     else:
-        for kper in range(array.shape[0]):
+        for kper in kpers:
             vtk.add_array(name, array[kper])
 
             otname = '{}'.format(name) + separator + '0{}'.format(kper + 1)
@@ -1529,7 +1537,7 @@ def trans_dict(in_dict, name, trans_array, array2d=False):
 
 def export_package(pak_model, pak_name, otfolder, vtkobj=None,
                    nanval=-1e+20, smooth=False, point_scalars=False,
-                   vtk_grid_type='auto', binary=False):
+                   vtk_grid_type='auto', binary=False, kpers=None):
     """
     Exports package to vtk
 
@@ -1563,6 +1571,9 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
                 * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
 
     """
 
@@ -1680,6 +1691,12 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
         # write transient data
         if vtk_trans_dict:
 
+            # only retain requested stress periods
+            if kpers is not None:
+                assert (isinstance(kpers, list) or isinstance(kpers,
+                                                              np.ndarray))
+                vtk_trans_dict = {kper: vtk_trans_dict[kper] for kper in kpers}
+
             # get model time
             # to_tim = _get_basic_modeltime(pak_model.modeltime.perlen)
             # loop through the transient array data that was stored in the
@@ -1706,7 +1723,7 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
 
 def export_model(model, otfolder, package_names=None, nanval=-1e+20,
                  smooth=False, point_scalars=False, vtk_grid_type='auto',
-                 binary=False):
+                 binary=False, kpers=None):
     """
     Exports model to vtk
 
@@ -1739,6 +1756,9 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
                 * Other grids will be saved as 'UnstructuredGrid'.
     binary : bool
         if True the output file will be binary, default is False
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
     """
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
               vtk_grid_type=vtk_grid_type, binary=binary)
@@ -1755,4 +1775,4 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
     for pak_name in package_names:
         export_package(model, pak_name, otfolder, vtkobj=vtk, nanval=nanval,
                        smooth=smooth, point_scalars=point_scalars,
-                       vtk_grid_type=vtk_grid_type, binary=binary)
+                       vtk_grid_type=vtk_grid_type, binary=binary, kpers=kpers)

@@ -100,9 +100,10 @@ def test_vtk_transient_array_2d():
                                    load_only=['dis', 'bas6', 'rch'])
     output_dir = os.path.join(cpth, 'transient_2d_test')
     output_dir_bin = os.path.join(cpth, 'transient_2d_test_bin')
+    kpers = [0, 1, 1096]
 
     # export and check
-    m.rch.rech.export(output_dir, fmt='vtk')
+    m.rch.rech.export(output_dir, fmt='vtk', kpers=kpers)
     filetocheck = os.path.join(output_dir, 'rech_01.vtu')
     # totalbytes = os.path.getsize(filetocheck)
     # assert(totalbytes==355144)
@@ -115,7 +116,7 @@ def test_vtk_transient_array_2d():
     assert(nlines1==2851)
 
     # with binary
-    m.rch.rech.export(output_dir_bin, fmt='vtk', binary=True)
+    m.rch.rech.export(output_dir_bin, fmt='vtk', binary=True, kpers=kpers)
     filetocheck = os.path.join(output_dir_bin, 'rech_01.vtu')
     # totalbytes2 = os.path.getsize(filetocheck)
     # assert(totalbytes2==168339)
@@ -167,8 +168,9 @@ def test_vtk_export_packages():
     assert(nlines2==8491)
 
     # transient package drain
+    kpers = [0, 1, 1096]
     output_dir = os.path.join(cpth, 'DRN')
-    m.drn.export(output_dir, fmt='vtk')
+    m.drn.export(output_dir, fmt='vtk', kpers=kpers)
     filetocheck = os.path.join(output_dir, 'DRN_01.vtu')
     # totalbytes3 = os.path.getsize(filetocheck)
     # assert(totalbytes3==20670)
