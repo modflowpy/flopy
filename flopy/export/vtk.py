@@ -574,12 +574,13 @@ class Vtk(object):
         ----------
 
         name : str
-            name of the array
+            Name of the array.
         a : flopy array
-            the array to be added to the vtk object
-            shape should match either grid cells or grid vertices
+            The array to be added to the vtk object.
+            The shape should match either grid cells or grid vertices.
         array2d : bool
-            True if the array is 2d
+            True if the array is 2d and represents the first layer,
+            default is False.
         """
         # format array
         a = self._format_array(a, array2d)
@@ -598,12 +599,19 @@ class Vtk(object):
         ----------
 
         name : str
-            name of the vector
+            Name of the vector.
         v : tuple of arrays
-            the vector to be added to the vtk object
-            shape of arrays should match either grid cells or grid vertices
+            The vector to be added to the vtk object. The shape of each
+            component should match either grid cells or grid vertices.
         array2d : bool
-            True if the vector components are 2d arrays
+            True if the vector components are 2d arrays and represent the first
+            layer, default is False.
+
+        Notes
+        -----
+        If the grid is rotated, the vector will be rotated too, assuming that
+        the first and second components are along x and y directions,
+        respectively.
         """
         # format each component of the vector
         vf = ()
@@ -612,6 +620,14 @@ class Vtk(object):
             if vcomp is None:
                 return
             vf = vf + (vcomp,)
+
+        # rotate the vector according to grid
+        if self.modelgrid.angrot_radians != 0.:
+            from ..utils import geometry
+            vf = list(vf)
+            vf[0], vf[1] = geometry.rotate(vf[0], vf[1], 0., 0.,
+                                           self.modelgrid.angrot_radians)
+            vf = tuple(vf)
 
         # add to self.vectors
         self.vectors[name] = vf

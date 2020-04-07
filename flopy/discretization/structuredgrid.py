@@ -312,7 +312,7 @@ class StructuredGrid(Grid):
 
             # vertices
             xverts, yverts = self.get_local_coords(self.xvertices,
-                                                     self.yvertices)
+                                                   self.yvertices)
             xyverts = np.ndarray((xverts.size, 2))
             xyverts[:, 0] = yverts.ravel()
             xyverts[:, 1] = xverts.ravel()
@@ -730,11 +730,11 @@ class StructuredGrid(Grid):
             elif a.shape == shape_ext_x:
                 xinput = np.reshape(self.xyedges[0], (1, 1, self.ncol+1))
                 xinput = xinput * np.ones(shape_ext_x)
-                yinput = np.reshape(self.ycellcenters[:, 0], (1, self.nrow, 1))
+                yinput = np.reshape(ycenters[:, 0], (1, self.nrow, 1))
                 yinput = yinput * np.ones(shape_ext_x)
                 zinput = self.array_at_faces(zcenters, 'x', withnan=False)
             elif a.shape == shape_ext_y:
-                xinput = np.reshape(self.xcellcenters[0, :], (1, 1, self.ncol))
+                xinput = np.reshape(xcenters[0, :], (1, 1, self.ncol))
                 xinput = xinput * np.ones(shape_ext_y)
                 yinput = np.reshape(self.xyedges[1], (1, self.nrow+1, 1))
                 yinput = yinput * np.ones(shape_ext_y)
@@ -788,8 +788,8 @@ class StructuredGrid(Grid):
             averts[where_nan] = averts_basic[where_nan]
 
             # assign NaN where idomain==0 at all 8 neighbors (these should be
-            # the same locations as in averts_basic)
-            averts[np.isnan(averts_basic)] = np.nan
+            # the same locations as in zverts_smooth)
+            averts[np.isnan(self.zverts_smooth)] = np.nan
 
         return averts
 

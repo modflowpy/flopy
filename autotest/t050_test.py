@@ -353,7 +353,6 @@ def test_vtk_cbc():
 
 def test_vtk_vector():
     from flopy.utils import postprocessing as pp
-    from flopy.utils import geometry
     # test mf 2005 freyberg
     mpth = os.path.join('..', 'examples', 'data',
                         'freyberg_multilayer_transient')
@@ -361,10 +360,8 @@ def test_vtk_vector():
     cbcfile = os.path.join(mpth, 'freyberg.cbc')
     hdsfile = os.path.join(mpth, 'freyberg.hds')
     m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False,
-                                   load_only=['dis', 'bas6'])
-    q = list(pp.get_specific_discharge(m, cbcfile=cbcfile))
-    q[0], q[1] = geometry.rotate(q[0], q[1], 0., 0.,
-                                 m.modelgrid.angrot_radians)
+                                   load_only=['dis', 'bas6', 'upw'])
+    q = pp.get_specific_discharge(m, cbcfile=cbcfile)
     output_dir = os.path.join(cpth, 'freyberg_vector')
     filenametocheck = 'discharge.vtu'
 
@@ -387,16 +384,18 @@ def test_vtk_vector():
     assert(os.path.exists(filetocheck))
 
     # with values directly given at vertices
-    q = list(pp.get_specific_discharge(m, cbcfile=cbcfile, hdsfile=hdsfile,
-                                       position='vertices'))
-    q[0], q[1] = geometry.rotate(q[0], q[1], 0., 0.,
-                                 m.modelgrid.angrot_radians)
+    q = pp.get_specific_discharge(m, cbcfile=cbcfile, hdsfile=hdsfile,
+                                  position='vertices')
+    nancount = np.count_nonzero(np.isnan(q[0]))
+    assert(nancount==308)
+    overall = np.nansum(q[0]) + np.nansum(q[1]) + np.nansum(q[2])
+    assert np.allclose(overall, -15.25331067312393)
     output_dir = os.path.join(cpth, 'freyberg_vector')
     filenametocheck = 'discharge_verts.vtu'
     vtk.export_vector(m, q, output_dir, 'discharge_verts')
     filetocheck = os.path.join(output_dir, filenametocheck)
     # totalbytes2 = os.path.getsize(filetocheck)
-    # assert(totalbytes2==2039528)
+    # assert(totalbytes2==2040610)
     nlines2 = count_lines_in_file(filetocheck)
     assert(nlines2==10598)
 
@@ -407,7 +406,7 @@ def test_vtk_vector():
     # totalbytes3 = os.path.getsize(filetocheck)
     # assert(totalbytes3==891486)
     # nlines3 = count_lines_in_file(filetocheck, binary=True)
-    # assert(nlines3==3113)
+    # assert(nlines3==3215)
     assert(os.path.exists(filetocheck))
 
     return

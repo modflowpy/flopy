@@ -358,7 +358,7 @@ def test_specific_discharge_comprehensive():
 
     # overall check
     overall = np.nansum(qx) + np.nansum(qy) + np.nansum(qz)
-    assert np.allclose(overall, -0.8086609840393066)
+    assert np.allclose(overall, -0.8558630187423599)
 
     # plot discharge in map view
     lay = 1
@@ -378,7 +378,7 @@ def test_specific_discharge_comprehensive():
     pos = np.sum(quiver.X) + np.sum(quiver.Y)
     assert np.allclose(pos, 1600.)
     val = np.sum(quiver.U) + np.sum(quiver.V)
-    assert np.allclose(val, 10.908548355102539)
+    assert np.allclose(val, 10.908548650065649)
 
     # close figure
     plt.close()
@@ -406,10 +406,10 @@ def test_specific_discharge_comprehensive():
     U = np.ma.masked_where(quiver.Umask, quiver.U)
     V = np.ma.masked_where(quiver.Umask, quiver.V)
     val = U.sum() + V.sum()
-    assert np.allclose(val, -3.0916009226424395)
+    assert np.allclose(val, -3.25453417836753)
 
-    # # close figure
-    # plt.close()
+    # close figure
+    plt.close()
     return
 
 def test_specific_discharge_mf6():
