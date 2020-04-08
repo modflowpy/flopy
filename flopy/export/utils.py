@@ -1008,9 +1008,15 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         array_dict = {}
         for ilay in range(modelgrid.nlay):
             u2d = u3d[ilay]
+            if isinstance(u2d, np.ndarray):
+                dname = u3d.name
+                array = u2d
+            else:
+                dname = u2d.name
+                array = u2d.array
             name = '{}_{}'.format(
-                shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
-            array_dict[name] = u2d.array
+                shapefile_utils.shape_attr_name(dname), ilay + 1)
+            array_dict[name] = array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):

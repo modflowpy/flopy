@@ -253,6 +253,7 @@ def np001():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -916,6 +917,7 @@ def test005_advgw_tidal():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1087,6 +1089,7 @@ def test004_bcfss():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1183,6 +1186,7 @@ def test035_fhb():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1467,6 +1471,7 @@ def test006_2models_gnc():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1552,6 +1557,7 @@ def test050_circle_island():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1698,9 +1704,11 @@ def test028_sfr():
              sim_ws=run_folder)
     model = sim.get_model(model_name)
     sfr_package = model.get_package('sfr')
+    # sfr_package.set_all_data_external()
     assert (sfr_package.connectiondata.get_data()[0][1] == -0.0)
     assert (sfr_package.connectiondata.get_data()[1][1] == 0.0)
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
+    pdata = sfr_package.packagedata.get_data()
     assert (sfr_package.packagedata.get_data()[1][1].lower() == 'none')
 
     # undo zero based test and move on

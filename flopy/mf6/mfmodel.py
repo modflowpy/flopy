@@ -77,6 +77,8 @@ class MFModel(PackageContainer, ModelInterface):
         checks the validity of the model and all of its packages
     rename_all_packages : (name : string)
         renames all packages in the model
+    set_all_data_external
+        sets the model's list and array data to be stored externally
 
     See Also
     --------
@@ -938,6 +940,10 @@ class MFModel(PackageContainer, ModelInterface):
                 package.filename = '{}_{}.{}'.format(
                     name, package_type_count[package.package_type],
                     package.package_type)
+
+    def set_all_data_external(self):
+        for package in self.packagelist:
+            package.set_all_data_external()
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
