@@ -1367,6 +1367,19 @@ def test_get_vertices():
     assert np.array_equal(a1, a2)
 
 
+def test_get_lrc_get_node():
+    node = 50
+    ml = flopy.modflow.Modflow()
+    dis = flopy.modflow.ModflowDis(ml, nlay=1, nrow=1, ncol=201, delr=10,
+                                   delc=1, top=50, botm=0)
+    lrc = dis.get_lrc([node, ])
+    if lrc[0] != (0, 0, 50):
+        raise AssertionError("get_lrc() is not returning zero based (k, i, j)")
+    nodes = dis.get_node(lrc)
+    if nodes[0] != node:
+        raise AssertionError('get_node() is not returning zero based node')
+
+
 def test_vertex_model_dot_plot():
     import matplotlib.pyplot as plt
     # load up the vertex example problem
