@@ -86,14 +86,19 @@ class LayerStorage(object):
     """
 
     def __init__(self, data_storage, lay_indexes,
-                 data_storage_type=DataStorageType.internal_array):
+                 data_storage_type=DataStorageType.internal_array,
+                 data_type=None):
         self._data_storage_parent = data_storage
         self._lay_indexes = lay_indexes
         self.internal_data = None
         self.data_const_value = None
         self.data_storage_type = data_storage_type
+        self.data_type = data_type
         self.fname = None
-        self.factor = 1.0
+        if self.data_type == DatumType.integer:
+            self.factor = 1
+        else:
+            self.factor = 1.0
         self.iprn = None
         self.binary = False
 
@@ -274,6 +279,11 @@ class DataStorage(object):
         self._data_storage_type = data_storage_type
         self._stress_period = stress_period
         self._data_path = data_path
+        if not data_structure_type == DataStructureType.recarray:
+            self._data_type = self.data_dimensions.structure.\
+                get_datum_type(return_enum_type=True)
+        else:
+            self._data_type = None
         self.layer_storage = MultiList(shape=layer_shape,
                                        callback=self._create_layer)
         #self.layer_storage = [LayerStorage(self, x, data_storage_type)
@@ -287,10 +297,7 @@ class DataStorage(object):
 
         if data_structure_type == DataStructureType.recarray:
             self.build_type_list(resolve_data_shape=False)
-            self._data_type = None
-        else:
-            self._data_type = self.data_dimensions.structure.\
-                get_datum_type(return_enum_type=True)
+
         self.layered = layered
 
         # initialize comments
@@ -304,13 +311,15 @@ class DataStorage(object):
         return self.get_data_str(False)
 
     def _create_layer(self, indexes):
-        return LayerStorage(self, indexes, self._data_storage_type)
+        return LayerStorage(self, indexes, self._data_storage_type,
+                            self._data_type)
 
     def flatten(self):
         self.layered = False
         storage_type = self.layer_storage.first_item().data_storage_type
         self.layer_storage = MultiList(mdlist=[LayerStorage(self, 0,
-                                                            storage_type)])
+                                                            storage_type,
+                                                            self._data_type)])
 
     def make_layered(self):
         if not self.layered:
@@ -881,7 +890,7 @@ class DataStorage(object):
                        key=None, autofill=False,
                        print_format=None):
         if multiplier is None:
-            multiplier = [1.0]
+            multiplier = [self.get_default_mult()]
         if self.data_structure_type == DataStructureType.recarray:
             if self.layer_storage.first_item().data_storage_type == \
                     DataStorageType.internal_constant:
@@ -1029,7 +1038,7 @@ class DataStorage(object):
                        print_format=None, data=None, do_not_verify=False,
                        binary=False):
         if multiplier is None:
-            multiplier = [1.0]
+            multiplier = [self.get_default_mult()]
         layer_new, multiplier = self._store_prep(layer, multiplier)
 
         if data is not None:
@@ -1304,10 +1313,13 @@ class DataStorage(object):
         cellid_size = model_grid.get_num_spatial_coordinates()
         if cellid_size + data_index > len(arr_line):
             return False
-        for index in range(data_index, cellid_size + data_index):
+        for index, \
+            dim_size in zip(range(data_index, cellid_size + data_index),
+                                   model_grid.get_model_dim()):
             if not DatumUtil.is_int(arr_line[index]):
                 return False
-            if int(arr_line[index]) <= 0:
+            val = int(arr_line[index])
+            if val <= 0 or val > dim_size:
                 return False
         return True
 
@@ -1323,10 +1335,7 @@ class DataStorage(object):
                                                 line_num)
 
     def process_internal_line(self, arr_line):
-        if self._data_type == DatumType.integer:
-            multiplier = 1
-        else:
-            multiplier = 1.0
+        multiplier = self.get_default_mult()
         print_format = None
         if isinstance(arr_line, list):
             if len(arr_line) < 2:
@@ -1952,6 +1961,12 @@ class DataStorage(object):
                                         (data_item.name, data_type))
         return self._recarray_type_list
 
+    def get_default_mult(self):
+        if self._data_type == DatumType.integer:
+            return 1
+        else:
+            return 1.0
+
     @staticmethod
     def _calc_data_size(data, count_to=None, current_length=None):
         if current_length is None:
@@ -2020,12 +2035,12 @@ class DataStorage(object):
         mult_ml = MultiList(multiplier)
         if not mult_ml.in_shape(layer):
             if multiplier[0] is None:
-                multiplier = 1.0
+                multiplier = self.get_default_mult()
             else:
                 multiplier = multiplier[0]
         else:
             if mult_ml.first_item() is None:
-                multiplier = 1.0
+                multiplier = self.get_default_mult()
             else:
                 multiplier = mult_ml.first_item()
 

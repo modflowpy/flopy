@@ -11,20 +11,36 @@ except Exception as e:
     print("Shapely not installed, tests cannot be run.")
 from flopy.utils.gridintersect import GridIntersect
 
-triangle_exe = None
 
 def get_tri_grid(angrot=0., xyoffset=0., triangle_exe=None):
     if not triangle_exe:
-        return -1
-    maximum_area = 50.
-    x0, x1, y0, y1 = (0.0, 20.0, 0.0, 20.0)
-    domainpoly = [(x0, y0), (x0, y1), (x1, y1), (x1, y0)]
-    tri = Triangle(maximum_area=maximum_area, angle=45, model_ws=".",
-                   exe_name=triangle_exe)
-    tri.add_polygon(domainpoly)
-    tri.build(verbose=False)
-    cell2d = tri.get_cell2d()
-    vertices = tri.get_vertices()
+        cell2d = [[0, 16.666666666666668, 13.333333333333334, 3, 4, 2, 7],
+                  [1, 3.3333333333333335, 6.666666666666667, 3, 4, 0, 5],
+                  [2, 6.666666666666667, 16.666666666666668, 3, 1, 8, 4],
+                  [3, 3.3333333333333335, 13.333333333333334, 3, 5, 1, 4],
+                  [4, 6.666666666666667, 3.3333333333333335, 3, 6, 0, 4],
+                  [5, 13.333333333333334, 3.3333333333333335, 3, 4, 3, 6],
+                  [6, 16.666666666666668, 6.666666666666667, 3, 7, 3, 4],
+                  [7, 13.333333333333334, 16.666666666666668, 3, 8, 2, 4]]
+        vertices = [[0, 0.0, 0.0],
+                    [1, 0.0, 20.0],
+                    [2, 20.0, 20.0],
+                    [3, 20.0, 0.0],
+                    [4, 10.0, 10.0],
+                    [5, 0.0, 10.0],
+                    [6, 10.0, 0.0],
+                    [7, 20.0, 10.0],
+                    [8, 10.0, 20.0]]
+    else:
+        maximum_area = 50.
+        x0, x1, y0, y1 = (0.0, 20.0, 0.0, 20.0)
+        domainpoly = [(x0, y0), (x0, y1), (x1, y1), (x1, y0)]
+        tri = Triangle(maximum_area=maximum_area, angle=45, model_ws=".",
+                       exe_name=triangle_exe)
+        tri.add_polygon(domainpoly)
+        tri.build(verbose=False)
+        cell2d = tri.get_cell2d()
+        vertices = tri.get_vertices()
     tgr = fgrid.VertexGrid(vertices, cell2d,
                            botm=np.atleast_2d(np.zeros(len(cell2d))),
                            top=np.ones(len(cell2d)), xoff=xyoffset,
@@ -33,8 +49,8 @@ def get_tri_grid(angrot=0., xyoffset=0., triangle_exe=None):
 
 
 def get_rect_grid(angrot=0., xyoffset=0.):
-    delc = 10*np.ones(2, dtype=np.float)
-    delr = 10*np.ones(2, dtype=np.float)
+    delc = 10 * np.ones(2, dtype=np.float)
+    delr = 10 * np.ones(2, dtype=np.float)
     sgr = fgrid.StructuredGrid(
         delc, delr, top=None, botm=None, xoff=xyoffset, yoff=xyoffset,
         angrot=angrot)
@@ -229,7 +245,7 @@ def test_tri_grid_point_outside():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -244,7 +260,7 @@ def test_tri_grid_point_on_outer_boundary():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -260,7 +276,7 @@ def test_tri_grid_point_on_inner_boundary():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -276,7 +292,7 @@ def test_tri_grid_multipoint_in_one_cell():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -292,7 +308,7 @@ def test_tri_grid_multipoint_in_multiple_cells():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -520,7 +536,7 @@ def test_tri_grid_linestring_outside():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -535,7 +551,7 @@ def test_tri_grid_linestring_in_2cells():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -553,7 +569,7 @@ def test_tri_grid_linestring_on_outer_boundary():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -571,7 +587,7 @@ def test_tri_grid_linestring_on_inner_boundary():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -589,7 +605,7 @@ def test_tri_grid_multilinestring_in_one_cell():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -829,7 +845,7 @@ def test_tri_grid_polygon_outside():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -845,7 +861,7 @@ def test_tri_grid_polygon_in_2cells():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -862,7 +878,7 @@ def test_tri_grid_polygon_on_outer_boundary():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -873,7 +889,7 @@ def test_tri_grid_polygon_on_outer_boundary():
 
 
 def test_tri_grid_polygon_on_inner_boundary():
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -890,7 +906,7 @@ def test_tri_grid_multipolygon_in_one_cell():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -909,7 +925,7 @@ def test_tri_grid_multipolygon_in_multiple_cells():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -928,7 +944,7 @@ def test_tri_grid_polygon_with_hole():
         import shapely
     except:
         return
-    gr = get_tri_grid(triangle_exe=triangle_exe)
+    gr = get_tri_grid()
     if gr == -1:
         return
     ix = GridIntersect(gr)
@@ -979,7 +995,7 @@ def test_polygon_offset_rot_structured_grid():
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     p = Polygon([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.)),
-                 (15, 10. + 1.5*np.sqrt(200.)), (5, 10. + 1.5*np.sqrt(200.))])
+                 (15, 10. + 1.5 * np.sqrt(200.)), (5, 10. + 1.5 * np.sqrt(200.))])
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect_polygon(p)
     # assert len(result) == 3.
@@ -1022,11 +1038,12 @@ def test_polygon_offset_rot_structured_grid_shapely():
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     p = Polygon([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.)),
-                 (15, 10. + 1.5*np.sqrt(200.)), (5, 10. + 1.5*np.sqrt(200.))])
+                 (15, 10. + 1.5 * np.sqrt(200.)), (5, 10. + 1.5 * np.sqrt(200.))])
     ix = GridIntersect(sgr, method="strtree")
     result = ix.intersect_polygon(p)
     # assert len(result) == 3.
     return result
+
 
 def test_rasters():
     from flopy.utils import Raster
@@ -1038,7 +1055,7 @@ def test_rasters():
 
     try:
         rio = Raster.load(os.path.join(ws, "dem", raster_name))
-    except ImportError:
+    except:
         return
 
     ml = fp.modflow.Modflow.load("sagehen.nam", version="mfnwt",
@@ -1093,4 +1110,5 @@ def test_rasters():
 
 
 if __name__ == "__main__":
-    test_rasters()
+    # test_rasters()
+    pass

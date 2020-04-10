@@ -30,6 +30,17 @@ class MFScalar(mfdata.MFData):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
+    Attributes
+    ----------
+    data_type : DataType
+        type of data stored in the scalar
+    plotable : bool
+        if the scalar is plotable
+    dtype : numpy.dtype
+        the scalar's numpy data type
+    data : variable
+        calls get_data with default parameters
+
     Methods
     -------
     has_data : () : bool
@@ -106,6 +117,10 @@ class MFScalar(mfdata.MFData):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
+
+    @property
+    def data(self):
+        return self.get_data()
 
     def get_data(self, apply_mult=False, **kwargs):
         try:

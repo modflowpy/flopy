@@ -1,4 +1,5 @@
 from .mf import Modflow
+from .mfag import ModflowAg
 from .mfbas import ModflowBas
 from .mfbcf import ModflowBcf
 from .mflpf import ModflowLpf

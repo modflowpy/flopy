@@ -410,10 +410,10 @@ class Gridgen(object):
 
         """
         vts = self.get_vertices(nodenumber)
-        xmin = vts[0][0]
-        xmax = vts[1][0]
-        ymin = vts[2][1]
-        ymax = vts[0][1]
+        xmin = min(vts[0][0], vts[1][0], vts[2][0], vts[3][0])
+        xmax = max(vts[0][0], vts[1][0], vts[2][0], vts[3][0])
+        ymin = min(vts[0][1], vts[1][1], vts[2][1], vts[3][1])
+        ymax = max(vts[0][1], vts[1][1], vts[2][1], vts[3][1])
         return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
     def export(self, verbose=False):
