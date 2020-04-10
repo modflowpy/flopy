@@ -190,6 +190,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.export(*.asc)` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.ndimage**                                  |
 | `.interpolate()` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.interpolate**                              |
 | `.interpolate()` in `flopy.mf6.utils.reference` `StructuredSpatialReference` class   | **scipy.interpolate**                              |
+| `._parse_units_from_proj4()` in `flopy.utils.reference` `SpatialReference` class     | **pyproj**                                         |
 | `.get_dataframes()` in `flopy.utils.mflistfile` `ListBudget` class                   | **pandas** >= 0.15                                 |
 | `.get_dataframes()` in `flopy.utils.observationfile` `ObsFiles` class                | **pandas** >= 0.15                                 |
 | `.get_dataframes()` in `flopy.utils.sfroutputfile` `ModflowSfr2` class               | **pandas** >= 0.15                                 |
@@ -208,6 +209,8 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**            |
 | `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                        |
 | `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                        |
+| `._zverts_smooth()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                              |
+| `.array_at_verts()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                              |
 
 How to Cite
 -----------------------------------------------

@@ -664,7 +664,7 @@ class BaseModel(ModelInterface):
     def add_output_file(self, unit, fname=None, extension='cbc',
                         binflag=True, package=None):
         """
-        Add an ascii or binary output file file for a package
+        Add an ascii or binary output file for a package
 
         Parameters
         ----------

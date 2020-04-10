@@ -126,7 +126,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -150,6 +150,9 @@ class PlotMapView(object):
         if masked_values is not None:
             for mval in masked_values:
                 plotarray = np.ma.masked_equal(plotarray, mval)
+
+        # add NaN values to mask
+        plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -243,7 +246,7 @@ class PlotMapView(object):
         elif self.mg.grid_type == "vertex":
             if a.ndim == 3:
                 if a.shape[0] == 1:
-                    a = np.squeeze(a, axis=1)
+                    a = np.squeeze(a, axis=0)
                     plotarray = a[self.layer, :]
                 elif a.shape[1] == 1:
                     a = np.squeeze(a, axis=1)
@@ -452,7 +455,7 @@ class PlotMapView(object):
 
         return lc
 
-    def plot_bc(self, ftype=None, package=None, kper=0, color=None,
+    def plot_bc(self, name=None, package=None, kper=0, color=None,
                 plotAll=False, **kwargs):
         """
         Plot boundary conditions locations for a specific boundary
@@ -460,7 +463,7 @@ class PlotMapView(object):
 
         Parameters
         ----------
-        ftype : string
+        name : string
             Package name string ('WEL', 'GHB', etc.). (Default is None)
         package : flopy.modflow.Modflow package class instance
             flopy package class instance. (Default is None)
@@ -480,41 +483,66 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if 'ftype' in kwargs and name is None:
+            name = kwargs.pop('ftype')
+
         # Find package to plot
         if package is not None:
             p = package
-            ftype = p.name[0]
+            name = p.name[0]
 
         elif self.model is not None:
-            if ftype is None:
+            if name is None:
                 raise Exception('ftype not specified')
-            ftype = ftype.upper()
-            p = self.model.get_package(ftype)
+            name = name.upper()
+            p = self.model.get_package(name)
 
         else:
             raise Exception('Cannot find package to plot')
 
         # trap for mf6 'cellid' vs mf2005 'k', 'i', 'j' convention
-        if p.parent.version == "mf6":
-            try:
-                mflist = p.stress_period_data.array[kper]
-            except Exception as e:
-                raise Exception("Not a list-style boundary package: " + str(e))
-            if mflist is None:
-                return
-            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+        if isinstance(p, list) or p.parent.version == "mf6":
+            if not isinstance(p, list):
+                p = [p]
+
+            idx = np.array([])
+            for pp in p:
+                if pp.package_type in ('lak', 'sfr', 'maw', 'uzf'):
+                    t = plotutil.advanced_package_bc_helper(pp, self.mg,
+                                                            kper)
+                else:
+                    try:
+                        mflist = pp.stress_period_data.array[kper]
+                    except Exception as e:
+                        raise Exception("Not a list-style boundary package: "
+                                        + str(e))
+                    if mflist is None:
+                        return
+
+                    t = np.array([list(i) for i in mflist['cellid']],
+                                     dtype=int).T
+
+                if len(idx) == 0:
+                    idx = np.copy(t)
+                else:
+                    idx = np.append(idx, t, axis=1)
+
         else:
             # modflow-2005 structured and unstructured grid
-            try:
-                mflist = p.stress_period_data[kper]
-            except Exception as e:
-                raise Exception("Not a list-style boundary package: " + str(e))
-            if mflist is None:
-                return
-            if len(self.mg.shape) == 3:
-                idx = [mflist['k'], mflist['i'], mflist['j']]
+            if p.package_type in ('uzf', 'lak'):
+                idx = plotutil.advanced_package_bc_helper(p, self.mg, kper)
             else:
-                idx = mflist['node']
+                try:
+                    mflist = p.stress_period_data[kper]
+                except Exception as e:
+                    raise Exception("Not a list-style boundary package: "
+                                    + str(e))
+                if mflist is None:
+                    return
+                if len(self.mg.shape) == 3:
+                    idx = [mflist['k'], mflist['i'], mflist['j']]
+                else:
+                    idx = mflist['node']
 
         nlay = self.mg.nlay
 
@@ -534,7 +562,7 @@ class PlotMapView(object):
         # set the colormap
         if color is None:
             # modflow 6 ftype fix, since multiple packages append _0, _1, etc:
-            key = ftype[:3].upper()
+            key = name[:3].upper()
             if key in plotutil.bc_color_dict:
                 c = plotutil.bc_color_dict[key]
             else:
@@ -655,6 +683,12 @@ class PlotMapView(object):
                     t = np.equal(plotarray, mval)
                     ismasked += t
 
+        # add NaN values to mask
+        if ismasked is None:
+            ismasked = np.isnan(plotarray)
+        else:
+            ismasked += np.isnan(plotarray)
+
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
         else:
@@ -676,9 +710,96 @@ class PlotMapView(object):
 
         return contour_set
 
+    def plot_vector(self, vx, vy, istep=1, jstep=1, normalize=False,
+                    masked_values=None, **kwargs):
+        """
+        Plot a vector.
+
+        Parameters
+        ----------
+        vx : np.ndarray
+            x component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        vy : np.ndarray
+            y component of the vector to be plotted (non-rotated)
+            array shape must be (nlay, nrow, ncol) for a structured grid
+            array shape must be (nlay, ncpl) for a unstructured grid
+        istep : int
+            row frequency to plot (default is 1)
+        jstep : int
+            column frequency to plot (default is 1)
+        normalize : bool
+            boolean flag used to determine if vectors should be normalized
+            using the vector magnitude in each cell (default is False)
+        masked_values : iterable of floats
+            values to mask
+        kwargs : matplotlib.pyplot keyword arguments for the
+            plt.quiver method
+
+        Returns
+        -------
+        quiver : matplotlib.pyplot.quiver
+            result of the quiver function
+
+        """
+        if 'pivot' in kwargs:
+            pivot = kwargs.pop('pivot')
+        else:
+            pivot = 'middle'
+
+        if 'ax' in kwargs:
+            ax = kwargs.pop('ax')
+        else:
+            ax = self.ax
+
+        # get actual values to plot
+        if self.mg.grid_type == "structured":
+            x = self.mg.xcellcenters[::istep, ::jstep]
+            y = self.mg.ycellcenters[::istep, ::jstep]
+            u = vx[self.layer, ::istep, ::jstep]
+            v = vy[self.layer, ::istep, ::jstep]
+        else:
+            x = self.mg.xcellcenters[::istep]
+            y = self.mg.ycellcenters[::istep]
+            u = vx[self.layer, ::istep]
+            v = vy[self.layer, ::istep]
+
+        # if necessary, copy to avoid changing the passed values
+        if masked_values is not None or normalize:
+            import copy
+            u = copy.copy(u)
+            v = copy.copy(v)
+
+        # mask values
+        if masked_values is not None:
+            for mval in masked_values:
+                to_mask = np.logical_or(u==mval, v==mval)
+                u[to_mask] = np.nan
+                v[to_mask] = np.nan
+
+        # normalize
+        if normalize:
+            vmag = np.sqrt(u ** 2. + v ** 2.)
+            idx = vmag > 0.
+            u[idx] /= vmag[idx]
+            v[idx] /= vmag[idx]
+
+        # rotate and plot, offsets must be zero since
+        # these are vectors not locations
+        urot, vrot = geometry.rotate(u, v, 0., 0., self.mg.angrot_radians)
+
+        # plot with quiver
+        quiver = ax.quiver(x, y, urot, vrot, pivot=pivot, **kwargs)
+
+        return quiver
+
     def plot_specific_discharge(self, spdis, istep=1,
                                 jstep=1, normalize=False, **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Method to plot specific discharge from discharge vectors
         provided by the cell by cell flow output file. In MODFLOW-6
         this option is controled in the NPF options block. This method
@@ -701,6 +822,11 @@ class PlotMapView(object):
             quiver plot of discharge vectors
 
         """
+        warnings.warn('plot_specific_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if 'pivot' in kwargs:
             pivot = kwargs.pop('pivot')
         else:
@@ -769,6 +895,9 @@ class PlotMapView(object):
                        flf=None, head=None, istep=1, jstep=1,
                        normalize=False, **kwargs):
         """
+        DEPRECATED. Use plot_vector() instead, which should follow after
+        postprocessing.get_specific_discharge().
+
         Use quiver to plot vectors.
 
         Parameters
@@ -799,6 +928,11 @@ class PlotMapView(object):
             Vectors of specific discharge.
 
         """
+        warnings.warn('plot_discharge() has been deprecated. Use '
+                      'plot_vector() instead, which should follow after '
+                      'postprocessing.get_specific_discharge()',
+                      DeprecationWarning)
+
         if self.mg.grid_type != "structured":
             err_msg = "Use plot_specific_discharge for " \
                       "{} grids".format(self.mg.grid_type)
@@ -818,10 +952,10 @@ class PlotMapView(object):
             delc = self.mg.delc
             top = np.copy(self.mg.top)
             botm = np.copy(self.mg.botm)
-            nlay = botm.shape[0]
             laytyp = None
             hnoflo = 999.
             hdry = 999.
+            laycbd = None
 
             if self.model is not None:
                 if self.model.laytyp is not None:
@@ -833,11 +967,23 @@ class PlotMapView(object):
                 if self.model.hdry is not None:
                     hdry = self.model.hdry
 
+                if self.model.laycbd is not None:
+                    laycbd = self.model.laycbd
+
+            if laycbd is not None and 1 in laycbd:
+                active = np.ones((botm.shape[0],), dtype=np.int)
+                kon = 0
+                for cbd in laycbd:
+                    if cbd > 0:
+                        kon += 1
+                        active[kon] = 0
+                botm = botm[active==1]
+
             # If no access to head or laytyp, then calculate confined saturated
             # thickness by setting laytyp to zeros
             if head is None or laytyp is None:
                 head = np.zeros(botm.shape, np.float32)
-                laytyp = np.zeros((nlay,), dtype=np.int)
+                laytyp = np.zeros((botm.shape[0],), dtype=np.int)
 
             # calculate the saturated thickness
             sat_thk = plotutil.PlotUtilities. \
@@ -864,8 +1010,9 @@ class PlotMapView(object):
             for ix, tup in enumerate(temp):
                 spdis[ix] = tup
 
-            self.plot_specific_discharge(spdis, istep=istep, jstep=jstep,
-                                         normalize=normalize, **kwargs)
+            return self.plot_specific_discharge(spdis, istep=istep,
+                                                jstep=jstep,
+                                                normalize=normalize, **kwargs)
 
     def plot_pathline(self, pl, travel_time=None, **kwargs):
         """

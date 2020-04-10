@@ -298,6 +298,8 @@ class _StructuredCrossSection(_CrossSection):
                         break
         else:
             for k in range(0, zpts.shape[0] - 1):
+                if not self.active[k]:
+                    continue
                 nz += 1
                 nx = 0
                 for i in range(0, xpts.shape[0], 2):
@@ -781,6 +783,8 @@ class _StructuredCrossSection(_CrossSection):
                     zcentergrid.append(zp)
         else:
             for k in range(0, self.zpts.shape[0] - 1):
+                if not self.active[k]==1:
+                    continue
                 nz += 1
                 nx = 0
                 for i in range(0, self.xpts.shape[0], 2):

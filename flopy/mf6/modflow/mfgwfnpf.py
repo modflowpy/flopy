@@ -47,7 +47,7 @@ class ModflowGwfnpf(mfpackage.MFPackage):
           is equal to the head in the overlying cell minus the bottom elevation
           of the overlying cell. If not specified, then the default is to use
           the head difference between the two cells.
-    rewet_record : [wetfct, iwetit, ihdwet]
+    rewet_record : [('WETFCT', wetfct, 'IWETIT', iwetit, 'IHDWET', ihdwet)]
         * wetfct (double) is a keyword and factor that is included in the
           calculation of the head that is initially established at a cell when
           that cell is converted from dry to wet.

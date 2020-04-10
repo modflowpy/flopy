@@ -253,6 +253,7 @@ def np001():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -916,6 +917,7 @@ def test005_advgw_tidal():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1087,6 +1089,7 @@ def test004_bcfss():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1183,6 +1186,7 @@ def test035_fhb():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1467,6 +1471,7 @@ def test006_2models_gnc():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1552,6 +1557,7 @@ def test050_circle_island():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1680,7 +1686,7 @@ def test028_sfr():
         os.path.join(pth, 'sfr_reach_per_rec.txt'))
     # test zero based indexes
     reach_con_rec[0] = (0, -0.0)
-    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, 
+    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',
                                 nreaches=36, packagedata=sfr_rec,
@@ -1690,6 +1696,7 @@ def test028_sfr():
     assert (sfr_package.connectiondata.get_data()[0][1] == -0.0)
     assert (sfr_package.connectiondata.get_data()[1][1] == 0.0)
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
+    assert (sfr_package.packagedata.get_data()[1][1].lower() == 'none')
 
     sim.simulation_data.mfpath.set_sim_path(run_folder)
     sim.write_simulation()
@@ -1697,14 +1704,22 @@ def test028_sfr():
              sim_ws=run_folder)
     model = sim.get_model(model_name)
     sfr_package = model.get_package('sfr')
+    # sfr_package.set_all_data_external()
     assert (sfr_package.connectiondata.get_data()[0][1] == -0.0)
     assert (sfr_package.connectiondata.get_data()[1][1] == 0.0)
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
+    pdata = sfr_package.packagedata.get_data()
+    assert (sfr_package.packagedata.get_data()[1][1].lower() == 'none')
 
     # undo zero based test and move on
     model.remove_package(sfr_package.package_type)
     reach_con_rec = testutils.read_reach_con_rec(
         os.path.join(pth, 'sfr_reach_con_rec.txt'))
+
+    # set sfr settings back to expected package data
+    rec_line = (sfr_rec[1][0], (0, 1, 1)) + sfr_rec[1][2:]
+    sfr_rec[1] = rec_line
+
     sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',
