@@ -236,7 +236,7 @@ class _VertexCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                a = np.ma.masked_equal(a, mval)
+                a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(np.ravel(head))

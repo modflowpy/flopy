@@ -357,19 +357,15 @@ class _StructuredCrossSection(_CrossSection):
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
-                vpts = np.ma.masked_equal(vpts, mval)
+                vpts = np.ma.masked_values(vpts, mval)
 
         if isinstance(head, np.ndarray):
             zpts = self.set_zpts(head)
         else:
             zpts = self.zpts
 
-        if masked_values is not None:
-            for mval in masked_values:
-                vpts = np.ma.masked_equal(vpts, mval)
-
         if self.ncb > 0:
-            vpts = np.ma.masked_equal(vpts, -1e9)
+            vpts = np.ma.masked_values(vpts, -1e9)
 
         pc = self.get_grid_patch_collection(zpts, vpts, **kwargs)
         if pc != None:

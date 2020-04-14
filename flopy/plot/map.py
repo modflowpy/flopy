@@ -149,7 +149,7 @@ class PlotMapView(object):
 
         if masked_values is not None:
             for mval in masked_values:
-                plotarray = np.ma.masked_equal(plotarray, mval)
+                plotarray = np.ma.masked_values(plotarray, mval)
 
         # add NaN values to mask
         plotarray = np.ma.masked_where(np.isnan(plotarray), plotarray)
