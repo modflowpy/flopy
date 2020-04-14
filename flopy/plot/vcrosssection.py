@@ -291,7 +291,7 @@ class _VertexCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                a = np.ma.masked_equal(a, mval)
+                a = np.ma.masked_values(a, mval)
 
         data = []
         lay_data = []
@@ -374,7 +374,7 @@ class _VertexCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                a = np.ma.masked_equal(a, mval)
+                a = np.ma.masked_values(a, mval)
 
         if isinstance(head, np.ndarray):
             projpts = self.set_zpts(head)
@@ -478,9 +478,9 @@ class _VertexCrossSection(_CrossSection):
         if masked_values is not None:
             for mval in masked_values:
                 if ismasked is None:
-                    ismasked = np.equal(plotarray, mval)
+                    ismasked = np.isclose(plotarray, mval)
                 else:
-                    t = np.equal(plotarray, mval)
+                    t = np.isclose(plotarray, mval)
                     ismasked += t
 
         if isinstance(head, np.ndarray):

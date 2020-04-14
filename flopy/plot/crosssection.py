@@ -416,7 +416,7 @@ class _StructuredCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                vpts = np.ma.masked_equal(vpts, mval)
+                vpts = np.ma.masked_values(vpts, mval)
 
         plot = []
         # adust distance array for modelgrid offset
@@ -484,9 +484,9 @@ class _StructuredCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                vpts = np.ma.masked_equal(vpts, mval)
+                vpts = np.ma.masked_values(vpts, mval)
         if self.ncb > 0:
-            vpts = np.ma.masked_equal(vpts, -1e9)
+            vpts = np.ma.masked_values(vpts, -1e9)
         idxm = np.ma.getmask(vpts)
 
         plot = []
@@ -563,7 +563,7 @@ class _StructuredCrossSection(_CrossSection):
 
         if masked_values is not None:
             for mval in masked_values:
-                vpts = np.ma.masked_equal(vpts, mval)
+                vpts = np.ma.masked_values(vpts, mval)
 
         if isinstance(head, np.ndarray):
             zcentergrid = self.set_zcentergrid(head)
