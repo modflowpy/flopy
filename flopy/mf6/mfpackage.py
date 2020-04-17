@@ -1958,10 +1958,10 @@ class MFChildPackages(object):
         if update_frecord:
             # set file record variable
             file_record = self._filerecord.get_data()
-            file_record_data = file_record[0]
+            file_record_data = file_record
             new_file_record_data = []
             for item in file_record_data:
-                new_file_record_data.append((item,))
+                new_file_record_data.append((item[0],))
             new_file_record_data.append((fname,))
             self._filerecord.set_data(new_file_record_data)
 
