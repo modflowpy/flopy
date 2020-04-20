@@ -1149,9 +1149,10 @@ def _get_names(in_list):
     return ot_list
 
 
-def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
-               kstpkper=None, text=None, smooth=False, point_scalars=False,
-               vtk_grid_type='auto', true2d=False, binary=False):
+def export_cbc(model, cbcfile, otfolder, precision='single', verbose=False,
+               nanval=-1e+20, kstpkper=None, text=None, smooth=False,
+               point_scalars=False, vtk_grid_type='auto', true2d=False,
+               binary=False):
     """
     Exports cell by cell file to vtk
 
@@ -1164,8 +1165,11 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         the cell by cell file
     otfolder : str
         output folder to write the data
-    precision : str:
-        binary file precision, default is 'single'
+    precision : str
+        Precision of data in the cell by cell file: 'single' or 'double'.
+        Default is 'single'.
+    verbose : bool
+        If True, write information to the screen. Default is False.
     nanval : scalar
         no data value
     kstpkper : tuple of ints or list of tuple of ints
@@ -1202,9 +1206,8 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         os.mkdir(otfolder)
 
     # set up the pvd file to make the output files time enabled
-    pvdfile = open(
-        os.path.join(otfolder, '{}_CBC.pvd'.format(model.name)),
-        'w')
+    pvdfilename = model.name + '_CBC.pvd'
+    pvdfile = open(os.path.join(otfolder, pvdfilename), 'w')
 
     pvdfile.write("""<?xml version="1.0"?>
 <VTKFile type="Collection" version="0.1"
@@ -1213,8 +1216,7 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
   <Collection>\n""")
 
     # load cbc
-
-    cbb = bf.CellBudgetFile(cbcfile, precision=precision)
+    cbb = bf.CellBudgetFile(cbcfile, precision=precision, verbose=verbose)
 
     # totim_dict = dict(zip(cbb.get_kstpkper(), model.dis.get_totim()))
 
@@ -1236,22 +1238,16 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     else:
         keylist = records
 
+    # get the export times
     if kstpkper is not None:
         if isinstance(kstpkper, tuple):
-            kstplist = [kstpkper[0]]
-            kperlist = [kstpkper[1]]
-        elif isinstance(kstpkper, list):
-            kstpkper_list = list(map(list, zip(*kstpkper)))
-            kstplist = kstpkper_list[0]
-            kperlist = kstpkper_list[1]
-
-        else:
-            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+            kstpkper = [kstpkper]
+        elif not isinstance(kstpkper, list) or \
+            not isinstance(kstpkper[0], tuple):
+            raise Exception('kstpkper must be a tuple (kstp, kper) or a list '
                             'of tuples')
-
     else:
-        kperlist = list(set([x[1] for x in cbb.get_kstpkper() if x[1] > -1]))
-        kstplist = list(set([x[0] for x in cbb.get_kstpkper() if x[0] > -1]))
+        kstpkper = cbb.get_kstpkper()
 
     # get model name
     model_name = model.name
@@ -1262,55 +1258,53 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     # export data
     addarray = False
     count = 1
-    for kper in kperlist:
-        for kstp in kstplist:
+    for kstpkper_i in kstpkper:
+        ot_base = '{}_CBC_KPER{}_KSTP{}'.format(
+            model_name, kstpkper_i[1] + 1, kstpkper_i[0] + 1)
+        otfile = os.path.join(otfolder, ot_base)
+        pvdfile.write("""<DataSet timestep="{}" group="" part="0"
+                     file="{}"/>\n""".format(count, ot_base))
+        for name in keylist:
 
-            ot_base = '{}_CBC_KPER{}_KSTP{}'.format(
-                model_name, kper + 1, kstp + 1)
-            otfile = os.path.join(otfolder, ot_base)
-            pvdfile.write("""<DataSet timestep="{}" group="" part="0"
-                         file="{}"/>\n""".format(count, ot_base))
-            for name in keylist:
+            try:
+                rec = cbb.get_data(kstpkper=kstpkper_i, text=name,
+                                   full3D=True)
 
-                try:
-                    rec = cbb.get_data(kstpkper=(kstp, kper), text=name,
-                                       full3D=True)
+                if len(rec) > 0:
+                    array = rec[0]  # need to fix for multiple pak
+                    addarray = True
 
-                    if len(rec) > 0:
-                        array = rec[0]  # need to fix for multiple pak
-                        addarray = True
+            except ValueError:
 
-                except ValueError:
+                rec = cbb.get_data(kstpkper=kstpkper_i, text=name)[0]
 
-                    rec = cbb.get_data(kstpkper=(kstp, kper), text=name)[0]
+                if imeth_dict[name] == 6:
+                    array = np.full(shape, nanval)
+                    # rec array
+                    for [node, q] in zip(rec['node'], rec['q']):
+                        lyr, row, col = np.unravel_index(node - 1, shape)
 
-                    if imeth_dict[name] == 6:
-                        array = np.full(shape, nanval)
-                        # rec array
-                        for [node, q] in zip(rec['node'], rec['q']):
-                            lyr, row, col = np.unravel_index(node - 1, shape)
+                        array[lyr, row, col] = q
 
-                            array[lyr, row, col] = q
+                    addarray = True
+                else:
+                    raise Exception('Data type not currently supported '
+                                    'for cbc output')
+                    # print('Data type not currently supported '
+                    #       'for cbc output')
 
-                        addarray = True
-                    else:
-                        raise Exception('Data type not currently supported '
-                                        'for cbc output')
-                        # print('Data type not currently supported '
-                        #       'for cbc output')
+            if addarray:
 
-                if addarray:
+                # set the data to no data value
+                if ma.is_masked(array):
+                    array = np.where(array.mask, nanval, array)
 
-                    # set the data to no data value
-                    if ma.is_masked(array):
-                        array = np.where(array.mask, nanval, array)
+                # add array to vtk
+                vtk.add_array(name.strip(), array)  # need to adjust for
 
-                    # add array to vtk
-                    vtk.add_array(name.strip(), array)  # need to adjust for
-
-            # write the vtk data to the output file
-            vtk.write(otfile)
-            count += 1
+        # write the vtk data to the output file
+        vtk.write(otfile)
+        count += 1
     # finish writing the pvd file
     pvdfile.write("""  </Collection>
 </VTKFile>""")
@@ -1319,9 +1313,10 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     return
 
 
-def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
-                 smooth=False, point_scalars=False, vtk_grid_type='auto',
-                 true2d=False, binary=False):
+def export_heads(model, hdsfile, otfolder, text='head', precision='auto',
+                 verbose=False, nanval=-1e+20, kstpkper=None, smooth=False,
+                 point_scalars=False, vtk_grid_type='auto', true2d=False,
+                 binary=False):
     """
     Exports binary head file to vtk
 
@@ -1334,6 +1329,13 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
         binary heads file
     otfolder : str
         output folder to write the data
+    text : string
+        Name of the text string in the head file.  Default is 'head'.
+    precision : str
+        Precision of data in the head file: 'auto', 'single' or 'double'.
+        Default is 'auto'.
+    verbose : bool
+        If True, write information to the screen. Default is False.
     nanval : scalar
         no data value, default value is -1e20
     kstpkper : tuple of ints or list of tuple of ints
@@ -1365,34 +1367,28 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
         os.mkdir(otfolder)
 
     # start writing the pvd file to make the data time aware
-    pvdfile = open(os.path.join(otfolder, '{}_Heads.pvd'.format(model.name)),
-                   'w')
+    pvdfilename = model.name + '_' + text + '.pvd'
+    pvdfile = open(os.path.join(otfolder, pvdfilename), 'w')
 
     pvdfile.write("""<?xml version="1.0"?>
 <VTKFile type="Collection" version="0.1"
          byte_order="LittleEndian"
          compressor="vtkZLibDataCompressor">
   <Collection>\n""")
-    # get the heads
-    hds = HeadFile(hdsfile)
 
+    # get the heads
+    hds = HeadFile(hdsfile, text=text, precision=precision, verbose=verbose)
+
+    # get the export times
     if kstpkper is not None:
         if isinstance(kstpkper, tuple):
-            kstplist = [kstpkper[0]]
-            kperlist = [kstpkper[1]]
-
-        elif isinstance(kstpkper, list):
-            kstpkper_list = list(map(list, zip(*kstpkper)))
-            kstplist = kstpkper_list[0]
-            kperlist = kstpkper_list[1]
-
-        else:
-            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+            kstpkper = [kstpkper]
+        elif not isinstance(kstpkper, list) or \
+            not isinstance(kstpkper[0], tuple):
+            raise Exception('kstpkper must be a tuple (kstp, kper) or a list '
                             'of tuples')
-
     else:
-        kperlist = list(set([x[1] for x in hds.get_kstpkper() if x[1] > -1]))
-        kstplist = list(set([x[0] for x in hds.get_kstpkper() if x[0] > -1]))
+        kstpkper = hds.get_kstpkper()
 
     # set upt the vtk
     vtk = Vtk(model, smooth=smooth, point_scalars=point_scalars, nanval=nanval,
@@ -1400,18 +1396,17 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
 
     # output data
     count = 0
-    for kper in kperlist:
-        for kstp in kstplist:
-            hdarr = hds.get_data((kstp, kper))
-            vtk.add_array('head', hdarr)
-            ot_base = '{}_Heads_KPER{}_KSTP{}'.format(
-                model.name, kper + 1, kstp + 1)
-            otfile = os.path.join(otfolder, ot_base)
-            # vtk.write(otfile, timeval=totim_dict[(kstp, kper)])
-            vtk.write(otfile)
-            pvdfile.write("""<DataSet timestep="{}" group="" part="0"
-             file="{}"/>\n""".format(count, ot_base))
-            count += 1
+    for kstpkper_i in kstpkper:
+        hdarr = hds.get_data(kstpkper_i)
+        vtk.add_array(text, hdarr)
+        ot_base = ('{}_' + text + '_KPER{}_KSTP{}').format(
+            model.name, kstpkper_i[1] + 1, kstpkper_i[0] + 1)
+        otfile = os.path.join(otfolder, ot_base)
+        # vtk.write(otfile, timeval=totim_dict[(kstp, kper)])
+        vtk.write(otfile)
+        pvdfile.write("""<DataSet timestep="{}" group="" part="0"
+         file="{}"/>\n""".format(count, ot_base))
+        count += 1
 
     pvdfile.write("""  </Collection>
 </VTKFile>""")

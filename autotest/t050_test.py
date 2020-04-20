@@ -240,7 +240,7 @@ def test_vtk_binary_head_export():
     hdsfile = os.path.join(mpth, 'freyberg.hds')
     m = flopy.modflow.Modflow.load(namfile, model_ws=mpth, verbose=False,
                                    load_only=['dis', 'bas6'])
-    filenametocheck = 'freyberg_Heads_KPER455_KSTP1.vtu'
+    filenametocheck = 'freyberg_head_KPER455_KSTP1.vtu'
 
     # export and check
     otfolder = os.path.join(cpth, 'heads_test')
@@ -298,7 +298,7 @@ def test_vtk_binary_head_export():
     vtk.export_heads(m, hdsfile, otfolder, kstpkper=(0, 0),
                      point_scalars=False, smooth=True, binary=True,
                      nanval=-999.99)
-    filetocheck = os.path.join(otfolder, 'freyberg_Heads_KPER1_KSTP1.vtu')
+    filetocheck = os.path.join(otfolder, 'freyberg_head_KPER1_KSTP1.vtu')
     # totalbytes4 = os.path.getsize(filetocheck)
     # assert(totalbytes4==493853)
     # nlines4 = count_lines_in_file(filetocheck, binary=True)
