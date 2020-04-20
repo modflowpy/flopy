@@ -209,7 +209,6 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**            |
 | `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                        |
 | `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                        |
-| `._zverts_smooth()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                              |
 | `.array_at_verts()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                              |
 
 How to Cite

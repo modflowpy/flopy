@@ -358,14 +358,17 @@ class Vtk(object):
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (i.e., with cubic cells) will be saved as an
-                  'ImageData'.
-                * A rectilinear, non-regular grid will be saved as a
-                  'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
             if True the output file will be binary, default is False
 
@@ -376,7 +379,8 @@ class Vtk(object):
         Stores data arrays added to VTK object
     """
     def __init__(self, model, verbose=None, nanval=-1e+20, smooth=False,
-                 point_scalars=False, vtk_grid_type='auto', binary=False):
+                 point_scalars=False, vtk_grid_type='auto', true2d=False,
+                 binary=False):
 
         if point_scalars:
             smooth = True
@@ -399,7 +403,6 @@ class Vtk(object):
         self.shape_verts2d = (self.shape_verts[1], self.shape_verts[2])
         self.nanval = nanval
 
-        self.cell_type = 11
         self.arrays = {}
         self.vectors = {}
 
@@ -432,6 +435,24 @@ class Vtk(object):
 
         self.ibound = ibound
 
+        self.true2d = true2d
+        self.nx = self.modelgrid.ncol
+        self.ny = self.modelgrid.nrow
+        self.nz = self.modelgrid.nlay
+        if self.true2d:
+            if self.nz == 1:
+                self.nz = 0
+            elif self.ny == 1:
+                self.ny = 0
+            elif self.nx == 1:
+                self.nx = 0
+            else:
+                raise ValueError('The option true2d was used but the model is '
+                                 'not 2d.')
+            self.cell_type = 8
+        else:
+            self.cell_type = 11
+
         self.vtk_grid_type, self.file_extension = \
             self._vtk_grid_type(vtk_grid_type)
 
@@ -462,9 +483,12 @@ class Vtk(object):
         # if 'auto', determine the vtk grid type automatically
         if vtk_grid_type == 'auto':
             if self.modelgrid.grid_type == 'structured':
-                if self.modelgrid.is_regular():
+                if self.modelgrid.is_regular or \
+                    (self.modelgrid.is_regular_xy and self.nz == 0) or \
+                    (self.modelgrid.is_regular_xz and self.ny == 0) or \
+                    (self.modelgrid.is_regular_yz and self.nx == 0):
                     vtk_grid_type = 'ImageData'
-                elif self.modelgrid.is_rectilinear():
+                elif self.modelgrid.is_rectilinear or self.nz == 0:
                     vtk_grid_type = 'RectilinearGrid'
                 else:
                     vtk_grid_type = 'UnstructuredGrid'
@@ -484,11 +508,14 @@ class Vtk(object):
                                           vtk_grid_type + '" for a grid '\
                                           'that is not structured')
             if vtk_grid_type == 'ImageData' and \
-                not self.modelgrid.is_regular():
+                not self.modelgrid.is_regular and \
+                not (self.modelgrid.is_regular_xy and self.nz == 0) and \
+                not (self.modelgrid.is_regular_xz and self.ny == 0) and \
+                not (self.modelgrid.is_regular_yz and self.nx == 0):
                 raise ValueError('vtk_grid_type cannot be "ImageData" for a '\
                                  'non-regular grid spacing')
             if vtk_grid_type == 'RectilinearGrid' and \
-                not self.modelgrid.is_rectilinear():
+                not self.modelgrid.is_rectilinear and not self.nz == 0:
                 raise ValueError('vtk_grid_type cannot be "RectilinearGrid" '\
                                  'for a non-rectilinear grid spacing')
 
@@ -574,12 +601,13 @@ class Vtk(object):
         ----------
 
         name : str
-            name of the array
+            Name of the array.
         a : flopy array
-            the array to be added to the vtk object
-            shape should match either grid cells or grid vertices
+            The array to be added to the vtk object.
+            The shape should match either grid cells or grid vertices.
         array2d : bool
-            True if the array is 2d
+            true if the array is 2d and represents the first layer,
+            default is False
         """
         # format array
         a = self._format_array(a, array2d)
@@ -598,12 +626,19 @@ class Vtk(object):
         ----------
 
         name : str
-            name of the vector
+            Name of the vector.
         v : tuple of arrays
-            the vector to be added to the vtk object
-            shape of arrays should match either grid cells or grid vertices
+            The vector to be added to the vtk object. The shape of each
+            component should match either grid cells or grid vertices.
         array2d : bool
-            True if the vector components are 2d arrays
+            true if the vector components are 2d arrays and represent the first
+            layer, default is False
+
+        Notes
+        -----
+        If the grid is rotated, the vector will be rotated too, assuming that
+        the first and second components are along x and y directions,
+        respectively.
         """
         # format each component of the vector
         vf = ()
@@ -612,6 +647,14 @@ class Vtk(object):
             if vcomp is None:
                 return
             vf = vf + (vcomp,)
+
+        # rotate the vector according to grid
+        if self.modelgrid.angrot_radians != 0.:
+            from ..utils import geometry
+            vf = list(vf)
+            vf[0], vf[1] = geometry.rotate(vf[0], vf[1], 0., 0.,
+                                           self.modelgrid.angrot_radians)
+            vf = tuple(vf)
 
         # add to self.vectors
         self.vectors[name] = vf
@@ -669,7 +712,10 @@ class Vtk(object):
 
             # get the total number of cells and vertices
             ncells = len(iverts)
-            npoints = ncells * 8
+            if self.true2d:
+                npoints = ncells * 4
+            else:
+                npoints = ncells * 8
             if self.verbose:
                 print('Number of point is {}, Number of cells is {}\n'.format(
                       npoints, ncells))
@@ -710,9 +756,9 @@ class Vtk(object):
 
         elif self.vtk_grid_type == 'ImageData':
             # note: in vtk, "extent" actually means indices of grid lines
-            vtk_extent_str = '0' + ' ' + str(self.modelgrid.ncol) + ' ' + \
-                             '0' + ' ' + str(self.modelgrid.nrow) + ' ' + \
-                             '0' + ' ' + str(self.modelgrid.nlay)
+            vtk_extent_str = '0' + ' ' + str(self.nx) + ' ' + \
+                             '0' + ' ' + str(self.ny) + ' ' + \
+                             '0' + ' ' + str(self.nz)
             xml.add_attributes(WholeExtent=vtk_extent_str)
             grid_extent = self.modelgrid.xyzextent
             vtk_origin_str = str(grid_extent[0]) + ' ' + \
@@ -730,9 +776,9 @@ class Vtk(object):
 
         elif self.vtk_grid_type == 'RectilinearGrid':
             # note: in vtk, "extent" actually means indices of grid lines
-            vtk_extent_str = '0' + ' ' + str(self.modelgrid.ncol) + ' ' + \
-                             '0' + ' ' + str(self.modelgrid.nrow) + ' ' + \
-                             '0' + ' ' + str(self.modelgrid.nlay)
+            vtk_extent_str = '0' + ' ' + str(self.nx) + ' ' + \
+                             '0' + ' ' + str(self.ny) + ' ' + \
+                             '0' + ' ' + str(self.nz)
             xml.add_attributes(WholeExtent=vtk_extent_str)
 
             # piece
@@ -814,6 +860,14 @@ class Vtk(object):
                     else:
                         a = self.modelgrid.array_at_verts(a)
                         a = np.flip(a, axis=[0, 1])
+                        # deal with true2d
+                        if self.true2d:
+                            if self.nz == 0:
+                                a = a[0, :, :]
+                            elif self.ny == 0:
+                                a = a[:, 0, :]
+                            elif self.nz == 0:
+                                a = a[:, :, 0]
                 else:
                     if self.vtk_grid_type == 'UnstructuredGrid':
                         # still need to do this to be consistent with
@@ -825,6 +879,14 @@ class Vtk(object):
                         # flip "a" so coordinates increase along with indices
                         # as in vtk
                         a = np.flip(a, axis=[0, 1])
+                        # deal with true2d
+                        if self.true2d:
+                            if self.nz == 0:
+                                a = a[0, :, :]
+                            elif self.ny == 0:
+                                a = a[:, 0, :]
+                            elif self.nz == 0:
+                                a = a[:, :, 0]
                 xml.write_array(a, Name=name, NumberOfComponents='1')
 
             # loop through stored vectors
@@ -842,6 +904,14 @@ class Vtk(object):
                         else:
                             vcomp = self.modelgrid.array_at_verts(vcomp)
                             vcomp = np.flip(vcomp, axis=[0, 1])
+                            # deal with true2d
+                            if self.true2d:
+                                if self.nz == 0:
+                                    vcomp = vcomp[0, :, :]
+                                elif self.ny == 0:
+                                    vcomp = vcomp[:, 0, :]
+                                elif self.nz == 0:
+                                    vcomp = vcomp[:, :, 0]
                         v_verts = v_verts + (vcomp,)
                     v = v_verts
                 else:
@@ -855,6 +925,14 @@ class Vtk(object):
                             vcomp = np.array(list(averts.values()))
                         else:
                             vcomp = np.flip(vcomp, axis=[0, 1])
+                            # deal with true2d
+                            if self.true2d:
+                                if self.nz == 0:
+                                    vcomp = vcomp[0, :, :]
+                                elif self.ny == 0:
+                                    vcomp = vcomp[:, 0, :]
+                                elif self.nz == 0:
+                                    vcomp = vcomp[:, :, 0]
                         v_verts = v_verts + (vcomp,)
                     v = v_verts
                 # write to file
@@ -996,49 +1074,68 @@ class Vtk(object):
                     pts = self.modelgrid._cell_vert_list(i, j)
                     pt0, pt1, pt2, pt3, pt0 = pts
 
-                    if not self.smooth:
-                        cellBot = self.modelgrid.top_botm[k + 1, i, j]
-                        cellTop = self.modelgrid.top_botm[k, i, j]
-                        celElev = [cellBot, cellTop]
-                        for elev in celElev:
-                            # verts[ipoint, :] = np.append(pt1,elev)
-                            verts.append([pt1[0], pt1[1], elev])
-                            # verts[ipoint+1, :] = np.append(pt2,elev)
-                            verts.append([pt2[0], pt2[1], elev])
-                            # verts[ipoint+2, :] = np.append(pt0,elev)
-                            verts.append([pt0[0], pt0[1], elev])
-                            # verts[ipoint+3, :] = np.append(pt3,elev)
-                            verts.append([pt3[0], pt3[1], elev])
-                            ivert.extend([ipoint, ipoint+1, ipoint+2,
-                                          ipoint+3])
-                            zverts.extend([elev, elev, elev, elev])
-                            ipoint += 4
-                        vertsdict[cellid] = verts
-                        ivertsdict[cellid] = ivert
-                        zvertsdict[cellid] = zverts
+                    # determine z values
+                    if self.nz == 0 and zvalues is None:
+                        elev = np.nanmin(self.modelgrid.top_botm_withnan[k + 1,
+                                                                         :, :])
+                        zvals = [[elev, elev, elev, elev],
+                                  [elev, elev, elev, elev]]
+                    elif not self.smooth:
+                        zbot = self.modelgrid.top_botm[k + 1, i, j]
+                        ztop = self.modelgrid.top_botm[k, i, j]
+                        zvals = [[zbot, zbot, zbot, zbot],
+                                 [ztop, ztop, ztop, ztop]]
                     else:
-                        layers = [k+1, k]
-                        for lay in layers:
-                            verts.append([pt1[0], pt1[1], zVertices[lay, i+1,
-                                                                    j]])
-                            verts.append([pt2[0], pt2[1], zVertices[lay, i+1,
-                                                                    j+1]])
+                        zvals = [[zVertices[k+1, i+1, j],
+                                  zVertices[k+1, i+1, j+1],
+                                  zVertices[k+1, i, j],
+                                  zVertices[k+1, i, j+1]],
+                                 [zVertices[k, i+1, j],
+                                  zVertices[k, i+1, j+1],
+                                  zVertices[k, i, j],
+                                  zVertices[k, i, j+1]]]
 
-                            verts.append([pt0[0], pt0[1], zVertices[lay, i,
-                                                                    j]])
-
-                            verts.append([pt3[0], pt3[1], zVertices[lay, i,
-                                                                    j+1]])
+                    # fill in the output lists
+                    if self.nz == 0:
+                        verts.append([pt1[0], pt1[1], zvals[0][0]])
+                        verts.append([pt2[0], pt2[1], zvals[0][1]])
+                        verts.append([pt0[0], pt0[1], zvals[0][2]])
+                        verts.append([pt3[0], pt3[1], zvals[0][3]])
+                        ivert.extend([ipoint, ipoint+1, ipoint+2, ipoint+3])
+                        zverts.extend([zvals[0][0], zvals[0][1],
+                                       zvals[0][2], zvals[0][3]])
+                        ipoint += 4
+                    elif self.ny == 0:
+                        verts.append([pt1[0], pt1[1], zvals[0][0]])
+                        verts.append([pt2[0], pt2[1], zvals[0][1]])
+                        verts.append([pt1[0], pt1[1], zvals[1][0]])
+                        verts.append([pt2[0], pt2[1], zvals[1][1]])
+                        ivert.extend([ipoint, ipoint+1, ipoint+2, ipoint+3])
+                        zverts.extend([zvals[0][0], zvals[0][1],
+                                       zvals[1][0], zvals[1][1]])
+                        ipoint += 4
+                    elif self.nx == 0:
+                        verts.append([pt1[0], pt1[1], zvals[0][0]])
+                        verts.append([pt0[0], pt0[1], zvals[0][2]])
+                        verts.append([pt1[0], pt1[1], zvals[1][0]])
+                        verts.append([pt0[0], pt0[1], zvals[1][2]])
+                        ivert.extend([ipoint, ipoint+1, ipoint+2, ipoint+3])
+                        zverts.extend([zvals[0][0], zvals[0][2],
+                                       zvals[1][0], zvals[1][2]])
+                        ipoint += 4
+                    else:
+                        for zvals_l in zvals:
+                            verts.append([pt1[0], pt1[1], zvals_l[0]])
+                            verts.append([pt2[0], pt2[1], zvals_l[1]])
+                            verts.append([pt0[0], pt0[1], zvals_l[2]])
+                            verts.append([pt3[0], pt3[1], zvals_l[3]])
                             ivert.extend([ipoint, ipoint+1, ipoint+2,
                                           ipoint+3])
-                            zverts.extend([zVertices[lay, i+1, j], zVertices[
-                                lay, i+1, j+1],
-                                        zVertices[lay, i, j], zVertices[lay, i,
-                                                                        j+1]])
+                            zverts.extend(zvals_l)
                             ipoint += 4
-                        vertsdict[cellid] = verts
-                        ivertsdict[cellid] = ivert
-                        zvertsdict[cellid] = zverts
+                    vertsdict[cellid] = verts
+                    ivertsdict[cellid] = ivert
+                    zvertsdict[cellid] = zverts
         return vertsdict, ivertsdict, zvertsdict
 
 
@@ -1052,9 +1149,10 @@ def _get_names(in_list):
     return ot_list
 
 
-def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
-               kstpkper=None, text=None, smooth=False, point_scalars=False,
-               vtk_grid_type='auto', binary=False):
+def export_cbc(model, cbcfile, otfolder, precision='single', verbose=False,
+               nanval=-1e+20, kstpkper=None, text=None, smooth=False,
+               point_scalars=False, vtk_grid_type='auto', true2d=False,
+               binary=False):
     """
     Exports cell by cell file to vtk
 
@@ -1067,8 +1165,11 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         the cell by cell file
     otfolder : str
         output folder to write the data
-    precision : str:
-        binary file precision, default is 'single'
+    precision : str
+        Precision of data in the cell by cell file: 'single' or 'double'.
+        Default is 'single'.
+    verbose : bool
+        If True, write information to the screen. Default is False.
     nanval : scalar
         no data value
     kstpkper : tuple of ints or list of tuple of ints
@@ -1083,14 +1184,17 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -1102,9 +1206,8 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
         os.mkdir(otfolder)
 
     # set up the pvd file to make the output files time enabled
-    pvdfile = open(
-        os.path.join(otfolder, '{}_CBC.pvd'.format(model.name)),
-        'w')
+    pvdfilename = model.name + '_CBC.pvd'
+    pvdfile = open(os.path.join(otfolder, pvdfilename), 'w')
 
     pvdfile.write("""<?xml version="1.0"?>
 <VTKFile type="Collection" version="0.1"
@@ -1113,8 +1216,7 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
   <Collection>\n""")
 
     # load cbc
-
-    cbb = bf.CellBudgetFile(cbcfile, precision=precision)
+    cbb = bf.CellBudgetFile(cbcfile, precision=precision, verbose=verbose)
 
     # totim_dict = dict(zip(cbb.get_kstpkper(), model.dis.get_totim()))
 
@@ -1136,81 +1238,73 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     else:
         keylist = records
 
+    # get the export times
     if kstpkper is not None:
         if isinstance(kstpkper, tuple):
-            kstplist = [kstpkper[0]]
-            kperlist = [kstpkper[1]]
-        elif isinstance(kstpkper, list):
-            kstpkper_list = list(map(list, zip(*kstpkper)))
-            kstplist = kstpkper_list[0]
-            kperlist = kstpkper_list[1]
-
-        else:
-            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+            kstpkper = [kstpkper]
+        elif not isinstance(kstpkper, list) or \
+            not isinstance(kstpkper[0], tuple):
+            raise Exception('kstpkper must be a tuple (kstp, kper) or a list '
                             'of tuples')
-
     else:
-        kperlist = list(set([x[1] for x in cbb.get_kstpkper() if x[1] > -1]))
-        kstplist = list(set([x[0] for x in cbb.get_kstpkper() if x[0] > -1]))
+        kstpkper = cbb.get_kstpkper()
 
     # get model name
     model_name = model.name
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
 
     # export data
     addarray = False
     count = 1
-    for kper in kperlist:
-        for kstp in kstplist:
+    for kstpkper_i in kstpkper:
+        ot_base = '{}_CBC_KPER{}_KSTP{}'.format(
+            model_name, kstpkper_i[1] + 1, kstpkper_i[0] + 1)
+        otfile = os.path.join(otfolder, ot_base)
+        pvdfile.write("""<DataSet timestep="{}" group="" part="0"
+                     file="{}"/>\n""".format(count, ot_base))
+        for name in keylist:
 
-            ot_base = '{}_CBC_KPER{}_KSTP{}'.format(
-                model_name, kper + 1, kstp + 1)
-            otfile = os.path.join(otfolder, ot_base)
-            pvdfile.write("""<DataSet timestep="{}" group="" part="0"
-                         file="{}"/>\n""".format(count, ot_base))
-            for name in keylist:
+            try:
+                rec = cbb.get_data(kstpkper=kstpkper_i, text=name,
+                                   full3D=True)
 
-                try:
-                    rec = cbb.get_data(kstpkper=(kstp, kper), text=name,
-                                       full3D=True)
+                if len(rec) > 0:
+                    array = rec[0]  # need to fix for multiple pak
+                    addarray = True
 
-                    if len(rec) > 0:
-                        array = rec[0]  # need to fix for multiple pak
-                        addarray = True
+            except ValueError:
 
-                except ValueError:
+                rec = cbb.get_data(kstpkper=kstpkper_i, text=name)[0]
 
-                    rec = cbb.get_data(kstpkper=(kstp, kper), text=name)[0]
+                if imeth_dict[name] == 6:
+                    array = np.full(shape, nanval)
+                    # rec array
+                    for [node, q] in zip(rec['node'], rec['q']):
+                        lyr, row, col = np.unravel_index(node - 1, shape)
 
-                    if imeth_dict[name] == 6:
-                        array = np.full(shape, nanval)
-                        # rec array
-                        for [node, q] in zip(rec['node'], rec['q']):
-                            lyr, row, col = np.unravel_index(node - 1, shape)
+                        array[lyr, row, col] = q
 
-                            array[lyr, row, col] = q
+                    addarray = True
+                else:
+                    raise Exception('Data type not currently supported '
+                                    'for cbc output')
+                    # print('Data type not currently supported '
+                    #       'for cbc output')
 
-                        addarray = True
-                    else:
-                        raise Exception('Data type not currently supported '
-                                        'for cbc output')
-                        # print('Data type not currently supported '
-                        #       'for cbc output')
+            if addarray:
 
-                if addarray:
+                # set the data to no data value
+                if ma.is_masked(array):
+                    array = np.where(array.mask, nanval, array)
 
-                    # set the data to no data value
-                    if ma.is_masked(array):
-                        array = np.where(array.mask, nanval, array)
+                # add array to vtk
+                vtk.add_array(name.strip(), array)  # need to adjust for
 
-                    # add array to vtk
-                    vtk.add_array(name.strip(), array)  # need to adjust for
-
-            # write the vtk data to the output file
-            vtk.write(otfile)
-            count += 1
+        # write the vtk data to the output file
+        vtk.write(otfile)
+        count += 1
     # finish writing the pvd file
     pvdfile.write("""  </Collection>
 </VTKFile>""")
@@ -1219,8 +1313,9 @@ def export_cbc(model, cbcfile, otfolder, precision='single', nanval=-1e+20,
     return
 
 
-def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
-                 smooth=False, point_scalars=False, vtk_grid_type='auto',
+def export_heads(model, hdsfile, otfolder, text='head', precision='auto',
+                 verbose=False, nanval=-1e+20, kstpkper=None, smooth=False,
+                 point_scalars=False, vtk_grid_type='auto', true2d=False,
                  binary=False):
     """
     Exports binary head file to vtk
@@ -1234,6 +1329,13 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
         binary heads file
     otfolder : str
         output folder to write the data
+    text : string
+        Name of the text string in the head file.  Default is 'head'.
+    precision : str
+        Precision of data in the head file: 'auto', 'single' or 'double'.
+        Default is 'auto'.
+    verbose : bool
+        If True, write information to the screen. Default is False.
     nanval : scalar
         no data value, default value is -1e20
     kstpkper : tuple of ints or list of tuple of ints
@@ -1245,14 +1347,17 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -1262,53 +1367,46 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
         os.mkdir(otfolder)
 
     # start writing the pvd file to make the data time aware
-    pvdfile = open(os.path.join(otfolder, '{}_Heads.pvd'.format(model.name)),
-                   'w')
+    pvdfilename = model.name + '_' + text + '.pvd'
+    pvdfile = open(os.path.join(otfolder, pvdfilename), 'w')
 
     pvdfile.write("""<?xml version="1.0"?>
 <VTKFile type="Collection" version="0.1"
          byte_order="LittleEndian"
          compressor="vtkZLibDataCompressor">
   <Collection>\n""")
-    # get the heads
-    hds = HeadFile(hdsfile)
 
+    # get the heads
+    hds = HeadFile(hdsfile, text=text, precision=precision, verbose=verbose)
+
+    # get the export times
     if kstpkper is not None:
         if isinstance(kstpkper, tuple):
-            kstplist = [kstpkper[0]]
-            kperlist = [kstpkper[1]]
-
-        elif isinstance(kstpkper, list):
-            kstpkper_list = list(map(list, zip(*kstpkper)))
-            kstplist = kstpkper_list[0]
-            kperlist = kstpkper_list[1]
-
-        else:
-            raise Exception('kstpkper must be tuple of (kstp, kper) or list '
+            kstpkper = [kstpkper]
+        elif not isinstance(kstpkper, list) or \
+            not isinstance(kstpkper[0], tuple):
+            raise Exception('kstpkper must be a tuple (kstp, kper) or a list '
                             'of tuples')
-
     else:
-        kperlist = list(set([x[1] for x in hds.get_kstpkper() if x[1] > -1]))
-        kstplist = list(set([x[0] for x in hds.get_kstpkper() if x[0] > -1]))
+        kstpkper = hds.get_kstpkper()
 
     # set upt the vtk
     vtk = Vtk(model, smooth=smooth, point_scalars=point_scalars, nanval=nanval,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
 
     # output data
     count = 0
-    for kper in kperlist:
-        for kstp in kstplist:
-            hdarr = hds.get_data((kstp, kper))
-            vtk.add_array('head', hdarr)
-            ot_base = '{}_Heads_KPER{}_KSTP{}'.format(
-                model.name, kper + 1, kstp + 1)
-            otfile = os.path.join(otfolder, ot_base)
-            # vtk.write(otfile, timeval=totim_dict[(kstp, kper)])
-            vtk.write(otfile)
-            pvdfile.write("""<DataSet timestep="{}" group="" part="0"
-             file="{}"/>\n""".format(count, ot_base))
-            count += 1
+    for kstpkper_i in kstpkper:
+        hdarr = hds.get_data(kstpkper_i)
+        vtk.add_array(text, hdarr)
+        ot_base = ('{}_' + text + '_KPER{}_KSTP{}').format(
+            model.name, kstpkper_i[1] + 1, kstpkper_i[0] + 1)
+        otfile = os.path.join(otfolder, ot_base)
+        # vtk.write(otfile, timeval=totim_dict[(kstp, kper)])
+        vtk.write(otfile)
+        pvdfile.write("""<DataSet timestep="{}" group="" part="0"
+         file="{}"/>\n""".format(count, ot_base))
+        count += 1
 
     pvdfile.write("""  </Collection>
 </VTKFile>""")
@@ -1318,7 +1416,7 @@ def export_heads(model, hdsfile, otfolder, nanval=-1e+20, kstpkper=None,
 
 def export_array(model, array, output_folder, name, nanval=-1e+20,
                  array2d=False, smooth=False, point_scalars=False,
-                 vtk_grid_type='auto', binary=False):
+                 vtk_grid_type='auto', true2d=False, binary=False):
     """
     Export array to vtk
 
@@ -1336,21 +1434,25 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
     nanval : scalar
         no data value, default value is -1e20
     array2d : bool
-        True if array is 2d, default is False
+        true if the array is 2d and represents the first layer, default is
+        False
     smooth : bool
         if True, will create smooth layer elevations, default is False
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
     """
@@ -1359,7 +1461,7 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
         os.mkdir(output_folder)
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
     vtk.add_array(name, array, array2d=array2d)
     otfile = os.path.join(output_folder, '{}'.format(name))
     vtk.write(otfile)
@@ -1369,7 +1471,7 @@ def export_array(model, array, output_folder, name, nanval=-1e+20,
 
 def export_vector(model, vector, output_folder, name, nanval=-1e+20,
                  array2d=False, smooth=False, point_scalars=False,
-                 vtk_grid_type='auto', binary=False):
+                 vtk_grid_type='auto', true2d=False, binary=False):
 
     """
 
@@ -1389,31 +1491,34 @@ def export_vector(model, vector, output_folder, name, nanval=-1e+20,
     nanval : scalar
         no data value, default value is -1e20
     array2d : bool
-            True if the vector components are 2d arrays, default is False
+        true if the vector components are 2d arrays and represent the first
+        layer, default is False
     smooth : bool
         if True, will create smooth layer elevations, default is False
     point_scalars : bool
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
-
     """
 
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
     vtk.add_vector(name, vector, array2d=array2d)
     otfile = os.path.join(output_folder, '{}'.format(name))
     vtk.write(otfile)
@@ -1423,7 +1528,8 @@ def export_vector(model, vector, output_folder, name, nanval=-1e+20,
 
 def export_transient(model, array, output_folder, name, nanval=-1e+20,
                      array2d=False, smooth=False, point_scalars=False,
-                     vtk_grid_type='auto', binary=False):
+                     vtk_grid_type='auto', true2d=False, binary=False,
+                     kpers=None):
     """
     Export transient 2d array to vtk
 
@@ -1448,16 +1554,22 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
     """
 
     if not os.path.exists(output_folder):
@@ -1466,15 +1578,20 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
     to_tim = model.dis.get_totim()
 
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
 
     if name.endswith('_'):
         separator = ''
     else:
         separator = '_'
 
+    if kpers is None:
+        kpers = range(array.shape[0])
+    else:
+        assert (isinstance(kpers, list) or isinstance(kpers, np.ndarray))
+
     if array2d:
-        for kper in range(array.shape[0]):
+        for kper in kpers:
 
             t2d_array_kper = array[kper]
             t2d_array_kper_shape = t2d_array_kper.shape
@@ -1488,7 +1605,7 @@ def export_transient(model, array, output_folder, name, nanval=-1e+20,
             vtk.write(otfile, timeval=to_tim[kper])
 
     else:
-        for kper in range(array.shape[0]):
+        for kper in kpers:
             vtk.add_array(name, array[kper])
 
             otname = '{}'.format(name) + separator + '0{}'.format(kper + 1)
@@ -1513,7 +1630,8 @@ def trans_dict(in_dict, name, trans_array, array2d=False):
 
 def export_package(pak_model, pak_name, otfolder, vtkobj=None,
                    nanval=-1e+20, smooth=False, point_scalars=False,
-                   vtk_grid_type='auto', binary=False):
+                   vtk_grid_type='auto', true2d=False, binary=False,
+                   kpers=None):
     """
     Exports package to vtk
 
@@ -1537,17 +1655,22 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
-
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
     """
 
     # see if there is vtk object being supplied by export_model
@@ -1555,7 +1678,7 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
         # if not build one
         vtk = Vtk(pak_model, nanval=nanval, smooth=smooth,
                   point_scalars=point_scalars, vtk_grid_type=vtk_grid_type,
-                  binary=binary)
+                  true2d=true2d, binary=binary)
     else:
         # otherwise use the vtk object that was supplied
         vtk = vtkobj
@@ -1664,6 +1787,12 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
         # write transient data
         if vtk_trans_dict:
 
+            # only retain requested stress periods
+            if kpers is not None:
+                assert (isinstance(kpers, list) or isinstance(kpers,
+                                                              np.ndarray))
+                vtk_trans_dict = {kper: vtk_trans_dict[kper] for kper in kpers}
+
             # get model time
             # to_tim = _get_basic_modeltime(pak_model.modeltime.perlen)
             # loop through the transient array data that was stored in the
@@ -1690,7 +1819,7 @@ def export_package(pak_model, pak_name, otfolder, vtkobj=None,
 
 def export_model(model, otfolder, package_names=None, nanval=-1e+20,
                  smooth=False, point_scalars=False, vtk_grid_type='auto',
-                 binary=False):
+                 true2d=False, binary=False, kpers=None):
     """
     Exports model to vtk
 
@@ -1713,19 +1842,25 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
         if True, will also output array values at cell vertices, default is
         False; note this automatically sets smooth to True
     vtk_grid_type : str
-            Specific vtk_grid_type or 'auto'. Possible specific values are
-            'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
-            If 'auto', the grid type is automatically determined. Namely:
-                * A regular grid (in all three directions) will be saved as an
-                  'ImageData'.
-                * A rectilinear (in all three directions), non-regular grid
-                  will be saved as a 'RectilinearGrid'.
-                * Other grids will be saved as 'UnstructuredGrid'.
+        Specific vtk_grid_type or 'auto' (default). Possible specific values
+        are 'ImageData', 'RectilinearGrid', and 'UnstructuredGrid'.
+        If 'auto', the grid type is automatically determined. Namely:
+            * A regular grid (in all three directions) will be saved as an
+              'ImageData'.
+            * A rectilinear (in all three directions), non-regular grid
+              will be saved as a 'RectilinearGrid'.
+            * Other grids will be saved as 'UnstructuredGrid'.
+    true2d : bool
+        If True, the model is expected to be 2d (1 layer, 1 row or 1 column)
+        and the data will be exported as true 2d data, default is False.
     binary : bool
         if True the output file will be binary, default is False
+    kpers : iterable of int
+        Stress periods to export. If None (default), all stress periods will be
+        exported.
     """
     vtk = Vtk(model, nanval=nanval, smooth=smooth, point_scalars=point_scalars,
-              vtk_grid_type=vtk_grid_type, binary=binary)
+              vtk_grid_type=vtk_grid_type, true2d=true2d, binary=binary)
 
     if package_names is not None:
         if not isinstance(package_names, list):
@@ -1739,4 +1874,5 @@ def export_model(model, otfolder, package_names=None, nanval=-1e+20,
     for pak_name in package_names:
         export_package(model, pak_name, otfolder, vtkobj=vtk, nanval=nanval,
                        smooth=smooth, point_scalars=point_scalars,
-                       vtk_grid_type=vtk_grid_type, binary=binary)
+                       vtk_grid_type=vtk_grid_type, true2d=true2d,
+                       binary=binary, kpers=kpers)

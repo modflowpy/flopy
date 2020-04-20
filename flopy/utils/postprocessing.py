@@ -190,11 +190,32 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     elif np.isscalar(per_idx):
         per_idx = [per_idx]
 
+    # get confined or unconfined/convertible info
+    if m.has_package('BCF6') or m.has_package('LPF') or m.has_package('UPW'):
+        if m.has_package('BCF6'):
+            laytyp = m.lpf.laycon.array
+        elif m.has_package('LPF'):
+            laytyp = m.lpf.laytyp.array
+        else:
+            laytyp = m.upw.laytyp.array
+        if len(laytyp) == 1:
+            is_conf = np.full(m.modelgrid.shape, laytyp == 0)
+        else:
+            laytyp = laytyp.reshape(m.modelgrid.nlay, 1, 1)
+            is_conf = np.logical_and((laytyp == 0),
+                                     np.full(m.modelgrid.shape, True))
+    elif m.has_package('NPF'):
+        is_conf = m.npf.icelltype.array == 0
+    else:
+        raise ValueError('No flow package was found when trying to determine '
+                         'the layer type.')
+
+    # calculate saturated thickness
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
         perthickness = hds - botm
-        conf = perthickness > thickness
+        conf = np.logical_or(perthickness > thickness, is_conf)
         perthickness[conf] = thickness[conf]
         # convert to nan-filled array, as is expected(!?)
         sat_thickness.append(perthickness.filled(np.nan))
@@ -629,6 +650,7 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
             sat_thk = model.dis.thickness.array
         else:
             sat_thk = get_saturated_thickness(head, model, model.hdry)
+            sat_thk = sat_thk.reshape(model.modelgrid.shape)
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid
