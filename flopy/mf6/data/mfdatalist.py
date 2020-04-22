@@ -955,6 +955,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def to_array(self, kper=0, mask=False):
         return super(MFTransientList, self).to_array(kper, mask)
 
+    def remove_transient_key(self, transient_key):
+        if transient_key in self._data_storage:
+            del self._data_storage[transient_key]
+
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
         if isinstance(transient_key, int):
@@ -1018,10 +1022,18 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             if 'filename' not in data:
                 # each item in the dictionary is a list for one stress period
                 # the dictionary key is the stress period the list is for
+                del_keys = []
                 for key, list_item in data.items():
-                    self._set_data_prep(list_item, key)
-                    super(MFTransientList, self).set_data(list_item,
-                                                          autofill=autofill)
+                    if list_item is None:
+                        self.remove_transient_key(key)
+                        del_keys.append(key)
+                    else:
+                        self._set_data_prep(list_item, key)
+                        super(MFTransientList, self).set_data(list_item,
+                                                              autofill=
+                                                              autofill)
+                for key in del_keys:
+                    del data[key]
             else:
                 self._set_data_prep(data['data'], key)
                 super(MFTransientList, self).set_data(data, autofill)
@@ -1033,8 +1045,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     key = data[new_key_index]
                 else:
                     key = 0
-            self._set_data_prep(data, key)
-            super(MFTransientList, self).set_data(data, autofill)
+            if data is None:
+                self.remove_transient_key(key)
+            else:
+                self._set_data_prep(data, key)
+                super(MFTransientList, self).set_data(data, autofill)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):

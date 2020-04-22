@@ -63,10 +63,11 @@ class Dfn(object):
         self.dfndir = os.path.join('.', 'dfn')
         self.common = os.path.join(self.dfndir, 'common.dfn')
         # FIX: Transport - multi packages are hard coded
-        self.multi_package = {'gwfmvr': 0, 'exggwfgwf': 0, 'gwfchd': 0,
-                              'gwfrch': 0, 'gwfwel': 0,
-                              'gwfdrn': 0, 'gwfriv': 0, 'lnfcgeo': 0,
-                              'lnfrgeo': 0, 'lnfngeo':0,
+        self.multi_package = {'exggwfgwf': 0, 'gwfchd': 0,  'gwfwel': 0,
+                              'gwfdrn': 0, 'gwfriv': 0, 'gwfghb': 0,
+                              'gwfrch': 0, 'gwfevt': 0, 'gwfmaw': 0,
+                              'gwfsfr': 0, 'gwflak': 0, 'gwfuzf': 0,
+                              'lnfcgeo': 0, 'lnfrgeo': 0, 'lnfngeo': 0,
                               'utlobs': 0, 'utlts': 0, 'utltas': 0}
 
     def get_file_list(self):

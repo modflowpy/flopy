@@ -1027,6 +1027,10 @@ class MFTransientArray(MFArray, MFTransient):
     def data_type(self):
         return DataType.transient2d
 
+    def remove_transient_key(self, transient_key):
+        if transient_key in self._data_storage:
+            del self._data_storage[transient_key]
+
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)
         self._data_storage[transient_key] = \
@@ -1112,10 +1116,17 @@ class MFTransientArray(MFArray, MFTransient):
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
+            del_keys = []
             for key, list_item in data.items():
-                self._set_data_prep(list_item, key)
-                super(MFTransientArray, self).set_data(list_item, multiplier,
-                                                       layer)
+                if list_item is None:
+                    self.remove_transient_key(key)
+                    del_keys.append(key)
+                else:
+                    self._set_data_prep(list_item, key)
+                    super(MFTransientArray, self).set_data(list_item,
+                                                           multiplier, layer)
+            for key in del_keys:
+                del data[key]
         else:
             if key is None:
                 # search for a key
@@ -1125,8 +1136,12 @@ class MFTransientArray(MFArray, MFTransient):
                     key = data[new_key_index]
                 else:
                     key = 0
-            self._set_data_prep(data, key)
-            super(MFTransientArray, self).set_data(data, multiplier, layer)
+            if data is None:
+                self.remove_transient_key(key)
+            else:
+                self._set_data_prep(data, key)
+                super(MFTransientArray, self).set_data(data, multiplier,
+                                                       layer)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):
