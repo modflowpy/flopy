@@ -189,7 +189,8 @@ def np001():
 
     # test saving a binary file with list data
     well_spd = {0: {'filename': 'wel0.bin', 'binary': True,
-                    'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]}}
+                    'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]},
+                1: None}
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=2,
                                 stress_period_data=well_spd)
