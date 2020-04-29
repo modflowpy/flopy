@@ -1,10 +1,15 @@
 import sys, inspect
 import numpy as np
 from copy import deepcopy
+from collections import Iterable
 from ..mfbase import MFDataException, FlopyException
 from .mfstructure import DatumType
 from ...utils.datautil import PyListUtil, DatumUtil
 import struct
+
+
+def iterable(obj):
+    return isinstance(obj, Iterable)
 
 
 def get_first_val(arr):

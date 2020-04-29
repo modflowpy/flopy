@@ -129,6 +129,9 @@ def np001():
 
     model = ModflowGwf(sim, modelname=model_name,
                        model_nam_file='{}.nam'.format(model_name))
+    # test case insensitive lookup
+    assert(sim.get_model(model_name.upper()) is not None)
+
     # test getting model using attribute
     model = sim.np001_mod
     assert(model is not None and model.name == 'np001_mod')
@@ -299,7 +302,7 @@ def np001():
                                 timeseries=[(0.0, 60.0), (100000.0, 60.0)],
                                 stress_period_data=[((100, 0, 0), np.nan,
                                                      'drn_1'), ((0, 0, 0),
-                                                    10.0)])
+                                                    10.0, 'drn_2')])
     npf_package = ModflowGwfnpf(model, save_flows=True,
                                 alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=100001.0, k33=1e-12)
@@ -310,6 +313,16 @@ def np001():
            'checker threshold of 1e-11' in summary
     assert 'npf package: horizontal hydraulic conductivity values above ' \
            'checker threshold of 100000.0' in summary
+    data_invalid = False
+    try:
+        drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                    save_flows=True, maxbound=1,
+                                    timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                    stress_period_data=[((0, 0, 0), 10.0)])
+    except MFDataException:
+        data_invalid = True
+    assert data_invalid
+
     return
 
 

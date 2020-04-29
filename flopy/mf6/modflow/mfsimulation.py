@@ -1352,6 +1352,10 @@ class MFSimulation(PackageContainer):
                 return model
         if model_name in self._models:
             return self._models[model_name]
+        # do case-insensitive lookup
+        for name, model in self._models.items():
+            if model_name.lower() == name.lower():
+                return model
         return None
 
     def get_exchange_file(self, filename):

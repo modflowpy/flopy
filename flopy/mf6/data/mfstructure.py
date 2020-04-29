@@ -1169,6 +1169,9 @@ class MFDataStructure(object):
         (<model>,<package>,<block>,<data>)
     get_datatype : () : DataType
         returns the DataType of this data (array, list, scalar, ...)
+    get_min_record_entries : () : int
+        gets the minimum number of entries, as entered in a package file,
+        for a single record. excludes optional data items
     get_record_size : () : int
         gets the number of data items, excluding keyword data items, in this
         MFDataStructure
@@ -1430,6 +1433,18 @@ class MFDataStructure(object):
                 data_type == DataType.list_multiple:
             return True
         return False
+
+    def get_min_record_entries(self):
+        count = 0
+        for data_item_structure in self.data_item_structures:
+            if not data_item_structure.optional:
+                if data_item_structure.type == DatumType.record:
+                    count += data_item_structure.get_record_size()[0]
+                else:
+                    if data_item_structure.type != DatumType.keyword or \
+                            count > 0:
+                        count += 1
+        return count
 
     def get_record_size(self):
         count = 0
