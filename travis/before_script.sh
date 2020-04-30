@@ -7,10 +7,7 @@ fi
 echo "PATH=$PATH"
 echo "PYTHONPATH=$PYTHONPATH"
 
-echo "Setting up GCC 8 aliases..."
-ln -fs /usr/bin/gfortran-8 "$HOME/.local/bin/gfortran"
-ln -fs /usr/bin/gcc-8 "$HOME/.local/bin/gcc"
-ln -fs /usr/bin/g++-8 "$HOME/.local/bin/g++"
+echo "Adding directory for downloaded executables to path..."
 ls -l "$HOME/.local/bin"
 
 echo "Showing version information..."
