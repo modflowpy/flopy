@@ -1103,8 +1103,6 @@ class MFTransientArray(MFArray, MFTransient):
                             if 'array' in kwargs:
                                 output.append(data)
                             else:
-                                if not isinstance(output, dict):
-                                    output = {}
                                 output[sp] = data
                     return output
             else:
