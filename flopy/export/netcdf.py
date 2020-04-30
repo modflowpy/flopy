@@ -11,6 +11,7 @@ import flopy
 
 try:
     from numpydoc.docscrape import NumpyDocString
+
     numpydoc = True
 except:
     numpydoc = None
@@ -716,9 +717,9 @@ class NetCdf(object):
         try:
             import netCDF4
         except Exception as e:
-             self.logger.warn("error importing netCDF module")
-             msg = "NetCdf error importing netCDF4 module:\n" + str(e)
-             raise Exception(msg)
+            self.logger.warn("error importing netCDF module")
+            msg = "NetCdf error importing netCDF4 module:\n" + str(e)
+            raise Exception(msg)
 
         # open the file for writing
         try:
@@ -961,7 +962,7 @@ class NetCdf(object):
             if dim.lower() == "time":
                 if "time" not in attributes:
                     attribs = {"units": "{} since {}".format(self.time_units,
-                                                         self.start_datetime),
+                                                             self.start_datetime),
                                "standard_name": "time",
                                "long_name": NC_LONG_NAMES.get("time", "time"),
                                "calendar": "gregorian",
