@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import os
 import platform
 import socket
@@ -9,6 +8,12 @@ from datetime import datetime
 import time
 from .metadata import acdd
 import flopy
+
+try:
+    from numpydoc.docscrape import NumpyDocString
+    numpydoc = True
+except:
+    numpydoc = None
 
 # globals
 FILLVALUE = -99999.9
@@ -1241,11 +1246,12 @@ class NetCdf(object):
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        try:
-            from numpydoc.docscrape import NumpyDocString
-        except Exception as e:
-            msg = 'NetCdf error importing numpydoc module:\n' + str(e)
-            raise Exception(msg)
+        if numpydoc is None:
+            msg = 'numpydoc package required for ' + \
+                  'get_longnames_from_docstrings(). ' + \
+                  "Please install 'numpydoc' package."
+            print(msg)
+            return
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""

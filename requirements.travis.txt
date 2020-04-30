@@ -1,4 +1,5 @@
 appdirs
+numpydoc
 matplotlib
 netcdf4
 fiona ; python_version < '3.8'
