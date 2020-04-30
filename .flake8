@@ -3,8 +3,9 @@ exclude =
     .git,
     __pycache__,
     build,
-    dist
-    examples
+    dist,
+    examples,
+    autotest
 ignore =
     # https://flake8.pycqa.org/en/latest/user/error-codes.html
     F401, # 'module' imported but unused
