@@ -7,16 +7,7 @@ fi
 echo "PATH=$PATH"
 echo "PYTHONPATH=$PYTHONPATH"
 
-echo "Setting up GCC 8 aliases..."
-ln -fs /usr/bin/gfortran-8 "$HOME/.local/bin/gfortran"
-ln -fs /usr/bin/gcc-8 "$HOME/.local/bin/gcc"
-ln -fs /usr/bin/g++-8 "$HOME/.local/bin/g++"
-ls -l "$HOME/.local/bin"
-
 echo "Showing version information..."
-gfortran --version
-gcc --version
-g++ --version
 python -c "import sys; print('python sys.path: {}'.format(sys.path))"
 python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
 python -c "import flopy; print('flopy: {}'.format(flopy.__version__))"
