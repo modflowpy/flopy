@@ -185,7 +185,7 @@ Additional dependencies to use optional FloPy helper methods are listed below.
 | `.plot_shapefile()`                                                                  | **matplotlib** >= 1.4 and **Pyshp** >= 1.2                         |
 | `.to_shapefile()`                                                                    | **Pyshp** >= 1.2                                                   |
 | `.export(*.shp)`                                                                     | **Pyshp** >= 1.2                                                   |
-| `.export(*.nc)`                                                                      | **netcdf4** >= 1.1, **numpydoc**,  and **python-dateutil** >= 2.4  |
+| `.export(*.nc)`                                                                      | **netcdf4** >= 1.1, and **python-dateutil** >= 2.4                 |
 | `.export(*.tif)`                                                                     | **rasterio**                                                       |
 | `.export(*.asc)` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.ndimage**                                                  |
 | `.interpolate()` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.interpolate**                                              |

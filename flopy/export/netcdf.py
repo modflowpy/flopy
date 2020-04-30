@@ -9,13 +9,6 @@ import time
 from .metadata import acdd
 import flopy
 
-try:
-    from numpydoc.docscrape import NumpyDocString
-
-    numpydoc = True
-except:
-    numpydoc = None
-
 # globals
 FILLVALUE = -99999.9
 ITMUNI = {0: "undefined", 1: "seconds", 2: "minutes", 3: "hours", 4: "days",
@@ -961,8 +954,9 @@ class NetCdf(object):
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
-                    attribs = {"units": "{} since {}".format(self.time_units,
-                                                             self.start_datetime),
+                    unit_value = "{} since {}".format(self.time_units,
+                                                      self.start_datetime)
+                    attribs = {"units": unit_value,
                                "standard_name": "time",
                                "long_name": NC_LONG_NAMES.get("time", "time"),
                                "calendar": "gregorian",
@@ -1247,12 +1241,6 @@ class NetCdf(object):
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        if numpydoc is None:
-            msg = 'numpydoc package required for ' + \
-                  'get_longnames_from_docstrings(). ' + \
-                  "Please install 'numpydoc' package."
-            print(msg)
-            return
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""
