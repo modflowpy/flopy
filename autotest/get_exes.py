@@ -43,7 +43,12 @@ print('modflow executables will be downloaded to:\n\n    "{}"'.format(bindir))
 def cleanup():
     if os.path.isdir(exe_pth):
         shutil.rmtree(exe_pth)
+    return
 
+
+def list_exes():
+    cmd = 'ls -l {}'.format(bindir)
+    os.system(cmd)
     return
 
 
@@ -55,11 +60,18 @@ def test_cleanup():
     cleanup()
 
 
+def test_list_download():
+    list_exes()
+
+
 def main():
     pymake.getmfexes(exe_pth)
 
     # clean up the download directory
     cleanup()
+
+    # list executables
+    list_exes()
 
 
 if __name__ == '__main__':

@@ -7,13 +7,7 @@ fi
 echo "PATH=$PATH"
 echo "PYTHONPATH=$PYTHONPATH"
 
-echo "Adding directory for downloaded executables to path..."
-ls -l "$HOME/.local/bin"
-
 echo "Showing version information..."
-gfortran --version
-gcc --version
-g++ --version
 python -c "import sys; print('python sys.path: {}'.format(sys.path))"
 python -c "import os; is_travis = 'TRAVIS' in os.environ; print('TRAVIS {}'.format(is_travis))"
 python -c "import flopy; print('flopy: {}'.format(flopy.__version__))"
