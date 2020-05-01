@@ -281,23 +281,15 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         if iterable(data_check):
             # verify data length
             min_line_size = self.structure.get_min_record_entries()
-            for data_line in data_check:
-                if 0 < len(data_line) < min_line_size:
-                    min_line_size = self.structure.get_min_record_entries()
-                    message = 'Data line {} only has {} entries, minimum ' \
-                              'number of entries is ' \
-                              '{}.'.format(data_line, len(data_line),
-                                           min_line_size)
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(
-                        self.structure.get_model(),
-                        self.structure.get_package(),
-                        self.structure.path,
-                        'storing data',
-                        self.structure.name,
-                        inspect.stack()[0][3],
-                        type_, value_, traceback_, message,
-                        self._simulation_data.debug)
+            if isinstance(data_check[0], np.record) or \
+                    (iterable(data_check[0]) and not
+                     isinstance(data_check[0], str)):
+                # data contains multiple records
+                for data_line in data_check:
+                    self._check_line_size(data_line, min_line_size)
+            else:
+                # data is a single record
+                self._check_line_size(data_check, min_line_size)
         # set data
         self._resync()
         try:
@@ -313,6 +305,24 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   inspect.stack()[0][3], type_, value_,
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
+
+    def _check_line_size(self, data_line, min_line_size):
+        if 0 < len(data_line) < min_line_size:
+            min_line_size = self.structure.get_min_record_entries()
+            message = 'Data line {} only has {} entries, ' \
+                      'minimum number of entries is ' \
+                      '{}.'.format(data_line, len(data_line),
+                                   min_line_size)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self.structure.path,
+                'storing data',
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
 
     def set_data(self, data, autofill=False):
         self._set_data(data, autofill)

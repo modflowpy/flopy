@@ -111,7 +111,11 @@ class ModflowGwflak(mfpackage.MFPackage):
           must be greater than zero and less than or equal to NLAKES. Lake
           information must be specified for every lake or the program will
           terminate with an error. The program will also terminate with an
-          error if information for a lake is specified more than once.
+          error if information for a lake is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * strt (double) real value that defines the starting stage for the
           lake.
         * nlakeconn (integer) integer value that defines the number of GWF
@@ -139,16 +143,27 @@ class ModflowGwflak(mfpackage.MFPackage):
           the GWF model (NLAKECONN) or the program will terminate with an
           error. The program will also terminate with an error if connection
           information for a lake connection to the GWF model is specified more
-          than once.
+          than once. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * iconn (integer) integer value that defines the GWF connection number
           for this lake connection entry. ICONN must be greater than zero and
-          less than or equal to NLAKECONN for lake LAKENO.
+          less than or equal to NLAKECONN for lake LAKENO. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * claktype (string) character string that defines the lake-GWF
           connection type for the lake connection. Possible lake-GWF connection
           type strings include: VERTICAL--character keyword to indicate the
@@ -202,7 +217,10 @@ class ModflowGwflak(mfpackage.MFPackage):
           greater than zero and less than or equal to NLAKES. The program will
           terminate with an error if table information for a lake is specified
           more than once or the number of specified tables is less than
-          NTABLES.
+          NTABLES. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * tab6_filename (string) character string that defines the path and
           filename for the file containing lake table data for the lake
           connection. The CTABNAME file includes the number of entries in the
@@ -219,15 +237,26 @@ class ModflowGwflak(mfpackage.MFPackage):
           be greater than zero and less than or equal to NOUTLETS. Outlet
           information must be specified for every outlet or the program will
           terminate with an error. The program will also terminate with an
-          error if information for a outlet is specified more than once.
+          error if information for a outlet is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * lakein (integer) integer value that defines the lake number that
           outlet is connected to. LAKEIN must be greater than zero and less
-          than or equal to NLAKES.
+          than or equal to NLAKES. This argument is an index variable, which
+          means that it should be treated as zero-based when working with FloPy
+          and Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
         * lakeout (integer) integer value that defines the lake number that
           outlet discharge from lake outlet OUTLETNO is routed to. LAKEOUT must
           be greater than or equal to zero and less than or equal to NLAKES. If
           LAKEOUT is zero, outlet discharge from lake outlet OUTLETNO is
-          discharged to an external boundary.
+          discharged to an external boundary. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * couttype (string) character string that defines the outlet type for
           the outlet OUTLETNO. Possible COUTTYPE strings include: SPECIFIED--
           character keyword to indicate the outlet is defined as a specified
@@ -259,7 +288,11 @@ class ModflowGwflak(mfpackage.MFPackage):
         * number (integer) integer value that defines the lake or outlet number
           associated with the specified PERIOD data on the line. NUMBER must be
           greater than zero and less than or equal to NLAKES for a lake number
-          and less than or equal to NOUTLETS for an outlet number.
+          and less than or equal to NOUTLETS for an outlet number. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * laksetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           LAKSETTING string include both keywords for lake settings and

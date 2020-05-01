@@ -14,6 +14,13 @@ import numpy as np
 from ..mfbase import PackageContainer, StructException
 
 
+numeric_index_text = 'This argument is an index variable, which means that ' \
+                     'it should be treated as zero-based when working with ' \
+                     'FloPy and Python. Flopy will automatically subtract ' \
+                     'one when loading index variables and add one when ' \
+                     'writing index variables.'
+
+
 class DfnType(Enum):
     common = 1
     sim_name_file = 2
@@ -933,6 +940,10 @@ class MFDataItemStructure(object):
     def get_description(self, line_size, initial_indent, level_indent):
         item_desc = '* {} ({}) {}'.format(self.name, self.type_string,
                                           self.description)
+        if self.numeric_index or self.is_cellid:
+            # append zero-based index text
+            item_desc = '{} {}'.format(item_desc,
+                                       numeric_index_text)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
                           drop_whitespace = True,
                           subsequent_indent='  {}'.format(initial_indent))
@@ -951,7 +962,6 @@ class MFDataItemStructure(object):
         param_doc_string = '\n'.join(twr.wrap(param_doc_string))
         param_doc_string = '{}\n{}'.format(param_doc_string, description)
         return param_doc_string
-
 
     def get_keystring_desc(self, line_size, initial_indent, level_indent):
         if self.type != DatumType.keystring:
@@ -1518,8 +1528,14 @@ class MFDataStructure(object):
             elif datastr.display_item(index):
                 if len(description.strip()) > 0:
                     description = '{}\n'.format(description)
+                item_desc = item.description
+                if item.numeric_index or item.is_cellid:
+                    # append zero-based index text
+                    item_desc = '{} {}'.format(item_desc,
+                                               numeric_index_text)
+
                 item_desc = '* {} ({}) {}'.format(item.name, itype,
-                                                  item.description)
+                                                  item_desc)
                 twr = TextWrapper(width=line_size,
                                   initial_indent=initial_indent,
                                   subsequent_indent='  {}'.format(
@@ -1568,6 +1584,7 @@ class MFDataStructure(object):
                                                level_indent)
             var_name = self.python_name
             type_name = self.get_type_string()
+
         param_doc_string = '{} : {}'.format(var_name, type_name)
         twr = TextWrapper(width=line_size, initial_indent=initial_indent,
                           subsequent_indent='  {}'.format(initial_indent))

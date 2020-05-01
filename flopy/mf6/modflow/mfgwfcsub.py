@@ -178,13 +178,20 @@ class ModflowGwfcsub(mfpackage.MFPackage):
           information must be specified for every CSUB cell or the program will
           terminate with an error. The program will also terminate with an
           error if information for a CSUB interbed number is specified more
-          than once.
+          than once. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * cdelay (string) character string that defines the subsidence delay
           type for the interbed. Possible subsidence package CDELAY strings
           include: NODELAY--character keyword to indicate that delay will not
@@ -239,7 +246,11 @@ class ModflowGwfcsub(mfpackage.MFPackage):
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * sig0 (double) is the stress offset for the cell. SIG0 is added to the
           calculated geostatic stress for the cell. SIG0 is specified only if
           MAXSIG0 is specified to be greater than 0 in the DIMENSIONS block.
