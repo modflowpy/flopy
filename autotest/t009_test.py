@@ -554,7 +554,7 @@ def test_SfrFile():
         assert df.shape == (1080, 20)
 
     ml = flopy.modflow.Modflow.load('test1tr.nam',
-                                    model_ws=path)
+                                    model_ws=path, exe_name='mf2005')
     ml.change_model_ws(outpath)
     ml.write_input()
     ml.run_model()
