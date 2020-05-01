@@ -71,12 +71,20 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           referred to as a "vertical pass through" cell.
     vertices : [iv, xv, yv]
         * iv (integer) is the vertex number. Records in the VERTICES block must
-          be listed in consecutive order from 1 to NVERT.
+          be listed in consecutive order from 1 to NVERT. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * xv (double) is the x-coordinate for the vertex.
         * yv (double) is the y-coordinate for the vertex.
     cell2d : [icell2d, xc, yc, ncvert, icvert]
         * icell2d (integer) is the CELL2D number. Records in the CELL2D block
-          must be listed in consecutive order from the first to the last.
+          must be listed in consecutive order from the first to the last. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * xc (double) is the x-coordinate for the cell center.
         * yc (double) is the y-coordinate for the cell center.
         * ncvert (integer) is the number of vertices required to define the
@@ -84,7 +92,10 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         * icvert (integer) is an array of integer values containing vertex
           numbers (in the VERTICES block) used to define the cell. Vertices
           must be listed in clockwise order. Cells that are connected must
-          share vertices.
+          share vertices. This argument is an index variable, which means that
+          it should be treated as zero-based when working with FloPy and
+          Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
     filename : String
         File name for this package.
     pname : String

@@ -73,7 +73,11 @@ class ModflowGwfrch(mfpackage.MFPackage):
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell
           to calculate the volumetric recharge rate. A time-series name may be

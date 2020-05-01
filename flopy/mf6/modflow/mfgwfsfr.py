@@ -96,13 +96,20 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           than zero and less than or equal to NREACHES. Reach information must
           be specified for every reach or the program will terminate with an
           error. The program will also terminate with an error if information
-          for a reach is specified more than once.
+          for a reach is specified more than once. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * cellid ((integer, ...)) The keyword `NONE' must be specified for
           reaches that are not connected to an underlying GWF cell. The keyword
           `NONE' is used for reaches that are in cells that have IDOMAIN values
           less than one or are in areas not covered by the GWF model grid.
           Reach-aquifer flow is not calculated if the keyword `NONE' is
-          specified.
+          specified. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * rlen (double) real value that defines the reach length. RLEN must be
           greater than zero.
         * rwid (double) real value that defines the reach width. RWID must be
@@ -150,7 +157,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           connection information must be specified for every reach or the
           program will terminate with an error. The program will also terminate
           with an error if connection information for a reach is specified more
-          than once.
+          than once. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * ic (double_precision) integer value that defines the reach number of
           the reach connected to the current reach and whether it is connected
           to the upstream or downstream end of the reach. Negative IC numbers
@@ -158,7 +168,10 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           current reach. Positive IC numbers indicate connected reaches are
           connected to the upstream end of the current reach. The absolute
           value of IC must be greater than zero and less than or equal to
-          NREACHES.
+          NREACHES. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
     diversions : [rno, idv, iconr, cprior]
         * rno (integer) integer value that defines the reach number associated
           with the specified DIVERSIONS data on the line. RNO must be greater
@@ -166,14 +179,26 @@ class ModflowGwfsfr(mfpackage.MFPackage):
           information must be specified for every reach with a NDV value
           greater than 0 or the program will terminate with an error. The
           program will also terminate with an error if diversion information
-          for a given reach diversion is specified more than once.
+          for a given reach diversion is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * idv (integer) integer value that defines the downstream diversion
           number for the diversion for reach RNO. IDV must be greater than zero
-          and less than or equal to NDV for reach RNO.
+          and less than or equal to NDV for reach RNO. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * iconr (integer) integer value that defines the downstream reach that
           will receive the diverted water. IDV must be greater than zero and
           less than or equal to NREACHES. Furthermore, reach ICONR must be a
-          downstream connection for reach RNO.
+          downstream connection for reach RNO. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * cprior (string) character string value that defines the the
           prioritization system for the diversion, such as when insufficient
           water is available to meet all diversion stipulations, and is used in
@@ -204,7 +229,11 @@ class ModflowGwfsfr(mfpackage.MFPackage):
     perioddata : [rno, sfrsetting]
         * rno (integer) integer value that defines the reach number associated
           with the specified PERIOD data on the line. RNO must be greater than
-          zero and less than or equal to NREACHES.
+          zero and less than or equal to NREACHES. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * sfrsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           SFRSETTING string include: STATUS, MANNING, STAGE, INFLOW, RAINFALL,
@@ -287,7 +316,11 @@ class ModflowGwfsfr(mfpackage.MFPackage):
                   and the volumetric evaporation rate for the reach is set to
                   zero. By default, runoff rates are zero for each reach.
             diversionrecord : [idv, divrate]
-                * idv (integer) diversion number.
+                * idv (integer) diversion number. This argument is an index
+                  variable, which means that it should be treated as zero-based
+                  when working with FloPy and Python. Flopy will automatically
+                  subtract one when loading index variables and add one when
+                  writing index variables.
                 * divrate (double) real or character value that defines the
                   volumetric diversion (DIVFLOW) rate for the streamflow
                   routing reach. If the Options block includes a TIMESERIESFILE
