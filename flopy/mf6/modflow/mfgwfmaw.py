@@ -115,7 +115,10 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           aquifer well information must be specified for every multi-aquifer
           well or the program will terminate with an error. The program will
           also terminate with an error if information for a multi-aquifer well
-          is specified more than once.
+          is specified more than once. This argument is an index variable,
+          which means that it should be treated as zero-based when working with
+          FloPy and Python. Flopy will automatically subtract one when loading
+          index variables and add one when writing index variables.
         * radius (double) radius for the multi-aquifer well.
         * bottom (double) bottom elevation of the multi-aquifer well. The well
           bottom is reset to the cell bottom in the lowermost GWF cell
@@ -163,11 +166,18 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           multi-aquifer well connection to the GWF model (NGWFNODES) or the
           program will terminate with an error. The program will also terminate
           with an error if connection information for a multi-aquifer well
-          connection to the GWF model is specified more than once.
+          connection to the GWF model is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * icon (integer) integer value that defines the GWF connection number
           for this multi-aquifer well connection entry. ICONN must be greater
           than zero and less than or equal to NGWFNODES for multi-aquifer well
-          WELLNO.
+          WELLNO. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
@@ -177,7 +187,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           more screened intervals can be connected to the same CELLID if
           CONDEQN for a well is MEAN. The program will terminate with an error
           if MAW wells using SPECIFIED, THIEM, SKIN, or CUMULATIVE conductance
-          equations have more than one connection to the same CELLID.
+          equations have more than one connection to the same CELLID. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * scrn_top (double) value that defines the top elevation of the screen
           for the multi-aquifer well connection. If the specified SCRN_TOP is
           greater than the top of the GWF cell it is set equal to the top of
@@ -201,7 +215,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     perioddata : [wellno, mawsetting]
         * wellno (integer) integer value that defines the well number
           associated with the specified PERIOD data on the line. WELLNO must be
-          greater than zero and less than or equal to NMAWWELLS.
+          greater than zero and less than or equal to NMAWWELLS. This argument
+          is an index variable, which means that it should be treated as zero-
+          based when working with FloPy and Python. Flopy will automatically
+          subtract one when loading index variables and add one when writing
+          index variables.
         * mawsetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
           MAWSETTING string include: STATUS, FLOWING_WELL, RATE, WELL_HEAD,

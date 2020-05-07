@@ -190,11 +190,32 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
     elif np.isscalar(per_idx):
         per_idx = [per_idx]
 
+    # get confined or unconfined/convertible info
+    if m.has_package('BCF6') or m.has_package('LPF') or m.has_package('UPW'):
+        if m.has_package('BCF6'):
+            laytyp = m.lpf.laycon.array
+        elif m.has_package('LPF'):
+            laytyp = m.lpf.laytyp.array
+        else:
+            laytyp = m.upw.laytyp.array
+        if len(laytyp) == 1:
+            is_conf = np.full(m.modelgrid.shape, laytyp == 0)
+        else:
+            laytyp = laytyp.reshape(m.modelgrid.nlay, 1, 1)
+            is_conf = np.logical_and((laytyp == 0),
+                                     np.full(m.modelgrid.shape, True))
+    elif m.has_package('NPF'):
+        is_conf = m.npf.icelltype.array == 0
+    else:
+        raise ValueError('No flow package was found when trying to determine '
+                         'the layer type.')
+
+    # calculate saturated thickness
     sat_thickness = []
     for per in per_idx:
         hds = heads[per]
         perthickness = hds - botm
-        conf = perthickness > thickness
+        conf = np.logical_or(perthickness > thickness, is_conf)
         perthickness[conf] = thickness[conf]
         # convert to nan-filled array, as is expected(!?)
         sat_thickness.append(perthickness.filled(np.nan))
@@ -534,7 +555,7 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
 
 def get_specific_discharge(model, cbcfile, precision='single', idx=None,
                            kstpkper=None, totim=None, boundary_ifaces=None,
-                           hdsfile=None):
+                           hdsfile=None, position='centers'):
     """
     Get the discharge vector at cell centers at a given time. For "classical"
     MODFLOW versions, we calculate it from the flow rate across cell faces.
@@ -584,6 +605,9 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
         hdsfile is also required if the budget term 'HEAD DEP BOUNDS',
         'RIVER LEAKAGE' or 'DRAINS' is present in boundary_ifaces and that the
         corresponding value is a list.
+    position : str
+        Position at which the specific discharge will be calculated. Possible
+        values are "centers" (default), "faces" and "vertices".
 
     Returns
     -------
@@ -603,7 +627,7 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
     cbf = bf.CellBudgetFile(cbcfile, precision=precision)
     rec_names = cbf.get_unique_record_names(decode=True)
     classical_budget_terms = ['FLOW RIGHT FACE', 'FLOW FRONT FACE',
-                         'FLOW RIGHT FACE']
+                              'FLOW RIGHT FACE']
     classical_budget = False
     for budget_term in classical_budget_terms:
         matched_name = [s for s in rec_names if budget_term in s]
@@ -618,34 +642,59 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
     if classical_budget:
         # get extended budget
         Qx_ext, Qy_ext, Qz_ext = get_extended_budget(cbcfile,
-                               precision=precision, idx=idx, kstpkper=kstpkper,
-                               totim=totim, boundary_ifaces=boundary_ifaces,
-                               hdsfile=hdsfile, model=model)
+            precision=precision, idx=idx, kstpkper=kstpkper, totim=totim,
+            boundary_ifaces=boundary_ifaces, hdsfile=hdsfile, model=model)
 
         # get saturated thickness (head - bottom elev for unconfined layer)
         if hdsfile is None:
             sat_thk = model.dis.thickness.array
         else:
             sat_thk = get_saturated_thickness(head, model, model.hdry)
+            sat_thk = sat_thk.reshape(model.modelgrid.shape)
 
-        # calculate qx at cell center
-        delc = np.reshape(model.modelgrid.delc, (1, model.modelgrid.nrow, 1))
-        cross_area_x = np.empty(model.modelgrid.shape, dtype=float)
+        # inform modelgrid of no-flow and dry cells
+        modelgrid = model.modelgrid
+        if modelgrid._idomain is None:
+            modelgrid._idomain = model.dis.ibound
+        if hdsfile is not None:
+            noflo_or_dry = np.logical_or(head==model.hnoflo, head==model.hdry)
+            modelgrid._idomain[noflo_or_dry] = 0
+
+        # get cross section areas along x
+        delc = np.reshape(modelgrid.delc, (1, modelgrid.nrow, 1))
+        cross_area_x = np.empty(modelgrid.shape, dtype=float)
         cross_area_x = delc * sat_thk
-        qx = 0.5 * (Qx_ext[:, :, 1:] + Qx_ext[:, :, :-1]) / cross_area_x
 
-        # calculate qy at cell center
-        delr = np.reshape(model.modelgrid.delr, (1, 1, model.modelgrid.ncol))
-        cross_area_y = np.empty(model.modelgrid.shape, dtype=float)
+        # get cross section areas along y
+        delr = np.reshape(modelgrid.delr, (1, 1, modelgrid.ncol))
+        cross_area_y = np.empty(modelgrid.shape, dtype=float)
         cross_area_y = delr * sat_thk
-        qy = 0.5 * (Qy_ext[:, 1:, :] + Qy_ext[:, :-1, :]) / cross_area_y
 
-        # calculate qz at cell center
-        cross_area_z = np.empty(model.modelgrid.shape, dtype=float)
-        cross_area_z = delc * delr
-        qz = 0.5 * (Qz_ext[1:, :, :] + Qz_ext[:-1, :, :]) / cross_area_z
+        # get cross section areas along z
+        cross_area_z = np.ones(modelgrid.shape) * delc * delr
+
+        # calculate qx, qy, qz
+        if position == 'centers':
+            qx = 0.5 * (Qx_ext[:, :, 1:] + Qx_ext[:, :, :-1]) / cross_area_x
+            qy = 0.5 * (Qy_ext[:, 1:, :] + Qy_ext[:, :-1, :]) / cross_area_y
+            qz = 0.5 * (Qz_ext[1:, :, :] + Qz_ext[:-1, :, :]) / cross_area_z
+        elif position == 'faces' or position == 'vertices':
+            cross_area_x = modelgrid.array_at_faces(cross_area_x, 'x')
+            cross_area_y = modelgrid.array_at_faces(cross_area_y, 'y')
+            cross_area_z = modelgrid.array_at_faces(cross_area_z, 'z')
+            qx = Qx_ext / cross_area_x
+            qy = Qy_ext / cross_area_y
+            qz = Qz_ext / cross_area_z
+        else:
+            raise ValueError('"' + position + '" is not a valid value for '
+                             'position')
+        if position == 'vertices':
+            qx = modelgrid.array_at_verts(qx)
+            qy = modelgrid.array_at_verts(qy)
+            qz = modelgrid.array_at_verts(qz)
 
     else:
+        # check valid options
         if boundary_ifaces is not None:
             import warnings
             warnings.warn('the boundary_ifaces option is not implemented '
@@ -653,6 +702,12 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
                           'budget is not recorded as FLOW RIGHT FACE, '
                           'FLOW FRONT FACE and FLOW LOWER FACE; it will be '
                           'ignored', UserWarning)
+        if position != 'centers':
+            raise NotImplementedError('position can only be "centers" for '
+                                      '"non-classical" MODFLOW versions where '
+                                      'the budget is not recorded as FLOW '
+                                      'RIGHT FACE, FLOW FRONT FACE and FLOW '
+                                      'LOWER FACE')
 
         is_spdis = [s for s in rec_names if 'DATA-SPDIS' in s]
         if not is_spdis:
@@ -675,10 +730,13 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
         qz.shape = shape
 
     # set no-flow and dry cells to NaN
-    if hdsfile is not None:
+    if hdsfile is not None and position == 'centers':
         noflo_or_dry = np.logical_or(head==model.hnoflo, head==model.hdry)
         qx[noflo_or_dry] = np.nan
         qy[noflo_or_dry] = np.nan
         qz[noflo_or_dry] = np.nan
 
     return qx, qy, qz
+
+
+

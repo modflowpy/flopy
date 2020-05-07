@@ -60,12 +60,15 @@ class SfrFile():
         evaluated_format = False
         has_gradient = False
         has_delUzstor = False
+        has_elevation = False
         with open(self.filename) as f:
             for i, line in enumerate(f):
                 if 'GRADIENT' in line:
                     has_gradient = True
                 if 'CHNG. UNSAT.' in line:
                     has_delUzstor = True
+                if 'ELEVATION' in line:
+                    has_elevation = True
                 items = line.strip().split()
                 if len(items) > 0 and items[0].isdigit():
                     evaluated_format = True
@@ -90,6 +93,8 @@ class SfrFile():
             self.names += ['Qwt', 'delUzstor']
             if self.ncol == 18:
                 self.names.append('gw_head')
+        if has_elevation:
+            self.names.append("strtop")
         self.times = self.get_times()
         self.geoms = None  # not implemented yet
         self._df = None
@@ -151,9 +156,11 @@ class SfrFile():
                               header=None, names=self.names,
                               error_bad_lines=False,
                               skiprows=self.sr, low_memory=False)
+
         # drop text between stress periods; convert to numeric
         df['layer'] = self.pd.to_numeric(df.layer, errors='coerce')
         df.dropna(axis=0, inplace=True)
+
         # convert to proper dtypes
         for c in df.columns:
             df[c] = df[c].astype(self.dtypes.get(c, float))

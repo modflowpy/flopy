@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import os
 import platform
 import socket
@@ -711,9 +710,9 @@ class NetCdf(object):
         try:
             import netCDF4
         except Exception as e:
-             self.logger.warn("error importing netCDF module")
-             msg = "NetCdf error importing netCDF4 module:\n" + str(e)
-             raise Exception(msg)
+            self.logger.warn("error importing netCDF module")
+            msg = "NetCdf error importing netCDF4 module:\n" + str(e)
+            raise Exception(msg)
 
         # open the file for writing
         try:
@@ -955,8 +954,9 @@ class NetCdf(object):
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
-                    attribs = {"units": "{} since {}".format(self.time_units,
-                                                         self.start_datetime),
+                    unit_value = "{} since {}".format(self.time_units,
+                                                      self.start_datetime)
+                    attribs = {"units": unit_value,
                                "standard_name": "time",
                                "long_name": NC_LONG_NAMES.get("time", "time"),
                                "calendar": "gregorian",
@@ -1241,11 +1241,6 @@ class NetCdf(object):
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        try:
-            from numpydoc.docscrape import NumpyDocString
-        except Exception as e:
-            msg = 'NetCdf error importing numpydoc module:\n' + str(e)
-            raise Exception(msg)
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""

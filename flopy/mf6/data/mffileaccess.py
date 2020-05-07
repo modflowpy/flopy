@@ -59,6 +59,7 @@ class MFFileAccess(object):
             storage.pre_data_comments = None
 
         # read through any fully commented or empty lines
+        PyListUtil.reset_delimiter_used()
         arr_line = PyListUtil.split_data_line(line)
         while MFComment.is_comment(arr_line, True) and line != '':
             if storage.pre_data_comments:
@@ -400,7 +401,13 @@ class MFFileAccessArray(MFFileAccess):
                 traceback_, message,
                 self._simulation_data.debug)
 
-        data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
+        if data_type == DatumType.double_precision:
+            data_type = np.float64
+        elif data_type == DatumType.integer:
+            data_type = np.int32
+
+        data_out = np.fromiter(data_raw, dtype=data_type,
+                               count=data_size)
         data_out = self._resolve_cellid_numbers_from_file(data_out)
         if close_file:
             fd.close()
@@ -836,6 +843,7 @@ class MFFileAccessList(MFFileAccess):
                 self.simple_line = False
         if current_line is None:
             current_line = file_handle.readline()
+        PyListUtil.reset_delimiter_used()
         arr_line = PyListUtil.split_data_line(current_line)
         line_num = 0
 
@@ -1405,9 +1413,8 @@ class MFFileAccessList(MFFileAccess):
             cellid_tuple = ()
             if not DatumUtil.is_int(arr_line[data_index]) and \
                     arr_line[data_index].lower() == 'none':
-                # special case where cellid is 'none', store as tuple of
-                # 'none's
-                cellid_tuple = ('none',) * cellid_size
+                # special case where cellid is 'none', store as 'none'
+                cellid_tuple = 'none'
                 if add_to_last_line:
                     self._last_line_info[-1].append([data_index,
                                                      data_item.type,

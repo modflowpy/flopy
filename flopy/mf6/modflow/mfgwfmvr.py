@@ -67,14 +67,22 @@ class ModflowGwfmvr(mfpackage.MFPackage):
           packages, the identifier is the reach number (SFR Package), well
           number (MAW Package), or UZF cell number. For the Lake Package, ID1
           is the lake outlet number. Thus, outflows from a single lake can be
-          routed to different streams, for example.
+          routed to different streams, for example. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * mname2 (string) name of model containing the package, PNAME2.
         * pname2 (string) is the package name for the receiver. The package
           PNAME2 must be designated to receive water from the MVR Package by
           specifying the keyword "MOVER" in its OPTIONS block.
         * id2 (integer) is the identifier for the receiver. The receiver
           identifier is the reach number (SFR Package), Lake number (LAK
-          Package), well number (MAW Package), or UZF cell number.
+          Package), well number (MAW Package), or UZF cell number. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * mvrtype (string) is the character string signifying the method for
           determining how much water will be moved. Supported values are
           "FACTOR" "EXCESS" "THRESHOLD" and "UPTO". These four options

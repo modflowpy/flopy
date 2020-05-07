@@ -48,25 +48,28 @@ class MFOutput:
 
 class MFOutputRequester:
     """
-        MFOutputRequest class is a helper function to enable the user to query
-        binary data from the SimulationDict() object on the fly without
-        actually storing it in the SimulationDict() object.
+    MFOutputRequest class is a helper function to enable the user to query
+    binary data from the SimulationDict() object on the fly without
+    actually storing it in the SimulationDict() object.
 
-        Parameters:
-        ----------
-        mfdict: local instance of the SimulationDict() object
-        path: pointer to the MFSimulationPath object
-        key: user requested data key
+    Parameters:
+    ----------
+    mfdict: OrderedDict
+        local instance of the SimulationDict() object
+    path:
+        pointer to the MFSimulationPath object
+    key: tuple
+        user requested data key
 
-        Methods:
-        -------
-        MFOutputRequester.querybinarydata
-            returns: Xarray object
+    Methods:
+    -------
+    MFOutputRequester.querybinarydata
+        returns: Xarray object
 
-        Examples:
-        --------
-        >>> data = MFOutputRequester(mfdict, path, key)
-        >>> data.querybinarydata
+    Examples:
+    --------
+    >>> data = MFOutputRequester(mfdict, path, key)
+    >>> data.querybinarydata
      """
 
     def __init__(self, mfdict, path, key):
@@ -103,8 +106,11 @@ class MFOutputRequester:
         bindata = self._get_binary_file_object(path, bintype, key)
 
         if bintype == 'CBC':
-            return np.array(bindata.get_data(text=key[-1], full3D=True))
-
+            try:
+                return np.array(bindata.get_data(text=key[-1], full3D=True))
+            except ValueError:
+                # imeth == 6
+                return np.array(bindata.get_data(text=key[-1], full3D=False))
         else:
             return np.array(bindata.get_alldata())
 
@@ -119,17 +125,22 @@ class MFOutputRequester:
         if bintype == 'CBC':
             if key[-1] == 'FLOW-JA-FACE':
                 data = np.array(bindata.get_data(text=key[-1]))
-                # todo: uncomment line to remove unnecessary dimensions from
+                # uncomment line to remove extra dimensions from data
                 # data data.shape = (len(times), -1)
                 return data
 
             else:
-                data = np.array(bindata.get_data(text=key[-1], full3D=True))
-
+                try:
+                    data = np.array(bindata.get_data(text=key[-1],
+                                                     full3D=True))
+                except ValueError:
+                    # imeth == 6
+                    data = np.array(bindata.get_data(text=key[-1],
+                                                     full3D=False))
         else:
             data = np.array(bindata.get_alldata())
 
-        # todo: uncomment line to remove extra dimensions from data
+        # uncomment line to remove extra dimensions from data
         # data = _reshape_binary_data(data, 'V')
         return data
 
@@ -141,7 +152,10 @@ class MFOutputRequester:
         bindata = self._get_binary_file_object(path, bintype, key)
 
         if bintype == 'CBC':
-            data = np.array(bindata.get_data(text=key[-1], full3D=True))
+            try:
+                data = np.array(bindata.get_data(text=key[-1], full3D=True))
+            except ValueError:
+                data = np.array(bindata.get_data(text=key[-1], full3D=False))
         else:
             data = bindata.get_alldata()
 
