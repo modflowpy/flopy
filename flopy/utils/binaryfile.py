@@ -835,6 +835,8 @@ class CellBudgetFile(object):
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
+            if naux > 100:
+                raise BudgetIndexError()
             for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
@@ -848,6 +850,8 @@ class CellBudgetFile(object):
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
+            if naux > 100:
+                raise BudgetIndexError()
             for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
@@ -1531,6 +1535,8 @@ class CellBudgetFile(object):
                     s += 'a numpy recarray of size (' + str(nlist) + ', 2)'
                 print(s)
             if full3D:
+                s += 'full 3D arrays not supported for ' + \
+                     'imeth = {}'.format(imeth)
                 raise ValueError(s)
             else:
                 return data.view(np.recarray)

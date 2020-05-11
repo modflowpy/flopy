@@ -916,7 +916,17 @@ def test027_timeseriestest():
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
 
+def test_cbc_precision():
+    pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
+    cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
+    print(cbc.get_unique_record_names())
+    data = cbc.get_data(text="GWF", full3D=False)
+    if data[2].node[0] != 1:
+        raise AssertionError("Budget precision error for imeth 6")
+
+
 if __name__ == '__main__':
+    test_cbc()
     test001a_tharmonic()
     test001e_uzf_3lay()
     test003_gwfs_disv()
