@@ -926,7 +926,6 @@ def test_cbc_precision():
 
 
 if __name__ == '__main__':
-    test_cbc()
     test001a_tharmonic()
     test001e_uzf_3lay()
     test003_gwfs_disv()
@@ -937,3 +936,4 @@ if __name__ == '__main__':
     test036_twrihfb()
     test045_lake1ss_table()
     test045_lake2tr()
+    test_cbc_precision()
