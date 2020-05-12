@@ -794,9 +794,9 @@ class MFFileAccessList(MFFileAccess):
             return [False, arr_line]
         if len(arr_line) >= 2 and arr_line[0].upper() == 'OPEN/CLOSE':
             try:
-                storage.process_open_close_line(arr_line, 0)
+                storage.process_open_close_line(arr_line, (0,))
             except Exception as ex:
-                message = 'An error occurred while processing the following' \
+                message = 'An error occurred while processing the following ' \
                           'open/close line: {}'.format(current_line)
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
