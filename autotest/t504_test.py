@@ -884,6 +884,11 @@ def test027_timeseriestest():
     sim.set_all_data_external()
     sim.write_simulation()
 
+    # reload sim
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, run_folder,
+                            verify_data=True)
+    sim.write_simulation()
+
     if run:
         # run simulation
         sim.run_simulation()
