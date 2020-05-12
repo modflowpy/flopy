@@ -919,21 +919,20 @@ def test027_timeseriestest():
 def test_cbc_precision():
     pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
     cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
-    print(cbc.get_unique_record_names())
     data = cbc.get_data(text="GWF", full3D=False)
     if data[2].node[0] != 1:
         raise AssertionError("Budget precision error for imeth 6")
 
 
 if __name__ == '__main__':
-    test001a_tharmonic()
+    # test001a_tharmonic()
     test001e_uzf_3lay()
-    test003_gwfs_disv()
-    test005_advgw_tidal()
-    test006_2models_mvr()
-    test006_gwf3()
-    test027_timeseriestest()
-    test036_twrihfb()
-    test045_lake1ss_table()
-    test045_lake2tr()
+    # test003_gwfs_disv()
+    # test005_advgw_tidal()
+    # test006_2models_mvr()
+    # test006_gwf3()
+    # test027_timeseriestest()
+    # test036_twrihfb()
+    # test045_lake1ss_table()
+    # test045_lake2tr()
     test_cbc_precision()

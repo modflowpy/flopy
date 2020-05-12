@@ -765,12 +765,14 @@ class CellBudgetFile(object):
             if header['text'] not in self.textlist:
                 # check the precision of the file using text records
                 try:
-                    text = header['text']
-                    if isinstance(text, bytes):
-                        text = text.decode()
-                    for t in text:
-                        if t.upper() not in asciiset:
-                            raise Exception()
+                    tlist = [header['text'], header['modelnam']]
+                    for text in tlist:
+                        if isinstance(text, bytes):
+                            text = text.decode()
+                        for t in text:
+                            if t.upper() not in asciiset:
+                                raise Exception()
+
                 except:
                     raise BudgetIndexError("Improper precision")
                 self.textlist.append(header['text'])
@@ -835,8 +837,7 @@ class CellBudgetFile(object):
         elif imeth == 5:
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-            if naux > 100:
-                raise BudgetIndexError()
+
             for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
@@ -850,8 +851,7 @@ class CellBudgetFile(object):
             # read rest of list data
             nauxp1 = binaryread(self.file, np.int32)[0]
             naux = nauxp1 - 1
-            if naux > 100:
-                raise BudgetIndexError()
+
             for i in range(naux):
                 temp = binaryread(self.file, str, charlen=16)
             nlist = binaryread(self.file, np.int32)[0]
