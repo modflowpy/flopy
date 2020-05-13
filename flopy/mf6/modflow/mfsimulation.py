@@ -1763,7 +1763,7 @@ class MFSimulation(PackageContainer):
                                       message=message)
 
             new_array = []
-            for index, record in enumerate(rec_array):
+            for record in rec_array:
                 if record.slnfname == ims_file:
                     continue
                 else:
