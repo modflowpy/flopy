@@ -380,7 +380,11 @@ class MFFileAccessArray(MFFileAccess):
         PyListUtil.reset_delimiter_used()
         while line != '' and len(data_raw) < data_size:
             line = fd.readline()
-            data_raw += PyListUtil.split_data_line(line, True)
+            arr_line = PyListUtil.split_data_line(line, True)
+            if not MFComment.is_comment(arr_line, True):
+                data_raw += arr_line
+            else:
+                PyListUtil.reset_delimiter_used()
 
         if len(data_raw) < data_size:
             message = 'Not enough data in file {} for data "{}".  ' \
@@ -846,6 +850,13 @@ class MFFileAccessList(MFFileAccess):
         PyListUtil.reset_delimiter_used()
         arr_line = PyListUtil.split_data_line(current_line)
         line_num = 0
+        # read any pre-data commented lines
+        while current_line and MFComment.is_comment(arr_line, True):
+            arr_line.insert(0, '\n')
+            storage.add_data_line_comment(arr_line, line_num)
+            PyListUtil.reset_delimiter_used()
+            current_line = file_handle.readline()
+            arr_line = PyListUtil.split_data_line(current_line)
 
         try:
             data_line = self._load_list_line(
