@@ -815,8 +815,7 @@ class DataStorage(object):
                 new_data.insert(0, 'open/close')
             else:
                 new_data = data[:]
-            multiplier, iprn, binary, \
-            filename = self.process_open_close_line(new_data, layer, True)
+            self.process_open_close_line(new_data, layer, True)
             return True
         # try to resolve as internal array
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
