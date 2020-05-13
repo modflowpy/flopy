@@ -944,5 +944,4 @@ if __name__ == '__main__':
     # test036_twrihfb()
     # test045_lake1ss_table()
     # test045_lake2tr()
-    test_cbc_precision()
     test_replace_ims_package()
