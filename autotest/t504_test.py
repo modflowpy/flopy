@@ -918,7 +918,7 @@ def test027_timeseriestest():
 
 def test_replace_ims_package():
     pth = os.path.join(cpth, "test001e_UZF_3lay")
-    sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth)
+    sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
 
     ims = sim.ims
     sim.remove_package(ims)
