@@ -780,8 +780,8 @@ class DataStorage(object):
                     data['data'] = [data['data']]
 
             if 'filename' in data:
-                multiplier, iprn, binary, \
-                filename = self.process_open_close_line(data, layer)
+                multiplier, iprn, binary = \
+                    self.process_open_close_line(data, layer)[0:3]
                 # store location to file
                 self.store_external(data['filename'], layer, [multiplier],
                                     print_format=iprn, binary=binary,

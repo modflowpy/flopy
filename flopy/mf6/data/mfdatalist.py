@@ -243,10 +243,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data = self._get_data()
                 # if not empty dataset
                 if data is not None:
-                    if external_file_path == 'timeseriestest.ghb_stress_period_data_1.txt':
-                        print('break')
                     external_data = {'filename': external_file_path,
-                                     'data': self._get_data(), 'binary': binary}
+                                     'data': self._get_data(),
+                                     'binary': binary}
                     self._set_data(external_data)
 
     def has_data(self):
