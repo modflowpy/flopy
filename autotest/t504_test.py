@@ -920,7 +920,15 @@ def test027_timeseriestest():
         head_new = os.path.join(save_folder, 'timeseriestest.hds')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
+        
+def test_cbc_precision():
+    pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
+    cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
+    data = cbc.get_data(text="GWF", full3D=False)
+    if data[2].node[0] != 1:
+        raise AssertionError("Budget precision error for imeth 6")
 
+        
 def test_replace_ims_package():
     pth = os.path.join(cpth, "test001e_UZF_3lay")
     sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
@@ -949,4 +957,5 @@ if __name__ == '__main__':
     # test036_twrihfb()
     # test045_lake1ss_table()
     # test045_lake2tr()
+    test_cbc_precision()
     test_replace_ims_package()
