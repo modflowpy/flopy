@@ -1313,6 +1313,7 @@ class MFSimulation(PackageContainer):
                 del self._exchange_files[package.filename]
             if package.filename in self._ims_files:
                 del self._ims_files[package.filename]
+                self._remove_ims_soultion_group(package.filename)
             if package.filename in self._ghost_node_files:
                 del self._ghost_node_files[package.filename]
             if package.filename in self._mover_files:
@@ -1747,6 +1748,31 @@ class MFSimulation(PackageContainer):
             return (package.parent_file.path) + (package.package_type,)
         else:
             return (package.package_type,)
+
+    def _remove_ims_soultion_group(self, ims_file):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file' \
+                          '.'.format(solution_group_num[0])
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+
+            new_array = []
+            for record in rec_array:
+                if record.slnfname == ims_file:
+                    continue
+                else:
+                    new_array.append(record)
+
+            if not new_array:
+                new_array = None
+
+            solution_recarray.set_data(new_array, solution_group_num[0])
 
     def _append_to_ims_solution_group(self, ims_file, new_models):
         solution_recarray = self.name_file.solutiongroup

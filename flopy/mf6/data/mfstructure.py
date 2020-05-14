@@ -1451,8 +1451,7 @@ class MFDataStructure(object):
                 if data_item_structure.type == DatumType.record:
                     count += data_item_structure.get_record_size()[0]
                 else:
-                    if data_item_structure.type != DatumType.keyword or \
-                            count > 0:
+                    if data_item_structure.type != DatumType.keyword:
                         count += 1
         return count
 

@@ -606,6 +606,7 @@ class MFBlock(object):
             arr_line = datautil.PyListUtil.split_data_line(line)
 
         # if block not empty
+        external_file_info = None
         if not (len(arr_line[0]) > 2 and arr_line[0][:3].upper() == 'END'):
             if arr_line[0].lower() == 'open/close':
                 # open block contents from external file
@@ -616,8 +617,8 @@ class MFBlock(object):
                             VerbosityLevel.verbose.value:
                         print('        opening external file "{}"..'
                               '.'.format(arr_line[1]))
-                    self.external_file_name = arr_line[1]
-                    fd_block = open(os.path.join(fd_path, self.external_file_name),
+                    external_file_info = arr_line
+                    fd_block = open(os.path.join(fd_path, arr_line[1]),
                                     'r')
                     # read first line of external file
                     line = fd_block.readline()
@@ -643,7 +644,8 @@ class MFBlock(object):
                               '.'.format(dataset.structure.name))
                     next_line = dataset.load(line, fd_block,
                                              self.block_headers[-1],
-                                             initial_comment)
+                                             initial_comment,
+                                             external_file_info)
                 except MFDataException as mfde:
                     raise MFDataException(
                         mfdata_except=mfde, model=self._container_package.
@@ -916,7 +918,8 @@ class MFBlock(object):
                     dataset.structure.type == DatumType.recarray) and \
                     dataset.enabled:
                 dataset.store_as_external_file(
-                    '{}_{}.txt'.format(base_name, dataset.structure.name))
+                    '{}_{}.txt'.format(base_name, dataset.structure.name),
+                    replace_existing_external=False)
 
     def _find_repeating_datasets(self):
         repeating_datasets = []
