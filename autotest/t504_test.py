@@ -921,14 +921,32 @@ def test027_timeseriestest():
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
 
+def test_replace_ims_package():
+    pth = os.path.join(cpth, "test001e_UZF_3lay")
+    sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
+
+    ims = sim.ims
+    sim.remove_package(ims)
+
+    ims = flopy.mf6.ModflowIms(sim, print_option='SUMMARY',
+                               complexity="COMPLEX")
+    sim.register_ims_package(ims, ["gwf_1", ])
+    sim.write_simulation()
+    success, buff = sim.run_simulation()
+
+    if not success:
+        raise AssertionError()
+
+
 if __name__ == '__main__':
-    test001a_tharmonic()
+    # test001a_tharmonic()
     test001e_uzf_3lay()
-    test003_gwfs_disv()
-    test005_advgw_tidal()
-    test006_2models_mvr()
-    test006_gwf3()
-    test027_timeseriestest()
-    test036_twrihfb()
-    test045_lake1ss_table()
-    test045_lake2tr()
+    # test003_gwfs_disv()
+    # test005_advgw_tidal()
+    # test006_2models_mvr()
+    # test006_gwf3()
+    # test027_timeseriestest()
+    # test036_twrihfb()
+    # test045_lake1ss_table()
+    # test045_lake2tr()
+    test_replace_ims_package()
