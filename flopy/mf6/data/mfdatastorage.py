@@ -1648,7 +1648,7 @@ class DataStorage(object):
             if all_none:
                 return None
             else:
-                return aux_data
+                return np.stack(aux_data, axis=0)
         else:
             return full_data
 
