@@ -938,7 +938,7 @@ def test_replace_ims_package():
 
     ims = flopy.mf6.ModflowIms(sim, print_option='SUMMARY',
                                complexity="COMPLEX")
-    sim.register_ims_package(ims, ["gwf_1", ])
+    sim.register_ims_package(ims, ["GwF_1", ])
     sim.write_simulation()
     success, buff = sim.run_simulation()
 
