@@ -887,6 +887,17 @@ def test_read_usgs_model_reference():
     model_ws = os.path.join('temp', 't007')
     mrf = os.path.join(model_ws, 'usgs.model.reference')
     shutil.copy('../examples/data/usgs.model.reference', mrf)
+
+    xul, yul = 0, 0
+    with open(mrf) as foo:
+        for line in foo:
+            if 'xul' in line.lower():
+                xul = float(line.strip().split()[1])
+            elif "yul" in line.lower():
+                yul = float(line.strip().split()[1])
+            else:
+                continue
+
     fm = flopy.modflow
     m = fm.Modflow(modelname='junk', model_ws=model_ws)
     # feet and days
@@ -900,6 +911,11 @@ def test_read_usgs_model_reference():
     mg = StructuredGrid(delr=dis.delr.array, delc=dis.delc.array)
     mg.read_usgs_model_reference_file(mrf)
     m2.modelgrid = mg
+
+    if abs(mg.xvertices[0, 0] - xul) > 0.01:
+        raise AssertionError()
+    if abs(mg.yvertices[0, 0] - yul) > 0.01:
+        raise AssertionError
 
     assert m2.modelgrid.xoffset == mg.xoffset
     assert m2.modelgrid.yoffset == mg.yoffset

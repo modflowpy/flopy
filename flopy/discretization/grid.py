@@ -420,6 +420,7 @@ class Grid(object):
         # check for reference info in the nam file header
         if namefile is None:
             return False
+        xul, yul = None, None
         header = []
         with open(namefile, 'r') as f:
             for line in f:
@@ -443,7 +444,6 @@ class Grid(object):
             elif "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
-                    self._xoff = self._xul_to_xll(xul)
                     warnings.warn(
                         'xul/yul have been deprecated. Use xll/yll instead.',
                         DeprecationWarning)
@@ -452,7 +452,6 @@ class Grid(object):
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
-                    self._yoff = self._yul_to_yll(yul)
                     warnings.warn(
                         'xul/yul have been deprecated. Use xll/yll instead.',
                         DeprecationWarning)
@@ -475,11 +474,21 @@ class Grid(object):
                     start_datetime = item.split(':')[1].strip()
                 except:
                     pass
+
+        # we need to rotate the modelgrid first, then we can
+        # calculate the xll and yll from xul and yul
+        if (xul, yul) != (None, None):
+            self.set_coord_info(xoff=self._xul_to_xll(xul),
+                                yoff=self._yul_to_yll(yul),
+                                angrot=self._angrot)
+
         return True
 
     def read_usgs_model_reference_file(self, reffile='usgs.model.reference'):
         """read spatial reference info from the usgs.model.reference file
         https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+        xul = None
+        yul = None
         if os.path.exists(reffile):
             with open(reffile) as input:
                 for line in input:
@@ -493,17 +502,9 @@ class Grid(object):
                                 elif info[0] == 'yll':
                                     self._yoff = float(data)
                                 elif info[0] == 'xul':
-                                    self._xoff = self._xul_to_xll(
-                                        float(data))
-                                    warnings.warn(
-                                        'xul/yul have been deprecated. Use xll/yll instead.',
-                                        DeprecationWarning)
+                                    xul = float(data)
                                 elif info[0] == 'yul':
-                                    self._yoff = self._yul_to_yll(
-                                        float(data))
-                                    warnings.warn(
-                                        'xul/yul have been deprecated. Use xll/yll instead.',
-                                        DeprecationWarning)
+                                    yul = float(data)
                                 elif info[0] == 'rotation':
                                     self._angrot = float(data)
                                 elif info[0] == 'epsg':
@@ -512,6 +513,14 @@ class Grid(object):
                                     self._proj4 = data
                                 elif info[0] == 'start_date':
                                     start_datetime = data
+
+            # model must be rotated first, before setting xoff and yoff
+            # when xul and yul are provided.
+            if (xul, yul) != (None, None):
+                self.set_coord_info(xoff=self._xul_to_xll(xul),
+                                    yoff=self._yul_to_yll(yul),
+                                    angrot=self._angrot)
+
             return True
         else:
             return False
