@@ -1794,11 +1794,11 @@ class MFSimulation(PackageContainer):
                     if record[1] == ims_file or item not in new_models:
                         new_record.append(item)
                         if index > 1:
-                            rec_model_dict[item] = 1
+                            rec_model_dict[item.lower()] = 1
 
                 if record[1] == ims_file:
                     for model in new_models:
-                        if model not in rec_model_dict:
+                        if model.lower() not in rec_model_dict:
                             new_record.append(model)
 
                 new_array.append(tuple(new_record))
