@@ -152,6 +152,7 @@ def get_software_citation(version, is_approved):
 
 
 def update_version():
+    name_pos = None
     try:
         fpth = os.path.join(paths[0], files[0])
 
@@ -159,7 +160,7 @@ def update_version():
         vminor = 0
         vmicro = 0
         lines = [line.rstrip('\n') for line in open(fpth, 'r')]
-        for line in lines:
+        for idx, line in enumerate(lines):
             t = line.split()
             if 'major =' in line:
                 vmajor = int(t[2])
@@ -167,6 +168,9 @@ def update_version():
                 vminor = int(t[2])
             elif 'micro =' in line:
                 vmicro = int(t[2])
+            elif '__name__' in line:
+                name_pos = idx
+
     except:
         msg = 'There was a problem updating the version file'
         raise IOError(msg)
@@ -184,6 +188,11 @@ def update_version():
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
         f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
+
+        # write the remainder of the version file
+        if name_pos is not None:
+            for line in lines[name_pos:]:
+                f.write('{}\n'.format(line))
         f.close()
         print('Successfully updated version.py')
     except:

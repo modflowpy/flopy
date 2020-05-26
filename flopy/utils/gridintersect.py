@@ -1,18 +1,26 @@
-import matplotlib.pyplot as plt
 import numpy as np
+
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    plt = None
+    print("matplotlib is needed for grid intersect operations! Please " +
+          "matplotlib if you need to use grid intersect functionality.")
 from .geometry import transform
+
 try:
     from shapely.geometry import (MultiPoint, Point, Polygon, box,
                                   GeometryCollection)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
 except ModuleNotFoundError:
-    print("Shapely is needed for grid intersect operations!"
-          "Please install shapely.")
+    print("Shapely is needed for grid intersect operations! Please install " +
+          "shapely if you need to use grid intersect functionality.")
 
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
-    """Recursive function for parsing shapely intersection results.
+    """
+    Recursive function for parsing shapely intersection results.
     Returns a list of shapely shapes matching shptyp
 
     Parameters
@@ -209,8 +217,10 @@ class GridIntersect:
             sorted list of Polygons
 
         """
+
         def sort_key(o):
             return o.name
+
         shapelist.sort(key=sort_key)
         return shapelist
 
@@ -1041,8 +1051,15 @@ class GridIntersect:
         try:
             from descartes import PolygonPatch
         except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                "descartes module needed for plotting polygons")
+            msg = 'descartes package needed for plotting polygons'
+            if plt is None:
+                msg = 'matplotlib and descartes packages needed for ' + \
+                      'plotting polygons'
+            raise ModuleNotFoundError(msg)
+
+        if plt is None:
+            msg = 'matplotlib package needed for plotting polygons'
+            raise ModuleNotFoundError(msg)
 
         if ax is None:
             _, ax = plt.subplots()
@@ -1077,6 +1094,10 @@ class GridIntersect:
             returns the axes handle
 
         """
+        if plt is None:
+            msg = 'matplotlib package needed for plotting polygons'
+            raise ModuleNotFoundError(msg)
+
         if ax is None:
             _, ax = plt.subplots()
 
@@ -1114,6 +1135,10 @@ class GridIntersect:
             returns the axes handle
 
         """
+        if plt is None:
+            msg = 'matplotlib package needed for plotting polygons'
+            raise ModuleNotFoundError(msg)
+
         if ax is None:
             _, ax = plt.subplots()
 

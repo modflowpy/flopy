@@ -20,13 +20,6 @@ contribute.
 
 """
 
-__name__ = 'flopy'
-__author__ = 'Mark Bakker, Vincent Post, Christian D. Langevin, ' + \
-             'Joseph D. Hughes, Jeremy T. White, Andrew T. Leaf, ' + \
-             'Scott R. Paulinski, Joshua D. Larsen, Michael W. Toews, ' + \
-             'Eric D. Morway, Jason C. Bellino, Jeffrey Starn, ' + \
-             'and Michael N. Fienen'
-
 from .version import __version__
 
 # imports
