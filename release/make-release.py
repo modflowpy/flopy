@@ -168,8 +168,8 @@ def update_version():
                 vminor = int(t[2])
             elif 'micro =' in line:
                 vmicro = int(t[2])
-            elif '__name__' in line:
-                name_pos = idx
+            elif '__version__' in line:
+                name_pos = idx + 1
 
     except:
         msg = 'There was a problem updating the version file'

@@ -20,7 +20,7 @@ contribute.
 
 """
 
-from .version import __version__
+from .version import __version__, __author__, __author_email__
 
 # imports
 from . import modflow

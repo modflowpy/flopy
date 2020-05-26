@@ -6,14 +6,10 @@ from setuptools import setup
 if sys.version_info[0:2] < (3, 5):
     raise RuntimeError('Flopy requires Python >= 3.5')
 
-# read package variables in flopy/version.py into a dictionary
-# dictionary is created rather than using an import so that numpy and
-# matplotlib imports in flopy do not cause pip install failures with
-# python environments that do not have numpy and matplotlib
-# already installed
-pak_vars = {}
-with open(os.path.join('flopy', 'version.py')) as vfile:
-    exec(vfile.read(), pak_vars)
+# local import of package variables in flopy/version.py
+sys.path.append('flopy')
+from version import __version__, __pakname__, __author__, __author_email__
+print(__version__, __pakname__, __author__, __author_email__)
 
 try:
     import pypandoc
@@ -23,12 +19,12 @@ try:
 except ImportError:
     long_description = ''
 
-setup(name=pak_vars['__name__'],
+setup(name=__pakname__,
       description='FloPy is a Python package to create, run, and ' +
                   'post-process MODFLOW-based models.',
       long_description=long_description,
-      author=pak_vars['__author__'],
-      author_email=pak_vars['__author_email__'],
+      author=__author__,
+      author_email=__author_email__,
       url='https://github.com/modflowpy/flopy/',
       license='CC0',
       platforms='Windows, Mac OS-X, Linux',
@@ -40,5 +36,5 @@ setup(name=pak_vars['__name__'],
                 'flopy.mf6.modflow', 'flopy.mf6.utils'],
       include_package_data=True,  # includes files listed in MANIFEST.in
       # use this version ID if .svn data cannot be found
-      version=pak_vars['__version__'],
+      version=__version__,
       classifiers=['Topic :: Scientific/Engineering :: Hydrology'])
