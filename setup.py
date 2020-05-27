@@ -7,9 +7,8 @@ if sys.version_info[0:2] < (3, 5):
     raise RuntimeError('Flopy requires Python >= 3.5')
 
 # local import of package variables in flopy/version.py
-sys.path.append('flopy')
-from version import __version__, __pakname__, __author__, __author_email__
-print(__version__, __pakname__, __author__, __author_email__)
+# imports __version__, __pakname__, __author__, __author_email__
+exec(open("flopy/version.py").read())
 
 try:
     import pypandoc
