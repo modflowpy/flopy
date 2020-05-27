@@ -977,9 +977,9 @@ class PlotUtilities(object):
             else:
                 i0 = 0
                 i1 = array.shape[0]
-            # build filenames
+            # build filenames, use local "name" variable (flopy6 adaptation)
             filenames = ['{}_{}_Layer{}.{}'.format(
-                filename_base, util3d.name[k],
+                filename_base, name[k],
                 k + 1, fext)
                          for k in range(i0, i1)]
 
