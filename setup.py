@@ -8,7 +8,7 @@ if sys.version_info[0:2] < (3, 5):
 
 # local import of package variables in flopy/version.py
 # imports __version__, __pakname__, __author__, __author_email__
-exec(open("flopy/version.py").read())
+exec(open(os.path.join("flopy", "version.py")).read())
 
 try:
     import pypandoc
