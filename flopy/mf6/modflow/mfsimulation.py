@@ -1793,7 +1793,7 @@ class MFSimulation(PackageContainer):
                 for index, item in enumerate(record):
                     if record[1] == ims_file or item not in new_models:
                         new_record.append(item)
-                        if index > 1:
+                        if index > 1 and item is not None:
                             rec_model_dict[item.lower()] = 1
 
                 if record[1] == ims_file:
