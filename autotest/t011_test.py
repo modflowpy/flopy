@@ -68,6 +68,22 @@ def test_mflist_reducedpumping():
     
     return
 
+
+def test_mf6listfile():
+    pth = os.path.join('..', 'examples', 'data', 'mf6', 'test005_advgw_tidal',
+                       'expected_output')
+    list_file = os.path.join(pth, 'AdvGW_tidal.gitlist')
+    assert os.path.exists(list_file)
+    mflist = flopy.utils.Mf6ListBudget(list_file)
+    names = mflist.get_record_names()
+    for item in ['RCH_IN', 'RCH2_IN', 'RCH3_IN', 'RCH_OUT', 'RCH2_OUT',
+                 'RCH3_OUT']:
+        assert item in names, '{} not found in names'.format(item)
+    assert len(names) == 25
+    inc = mflist.get_incremental()
+    return
+
+
 @raises(AssertionError) 
 def test_mflist_reducedpumping_fail():
     '''
@@ -89,3 +105,4 @@ if __name__ == '__main__':
     test_mflistfile()
     test_mflist_reducedpumping()
     test_mflist_reducedpumping_fail()
+    test_mf6listfile()
