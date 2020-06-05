@@ -80,10 +80,10 @@ class GridIntersect:
      - Building the STR-tree can take a while for large grids. Once built the
        intersect routines (for individual shapes) should be pretty fast. It
        is possible to perform intersects without building the STR-tree by
-       setting `rtree=False`. 
+       setting `rtree=False`.
      - The optimized routines for structured grids will often outperform
        the shapely routines because of the reduced overhead of building and
-       parsing the STR-tree. However, for polygons the STR-tree implementation 
+       parsing the STR-tree. However, for polygons the STR-tree implementation
        is often faster than the optimized structured routines.
 
     """
@@ -102,8 +102,8 @@ class GridIntersect:
             operations or 'structured' which uses optimized methods that
             only work for structured grids
         rtree : bool, optional
-            whether to build an STR-Tree, default is True. If False no 
-            STR-tree is built (which saves some time), but intersects will 
+            whether to build an STR-Tree, default is True. If False no
+            STR-tree is built (which saves some time), but intersects will
             loop through all model gridcells (which is generally slower).
 
         """
@@ -286,7 +286,7 @@ class GridIntersect:
     def filter_query_result(self, qresult, shp):
         """
         Filter query result to obtain grid cells that intersect with shape.
-        Used to (further) reduce query result to cells that definitely 
+        Used to (further) reduce query result to cells that definitely
         intersect with shape.
 
         Parameters
