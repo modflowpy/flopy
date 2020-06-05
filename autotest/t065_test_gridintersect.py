@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(1, "..")
 import flopy.discretization as fgrid
 import flopy.plot as fplot
 import matplotlib.pyplot as plt
@@ -169,69 +171,69 @@ def test_rect_grid_multipoint_in_multiple_cells():
 # %% test point shapely
 
 
-def test_rect_grid_point_outside_shapely():
+def test_rect_grid_point_outside_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(25., 25.))
     assert len(result) == 0
     return result
 
 
-def test_rect_grid_point_on_outer_boundary_shapely():
+def test_rect_grid_point_on_outer_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(20., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 1))
     return result
 
 
-def test_rect_grid_point_on_inner_boundary_shapely():
+def test_rect_grid_point_on_inner_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 0))
     return result
 
 
-def test_rect_grid_multipoint_in_one_cell_shapely():
+def test_rect_grid_multipoint_in_one_cell_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(2., 2.)]))
     assert len(result) == 1
     assert result.cellids[0] == (1, 0)
     return result
 
 
-def test_rect_grid_multipoint_in_multiple_cells_shapely():
+def test_rect_grid_multipoint_in_multiple_cells_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(12., 12.)]))
     assert len(result) == 2
     assert result.cellids[0] == (0, 1)
@@ -239,7 +241,7 @@ def test_rect_grid_multipoint_in_multiple_cells_shapely():
     return result
 
 
-def test_tri_grid_point_outside():
+def test_tri_grid_point_outside(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -248,13 +250,13 @@ def test_tri_grid_point_outside():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(25., 25.))
     assert len(result) == 0
     return result
 
 
-def test_tri_grid_point_on_outer_boundary():
+def test_tri_grid_point_on_outer_boundary(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -263,14 +265,14 @@ def test_tri_grid_point_on_outer_boundary():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(20., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
     return result
 
 
-def test_tri_grid_point_on_inner_boundary():
+def test_tri_grid_point_on_inner_boundary(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -279,14 +281,14 @@ def test_tri_grid_point_on_inner_boundary():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == 0)
     return result
 
 
-def test_tri_grid_multipoint_in_one_cell():
+def test_tri_grid_multipoint_in_one_cell(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -295,14 +297,14 @@ def test_tri_grid_multipoint_in_one_cell():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(2., 2.)]))
     assert len(result) == 1
     assert result.cellids[0] == 1
     return result
 
 
-def test_tri_grid_multipoint_in_multiple_cells():
+def test_tri_grid_multipoint_in_multiple_cells(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -311,7 +313,7 @@ def test_tri_grid_multipoint_in_multiple_cells():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_point(MultiPoint([Point(1., 1.), Point(12., 12.)]))
     assert len(result) == 2
     assert result.cellids[0] == 0
@@ -436,27 +438,27 @@ def test_rect_grid_linestring_in_and_out_of_cell2():
 # %% test linestring shapely
 
 
-def test_rect_grid_linestring_outside_shapely():
+def test_rect_grid_linestring_outside_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(25., 25.), (21., 5.)]))
     assert len(result) == 0
     return result
 
 
-def test_rect_grid_linestring_in_2cells_shapely():
+def test_rect_grid_linestring_in_2cells_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(5., 5.), (15., 5.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -465,14 +467,14 @@ def test_rect_grid_linestring_in_2cells_shapely():
     return result
 
 
-def test_rect_grid_linestring_on_outer_boundary_shapely():
+def test_rect_grid_linestring_on_outer_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(15., 20.), (5., 20.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -481,14 +483,14 @@ def test_rect_grid_linestring_on_outer_boundary_shapely():
     return result
 
 
-def test_rect_grid_linestring_on_inner_boundary_shapely():
+def test_rect_grid_linestring_on_inner_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(5., 10.), (15., 10.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -497,14 +499,14 @@ def test_rect_grid_linestring_on_inner_boundary_shapely():
     return result
 
 
-def test_rect_grid_multilinestring_in_one_cell_shapely():
+def test_rect_grid_multilinestring_in_one_cell_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(MultiLineString(
         [LineString([(1., 1), (9., 1.)]), LineString([(1., 9.), (9., 9.)])]))
     assert len(result) == 1
@@ -513,14 +515,14 @@ def test_rect_grid_multilinestring_in_one_cell_shapely():
     return result
 
 
-def test_rect_grid_linestring_in_and_out_of_cell_shapely():
+def test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(
         LineString([(5., 9), (15., 5.), (5., 1.)]))
     assert len(result) == 2
@@ -530,7 +532,7 @@ def test_rect_grid_linestring_in_and_out_of_cell_shapely():
     return result
 
 
-def test_tri_grid_linestring_outside():
+def test_tri_grid_linestring_outside(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -539,13 +541,13 @@ def test_tri_grid_linestring_outside():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(25., 25.), (21., 5.)]))
     assert len(result) == 0
     return result
 
 
-def test_tri_grid_linestring_in_2cells():
+def test_tri_grid_linestring_in_2cells(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -554,7 +556,7 @@ def test_tri_grid_linestring_in_2cells():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(5., 5.), (5., 15.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -563,7 +565,7 @@ def test_tri_grid_linestring_in_2cells():
     return result
 
 
-def test_tri_grid_linestring_on_outer_boundary():
+def test_tri_grid_linestring_on_outer_boundary(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -572,7 +574,7 @@ def test_tri_grid_linestring_on_outer_boundary():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(15., 20.), (5., 20.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -581,7 +583,7 @@ def test_tri_grid_linestring_on_outer_boundary():
     return result
 
 
-def test_tri_grid_linestring_on_inner_boundary():
+def test_tri_grid_linestring_on_inner_boundary(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -590,7 +592,7 @@ def test_tri_grid_linestring_on_inner_boundary():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(LineString([(5., 10.), (15., 10.)]))
     assert len(result) == 2
     assert result.lengths.sum() == 10.
@@ -599,7 +601,7 @@ def test_tri_grid_linestring_on_inner_boundary():
     return result
 
 
-def test_tri_grid_multilinestring_in_one_cell():
+def test_tri_grid_multilinestring_in_one_cell(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -608,7 +610,7 @@ def test_tri_grid_multilinestring_in_one_cell():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_linestring(MultiLineString(
         [LineString([(1., 1), (9., 1.)]), LineString([(2., 2.), (9., 2.)])]))
     assert len(result) == 1
@@ -731,28 +733,28 @@ def test_rect_grid_polygon_with_hole():
 # %% test polygon shapely
 
 
-def test_rect_grid_polygon_outside_shapely():
+def test_rect_grid_polygon_outside_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(21., 11.), (23., 17.), (25., 11.)]))
     assert len(result) == 0
     return result
 
 
-def test_rect_grid_polygon_in_2cells_shapely():
+def test_rect_grid_polygon_in_2cells_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(2.5, 5.0), (7.5, 5.0), (7.5, 15.), (2.5, 15.)]))
     assert len(result) == 2
@@ -760,28 +762,28 @@ def test_rect_grid_polygon_in_2cells_shapely():
     return result
 
 
-def test_rect_grid_polygon_on_outer_boundary_shapely():
+def test_rect_grid_polygon_on_outer_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(20., 5.0), (25., 5.0), (25., 15.), (20., 15.)]))
     assert len(result) == 0
     return result
 
 
-def test_rect_grid_polygon_on_inner_boundary_shapely():
+def test_rect_grid_polygon_on_inner_boundary_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(5., 10.0), (15., 10.0), (15., 5.), (5., 5.)]))
     assert len(result) == 2
@@ -789,14 +791,14 @@ def test_rect_grid_polygon_on_inner_boundary_shapely():
     return result
 
 
-def test_rect_grid_multipolygon_in_one_cell_shapely():
+def test_rect_grid_multipolygon_in_one_cell_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p1 = Polygon([(1., 1.), (8., 1.), (8., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (8., 9.), (8., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
@@ -806,14 +808,14 @@ def test_rect_grid_multipolygon_in_one_cell_shapely():
     return result
 
 
-def test_rect_grid_multipolygon_in_multiple_cells_shapely():
+def test_rect_grid_multipolygon_in_multiple_cells_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p1 = Polygon([(1., 1.), (19., 1.), (19., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (19., 9.), (19., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
@@ -823,14 +825,14 @@ def test_rect_grid_multipolygon_in_multiple_cells_shapely():
     return result
 
 
-def test_rect_grid_polygon_with_hole_shapely():
+def test_rect_grid_polygon_with_hole_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     gr = get_rect_grid()
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p = Polygon([(5., 5.), (5., 15.), (25., 15.), (25., -5.),
                  (5., -5.)], holes=[[(9., -1), (9, 11), (21, 11), (21, -1)]])
     result = ix.intersect_polygon(p)
@@ -839,7 +841,7 @@ def test_rect_grid_polygon_with_hole_shapely():
     return result
 
 
-def test_tri_grid_polygon_outside():
+def test_tri_grid_polygon_outside(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -848,14 +850,14 @@ def test_tri_grid_polygon_outside():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(21., 11.), (23., 17.), (25., 11.)]))
     assert len(result) == 0
     return result
 
 
-def test_tri_grid_polygon_in_2cells():
+def test_tri_grid_polygon_in_2cells(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -864,7 +866,7 @@ def test_tri_grid_polygon_in_2cells():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(2.5, 5.0), (5.0, 5.0), (5.0, 15.), (2.5, 15.)]))
     assert len(result) == 2
@@ -872,7 +874,7 @@ def test_tri_grid_polygon_in_2cells():
     return result
 
 
-def test_tri_grid_polygon_on_outer_boundary():
+def test_tri_grid_polygon_on_outer_boundary(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -881,18 +883,18 @@ def test_tri_grid_polygon_on_outer_boundary():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(20., 5.0), (25., 5.0), (25., 15.), (20., 15.)]))
     assert len(result) == 0
     return result
 
 
-def test_tri_grid_polygon_on_inner_boundary():
+def test_tri_grid_polygon_on_inner_boundary(rtree=True):
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     result = ix.intersect_polygon(
         Polygon([(5., 10.0), (15., 10.0), (15., 5.), (5., 5.)]))
     assert len(result) == 4
@@ -900,7 +902,7 @@ def test_tri_grid_polygon_on_inner_boundary():
     return result
 
 
-def test_tri_grid_multipolygon_in_one_cell():
+def test_tri_grid_multipolygon_in_one_cell(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -909,7 +911,7 @@ def test_tri_grid_multipolygon_in_one_cell():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p1 = Polygon([(1., 1.), (8., 1.), (8., 3.), (3., 3.)])
     p2 = Polygon([(5., 5.), (8., 5.), (8., 8.)])
     p = MultiPolygon([p1, p2])
@@ -919,7 +921,7 @@ def test_tri_grid_multipolygon_in_one_cell():
     return result
 
 
-def test_tri_grid_multipolygon_in_multiple_cells():
+def test_tri_grid_multipolygon_in_multiple_cells(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -928,7 +930,7 @@ def test_tri_grid_multipolygon_in_multiple_cells():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p1 = Polygon([(1., 1.), (19., 1.), (19., 3.), (1., 3.)])
     p2 = Polygon([(1., 9.), (19., 9.), (19., 7.), (1., 7.)])
     p = MultiPolygon([p1, p2])
@@ -938,7 +940,7 @@ def test_tri_grid_multipolygon_in_multiple_cells():
     return result
 
 
-def test_tri_grid_polygon_with_hole():
+def test_tri_grid_polygon_with_hole(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -947,7 +949,7 @@ def test_tri_grid_polygon_with_hole():
     gr = get_tri_grid()
     if gr == -1:
         return
-    ix = GridIntersect(gr)
+    ix = GridIntersect(gr, rtree=rtree)
     p = Polygon([(5., 5.), (5., 15.), (25., 15.), (25., -5.),
                  (5., -5.)], holes=[[(9., -1), (9, 11), (21, 11), (21, -1)]])
     result = ix.intersect_polygon(p)
@@ -994,15 +996,17 @@ def test_polygon_offset_rot_structured_grid():
     except:
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
-    p = Polygon([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.)),
-                 (15, 10. + 1.5 * np.sqrt(200.)), (5, 10. + 1.5 * np.sqrt(200.))])
+    p = Polygon([(5, 10. + np.sqrt(200.)),
+                 (15, 10. + np.sqrt(200.)),
+                 (15, 10. + 1.5 * np.sqrt(200.)),
+                 (5, 10. + 1.5 * np.sqrt(200.))])
     ix = GridIntersect(sgr, method="structured")
     result = ix.intersect_polygon(p)
     # assert len(result) == 3.
     return result
 
 
-def test_point_offset_rot_structured_grid_shapely():
+def test_point_offset_rot_structured_grid_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -1010,13 +1014,13 @@ def test_point_offset_rot_structured_grid_shapely():
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     p = Point(10., 10 + np.sqrt(200.))
-    ix = GridIntersect(sgr, method="strtree")
+    ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect_point(p)
     # assert len(result) == 1.
     return result
 
 
-def test_linestring_offset_rot_structured_grid_shapely():
+def test_linestring_offset_rot_structured_grid_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
@@ -1024,25 +1028,89 @@ def test_linestring_offset_rot_structured_grid_shapely():
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
     ls = LineString([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.))])
-    ix = GridIntersect(sgr, method="strtree")
+    ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect_linestring(ls)
     # assert len(result) == 2.
     return result
 
 
-def test_polygon_offset_rot_structured_grid_shapely():
+def test_polygon_offset_rot_structured_grid_shapely(rtree=True):
     # avoid test fail when shapely not available
     try:
         import shapely
     except:
         return
     sgr = get_rect_grid(angrot=45., xyoffset=10.)
-    p = Polygon([(5, 10. + np.sqrt(200.)), (15, 10. + np.sqrt(200.)),
-                 (15, 10. + 1.5 * np.sqrt(200.)), (5, 10. + 1.5 * np.sqrt(200.))])
-    ix = GridIntersect(sgr, method="strtree")
+    p = Polygon([(5, 10. + np.sqrt(200.)),
+                 (15, 10. + np.sqrt(200.)),
+                 (15, 10. + 1.5 * np.sqrt(200.)),
+                 (5, 10. + 1.5 * np.sqrt(200.))])
+    ix = GridIntersect(sgr, method="vertex", rtree=rtree)
     result = ix.intersect_polygon(p)
     # assert len(result) == 3.
     return result
+
+
+# %% test non strtree shapely intersect
+
+def test_all_intersections_shapely_no_strtree():
+    """avoid adding separate tests for rtree=False"""
+    # Points
+    # regular grid
+    test_rect_grid_point_on_inner_boundary_shapely(rtree=False)
+    test_rect_grid_point_on_outer_boundary_shapely(rtree=False)
+    test_rect_grid_point_outside_shapely(rtree=False)
+    test_rect_grid_multipoint_in_one_cell_shapely(rtree=False)
+    test_rect_grid_multipoint_in_multiple_cells_shapely(rtree=False)
+    # vertex grid
+    test_tri_grid_point_on_inner_boundary(rtree=False)
+    test_tri_grid_point_on_outer_boundary(rtree=False)
+    test_tri_grid_point_outside(rtree=False)
+    test_tri_grid_multipoint_in_multiple_cells(rtree=False)
+    test_tri_grid_multipoint_in_one_cell(rtree=False)
+
+    # LineStrings
+    # regular grid
+    test_rect_grid_linestring_on_inner_boundary_shapely(rtree=False)
+    test_rect_grid_linestring_on_outer_boundary_shapely(rtree=False)
+    test_rect_grid_linestring_outside_shapely(rtree=False)
+    test_rect_grid_linestring_in_2cells_shapely(rtree=False)
+    test_rect_grid_linestring_in_and_out_of_cell_shapely(rtree=False)
+    test_rect_grid_multilinestring_in_one_cell_shapely(rtree=False)
+    # vertex grid
+    test_tri_grid_linestring_on_inner_boundary(rtree=False)
+    test_tri_grid_linestring_on_outer_boundary(rtree=False)
+    test_tri_grid_linestring_outside(rtree=False)
+    test_tri_grid_linestring_in_2cells(rtree=False)
+    test_tri_grid_multilinestring_in_one_cell(rtree=False)
+
+    # Polygons
+    # regular grid
+    test_rect_grid_polygon_on_inner_boundary_shapely(rtree=False)
+    test_rect_grid_polygon_on_outer_boundary_shapely(rtree=False)
+    test_rect_grid_polygon_outside_shapely(rtree=False)
+    test_rect_grid_polygon_in_2cells_shapely(rtree=False)
+    test_rect_grid_polygon_with_hole_shapely(rtree=False)
+    test_rect_grid_multipolygon_in_one_cell_shapely(rtree=False)
+    test_rect_grid_multipolygon_in_multiple_cells_shapely(rtree=False)
+    # vertex grid
+    test_tri_grid_polygon_on_inner_boundary(rtree=False)
+    test_tri_grid_polygon_on_outer_boundary(rtree=False)
+    test_tri_grid_polygon_outside(rtree=False)
+    test_tri_grid_polygon_in_2cells(rtree=False)
+    test_tri_grid_polygon_with_hole(rtree=False)
+    test_tri_grid_multipolygon_in_multiple_cells(rtree=False)
+    test_tri_grid_multipolygon_in_one_cell(rtree=False)
+
+    # offset and rotated grids
+    test_point_offset_rot_structured_grid_shapely(rtree=False)
+    test_linestring_offset_rot_structured_grid_shapely(rtree=False)
+    ix = test_polygon_offset_rot_structured_grid_shapely(rtree=False)
+
+    return ix
+
+
+# %% test rasters
 
 
 def test_rasters():
@@ -1107,8 +1175,3 @@ def test_rasters():
         raise AssertionError
 
     del rio
-
-
-if __name__ == "__main__":
-    # test_rasters()
-    pass
