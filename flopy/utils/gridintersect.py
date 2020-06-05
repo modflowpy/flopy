@@ -3,7 +3,7 @@ try:
     import matplotlib.pyplot as plt
 except ModuleNotFoundError:
     plt = None
-    
+
 from .geometry import transform
 
 try:
@@ -15,6 +15,7 @@ try:
     shply = True
 except ModuleNotFoundError:
     shply = False
+
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
     """
