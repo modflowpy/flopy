@@ -780,8 +780,8 @@ class DataStorage(object):
                     data['data'] = [data['data']]
 
             if 'filename' in data:
-                multiplier, iprn, binary = self.process_open_close_line(data,
-                                                                        layer)
+                multiplier, iprn, binary = \
+                    self.process_open_close_line(data, layer)[0:3]
                 # store location to file
                 self.store_external(data['filename'], layer, [multiplier],
                                     print_format=iprn, binary=binary,
@@ -815,9 +815,7 @@ class DataStorage(object):
                 new_data.insert(0, 'open/close')
             else:
                 new_data = data[:]
-            multiplier, iprn, binary = self.process_open_close_line(new_data,
-                                                                    layer,
-                                                                    True)
+            self.process_open_close_line(new_data, layer, True)
             return True
         # try to resolve as internal array
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
@@ -1096,13 +1094,23 @@ class DataStorage(object):
             else:
                 self.layer_storage[layer_new].factor = multiplier
                 self.layer_storage[layer_new].internal_data = None
+        self.set_ext_file_attributes(layer_new, file_path, print_format,
+                                     binary)
 
+    def set_ext_file_attributes(self, layer, file_path,
+                                print_format, binary):
         # point to the external file and set flags
-        self.layer_storage[layer_new].fname = file_path
-        self.layer_storage[layer_new].iprn = print_format
-        self.layer_storage[layer_new].binary = binary
-        self.layer_storage[layer_new].data_storage_type = \
+        self.layer_storage[layer].fname = file_path
+        self.layer_storage[layer].iprn = print_format
+        self.layer_storage[layer].binary = binary
+        self.layer_storage[layer].data_storage_type = \
                 DataStorageType.external_file
+
+    def point_to_existing_external_file(self, arr_line, layer):
+        multiplier, print_format, binary, \
+        data_file = self.process_open_close_line(arr_line, layer, store=False)
+        self.set_ext_file_attributes(layer, data_file, print_format, binary)
+        self.layer_storage[layer].factor = multiplier
 
     def external_to_external(self, new_external_file, multiplier=None,
                              layer=None, binary=None):
@@ -1476,7 +1484,7 @@ class DataStorage(object):
         model_name = data_dim.package_dim.model_dim[0].model_name
         self._simulation_data.mfpath.add_ext_file(data_file, model_name)
 
-        return multiplier, print_format, binary
+        return multiplier, print_format, binary, data_file
 
     @staticmethod
     def _tupleize_data(data):
@@ -1640,7 +1648,7 @@ class DataStorage(object):
             if all_none:
                 return None
             else:
-                return aux_data
+                return np.stack(aux_data, axis=0)
         else:
             return full_data
 

@@ -1,0 +1,296 @@
+                                   MODFLOW 6
+                U.S. GEOLOGICAL SURVEY MODULAR HYDROLOGIC MODEL
+                          GROUNDWATER FLOW MODEL (GWF)
+                            VERSION 6.0.4 03/13/2019
+
+  MODFLOW 6 compiled Mar 14 2019 09:20:00 with GFORTRAN compiler (ver. 8.2.0)
+
+This software has been approved for release by the U.S. Geological
+Survey (USGS). Although the software has been subjected to rigorous
+review, the USGS reserves the right to update the software as needed
+pursuant to further analysis and review. No warranty, expressed or
+implied, is made by the USGS or the U.S. Government as to the
+functionality of the software and related material nor shall the
+fact of release constitute any such warranty. Furthermore, the
+software is released on condition that neither the USGS nor the U.S.
+Government shall be held liable for any damages resulting from its
+authorized or unauthorized use. Also refer to the USGS Water
+Resources Software User Rights Notice for complete use, copyright,
+and distribution information.
+
+
+MODFLOW was compiled using uniform precision.
+Precision of REAL variables: 15
+
+
+ OPENED AdvGW_tidal.ic
+ FILE TYPE:IC6                    UNIT 1005   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.npf
+ FILE TYPE:NPF6                   UNIT 1006   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.wel
+ FILE TYPE:WEL6                   UNIT 1007   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.riv
+ FILE TYPE:RIV6                   UNIT 1008   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal_1.rch
+ FILE TYPE:RCH6                   UNIT 1009   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal_2.rch
+ FILE TYPE:RCH6                   UNIT 1010   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal_3.rch
+ FILE TYPE:RCH6                   UNIT 1011   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.oc
+ FILE TYPE:OC6                    UNIT 1012   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.dis
+ FILE TYPE:DIS6                   UNIT 1013   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.ghb
+ FILE TYPE:GHB6                   UNIT 1014   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.sto
+ FILE TYPE:STO6                   UNIT 1015   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.evt
+ FILE TYPE:EVT6                   UNIT 1016   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+ OPENED AdvGW_tidal.obs
+ FILE TYPE:OBS6                   UNIT 1017   STATUS:OLD
+ FORMAT:FORMATTED              ACCESS:SEQUENTIAL
+ ACTION:READ
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE
+                 WEL =           0.0000                   WEL =           0.0000     WEL
+                 RIV =       19677.9327                   RIV =       19677.9327     RIV
+                 GHB =           0.0000                   GHB =           0.0000     GHB-TIDAL
+                 RCH =       30750.0000                   RCH =       30750.0000     RCH-ZONE_1
+                 RCH =        6800.0000                   RCH =        6800.0000     RCH-ZONE_2
+                 RCH =       24050.0000                   RCH =       24050.0000     RCH-ZONE_3
+                 EVT =           0.0000                   EVT =           0.0000     EVT
+
+            TOTAL IN =       81277.9327              TOTAL IN =       81277.9327
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =           0.0000                STO-SS =           0.0000     STORAGE
+              STO-SY =           0.0000                STO-SY =           0.0000     STORAGE
+                 WEL =           0.0000                   WEL =           0.0000     WEL
+                 RIV =        4891.5846                   RIV =        4891.5846     RIV
+                 GHB =       76116.3012                   GHB =       76116.3012     GHB-TIDAL
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_1
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_2
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_3
+                 EVT =         270.0459                   EVT =         270.0459     EVT
+
+           TOTAL OUT =       81277.9317             TOTAL OUT =       81277.9317
+
+            IN - OUT =       1.0332E-03              IN - OUT =       1.0332E-03
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP    1 IN STRESS PERIOD    1
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  86400.      1440.0      24.000      1.0000     2.73785E-03
+ STRESS PERIOD TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+         TOTAL TIME  86400.      1440.0      24.000      1.0000     2.73785E-03
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  120, STRESS PERIOD   2
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       45634.5133                STO-SS =          53.4129     STORAGE
+              STO-SY =       85658.9163                STO-SY =        8692.4699     STORAGE
+                 WEL =           0.0000                   WEL =           0.0000     WEL
+                 RIV =      521527.7300                   RIV =       28541.3439     RIV
+                 GHB =           0.0000                   GHB =           0.0000     GHB-TIDAL
+                 RCH =      235750.0000                   RCH =       20500.0000     RCH-ZONE_1
+                 RCH =       80800.0000                   RCH =        7598.3333     RCH-ZONE_2
+                 RCH =      264550.0000                   RCH =       22116.2500     RCH-ZONE_3
+                 EVT =           0.0000                   EVT =           0.0000     EVT
+
+            TOTAL IN =     1233921.1596              TOTAL IN =       87501.8100
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       46352.6550                STO-SS =       14308.0596     STORAGE
+              STO-SY =      336599.3388                STO-SY =       10116.9414     STORAGE
+                 WEL =        2500.0000                   WEL =         250.0000     WEL
+                 RIV =        6829.5406                   RIV =        2028.7842     RIV
+                 GHB =      838630.3721                   GHB =       60521.4761     GHB-TIDAL
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_1
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_2
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_3
+                 EVT =        3009.2429                   EVT =         276.5487     EVT
+
+           TOTAL OUT =     1233921.1494             TOTAL OUT =       87501.8100
+
+            IN - OUT =       1.0215E-02              IN - OUT =       1.3167E-05
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP  120 IN STRESS PERIOD    2
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  7200.0      120.00      2.0000     8.33333E-02 2.28154E-04
+ STRESS PERIOD TIME 8.64000E+05  14400.      240.00      10.000     2.73785E-02
+         TOTAL TIME 9.50400E+05  15840.      264.00      11.000     3.01164E-02
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  120, STRESS PERIOD   3
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =       92326.1229                STO-SS =       13063.9452     STORAGE
+              STO-SY =      142015.7165                STO-SY =        8904.1423     STORAGE
+                 WEL =           0.0000                   WEL =           0.0000     WEL
+                 RIV =      719514.5899                   RIV =       19131.2997     RIV
+                 GHB =           0.0000                   GHB =           0.0000     GHB-TIDAL
+                 RCH =      543250.0000                   RCH =       30750.0000     RCH-ZONE_1
+                 RCH =      150800.0000                   RCH =        6405.0000     RCH-ZONE_2
+                 RCH =      492050.0000                   RCH =       23394.5833     RCH-ZONE_3
+                 EVT =           0.0000                   EVT =           0.0000     EVT
+
+            TOTAL IN =     2139956.4293              TOTAL IN =      101648.9705
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =       91010.2622                STO-SS =          16.2689     STORAGE
+              STO-SY =      368213.1394                STO-SY =        2025.1984     STORAGE
+                 WEL =       25500.0000                   WEL =        2300.0000     WEL
+                 RIV =       53227.3651                   RIV =        5928.1102     RIV
+                 GHB =     1596232.3720                   GHB =       91103.3212     GHB-TIDAL
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_1
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_2
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_3
+                 EVT =        5773.2782                   EVT =         276.0718     EVT
+
+           TOTAL OUT =     2139956.4170             TOTAL OUT =      101648.9705
+
+            IN - OUT =       1.2296E-02              IN - OUT =       6.8287E-05
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP  120 IN STRESS PERIOD    3
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  7200.0      120.00      2.0000     8.33333E-02 2.28154E-04
+ STRESS PERIOD TIME 8.64000E+05  14400.      240.00      10.000     2.73785E-02
+         TOTAL TIME 1.81440E+06  30240.      504.00      21.000     5.74949E-02
+
+
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP  120, STRESS PERIOD   4
+  ---------------------------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T          PACKAGE NAME
+     ------------------                 ------------------------                     ----------------
+
+           IN:                                      IN:
+           ---                                      ---
+              STO-SS =      136641.8243                STO-SS =          12.0295     STORAGE
+              STO-SY =      201207.5005                STO-SY =        6276.0852     STORAGE
+                 WEL =           0.0000                   WEL =           0.0000     WEL
+                 RIV =      905396.1710                   RIV =       18103.0142     RIV
+                 GHB =           0.0000                   GHB =           0.0000     GHB-TIDAL
+                 RCH =     1055750.0000                   RCH =       51250.0000     RCH-ZONE_1
+                 RCH =      218800.0000                   RCH =        7196.6667     RCH-ZONE_2
+                 RCH =      739050.0000                   RCH =       25989.1667     RCH-ZONE_3
+                 EVT =           0.0000                   EVT =           0.0000     EVT
+
+            TOTAL IN =     3256845.4958              TOTAL IN =      108826.9623
+
+          OUT:                                     OUT:
+          ----                                     ----
+              STO-SS =      137620.6061                STO-SS =       11424.0679     STORAGE
+              STO-SY =      593759.5707                STO-SY =       24995.5298     STORAGE
+                 WEL =       32200.0000                   WEL =         670.0000     WEL
+                 RIV =      128064.8995                   RIV =        8958.9833     RIV
+                 GHB =     2356641.5987                   GHB =       62497.5547     GHB-TIDAL
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_1
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_2
+                 RCH =           0.0000                   RCH =           0.0000     RCH-ZONE_3
+                 EVT =        8558.8104                   EVT =         280.8262     EVT
+
+           TOTAL OUT =     3256845.4854             TOTAL OUT =      108826.9618
+
+            IN - OUT =       1.0424E-02              IN - OUT =       4.9647E-04
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+
+
+
+
+         TIME SUMMARY AT END OF TIME STEP  120 IN STRESS PERIOD    4
+                    SECONDS     MINUTES      HOURS       DAYS        YEARS
+                    -----------------------------------------------------------
+   TIME STEP LENGTH  7200.0      120.00      2.0000     8.33333E-02 2.28154E-04
+ STRESS PERIOD TIME 8.64000E+05  14400.      240.00      10.000     2.73785E-02
+         TOTAL TIME 2.67840E+06  44640.      744.00      31.000     8.48734E-02
+

@@ -1313,6 +1313,7 @@ class MFSimulation(PackageContainer):
                 del self._exchange_files[package.filename]
             if package.filename in self._ims_files:
                 del self._ims_files[package.filename]
+                self._remove_ims_soultion_group(package.filename)
             if package.filename in self._ghost_node_files:
                 del self._ghost_node_files[package.filename]
             if package.filename in self._mover_files:
@@ -1748,6 +1749,31 @@ class MFSimulation(PackageContainer):
         else:
             return (package.package_type,)
 
+    def _remove_ims_soultion_group(self, ims_file):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file' \
+                          '.'.format(solution_group_num[0])
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+
+            new_array = []
+            for record in rec_array:
+                if record.slnfname == ims_file:
+                    continue
+                else:
+                    new_array.append(record)
+
+            if not new_array:
+                new_array = None
+
+            solution_recarray.set_data(new_array, solution_group_num[0])
+
     def _append_to_ims_solution_group(self, ims_file, new_models):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
@@ -1767,12 +1793,12 @@ class MFSimulation(PackageContainer):
                 for index, item in enumerate(record):
                     if record[1] == ims_file or item not in new_models:
                         new_record.append(item)
-                        if index > 1:
-                            rec_model_dict[item] = 1
+                        if index > 1 and item is not None:
+                            rec_model_dict[item.lower()] = 1
 
                 if record[1] == ims_file:
                     for model in new_models:
-                        if model not in rec_model_dict:
+                        if model.lower() not in rec_model_dict:
                             new_record.append(model)
 
                 new_array.append(tuple(new_record))

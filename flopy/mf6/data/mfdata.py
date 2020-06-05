@@ -386,7 +386,7 @@ class MFData(DataInterface):
         return description
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         self.enabled = True
 
     def is_valid(self):
