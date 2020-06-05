@@ -3,8 +3,7 @@ try:
     import matplotlib.pyplot as plt
 except ModuleNotFoundError:
     plt = None
-    print("matplotlib is needed for grid intersect operations! Please " +
-          "matplotlib if you need to use grid intersect functionality.")
+    
 from .geometry import transform
 
 try:
@@ -13,10 +12,9 @@ try:
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
     from shapely.prepared import prep
+    shply = True
 except ModuleNotFoundError:
-    print("Shapely is needed for grid intersect operations! Please install " +
-          "shapely if you need to use grid intersect functionality.")
-
+    shply = False
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
     """
@@ -108,6 +106,11 @@ class GridIntersect:
             loop through all model gridcells (which is generally slower).
 
         """
+        if not shply:
+            msg = ("Shapely is needed for grid intersect operations! "
+                   "Please install shapely if you need to use grid intersect "
+                   "functionality.")
+            raise ModuleNotFoundError(msg)
 
         self.mfgrid = mfgrid
         self.method = method
@@ -681,7 +684,7 @@ class GridIntersect:
             return np.recarray(0, names=["cellids", "vertices",
                                          "lengths", "ixshapes"],
                                formats=["O", "O", "f8", "O"])
-        if lineclip.geom_type is 'MultiLineString':  # there are multiple lines
+        if lineclip.geom_type == 'MultiLineString':  # there are multiple lines
             nodelist, lengths, vertices = [], [], []
             ixshapes = []
             for ls in lineclip:
@@ -1306,7 +1309,7 @@ class GridIntersect:
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
             raise ModuleNotFoundError(msg)
-        
+
         if ax is None:
             _, ax = plt.subplots()
 
