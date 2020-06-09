@@ -12,9 +12,9 @@ if not os.path.exists(opth):
 
 tabfiles_high = ['seg1_high.tab', 'seg9.tab']
 
-nwt_exe_name = 'mfnwt-ag'
+nwt_exe_name = 'mfnwt'
 if platform.system().lower() == "windows":
-    nwt_exe_name = "mfnwt-ag.exe"
+    nwt_exe_name = "mfnwt.exe"
 
 nwt_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        nwt_exe_name)
