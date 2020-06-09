@@ -62,6 +62,20 @@ class ModflowStr(Package):
         datasets 6 and 8 and the dtype for datasets 9 and 10 data in
         stress_period_data and segment_data dictionaries.
         (default is None)
+    irdflg : integer or dictionary
+        is a integer or dictionary containing a integer flag, when positive
+        suppresses printing of the stream input data for a stress period. If
+        an integer is passed, all stress periods will use the same value.
+        If a dictionary is passed, stress periods not in the dictionary will
+        assigned a value of 1. Default is None which will assign a value of 1
+        to all stress periods.
+    iptflg : integer or dictionary
+        is a integer or dictionary containing a integer flag, when positive
+        suppresses printing of stream results for a stress period. If an
+        integer is passed, all stress periods will use the same value.
+        If a dictionary is passed, stress periods not in the dictionary will
+        assigned a value of 1. Default is None which will assign a value of 1
+        to all stress periods.
     stress_period_data : dictionary of reach data
         Each dictionary contains a list of str reach data for a stress period.
 
@@ -202,17 +216,17 @@ class ModflowStr(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> strd = {}
-    >>> strd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this river boundary will be
+    >>> strd[0] = [[2, 3, 4, 15.6, 1050., -4]]  #this str boundary will be
     >>>                                         #applied to all stress periods
-    >>> str8 = flopy.modflow.ModflowStr(m, stress_period_data=strd)
+    >>> str = flopy.modflow.ModflowStr(m, stress_period_data=strd)
 
     """
 
     def __init__(self, model, mxacts=0, nss=0, ntrib=0, ndiv=0, icalc=0,
                  const=86400., ipakcb=None, istcb2=None,
                  dtype=None, stress_period_data=None, segment_data=None,
-                 extension='str', unitnumber=None, filenames=None,
-                 options=None, **kwargs):
+                 irdflg=None, iptflg=None, extension='str',
+                 unitnumber=None, filenames=None, options=None, **kwargs):
         """
         Package constructor.
 
@@ -289,6 +303,45 @@ class ModflowStr(Package):
 
         # parameters are not supported
         self.npstr = 0
+
+        # dataset 5
+        # check type of irdflg and iptflg
+        msg = ''
+        if irdflg is not None and not isinstance(irdflg, (int, dict)):
+            msg = 'irdflg'
+        if iptflg is not None and not isinstance(iptflg, (int, dict)):
+            if len(msg) > 0:
+                msg += ' and '
+            msg += 'iptflg'
+        if len(msg) > 0:
+            msg += ' must be an integer or a dictionary'
+            raise TypeError(msg)
+
+        # process irdflg
+        self.irdflg = {}
+        for n in range(self.parent.nper):
+            if irdflg is None:
+                self.irdflg[n] = 1
+            elif isinstance(irdflg, int):
+                self.irdflg[n] = irdflg
+            elif isinstance(irdflg, dict):
+                if n in irdflg:
+                    self.irdflg[n] = irdflg[n]
+                else:
+                    self.irdflg[n] = 1
+
+        # process iptflg
+        self.iptflg = {}
+        for n in range(self.parent.nper):
+            if iptflg is None:
+                self.iptflg[n] = 1
+            elif isinstance(iptflg, int):
+                self.iptflg[n] = iptflg
+            elif isinstance(iptflg, dict):
+                if n in iptflg:
+                    self.iptflg[n] = iptflg[n]
+                else:
+                    self.iptflg[n] = 1
 
         # determine dtype for dataset 6
         if dtype is not None:
@@ -482,9 +535,10 @@ class ModflowStr(Package):
                     itmp = -1
                 else:
                     itmp = tdata.shape[0]
-            line = '{:10d}{:10d}{:10d}  # stress period {}\n'.format(itmp, 0,
-                                                                     0,
-                                                                     iper + 1)
+            line = '{:10d}'.format(itmp) + \
+                   '{:10d}'.format(self.irdflg[iper]) + \
+                   '{:10d}'.format(self.iptflg[iper]) + \
+                   '  # stress period {}\n'.format(iper + 1)
             f_str.write(line)
             if itmp > 0:
                 tdata = np.recarray.copy(tdata)
@@ -647,8 +701,10 @@ class ModflowStr(Package):
                                      model.verbose)
 
         if nper is None:
-            nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
+            nper = model.nper
 
+        irdflg = {}
+        iptflg = {}
         stress_period_data = {}
         segment_data = {}
         for iper in range(nper):
@@ -659,12 +715,19 @@ class ModflowStr(Package):
             if line == '':
                 break
             t = line.strip().split()
+
+            # set itmp
             itmp = int(t[0])
-            irdflg, iptflg = 0, 0
+
+            # set irdflg and iptflg - initialize to 0 since this is how
+            # MODFLOW would interpret a missing value
+            iflg0, iflg1 = 0, 0
             if len(t) > 1:
-                irdflg = int(t[1])
+                iflg0 = int(t[1])
             if len(t) > 2:
-                iptflg = int(t[2])
+                iflg1 = int(t[2])
+            irdflg[iper] = iflg0
+            iptflg[iper] = iflg1
 
             if itmp == 0:
                 bnd_output = None
@@ -810,6 +873,7 @@ class ModflowStr(Package):
         strpak = ModflowStr(model, mxacts=mxacts, nss=nss,
                             ntrib=ntrib, ndiv=ndiv, icalc=icalc,
                             const=const, ipakcb=ipakcb, istcb2=istcb2,
+                            iptflg=iptflg, irdflg=irdflg,
                             stress_period_data=stress_period_data,
                             segment_data=segment_data,
                             options=options, unitnumber=unitnumber,
