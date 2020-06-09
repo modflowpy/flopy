@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import os
 import platform
 import socket
@@ -624,24 +623,26 @@ class NetCdf(object):
             needed for the netcdf file
         """
         try:
-            from pyproj import Proj, transform
-        except Exception as e:
-            raise Exception("NetCdf error importing pyproj module:\n" + str(e))
+            import pyproj
+        except ImportError as e:
+            raise ImportError(
+                "NetCdf error importing pyproj module:\n" + str(e))
+        from distutils.version import LooseVersion
+
+        # Check if using newer pyproj version conventions
+        pyproj220 = LooseVersion(pyproj.__version__) >= LooseVersion('2.2.0')
 
         proj4_str = self.proj4_str
         print('initialize_geometry::proj4_str = {}'.format(proj4_str))
 
         self.log("building grid crs using proj4 string: {}".format(proj4_str))
-        try:
-            self.grid_crs = Proj(proj4_str, preserve_units=True, errcheck=True)
 
-        except Exception as e:
-            self.log("error building grid crs:\n{0}".format(str(e)))
-            raise Exception("error building grid crs:\n{0}".format(str(e)))
+        if pyproj220:
+            self.grid_crs = pyproj.CRS(proj4_str)
+        else:
+            self.grid_crs = pyproj.Proj(proj4_str, preserve_units=True)
 
         print('initialize_geometry::self.grid_crs = {}'.format(self.grid_crs))
-
-        self.log("building grid crs using proj4 string: {}".format(proj4_str))
 
         vmin, vmax = self.model_grid.botm.min(), \
                      self.model_grid.top.max()
@@ -654,21 +655,26 @@ class NetCdf(object):
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
-        nc_crs = Proj(self.nc_epsg_str)
+
+        if pyproj220:
+            nc_crs = pyproj.CRS(self.nc_epsg_str)
+            self.transformer = pyproj.Transformer.from_crs(
+                self.grid_crs, nc_crs, always_xy=True)
+        else:
+            nc_crs = pyproj.Proj(self.nc_epsg_str)
+            self.transformer = None
+
         print('initialize_geometry::nc_crs = {}'.format(nc_crs))
 
-        self.log("projecting grid cell center arrays " + \
-                 "from {} to {}".format(str(self.grid_crs.srs),
-                                        str(nc_crs.srs)))
-        try:
-            self.xs, self.ys = transform(self.grid_crs, nc_crs, xs, ys)
-        except Exception as e:
-            self.log("error projecting:\n{0}".format(str(e)))
-            raise Exception("error projecting:\n{0}".format(str(e)))
+        if pyproj220:
+            print('transforming coordinates using = {}'
+                  .format(self.transformer))
 
-        self.log("projecting grid cell center arrays " + \
-                 "from {0} to {1}".format(str(self.grid_crs),
-                                          str(nc_crs)))
+        self.log("projecting grid cell center arrays")
+        if pyproj220:
+            self.xs, self.ys = self.transformer.transform(xs, ys)
+        else:
+            self.xs, self.ys = pyproj.transform(self.grid_crs, nc_crs, xs, ys)
 
         # get transformed bounds and record to check against ScienceBase later
         xmin, xmax, ymin, ymax = self.model_grid.extent
@@ -676,10 +682,13 @@ class NetCdf(object):
                          [xmin, ymax],
                          [xmax, ymax],
                          [xmax, ymin]])
-        x, y = transform(self.grid_crs, nc_crs, *bbox.transpose())
+
+        if pyproj220:
+            x, y = self.transformer.transform(*bbox.transpose())
+        else:
+            x, y = pyproj.transform(self.grid_crs, nc_crs, *bbox.transpose())
         self.bounds = x.min(), y.min(), x.max(), y.max()
         self.vbounds = vmin, vmax
-        pass
 
     def initialize_file(self, time_values=None):
         """
@@ -704,9 +713,9 @@ class NetCdf(object):
         try:
             import netCDF4
         except Exception as e:
-             self.logger.warn("error importing netCDF module")
-             msg = "NetCdf error importing netCDF4 module:\n" + str(e)
-             raise Exception(msg)
+            self.logger.warn("error importing netCDF module")
+            msg = "NetCdf error importing netCDF4 module:\n" + str(e)
+            raise Exception(msg)
 
         # open the file for writing
         try:
@@ -948,8 +957,9 @@ class NetCdf(object):
         for dim in dimensions:
             if dim.lower() == "time":
                 if "time" not in attributes:
-                    attribs = {"units": "{} since {}".format(self.time_units,
-                                                         self.start_datetime),
+                    unit_value = "{} since {}".format(self.time_units,
+                                                      self.start_datetime)
+                    attribs = {"units": unit_value,
                                "standard_name": "time",
                                "long_name": NC_LONG_NAMES.get("time", "time"),
                                "calendar": "gregorian",
@@ -1234,11 +1244,6 @@ class NetCdf(object):
         One major limitation is that variables from mflists often aren't described
         in the docstrings.
         """
-        try:
-            from numpydoc.docscrape import NumpyDocString
-        except Exception as e:
-            msg = 'NetCdf error importing numpydoc module:\n' + str(e)
-            raise Exception(msg)
 
         def startstop(ds):
             """Get just the Parameters section of the docstring."""

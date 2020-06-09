@@ -49,6 +49,9 @@ class MFBlockHeader(object):
         writes block header to file object 'fd'
     write_footer : (fd : file object)
         writes block footer to file object 'fd'
+    set_all_data_external
+        sets the block's list and array data to be stored externally
+
     """
     def __init__(self, name, variable_strings, comment, simulation_data=None,
                  path=None):
@@ -603,6 +606,7 @@ class MFBlock(object):
             arr_line = datautil.PyListUtil.split_data_line(line)
 
         # if block not empty
+        external_file_info = None
         if not (len(arr_line[0]) > 2 and arr_line[0][:3].upper() == 'END'):
             if arr_line[0].lower() == 'open/close':
                 # open block contents from external file
@@ -613,8 +617,8 @@ class MFBlock(object):
                             VerbosityLevel.verbose.value:
                         print('        opening external file "{}"..'
                               '.'.format(arr_line[1]))
-                    self.external_file_name = arr_line[1]
-                    fd_block = open(os.path.join(fd_path, self.external_file_name),
+                    external_file_info = arr_line
+                    fd_block = open(os.path.join(fd_path, arr_line[1]),
                                     'r')
                     # read first line of external file
                     line = fd_block.readline()
@@ -640,7 +644,8 @@ class MFBlock(object):
                               '.'.format(dataset.structure.name))
                     next_line = dataset.load(line, fd_block,
                                              self.block_headers[-1],
-                                             initial_comment)
+                                             initial_comment,
+                                             external_file_info)
                 except MFDataException as mfde:
                     raise MFDataException(
                         mfdata_except=mfde, model=self._container_package.
@@ -906,6 +911,16 @@ class MFBlock(object):
                     return True
         return False
 
+    def set_all_data_external(self, base_name):
+        for key, dataset in self.datasets.items():
+            if isinstance(dataset, mfdataarray.MFArray) or \
+                    (isinstance(dataset, mfdatalist.MFList) and
+                    dataset.structure.type == DatumType.recarray) and \
+                    dataset.enabled:
+                dataset.store_as_external_file(
+                    '{}_{}.txt'.format(base_name, dataset.structure.name),
+                    replace_existing_external=False)
+
     def _find_repeating_datasets(self):
         repeating_datasets = []
         for key, dataset in self.datasets.items():
@@ -1089,6 +1104,8 @@ class MFPackage(PackageContainer, PackageInterface):
         describes the blocks and data contain in this package
     dimensions : PackageDimension
         resolves data dimensions for data within this package
+    set_all_data_external
+        sets the package's list and array data to be stored externally
 
     Methods
     -------
@@ -1511,6 +1528,15 @@ class MFPackage(PackageContainer, PackageInterface):
         # update sub-packages
         for package in self._packagelist:
             package.set_model_relative_path(model_ws)
+
+    def set_all_data_external(self):
+        # set blocks
+        for key, block in self.blocks.items():
+            file_name = os.path.split(self.filename)[1]
+            block.set_all_data_external(file_name)
+        # set sub-packages
+        for package in self._packagelist:
+            package.set_all_data_external()
 
     def load(self, strict=True):
         # open file
@@ -1935,10 +1961,10 @@ class MFChildPackages(object):
         if update_frecord:
             # set file record variable
             file_record = self._filerecord.get_data()
-            file_record_data = file_record[0]
+            file_record_data = file_record
             new_file_record_data = []
             for item in file_record_data:
-                new_file_record_data.append((item,))
+                new_file_record_data.append((item[0],))
             new_file_record_data.append((fname,))
             self._filerecord.set_data(new_file_record_data)
 

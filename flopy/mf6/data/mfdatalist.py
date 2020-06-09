@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import math
 import sys
+import os
 import inspect
 import numpy as np
 from ..utils.mfenums import DiscretizationType
@@ -11,7 +12,7 @@ from ...utils import datautil
 from ...datbase import DataListInterface, DataType
 from .mffileaccess import MFFileAccessList
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
-from .mfdatautil import to_string
+from .mfdatautil import to_string, iterable
 
 
 class MFList(mfdata.MFMultiDimVar, DataListInterface):
@@ -91,6 +92,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
     get_file_entry : (layer : int) : string
         Returns a string containing the data in layer "layer".  For unlayered
         data do not pass in "layer".
+    store_as_external_file : (external_file_path : str, binary : bool)
+        store all data externally in file external_file_path. the binary
+        allows storage in a binary file. If replace_existing_external is set
+        to False, this method will not do anything if the data is already in
+        an external file.
 
     See Also
     --------
@@ -225,6 +231,23 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
 
         self._data_line = None
 
+    def store_as_external_file(self, external_file_path, binary=False,
+                               replace_existing_external=True):
+        # only store data externally (do not subpackage info)
+        if self.structure.construct_package is None:
+            storage = self._get_storage_obj()
+            # check if data is already stored external
+            if replace_existing_external or storage is None or \
+                    storage.layer_storage.first_item().data_storage_type == \
+                    DataStorageType.internal_array:
+                data = self._get_data()
+                # if not empty dataset
+                if data is not None:
+                    external_data = {'filename': external_file_path,
+                                     'data': self._get_data(),
+                                     'binary': binary}
+                    self._set_data(external_data)
+
     def has_data(self):
         try:
             if self._get_storage_obj() is None:
@@ -239,7 +262,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def get_data(self, apply_mult=False, **kwargs):
+    def _get_data(self, apply_mult=False, **kwargs):
         try:
             if self._get_storage_obj() is None:
                 return None
@@ -253,7 +276,30 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
 
-    def set_data(self, data, autofill=False):
+    def get_data(self, apply_mult=False, **kwargs):
+        return self._get_data(apply_mult, **kwargs)
+
+    def _set_data(self, data, autofill=False):
+        if isinstance(data, dict):
+            if 'data' in data:
+                data_check = data['data']
+            else:
+                data_check = None
+        else:
+            data_check = data
+        if iterable(data_check):
+            # verify data length
+            min_line_size = self.structure.get_min_record_entries()
+            if isinstance(data_check[0], np.record) or \
+                    (iterable(data_check[0]) and not
+                     isinstance(data_check[0], str)):
+                # data contains multiple records
+                for data_line in data_check:
+                    self._check_line_size(data_line, min_line_size)
+            else:
+                # data is a single record
+                self._check_line_size(data_check, min_line_size)
+        # set data
         self._resync()
         try:
             if self._get_storage_obj() is None:
@@ -268,6 +314,27 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   inspect.stack()[0][3], type_, value_,
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
+
+    def _check_line_size(self, data_line, min_line_size):
+        if 0 < len(data_line) < min_line_size:
+            min_line_size = self.structure.get_min_record_entries()
+            message = 'Data line {} only has {} entries, ' \
+                      'minimum number of entries is ' \
+                      '{}.'.format(data_line, len(data_line),
+                                   min_line_size)
+            type_, value_, traceback_ = sys.exc_info()
+            raise MFDataException(
+                self.structure.get_model(),
+                self.structure.get_package(),
+                self.structure.path,
+                'storing data',
+                self.structure.name,
+                inspect.stack()[0][3],
+                type_, value_, traceback_, message,
+                self._simulation_data.debug)
+
+    def set_data(self, data, autofill=False):
+        self._set_data(data, autofill)
 
     def append_data(self, data):
         try:
@@ -335,6 +402,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                    self._simulation_data.debug, ex)
 
     def get_file_entry(self, values_only=False,
+                       ext_file_action=ExtFileAction.copy_relative_paths):
+        return self._get_file_entry(values_only, ext_file_action)
+
+    def _get_file_entry(self, values_only=False,
                        ext_file_action=ExtFileAction.copy_relative_paths):
         try:
             # freeze model grid to boost performance
@@ -447,7 +518,8 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             for data_item in data_set.data_item_structures:
                 if data_item.is_aux:
                     try:
-                        aux_var_names = data_dim.package_dim.get_aux_variables()
+                        aux_var_names = \
+                            data_dim.package_dim.get_aux_variables()
                         if aux_var_names is not None:
                             for aux_var_name in aux_var_names[0]:
                                 if aux_var_name.lower() != 'auxiliary':
@@ -508,14 +580,15 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                 data_item, self.structure, [data_line],
                                 repeating_key=self._current_key)
                         data_val = data_line[index]
-                        if data_item.is_cellid or (data_item.possible_cellid and
-                                storage._validate_cellid([data_val], 0)):
+                        if data_item.is_cellid or (data_item.possible_cellid
+                                and storage._validate_cellid([data_val], 0)):
                             if data_item.shape is not None and \
                                     len(data_item.shape) > 0 and \
                                     data_item.shape[0] == 'ncelldim':
                                 model_grid = data_dim.get_model_grid()
                                 cellid_size = \
-                                        model_grid.get_num_spatial_coordinates()
+                                        model_grid.\
+                                            get_num_spatial_coordinates()
                                 data_item.remove_cellid(resolved_shape,
                                                         cellid_size)
                         data_size = 1
@@ -689,19 +762,23 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                                   self._simulation_data.debug)
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         super(MFList, self).load(first_line, file_handle, block_header,
                                  pre_data_comments=None)
         self._resync()
         file_access = MFFileAccessList( self.structure, self._data_dimensions,
                                         self._simulation_data, self._path,
                                         self._current_key)
-        return file_access.load_from_package(
-            first_line, file_handle, self._get_storage_obj(), pre_data_comments)
+        storage = self._get_storage_obj()
+        result = file_access.load_from_package(
+            first_line, file_handle, storage, pre_data_comments)
+        if external_file_info is not None:
+            storage.point_to_existing_external_file(external_file_info, 0)
+        return result
 
     def _new_storage(self, stress_period=0):
         return DataStorage(self._simulation_data, self._model_or_sim,
-                           self._data_dimensions, self.get_file_entry,
+                           self._data_dimensions, self._get_file_entry,
                            DataStorageType.internal_array,
                            DataStructureType.recarray,
                            stress_period=stress_period,
@@ -931,6 +1008,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     def to_array(self, kper=0, mask=False):
         return super(MFTransientList, self).to_array(kper, mask)
 
+    def remove_transient_key(self, transient_key):
+        if transient_key in self._data_storage:
+            del self._data_storage[transient_key]
+
     def add_transient_key(self, transient_key):
         super(MFTransientList, self).add_transient_key(transient_key)
         if isinstance(transient_key, int):
@@ -943,6 +1024,25 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
     @property
     def data(self):
         return self.get_data()
+
+    def store_as_external_file(self, external_file_path, binary=False,
+                               replace_existing_external=True):
+        sim_time = self._data_dimensions.package_dim.model_dim[
+            0].simulation_time
+        num_sp = sim_time.get_num_stress_periods()
+        for sp in range(0, num_sp):
+            if sp in self._data_storage:
+                self._current_key = sp
+                layer_storage = self._get_storage_obj().layer_storage
+                if layer_storage.get_total_size() > 0 and \
+                        self._get_storage_obj().layer_storage[0].\
+                        layer_storage_type != \
+                        DataStorageType.external_file:
+                    fname, ext = os.path.splitext(external_file_path)
+                    full_name = '{}_{}{}'.format(fname, sp+1, ext)
+                    super(MFTransientList, self).\
+                        store_as_external_file(full_name, binary,
+                                               replace_existing_external)
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
@@ -973,14 +1073,25 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
             return None
 
     def set_data(self, data, key=None, autofill=False):
-        if (isinstance(data, dict) or isinstance(data, OrderedDict)) and \
-                'filename' not in data:
-            # each item in the dictionary is a list for one stress period
-            # the dictionary key is the stress period the list is for
-            for key, list_item in data.items():
-                self._set_data_prep(list_item, key)
-                super(MFTransientList, self).set_data(list_item,
-                                                      autofill=autofill)
+        if (isinstance(data, dict) or isinstance(data, OrderedDict)):
+            if 'filename' not in data:
+                # each item in the dictionary is a list for one stress period
+                # the dictionary key is the stress period the list is for
+                del_keys = []
+                for key, list_item in data.items():
+                    if list_item is None:
+                        self.remove_transient_key(key)
+                        del_keys.append(key)
+                    else:
+                        self._set_data_prep(list_item, key)
+                        super(MFTransientList, self).set_data(list_item,
+                                                              autofill=
+                                                              autofill)
+                for key in del_keys:
+                    del data[key]
+            else:
+                self._set_data_prep(data['data'], key)
+                super(MFTransientList, self).set_data(data, autofill)
         else:
             if key is None:
                 # search for a key
@@ -989,8 +1100,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     key = data[new_key_index]
                 else:
                     key = 0
-            self._set_data_prep(data, key)
-            super(MFTransientList, self).set_data(data, autofill)
+            if data is None:
+                self.remove_transient_key(key)
+            else:
+                self._set_data_prep(data, key)
+                super(MFTransientList, self).set_data(data, autofill)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):
@@ -999,10 +1113,12 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                                                            ext_file_action)
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         self._load_prep(block_header)
         return super(MFTransientList, self).load(first_line, file_handle,
-                                                 pre_data_comments)
+                                                 block_header,
+                                                 pre_data_comments,
+                                                 external_file_info)
 
     def append_list_as_record(self, record, key=0):
         self._append_list_as_record_prep(record, key)
@@ -1138,4 +1254,5 @@ class MFMultipleList(MFTransientList):
 
     def get_data(self, key=None, apply_mult=False, **kwargs):
         return super(MFMultipleList, self).get_data(key=key,
-                                                    apply_mult=apply_mult)
+                                                    apply_mult=apply_mult,
+                                                    **kwargs)

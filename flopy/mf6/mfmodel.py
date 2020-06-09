@@ -77,6 +77,8 @@ class MFModel(PackageContainer, ModelInterface):
         checks the validity of the model and all of its packages
     rename_all_packages : (name : string)
         renames all packages in the model
+    set_all_data_external
+        sets the model's list and array data to be stored externally
 
     See Also
     --------
@@ -368,6 +370,35 @@ class MFModel(PackageContainer, ModelInterface):
                 epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot,
                 nodes=dis.nodes.get_data())
+
+        elif self.get_grid_type() == DiscretizationType.DISL:
+            dis = self.get_package('disl')
+            if not hasattr(dis, '_init_complete'):
+                if not hasattr(dis, 'cell1d'):
+                    # disv package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # disv package has been partially initialized
+                    self._modelgrid = VertexGrid(vertices=dis.vertices.array,
+                                                 cell1d=dis.cell1d.array,
+                                                 top=None,
+                                                 botm=None,
+                                                 idomain=None,
+                                                 lenuni=None,
+                                                 proj4=self._modelgrid.proj4,
+                                                 epsg=self._modelgrid.epsg,
+                                                 xoff=self._modelgrid.xoffset,
+                                                 yoff=self._modelgrid.yoffset,
+                                                 angrot=self._modelgrid.angrot)
+            else:
+                self._modelgrid = VertexGrid(
+                    vertices=dis.vertices.array, cell1d=dis.cell1d.array,
+                    top=dis.top.array, botm=dis.botm.array,
+                    idomain=dis.idomain.array, lenuni=dis.length_units.array,
+                    proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
+                    xoff=self._modelgrid.xoffset, yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot)
+
         else:
             return self._modelgrid
 
@@ -671,6 +702,10 @@ class MFModel(PackageContainer, ModelInterface):
                 'disu{}'.format(structure.get_version_string()),
                 0) is not None:
             return DiscretizationType.DISU
+        elif package_recarray.search_data(
+                'disl{}'.format(structure.get_version_string()),
+                0) is not None:
+            return DiscretizationType.DISL
 
         return DiscretizationType.UNDEFINED
 
@@ -907,6 +942,10 @@ class MFModel(PackageContainer, ModelInterface):
                 package.filename = '{}_{}.{}'.format(
                     name, package_type_count[package.package_type],
                     package.package_type)
+
+    def set_all_data_external(self):
+        for package in self.packagelist:
+            package.set_all_data_external()
 
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):

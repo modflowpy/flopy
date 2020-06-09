@@ -166,6 +166,7 @@ def test_sfr():
     if matplotlib is not None:
         assert isinstance(sfr.plot()[0],
                           matplotlib.axes.Axes)  # test the plot() method
+        matplotlib.pyplot.close()
 
     # trout lake example (only sfr file is included)
     # can add tests for sfr connection with lak package
@@ -552,6 +553,22 @@ def test_SfrFile():
         assert df.gradient.values[-1] == 5.502E-02
         assert df.shape == (1080, 20)
 
+    ml = flopy.modflow.Modflow.load('test1tr.nam',
+                                    model_ws=path, exe_name='mf2005')
+    ml.change_model_ws(outpath)
+    ml.write_input()
+    ml.run_model()
+
+    sfrout = SfrFile(os.path.join(outpath, 'test1tr.flw'))
+    assert sfrout.ncol == 16, sfrout.ncol
+    assert sfrout.names == common_names + ['gradient'], sfrout.names
+    expected_times = [
+        (0, 0), (4, 0), (9, 0), (12, 0), (14, 0), (19, 0), (24, 0), (29, 0),
+        (32, 0), (34, 0), (39, 0), (44, 0), (49, 0), (0, 1), (4, 1), (9, 1),
+        (12, 1), (14, 1), (19, 1), (24, 1), (29, 1), (32, 1), (34, 1), (39, 1),
+        (44, 1), (45, 1), (46, 1), (47, 1), (48, 1), (49, 1)]
+    assert sfrout.times == expected_times, sfrout.times
+
 
 def test_sfr_plot():
     #m = flopy.modflow.Modflow.load('test1ss.nam', model_ws=path, verbose=False)
@@ -559,19 +576,20 @@ def test_sfr_plot():
     #sfr.plot(key='strtop')
     #plt.show()
     #assert True
+    #plt.close()
     pass
 
 
 if __name__ == '__main__':
     # test_sfr()
     # test_ds_6d_6e_disordered()
-    test_disordered_reachdata_fields()
+    # test_disordered_reachdata_fields()
     # test_sfr_renumbering()
     # test_example()
     # test_export()
     # test_transient_example()
     # mtest_sfr_plot()
     # test_assign_layers()
-    # test_SfrFile()
+    test_SfrFile()
     # test_const()
     pass

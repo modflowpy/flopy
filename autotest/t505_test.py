@@ -129,6 +129,9 @@ def np001():
 
     model = ModflowGwf(sim, modelname=model_name,
                        model_nam_file='{}.nam'.format(model_name))
+    # test case insensitive lookup
+    assert(sim.get_model(model_name.upper()) is not None)
+
     # test getting model using attribute
     model = sim.np001_mod
     assert(model is not None and model.name == 'np001_mod')
@@ -189,7 +192,8 @@ def np001():
 
     # test saving a binary file with list data
     well_spd = {0: {'filename': 'wel0.bin', 'binary': True,
-                    'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]}}
+                    'data': [((0, 0, 4), -2000.0), ((0, 0, 7), -2.0)]},
+                1: None}
     wel_package = ModflowGwfwel(model, print_input=True, print_flows=True,
                                 save_flows=True, maxbound=2,
                                 stress_period_data=well_spd)
@@ -253,6 +257,7 @@ def np001():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -297,7 +302,8 @@ def np001():
                                 timeseries=[(0.0, 60.0), (100000.0, 60.0)],
                                 stress_period_data=[((100, 0, 0), np.nan,
                                                      'drn_1'), ((0, 0, 0),
-                                                    10.0)])
+                                                    10.0, 'drn_2')])
+
     npf_package = ModflowGwfnpf(model, save_flows=True,
                                 alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=100001.0, k33=1e-12)
@@ -308,6 +314,17 @@ def np001():
            'checker threshold of 1e-11' in summary
     assert 'npf package: horizontal hydraulic conductivity values above ' \
            'checker threshold of 100000.0' in summary
+
+    data_invalid = False
+    try:
+        drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,
+                                    save_flows=True, maxbound=1,
+                                    timeseries=[(0.0, 60.0), (100000.0, 60.0)],
+                                    stress_period_data=[((0, 0, 0), 10.0)])
+    except MFDataException:
+        data_invalid = True
+    assert data_invalid
+
     return
 
 
@@ -916,6 +933,7 @@ def test005_advgw_tidal():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1087,6 +1105,7 @@ def test004_bcfss():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1183,6 +1202,7 @@ def test035_fhb():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1467,6 +1487,7 @@ def test006_2models_gnc():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1552,6 +1573,7 @@ def test050_circle_island():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     # run simulation
@@ -1680,7 +1702,7 @@ def test028_sfr():
         os.path.join(pth, 'sfr_reach_per_rec.txt'))
     # test zero based indexes
     reach_con_rec[0] = (0, -0.0)
-    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486, 
+    sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',
                                 nreaches=36, packagedata=sfr_rec,
@@ -1690,6 +1712,7 @@ def test028_sfr():
     assert (sfr_package.connectiondata.get_data()[0][1] == -0.0)
     assert (sfr_package.connectiondata.get_data()[1][1] == 0.0)
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
+    assert (sfr_package.packagedata.get_data()[1][1].lower() == 'none')
 
     sim.simulation_data.mfpath.set_sim_path(run_folder)
     sim.write_simulation()
@@ -1697,14 +1720,22 @@ def test028_sfr():
              sim_ws=run_folder)
     model = sim.get_model(model_name)
     sfr_package = model.get_package('sfr')
+    # sfr_package.set_all_data_external()
     assert (sfr_package.connectiondata.get_data()[0][1] == -0.0)
     assert (sfr_package.connectiondata.get_data()[1][1] == 0.0)
     assert (sfr_package.connectiondata.get_data()[2][1] == 1.0)
+    pdata = sfr_package.packagedata.get_data()
+    assert (sfr_package.packagedata.get_data()[1][1].lower() == 'none')
 
     # undo zero based test and move on
     model.remove_package(sfr_package.package_type)
     reach_con_rec = testutils.read_reach_con_rec(
         os.path.join(pth, 'sfr_reach_con_rec.txt'))
+
+    # set sfr settings back to expected package data
+    rec_line = (sfr_rec[1][0], (0, 1, 1)) + sfr_rec[1][2:]
+    sfr_rec[1] = rec_line
+
     sfr_package = ModflowGwfsfr(model, unit_conversion=1.486,
                                 stage_filerecord='test1tr.sfr.stage.bin',
                                 budget_filerecord='test1tr.sfr.cbc',

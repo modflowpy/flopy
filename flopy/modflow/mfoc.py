@@ -67,7 +67,7 @@ class ModflowOc(Package):
         text files, but they are not generally transportable among different
         computer operating systems or different Fortran compilers.
         (default is None)
-    stress_period_data : dictionary of of lists
+    stress_period_data : dictionary of lists
         Dictionary key is a tuple with the zero-based period and step
         (IPEROC, ITSOC) for each print/save option list. If stress_period_data
         is None, then heads are saved for the last time step of each stress
@@ -153,7 +153,7 @@ class ModflowOc(Package):
 
         """
         if unitnumber is None:
-            unitnumber = [ModflowOc.defaultunit(), 0, 0, 0, 0]
+            unitnumber = ModflowOc.defaultunit()
         elif isinstance(unitnumber, list):
             if len(unitnumber) < 5:
                 for idx in range(len(unitnumber), 6):

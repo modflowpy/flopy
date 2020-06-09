@@ -111,7 +111,11 @@ class ModflowGwflak(mfpackage.MFPackage):
           must be greater than zero and less than or equal to NLAKES. Lake
           information must be specified for every lake or the program will
           terminate with an error. The program will also terminate with an
-          error if information for a lake is specified more than once.
+          error if information for a lake is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * strt (double) real value that defines the starting stage for the
           lake.
         * nlakeconn (integer) integer value that defines the number of GWF
@@ -139,16 +143,27 @@ class ModflowGwflak(mfpackage.MFPackage):
           the GWF model (NLAKECONN) or the program will terminate with an
           error. The program will also terminate with an error if connection
           information for a lake connection to the GWF model is specified more
-          than once.
+          than once. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * iconn (integer) integer value that defines the GWF connection number
           for this lake connection entry. ICONN must be greater than zero and
-          less than or equal to NLAKECONN for lake LAKENO.
+          less than or equal to NLAKECONN for lake LAKENO. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * claktype (string) character string that defines the lake-GWF
           connection type for the lake connection. Possible lake-GWF connection
           type strings include: VERTICAL--character keyword to indicate the
@@ -202,7 +217,10 @@ class ModflowGwflak(mfpackage.MFPackage):
           greater than zero and less than or equal to NLAKES. The program will
           terminate with an error if table information for a lake is specified
           more than once or the number of specified tables is less than
-          NTABLES.
+          NTABLES. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * tab6_filename (string) character string that defines the path and
           filename for the file containing lake table data for the lake
           connection. The CTABNAME file includes the number of entries in the
@@ -219,15 +237,26 @@ class ModflowGwflak(mfpackage.MFPackage):
           be greater than zero and less than or equal to NOUTLETS. Outlet
           information must be specified for every outlet or the program will
           terminate with an error. The program will also terminate with an
-          error if information for a outlet is specified more than once.
+          error if information for a outlet is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * lakein (integer) integer value that defines the lake number that
           outlet is connected to. LAKEIN must be greater than zero and less
-          than or equal to NLAKES.
+          than or equal to NLAKES. This argument is an index variable, which
+          means that it should be treated as zero-based when working with FloPy
+          and Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
         * lakeout (integer) integer value that defines the lake number that
           outlet discharge from lake outlet OUTLETNO is routed to. LAKEOUT must
           be greater than or equal to zero and less than or equal to NLAKES. If
           LAKEOUT is zero, outlet discharge from lake outlet OUTLETNO is
-          discharged to an external boundary.
+          discharged to an external boundary. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * couttype (string) character string that defines the outlet type for
           the outlet OUTLETNO. Possible COUTTYPE strings include: SPECIFIED--
           character keyword to indicate the outlet is defined as a specified
@@ -255,14 +284,22 @@ class ModflowGwflak(mfpackage.MFPackage):
           Options block includes a TIMESERIESFILE entry (see the "Time-Variable
           Input" section), values can be obtained from a time series by
           entering the time-series name in place of a numeric value.
-    lakeperioddata : [lakeno, laksetting]
-        * lakeno (integer) integer value that defines the lake number
-          associated with the specified PERIOD data on the line. LAKENO must be
-          greater than zero and less than or equal to NLAKES.
+    perioddata : [number, laksetting]
+        * number (integer) integer value that defines the lake or outlet number
+          associated with the specified PERIOD data on the line. NUMBER must be
+          greater than zero and less than or equal to NLAKES for a lake number
+          and less than or equal to NOUTLETS for an outlet number. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * laksetting (keystring) line of information that is parsed into a
           keyword and values. Keyword values that can be used to start the
-          LAKSETTING string include: STATUS, STAGE, RAINFALL, EVAPORATION,
-          RUNOFFON, WITHDRAWAL, and AUXILIARY.
+          LAKSETTING string include both keywords for lake settings and
+          keywords for outlet settings. Keywords for lake settings include:
+          STATUS, STAGE, RAINFALL, EVAPORATION, RUNOFF, INFLOW, WITHDRAWAL, and
+          AUXILIARY. Keywords for outlet settings include RATE, INVERT, WIDTH,
+          SLOPE, and ROUGH.
             status : [string]
                 * status (string) keyword option to define lake status. STATUS
                   can be ACTIVE, INACTIVE, or CONSTANT. By default, STATUS is
@@ -297,12 +334,12 @@ class ModflowGwflak(mfpackage.MFPackage):
                   entering the time-series name in place of a numeric value.
             inflow : [string]
                 * inflow (string) real or character value that defines the
-                  volumetric inflow rate :math:`(L^3 T^{-1})` for the lake. If
-                  the Options block includes a TIMESERIESFILE entry (see the
-                  "Time-Variable Input" section), values can be obtained from a
-                  time series by entering the time-series name in place of a
-                  numeric value. By default, inflow rates are zero for each
-                  lake.
+                  volumetric inflow rate :math:`(L^3 T^{-1})` for the lake.
+                  Value must be greater than or equal to zero. If the Options
+                  block includes a TIMESERIESFILE entry (see the "Time-Variable
+                  Input" section), values can be obtained from a time series by
+                  entering the time-series name in place of a numeric value. By
+                  default, inflow rates are zero for each lake.
             withdrawal : [string]
                 * withdrawal (string) real or character value that defines the
                   maximum withdrawal rate :math:`(L^3 T^{-1})` for the lake.
@@ -310,24 +347,6 @@ class ModflowGwflak(mfpackage.MFPackage):
                   block includes a TIMESERIESFILE entry (see the "Time-Variable
                   Input" section), values can be obtained from a time series by
                   entering the time-series name in place of a numeric value.
-            auxiliaryrecord : [auxname, auxval]
-                * auxname (string) name for the auxiliary variable to be
-                  assigned AUXVAL. AUXNAME must match one of the auxiliary
-                  variable names defined in the OPTIONS block. If AUXNAME does
-                  not match one of the auxiliary variable names defined in the
-                  OPTIONS block the data are ignored.
-                * auxval (double) value for the auxiliary variable. If the
-                  Options block includes a TIMESERIESFILE entry (see the "Time-
-                  Variable Input" section), values can be obtained from a time
-                  series by entering the time-series name in place of a numeric
-                  value.
-    outletperioddata : [outletno, outletsetting]
-        * outletno (integer) integer value that defines the outlet number
-          associated with the specified PERIOD data on the line. OUTLETNO must
-          be greater than zero and less than or equal to NOUTLETS.
-        * outletsetting (keystring) line of information that is parsed into a
-          keyword and values. Keyword values that can be used to start the
-          OUTLETSETTING string include: RATE, INVERT, WIDTH, SLOPE, and ROUGH.
             rate : [string]
                 * rate (string) real or character value that defines the
                   extraction rate for the lake outflow. A positive value
@@ -370,6 +389,17 @@ class ModflowGwflak(mfpackage.MFPackage):
                   TIMESERIESFILE entry (see the "Time-Variable Input" section),
                   values can be obtained from a time series by entering the
                   time-series name in place of a numeric value.
+            auxiliaryrecord : [auxname, auxval]
+                * auxname (string) name for the auxiliary variable to be
+                  assigned AUXVAL. AUXNAME must match one of the auxiliary
+                  variable names defined in the OPTIONS block. If AUXNAME does
+                  not match one of the auxiliary variable names defined in the
+                  OPTIONS block the data are ignored.
+                * auxval (double) value for the auxiliary variable. If the
+                  Options block includes a TIMESERIESFILE entry (see the "Time-
+                  Variable Input" section), values can be obtained from a time
+                  series by entering the time-series name in place of a numeric
+                  value.
     filename : String
         File name for this package.
     pname : String
@@ -398,10 +428,8 @@ class ModflowGwflak(mfpackage.MFPackage):
     tables = ListTemplateGenerator(('gwf6', 'lak', 'tables', 'tables'))
     outlets = ListTemplateGenerator(('gwf6', 'lak', 'outlets',
                                      'outlets'))
-    lakeperioddata = ListTemplateGenerator(('gwf6', 'lak', 'period',
-                                            'lakeperioddata'))
-    outletperioddata = ListTemplateGenerator(('gwf6', 'lak', 'period',
-                                              'outletperioddata'))
+    perioddata = ListTemplateGenerator(('gwf6', 'lak', 'period',
+                                        'perioddata'))
     package_abbr = "gwflak"
     _package_type = "lak"
     dfn_file_name = "gwf-lak.dfn"
@@ -563,14 +591,14 @@ class ModflowGwflak(mfpackage.MFPackage):
            ["block period", "name iper", "type integer",
             "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
-           ["block period", "name lakeperioddata",
-            "type recarray lakeno laksetting", "shape", "reader urword"],
-           ["block period", "name lakeno", "type integer", "shape",
+           ["block period", "name perioddata",
+            "type recarray number laksetting", "shape", "reader urword"],
+           ["block period", "name number", "type integer", "shape",
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
            ["block period", "name laksetting",
             "type keystring status stage rainfall evaporation runoff inflow "
-            "withdrawal auxiliaryrecord",
+            "withdrawal rate invert width slope rough auxiliaryrecord",
             "shape", "tagged false", "in_record true", "reader urword"],
            ["block period", "name status", "type string", "shape",
             "tagged true", "in_record true", "reader urword"],
@@ -592,24 +620,6 @@ class ModflowGwflak(mfpackage.MFPackage):
            ["block period", "name withdrawal", "type string", "shape",
             "tagged true", "in_record true", "reader urword",
             "time_series true"],
-           ["block period", "name auxiliaryrecord",
-            "type record auxiliary auxname auxval", "shape", "tagged",
-            "in_record true", "reader urword"],
-           ["block period", "name auxiliary", "type keyword", "shape",
-            "in_record true", "reader urword"],
-           ["block period", "name auxname", "type string", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name auxval", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "time_series true"],
-           ["block period", "name outletperioddata",
-            "type recarray outletno outletsetting", "shape", "reader urword"],
-           ["block period", "name outletno", "type integer", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "numeric_index true"],
-           ["block period", "name outletsetting",
-            "type keystring rate invert width slope rough", "shape",
-            "tagged false", "in_record true", "reader urword"],
            ["block period", "name rate", "type string", "shape",
             "tagged true", "in_record true", "reader urword",
             "time_series true"],
@@ -624,6 +634,16 @@ class ModflowGwflak(mfpackage.MFPackage):
             "time_series true"],
            ["block period", "name slope", "type string", "shape",
             "tagged true", "in_record true", "reader urword",
+            "time_series true"],
+           ["block period", "name auxiliaryrecord",
+            "type record auxiliary auxname auxval", "shape", "tagged",
+            "in_record true", "reader urword"],
+           ["block period", "name auxiliary", "type keyword", "shape",
+            "in_record true", "reader urword"],
+           ["block period", "name auxname", "type string", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block period", "name auxval", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword",
             "time_series true"]]
 
     def __init__(self, model, loading_package=False, auxiliary=None,
@@ -633,9 +653,8 @@ class ModflowGwflak(mfpackage.MFPackage):
                  mover=None, surfdep=None, time_conversion=None,
                  length_conversion=None, nlakes=None, noutlets=None,
                  ntables=None, packagedata=None, connectiondata=None,
-                 tables=None, outlets=None, lakeperioddata=None,
-                 outletperioddata=None, filename=None, pname=None,
-                 parent_file=None):
+                 tables=None, outlets=None, perioddata=None, filename=None,
+                 pname=None, parent_file=None):
         super(ModflowGwflak, self).__init__(model, "lak", filename, pname,
                                             loading_package, parent_file)
 
@@ -674,8 +693,5 @@ class ModflowGwflak(mfpackage.MFPackage):
                                                 connectiondata)
         self.tables = self.build_mfdata("tables", tables)
         self.outlets = self.build_mfdata("outlets", outlets)
-        self.lakeperioddata = self.build_mfdata("lakeperioddata",
-                                                lakeperioddata)
-        self.outletperioddata = self.build_mfdata("outletperioddata",
-                                                  outletperioddata)
+        self.perioddata = self.build_mfdata("perioddata", perioddata)
         self._init_complete = True

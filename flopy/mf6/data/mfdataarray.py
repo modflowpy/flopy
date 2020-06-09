@@ -1,15 +1,13 @@
-import sys, inspect, copy
+import sys, inspect, copy, os
 import numpy as np
 from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
-from ...utils import datautil
 from ...utils.datautil import MultiList
 from ..mfbase import ExtFileAction, MFDataException
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 from .mffileaccess import MFFileAccessArray
-from .mfdatautil import to_string
 from .mfdata import MFMultiDimVar, MFTransient
 
 
@@ -51,11 +49,14 @@ class MFArray(MFMultiDimVar):
         Returns whether this MFArray supports layered data
     set_layered_data : (layered_data : bool)
         Sets whether this MFArray supports layered data
-    store_as_external_file : (external_file_path : string, multiplier : float,
-        layer_num : int)
+    store_as_external_file : (external_file_path : string, layer_num : int,
+                             replace_existing_external : bool)
         Stores data from layer "layer_num" to an external file at
-        "external_file_path" with a multiplier "multiplier".  For unlayered
-        data do not pass in "layer".
+        "external_file_path".  For unlayered data do not pass in "layer".
+        If layer is not specified all layers will be stored with each layer
+        as a separate file. If replace_existing_external is set to False,
+        this method will not do anything if the data is already in an
+        external file.
     store_as_internal_array : (multiplier : float, layer_num : int)
         Stores data from layer "layer_num" internally within the MODFLOW file
         with a multiplier "multiplier". For unlayered data do not pass in
@@ -198,12 +199,12 @@ class MFArray(MFMultiDimVar):
             # for non-layered data treat k as an array/list index of the data
             if isinstance(k, int):
                 try:
-                    if len(self.get_data(apply_mult=True).shape) == 1:
-                        return self.get_data(apply_mult=True)[k]
-                    elif self.get_data(apply_mult=True).shape[0] == 1:
-                        return self.get_data(apply_mult=True)[0, k]
-                    elif self.get_data(apply_mult=True).shape[1] == 1:
-                        return self.get_data(apply_mult=True)[k, 0]
+                    if len(self._get_data(apply_mult=True).shape) == 1:
+                        return self._get_data(apply_mult=True)[k]
+                    elif self._get_data(apply_mult=True).shape[0] == 1:
+                        return self._get_data(apply_mult=True)[0, k]
+                    elif self._get_data(apply_mult=True).shape[1] == 1:
+                        return self._get_data(apply_mult=True)[k, 0]
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(self.structure.get_model(),
@@ -230,13 +231,14 @@ class MFArray(MFMultiDimVar):
                 try:
                     if isinstance(k, tuple):
                         if len(k) == 3:
-                            return self.get_data(apply_mult=True)[k[0], k[1], k[2]]
+                            return self._get_data(apply_mult=True)[k[0], k[1],
+                                                                   k[2]]
                         elif len(k) == 2:
-                            return self.get_data(apply_mult=True)[k[0], k[1]]
+                            return self._get_data(apply_mult=True)[k[0], k[1]]
                         if len(k) == 1:
-                            return self.get_data(apply_mult=True)[k]
+                            return self._get_data(apply_mult=True)[k]
                     else:
-                        return self.get_data(apply_mult=True)[(k,)]
+                        return self._get_data(apply_mult=True)[(k,)]
                 except Exception as ex:
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(self.structure.get_model(),
@@ -256,7 +258,7 @@ class MFArray(MFMultiDimVar):
                 k = (k,)
             # for layered data treat k as a layer number
             try:
-               storage.layer_storage[k].set_data(value)
+               storage.layer_storage[k]._set_data(value)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -271,12 +273,12 @@ class MFArray(MFMultiDimVar):
         else:
             try:
                 # for non-layered data treat k as an array/list index of the data
-                a = self.get_data()
+                a = self._get_data()
                 a[k] = value
-                a = a.astype(self.get_data().dtype)
+                a = a.astype(self._get_data().dtype)
                 layer_storage = storage.layer_storage.first_item()
-                self._get_storage_obj().set_data(a, key=self._current_key,
-                                                 multiplier=layer_storage.factor)
+                self._get_storage_obj()._set_data(a, key=self._current_key,
+                                                  multiplier=layer_storage.factor)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -297,7 +299,7 @@ class MFArray(MFMultiDimVar):
 
     @property
     def dtype(self):
-        return self.get_data().dtype.type
+        return self._get_data().dtype.type
 
     @property
     def plotable(self):
@@ -378,47 +380,75 @@ class MFArray(MFMultiDimVar):
                                   traceback_, comment,
                                   self._simulation_data.debug)
 
-    def store_as_external_file(self, external_file_path, multiplier=None,
-                               layer=None, binary=False):
-        if isinstance(layer, int):
-            layer = (layer,)
+    def store_as_external_file(self, external_file_path, layer=None,
+                               binary=False,
+                               replace_existing_external=True):
         storage = self._get_storage_obj()
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
             storage = self._get_storage_obj()
-        ds_index = self._resolve_layer_index(layer)
-        if multiplier is None:
-            multiplier = [storage.get_default_mult()]
 
-        try:
-            # move data to file
-            if storage.layer_storage[ds_index[0]].data_storage_type == \
-                    DataStorageType.external_file:
-                storage.external_to_external(external_file_path, multiplier,
-                                             layer)
+        # build list of layers
+        if layer is None:
+            layer_list = []
+            for index in range(0, storage.layer_storage.get_total_size()):
+                if replace_existing_external or \
+                        storage.layer_storage[index].data_storage_type == \
+                        DataStorageType.internal_array:
+                    layer_list.append(index)
+        else:
+            if replace_existing_external or \
+                    storage.layer_storage[layer].data_storage_type == \
+                    DataStorageType.internal_array:
+                layer_list = [layer]
             else:
-                storage.internal_to_external(external_file_path, multiplier,
-                                             layer, binary=binary)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'storing data in external file '
-                                  '{}'.format(external_file_path),
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
+                layer_list = []
 
-        # update data storage
-        storage.layer_storage[ds_index[0]].data_storage_type \
-            = DataStorageType.external_file
-        storage.layer_storage[ds_index[0]].fname = external_file_path
-        storage.layer_storage[ds_index[0]].binary = binary
-        if multiplier is not None:
-            self._get_storage_obj().layer_storage[ds_index[0]].multiplier = \
-                    multiplier[0]
+        # store data from each layer in a separate file
+        for current_layer in layer_list:
+            # determine external file name for layer
+            if len(layer_list) > 0:
+                fname, ext = os.path.splitext(external_file_path)
+                if len(layer_list) == 1:
+                    file_path = '{}{}'.format(fname, ext)
+                else:
+                    file_path = '{}_layer{}{}'.format(fname, current_layer + 1,
+                                                      ext)
+            else:
+                file_path = external_file_path
+            if isinstance(current_layer, int):
+                current_layer = (current_layer,)
+            # get the layer's data
+            data = self._get_data(current_layer, True)
+            if data is None:
+                # do not write empty data to an external file
+                continue
+            if isinstance(data, str) and self._tas_info(data)[0] is not \
+                    None:
+                # data must not be time array series information
+                continue
+            if storage.get_data_dimensions(current_layer)[0] == -9999:
+                # data must have well defined dimensions to make external
+                continue
+            try:
+                # store layer's data in external file
+                factor = storage.layer_storage[current_layer].factor
+                external_data = {'filename': file_path,
+                                 'data': self._get_data(current_layer, True),
+                                 'factor': factor,
+                                 'binary': binary}
+                self._set_data(external_data, layer=current_layer)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'storing data in external file '
+                                      '{}'.format(external_file_path),
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
 
     def has_data(self, layer=None):
         storage = self._get_storage_obj()
@@ -441,9 +471,12 @@ class MFArray(MFMultiDimVar):
 
     @property
     def data(self):
-        return self.get_data()
+        return self._get_data()
 
     def get_data(self, layer=None, apply_mult=False, **kwargs):
+        return self._get_data(layer, apply_mult, **kwargs)
+
+    def _get_data(self, layer=None, apply_mult=False, **kwargs):
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
         if isinstance(layer, int):
@@ -469,6 +502,9 @@ class MFArray(MFMultiDimVar):
         return None
 
     def set_data(self, data, multiplier=None, layer=None):
+        self._set_data(data, multiplier, layer)
+
+    def _set_data(self, data, multiplier=None, layer=None):
         self._resync()
         if self._get_storage_obj() is None:
             self._data_storage = self._new_storage(False)
@@ -484,25 +520,81 @@ class MFArray(MFMultiDimVar):
                 self._get_storage_obj().set_tas(tas_name, tas_label,
                                                 self._current_key)
                 return
-        try:
-            self._get_storage_obj().set_data(data, layer, multiplier,
-                                             key=self._current_key)
-        except Exception as ex:
-            type_, value_, traceback_ = sys.exc_info()
-            raise MFDataException(self.structure.get_model(),
-                                  self.structure.get_package(),
-                                  self._path,
-                                  'setting data',
-                                  self.structure.name,
-                                  inspect.stack()[0][3], type_,
-                                  value_, traceback_, None,
-                                  self._simulation_data.debug, ex)
-        self._layer_shape = self._get_storage_obj().layer_storage.list_shape
+
+        storage = self._get_storage_obj()
+        if self.structure.name == 'aux' and layer is None:
+            if isinstance(data, dict):
+                aux_data = copy.deepcopy(data['data'])
+            else:
+                aux_data = data
+            # make a list out of a single item
+            if isinstance(aux_data, int) or \
+                    isinstance(aux_data, float) or \
+                    isinstance(aux_data, str):
+                aux_data = [[aux_data]]
+            # handle special case of aux variables in an array
+            self.layered = True
+            aux_var_names = self._data_dimensions.\
+                package_dim.get_aux_variables()
+            if len(aux_data) == len(aux_var_names[0]) - 1:
+                for layer, aux_var_data in enumerate(aux_data):
+                    if layer > 0 and \
+                            layer >= storage.layer_storage.get_total_size():
+                        storage.add_layer()
+                    if isinstance(data, dict):
+                        # put layer data back in dictionary
+                        layer_data = data
+                        layer_data['data'] = aux_var_data
+                    else:
+                        layer_data = aux_var_data
+                    try:
+                        storage.set_data(layer_data, [layer], multiplier,
+                                         self._current_key)
+                    except Exception as ex:
+                        type_, value_, traceback_ = sys.exc_info()
+                        raise MFDataException(self.structure.get_model(),
+                                              self.structure.get_package(),
+                                              self._path,
+                                              'setting data',
+                                              self.structure.name,
+                                              inspect.stack()[0][3], type_,
+                                              value_, traceback_, None,
+                                              self._simulation_data.debug, ex)
+            else:
+                message = 'Unable to set data for aux variable. ' \
+                          'Expected {} aux variables but got ' \
+                          '{}.'.format(len(aux_var_names[0]),
+                                       len(data))
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(
+                    self._data_dimensions.structure.get_model(),
+                    self._data_dimensions.structure.get_package(),
+                    self._data_dimensions.structure.path,
+                    'setting aux variables',
+                    self._data_dimensions.structure.name,
+                    inspect.stack()[0][3], type_, value_, traceback_,
+                    message, self._simulation_data.debug)
+        else:
+            try:
+                storage.set_data(data, layer, multiplier,
+                                 key=self._current_key)
+            except Exception as ex:
+                type_, value_, traceback_ = sys.exc_info()
+                raise MFDataException(self.structure.get_model(),
+                                      self.structure.get_package(),
+                                      self._path,
+                                      'setting data',
+                                      self.structure.name,
+                                      inspect.stack()[0][3], type_,
+                                      value_, traceback_, None,
+                                      self._simulation_data.debug, ex)
+        self._layer_shape = storage.layer_storage.list_shape
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         super(MFArray, self).load(first_line, file_handle, block_header,
-                                  pre_data_comments=None)
+                                  pre_data_comments=None,
+                                  external_file_info=None)
         self._resync()
         if self.structure.layered:
             try:
@@ -530,9 +622,14 @@ class MFArray(MFMultiDimVar):
         file_access = MFFileAccessArray(self.structure, self._data_dimensions,
                                         self._simulation_data, self._path,
                                         self._current_key)
+        storage = self._get_storage_obj()
         self._layer_shape, return_val = file_access.load_from_package(
-            first_line, file_handle, self._layer_shape, self._get_storage_obj(),
+            first_line, file_handle, self._layer_shape, storage,
             self._keyword, pre_data_comments=None)
+        if external_file_info is not None:
+            storage.point_to_existing_external_file(
+                external_file_info, storage.layer_storage.get_total_size() - 1)
+
         return return_val
 
     def _is_layered_aux(self):
@@ -544,6 +641,10 @@ class MFArray(MFMultiDimVar):
             return False
 
     def get_file_entry(self, layer=None,
+                       ext_file_action=ExtFileAction.copy_relative_paths):
+        return self._get_file_entry(layer, ext_file_action)
+
+    def _get_file_entry(self, layer=None,
                        ext_file_action=ExtFileAction.copy_relative_paths):
         if isinstance(layer, int):
             layer = (layer,)
@@ -647,14 +748,14 @@ class MFArray(MFMultiDimVar):
                      stress_period=0):
         if set_layers:
             return DataStorage(self._simulation_data, self._model_or_sim,
-                               self._data_dimensions, self.get_file_entry,
+                               self._data_dimensions, self._get_file_entry,
                                DataStorageType.internal_array,
                                DataStructureType.ndarray, self._layer_shape,
                                stress_period=stress_period,
                                data_path=self._path)
         else:
             return DataStorage(self._simulation_data, self._model_or_sim,
-                               self._data_dimensions, self.get_file_entry,
+                               self._data_dimensions, self._get_file_entry,
                                DataStorageType.internal_array,
                                DataStructureType.ndarray,
                                stress_period=stress_period,
@@ -944,11 +1045,36 @@ class MFTransientArray(MFArray, MFTransient):
     def data_type(self):
         return DataType.transient2d
 
+    def remove_transient_key(self, transient_key):
+        if transient_key in self._data_storage:
+            del self._data_storage[transient_key]
+
     def add_transient_key(self, transient_key):
         super(MFTransientArray, self).add_transient_key(transient_key)
         self._data_storage[transient_key] = \
             super(MFTransientArray, self)._new_storage(stress_period=
                                                        transient_key)
+
+    def store_as_external_file(self, external_file_path, layer=None,
+                               binary=False,
+                               replace_existing_external=True):
+        sim_time = self._data_dimensions.package_dim.model_dim[
+            0].simulation_time
+        num_sp = sim_time.get_num_stress_periods()
+        # store each stress period in separate file(s)
+        for sp in range(0, num_sp):
+            if sp in self._data_storage:
+                self._current_key = sp
+                layer_storage = self._get_storage_obj().layer_storage
+                if layer_storage.get_total_size() > 0 and \
+                        self._get_storage_obj().layer_storage[0].\
+                        layer_storage_type != \
+                        DataStorageType.external_file:
+                    fname, ext = os.path.splitext(external_file_path)
+                    full_name = '{}_{}{}'.format(fname, sp+1, ext)
+                    super(MFTransientArray, self).\
+                        store_as_external_file(full_name, layer, binary,
+                                               replace_existing_external)
 
     def get_data(self, layer=None, apply_mult=True, **kwargs):
         if self._data_storage is not None and len(self._data_storage) > 0:
@@ -1010,10 +1136,17 @@ class MFTransientArray(MFArray, MFTransient):
         if isinstance(data, dict) or isinstance(data, OrderedDict):
             # each item in the dictionary is a list for one stress period
             # the dictionary key is the stress period the list is for
+            del_keys = []
             for key, list_item in data.items():
-                self._set_data_prep(list_item, key)
-                super(MFTransientArray, self).set_data(list_item, multiplier,
-                                                       layer)
+                if list_item is None:
+                    self.remove_transient_key(key)
+                    del_keys.append(key)
+                else:
+                    self._set_data_prep(list_item, key)
+                    super(MFTransientArray, self).set_data(list_item,
+                                                           multiplier, layer)
+            for key in del_keys:
+                del data[key]
         else:
             if key is None:
                 # search for a key
@@ -1023,8 +1156,12 @@ class MFTransientArray(MFArray, MFTransient):
                     key = data[new_key_index]
                 else:
                     key = 0
-            self._set_data_prep(data, key)
-            super(MFTransientArray, self).set_data(data, multiplier, layer)
+            if data is None:
+                self.remove_transient_key(key)
+            else:
+                self._set_data_prep(data, key)
+                super(MFTransientArray, self).set_data(data, multiplier,
+                                                       layer)
 
     def get_file_entry(self, key=0,
                        ext_file_action=ExtFileAction.copy_relative_paths):
@@ -1033,10 +1170,11 @@ class MFTransientArray(MFArray, MFTransient):
                                                             ext_file_action)
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         self._load_prep(block_header)
         return super(MFTransientArray, self).load(first_line, file_handle,
-                                                  pre_data_comments)
+                                                  pre_data_comments,
+                                                  external_file_info)
 
     def _new_storage(self, set_layers=True, base_storage=False,
                      stress_period=0):

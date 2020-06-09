@@ -386,6 +386,8 @@ class MFSimulation(PackageContainer):
         the model
     is_valid : () : boolean
         checks the validity of the solution and all of its models and packages
+    set_all_data_external
+        sets the simulation's list and array data to be stored externally
 
     Examples
     --------
@@ -1084,6 +1086,22 @@ class MFSimulation(PackageContainer):
         for model in self._models.values():
             model.rename_all_packages(name)
 
+    def set_all_data_external(self):
+        # copy any files whose paths have changed
+        self.simulation_data.mfpath.copy_files()
+        # set data external for all packages in all models
+        for model in self._models.values():
+            model.set_all_data_external()
+        # set data external for ims packages
+        for package in self._ims_files.values():
+            package.set_all_data_external()
+        # set data external for ghost node packages
+        for package in self._ghost_node_files.values():
+            package.set_all_data_external()
+        # set data external for mover packages
+        for package in self._mover_files.values():
+            package.set_all_data_external()
+
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths,
                          silent=False):
@@ -1295,6 +1313,7 @@ class MFSimulation(PackageContainer):
                 del self._exchange_files[package.filename]
             if package.filename in self._ims_files:
                 del self._ims_files[package.filename]
+                self._remove_ims_soultion_group(package.filename)
             if package.filename in self._ghost_node_files:
                 del self._ghost_node_files[package.filename]
             if package.filename in self._mover_files:
@@ -1334,6 +1353,10 @@ class MFSimulation(PackageContainer):
                 return model
         if model_name in self._models:
             return self._models[model_name]
+        # do case-insensitive lookup
+        for name, model in self._models.items():
+            if model_name.lower() == name.lower():
+                return model
         return None
 
     def get_exchange_file(self, filename):
@@ -1726,6 +1749,31 @@ class MFSimulation(PackageContainer):
         else:
             return (package.package_type,)
 
+    def _remove_ims_soultion_group(self, ims_file):
+        solution_recarray = self.name_file.solutiongroup
+        for solution_group_num in solution_recarray.get_active_key_list():
+            try:
+                rec_array = solution_recarray.get_data(solution_group_num[0])
+            except MFDataException as mfde:
+                message = 'An error occurred while getting solution group' \
+                          '"{}" from the simulation name file' \
+                          '.'.format(solution_group_num[0])
+                raise MFDataException(mfdata_except=mfde,
+                                      package='nam',
+                                      message=message)
+
+            new_array = []
+            for record in rec_array:
+                if record.slnfname == ims_file:
+                    continue
+                else:
+                    new_array.append(record)
+
+            if not new_array:
+                new_array = None
+
+            solution_recarray.set_data(new_array, solution_group_num[0])
+
     def _append_to_ims_solution_group(self, ims_file, new_models):
         solution_recarray = self.name_file.solutiongroup
         for solution_group_num in solution_recarray.get_active_key_list():
@@ -1745,12 +1793,12 @@ class MFSimulation(PackageContainer):
                 for index, item in enumerate(record):
                     if record[1] == ims_file or item not in new_models:
                         new_record.append(item)
-                        if index > 1:
-                            rec_model_dict[item] = 1
+                        if index > 1 and item is not None:
+                            rec_model_dict[item.lower()] = 1
 
                 if record[1] == ims_file:
                     for model in new_models:
-                        if model not in rec_model_dict:
+                        if model.lower() not in rec_model_dict:
                             new_record.append(model)
 
                 new_array.append(tuple(new_record))

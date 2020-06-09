@@ -283,9 +283,10 @@ class MFData(DataInterface):
 
     @staticmethod
     def _tas_info(tas_str):
-        lst_str = tas_str.split(' ')
-        if len(lst_str) >= 2 and lst_str[0].lower() == 'timearrayseries':
-            return lst_str[1], lst_str[0]
+        if isinstance(tas_str, str):
+            lst_str = tas_str.split(' ')
+            if len(lst_str) >= 2 and lst_str[0].lower() == 'timearrayseries':
+                return lst_str[1], lst_str[0]
         return None, None
 
     def export(self, f, **kwargs):
@@ -385,7 +386,7 @@ class MFData(DataInterface):
         return description
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         self.enabled = True
 
     def is_valid(self):

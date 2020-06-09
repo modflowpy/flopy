@@ -4,6 +4,7 @@ Begin options
   boundnames
   PRINT_FLOWS
   OBS6 FILEIN test001e_UZF_3lay.obs
+  BUDGET FILEOUT test001e_UZF_3lay.uzf.cbc
   SIMULATE_GWSEEP
   SIMULATE_ET   
   LINEAR_GWET

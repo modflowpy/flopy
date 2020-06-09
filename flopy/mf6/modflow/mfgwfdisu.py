@@ -93,7 +93,11 @@ class ModflowGwfdisu(mfpackage.MFPackage):
           of the file. To further ease readability of the file, the node number
           of the cell whose connectivity is subsequently listed, may be
           expressed as a negative number, the sign of which is subsequently
-          converted to positive by the code.
+          converted to positive by the code. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
     ihc : [integer]
         * ihc (integer) is an index array indicating the direction between node
           n and all of its m connections. If IHC = 0 then cell n and cell m are
@@ -137,12 +141,20 @@ class ModflowGwfdisu(mfpackage.MFPackage):
           which reads a similar variable (ANGLEX) in radians.
     vertices : [iv, xv, yv]
         * iv (integer) is the vertex number. Records in the VERTICES block must
-          be listed in consecutive order from 1 to NVERT.
+          be listed in consecutive order from 1 to NVERT. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * xv (double) is the x-coordinate for the vertex.
         * yv (double) is the y-coordinate for the vertex.
     cell2d : [icell2d, xc, yc, ncvert, icvert]
         * icell2d (integer) is the cell2d number. Records in the CELL2D block
-          must be listed in consecutive order from 1 to NODES.
+          must be listed in consecutive order from 1 to NODES. This argument is
+          an index variable, which means that it should be treated as zero-
+          based when working with FloPy and Python. Flopy will automatically
+          subtract one when loading index variables and add one when writing
+          index variables.
         * xc (double) is the x-coordinate for the cell center.
         * yc (double) is the y-coordinate for the cell center.
         * ncvert (integer) is the number of vertices required to define the

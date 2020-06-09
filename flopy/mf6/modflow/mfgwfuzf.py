@@ -118,13 +118,21 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           must be greater than zero and less than or equal to NUZFCELLS. UZF
           information must be specified for every UZF cell or the program will
           terminate with an error. The program will also terminate with an
-          error if information for a UZF cell is specified more than once.
+          error if information for a UZF cell is specified more than once. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * cellid ((integer, ...)) is the cell identifier, and depends on the
           type of grid that is used for the simulation. For a structured grid
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * landflag (integer) integer value set to one for land surface cells
           indicating that boundary conditions can be applied and data can be
           specified in the PERIOD block. A value of 0 specifies a non-land
@@ -134,7 +142,10 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           flow reaches the water table before the cell bottom, then water is
           added to the GWF cell instead of flowing to the underlying UZF cell.
           A value of 0 indicates the UZF cell is not connected to an underlying
-          UZF cell.
+          UZF cell. This argument is an index variable, which means that it
+          should be treated as zero-based when working with FloPy and Python.
+          Flopy will automatically subtract one when loading index variables
+          and add one when writing index variables.
         * surfdep (double) is the surface depression depth of the UZF cell.
         * vks (double) is the vertical saturated hydraulic conductivity of the
           UZF cell.
@@ -149,7 +160,11 @@ class ModflowGwfuzf(mfpackage.MFPackage):
           enclosed within single quotes.
     perioddata : [iuzno, finf, pet, extdp, extwc, ha, hroot, rootact, aux]
         * iuzno (integer) integer value that defines the UZF cell number
-          associated with the specified PERIOD data on the line.
+          associated with the specified PERIOD data on the line. This argument
+          is an index variable, which means that it should be treated as zero-
+          based when working with FloPy and Python. Flopy will automatically
+          subtract one when loading index variables and add one when writing
+          index variables.
         * finf (string) real or character value that defines the applied
           infiltration rate of the UZF cell (:math:`LT^{-1}`). If the Options
           block includes a TIMESERIESFILE entry (see the "Time-Variable Input"

@@ -73,9 +73,9 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     ```shell
     cd autotest
     nosetests -v build_exes.py
-    nosetests -v t*_test.py
+    nosetests -v
     ```
-   Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages.
+   Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages. All the FloPy dependencies must also be installed for the tests to pass.
 
 1. Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit). Adherence to these conventions
