@@ -636,6 +636,7 @@ class NetCdf(object):
         print('initialize_geometry::proj4_str = {}'.format(proj4_str))
 
         self.log("building grid crs using proj4 string: {}".format(proj4_str))
+
         if pyproj220:
             self.grid_crs = pyproj.CRS(proj4_str)
         else:
@@ -654,6 +655,7 @@ class NetCdf(object):
         xs = self.model_grid.xyzcellcenters[0].copy()
 
         # Transform to a known CRS
+
         if pyproj220:
             nc_crs = pyproj.CRS(self.nc_epsg_str)
             self.transformer = pyproj.Transformer.from_crs(
@@ -680,6 +682,7 @@ class NetCdf(object):
                          [xmin, ymax],
                          [xmax, ymax],
                          [xmax, ymin]])
+
         if pyproj220:
             x, y = self.transformer.transform(*bbox.transpose())
         else:

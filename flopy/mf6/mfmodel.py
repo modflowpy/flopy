@@ -370,6 +370,7 @@ class MFModel(PackageContainer, ModelInterface):
                 epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
                 yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot,
                 nodes=dis.nodes.get_data())
+
         elif self.get_grid_type() == DiscretizationType.DISL:
             dis = self.get_package('disl')
             if not hasattr(dis, '_init_complete'):
@@ -397,6 +398,7 @@ class MFModel(PackageContainer, ModelInterface):
                     proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
                     xoff=self._modelgrid.xoffset, yoff=self._modelgrid.yoffset,
                     angrot=self._modelgrid.angrot)
+
         else:
             return self._modelgrid
 

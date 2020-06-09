@@ -303,6 +303,7 @@ def np001():
                                 stress_period_data=[((100, 0, 0), np.nan,
                                                      'drn_1'), ((0, 0, 0),
                                                     10.0, 'drn_2')])
+
     npf_package = ModflowGwfnpf(model, save_flows=True,
                                 alternative_cell_averaging='logarithmic',
                                 icelltype=1, k=100001.0, k33=1e-12)
@@ -313,6 +314,7 @@ def np001():
            'checker threshold of 1e-11' in summary
     assert 'npf package: horizontal hydraulic conductivity values above ' \
            'checker threshold of 100000.0' in summary
+
     data_invalid = False
     try:
         drn_package = ModflowGwfdrn(model, print_input=True, print_flows=True,

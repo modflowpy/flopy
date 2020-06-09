@@ -387,6 +387,7 @@ class MFArray(MFMultiDimVar):
         if storage is None:
             self._set_storage_obj(self._new_storage(False, True))
             storage = self._get_storage_obj()
+
         # build list of layers
         if layer is None:
             layer_list = []

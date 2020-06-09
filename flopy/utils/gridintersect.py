@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 try:
@@ -7,7 +8,6 @@ except ModuleNotFoundError:
     print("matplotlib is needed for grid intersect operations! Please " +
           "matplotlib if you need to use grid intersect functionality.")
 from .geometry import transform
-
 try:
     from shapely.geometry import (MultiPoint, Point, Polygon, box,
                                   GeometryCollection)
@@ -217,10 +217,8 @@ class GridIntersect:
             sorted list of Polygons
 
         """
-
         def sort_key(o):
             return o.name
-
         shapelist.sort(key=sort_key)
         return shapelist
 
