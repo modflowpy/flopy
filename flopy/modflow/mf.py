@@ -437,9 +437,9 @@ class Modflow(BaseModel):
             if o:
                 replace_text = 'REPLACE'
             if b:
-                f_nam.write(
-                    'DATA(BINARY)   {0:5d}  '.format(u) + f +
-                     replace_text + '\n')
+                line = 'DATA(BINARY)   {0:5d}  '.format(u) + f + \
+                       replace_text + '\n'
+                f_nam.write(line)
             else:
                 f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
@@ -821,7 +821,7 @@ class Modflow(BaseModel):
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
                     msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
-                              'package load...skipped'
+                          'package load...skipped'
                     print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
@@ -850,15 +850,16 @@ class Modflow(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if ml.verbose:
-                    msg = 'Warning: external file unit {} '.format(key) + \
+                    msg = '\nWARNING:\n    External file ' + \
+                          'unit {} '.format(key) + \
                           'does not exist in ext_unit_dict.'
                     print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
-            msg =  3 * ' ' + 'The following ' + \
-                   '{} '.format(len(files_successfully_loaded)) + \
-                   'packages were successfully loaded.'
+            msg = 3 * ' ' + 'The following ' + \
+                  '{} '.format(len(files_successfully_loaded)) + \
+                  'packages were successfully loaded.'
             print('')
             print(msg)
             for fname in files_successfully_loaded:

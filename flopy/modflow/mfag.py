@@ -203,7 +203,6 @@ class ModflowAg(Package):
         else:
             self.options = OptionBlock("", ModflowAg)
 
-        # todo: set some of these as MfList objects...
         self.time_series = time_series
         self.well_list = well_list
         self.irrdiversion = irrdiversion
