@@ -50,7 +50,7 @@ class ModflowAg(Package):
     --------
 
     load a ModflowAg file
-    
+
     >>> import flopy
     >>> ml = flopy.modflow.Modflow('agtest')
     >>> ag = flopy.modflow.ModflowAg.load('test.ag', ml, nper=2)
@@ -227,7 +227,7 @@ class ModflowAg(Package):
         """
         segments = []
         if self.irrdiversion is not None:
-            for kper, recarray in self.irrdiversion.items():
+            for _, recarray in self.irrdiversion.items():
                 if np.isscalar(recarray):
                     continue
                 t = np.unique(recarray["segid"])
@@ -253,7 +253,7 @@ class ModflowAg(Package):
                 val = options.__dict__[key]
                 self.__setattr__(key, val)
                 if ctx[OptionBlock.nested]:
-                    for k2, ctx2 in ctx[OptionBlock.vars].items():
+                    for k2, _ in ctx[OptionBlock.vars].items():
                         if k2 in options.__dict__:
                             v2 = options.__dict__[k2]
                             self.__setattr__(k2, v2)
@@ -828,7 +828,7 @@ def _read_block_21_25_or_29(fobj, nrec, recarray, block):
         else:
             raise AssertionError("block number must be 6, 10, or 14")
 
-        for numcell in range(int(ll[1])):
+        for _ in range(int(ll[1])):
             if block == 29:
                 if len(ll) == 2:
                     ll += [1e-10]
