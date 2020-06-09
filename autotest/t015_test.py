@@ -38,7 +38,7 @@ str_items = {0: {'mfnam': 'str.nam',
 
 def test_str_free():
     m = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                   model_ws=path, verbose=True, check=False)
+                                   model_ws=path, verbose=False, check=False)
     ws = tpth
     m.change_model_ws(ws)
 
@@ -91,7 +91,7 @@ def test_str_free():
     # load the fixed format model with aux variables
     try:
         m2 = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                        model_ws=ws, verbose=True, check=False)
+                                        model_ws=ws, verbose=False, check=False)
     except:
         m2 = None
 
@@ -112,7 +112,7 @@ def test_str_free():
     # load the free format model
     try:
         m2 = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                        model_ws=ws, verbose=True, check=False)
+                                        model_ws=ws, verbose=False, check=False)
     except:
         m2 = None
 
@@ -139,4 +139,4 @@ def test_str_plot():
 
 if __name__ == '__main__':
     test_str_free()
-    # test_str_plot()
+    test_str_plot()

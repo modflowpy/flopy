@@ -666,10 +666,10 @@ class Mt3dms(BaseModel):
         ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
-        poss_output_units = set(list(range(201, 201+ncomp)) +
-                                list(range(301, 301+ncomp)) +
-                                list(range(401, 401+ncomp)) +
-                                list(range(601, 601+ncomp)) + [17])
+        poss_output_units = set(list(range(201, 201 + ncomp)) +
+                                list(range(301, 301 + ncomp)) +
+                                list(range(401, 401 + ncomp)) +
+                                list(range(601, 601 + ncomp)) + [17])
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -760,9 +760,9 @@ class Mt3dms(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if mt.verbose:
-                    sys.stdout.write(
-                        "Warning: external file unit "
-                        "{} does not exist in ext_unit_dict.\n".format(key))
+                    msg = "\nWARNING:\n    External file unit " + \
+                          "{} does not exist in ext_unit_dict.\n".format(key)
+                    sys.stdout.write(msg)
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:
