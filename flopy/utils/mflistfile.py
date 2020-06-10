@@ -893,6 +893,14 @@ class ListBudget(object):
             elif '-----------------------------------------------------------' in line:
                 line = self.f.readline()
                 break
+
+        if isinstance(self, SwtListBudget):
+            translen = self._parse_time_line(line)
+            line = self.f.readline()
+            if translen is None:
+                print('error parsing translen for ts,sp', ts, sp)
+                return np.NaN, np.NaN, np.NaN
+
         tslen = self._parse_time_line(line)
         if tslen is None:
             print('error parsing tslen for ts,sp', ts, sp)
