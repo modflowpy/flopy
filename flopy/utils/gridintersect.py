@@ -18,9 +18,8 @@ except ModuleNotFoundError:
 
 
 def parse_shapely_ix_result(collection, ix_result, shptyps=None):
-    """
-    Recursive function for parsing shapely intersection results.
-    Returns a list of shapely shapes matching shptyp
+    """Recursive function for parsing shapely intersection results. Returns a
+    list of shapely shapes matching shptyp.
 
     Parameters
     ----------
@@ -38,7 +37,6 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
     -------
     collection : list
         list containing shapely geometries of type shptyp
-
     """
     # convert shptyps to list if needed
     if isinstance(shptyps, str):
@@ -64,9 +62,8 @@ def parse_shapely_ix_result(collection, ix_result, shptyps=None):
 
 
 class GridIntersect:
-    """
-    Class for intersecting shapely shapes (Point, Linestring, Polygon,
-    or their Multi variants) with MODFLOW grids. Contains optimized search
+    """Class for intersecting shapely shapes (Point, Linestring, Polygon, or
+    their Multi variants) with MODFLOW grids. Contains optimized search
     routines for structured grids.
 
     Notes
@@ -86,13 +83,10 @@ class GridIntersect:
        parsing the STR-tree. However, for polygons the STR-tree implementation
        is often faster than the optimized structured routines, especially
        for larger grids.
-
     """
 
     def __init__(self, mfgrid, method=None, rtree=True):
-        """
-        Intersect shapes (Point, Linestring, Polygon) with a
-        modflow grid.
+        """Intersect shapes (Point, Linestring, Polygon) with a modflow grid.
 
         Parameters
         ----------
@@ -108,7 +102,6 @@ class GridIntersect:
             STR-tree is built (which saves some time), but intersects will
             loop through all model gridcells (which is generally slower).
             Only read when `method='vertex'`.
-
         """
         if not shply:
             msg = ("Shapely is needed for grid intersect operations! "
@@ -148,11 +141,8 @@ class GridIntersect:
                 "Method '{0}' not recognized!".format)
 
     def _set_method_get_gridshapes(self):
-        """
-        internal method, set self._get_gridshapes to the certain method
-        for obtaining gridcells
-
-        """
+        """internal method, set self._get_gridshapes to the certain method for
+        obtaining gridcells."""
         # Set method for obtaining grid shapes
         if self.mfgrid.grid_type == "structured":
             self._get_gridshapes = self._rect_grid_to_shape_generator
@@ -162,15 +152,13 @@ class GridIntersect:
             raise NotImplementedError()
 
     def _rect_grid_to_shape_generator(self):
-        """
-        internal method, generator yielding shapely polygons for
-        structured grid cells
+        """internal method, generator yielding shapely polygons for structured
+        grid cells.
 
         Returns
         -------
         generator :
             generator of shapely Polygons
-
         """
         for i in range(self.mfgrid.nrow):
             for j in range(self.mfgrid.ncol):
@@ -180,9 +168,8 @@ class GridIntersect:
                 yield p
 
     def _usg_grid_to_shape_generator(self):
-        """
-        internal method, convert unstructred grid to list of shapely
-        polygons
+        """internal method, convert unstructred grid to list of shapely
+        polygons.
 
         Returns
         -------
@@ -192,15 +179,13 @@ class GridIntersect:
         raise NotImplementedError()
 
     def _vtx_grid_to_shape_generator(self):
-        """
-        internal method, generator yielding shapely polygons for
-        vertex grids
+        """internal method, generator yielding shapely polygons for vertex
+        grids.
 
         Returns
         -------
         generator :
             generator of shapely Polygons
-
         """
         # for cell2d rec-arrays
         if isinstance(self.mfgrid._cell2d, np.recarray):
@@ -232,22 +217,18 @@ class GridIntersect:
                 yield p
 
     def _rect_grid_to_shape_list(self):
-        """
-        internal method, list of shapely polygons for
-        structured grid cells
+        """internal method, list of shapely polygons for structured grid cells.
 
         Returns
         -------
         list :
             list of shapely Polygons
-
         """
         return list(self._rect_grid_to_shape_generator())
 
     def _usg_grid_to_shape_list(self):
-        """
-        internal method, convert unstructred grid to list of shapely
-        polygons
+        """internal method, convert unstructred grid to list of shapely
+        polygons.
 
         Returns
         -------
@@ -257,20 +238,17 @@ class GridIntersect:
         raise NotImplementedError()
 
     def _vtx_grid_to_shape_list(self):
-        """
-        internal method, list of shapely polygons for vertex grids
+        """internal method, list of shapely polygons for vertex grids.
 
         Returns
         -------
         list :
             list of shapely Polygons
-
         """
         return list(self._vtx_grid_to_shape_generator())
 
     def query_grid(self, shp):
-        """
-        Perform spatial query on grid with shapely geometry. If no spatial
+        """Perform spatial query on grid with shapely geometry. If no spatial
         query is possible returns all grid cells.
 
         Parameters
@@ -282,7 +260,6 @@ class GridIntersect:
         -------
         list or generator expression
             list or generator containing grid cells in query result
-
         """
         if self.rtree:
             result = self.strtree.query(shp)
@@ -293,8 +270,7 @@ class GridIntersect:
 
     @staticmethod
     def filter_query_result(qresult, shp):
-        """
-        Filter query result to obtain grid cells that intersect with shape.
+        """Filter query result to obtain grid cells that intersect with shape.
         Used to (further) reduce query result to cells that definitely
         intersect with shape.
 
@@ -310,7 +286,6 @@ class GridIntersect:
         -------
         qfiltered
             filter or generator containing polygons that intersect with shape
-
         """
         # prepare shape for efficient batch intersection check
         prepshp = prep(shp)
@@ -320,8 +295,7 @@ class GridIntersect:
 
     @staticmethod
     def sort_gridshapes(shape_iter):
-        """
-        Sort query result by node id.
+        """Sort query result by node id.
 
         Parameters
         ----------
@@ -332,7 +306,6 @@ class GridIntersect:
         -------
         list
             sorted list of gridcells
-
         """
         if not isinstance(shape_iter, list):
             shapelist = list(shape_iter)
@@ -345,8 +318,7 @@ class GridIntersect:
         return shapelist
 
     def _intersect_point_shapely(self, shp, sort_by_cellid=True):
-        """
-        intersect grid with Point or MultiPoint
+        """intersect grid with Point or MultiPoint.
 
         Parameters
         ----------
@@ -362,7 +334,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
         # query grid
         qresult = self.query_grid(shp)
@@ -418,8 +389,7 @@ class GridIntersect:
 
     def _intersect_linestring_shapely(self, shp, keepzerolengths=False,
                                       sort_by_cellid=True):
-        """
-        intersect with LineString or MultiLineString
+        """intersect with LineString or MultiLineString.
 
         Parameters
         ----------
@@ -435,7 +405,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
         # query grid
         qresult = self.query_grid(shp)
@@ -485,8 +454,7 @@ class GridIntersect:
         return rec
 
     def _intersect_polygon_shapely(self, shp, sort_by_cellid=True):
-        """
-        intersect with Polygon or MultiPolygon
+        """intersect with Polygon or MultiPolygon.
 
         Parameters
         ----------
@@ -500,7 +468,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
         # query grid
         qresult = self.query_grid(shp)
@@ -557,7 +524,6 @@ class GridIntersect:
         rec : numpy.recarray
             a record array containing cell IDs of the gridcells
             the shape intersects with
-
         """
         # query grid
         qresult = self.query_grid(shp)
@@ -573,8 +539,7 @@ class GridIntersect:
         return rec
 
     def _intersect_point_structured(self, shp):
-        """
-        intersection method for intersecting points with structured grids
+        """intersection method for intersecting points with structured grids.
 
         Parameters
         ----------
@@ -585,7 +550,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
         nodelist = []
 
@@ -646,8 +610,7 @@ class GridIntersect:
         return rec
 
     def _intersect_linestring_structured(self, shp, keepzerolengths=False):
-        """
-        method for intersecting linestrings with structured grids
+        """method for intersecting linestrings with structured grids.
 
         Parameters
         ----------
@@ -662,7 +625,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
         # get local extent of grid
         if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
@@ -790,10 +752,9 @@ class GridIntersect:
         return rec
 
     def _get_nodes_intersecting_linestring(self, linestring):
-        """
-        helper function, intersect the linestring with the a structured
-        grid and return a list of node indices and the length of the
-        line in that node.
+        """helper function, intersect the linestring with the a structured grid
+        and return a list of node indices and the length of the line in that
+        node.
 
         Parameters
         ----------
@@ -805,7 +766,6 @@ class GridIntersect:
         nodelist, lengths, vertices: lists
             lists containing node ids, lengths of intersects and the
             start and end points of the intersects
-
         """
         nodelist = []
         lengths = []
@@ -877,8 +837,7 @@ class GridIntersect:
 
     def _check_adjacent_cells_intersecting_line(self, linestring, i_j,
                                                 nodelist):
-        """
-        helper method that follows a line through a structured grid
+        """helper method that follows a line through a structured grid.
 
         Parameters
         ----------
@@ -896,7 +855,6 @@ class GridIntersect:
             lists containing nodes, lengths and vertices of
             intersections with adjacent cells relative to the
             current cell (i, j)
-
         """
         i, j = i_j
 
@@ -1021,9 +979,8 @@ class GridIntersect:
         return node, length, verts, ixshape
 
     def _intersect_rectangle_structured(self, rectangle):
-        """
-        intersect a rectangle with a structured grid to retrieve
-        node ids of intersecting grid cells.
+        """intersect a rectangle with a structured grid to retrieve node ids of
+        intersecting grid cells.
 
         Note: only works in local coordinates (i.e. non-rotated grid
         with origin at (0, 0))
@@ -1039,7 +996,6 @@ class GridIntersect:
         nodelist: list of tuples
             list of tuples containing node ids with which
             the rectangle intersects
-
         """
 
         nodelist = []
@@ -1101,9 +1057,8 @@ class GridIntersect:
         return nodelist
 
     def _intersect_polygon_structured(self, shp):
-        """
-        intersect polygon with a structured grid. Uses
-        bounding box of the Polygon to limit search space.
+        """intersect polygon with a structured grid. Uses bounding box of the
+        Polygon to limit search space.
 
         Notes
         -----
@@ -1120,7 +1075,6 @@ class GridIntersect:
         -------
         numpy.recarray
             a record array containing information about the intersection
-
         """
 
         # initialize the result lists
@@ -1199,8 +1153,8 @@ class GridIntersect:
         return rec
 
     def _transform_geo_interface_polygon(self, polygon):
-        """Internal method, helper function to transform
-        geometry __geo_interface__.
+        """Internal method, helper function to transform geometry
+        __geo_interface__.
 
         Used for translating intersection result coordinates back into
         real-world coordinates.
@@ -1215,7 +1169,6 @@ class GridIntersect:
         geom_list : list
             list containing transformed coordinates in same structure as
             the original __geo_interface__.
-
         """
 
         if polygon.geom_type.startswith("Multi"):
@@ -1263,9 +1216,8 @@ class GridIntersect:
 
     @staticmethod
     def plot_polygon(rec, ax=None, **kwargs):
-        """
-        method to plot the polygon intersection results from
-        the resulting numpy.recarray.
+        """method to plot the polygon intersection results from the resulting
+        numpy.recarray.
 
         Note: only works when recarray has 'intersects' column!
 
@@ -1283,7 +1235,6 @@ class GridIntersect:
         -------
         ax: matplotlib.pyplot.axes
             returns the axes handle
-
         """
         try:
             from descartes import PolygonPatch
@@ -1313,9 +1264,8 @@ class GridIntersect:
 
     @staticmethod
     def plot_linestring(rec, ax=None, **kwargs):
-        """
-        method to plot the linestring intersection results from
-        the resulting numpy.recarray.
+        """method to plot the linestring intersection results from the
+        resulting numpy.recarray.
 
         Note: only works when recarray has 'intersects' column!
 
@@ -1333,7 +1283,6 @@ class GridIntersect:
         -------
         ax: matplotlib.pyplot.axes
             returns the axes handle
-
         """
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
@@ -1361,9 +1310,8 @@ class GridIntersect:
 
     @staticmethod
     def plot_point(rec, ax=None, **kwargs):
-        """
-        method to plot the point intersection results from
-        the resulting numpy.recarray.
+        """method to plot the point intersection results from the resulting
+        numpy.recarray.
 
         Note: only works when recarray has 'intersects' column!
 
@@ -1380,7 +1328,6 @@ class GridIntersect:
         -------
         ax: matplotlib.pyplot.axes
             returns the axes handle
-
         """
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
@@ -1401,16 +1348,13 @@ class GridIntersect:
 
 
 class ModflowGridIndices:
-    """
-    Collection of methods that can be used to find cell indices for a
-    structured, but irregularly spaced MODFLOW grid.
-    """
+    """Collection of methods that can be used to find cell indices for a
+    structured, but irregularly spaced MODFLOW grid."""
 
     @staticmethod
     def find_position_in_array(arr, x):
-        """
-        If arr has x positions for the left edge of a cell, then
-        return the cell index containing x.
+        """If arr has x positions for the left edge of a cell, then return the
+        cell index containing x.
 
         Parameters
         ----------
@@ -1419,7 +1363,6 @@ class ModflowGridIndices:
 
         x : float
             The x position to find in arr.
-
         """
         jpos = None
 
@@ -1446,9 +1389,8 @@ class ModflowGridIndices:
 
     @staticmethod
     def kij_from_nodenumber(nodenumber, nlay, nrow, ncol):
-        """
-        Convert the modflow node number to a zero-based layer, row and column
-        format.  Return (k0, i0, j0).
+        """Convert the modflow node number to a zero-based layer, row and
+        column format.  Return (k0, i0, j0).
 
         Parameters
         ----------
@@ -1461,7 +1403,6 @@ class ModflowGridIndices:
             The number of rows.
         ncol: int
             The number of columns.
-
         """
         if nodenumber > nlay * nrow * ncol:
             raise Exception('Error in function kij_from_nodenumber...')
@@ -1473,8 +1414,7 @@ class ModflowGridIndices:
 
     @staticmethod
     def nodenumber_from_kij(k, i, j, nrow, ncol):
-        """
-        Calculate the nodenumber using the zero-based layer, row, and column
+        """Calculate the nodenumber using the zero-based layer, row, and column
         values.  The first node has a value of 1.
 
         Parameters
@@ -1494,8 +1434,7 @@ class ModflowGridIndices:
 
     @staticmethod
     def nn0_from_kij(k, i, j, nrow, ncol):
-        """
-        Calculate the zero-based nodenumber using the zero-based layer, row,
+        """Calculate the zero-based nodenumber using the zero-based layer, row,
         and column values.  The first node has a value of 0.
 
         Parameters
@@ -1515,8 +1454,7 @@ class ModflowGridIndices:
 
     @staticmethod
     def kij_from_nn0(n, nlay, nrow, ncol):
-        """
-        Convert the node number to a zero-based layer, row and column
+        """Convert the node number to a zero-based layer, row and column
         format.  Return (k0, i0, j0).
 
         Parameters
@@ -1530,7 +1468,6 @@ class ModflowGridIndices:
             The number of rows.
         ncol : int
             The number of columns.
-
         """
         if n > nlay * nrow * ncol:
             raise Exception('Error in function kij_from_nodenumber...')
