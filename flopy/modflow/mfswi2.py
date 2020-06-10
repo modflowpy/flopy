@@ -1,11 +1,9 @@
-"""
-mfswi2 module.  Contains the ModflowSwi2 class. Note that the user can access
-the ModflowSwi2 class as `flopy.modflow.ModflowSwi2`.
+"""mfswi2 module.  Contains the ModflowSwi2 class. Note that the user can
+access the ModflowSwi2 class as `flopy.modflow.ModflowSwi2`.
 
 Additional information for this MODFLOW package can be found at the `Online
 MODFLOW Guide
 <http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/swi2_seawater_intrusion_pack.htm>`_.
-
 """
 import sys
 
@@ -16,8 +14,7 @@ from ..utils import Util2d, Util3d
 
 
 class ModflowSwi2(Package):
-    """
-    MODFLOW SWI2 Package Class.
+    """MODFLOW SWI2 Package Class.
 
     Parameters
     ----------
@@ -101,10 +98,10 @@ class ModflowSwi2(Package):
         Fraction of threshold used to move the toe to adjacent non-empty cells
         when the surface is below a minimum value defined by the user-specified
         TOESLOPE value. (default is 0.1).
-    napptmx : int
+    nadptmx : int
         only used if adaptive is True. Maximum number of SWI2 time steps per
         MODFLOW time step. (default is 1).
-    napptmn : int
+    nadptmn : int
         only used if adaptive is True. Minimum number of SWI2 time steps per
         MODFLOW time step. (default is 1).
     adptfct : float
@@ -185,7 +182,6 @@ class ModflowSwi2(Package):
     >>> import flopy
     >>> m = flopy.modflow.Modflow()
     >>> swi2 = flopy.modflow.ModflowSwi2(m)
-
     """
 
     def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None,
@@ -198,10 +194,7 @@ class ModflowSwi2(Package):
                  nadptmn=1, adptfct=1.0, nu=0.025, zeta=[0.0], ssz=0.25,
                  isource=0, obsnam=None, obslrc=None, npln=None,
                  extension='swi2', unitnumber=None, filenames=None):
-        """
-        Package constructor.
-
-        """
+        """Package constructor."""
         # set default unit number of one is not specified
         if unitnumber is None:
             unitnumber = ModflowSwi2.defaultunit()
@@ -271,6 +264,7 @@ class ModflowSwi2(Package):
                     ext = 'zobs.bin'
             else:
                 iswiobs = 1053
+
             # update external file information with swi2 observation output,
             # if necessary
             model.add_output_file(iswiobs, fname=fname, binflag=binflag,
@@ -320,11 +314,13 @@ class ModflowSwi2(Package):
                                                                        nobs, \
                                                                        iswizt, \
                                                                        iswiobs
+        # set cbc unit
         self.ipakcb = ipakcb
 
-        #
+        # set solver flags
         self.nsolver, self.iprsol, self.mutsol = nsolver, iprsol, mutsol
-        #
+
+        # set solver parameters
         self.solver2params = solver2params
         #
         self.toeslope, self.tipslope, self.alpha, self.beta = toeslope, \
@@ -332,6 +328,7 @@ class ModflowSwi2(Package):
                                                               alpha, \
                                                               beta
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
+
         # Create arrays so that they have the correct size
         if self.istrat == 1:
             self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu,
@@ -356,8 +353,7 @@ class ModflowSwi2(Package):
         self.parent.add_package(self)
 
     def write_file(self, check=True, f=None):
-        """
-        Write the package file.
+        """Write the package file.
 
         Parameters
         ----------
@@ -367,15 +363,17 @@ class ModflowSwi2(Package):
         Returns
         -------
         None
-
         """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
+
         # Open file for writing
         if f is None:
             f = open(self.fn_path, 'w')
+
         # First line: heading
         f.write('{}\n'.format(
             self.heading))  # Writing heading not allowed in SWI???
+
         # write dataset 1
         f.write('# Dataset 1\n')
         f.write(
@@ -385,15 +383,18 @@ class ModflowSwi2(Package):
                                                           self.iswizt,
                                                           self.ipakcb,
                                                           self.iswiobs))
+
         # write SWI2 options
         if self.options != None:
             for o in self.options:
                 f.write(' {}'.format(o))
         f.write('\n')
+
         # write dataset 2a
         f.write('# Dataset 2a\n')
         f.write('{:10d}{:10d}{:10d}\n'.format(self.nsolver, self.iprsol,
                                               self.mutsol))
+
         # write dataset 2b
         if self.nsolver == 2:
             f.write('# Dataset 2b\n')
@@ -406,12 +407,14 @@ class ModflowSwi2(Package):
             f.write('{:10d}'.format(self.solver2params['nbpol']))
             f.write('{:14.6g}'.format(self.solver2params['damp']))
             f.write('{:14.6g}\n'.format(self.solver2params['dampt']))
+
         # write dataset 3a
         f.write('# Dataset 3a\n')
         f.write('{:14.6g}{:14.6g}'.format(self.toeslope, self.tipslope))
         if self.alpha is not None:
             f.write('{:14.6g}{:14.6g}'.format(self.alpha, self.beta))
         f.write('\n')
+
         # write dataset 3b
         if self.adaptive is True:
             f.write('# Dataset 3b\n')
@@ -421,17 +424,21 @@ class ModflowSwi2(Package):
         # write dataset 4
         f.write('# Dataset 4\n')
         f.write(self.nu.get_file_entry())
+
         # write dataset 5
         f.write('# Dataset 5\n')
         for isur in range(self.nsrf):
             for ilay in range(nlay):
                 f.write(self.zeta[isur][ilay].get_file_entry())
+
         # write dataset 6
         f.write('# Dataset 6\n')
         f.write(self.ssz.get_file_entry())
+
         # write dataset 7
         f.write('# Dataset 7\n')
         f.write(self.isource.get_file_entry())
+
         # write dataset 8
         if self.nobs > 0:
             f.write('# Dataset 8\n')
@@ -447,8 +454,7 @@ class ModflowSwi2(Package):
 
     @staticmethod
     def load(f, model, ext_unit_dict=None):
-        """
-        Load an existing package.
+        """Load an existing package.
 
         Parameters
         ----------
@@ -474,7 +480,6 @@ class ModflowSwi2(Package):
         >>> import flopy
         >>> m = flopy.modflow.Modflow()
         >>> swi2 = flopy.modflow.ModflowSwi2.load('test.swi2', m)
-
         """
 
         if model.verbose:
