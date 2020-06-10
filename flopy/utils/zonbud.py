@@ -59,9 +59,9 @@ class ZoneBudget(object):
             assert np.issubdtype(z.dtype,
                                  np.integer), 'Zones dtype must be integer'
         else:
-            raise Exception(
-                'Please pass zones as a numpy ndarray of (positive) integers. {}'.format(
-                    z.dtype))
+            e = 'Please pass zones as a numpy ndarray of (positive)' \
+                ' integers. {}'.format(z.dtype)
+            raise Exception(e)
 
         # Check for negative zone values
         if np.any(z < 0):
@@ -133,20 +133,19 @@ class ZoneBudget(object):
             izone = np.zeros(self.cbc_shape, self.int_type)
             izone[:] = z[0, :, :]
         else:
-            raise Exception(
-                'Shape of the zone array is not recognized: {}'.format(
-                    z.shape))
+            e = 'Shape of the zone array is not recognized: {}'.format(
+                    z.shape)
+            raise Exception(e)
 
         self.izone = izone
-        self.allzones = [z for z in np.unique(self.izone)]
+        self.allzones = np.unique(izone)
         self._zonenamedict = OrderedDict([(z, 'ZONE_{}'.format(z))
-                                          for z in self.allzones if
-                                          z != 0])
+                                          for z in self.allzones])
 
         if aliases is not None:
-            assert isinstance(aliases,
-                              dict), 'Input aliases not recognized. Please pass a dictionary ' \
+            s = 'Input aliases not recognized. Please pass a dictionary ' \
                                      'with key,value pairs of zone/alias.'
+            assert isinstance(aliases, dict), s
             # Replace the relevant field names (ignore zone 0)
             seen = []
             for z, a in iter(aliases.items()):
@@ -157,7 +156,7 @@ class ZoneBudget(object):
                     self._zonenamedict[z] = '_'.join(a.split())
                     seen.append(z)
 
-        self._iflow_recnames = self._get_internal_flow_record_names()
+        # self._iflow_recnames = self._get_internal_flow_record_names()
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip() for n in
@@ -397,8 +396,8 @@ class ZoneBudget(object):
             raise ImportError(msg)
 
         valid_index_keys = ['totim', 'kstpkper']
-        assert index_key in valid_index_keys, 'index_key "{}" is not valid.'.format(
-            index_key)
+        s = 'index_key "{}" is not valid.'.format(index_key)
+        assert index_key in valid_index_keys, s
 
         valid_timeunit = ['S', 'M', 'H', 'D', 'Y']
 
@@ -464,8 +463,8 @@ class ZoneBudget(object):
 
     def _compute_budget(self, kstpkper=None, totim=None):
         """
-        Creates a budget for the specified zone array. This function only supports the
-        use of a single time step/stress period or time.
+        Creates a budget for the specified zone array. This function only
+        supports the use of a single time step/stress period or time.
 
         Parameters
         ----------
@@ -523,22 +522,22 @@ class ZoneBudget(object):
 
         return
 
-    def _get_internal_flow_record_names(self):
-        """
-        Get internal flow record names
-
-        Returns
-        -------
-        iflow_recnames : np.recarray
-            recarray of internal flow terms
-
-        """
-        iflow_recnames = OrderedDict([(0, 'ZONE_0')])
-        for z, a in iter(self._zonenamedict.items()):
-            iflow_recnames[z] = '{}'.format(a)
-        # dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
-        # iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
-        return iflow_recnames
+    # def _get_internal_flow_record_names(self):
+    #     """
+    #     Get internal flow record names
+    #
+    #     Returns
+    #     -------
+    #     iflow_recnames : np.recarray
+    #         recarray of internal flow terms
+    #
+    #     """
+    #     iflow_recnames = OrderedDict()
+    #     for z, a in iter(self._zonenamedict.items()):
+    #         iflow_recnames[z] = '{}'.format(a)
+    #     dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
+    #     iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
+    #     return iflow_recnames
 
     def _add_empty_record(self, recordarray, recname, kstpkper=None,
                           totim=None):
@@ -617,7 +616,7 @@ class ZoneBudget(object):
                                                          recname.split()),
                                                      kstpkper, totim)
 
-        for z, n in self._iflow_recnames.items():
+        for z, n in self._zonenamedict.items():
             if z == 0 and 0 not in self.allzones:
                 continue
             else:
@@ -643,7 +642,7 @@ class ZoneBudget(object):
                                                          recname.split()),
                                                      kstpkper, totim)
 
-        for z, n in self._iflow_recnames.items():
+        for z, n in self._zonenamedict.items():
             if z == 0 and 0 not in self.allzones:
                 continue
             else:
@@ -708,8 +707,8 @@ class ZoneBudget(object):
         idx = tz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = ['FROM_' + self._iflow_recnames[z] for z in fzi]
-        colnames = [self._iflow_recnames[z] for z in tzi]
+        rownames = ['FROM_' + self._zonenamedict[z] for z in fzi]
+        colnames = [self._zonenamedict[z] for z in tzi]
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
                                         totim)
@@ -718,8 +717,8 @@ class ZoneBudget(object):
         idx = fz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = ['TO_' + self._iflow_recnames[z] for z in tzi]
-        colnames = [self._iflow_recnames[z] for z in fzi]
+        rownames = ['TO_' + self._zonenamedict[z] for z in tzi]
+        colnames = [self._zonenamedict[z] for z in fzi]
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
                                         totim)
@@ -1210,8 +1209,9 @@ class ZoneBudget(object):
         data = self.cbc.get_data(text=recname, kstpkper=kstpkper,
                                  totim=totim)
         if len(data) == 0:
-            # Empty data, can occur during the first time step of a transient model when
-            # storage terms are zero and not in the cell-budget file.
+            # Empty data, can occur during the first time step of a transient
+            # model when storage terms are zero and not in the cell-budget
+            # file.
             return
         else:
             data = data[0]
@@ -1453,7 +1453,8 @@ def _numpyvoid2numeric(a):
 
 def write_zbarray(fname, X, fmtin=None, iprn=None):
     """
-    Saves a numpy array in a format readable by the zonebudget program executable.
+    Saves a numpy array in a format readable by the zonebudget program
+    executable.
 
     File format:
     line 1: nlay, nrow, ncol
@@ -1466,13 +1467,13 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     example from NACP:
     19 250 500
     INTERNAL      (10I8)
-         199     199     199     199     199     199     199     199     199     199
-         199     199     199     199     199     199     199     199     199     199
-         ...
+    199     199     199     199     199     199     199     199     199     199
+    199     199     199     199     199     199     199     199     199     199
+    ...
     INTERNAL      (10I8)
-         199     199     199     199     199     199     199     199     199     199
-         199     199     199     199     199     199     199     199     199     199
-         ...
+    199     199     199     199     199     199     199     199     199     199
+    199     199     199     199     199     199     199     199     199     199
+    ...
 
     Parameters
     ----------
@@ -1536,10 +1537,7 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
                         start = end
                         end = start + fmtin
                         vals = rowvals[start:end]
-                        # vals = rowvals[start:end]
-                        # if len(vals) > 0:
-                        #     s = ''.join([formatter(int(val)) for val in vals]) + '\n'
-                        #     f.write(s)
+
             elif fmtin == ncol:
                 for row in range(nrow):
                     vals = X[lay, row, :].ravel()
@@ -1550,7 +1548,8 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 def read_zbarray(fname):
     """
-    Reads an ascii array in a format readable by the zonebudget program executable.
+    Reads an ascii array in a format readable by the zonebudget program
+    executable.
 
     Parameters
     ----------
