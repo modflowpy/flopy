@@ -84,7 +84,8 @@ class GridIntersect:
      - The optimized routines for structured grids will often outperform
        the shapely routines because of the reduced overhead of building and
        parsing the STR-tree. However, for polygons the STR-tree implementation
-       is often faster than the optimized structured routines.
+       is often faster than the optimized structured routines, especially
+       for larger grids.
 
     """
 
@@ -99,8 +100,8 @@ class GridIntersect:
             MODFLOW grid as implemented in flopy
         method : str, optional
             default is None, which determines intersection method based on
-            the grid type. Options are either 'vertex' which uses shapely 
-            interesection operations or 'structured' which uses optimized 
+            the grid type. Options are either 'vertex' which uses shapely
+            interesection operations or 'structured' which uses optimized
             methods that only work for structured grids
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no
@@ -290,7 +291,8 @@ class GridIntersect:
             result = self._get_gridshapes()
         return result
 
-    def filter_query_result(self, qresult, shp):
+    @staticmethod
+    def filter_query_result(qresult, shp):
         """
         Filter query result to obtain grid cells that intersect with shape.
         Used to (further) reduce query result to cells that definitely
@@ -1103,6 +1105,12 @@ class GridIntersect:
         intersect polygon with a structured grid. Uses
         bounding box of the Polygon to limit search space.
 
+        Notes
+        -----
+        If performance is slow, try setting the method to 'vertex'
+        in the GridIntersect object. For polygons this is often 
+        faster.
+
         Parameters
         ----------
         shp : shapely.geometry.Polygon
@@ -1158,13 +1166,15 @@ class GridIntersect:
                     if (self.mfgrid.angrot != 0. or self.mfgrid.xoffset != 0.
                             or self.mfgrid.yoffset != 0.):
                         v_realworld = []
-                        for pt in intersect.__geo_interface__["coordinates"]:
-                            rx, ry = transform([pt[0]], [pt[1]],
-                                               self.mfgrid.xoffset,
-                                               self.mfgrid.yoffset,
-                                               self.mfgrid.angrot_radians,
-                                               inverse=False)
-                            v_realworld.append([rx, ry])
+                        if intersect.geom_type.startswith("Multi"):
+                            for ipoly in intersect:
+                                v_realworld += \
+                                    self._transform_geo_interface_polygon(
+                                        ipoly)
+                        else:
+                            v_realworld += \
+                                self._transform_geo_interface_polygon(
+                                    intersect)
                         intersect_realworld = rotate(intersect,
                                                      self.mfgrid.angrot,
                                                      origin=(0., 0.))
@@ -1187,6 +1197,69 @@ class GridIntersect:
         rec.ixshapes = ixshapes
 
         return rec
+
+    def _transform_geo_interface_polygon(self, polygon):
+        """Internal method, helper function to transform 
+        geometry __geo_interface__.
+
+        Used for translating intersection result coordinates back into 
+        real-world coordinates.
+
+        Parameters
+        ----------
+        polygon : shapely.geometry.Polygon
+            polygon to transform coordinates for
+
+        Returns
+        -------
+        geom_list : list 
+            list containing transformed coordinates in same structure as
+            the original __geo_interface__.
+
+        """
+
+        if polygon.geom_type.startswith("Multi"):
+            raise TypeError("Does not support Multi geometries!")
+
+        geom_list = []
+        for coords in polygon.__geo_interface__["coordinates"]:
+            geoms = []
+            try:
+                # test depth of list/tuple
+                coords[0][0][0]
+                if len(coords) == 2:
+                    shell, holes = coords
+                else:
+                    raise ValueError("Cannot parse __geo_interface__")
+            except TypeError:
+                shell = coords
+                holes = None
+            except Exception as e:
+                raise e
+            # transform shell coordinates
+            shell_pts = []
+            for pt in shell:
+                rx, ry = transform([pt[0]], [pt[1]],
+                                   self.mfgrid.xoffset,
+                                   self.mfgrid.yoffset,
+                                   self.mfgrid.angrot_radians,
+                                   inverse=False)
+                shell_pts.append((rx, ry))
+            geoms.append(shell_pts)
+            # transform holes coordinates if necessary
+            if holes:
+                holes_pts = []
+                for pt in holes:
+                    rx, ry = transform([pt[0]], [pt[1]],
+                                       self.mfgrid.xoffset,
+                                       self.mfgrid.yoffset,
+                                       self.mfgrid.angrot_radians,
+                                       inverse=False)
+                    holes_pts.append((rx, ry))
+                geoms.append(holes_pts)
+            # append (shells, holes) to transformed coordinates list
+            geom_list.append(tuple(geoms))
+        return geom_list
 
     @staticmethod
     def plot_polygon(rec, ax=None, **kwargs):
