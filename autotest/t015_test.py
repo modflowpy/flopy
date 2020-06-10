@@ -38,12 +38,13 @@ str_items = {0: {'mfnam': 'str.nam',
 
 def test_str_free():
     m = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                   model_ws=path, verbose=True, check=False)
+                                   model_ws=path, verbose=False, check=False)
     ws = tpth
     m.change_model_ws(ws)
 
     # get pointer to str package
     str = m.str
+    str.istcb2 = -1
 
     # add aux variables to str
     aux_names = ['aux iface', 'aux xyz']
@@ -65,15 +66,19 @@ def test_str_free():
                                    ntrib=str.ntrib, ndiv=str.ndiv,
                                    icalc=str.icalc, const=str.const,
                                    ipakcb=str.ipakcb, istcb2=str.istcb2,
+                                   iptflg=str.iptflg, irdflg=str.irdflg,
                                    stress_period_data={0: current},
                                    segment_data=str.segment_data,
                                    options=aux_names)
 
     # add head output to oc file
-    oclst = ['PRINT HEAD', 'PRINT BUDGET', 'SAVE HEAD']
-    spd = {(0,0): oclst, (0,1): oclst, (0,2): oclst}
+    oclst = ['PRINT HEAD', 'PRINT BUDGET', 'SAVE HEAD', 'SAVE BUDGET']
+    spd = {(0, 0): oclst, (0, 1): oclst, (0, 2): oclst}
     oc = flopy.modflow.ModflowOc(m, stress_period_data=spd)
     oc.reset_budgetunit()
+
+    # reset ipakcb for str package to get ascii output in lst file
+    str.ipakcb = -1
 
     m.write_input()
     if run:
@@ -86,7 +91,7 @@ def test_str_free():
     # load the fixed format model with aux variables
     try:
         m2 = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                        model_ws=ws, verbose=True, check=False)
+                                        model_ws=ws, verbose=False, check=False)
     except:
         m2 = None
 
@@ -107,7 +112,7 @@ def test_str_free():
     # load the free format model
     try:
         m2 = flopy.modflow.Modflow.load(str_items[0]['mfnam'], exe_name=mfexe,
-                                        model_ws=ws, verbose=True, check=False)
+                                        model_ws=ws, verbose=False, check=False)
     except:
         m2 = None
 
@@ -134,4 +139,4 @@ def test_str_plot():
 
 if __name__ == '__main__':
     test_str_free()
-    #test_str_plot()
+    test_str_plot()

@@ -24,7 +24,6 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
@@ -535,17 +534,20 @@ class BaseModel(ModelInterface):
                         pn = p.name[idx]
                     except:
                         pn = p.name
-                    msg = "WARNING: unit {} ".format(u) + \
-                          "of package {} already in use".format(pn)
-                    print(msg)
+                    if self.verbose:
+                        msg = "\nWARNING:\n    unit {} ".format(u) + \
+                              "of package {} ".format(pn) + \
+                              "already in use."
+                        print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
             elif isinstance(p, type(pp)):
-                print('****Warning -- two packages of the same type: ',
-                      type(p), type(pp))
-                print('replacing existing Package...')
+                if self.verbose:
+                    print("\nWARNING:\n    Two packages of the same type, " +
+                          "Replacing existing " +
+                          "'{}' package.".format(p.name[0]))
                 self.packagelist[i] = p
                 return
         if self.verbose:
@@ -620,7 +622,8 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-        #return self.get_package(item)
+
+        # return self.get_package(item)
         # to avoid infinite recursion
         if item == "_packagelist" or item == "packagelist":
             raise AttributeError(item)
@@ -745,8 +748,10 @@ class BaseModel(ModelInterface):
 
         """
         if fname in self.output_fnames:
-            print("BaseModel.add_output() warning: " +
-                  "replacing existing filename {0}".format(fname))
+            if self.verbose:
+                msg = "BaseModel.add_output() warning: " + \
+                      "replacing existing filename {}".format(fname)
+                print(msg)
             idx = self.output_fnames.index(fname)
             if self.verbose:
                 self._output_msg(idx, add=False)
@@ -800,8 +805,8 @@ class BaseModel(ModelInterface):
                     self.output_binflag.pop(i)
                     self.output_packages.pop(i)
         else:
-            raise Exception(
-                ' either fname or unit must be passed to remove_output()')
+            msg = ' either fname or unit must be passed to remove_output()'
+            raise Exception(msg)
         return
 
     def get_output(self, fname=None, unit=None):
@@ -828,8 +833,8 @@ class BaseModel(ModelInterface):
                     return self.output_fnames[i]
             return None
         else:
-            raise Exception(
-                ' either fname or unit must be passed to get_output()')
+            msg = ' either fname or unit must be passed to get_output()'
+            raise Exception(msg)
         return
 
     def set_output_attribute(self, fname=None, unit=None, attr=None):
@@ -859,9 +864,9 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            raise Exception(
-                ' either fname or unit must be passed ' +
-                ' to set_output_attribute()')
+            msg = ' either fname or unit must be passed ' + \
+                  ' to set_output_attribute()'
+            raise Exception(msg)
         if attr is not None:
             if idx is not None:
                 for key, value in attr.items:
@@ -930,16 +935,20 @@ class BaseModel(ModelInterface):
 
         """
         if fname in self.external_fnames:
-            print("BaseModel.add_external() warning: " +
-                  "replacing existing filename {}".format(fname))
+            if self.verbose:
+                msg = "BaseModel.add_external() warning: " + \
+                      "replacing existing filename {}".format(fname)
+                print(msg)
             idx = self.external_fnames.index(fname)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
             self.external_output.pop(idx)
         if unit in self.external_units:
-            print("BaseModel.add_external() warning: " +
-                  "replacing existing unit {}".format(unit))
+            if self.verbose:
+                msg = "BaseModel.add_external() warning: " + \
+                      "replacing existing unit {}".format(unit)
+                print(msg)
             idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
@@ -975,8 +984,8 @@ class BaseModel(ModelInterface):
                 if u == unit:
                     plist.append(i)
         else:
-            raise Exception(
-                ' either fname or unit must be passed to remove_external()')
+            msg = ' either fname or unit must be passed to remove_external()'
+            raise Exception(msg)
         # remove external file
         j = 0
         for i in plist:
@@ -1048,8 +1057,9 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = '{:14s} {:5d}  {}'.format(
-                        p.name[i], p.unit_number[i], p.file_name[i])
+                s = '{:14s} '.format(p.name[i]) + \
+                    '{:5d}  '.format(p.unit_number[i]) + \
+                    '{}'.format(p.file_name[i])
                 if p.extra[i]:
                     s += ' ' + p.extra[i]
                 lines.append(s)
@@ -1107,8 +1117,8 @@ class BaseModel(ModelInterface):
 
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
-            err = 'Error: Unsupported model version ({}).'.format(
-                self.version) + \
+            err = 'Error: Unsupported model ' + \
+                  'version ({}).'.format(self.version) + \
                   ' Valid model versions are:'
             for v in list(self.version_types.keys()):
                 err += ' {}'.format(v)

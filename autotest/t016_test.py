@@ -2,6 +2,20 @@ import os
 import flopy
 import numpy as np
 
+
+tpth = os.path.abspath(os.path.join('temp', 't016'))
+if not os.path.isdir(tpth):
+    os.makedirs(tpth)
+
+
+exe_name = 'mfusg'
+v = flopy.which(exe_name)
+
+run = True
+if v is None:
+    run = False
+
+
 def test_usg_disu_load():
 
     pthusgtest = os.path.join('..', 'examples', 'data', 'mfusg_test',
@@ -17,7 +31,7 @@ def test_usg_disu_load():
     assert isinstance(disu, flopy.modflow.ModflowDisU)
 
     # Change where model files are written
-    model_ws = os.path.join('temp', 't016')
+    model_ws = tpth
     m.model_ws = model_ws
 
     # Write the disu file
@@ -37,6 +51,7 @@ def test_usg_disu_load():
 
     return
 
+
 def test_usg_sms_load():
 
     pthusgtest = os.path.join('..', 'examples', 'data', 'mfusg_test',
@@ -52,7 +67,7 @@ def test_usg_sms_load():
     assert isinstance(sms, flopy.modflow.ModflowSms)
 
     # Change where model files are written
-    model_ws = os.path.join('temp', 't016')
+    model_ws = tpth
     m.model_ws = model_ws
 
     # Write the sms file
@@ -69,6 +84,39 @@ def test_usg_sms_load():
 
     return
 
+
+def test_usg_model():
+    mf = flopy.modflow.Modflow(version='mfusg', structured=True,
+                               model_ws=tpth, modelname='simple',
+                               exe_name=v)
+    dis = flopy.modflow.ModflowDis(mf, nlay=1, nrow=11, ncol=11)
+    bas = flopy.modflow.ModflowBas(mf)
+    lpf = flopy.modflow.ModflowLpf(mf)
+    wel = flopy.modflow.ModflowWel(mf, stress_period_data={0: [[0, 5, 5, -1.]]})
+    ghb = flopy.modflow.ModflowGhb(mf,
+                                   stress_period_data={
+                                       0: [[0, 0, 0, 1.0, 1000.],
+                                           [0, 9, 9, 0.0, 1000.], ]})
+    oc = flopy.modflow.ModflowOc(mf)
+    sms = flopy.modflow.ModflowSms(mf, options='complex')
+
+    # run with defaults
+    mf.write_input()
+    if run:
+        success, buff = mf.run_model()
+        assert success
+
+    # try different complexity options; all should run successfully
+    for complexity in ['simple', 'moderate', 'complex']:
+        print('testing MFUSG with sms complexity: ' + complexity)
+        sms = flopy.modflow.ModflowSms(mf, options=complexity)
+        sms.write_file()
+        if run:
+            success, buff = mf.run_model()
+            assert success
+
+
 if __name__ == '__main__':
     test_usg_disu_load()
     test_usg_sms_load()
+    test_usg_model()
