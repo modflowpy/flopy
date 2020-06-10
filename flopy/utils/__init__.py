@@ -46,4 +46,4 @@ from .recarray_utils import create_empty_recarray, ra_slice
 from .mtlistfile import MtListBudget
 from .optionblock import OptionBlock
 from .rasters import Raster
-from .gridintersect import GridIntersect,ModflowGridIndices
+from .gridintersect import GridIntersect, ModflowGridIndices

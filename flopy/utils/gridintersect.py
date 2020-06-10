@@ -88,7 +88,7 @@ class GridIntersect:
 
     """
 
-    def __init__(self, mfgrid, method="vertex", rtree=True):
+    def __init__(self, mfgrid, method=None, rtree=True):
         """
         Intersect shapes (Point, Linestring, Polygon) with a
         modflow grid.
@@ -98,13 +98,15 @@ class GridIntersect:
         mfgrid : flopy modflowgrid
             MODFLOW grid as implemented in flopy
         method : str, optional
-            either 'vertex' (default) which uses shapely interesection
-            operations or 'structured' which uses optimized methods that
-            only work for structured grids
+            default is None, which determines intersection method based on
+            the grid type. Options are either 'vertex' which uses shapely 
+            interesection operations or 'structured' which uses optimized 
+            methods that only work for structured grids
         rtree : bool, optional
             whether to build an STR-Tree, default is True. If False no
             STR-tree is built (which saves some time), but intersects will
             loop through all model gridcells (which is generally slower).
+            Only read when `method='vertex'`.
 
         """
         if not shply:
@@ -114,7 +116,12 @@ class GridIntersect:
             raise ModuleNotFoundError(msg)
 
         self.mfgrid = mfgrid
-        self.method = method
+        if method is None:
+            # determine method from grid_type
+            self.method = self.mfgrid.grid_type
+        else:
+            # set method
+            self.method = method
         self.rtree = rtree
 
         if self.method == "vertex":
@@ -137,7 +144,7 @@ class GridIntersect:
 
         else:
             raise NotImplementedError(
-                "Method 'structured' only works for structured grids.")
+                "Method '{0}' not recognized!".format)
 
     def _set_method_get_gridshapes(self):
         """
@@ -292,7 +299,7 @@ class GridIntersect:
         Parameters
         ----------
         qresult : iterable
-            iterable of polygons
+            query result, iterable of polygons
         shp : shapely.geometry
             shapely geometry that is prepared and used to filter
             query result
@@ -303,15 +310,10 @@ class GridIntersect:
             filter or generator containing polygons that intersect with shape
 
         """
-        # filter result further if possible
-        if self.rtree:
-            # prepare shape for efficient batch intersection check
-            prepshp = prep(shp)
-            # get only gridcells that intersect
-            qfiltered = filter(prepshp.intersects, qresult)
-        else:
-            # cannot be filtered, return original
-            qfiltered = qresult
+        # prepare shape for efficient batch intersection check
+        prepshp = prep(shp)
+        # get only gridcells that intersect
+        qfiltered = filter(prepshp.intersects, qresult)
         return qfiltered
 
     @staticmethod
