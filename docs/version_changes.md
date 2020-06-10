@@ -14,7 +14,6 @@ FloPy Changes
     * Fix issue in `PlotUtilities._plot_array_helper` mask MODFLOW-6 no flow and dry cells before plotting
     * Removed assumption that transient SSM data appears in the first stress period [#754](https://github.com/modflowpy/flopy/issues/754) [#756](https://github.com/modflowpy/flopy/issues/754).  Fix includes a new autotest ([t068_test_ssm.py](https://github.com/modflowpy/flopy/blob/develop/autotest/t068_test_ssm.py)) that adds transient concentration data after the first stress period.
     * Fix issues with add_record method for MfList [#758](https://github.com/modflowpy/flopy/pull/758)
-    * Fix issue with ZoneBudget class where active cells are located in zone 0 [#882](https://github.com/modflowpy/flopy/issues/882)
 
 ### Version 3.2.13
 
