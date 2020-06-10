@@ -1108,7 +1108,7 @@ class GridIntersect:
         Notes
         -----
         If performance is slow, try setting the method to 'vertex'
-        in the GridIntersect object. For polygons this is often 
+        in the GridIntersect object. For polygons this is often
         faster.
 
         Parameters
@@ -1199,10 +1199,10 @@ class GridIntersect:
         return rec
 
     def _transform_geo_interface_polygon(self, polygon):
-        """Internal method, helper function to transform 
+        """Internal method, helper function to transform
         geometry __geo_interface__.
 
-        Used for translating intersection result coordinates back into 
+        Used for translating intersection result coordinates back into
         real-world coordinates.
 
         Parameters
@@ -1212,7 +1212,7 @@ class GridIntersect:
 
         Returns
         -------
-        geom_list : list 
+        geom_list : list
             list containing transformed coordinates in same structure as
             the original __geo_interface__.
 
@@ -1226,7 +1226,7 @@ class GridIntersect:
             geoms = []
             try:
                 # test depth of list/tuple
-                coords[0][0][0]
+                _ = coords[0][0][0]
                 if len(coords) == 2:
                     shell, holes = coords
                 else:
