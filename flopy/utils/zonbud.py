@@ -705,7 +705,7 @@ class ZoneBudget(object):
             return
 
         # Inflows
-        idx = np.logical_not(np.array([item in tz for item in [0] * len(tz)]))
+        idx = tz != 0
         fzi = fz[idx]
         tzi = tz[idx]
         rownames = np.array(list(['FROM_' +
@@ -721,7 +721,7 @@ class ZoneBudget(object):
                                         totim)
 
         # Outflows
-        idx = np.logical_not(np.array([item in fz for item in [0] * len(fz)]))
+        idx = fz != 0
         fzi = fz[idx]
         tzi = tz[idx]
         rownames = np.array(list(['TO_' +
