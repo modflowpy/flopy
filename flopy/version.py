@@ -1,5 +1,5 @@
 # flopy version file automatically created using...make-release.py
-# created on...May 26, 2020 17:16:58
+# created on...June 11, 2020 11:16:17
 
 major = 3
 minor = 3
@@ -21,7 +21,7 @@ author_dict = {
     'Michael W. Toews': 'M.Toews@gns.cri.nz',
     'Eric D. Morway': 'emorway@usgs.gov',
     'Jason C. Bellino': 'jbellino@usgs.gov',
-    'Jeffrey Starn': 'jjstarn@usgs.gov',
+    'Jon Jeffrey Starn': 'jjstarn@usgs.gov',
     'Michael N. Fienen': 'mnfienen@usgs.gov',
 }
 __author__ = ', '.join(author_dict.keys())
