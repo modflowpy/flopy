@@ -58,6 +58,9 @@ class ModflowGwflak(mfpackage.MFPackage):
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
           information.
+    package_convergence_filerecord : [package_convergence_filename]
+        * package_convergence_filename (string) name of the comma spaced values
+          output file to write package convergence information.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -223,13 +226,12 @@ class ModflowGwflak(mfpackage.MFPackage):
           and add one when writing index variables.
         * tab6_filename (string) character string that defines the path and
           filename for the file containing lake table data for the lake
-          connection. The CTABNAME file includes the number of entries in the
-          file and the relation between stage, surface area, and volume for
+          connection. The TAB6_FILENAME file includes the number of entries in
+          the file and the relation between stage, volume, and surface area for
           each entry in the file. Lake table files for EMBEDDEDH and EMBEDDEDV
           lake-GWF connections also include lake-GWF exchange area data for
-          each entry in the file. Input instructions for the CTABNAME file is
-          included at the LAK package lake table file input instructions
-          section.
+          each entry in the file. Instructions for creating the TAB6_FILENAME
+          input file are provided in Lake Table Input File section.
     outlets : [outletno, lakein, lakeout, couttype, invert, width, rough,
       slope]
         * outletno (integer) integer value that defines the outlet number
@@ -416,6 +418,8 @@ class ModflowGwflak(mfpackage.MFPackage):
                                               'stage_filerecord'))
     budget_filerecord = ListTemplateGenerator(('gwf6', 'lak', 'options',
                                                'budget_filerecord'))
+    package_convergence_filerecord = ListTemplateGenerator((
+        'gwf6', 'lak', 'options', 'package_convergence_filerecord'))
     ts_filerecord = ListTemplateGenerator(('gwf6', 'lak', 'options',
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'lak', 'options',
@@ -466,6 +470,16 @@ class ModflowGwflak(mfpackage.MFPackage):
             "optional false"],
            ["block options", "name budgetfile", "type string",
             "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name package_convergence_filerecord",
+            "type record package_convergence fileout "
+            "package_convergence_filename",
+            "shape", "reader urword", "tagged true", "optional true"],
+           ["block options", "name package_convergence", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name package_convergence_filename",
+            "type string", "shape", "in_record true", "reader urword",
             "tagged false", "optional false"],
            ["block options", "name ts_filerecord",
             "type record ts6 filein ts6_filename", "shape", "reader urword",
@@ -649,12 +663,12 @@ class ModflowGwflak(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, auxiliary=None,
                  boundnames=None, print_input=None, print_stage=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
-                 budget_filerecord=None, timeseries=None, observations=None,
-                 mover=None, surfdep=None, time_conversion=None,
-                 length_conversion=None, nlakes=None, noutlets=None,
-                 ntables=None, packagedata=None, connectiondata=None,
-                 tables=None, outlets=None, perioddata=None, filename=None,
-                 pname=None, parent_file=None):
+                 budget_filerecord=None, package_convergence_filerecord=None,
+                 timeseries=None, observations=None, mover=None, surfdep=None,
+                 time_conversion=None, length_conversion=None, nlakes=None,
+                 noutlets=None, ntables=None, packagedata=None,
+                 connectiondata=None, tables=None, outlets=None,
+                 perioddata=None, filename=None, pname=None, parent_file=None):
         super(ModflowGwflak, self).__init__(model, "lak", filename, pname,
                                             loading_package, parent_file)
 
@@ -669,6 +683,8 @@ class ModflowGwflak(mfpackage.MFPackage):
                                                   stage_filerecord)
         self.budget_filerecord = self.build_mfdata("budget_filerecord",
                                                    budget_filerecord)
+        self.package_convergence_filerecord = self.build_mfdata(
+            "package_convergence_filerecord", package_convergence_filerecord)
         self._ts_filerecord = self.build_mfdata("ts_filerecord",
                                                 None)
         self._ts_package = self.build_child_package("ts", timeseries,

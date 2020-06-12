@@ -90,22 +90,34 @@ class ModflowGwfevt(mfpackage.MFPackage):
           as zero-based when working with FloPy and Python. Flopy will
           automatically subtract one when loading index variables and add one
           when writing index variables.
-        * surface (double) is the elevation of the ET surface (:math:`L`). A
-          time-series name may be specified.
-        * rate (double) is the maximum ET flux rate (:math:`LT^{-1}`). A time-
-          series name may be specified.
-        * depth (double) is the ET extinction depth (:math:`L`). A time-series
-          name may be specified.
+        * surface (double) is the elevation of the ET surface (:math:`L`). If
+          the Options block includes a TIMESERIESFILE entry (see the "Time-
+          Variable Input" section), values can be obtained from a time series
+          by entering the time-series name in place of a numeric value.
+        * rate (double) is the maximum ET flux rate (:math:`LT^{-1}`). If the
+          Options block includes a TIMESERIESFILE entry (see the "Time-Variable
+          Input" section), values can be obtained from a time series by
+          entering the time-series name in place of a numeric value.
+        * depth (double) is the ET extinction depth (:math:`L`). If the Options
+          block includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
         * pxdp (double) is the proportion of the ET extinction depth at the
-          bottom of a segment (dimensionless). A time-series name may be
-          specified.
+          bottom of a segment (dimensionless). If the Options block includes a
+          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
+          can be obtained from a time series by entering the time-series name
+          in place of a numeric value.
         * petm (double) is the proportion of the maximum ET flux rate at the
-          bottom of a segment (dimensionless). A time-series name may be
-          specified.
+          bottom of a segment (dimensionless). If the Options block includes a
+          TIMESERIESFILE entry (see the "Time-Variable Input" section), values
+          can be obtained from a time series by entering the time-series name
+          in place of a numeric value.
         * petm0 (double) is the proportion of the maximum ET flux rate that
           will apply when head is at or above the ET surface (dimensionless).
-          PETM0 is read only when the SURF_RATE_SPECIFIED option is used. A
-          time-series name may be specified.
+          PETM0 is read only when the SURF_RATE_SPECIFIED option is used. If
+          the Options block includes a TIMESERIESFILE entry (see the "Time-
+          Variable Input" section), values can be obtained from a time series
+          by entering the time-series name in place of a numeric value.
         * aux (double) represents the values of the auxiliary variables for
           each evapotranspiration. The values of auxiliary variables must be
           present for each evapotranspiration. The values must be specified in

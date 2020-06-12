@@ -96,6 +96,38 @@ longname file keyword
 description name of the binary output file to write budget information.
 
 block options
+name package_convergence_filerecord
+type record package_convergence fileout package_convergence_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name package_convergence
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname package_convergence keyword
+description keyword to specify that record corresponds to the package convergence comma spaced values file.
+
+block options
+name package_convergence_filename
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma spaced values output file to write package convergence information.
+
+block options
 name ts_filerecord
 type record ts6 filein ts6_filename
 shape
@@ -231,7 +263,7 @@ tagged true
 reader urword
 optional true
 longname use root potential
-description keyword specifying that ET in the unsaturated zone will be simulated simulated using a capillary pressure based formulation. Capillary pressure is calculated using the Brooks-Corey retention function.
+description keyword specifying that ET in the unsaturated zone will be simulated using a capillary pressure based formulation. Capillary pressure is calculated using the Brooks-Corey retention function.
 
 
 # --------------------- gwf uzf dimensions ---------------------
@@ -251,6 +283,7 @@ reader urword
 optional false
 longname number of trailing waves
 description is the number of trailing waves.  A recommended value of 7 can be used for NTRAILWAVES.  This value can be increased to lower mass balance error in the unsaturated zone.
+default_value 7
 
 block dimensions
 name nwavesets
@@ -259,7 +292,7 @@ reader urword
 optional false
 longname number of wave sets
 description is the number of wave sets.  A recommended value of 40 can be used for NWAVESETS.  This value can be increased if more waves are required to resolve variations in water content within the unsaturated zone.
-
+default_value 40
 
 # --------------------- gwf uzf packagedata ---------------------
 

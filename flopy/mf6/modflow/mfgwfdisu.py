@@ -219,7 +219,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
            ["block griddata", "name area", "type double precision",
             "shape (nodes)", "reader readarray"],
            ["block griddata", "name idomain", "type integer",
-            "shape (nodes)", "reader readarray", "layered true",
+            "shape (nodes)", "reader readarray", "layered false",
             "optional true"],
            ["block connectiondata", "name iac", "type integer",
             "shape (nodes)", "reader readarray"],

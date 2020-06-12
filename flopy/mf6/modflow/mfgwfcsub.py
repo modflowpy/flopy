@@ -136,6 +136,9 @@ class ModflowGwfcsub(mfpackage.MFPackage):
     zdisplacement_filerecord : [zdisplacement_filename]
         * zdisplacement_filename (string) name of the binary output file to
           write z-displacement information.
+    package_convergence_filerecord : [package_convergence_filename]
+        * package_convergence_filename (string) name of the comma spaced values
+          output file to write package convergence information.
     timeseries : {varname:data} or timeseries data
         * Contains data for the ts package. Data can be stored in a dictionary
           containing data for the ts package with variable names as keys and
@@ -174,7 +177,7 @@ class ModflowGwfcsub(mfpackage.MFPackage):
       sse_cr, theta, kv, h0, boundname]
         * icsubno (integer) integer value that defines the CSUB interbed number
           associated with the specified PACKAGEDATA data on the line. CSUBNO
-          must be greater than zero and less than or equal to NCSUBCELLS. CSUB
+          must be greater than zero and less than or equal to NINTERBEDS. CSUB
           information must be specified for every CSUB cell or the program will
           terminate with an error. The program will also terminate with an
           error if information for a CSUB interbed number is specified more
@@ -253,7 +256,10 @@ class ModflowGwfcsub(mfpackage.MFPackage):
           when writing index variables.
         * sig0 (double) is the stress offset for the cell. SIG0 is added to the
           calculated geostatic stress for the cell. SIG0 is specified only if
-          MAXSIG0 is specified to be greater than 0 in the DIMENSIONS block.
+          MAXSIG0 is specified to be greater than 0 in the DIMENSIONS block. If
+          the Options block includes a TIMESERIESFILE entry (see the "Time-
+          Variable Input" section), values can be obtained from a time series
+          by entering the time-series name in place of a numeric value.
     filename : String
         File name for this package.
     pname : String
@@ -283,6 +289,8 @@ class ModflowGwfcsub(mfpackage.MFPackage):
         'gwf6', 'csub', 'options', 'compaction_coarse_filerecord'))
     zdisplacement_filerecord = ListTemplateGenerator((
         'gwf6', 'csub', 'options', 'zdisplacement_filerecord'))
+    package_convergence_filerecord = ListTemplateGenerator((
+        'gwf6', 'csub', 'options', 'package_convergence_filerecord'))
     ts_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options',
                                            'ts_filerecord'))
     obs_filerecord = ListTemplateGenerator(('gwf6', 'csub', 'options',
@@ -412,6 +420,16 @@ class ModflowGwfcsub(mfpackage.MFPackage):
            ["block options", "name zdisplacement_filename", "type string",
             "shape", "in_record true", "reader urword", "tagged false",
             "optional false"],
+           ["block options", "name package_convergence_filerecord",
+            "type record package_convergence fileout "
+            "package_convergence_filename",
+            "shape", "reader urword", "tagged true", "optional true"],
+           ["block options", "name package_convergence", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name package_convergence_filename",
+            "type string", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
            ["block options", "name ts_filerecord",
             "type record ts6 filein ts6_filename", "shape", "reader urword",
             "tagged true", "optional true", "construct_package ts",
@@ -451,7 +469,7 @@ class ModflowGwfcsub(mfpackage.MFPackage):
            ["block packagedata", "name packagedata",
             "type recarray icsubno cellid cdelay pcs0 thick_frac rnb ssv_cc "
             "sse_cr theta kv h0 boundname",
-            "shape (ncsubcells)", "reader urword"],
+            "shape (ninterbeds)", "reader urword"],
            ["block packagedata", "name icsubno", "type integer", "shape",
             "tagged false", "in_record true", "reader urword",
             "numeric_index true"],
@@ -506,7 +524,8 @@ class ModflowGwfcsub(mfpackage.MFPackage):
                  compaction_inelastic_filerecord=None,
                  compaction_interbed_filerecord=None,
                  compaction_coarse_filerecord=None,
-                 zdisplacement_filerecord=None, timeseries=None,
+                 zdisplacement_filerecord=None,
+                 package_convergence_filerecord=None, timeseries=None,
                  observations=None, ninterbeds=None, maxsig0=None,
                  cg_ske_cr=1e-5, cg_theta=0.2, sgm=None, sgs=None,
                  packagedata=None, stress_period_data=None, filename=None,
@@ -557,6 +576,8 @@ class ModflowGwfcsub(mfpackage.MFPackage):
             "compaction_coarse_filerecord", compaction_coarse_filerecord)
         self.zdisplacement_filerecord = self.build_mfdata(
             "zdisplacement_filerecord", zdisplacement_filerecord)
+        self.package_convergence_filerecord = self.build_mfdata(
+            "package_convergence_filerecord", package_convergence_filerecord)
         self._ts_filerecord = self.build_mfdata("ts_filerecord",
                                                 None)
         self._ts_package = self.build_child_package("ts", timeseries,

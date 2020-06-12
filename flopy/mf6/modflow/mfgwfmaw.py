@@ -62,6 +62,14 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         * no_well_storage (boolean) keyword that deactivates inclusion of well
           storage contributions to the multi-aquifer well package continuity
           equation.
+    flow_correction : boolean
+        * flow_correction (boolean) keyword that activates flow corrections in
+          cases where the head in a multi-aquifer well is below the bottom of
+          the screen for a connection or the head in a convertible cell
+          connected to a multi-aquifer well is below the cell bottom. When flow
+          corrections are activated, unit head gradients are used to calculate
+          the flow between a multi-aquifer well and a connected GWF cell. By
+          default, flow corrections are not made.
     flowing_wells : boolean
         * flowing_wells (boolean) keyword that activates the flowing wells
           option for the multi-aquifer well package.
@@ -141,7 +149,13 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           combination of the Thiem and SKIN equations. MEAN--character keyword
           to indicate the multi-aquifer well saturated conductance will be
           calculated using the aquifer and screen top and bottom, aquifer and
-          screen hydraulic conductivity, and well and skin radius.
+          screen hydraulic conductivity, and well and skin radius. The
+          CUMULATIVE conductance equation is identical to the SKIN LOSSTYPE in
+          the Multi-Node Well (MNW2) package for MODFLOW-2005. The program will
+          terminate with an error condition if CONDEQN is SKIN or CUMULATIVE
+          and the calculated saturated conductance is less than zero; if an
+          error condition occurs, it is suggested that the THEIM or MEAN
+          conductance equations be used for these multi-aquifer wells.
         * ngwfnodes (integer) integer value that defines the number of GWF
           nodes connected to this (WELLNO) multi-aquifer well. NGWFNODES must
           be greater than zero.
@@ -207,7 +221,17 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           conductivity (if CONDEQN for the multi-aquifer well is SKIN,
           CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer
           well is SPECIFIED) for each GWF node connected to the multi-aquifer
-          well (NGWFNODES). HK_SKIN can be any value if CONDEQN is THIEM.
+          well (NGWFNODES). If CONDEQN is SPECIFIED, HK_SKIN must be greater
+          than or equal to zero. HK_SKIN can be any value if CONDEQN is THIEM.
+          Otherwise, HK_SKIN must be greater than zero. If CONDEQN is SKIN, the
+          contrast between the cell transmissivity (the product of geometric
+          mean horizontal hydraulic conductivity and the cell thickness) and
+          the well transmissivity (the product of HK_SKIN and the screen
+          thicknesses) must be greater than one in node CELLID or the program
+          will terminate with an error condition; if an error condition occurs,
+          it is suggested that the HK_SKIN be reduced to a value less than K11
+          and K22 in node CELLID or the THEIM or MEAN conductance equations be
+          used for these multi-aquifer wells.
         * radius_skin (double) real value that defines the skin radius (filter
           pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
           if CONDEQN is SPECIFIED or THIEM. Otherwise, RADIUS_SKIN must be
@@ -371,6 +395,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
             "tagged false", "optional false"],
            ["block options", "name no_well_storage", "type keyword",
             "reader urword", "optional true"],
+           ["block options", "name flow_correction", "type keyword",
+            "reader urword", "optional true"],
            ["block options", "name flowing_wells", "type keyword",
             "reader urword", "optional true"],
            ["block options", "name shutdown_theta", "type double precision",
@@ -517,10 +543,11 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                  boundnames=None, print_input=None, print_head=None,
                  print_flows=None, save_flows=None, stage_filerecord=None,
                  budget_filerecord=None, no_well_storage=None,
-                 flowing_wells=None, shutdown_theta=None, shutdown_kappa=None,
-                 timeseries=None, observations=None, mover=None,
-                 nmawwells=None, packagedata=None, connectiondata=None,
-                 perioddata=None, filename=None, pname=None, parent_file=None):
+                 flow_correction=None, flowing_wells=None, shutdown_theta=None,
+                 shutdown_kappa=None, timeseries=None, observations=None,
+                 mover=None, nmawwells=None, packagedata=None,
+                 connectiondata=None, perioddata=None, filename=None,
+                 pname=None, parent_file=None):
         super(ModflowGwfmaw, self).__init__(model, "maw", filename, pname,
                                             loading_package, parent_file)
 
@@ -537,6 +564,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                                                    budget_filerecord)
         self.no_well_storage = self.build_mfdata("no_well_storage",
                                                  no_well_storage)
+        self.flow_correction = self.build_mfdata("flow_correction",
+                                                 flow_correction)
         self.flowing_wells = self.build_mfdata("flowing_wells", flowing_wells)
         self.shutdown_theta = self.build_mfdata("shutdown_theta",
                                                 shutdown_theta)

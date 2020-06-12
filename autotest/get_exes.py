@@ -55,6 +55,16 @@ def list_exes():
 def test_download_and_unzip():
     pymake.getmfexes(exe_pth)
 
+    # move the exes from exe_pth to bindir
+    files = os.listdir(exe_pth)
+    for file in files:
+        if file.startswith('__'):
+            continue
+        src = os.path.join(exe_pth, file)
+        dst = os.path.join(bindir, file)
+        print('moving {} -> {}'.format(src, dst))
+        os.replace(src, dst)
+
 
 def test_cleanup():
     cleanup()
@@ -65,7 +75,7 @@ def test_list_download():
 
 
 def main():
-    pymake.getmfexes(exe_pth)
+    test_download_and_unzip()
 
     # clean up the download directory
     cleanup()
