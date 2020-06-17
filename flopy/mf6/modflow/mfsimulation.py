@@ -1,4 +1,7 @@
-"""mfsimulation module. contains the MFSimulation class."""
+"""
+mfsimulation module. contains the MFSimulation class.
+
+"""
 
 import errno
 import sys
@@ -19,7 +22,8 @@ from ..data.mfdatautil import MFComment
 
 
 class SimulationDict(collections.OrderedDict):
-    """Class containing custom dictionary for MODFLOW simulations.
+    """
+    Class containing custom dictionary for MODFLOW simulations.
 
     Behaves as an OrderedDict with some additional features described below.
 
@@ -52,20 +56,15 @@ class SimulationDict(collections.OrderedDict):
     """
 
     def __init__(self, path=None):
-        """Define the __init__ method.
-
-        Parameters:
-            path (string): File-like path used as dictionary key
-
-        """
         collections.OrderedDict.__init__(self)
         self._path = path
 
     def __getitem__(self, key):
         """Define the __getitem__ magic method.
 
-        Parameters:
-            key (string): Part or all of a dictionary key
+        Parameters
+        ----------
+        key (string): Part or all of a dictionary key
 
         Returns:
             MFData or numpy.ndarray
@@ -91,9 +90,10 @@ class SimulationDict(collections.OrderedDict):
     def __setitem__(self, key, val):
         """Define the __setitem__ magic method.
 
-        Parameters:
-            key (string): Dictionary key
-            val (MFData): MFData to store in dictionary
+        Parameters
+        ----------
+        key (string): Dictionary key
+        val (MFData): MFData to store in dictionary
 
         """
         collections.OrderedDict.__setitem__(self, key, val)
@@ -101,9 +101,10 @@ class SimulationDict(collections.OrderedDict):
     def find_in_path(self, key_path, key_leaf):
         """Attempt to find key_leaf in a partial key path key_path.
 
-        Parameters:
-            key_path (string): partial path to the data
-            key_leaf (string): name of the data
+        Parameters
+        ----------
+        key_path (string): partial path to the data
+        key_leaf (string): name of the data
 
         Returns:
             MFData: Data found at the path.
@@ -131,8 +132,9 @@ class SimulationDict(collections.OrderedDict):
     def output_keys(self, print_keys=True):
         """Return a list of output data keys.
 
-        Parameters:
-            print_keys (bool): print keys to console
+        Parameters
+        ----------
+        print_keys (bool): print keys to console
 
         Returns:
             list: keys for requesting binary output
@@ -185,7 +187,8 @@ class SimulationDict(collections.OrderedDict):
 
 
 class MFSimulationData(object):
-    """Class containing MODFLOW simulation data and file formatting data.
+    """
+    Class containing MODFLOW simulation data and file formatting data.
 
     Parameters
     ----------
@@ -225,12 +228,6 @@ class MFSimulationData(object):
     """
 
     def __init__(self, path):
-        """Define the __init__ method.
-
-        Parameters:
-            path (string): File-like path to simulation
-
-        """
         # --- formatting variables ---
         self.indent_string = '  '
         self.constant_formatting = ['constant', '']
@@ -270,7 +267,8 @@ class MFSimulationData(object):
         Sets threshold number where any number larger than threshold
         is represented in scientific notation.
 
-        Parameters:
+        Parameters
+        ----------
             value (float): threshold value
 
         """
@@ -283,7 +281,8 @@ class MFSimulationData(object):
         Sets threshold number where any number smaller than threshold
         is represented in scientific notation.
 
-        Parameters:
+        Parameters
+        ----------
             value (float): threshold value
 
         """
@@ -300,7 +299,8 @@ class MFSimulationData(object):
 
 
 class MFSimulation(PackageContainer):
-    """Entry point into any MODFLOW simulation.
+    """
+    Entry point into any MODFLOW simulation.
 
     MFSimulation is used to load, build, and/or save a MODFLOW6 simulation.
 
@@ -398,48 +398,6 @@ class MFSimulation(PackageContainer):
     def __init__(self, sim_name='sim', version='mf6', exe_name='mf6.exe',
                  sim_ws='.', verbosity_level=1, continue_=None,
                  nocheck=None, memory_print_option=None):
-        """Initialization.
-
-        __init__ is used to initialize a simulation object
-
-        Parameters:
-            sim_name : string
-                name of the simulation.
-            version : string
-                MODFLOW version
-            exe_name : string
-                relative path to MODFLOW executable from the simulation
-                working folder
-            sim_ws : string
-                path to simulation working folder
-            verbosity_level : int
-                verbosity level of standard output
-                    0 : no standard output
-                    1 : standard error/warning messages with some
-                        informational messages
-                    2 : verbose mode with full error/warning/informational
-                        messages. this is ideal for debugging
-            continue_ : bool
-                sets the continue option in the simulation name file. the
-                continue option is a keyword flag to indicate that the
-                simulation should continue even if one or more solutions do
-                not converge.
-            nocheck : bool
-                 sets the nocheck option in the simulation name file. the
-                 nocheckoption is a keyword flag to indicate that the model
-                 input check routines should not be called prior to each time
-                 step. checks are performed by default.
-            memory_print_option : str
-                 sets memory_print_option in the simulation name file.
-                 memory_print_option is a flag that controls printing of
-                 detailed memory manager usage to the end of the simulation
-                 list file.  NONE means do not print detailed information.
-                 SUMMARY means print only the total memory for each
-                 simulation component. ALL means print information for each
-                 variable stored in the memory manager. NONE is default if
-                 memory_print_option is not specified.
-
-        """
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level)
@@ -538,7 +496,8 @@ class MFSimulation(PackageContainer):
     def __repr__(self):
         """Override __repr__ to print custom string.
 
-        Returns:
+        Returns
+        --------
             repr string : str
                 string describing object
 
@@ -548,7 +507,8 @@ class MFSimulation(PackageContainer):
     def __str__(self):
         """Override __str__ to print custom string.
 
-        Returns:
+        Returns
+        --------
             str string : str
                 string describing object
 
@@ -594,7 +554,8 @@ class MFSimulation(PackageContainer):
     def model_names(self):
         """Return a list of model names associated with this simulation.
 
-        Returns:
+        Returns
+        --------
             list: list of model names
 
         """
@@ -1070,7 +1031,8 @@ class MFSimulation(PackageContainer):
     def rename_all_packages(self, name):
         """Rename all packages with name as prefix.
 
-        Parameters:
+        Parameters
+        ----------
             name (str): prefix of name
 
         """
@@ -1233,10 +1195,12 @@ class MFSimulation(PackageContainer):
     def set_sim_path(self, path):
         """Return a list of output data keys.
 
-        Parameters:
+        Parameters
+        ----------
             print_keys (bool): print keys to console
 
-        Returns:
+        Returns
+        --------
             list: keys for requesting binary output
 
         """
@@ -1247,7 +1211,8 @@ class MFSimulation(PackageContainer):
                        use_async=False, cargs=None):
         """Run the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             silent (bool):
                 run in silent mode
             pause (bool):
@@ -1265,7 +1230,9 @@ class MFSimulation(PackageContainer):
             cargs : (str or list of strings)
                 additional command line arguments to pass to the executable.
                 default is None
-        Returns:
+
+        Returns
+        --------
             (success, buff)
                 success : boolean
                 buff : list of lines of stdout
@@ -1295,7 +1262,8 @@ class MFSimulation(PackageContainer):
     def remove_package(self, package_name):
         """Remove a package.
 
-        Parameters:
+        Parameters
+        ----------
             package_name (str): name of package to be removed
 
         """
@@ -1327,7 +1295,8 @@ class MFSimulation(PackageContainer):
     def model_dict(self):
         """Return a dictionary of models.
 
-        Returns:
+        Returns
+        --------
             model dict : dict
                 dictionary of models
 
@@ -1337,11 +1306,13 @@ class MFSimulation(PackageContainer):
     def get_model(self, model_name=None):
         """Load an existing model.
 
-        Parameters:
+        Parameters
+        ----------
             model_name : string
                 name of model to get
 
-        Returns:
+        Returns
+        --------
             model : MFModel
 
         """
@@ -1362,11 +1333,13 @@ class MFSimulation(PackageContainer):
     def get_exchange_file(self, filename):
         """Get a specified exchange file.
 
-        Parameters:
+        Parameters
+        ----------
             filename : string
                 name of exchange file to get
 
-        Returns:
+        Returns
+        --------
             exchange package : MFPackage
 
         """
@@ -1380,11 +1353,13 @@ class MFSimulation(PackageContainer):
     def get_mvr_file(self, filename):
         """Get a specified mover file.
 
-        Parameters:
+        Parameters
+        ----------
             filename : string
                 name of mover file to get
 
-        Returns:
+        Returns
+        --------
             mover package : MFPackage
 
         """
@@ -1398,11 +1373,13 @@ class MFSimulation(PackageContainer):
     def get_gnc_file(self, filename):
         """Get a specified gnc file.
 
-        Parameters:
+        Parameters
+        ----------
             filename : string
                 name of gnc file to get
 
-        Returns:
+        Returns
+        --------
             gnc package : MFPackage
 
         """
@@ -1416,7 +1393,8 @@ class MFSimulation(PackageContainer):
     def register_exchange_file(self, package):
         """Register an exchange package file with the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             package : MFPackage
                 exchange package object to register
 
@@ -1491,7 +1469,8 @@ class MFSimulation(PackageContainer):
                          set_package_name=True, set_package_filename=True):
         """Register a package file with the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             package : MFPackage
                 package to register
             add_to_package_list : bool
@@ -1501,7 +1480,8 @@ class MFSimulation(PackageContainer):
             set_package_filename : bool
                 produce a filename for this package
 
-        Returns:
+        Returns
+        --------
             (path : tuple, package structure : MFPackageStructure)
 
         """
@@ -1626,13 +1606,15 @@ class MFSimulation(PackageContainer):
     def register_model(self, model, model_type, model_name, model_namefile):
         """Add a model to the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             model : MFModel
                 model object to add to simulation
             sln_group : string
                 solution group of model
 
-        Returns:
+        Returns
+        --------
             model_structure_object : MFModelStructure
 
         """
@@ -1666,11 +1648,13 @@ class MFSimulation(PackageContainer):
     def get_ims_package(self, key):
         """Add a model to the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             key : str
                 ims package key
 
-        Returns:
+        Returns
+        --------
             ims_package : ModflowIms
 
         """
@@ -1681,7 +1665,8 @@ class MFSimulation(PackageContainer):
     def remove_model(self, model_name):
         """Remove a model from the simulation.
 
-        Parameters:
+        Parameters
+        ----------
             model_name : string
                 model name to remove from simulation
 
@@ -1695,7 +1680,8 @@ class MFSimulation(PackageContainer):
     def is_valid(self):
         """Check all packages and models in the simulation to verify validity.
 
-        Returns:
+        Returns
+        --------
             valid : boolean
                 simulation validity
 
@@ -1851,7 +1837,8 @@ class MFSimulation(PackageContainer):
         Method to plot a whole simulation or a series of models
         that are part of a simulation.
 
-        Parameters:
+        Parameters
+        ----------
             model_list: (list) list of model names to plot, if none
                 all models will be plotted
             SelPackList: (list) list of package names to plot, if none
@@ -1873,7 +1860,8 @@ class MFSimulation(PackageContainer):
                 key : str
                     MfList dictionary key. (default is None)
 
-        Returns:
+        Returns
+        --------
              axes: (list) matplotlib.pyplot.axes objects
 
         """
