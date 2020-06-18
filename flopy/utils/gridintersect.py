@@ -137,8 +137,11 @@ class GridIntersect:
             self.intersect_polygon = self._intersect_polygon_structured
 
         else:
-            raise NotImplementedError(
-                "Method '{0}' not recognized!".format)
+            raise ValueError(
+                "Method '{0}' not recognized or "
+                "not supported "
+                "for grid_type '{1}'!".format(self.method,
+                                              self.mfgrid.grid_type))
 
     def _set_method_get_gridshapes(self):
         """internal method, set self._get_gridshapes to the certain method for
