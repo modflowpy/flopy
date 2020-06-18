@@ -8,7 +8,7 @@ from .geometry import transform
 
 try:
     from shapely.geometry import (MultiPoint, Point, Polygon, box,
-                                  GeometryCollection)
+                                  GeometryCollection, MultiPolygon)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
     from shapely.prepared import prep
@@ -493,6 +493,8 @@ class GridIntersect:
             # parse result
             collection = parse_shapely_ix_result(
                 [], intersect, shptyps=["Polygon", "MultiPolygon"])
+            if len(collection) > 1:
+                collection = [MultiPolygon(collection)]
             # loop over intersection result and store information
             for c in collection:
                 # don't store intersections with 0 area
