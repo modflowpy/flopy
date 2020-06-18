@@ -346,7 +346,7 @@ def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     zbud = pd.read_csv(zbud_f)
     zbud.columns = [c.strip() for c in zbud.columns]
     zbud.columns = ['_'.join(c.split()) for c in zbud.columns]
-    zbud.index = pd.Index([f'ZONE_{z}' for z in zbud.ZONE.values],
+    zbud.index = pd.Index(['ZONE_{}'.format(z) for z in zbud.ZONE.values],
                            name='name')
     cols = [c for c in zbud.columns if 'ZONE_' in c]
     zbud = zbud[cols]
@@ -359,7 +359,7 @@ def test_zonbud_active_areas_zone_zero(rtol=1e-2):
     fpbud = fpbud[['name'] + [c for c in fpbud.columns if 'ZONE' in c]]
     fpbud = fpbud.set_index('name').T
     fpbud = fpbud[[c for c in fpbud.columns if 'ZONE' in c]]
-    fpbud = fpbud.loc[[f'ZONE_{z}' for z in range(1, 4)]]
+    fpbud = fpbud.loc[['ZONE_{}'.format(z) for z in range(1, 4)]]
 
     # Test for equality
     allclose = np.allclose(zbud, fpbud, rtol)
