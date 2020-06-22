@@ -894,8 +894,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1])
-                                  for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to right
@@ -922,8 +921,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1])
-                                  for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to back
@@ -950,8 +948,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1]) for ixy in
-                                  zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to front
