@@ -74,7 +74,10 @@ class ModflowGwfchd(mfpackage.MFPackage):
           as zero-based when working with FloPy and Python. Flopy will
           automatically subtract one when loading index variables and add one
           when writing index variables.
-        * head (double) is the head at the boundary.
+        * head (double) is the head at the boundary. If the Options block
+          includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
         * aux (double) represents the values of the auxiliary variables for
           each constant head. The values of auxiliary variables must be present
           for each constant head. The values must be specified in the order of

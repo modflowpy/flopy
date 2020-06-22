@@ -32,7 +32,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     ss : [double]
         * ss (double) is specific storage (or the storage coefficient if
           STORAGECOEFFICIENT is specified as an option). Specific storage
-          values must be greater than or equal to 0.
+          values must be greater than or equal to 0. If the CSUB Package is
+          included in the GWF model, specific storage must be zero for every
+          cell.
     sy : [double]
         * sy (double) is specific yield. Specific yield values must be greater
           than or equal to 0. Specific yield does not have to be specified if
@@ -40,7 +42,9 @@ class ModflowGwfsto(mfpackage.MFPackage):
     steady_state : boolean
         * steady-state (boolean) keyword to indicate that stress period IPER is
           steady-state. Steady-state conditions will apply until the TRANSIENT
-          keyword is specified in a subsequent BEGIN PERIOD block.
+          keyword is specified in a subsequent BEGIN PERIOD block. If the CSUB
+          Package is included in the GWF model, only the first and last stress
+          period can be steady-state.
     transient : boolean
         * transient (boolean) keyword to indicate that stress period IPER is
           transient. Transient conditions will apply until the STEADY-STATE

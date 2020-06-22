@@ -58,6 +58,18 @@ class ModflowIms(mfpackage.MFPackage):
           information for the solution and each model (if the solution includes
           more than one model) and linear acceleration information for each
           inner iteration.
+    csv_outer_output_filerecord : [outer_csvfile]
+        * outer_csvfile (string) name of the ascii comma separated values
+          output file to write maximum dependent-variable (for example, head)
+          change convergence information at the end of each outer iteration for
+          each time step.
+    csv_inner_output_filerecord : [inner_csvfile]
+        * inner_csvfile (string) name of the ascii comma separated values
+          output file to write solver convergence information. Comma separated
+          values output includes maximum dependent-variable (for example, head)
+          change and maximum residual convergence information for the solution
+          and each model (if the solution includes more than one model) and
+          linear acceleration information for each inner iteration.
     no_ptcrecord : [no_ptc_option]
         * no_ptc_option (string) is an optional keyword that is used to define
           options for disabling pseudo-transient continuation (PTC). FIRST is
@@ -72,7 +84,22 @@ class ModflowIms(mfpackage.MFPackage):
           for convergence of the outer (nonlinear) iterations, in units of
           length. When the maximum absolute value of the head change at all
           nodes during an iteration is less than or equal to OUTER_HCLOSE,
-          iteration stops. Commonly, OUTER_HCLOSE equals 0.01.
+          iteration stops. Commonly, OUTER_HCLOSE equals 0.01. The OUTER_HCLOSE
+          option has been deprecated in favor of the more general OUTER_DVCLOSE
+          (for dependent variable), however either one can be specified in
+          order to maintain backward compatibility.
+    outer_dvclose : double
+        * outer_dvclose (double) real value defining the dependent-variable
+          (for example, head) change criterion for convergence of the outer
+          (nonlinear) iterations, in units of the dependent-variable (for
+          example, length for head). When the maximum absolute value of the
+          dependent-variable change at all nodes during an iteration is less
+          than or equal to OUTER_DVCLOSE, iteration stops. Commonly,
+          OUTER_DVCLOSE equals 0.01. The keyword, OUTER_HCLOSE can be still be
+          specified instead of OUTER_DVCLOSE for backward compatibility with
+          previous versions of MODFLOW 6 but eventually OUTER_HCLOSE will be
+          deprecated and specification of OUTER_HCLOSE will cause MODFLOW 6 to
+          terminate with an error.
     outer_rclosebnd : double
         * outer_rclosebnd (double) real value defining the residual tolerance
           for convergence of model packages that solve a separate equation not
@@ -80,7 +107,12 @@ class ModflowIms(mfpackage.MFPackage):
           allowable residual between successive outer iterations at any single
           model package element. An example of a model package that would use
           OUTER_RCLOSEBND to evaluate convergence is the SFR package which
-          solves a continuity equation for each reach.
+          solves a continuity equation for each reach. The OUTER_RCLOSEBND
+          option is deprecated and has no effect on simulation results as of
+          version 6.1.1. The keyword, OUTER_RCLOSEBND can be still be specified
+          for backward compatibility with previous versions of MODFLOW 6 but
+          eventually specificiation of OUTER_RCLOSEBND will cause MODFLOW 6 to
+          terminate with an error.
     outer_maximum : integer
         * outer_maximum (integer) integer value defining the maximum number of
           outer (nonlinear) iterations -- that is, calls to the solution
@@ -100,22 +132,22 @@ class ModflowIms(mfpackage.MFPackage):
         * under_relaxation_theta (double) real value defining the reduction
           factor for the learning rate (under-relaxation term) of the delta-
           bar-delta algorithm. The value of UNDER_RELAXATION_THETA is between
-          zero and one. If the change in the variable (head) is of opposite
-          sign to that of the previous iteration, the under-relaxation term is
-          reduced by a factor of UNDER_RELAXATION_THETA. The value usually
-          ranges from 0.3 to 0.9; a value of 0.7 works well for most problems.
-          UNDER_RELAXATION_THETA only needs to be specified if UNDER_RELAXATION
-          is DBD.
+          zero and one. If the change in the dependent-variable (for example,
+          head) is of opposite sign to that of the previous iteration, the
+          under-relaxation term is reduced by a factor of
+          UNDER_RELAXATION_THETA. The value usually ranges from 0.3 to 0.9; a
+          value of 0.7 works well for most problems. UNDER_RELAXATION_THETA
+          only needs to be specified if UNDER_RELAXATION is DBD.
     under_relaxation_kappa : double
         * under_relaxation_kappa (double) real value defining the increment for
           the learning rate (under-relaxation term) of the delta-bar-delta
           algorithm. The value of UNDER_RELAXATION_kappa is between zero and
-          one. If the change in the variable (head) is of the same sign to that
-          of the previous iteration, the under-relaxation term is increased by
-          an increment of UNDER_RELAXATION_KAPPA. The value usually ranges from
-          0.03 to 0.3; a value of 0.1 works well for most problems.
-          UNDER_RELAXATION_KAPPA only needs to be specified if UNDER_RELAXATION
-          is DBD.
+          one. If the change in the dependent-variable (for example, head) is
+          of the same sign to that of the previous iteration, the under-
+          relaxation term is increased by an increment of
+          UNDER_RELAXATION_KAPPA. The value usually ranges from 0.03 to 0.3; a
+          value of 0.1 works well for most problems. UNDER_RELAXATION_KAPPA
+          only needs to be specified if UNDER_RELAXATION is DBD.
     under_relaxation_gamma : double
         * under_relaxation_gamma (double) real value defining the history or
           memory term factor of the delta-bar-delta algorithm.
@@ -185,7 +217,23 @@ class ModflowIms(mfpackage.MFPackage):
           during an iteration is less than or equal to INNER_HCLOSE, the matrix
           solver assumes convergence. Commonly, INNER_HCLOSE is set an order of
           magnitude less than the OUTER_HCLOSE value specified for the
-          NONLINEAR block.
+          NONLINEAR block. The INNER_HCLOSE keyword has been deprecated in
+          favor of the more general INNER_DVCLOSE (for dependent variable),
+          however either one can be specified in order to maintain backward
+          compatibility.
+    inner_dvclose : double
+        * inner_dvclose (double) real value defining the dependent-variable
+          (for example, head) change criterion for convergence of the inner
+          (linear) iterations, in units of the dependent-variable (for example,
+          length for head). When the maximum absolute value of the dependent-
+          variable change at all nodes during an iteration is less than or
+          equal to INNER_DVCLOSE, the matrix solver assumes convergence.
+          Commonly, INNER_DVCLOSE is set an order of magnitude less than the
+          OUTER_DVCLOSE value specified for the NONLINEAR block. The keyword,
+          INNER_HCLOSE can be still be specified instead of INNER_DVCLOSE for
+          backward compatibility with previous versions of MODFLOW 6 but
+          eventually INNER_HCLOSE will be deprecated and specification of
+          INNER_HCLOSE will cause MODFLOW 6 to terminate with an error.
     rcloserecord : [inner_rclose, rclose_option]
         * inner_rclose (double) real value that defines the flow residual
           tolerance for convergence of the IMS linear solver and specific flow
@@ -198,25 +246,25 @@ class ModflowIms(mfpackage.MFPackage):
         * rclose_option (string) an optional keyword that defines the specific
           flow residual criterion used. STRICT--an optional keyword that is
           used to specify that INNER_RCLOSE represents a infinity-Norm
-          (absolute convergence criteria) and that the head and flow
-          convergence criteria must be met on the first inner iteration (this
-          criteria is equivalent to the criteria used by the MODFLOW-2005 PCG
-          package~citep{hill1990preconditioned}). L2NORM_RCLOSE--an optional
-          keyword that is used to specify that INNER_RCLOSE represents a L-2
-          Norm closure criteria instead of a infinity-Norm (absolute
-          convergence criteria). When L2NORM_RCLOSE is specified, a reasonable
-          initial INNER_RCLOSE value is 0.1 times the number of active cells
-          when meters and seconds are the defined mf length and time.
-          RELATIVE_RCLOSE--an optional keyword that is used to specify that
-          INNER_RCLOSE represents a relative L-2 Norm reduction closure
-          criteria instead of a infinity-Norm (absolute convergence criteria).
-          When RELATIVE_RCLOSE is specified, a reasonable initial INNER_RCLOSE
-          value is :math:`1.0 \\times 10^{-4}` and convergence is achieved for
-          a given inner (linear) iteration when :math:`\\Delta h \\le`
-          INNER_HCLOSE and the current L-2 Norm is :math:`\\le` the product of
-          the RELATIVE\_RCLOSE and the initial L-2 Norm for the current inner
-          (linear) iteration. If RCLOSE\_OPTION is not specified, an absolute
-          residual (infinity-norm) criterion is used.
+          (absolute convergence criteria) and that the dependent-variable (for
+          example, head) and flow convergence criteria must be met on the first
+          inner iteration (this criteria is equivalent to the criteria used by
+          the MODFLOW-2005 PCG package~citep{hill1990preconditioned}).
+          L2NORM_RCLOSE--an optional keyword that is used to specify that
+          INNER_RCLOSE represents a L-2 Norm closure criteria instead of a
+          infinity-Norm (absolute convergence criteria). When L2NORM_RCLOSE is
+          specified, a reasonable initial INNER_RCLOSE value is 0.1 times the
+          number of active cells when meters and seconds are the defined mf
+          length and time. RELATIVE_RCLOSE--an optional keyword that is used to
+          specify that INNER_RCLOSE represents a relative L-2 Norm reduction
+          closure criteria instead of a infinity-Norm (absolute convergence
+          criteria). When RELATIVE_RCLOSE is specified, a reasonable initial
+          INNER_RCLOSE value is :math:`1.0 \\times 10^{-4}` and convergence is
+          achieved for a given inner (linear) iteration when :math:`\\Delta h
+          \\le` INNER_DVCLOSE and the current L-2 Norm is :math:`\\le` the
+          product of the RELATIVE\_RCLOSE and the initial L-2 Norm for the
+          current inner (linear) iteration. If RCLOSE\_OPTION is not specified,
+          an absolute residual (infinity-norm) criterion is used.
     linear_acceleration : string
         * linear_acceleration (string) a keyword that defines the linear
           acceleration method used by the default IMS linear solvers. CG -
@@ -255,10 +303,11 @@ class ModflowIms(mfpackage.MFPackage):
     number_orthogonalizations : integer
         * number_orthogonalizations (integer) optional integer value defining
           the interval used to explicitly recalculate the residual of the flow
-          equation using the solver coefficient matrix, the latest head
-          estimates, and the right hand side. For problems that benefit from
-          explicit recalculation of the residual, a number between 4 and 10 is
-          appropriate. By default, NUMBER_ORTHOGONALIZATIONS is zero.
+          equation using the solver coefficient matrix, the latest dependent-
+          variable (for example, head) estimates, and the right hand side. For
+          problems that benefit from explicit recalculation of the residual, a
+          number between 4 and 10 is appropriate. By default,
+          NUMBER_ORTHOGONALIZATIONS is zero.
     scaling_method : string
         * scaling_method (string) an optional keyword that defines the matrix
           scaling approach used. By default, matrix scaling is not applied.
@@ -282,6 +331,10 @@ class ModflowIms(mfpackage.MFPackage):
     """
     csv_output_filerecord = ListTemplateGenerator(('ims', 'options',
                                                    'csv_output_filerecord'))
+    csv_outer_output_filerecord = ListTemplateGenerator((
+        'ims', 'options', 'csv_outer_output_filerecord'))
+    csv_inner_output_filerecord = ListTemplateGenerator((
+        'ims', 'options', 'csv_inner_output_filerecord'))
     no_ptcrecord = ListTemplateGenerator(('ims', 'options',
                                           'no_ptcrecord'))
     rcloserecord = ListTemplateGenerator(('ims', 'linear',
@@ -296,14 +349,33 @@ class ModflowIms(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name csv_output_filerecord",
             "type record csv_output fileout csvfile", "shape",
-            "reader urword", "tagged true", "optional true"],
+            "reader urword", "tagged true", "optional true",
+            "deprecated 6.1.1"],
            ["block options", "name csv_output", "type keyword", "shape",
             "in_record true", "reader urword", "tagged true",
+            "optional false", "deprecated 6.1.1"],
+           ["block options", "name csvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false", "deprecated 6.1.1"],
+           ["block options", "name csv_outer_output_filerecord",
+            "type record csv_outer_output fileout outer_csvfile", "shape",
+            "reader urword", "tagged true", "optional true"],
+           ["block options", "name csv_outer_output", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
             "optional false"],
            ["block options", "name fileout", "type keyword", "shape",
             "in_record true", "reader urword", "tagged true",
             "optional false"],
-           ["block options", "name csvfile", "type string",
+           ["block options", "name outer_csvfile", "type string",
+            "preserve_case true", "shape", "in_record true", "reader urword",
+            "tagged false", "optional false"],
+           ["block options", "name csv_inner_output_filerecord",
+            "type record csv_inner_output fileout inner_csvfile", "shape",
+            "reader urword", "tagged true", "optional true"],
+           ["block options", "name csv_inner_output", "type keyword",
+            "shape", "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name inner_csvfile", "type string",
             "preserve_case true", "shape", "in_record true", "reader urword",
             "tagged false", "optional false"],
            ["block options", "name no_ptcrecord",
@@ -316,9 +388,12 @@ class ModflowIms(mfpackage.MFPackage):
             "in_record true", "reader urword", "optional true",
             "tagged false"],
            ["block nonlinear", "name outer_hclose", "type double precision",
-            "reader urword", "optional false"],
+            "reader urword", "optional true", "deprecated 6.1.1"],
+           ["block nonlinear", "name outer_dvclose",
+            "type double precision", "reader urword", "optional false"],
            ["block nonlinear", "name outer_rclosebnd",
-            "type double precision", "reader urword", "optional true"],
+            "type double precision", "reader urword", "optional true",
+            "deprecated 6.1.1"],
            ["block nonlinear", "name outer_maximum", "type integer",
             "reader urword", "optional false"],
            ["block nonlinear", "name under_relaxation", "type string",
@@ -342,6 +417,8 @@ class ModflowIms(mfpackage.MFPackage):
            ["block linear", "name inner_maximum", "type integer",
             "reader urword", "optional false"],
            ["block linear", "name inner_hclose", "type double precision",
+            "reader urword", "optional true", "deprecated 6.1.1"],
+           ["block linear", "name inner_dvclose", "type double precision",
             "reader urword", "optional false"],
            ["block linear", "name rcloserecord",
             "type record inner_rclose rclose_option", "reader urword",
@@ -369,14 +446,16 @@ class ModflowIms(mfpackage.MFPackage):
 
     def __init__(self, simulation, loading_package=False, print_option=None,
                  complexity=None, csv_output_filerecord=None,
-                 no_ptcrecord=None, outer_hclose=None, outer_rclosebnd=None,
+                 csv_outer_output_filerecord=None,
+                 csv_inner_output_filerecord=None, no_ptcrecord=None,
+                 outer_hclose=None, outer_dvclose=None, outer_rclosebnd=None,
                  outer_maximum=None, under_relaxation=None,
                  under_relaxation_theta=None, under_relaxation_kappa=None,
                  under_relaxation_gamma=None, under_relaxation_momentum=None,
                  backtracking_number=None, backtracking_tolerance=None,
                  backtracking_reduction_factor=None,
                  backtracking_residual_limit=None, inner_maximum=None,
-                 inner_hclose=None, rcloserecord=None,
+                 inner_hclose=None, inner_dvclose=None, rcloserecord=None,
                  linear_acceleration=None, relaxation_factor=None,
                  preconditioner_levels=None,
                  preconditioner_drop_tolerance=None,
@@ -391,8 +470,13 @@ class ModflowIms(mfpackage.MFPackage):
         self.complexity = self.build_mfdata("complexity", complexity)
         self.csv_output_filerecord = self.build_mfdata("csv_output_filerecord",
                                                        csv_output_filerecord)
+        self.csv_outer_output_filerecord = self.build_mfdata(
+            "csv_outer_output_filerecord", csv_outer_output_filerecord)
+        self.csv_inner_output_filerecord = self.build_mfdata(
+            "csv_inner_output_filerecord", csv_inner_output_filerecord)
         self.no_ptcrecord = self.build_mfdata("no_ptcrecord", no_ptcrecord)
         self.outer_hclose = self.build_mfdata("outer_hclose", outer_hclose)
+        self.outer_dvclose = self.build_mfdata("outer_dvclose", outer_dvclose)
         self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd",
                                                  outer_rclosebnd)
         self.outer_maximum = self.build_mfdata("outer_maximum", outer_maximum)
@@ -416,6 +500,7 @@ class ModflowIms(mfpackage.MFPackage):
             "backtracking_residual_limit", backtracking_residual_limit)
         self.inner_maximum = self.build_mfdata("inner_maximum", inner_maximum)
         self.inner_hclose = self.build_mfdata("inner_hclose", inner_hclose)
+        self.inner_dvclose = self.build_mfdata("inner_dvclose", inner_dvclose)
         self.rcloserecord = self.build_mfdata("rcloserecord", rcloserecord)
         self.linear_acceleration = self.build_mfdata("linear_acceleration",
                                                      linear_acceleration)

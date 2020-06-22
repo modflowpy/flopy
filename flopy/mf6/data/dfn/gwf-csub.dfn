@@ -406,6 +406,38 @@ longname file keyword
 description name of the binary output file to write z-displacement information.
 
 block options
+name package_convergence_filerecord
+type record package_convergence fileout package_convergence_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name package_convergence
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname package_convergence keyword
+description keyword to specify that record corresponds to the package convergence comma spaced values file.
+
+block options
+name package_convergence_filename
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma spaced values output file to write package convergence information.
+
+block options
 name ts_filerecord
 type record ts6 filein ts6_filename
 shape
@@ -544,7 +576,7 @@ description is the specific gravity of saturated sediments. If not specified, th
 block packagedata
 name packagedata
 type recarray icsubno cellid cdelay pcs0 thick_frac rnb ssv_cc sse_cr theta kv h0 boundname
-shape (ncsubcells)
+shape (ninterbeds)
 reader urword
 longname
 description
@@ -557,7 +589,7 @@ tagged false
 in_record true
 reader urword
 longname CSUB id number for this entry
-description integer value that defines the CSUB interbed number associated with the specified PACKAGEDATA data on the line. CSUBNO must be greater than zero and less than or equal to NCSUBCELLS.  CSUB information must be specified for every CSUB cell or the program will terminate with an error.  The program will also terminate with an error if information for a CSUB interbed number is specified more than once.
+description integer value that defines the CSUB interbed number associated with the specified PACKAGEDATA data on the line. CSUBNO must be greater than zero and less than or equal to NINTERBEDS.  CSUB information must be specified for every CSUB cell or the program will terminate with an error.  The program will also terminate with an error if information for a CSUB interbed number is specified more than once.
 numeric_index true
 
 block packagedata
@@ -577,7 +609,7 @@ shape
 tagged false
 in_record true
 reader urword
-longname initial water content
+longname delay type
 description character string that defines the subsidence delay type for the interbed. Possible subsidence package CDELAY strings include: NODELAY--character keyword to indicate that delay will not be simulated in the interbed.  DELAY--character keyword to indicate that delay will be simulated in the interbed.
 
 block packagedata
@@ -627,7 +659,7 @@ shape
 tagged false
 in_record true
 reader urword
-longname initial elastic interbed specific storage
+longname initial interbed elastic specific storage
 description is the initial elastic coarse-grained material specific storage or recompression index of the interbed. The recompression index is specified if COMPRESSION\_INDICES is specified in the OPTIONS block. Specified or calculated interbed elastic specific storage values are not adjusted from initial values if HEAD\_BASED is specified in the OPTIONS block.
 
 block packagedata
@@ -714,4 +746,4 @@ in_record true
 reader urword
 time_series true
 longname well stress offset
-description is the stress offset for the cell. SIG0 is added to the calculated geostatic stress for the cell. SIG0 is specified only if MAXSIG0 is specified to be greater than 0 in the DIMENSIONS block.
+description is the stress offset for the cell. SIG0 is added to the calculated geostatic stress for the cell. SIG0 is specified only if MAXSIG0 is specified to be greater than 0 in the DIMENSIONS block. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.

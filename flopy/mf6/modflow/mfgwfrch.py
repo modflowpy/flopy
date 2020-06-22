@@ -80,8 +80,10 @@ class ModflowGwfrch(mfpackage.MFPackage):
           when writing index variables.
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell
-          to calculate the volumetric recharge rate. A time-series name may be
-          specified.
+          to calculate the volumetric recharge rate. If the Options block
+          includes a TIMESERIESFILE entry (see the "Time-Variable Input"
+          section), values can be obtained from a time series by entering the
+          time-series name in place of a numeric value.
         * aux (double) represents the values of the auxiliary variables for
           each recharge. The values of auxiliary variables must be present for
           each recharge. The values must be specified in the order of the

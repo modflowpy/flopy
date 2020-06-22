@@ -17,9 +17,9 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     save_flows : boolean
-        * save_flows (boolean) keyword to indicate that cell-by-cell flow terms
-          will be written to the file specified with "BUDGET SAVE FILE" in
-          Output Control.
+        * save_flows (boolean) keyword to indicate that budget flow terms will
+          be written to the file specified with "BUDGET SAVE FILE" in Output
+          Control.
     alternative_cell_averaging : string
         * alternative_cell_averaging (string) is a text keyword to indicate
           that an alternative method will be used for calculating the
@@ -67,13 +67,22 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     save_specific_discharge : boolean
         * save_specific_discharge (boolean) keyword to indicate that x, y, and
           z components of specific discharge will be calculated at cell centers
-          and written to the cell-by-cell flow file, which is specified with
-          "BUDGET SAVE FILE" in Output Control. If this option is activated,
-          then additional information may be required in the discretization
-          packages and the GWF Exchange package (if GWF models are coupled).
-          Specifically, ANGLDEGX must be specified in the CONNECTIONDATA block
-          of the DISU Package; ANGLDEGX must also be specified for the GWF
-          Exchange as an auxiliary variable.
+          and written to the budget file, which is specified with "BUDGET SAVE
+          FILE" in Output Control. If this option is activated, then additional
+          information may be required in the discretization packages and the
+          GWF Exchange package (if GWF models are coupled). Specifically,
+          ANGLDEGX must be specified in the CONNECTIONDATA block of the DISU
+          Package; ANGLDEGX must also be specified for the GWF Exchange as an
+          auxiliary variable.
+    save_saturation : boolean
+        * save_saturation (boolean) keyword to indicate that cell saturation
+          will be written to the budget file, which is specified with "BUDGET
+          SAVE FILE" in Output Control. Saturation will be saved to the budget
+          file as an auxiliary variable saved with the DATA-SAT text label.
+          Saturation is a cell variable that ranges from zero to one and can be
+          used by post processing programs to determine how much of a cell
+          volume is saturated. If ICELLTYPE is 0, then saturation is always
+          one.
     k22overk : boolean
         * k22overk (boolean) keyword to indicate that specified K22 is a ratio
           of K22 divided by K. If this option is specified, then the K22 array
@@ -237,6 +246,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
             "reader urword", "optional true"],
            ["block options", "name save_specific_discharge", "type keyword",
             "reader urword", "optional true"],
+           ["block options", "name save_saturation", "type keyword",
+            "reader urword", "optional true"],
            ["block options", "name k22overk", "type keyword",
             "reader urword", "optional true"],
            ["block options", "name k33overk", "type keyword",
@@ -269,10 +280,11 @@ class ModflowGwfnpf(mfpackage.MFPackage):
     def __init__(self, model, loading_package=False, save_flows=None,
                  alternative_cell_averaging=None, thickstrt=None,
                  cvoptions=None, perched=None, rewet_record=None,
-                 xt3doptions=None, save_specific_discharge=None, k22overk=None,
-                 k33overk=None, icelltype=0, k=1.0, k22=None, k33=None,
-                 angle1=None, angle2=None, angle3=None, wetdry=None,
-                 filename=None, pname=None, parent_file=None):
+                 xt3doptions=None, save_specific_discharge=None,
+                 save_saturation=None, k22overk=None, k33overk=None,
+                 icelltype=0, k=1.0, k22=None, k33=None, angle1=None,
+                 angle2=None, angle3=None, wetdry=None, filename=None,
+                 pname=None, parent_file=None):
         super(ModflowGwfnpf, self).__init__(model, "npf", filename, pname,
                                             loading_package, parent_file)
 
@@ -287,6 +299,8 @@ class ModflowGwfnpf(mfpackage.MFPackage):
         self.xt3doptions = self.build_mfdata("xt3doptions", xt3doptions)
         self.save_specific_discharge = self.build_mfdata(
             "save_specific_discharge", save_specific_discharge)
+        self.save_saturation = self.build_mfdata("save_saturation",
+                                                 save_saturation)
         self.k22overk = self.build_mfdata("k22overk", k22overk)
         self.k33overk = self.build_mfdata("k33overk", k33overk)
         self.icelltype = self.build_mfdata("icelltype", icelltype)

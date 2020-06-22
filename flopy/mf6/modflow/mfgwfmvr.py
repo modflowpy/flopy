@@ -87,8 +87,9 @@ class ModflowGwfmvr(mfpackage.MFPackage):
           determining how much water will be moved. Supported values are
           "FACTOR" "EXCESS" "THRESHOLD" and "UPTO". These four options
           determine how the receiver flow rate, :math:`Q_R`, is calculated.
-          These options are based the options available in the SFR2 Package for
-          diverting stream flow.
+          These options mirror the options defined for the cprior variable in
+          the SFR package, with the term "FACTOR" being functionally equivalent
+          to the "FRACTION" option for cprior.
         * value (double) is the value to be used in the equation for
           calculating the amount of water to move. For the "FACTOR" option,
           VALUE is the :math:`\\alpha` factor. For the remaining options, VALUE
