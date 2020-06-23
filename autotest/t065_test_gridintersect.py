@@ -841,6 +841,22 @@ def test_rect_grid_polygon_with_hole_shapely(rtree=True):
     return result
 
 
+def test_rect_grid_polygon_in_edge_in_cell(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_grid()
+    ix = GridIntersect(gr, method='vertex', rtree=rtree)
+    p = Polygon([(0., 5.), (3., 0.), (7., 0.),
+                 (10., 5.), (10., -1.), (0., -1.)])
+    result = ix.intersect_polygon(p)
+    assert len(result) == 1
+    assert result.areas.sum() == 15.
+    return result
+
+
 def test_tri_grid_polygon_outside(rtree=True):
     # avoid test fail when shapely not available
     try:

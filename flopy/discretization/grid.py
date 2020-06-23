@@ -51,7 +51,7 @@ class Grid(object):
     rotation : float
         rotation angle of model grid, as it is rotated around the origin point
 
-    Properties
+    Attributes
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex_layered',

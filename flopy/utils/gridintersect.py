@@ -8,7 +8,7 @@ from .geometry import transform
 
 try:
     from shapely.geometry import (MultiPoint, Point, Polygon, box,
-                                  GeometryCollection)
+                                  GeometryCollection, MultiPolygon)
     from shapely.strtree import STRtree
     from shapely.affinity import translate, rotate
     from shapely.prepared import prep
@@ -137,8 +137,11 @@ class GridIntersect:
             self.intersect_polygon = self._intersect_polygon_structured
 
         else:
-            raise NotImplementedError(
-                "Method '{0}' not recognized!".format)
+            raise ValueError(
+                "Method '{0}' not recognized or "
+                "not supported "
+                "for grid_type '{1}'!".format(self.method,
+                                              self.mfgrid.grid_type))
 
     def _set_method_get_gridshapes(self):
         """internal method, set self._get_gridshapes to the certain method for
@@ -490,6 +493,8 @@ class GridIntersect:
             # parse result
             collection = parse_shapely_ix_result(
                 [], intersect, shptyps=["Polygon", "MultiPolygon"])
+            if len(collection) > 1:
+                collection = [MultiPolygon(collection)]
             # loop over intersection result and store information
             for c in collection:
                 # don't store intersections with 0 area
@@ -889,8 +894,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1])
-                                  for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to right
@@ -917,8 +921,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1])
-                                  for ixy in zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to back
@@ -945,8 +948,7 @@ class GridIntersect:
                     else:
                         x = intersect.xy[0]
                         y = intersect.xy[1]
-                    verts.append([(ixy[0], ixy[1]) for ixy in
-                                  zip(*intersect.xy)])
+                    verts.append([(ixy[0], ixy[1]) for ixy in zip(x, y)])
                     node.append((ii, jj))
 
         # check to front
