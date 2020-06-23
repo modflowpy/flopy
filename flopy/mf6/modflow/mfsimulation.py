@@ -1063,6 +1063,9 @@ class MFSimulation(PackageContainer):
         # set data external for mover packages
         for package in self._mover_files.values():
             package.set_all_data_external()
+        for package in self._exchange_files.values():
+            package.set_all_data_external()
+
 
     def write_simulation(self,
                          ext_file_action=ExtFileAction.copy_relative_paths,

@@ -393,12 +393,16 @@ class MFArray(MFMultiDimVar):
             for index in range(0, storage.layer_storage.get_total_size()):
                 if replace_existing_external or \
                         storage.layer_storage[index].data_storage_type == \
-                        DataStorageType.internal_array:
+                        DataStorageType.internal_array or \
+                        storage.layer_storage[index].data_storage_type == \
+                        DataStorageType.internal_constant:
                     layer_list.append(index)
         else:
             if replace_existing_external or \
                     storage.layer_storage[layer].data_storage_type == \
-                    DataStorageType.internal_array:
+                    DataStorageType.internal_array or \
+                    storage.layer_storage[layer].data_storage_type == \
+                    DataStorageType.internal_constant:
                 layer_list = [layer]
             else:
                 layer_list = []
