@@ -10,6 +10,7 @@ from ..mfbase import MFDataException, ExtFileAction
 from .mfstructure import DatumType
 from ...utils import datautil
 from ...datbase import DataListInterface, DataType
+from ...mbase import ModelInterface
 from .mffileaccess import MFFileAccessList
 from .mfdatastorage import DataStorage, DataStorageType, DataStructureType
 from .mfdatautil import to_string, iterable
@@ -239,7 +240,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
             # check if data is already stored external
             if replace_existing_external or storage is None or \
                     storage.layer_storage.first_item().data_storage_type == \
-                    DataStorageType.internal_array:
+                    DataStorageType.internal_array or \
+                    storage.layer_storage.first_item().data_storage_type == \
+                    DataStorageType.internal_constant:
                 data = self._get_data()
                 # if not empty dataset
                 if data is not None:
@@ -314,6 +317,69 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                   inspect.stack()[0][3], type_, value_,
                                   traceback_, None,
                                   self._simulation_data.debug, ex)
+        # verify cellids
+        self._check_valid_cellids()
+
+    def _check_valid_cellids(self):
+        # only check packages that are a part of a model
+        if isinstance(self._model_or_sim, ModelInterface) and \
+                hasattr(self._model_or_sim, 'modelgrid'):
+            # get model grid info
+            mg = self._model_or_sim.modelgrid
+            if not mg.is_complete:
+                return
+            idomain = mg.idomain
+            model_shape = idomain.shape
+
+            # check to see if there are any cellids
+            storage_obj = self._get_storage_obj()
+            if True in storage_obj.recarray_cellid_list:
+                # get data
+                data = storage_obj.get_data()
+                # check data for invalid cellids
+                for index, is_cellid in enumerate(
+                        storage_obj.recarray_cellid_list):
+                    if is_cellid:
+                        for record in data:
+                            if not isinstance(record[index], tuple):
+                                # cellids are not always a tuple of integers,
+                                # like sfr.  nothing to check in this case
+                                break
+                            idomain_val = idomain
+                            # cellid should be within the model grid
+                            for idx, cellid_part in enumerate(record[index]):
+                                if model_shape[idx] <= cellid_part or \
+                                        cellid_part < 0:
+                                    message = 'Cellid {} is outside of the ' \
+                                              'model grid ' \
+                                              '{}'.format(record[index],
+                                                          model_shape)
+                                    type_, value_, traceback_ = sys.exc_info()
+                                    raise MFDataException(
+                                        self.structure.get_model(),
+                                        self.structure.get_package(),
+                                        self.structure.path,
+                                        'storing data',
+                                        self.structure.name,
+                                        inspect.stack()[0][3],
+                                        type_, value_, traceback_, message,
+                                        self._simulation_data.debug)
+                                idomain_val = idomain_val[cellid_part]
+                            # cellid should be at an active cell
+                            if idomain_val != 1:
+                                message = 'Cellid {} is outside of the ' \
+                                          'active model grid' \
+                                          '.'.format(record[index])
+                                type_, value_, traceback_ = sys.exc_info()
+                                raise MFDataException(
+                                    self.structure.get_model(),
+                                    self.structure.get_package(),
+                                    self.structure.path,
+                                    'storing data',
+                                    self.structure.name,
+                                    inspect.stack()[0][3],
+                                    type_, value_, traceback_, message,
+                                    self._simulation_data.debug)
 
     def _check_line_size(self, data_line, min_line_size):
         if 0 < len(data_line) < min_line_size:
