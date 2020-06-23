@@ -2163,7 +2163,7 @@ class check:
             print(headertxt.strip())
         # for per, segment_data in self.segment_data.items():
 
-        inds = (sd.outseg < sd.nseg) & (sd.outseg != 0)
+        inds = (sd.outseg < sd.nseg) & (sd.outseg > 0)
 
         if len(txt) == 0 and np.any(inds):
             decreases = np.array(sd[inds])[['nseg', 'outseg']]
