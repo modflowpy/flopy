@@ -4,7 +4,6 @@ Contributing
 Contributions to FloPy are welcome from the community. As a contributor, here are the guidelines we would like you to follow:
 
  - [Code of Conduct](#coc)
- - [Question or Problem?](#question)
  - [Issues and Bugs](#issue)
  - [Feature Requests](#feature)
  - [Submission Guidelines](#submit)
@@ -13,18 +12,6 @@ Contributions to FloPy are welcome from the community. As a contributor, here ar
 
 ## <a name="coc"></a> Code of Conduct
 Help us keep FloPy open and inclusive. Please read and follow our [Code of Conduct][coc].
-
-## <a name="question"></a> Got a Question or Problem?
-
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy`.
-
-Stack Overflow is a much better place to ask questions since:
-
-- there are thousands of people willing to help on Stack Overflow
-- questions and answers stay available for public viewing so your question / answer might help someone else
-- Stack Overflow's voting system assures that the best answers are prominently visible.
-
-To save your and our time, we will systematically close all issues that are requests for general support and redirect people to Stack Overflow.
 
 ## <a name="issue"></a> Found a Bug?
 If you find a bug in the source code, you can help us by
