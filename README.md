@@ -3,7 +3,7 @@
 
 ### Version 3.3.1 &mdash; release candidate
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3424dc693f9042ffadc93086cd554e47)](https://www.codacy.com/gh/modflowpy/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/manual/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
@@ -18,10 +18,39 @@ FloPy includes support for [MODFLOW 6](docs/mf6.md), MODFLOW-2005, MODFLOW-NWT, 
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 
-Contributing
-------------------------------------------------
+Installation
+-----------------------------------------------
 
-Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
+**Python versions:**
+
+FloPy requires **Python** 3.5 (or higher).
+
+
+**Dependencies:**
+
+FloPy requires **NumPy** 1.9 (or higher).  Dependencies for optional FloPy functionality methods (for example, `to_shapefile()`) are summarized in [docs/flopy_method_dependencies.md](docs/flopy_method_dependencies.md) on the github repo.
+
+
+**For base and Anaconda Python distributions:**
+
+To install FloPy type:
+
+    pip install flopy
+
+or
+
+	conda install -c conda-forge flopy
+
+To update FloPy type:
+
+    pip install flopy --upgrade
+
+or
+
+	conda update -c conda-forge flopy
+
+
+The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
 
 
 Documentation
@@ -109,107 +138,25 @@ FloPy Changes
 A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
 
 
-Installation
------------------------------------------------
+Contributing
+------------------------------------------------
 
-**Python versions:**
-
-FloPy requires **Python** 3.5 (or higher).
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
-**Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher).
+<a name="relcand"></a>Installing the latest FloPy release candidate
+------------------------------------------------
 
-
-**For base and Anaconda Python distributions:**
-
-To install FloPy type:
-
-    pip install flopy
-
-or
-
-	conda install -c conda-forge flopy
-
-To update FloPy type:
-
-    pip install flopy --upgrade
-
-or
-
-	conda update -c conda-forge flopy
-
-To uninstall FloPy type:
-
-    pip uninstall flopy
-
-or
-
-	conda uninstall flopy
-
-
-**Installing from the git repository:**
-
-***Current Version of FloPy:***
-
-To install the current version of FloPy from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/master
-
-To update your version of FloPy with the current version from the git repository type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/master --upgrade
-
-***Development version of FloPy:***
-
-To install the latest development version of FloPy from the git repository type:
+To install the latest release candidate type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop
 
-To update your version of FloPy with the latest development version from the git repository type:
+To update your current version with the latest release candidate type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
-
-***Optional Method Dependencies:***
-
-Additional dependencies to use optional FloPy helper methods are listed below.
-
-| Method                                                                               | Python Package                                                     |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| `.PlotMapView()` in `flopy.plot`                                                     | **matplotlib** >= 1.4                                              |
-| `.PlotCrossSection()` in `flopy.plot`                                                | **matplotlib** >= 1.4                                              |
-| `.plot()`                                                                            | **matplotlib** >= 1.4                                              |
-| `.plot_shapefile()`                                                                  | **matplotlib** >= 1.4 and **Pyshp** >= 1.2                         |
-| `.to_shapefile()`                                                                    | **Pyshp** >= 1.2                                                   |
-| `.export(*.shp)`                                                                     | **Pyshp** >= 1.2                                                   |
-| `.export(*.nc)`                                                                      | **netcdf4** >= 1.1, and **python-dateutil** >= 2.4                 |
-| `.export(*.tif)`                                                                     | **rasterio**                                                       |
-| `.export(*.asc)` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.ndimage**                                                  |
-| `.interpolate()` in `flopy.utils.reference` `SpatialReference` class                 | **scipy.interpolate**                                              |
-| `.interpolate()` in `flopy.mf6.utils.reference` `StructuredSpatialReference` class   | **scipy.interpolate**                                              |
-| `._parse_units_from_proj4()` in `flopy.utils.reference` `SpatialReference` class     | **pyproj**                                                         |
-| `.get_dataframes()` in `flopy.utils.mflistfile` `ListBudget` class                   | **pandas** >= 0.15                                                 |
-| `.get_dataframes()` in `flopy.utils.observationfile` `ObsFiles` class                | **pandas** >= 0.15                                                 |
-| `.get_dataframes()` in `flopy.utils.sfroutputfile` `ModflowSfr2` class               | **pandas** >= 0.15                                                 |
-| `.get_dataframes()` in `flopy.utils.util_list` `MfList` class                        | **pandas** >= 0.15                                                 |
-| `.get_dataframes()` in `flopy.utils.zonebud` `ZoneBudget` class                      | **pandas** >= 0.15                                                 |
-| `.pivot_keyarray()` in `flopy.mf6.utils.arrayutils` `AdvancedPackageUtil` class      | **pandas** >= 0.15                                                 |
-| `._get_vertices()` in `flopy.mf6.utils.binaryfile_utils` `MFOutputRequester` class   | **pandas** >= 0.15                                                 |
-| `.get_dataframe()` in `flopy.mf6.utils.mfobservation` `Observations` class           | **pandas** >= 0.15                                                 |
-| `.df()` in `flopy.modflow.mfsfr2` `SfrFile` class                                    | **pandas** >= 0.15                                                 |
-| `.time_coverage()` in `flopy.export.metadata` `acc` class - ***used if available***  | **pandas** >= 0.15                                                 |
-| `.loadtxt()` in `flopy.utils.flopyio` - ***used if available***                      | **pandas** >= 0.15                                                 |
-| `.generate_classes()` in `flopy.mf6.utils`                                           | [**pymake**](https://github.com/modflowpy/pymake)                  |
-| `.intersect()` in `flopy.discretization.VertexGrid`                                  | **matplotlib** >= 1.4                                              |
-| `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                                        |
-| `GridIntersect().plot_polygon()` in `flopy.utils.gridintersect`                      | **shapely** and **descartes**                                      |
-| `Raster()` in `flopy.utils.Raster`                                                   | **rasterio**, **affine**, and **scipy**                            |
-| `Raster().sample_polygon()` in `flopy.utils.Raster`                                  | **shapely**                                                        |
-| `Raster().crop()` in `flopy.utils.Raster`                                            | **shapely**                                                        |
-| `.array_at_verts()` in `flopy.discretization.structuredgrid` `StructuredGrid` class  | **scipy.interpolate**                                              |
 
 How to Cite
 -----------------------------------------------
@@ -243,4 +190,3 @@ functionality of the software and related material nor shall the fact of release
 constitute any such warranty. The software is provided on the condition that
 neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
-
