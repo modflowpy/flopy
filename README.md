@@ -21,33 +21,15 @@ For general modeling issues, please consult a modeling forum, such as the [MODFL
 Installation
 -----------------------------------------------
 
-**Python versions:**
-
-FloPy requires **Python** 3.5 (or higher).
-
-
-**Dependencies:**
-
-FloPy requires **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods (for example, `to_shapefile()`) are summarized in [docs/flopy_method_dependencies.md](docs/flopy_method_dependencies.md) on the github repo.
-
-
-**For base and Anaconda Python distributions:**
+FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
 
 To install FloPy type:
 
+    conda install -c conda-forge flopy
+
+or
+
     pip install flopy
-
-or
-
-	conda install -c conda-forge flopy
-
-To update FloPy type:
-
-    pip install flopy --upgrade
-
-or
-
-	conda update -c conda-forge flopy
 
 
 The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
@@ -114,24 +96,23 @@ Additional FloPy Resources
 
 - A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
 
-
-Contributing
+Questions
 ------------------------------------------------
 FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
 
-#### Questions
-
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy`.
+Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy` or the [MODFLOW google group](https://groups.google.com/forum/#!forum/modflow).
 
 Stack Overflow is a much better place to ask questions since:
 
-- there are thousands of people willing to help on Stack Overflow
+- there are thousands of people willing to help on Stack Overflow and the MODFLOW google group
 - questions and answers stay available for public viewing so your question / answer might help someone else
 - Stack Overflow's voting system assures that the best answers are prominently visible.
 
-To save your and our time, we will systematically close all issues that are requests for general support and redirect people to Stack Overflow.
+To save your and our time, **we will systematically close all issues that are requests for general support and redirect people to Stack Overflow or the MODFLOW google group**.
 
-#### Bugs, Contributions, and Missing Features
+
+Contributing
+------------------------------------------------
 
 Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
@@ -142,10 +123,6 @@ Bug reports, code contributions, or improvements to the documentation are welcom
 To install the latest release candidate type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop
-
-To update your current version with the latest release candidate type:
-
-    pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
 
 
 How to Cite
