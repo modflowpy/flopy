@@ -157,6 +157,7 @@ class Modflow(BaseModel):
         self.mfnam_packages = {
             "zone": flopy.modflow.ModflowZon,
             "mult": flopy.modflow.ModflowMlt,
+            "ag": flopy.modflow.ModflowAg,
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
