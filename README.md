@@ -28,7 +28,7 @@ FloPy requires **Python** 3.5 (or higher).
 
 **Dependencies:**
 
-FloPy requires **NumPy** 1.9 (or higher).  Dependencies for optional FloPy functionality methods (for example, `to_shapefile()`) are summarized in [docs/flopy_method_dependencies.md](docs/flopy_method_dependencies.md) on the github repo.
+FloPy requires **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods (for example, `to_shapefile()`) are summarized in [docs/flopy_method_dependencies.md](docs/flopy_method_dependencies.md) on the github repo.
 
 
 **For base and Anaconda Python distributions:**
@@ -63,6 +63,7 @@ Getting Started
 -----------------------------------------------
 
 ### MODFLOW 6 Quick Start
+
 ```python
 import os
 import flopy
@@ -97,52 +98,42 @@ pmv.plot_specific_discharge(spdis, color='white')
 ```
 <img src="examples/images/quickstart.png" alt="plot" style="width:30;height:30">
 
-### [Frequently asked questions](docs/flopyFAQ.md)
 
-### [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html)
+Additional FloPy Resources
+------------------------------------------------
 
-### [Additional jupyter Notebook Examples](docs/notebook_examples.md)
+- [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html) demonstrating basic FloPy use.
 
-### [Python Script Examples](docs/script_examples.md)
+- [Jupyter notebooks](docs/notebook_examples.md) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 
+- [Scripts](docs/script_examples.md) demonstrating the use of FloPy for running and post-processing MODFLOW-based models.
 
-If You Get Stuck
------------------------------------------------
+- A list of supported packages in FloPy is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
 
-FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
+- A table of the supported and proposed model checks implemented in  FloPy is available in [docs/model_checks.md](docs/model_checks.md) on the github repo.
 
-### Questions
-
-For questions related to how to do something with FloPy, we ask our users to submit the question to [Stack Overflow](https://stackoverflow.com) and assign the [flopy](https://stackoverflow.com/questions/tagged/flopy) tag.  Many of our recent questions have been related to MODFLOW or Python, and the Flopy developers cannot always respond to these inquiries.
-
-### Bugs
-
-If you think you have discovered a bug in FloPy in which you feel that the program does not work as intended, then we ask you to submit a [Github issue](https://github.com/modflowpy/flopy/labels/bug).
-
-
-FloPy Supported Packages
------------------------------------------------
-
-A list of supported packages in FloPy is available in [docs/supported_packages.md](docs/supported_packages.md) on the github repo.
-
-
-FloPy Model Checks
------------------------------------------------
-
-A table of the supported and proposed model checks implemented in  FloPy is available in [docs/model_checks.md](docs/model_checks.md) on the github repo.
-
-
-FloPy Changes
------------------------------------------------
-
-A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
+- A summary of changes in each FloPy version is available in [docs/version_changes.md](docs/version_changes.md) on the github repo.
 
 
 Contributing
 ------------------------------------------------
+FloPy usage has been growing rapidly, and as the number of users has increased, so has the number of questions about how to use FloPy.  We ask our users to carefully consider the nature of their problem and seek help in the appropriate manner.
+
+#### Questions
+
+Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy`.
+
+Stack Overflow is a much better place to ask questions since:
+
+- there are thousands of people willing to help on Stack Overflow
+- questions and answers stay available for public viewing so your question / answer might help someone else
+- Stack Overflow's voting system assures that the best answers are prominently visible.
+
+To save your and our time, we will systematically close all issues that are requests for general support and redirect people to Stack Overflow.
+
+#### Bugs, Contributions, and Missing Features
 
 Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
-
 
 
 <a name="relcand"></a>Installing the latest FloPy release candidate
@@ -155,7 +146,6 @@ To install the latest release candidate type:
 To update your current version with the latest release candidate type:
 
     pip install https://github.com/modflowpy/flopy/zipball/develop --upgrade
-
 
 
 How to Cite
