@@ -2,6 +2,7 @@
 <img src="https://raw.githubusercontent.com/modflowpy/flopy/master/examples/images/flopy3.png" alt="flopy3" style="width:50;height:20">
 
 ### Version 3.3.1 &mdash; release candidate
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/dc83d3f53737440692bad2f9cca9b37a)](https://app.codacy.com/manual/jdhughes-usgs/flopy?utm_source=github.com&utm_medium=referral&utm_content=modflowpy/flopy&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/modflowpy/flopy.svg?branch=develop)](https://travis-ci.org/modflowpy/flopy)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3424dc693f9042ffadc93086cd554e47)](https://www.codacy.com/gh/modflowpy/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/modflowpy/flopy/badge.svg?branch=develop)](https://coveralls.io/github/modflowpy/flopy?branch=develop)
