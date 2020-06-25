@@ -66,6 +66,27 @@ def line_strip(line):
     return line.replace(',', ' ')
 
 
+def multi_line_strip(fobj):
+    """
+    Get next line that is not blank or is not a comment line
+    from a free formatted modflow input file
+
+    Parameters
+    ----------
+        fobj : open file object
+            a line of text from an input file
+
+    Returns
+    -------
+        str : line with comments removed and commas replaced
+
+    """
+    while True:
+        line = line_strip(fobj.readline())
+        if line:
+            return line.lower()
+
+
 def get_next_line(f):
     """
     Get the next line from a file that is not a blank line
