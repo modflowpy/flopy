@@ -4,6 +4,7 @@ FloPy Changes
 
 * New features:
 
+    * [feat(ModflowAg)](https://github.com/modflowpy/flopy/commit/c89b2d83a81125c986c05df57ffc980fe10fd663): Add the modflowag package for nwt (pull request #922). Committed by Joshua Larsen on 2020-06-25.
     * [feat(GridIntersect)](https://github.com/modflowpy/flopy/commit/176c9b45eb158217b1aeb0657d60ed06739e53e6): #902 (#903). Committed by Davíd Brakenhoff on 2020-06-10.
     * [feat(mbase)](https://github.com/modflowpy/flopy/commit/4fc61d573c108be7601a2e8479a86c35040998c2): Suppress duplicate package warning if verbose is false (#908). Committed by Hughes, J.D on 2020-06-09.
     * [feat(ModflowSms)](https://github.com/modflowpy/flopy/commit/f539d072e20cb5654fab8826ac3bbaf7d1f8b52e): Add support for simple, moderate, complex (#906). Committed by langevin-usgs on 2020-06-09.
@@ -27,7 +28,7 @@ FloPy Changes
     * [fix(#280, #835)](https://github.com/modflowpy/flopy/commit/6dae1b0ed5df6836ce6ea981de7050621a90477f): Set_all_data_external now includes constants, cellids in list data are checked (#920). Committed by spaulins-usgs on 2020-06-23.
     * [fix(mfsfr2.check)](https://github.com/modflowpy/flopy/commit/796b7b15385de0181cabd33d3bc1915bfa76a83b): Negative segments for lakes no longer included in segment numbering order check (#915). Committed by aleaf on 2020-06-23.
     * [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/d5672f585faa31ead48973834d9b30cf70512cba): Fixes #916 and #917 (#918). Committed by Davíd Brakenhoff on 2020-06-22.
-    * [fix()](https://github.com/modflowpy/flopy/commit/0207372769c5389835c555820c11fc377a4370c7): Fix faulty logic in ZoneBudget (#911). Committed by Jason Bellino on 2020-06-22.
+    * [fix(ZoneBudget)](https://github.com/modflowpy/flopy/commit/0207372769c5389835c555820c11fc377a4370c7): Fix faulty logic in ZoneBudget (#911). Committed by Jason Bellino on 2020-06-22.
     * [fix(SwtListBudget)](https://github.com/modflowpy/flopy/commit/eed5afdd03917256b097a797ec1137c2b80fb8a1): Totim was not being read correctly for seawat list file (#910). Committed by langevin-usgs on 2020-06-10.
     * [fix(Seawat.modelgrid)](https://github.com/modflowpy/flopy/commit/7a31a1d7a210894d9970e2e7a3a6a6453518289b): Pass lenuni from dis file into modelgrid instance (#901). Committed by Joshua Larsen on 2020-06-02.
     * [fix(mfsimulation)](https://github.com/modflowpy/flopy/commit/0958b28added4b572b168c35657f1d5fd968e952): Repair change for case insensitive model names (#897). Committed by langevin-usgs on 2020-06-01.
@@ -48,7 +49,7 @@ FloPy Changes
     * [fix(ModflowDis)](https://github.com/modflowpy/flopy/commit/52ecd98a11fc4f459c9bd0b59cb854ff402eeb08): Zero based get_node() and get_lrc()… (#847). Committed by Joshua Larsen on 2020-04-10.
     * [fix(binaryfile_utils, CellbudgetFile)](https://github.com/modflowpy/flopy/commit/f514a22a38264dc81c0db6dae62db4beae8df227): Update for imeth == 6 (#823). Committed by Joshua Larsen on 2020-04-10.
     * [fix(utils.gridintersect)](https://github.com/modflowpy/flopy/commit/14040ff605dfe496d8ec88ca8eeb3f73daeee06e): Bug in gridintersect for vertex grids (#845). Committed by Davíd Brakenhoff on 2020-04-06.
-    * [fix(mflmt.py)](https://github.com/modflowpy/flopy/commit/1f322f0ef50be9dfaa2252cacb091aded4159113): Clean up docstring for package_flows argument in lmt. Committed by GS\emorway-usgs on 2020-03-31.
+    * [fix(mflmt.py)](https://github.com/modflowpy/flopy/commit/1f322f0ef50be9dfaa2252cacb091aded4159113): Clean up docstring for package_flows argument in lmt. Committed by emorway-usgs on 2020-03-31.
     * [fix(str)](https://github.com/modflowpy/flopy/commit/59cac5c0466b497c36e833784b436d4a5e47fcd5): Add consistent fixed and free format approach (#838). Committed by Hughes, J.D on 2020-03-31.
     * [fix(vtk)](https://github.com/modflowpy/flopy/commit/aa9f3148008dd4c23d86db4e4dae5bae8c8bc564): Issues related to nan and type cast. Committed by Etienne Bresciani on 2020-03-31.
     * [fix(pyproj)](https://github.com/modflowpy/flopy/commit/9a1b9e344aefad4ed222bd8d10eb6b9000c9c7d0): Pyproj.proj's errcheck keyword option not reliable (#837). Committed by Mike Taves on 2020-03-29.

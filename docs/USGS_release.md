@@ -12,7 +12,7 @@ author:
     - Michael W. Toews
     - Eric D. Morway
     - Jason C. Bellino
-    - Jeffrey J. Starn
+    - Jon J. Starn
     - Michael N. Fienen
 header-includes:
     - \usepackage{fancyhdr}
@@ -21,9 +21,9 @@ header-includes:
     - \fancyhf{{}}
     - \fancyhead[LE, LO, RE, RO]{}
     - \fancyhead[CE, CO]{FloPy Release Notes}
-    - \fancyfoot[LE, RO]{FloPy version 3.3.1}
+    - \fancyfoot[LE, RO]{FloPy version 3.3.2}
     - \fancyfoot[CO, CE]{\thepage\ of \pageref{LastPage}}
-    - \fancyfoot[RE, LO]{12/15/2019}
+    - \fancyfoot[RE, LO]{06/26/2020}
 geometry: margin=0.75in
 ---
 
@@ -35,10 +35,21 @@ FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, an
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 
-Contributing
-------------------------------------------------
+Installation
+-----------------------------------------------
 
-Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
+FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
+
+To install FloPy type:
+
+    conda install -c conda-forge flopy
+
+or
+
+    pip install flopy
+
+
+The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
 
 
 Documentation
@@ -52,11 +63,11 @@ How to Cite
 
 ##### ***Citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Starn, J. J. and Fienen, M. N., 2016, Scripting MODFLOW Model Development Using Python and FloPy: Groundwater, v. 54, p. 733–739, doi:10.1111/gwat.12413.](http://dx.doi.org/10.1111/gwat.12413)
 
 ##### ***Software/Code citation for FloPy:***
 
-[Bakker, M., Post, V., Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2019, FloPy v3.3.1 &mdash; release candidate: U.S. Geological Survey Software Release, 15 December 2019, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
+[Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N., 2020, FloPy v3.3.2 &mdash; release candidate: U.S. Geological Survey Software Release, 26 June 2020, http://dx.doi.org/10.5066/F7BK19FH](http://dx.doi.org/10.5066/F7BK19FH)
 
 
 Disclaimer
@@ -73,12 +84,12 @@ resulting from the authorized or unauthorized use of the software.
 
 Installation
 -----------------------------------------------
-To install FloPy version 3.3.1 from the USGS FloPy website:
+To install FloPy version 3.3.2 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.1.zip
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip
 ```
 
-To update to FloPy version 3.3.1 from the USGS FloPy website:
+To update to FloPy version 3.3.2 from the USGS FloPy website:
 ```
-pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.1.zip --upgrade
+pip install https://water.usgs.gov/ogw/flopy/flopy-3.3.2.zip --upgrade
 ```

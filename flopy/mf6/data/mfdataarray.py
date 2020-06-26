@@ -258,7 +258,7 @@ class MFArray(MFMultiDimVar):
                 k = (k,)
             # for layered data treat k as a layer number
             try:
-               storage.layer_storage[k]._set_data(value)
+                storage.layer_storage[k]._set_data(value)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
