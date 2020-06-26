@@ -242,7 +242,7 @@ def update_codejson(vmajor, vminor, vmicro):
     now = datetime.datetime.now()
     sdate = now.strftime('%Y-%m-%d')
     data[0]['date']['metadataLastUpdated'] = sdate
-    if 'release' in branch.lower() or 'master' in branch.lower():
+    if branch.lower().startswith('release') or 'master' in branch.lower():
         data[0]['version'] = version
         data[0]['status'] = 'Production'
     else:
@@ -352,6 +352,12 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     # create disclaimer text
     is_approved, disclaimer = get_disclaimer()
 
+    # set repo branch string based on is_approved
+    if is_approved:
+        repo_str = 'master'
+    else:
+        repo_str = 'develop'
+
     # create version
     version = get_tag(vmajor, vminor, vmicro)
 
@@ -422,10 +428,17 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
             writeline = True
         elif '[MODFLOW 6](docs/mf6.md)' in line:
             line = line.replace('[MODFLOW 6](docs/mf6.md)', 'MODFLOW 6')
+
         if writeline:
+            # USGS_release.md
             f.write('{}\n'.format(line))
+            # PyPi_release.md
             line = line.replace('***', '*')
             line = line.replace('##### ', '')
+            if 'CONTRIBUTING.md' in line:
+                rstr = 'https://github.com/modflowpy/flopy/blob/' + \
+                       '{}/CONTRIBUTING.md'.format(repo_str)
+                line = line.replace('CONTRIBUTING.md', rstr)
             f2.write('{}\n'.format(line))
 
     # write installation information
@@ -444,7 +457,7 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     line += 'pip install {} --upgrade\n'.format(cweb)
     line += '```\n'
 
-    #
+    # write installation instructions of USGS_release.md
     f.write(line)
 
     # close the USGS_release.md file

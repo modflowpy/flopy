@@ -1,5 +1,11 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.3.2
+
+* Bug fixes:
+
+    * [fix(Modpath7Sim)](https://github.com/modflowpy/flopy/commit/b27fccdee589c772e6e66160f27d60a8dd485645): Fix timepointinterval calculation for timepointoption 3 (#927). Committed by jdhughes-usgs on 2020-06-26.
+
 ### Version 3.3.1
 
 * New features:
