@@ -261,9 +261,7 @@ class SpatialReference(object):
             if "EPSG" in self.proj4_str.upper():
                 import pyproj
 
-                crs = pyproj.Proj(self.proj4_str,
-                                  preserve_units=True,
-                                  errcheck=True)
+                crs = pyproj.Proj(self.proj4_str, preserve_units=True)
                 proj_str = crs.srs
             else:
                 proj_str = self.proj4_str

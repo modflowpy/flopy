@@ -197,7 +197,7 @@ class ModflowChd(Package):
         return ['shead', 'ehead']
 
     @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    def load(f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -235,7 +235,7 @@ class ModflowChd(Package):
         if model.verbose:
             sys.stdout.write('loading chd package file...\n')
 
-        return Package.load(f, model, ModflowChd, nper=nper,
+        return Package.load(f, model, ModflowChd, nper=nper, check=check,
                             ext_unit_dict=ext_unit_dict)
 
     @staticmethod

@@ -161,11 +161,12 @@ class PyListUtil(object):
 
     @staticmethod
     def first_item(current_list):
-        if not isinstance(current_list, list):
+        if not isinstance(current_list, list) and not isinstance\
+                (current_list, np.ndarray):
             return current_list
 
         for item in current_list:
-            if isinstance(item, list):
+            if isinstance(item, list) or isinstance(item, np.ndarray):
                 # still in a list of lists, recurse
                 return PyListUtil.first_item(item)
             else:
@@ -200,11 +201,12 @@ class PyListUtil(object):
 
     @staticmethod
     def next_list(current_list):
-        if not isinstance(current_list[0], list):
+        if not isinstance(current_list[0], list) and not \
+                isinstance(current_list[0], np.ndarray):
             yield current_list
         else:
             for lst in current_list:
-                if isinstance(lst[0], list):
+                if isinstance(lst[0], list) or isinstance(lst[0], np.ndarray):
                     for lst in PyListUtil.next_list(lst):
                         yield lst
                 else:

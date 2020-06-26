@@ -86,14 +86,19 @@ class LayerStorage(object):
     """
 
     def __init__(self, data_storage, lay_indexes,
-                 data_storage_type=DataStorageType.internal_array):
+                 data_storage_type=DataStorageType.internal_array,
+                 data_type=None):
         self._data_storage_parent = data_storage
         self._lay_indexes = lay_indexes
         self.internal_data = None
         self.data_const_value = None
         self.data_storage_type = data_storage_type
+        self.data_type = data_type
         self.fname = None
-        self.factor = 1.0
+        if self.data_type == DatumType.integer:
+            self.factor = 1
+        else:
+            self.factor = 1.0
         self.iprn = None
         self.binary = False
 
@@ -274,6 +279,11 @@ class DataStorage(object):
         self._data_storage_type = data_storage_type
         self._stress_period = stress_period
         self._data_path = data_path
+        if not data_structure_type == DataStructureType.recarray:
+            self._data_type = self.data_dimensions.structure.\
+                get_datum_type(return_enum_type=True)
+        else:
+            self._data_type = None
         self.layer_storage = MultiList(shape=layer_shape,
                                        callback=self._create_layer)
         #self.layer_storage = [LayerStorage(self, x, data_storage_type)
@@ -287,10 +297,7 @@ class DataStorage(object):
 
         if data_structure_type == DataStructureType.recarray:
             self.build_type_list(resolve_data_shape=False)
-            self._data_type = None
-        else:
-            self._data_type = self.data_dimensions.structure.\
-                get_datum_type(return_enum_type=True)
+
         self.layered = layered
 
         # initialize comments
@@ -304,13 +311,15 @@ class DataStorage(object):
         return self.get_data_str(False)
 
     def _create_layer(self, indexes):
-        return LayerStorage(self, indexes, self._data_storage_type)
+        return LayerStorage(self, indexes, self._data_storage_type,
+                            self._data_type)
 
     def flatten(self):
         self.layered = False
         storage_type = self.layer_storage.first_item().data_storage_type
         self.layer_storage = MultiList(mdlist=[LayerStorage(self, 0,
-                                                            storage_type)])
+                                                            storage_type,
+                                                            self._data_type)])
 
     def make_layered(self):
         if not self.layered:
@@ -680,41 +689,10 @@ class DataStorage(object):
         if multiplier is None:
             multiplier = [1.0]
         if self.data_structure_type == DataStructureType.recarray or \
-          self.data_structure_type == DataStructureType.scalar:
+                self.data_structure_type == DataStructureType.scalar:
             self._set_list(data, layer, multiplier, key, autofill)
         else:
-            data_dim = self.data_dimensions
-            struct = data_dim.structure
-            if struct.name == 'aux':
-                # make a list out of a single item
-                if isinstance(data, int) or isinstance(data, float) or \
-                        isinstance(data, str):
-                    data = [[data]]
-                # handle special case of aux variables in an array
-                self.layered = True
-                aux_var_names = data_dim.package_dim.get_aux_variables()
-                if len(data) == len(aux_var_names[0]) - 1:
-                    for layer, aux_var_data in enumerate(data):
-                        if layer > 0 and \
-                                layer >= self.layer_storage.get_total_size():
-                            self.add_layer()
-                        self._set_array(aux_var_data, [layer], multiplier, key,
-                                        autofill)
-                else:
-                    message = 'Unable to set data for aux variable. ' \
-                              'Expected {} aux variables but got ' \
-                              '{}.'.format(len(aux_var_names[0]),
-                                           len(data))
-                    type_, value_, traceback_ = sys.exc_info()
-                    raise MFDataException(
-                        self.data_dimensions.structure.get_model(),
-                        self.data_dimensions.structure.get_package(),
-                        self.data_dimensions.structure.path,
-                        'setting aux variables', data_dim.structure.name,
-                        inspect.stack()[0][3], type_, value_, traceback_,
-                        message, self._simulation_data.debug)
-            else:
-                self._set_array(data, layer, multiplier, key, autofill)
+            self._set_array(data, layer, multiplier, key, autofill)
 
     def _set_list(self, data, layer, multiplier, key, autofill):
         if isinstance(data, dict):
@@ -802,8 +780,8 @@ class DataStorage(object):
                     data['data'] = [data['data']]
 
             if 'filename' in data:
-                multiplier, iprn, binary = self.process_open_close_line(data,
-                                                                        layer)
+                multiplier, iprn, binary = \
+                    self.process_open_close_line(data, layer)[0:3]
                 # store location to file
                 self.store_external(data['filename'], layer, [multiplier],
                                     print_format=iprn, binary=binary,
@@ -837,9 +815,7 @@ class DataStorage(object):
                 new_data.insert(0, 'open/close')
             else:
                 new_data = data[:]
-            multiplier, iprn, binary = self.process_open_close_line(new_data,
-                                                                    layer,
-                                                                    True)
+            self.process_open_close_line(new_data, layer, True)
             return True
         # try to resolve as internal array
         layer_storage = self.layer_storage[self._resolve_layer(layer)]
@@ -881,7 +857,7 @@ class DataStorage(object):
                        key=None, autofill=False,
                        print_format=None):
         if multiplier is None:
-            multiplier = [1.0]
+            multiplier = [self.get_default_mult()]
         if self.data_structure_type == DataStructureType.recarray:
             if self.layer_storage.first_item().data_storage_type == \
                     DataStorageType.internal_constant:
@@ -1029,7 +1005,7 @@ class DataStorage(object):
                        print_format=None, data=None, do_not_verify=False,
                        binary=False):
         if multiplier is None:
-            multiplier = [1.0]
+            multiplier = [self.get_default_mult()]
         layer_new, multiplier = self._store_prep(layer, multiplier)
 
         if data is not None:
@@ -1118,13 +1094,23 @@ class DataStorage(object):
             else:
                 self.layer_storage[layer_new].factor = multiplier
                 self.layer_storage[layer_new].internal_data = None
+        self.set_ext_file_attributes(layer_new, file_path, print_format,
+                                     binary)
 
+    def set_ext_file_attributes(self, layer, file_path,
+                                print_format, binary):
         # point to the external file and set flags
-        self.layer_storage[layer_new].fname = file_path
-        self.layer_storage[layer_new].iprn = print_format
-        self.layer_storage[layer_new].binary = binary
-        self.layer_storage[layer_new].data_storage_type = \
+        self.layer_storage[layer].fname = file_path
+        self.layer_storage[layer].iprn = print_format
+        self.layer_storage[layer].binary = binary
+        self.layer_storage[layer].data_storage_type = \
                 DataStorageType.external_file
+
+    def point_to_existing_external_file(self, arr_line, layer):
+        multiplier, print_format, binary, \
+        data_file = self.process_open_close_line(arr_line, layer, store=False)
+        self.set_ext_file_attributes(layer, data_file, print_format, binary)
+        self.layer_storage[layer].factor = multiplier
 
     def external_to_external(self, new_external_file, multiplier=None,
                              layer=None, binary=None):
@@ -1304,10 +1290,13 @@ class DataStorage(object):
         cellid_size = model_grid.get_num_spatial_coordinates()
         if cellid_size + data_index > len(arr_line):
             return False
-        for index in range(data_index, cellid_size + data_index):
+        for index, \
+            dim_size in zip(range(data_index, cellid_size + data_index),
+                                   model_grid.get_model_dim()):
             if not DatumUtil.is_int(arr_line[index]):
                 return False
-            if int(arr_line[index]) <= 0:
+            val = int(arr_line[index])
+            if val <= 0 or val > dim_size:
                 return False
         return True
 
@@ -1323,10 +1312,7 @@ class DataStorage(object):
                                                 line_num)
 
     def process_internal_line(self, arr_line):
-        if self._data_type == DatumType.integer:
-            multiplier = 1
-        else:
-            multiplier = 1.0
+        multiplier = self.get_default_mult()
         print_format = None
         if isinstance(arr_line, list):
             if len(arr_line) < 2:
@@ -1498,7 +1484,7 @@ class DataStorage(object):
         model_name = data_dim.package_dim.model_dim[0].model_name
         self._simulation_data.mfpath.add_ext_file(data_file, model_name)
 
-        return multiplier, print_format, binary
+        return multiplier, print_format, binary, data_file
 
     @staticmethod
     def _tupleize_data(data):
@@ -1526,7 +1512,9 @@ class DataStorage(object):
                             model_grid = self.data_dimensions.get_model_grid()
                             cellid_size = model_grid.\
                                 get_num_spatial_coordinates()
-                        if len(data_line[index]) != cellid_size:
+                        if cellid_size != 1 and \
+                                len(data_line[index]) != cellid_size and \
+                                isinstance(data_line[index], int):
                             message = 'Cellid "{}" contains {} integer(s). ' \
                                       'Expected a cellid containing {} ' \
                                       'integer(s) for grid type' \
@@ -1660,7 +1648,7 @@ class DataStorage(object):
             if all_none:
                 return None
             else:
-                return aux_data
+                return np.stack(aux_data, axis=0)
         else:
             return full_data
 
@@ -1821,6 +1809,7 @@ class DataStorage(object):
                         nseg=None):
         if data_set is None:
             self._recarray_type_list = []
+            self.recarray_cellid_list = []
             data_set = self.data_dimensions.structure
         initial_keyword = True
         package_dim = self.data_dimensions.package_dim
@@ -1845,6 +1834,7 @@ class DataStorage(object):
                             if aux_var_name.lower() != 'auxiliary':
                                 self._recarray_type_list.append((aux_var_name,
                                                                  data_type))
+                                self.recarray_cellid_list.append(False)
 
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
@@ -1852,6 +1842,7 @@ class DataStorage(object):
                 elif data_item.type == DatumType.keystring:
                     self._recarray_type_list.append((data_item.name,
                                                      data_type))
+                    self.recarray_cellid_list.append(data_item.is_cellid)
                     # add potential data after keystring to type list
                     ks_data_item = deepcopy(data_item)
                     ks_data_item.type = DatumType.string
@@ -1859,6 +1850,7 @@ class DataStorage(object):
                     ks_rec_type = ks_data_item.get_rec_type()
                     self._recarray_type_list.append((ks_data_item.name,
                                                      ks_rec_type))
+                    self.recarray_cellid_list.append(ks_data_item.is_cellid)
                     if index == len(data_set.data_item_structures) - 1:
                         idx = 1
                         data_line_max_size = self._get_max_data_line_size(data)
@@ -1872,6 +1864,9 @@ class DataStorage(object):
                             self._recarray_type_list.append(
                                     ('{}_{}'.format(ks_data_item.name, idx),
                                                     ks_rec_type))
+                            self.recarray_cellid_list.append(
+                                ks_data_item.is_cellid)
+
                             idx += 1
 
                 elif data_item.name != 'boundname' or \
@@ -1888,6 +1883,8 @@ class DataStorage(object):
                                 self._recarray_type_list.append(
                                         ('{}_label'.format(data_item.name),
                                                            object))
+                                self.recarray_cellid_list.append(
+                                    data_item.is_cellid)
                         if nseg is not None and len(data_item.shape) > 0 and \
                                 isinstance(data_item.shape[0], str) and \
                                 data_item.shape[0][0:4] == 'nseg':
@@ -1911,7 +1908,9 @@ class DataStorage(object):
                                 resolved_shape, shape_rule = \
                                         data_dim.get_data_shape(data_item,
                                                                 data_set,
-                                                                data, key)
+                                                                data,
+                                                                repeating_key=
+                                                                key)
                             else:
                                 resolved_shape = [1]
                         if not resolved_shape or len(resolved_shape) == 0 or \
@@ -1950,7 +1949,16 @@ class DataStorage(object):
                             else:
                                 self._recarray_type_list.append(
                                         (data_item.name, data_type))
+                            self.recarray_cellid_list.append(
+                                data_item.is_cellid)
+
         return self._recarray_type_list
+
+    def get_default_mult(self):
+        if self._data_type == DatumType.integer:
+            return 1
+        else:
+            return 1.0
 
     @staticmethod
     def _calc_data_size(data, count_to=None, current_length=None):
@@ -2020,12 +2028,12 @@ class DataStorage(object):
         mult_ml = MultiList(multiplier)
         if not mult_ml.in_shape(layer):
             if multiplier[0] is None:
-                multiplier = 1.0
+                multiplier = self.get_default_mult()
             else:
                 multiplier = multiplier[0]
         else:
             if mult_ml.first_item() is None:
-                multiplier = 1.0
+                multiplier = self.get_default_mult()
             else:
                 multiplier = mult_ml.first_item()
 

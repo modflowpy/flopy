@@ -331,7 +331,8 @@ class Mf6Obs(ObsFiles):
             self._build_index()
 
             # read ascii data
-            self.data = np.loadtxt(self.file, dtype=self.dtype, delimiter=',')
+            self.data = np.loadtxt(self.file, dtype=self.dtype, delimiter=',',
+                                   ndmin=1)
         return
 
     def _build_dtype(self):

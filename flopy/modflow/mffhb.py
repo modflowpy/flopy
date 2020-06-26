@@ -68,7 +68,7 @@ class ModflowFhb(Package):
     ds5 : list or numpy array or recarray
         Each FHB flwrat cell (dataset 5) is defined through definition of
         layer(int), row(int), column(int), iaux(int), flwrat[nbdtime](float).
-        There are nflw entries. (default is None)
+        There should be nflw entries. (default is None)
         The simplest form is a list of lists with the FHB flow boundaries.
         This gives the form of::
 
@@ -80,14 +80,12 @@ class ModflowFhb(Package):
                 [lay, row, col, iaux, flwrat1, flwra2, ..., flwrat(nbdtime)]
             ]
 
-        Note there should be nflw rows in ds7.
-
     cnstm7 : float
         A constant multiplier for data list sbhedt. (default is 1.0)
     ds7 : list or numpy array or recarray
         Each FHB sbhed cell (dataset 7) is defined through definition of
         layer(int), row(int), column(int), iaux(int), sbhed[nbdtime](float).
-        There are nflw entries. (default is None)
+        There should be nhed entries. (default is None)
         The simplest form is a list of lists with the FHB flow boundaries.
         This gives the form of::
 
@@ -98,8 +96,6 @@ class ModflowFhb(Package):
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)],
                 [lay, row, col, iaux, sbhed1, sbhed2, ..., sbhed(nbdtime)]
             ]
-
-        Note there should be nhed rows in ds7.
 
     extension : string
         Filename extension (default is 'fhb')

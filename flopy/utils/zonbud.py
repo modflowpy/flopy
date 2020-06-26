@@ -59,14 +59,14 @@ class ZoneBudget(object):
             assert np.issubdtype(z.dtype,
                                  np.integer), 'Zones dtype must be integer'
         else:
-            raise Exception(
-                'Please pass zones as a numpy ndarray of (positive) integers. {}'.format(
-                    z.dtype))
+            e = 'Please pass zones as a numpy ndarray of (positive)' \
+                ' integers. {}'.format(z.dtype)
+            raise Exception(e)
 
         # Check for negative zone values
-        for zi in np.unique(z):
-            if zi < 0:
-                raise Exception('Negative zone value(s) found:', zi)
+        if np.any(z < 0):
+            raise Exception('Negative zone value(s) found:',
+                            np.unique(z[z < 0]))
 
         self.dis = None
         self.sr = None
@@ -133,20 +133,19 @@ class ZoneBudget(object):
             izone = np.zeros(self.cbc_shape, self.int_type)
             izone[:] = z[0, :, :]
         else:
-            raise Exception(
-                'Shape of the zone array is not recognized: {}'.format(
-                    z.shape))
+            e = 'Shape of the zone array is not recognized: {}'.format(
+                z.shape)
+            raise Exception(e)
 
         self.izone = izone
-        self.allzones = [z for z in np.unique(self.izone)]
+        self.allzones = np.unique(izone)
         self._zonenamedict = OrderedDict([(z, 'ZONE_{}'.format(z))
-                                          for z in self.allzones if
-                                          z != 0])
+                                          for z in self.allzones])
 
         if aliases is not None:
-            assert isinstance(aliases,
-                              dict), 'Input aliases not recognized. Please pass a dictionary ' \
-                                     'with key,value pairs of zone/alias.'
+            s = 'Input aliases not recognized. Please pass a dictionary ' \
+                'with key,value pairs of zone/alias.'
+            assert isinstance(aliases, dict), s
             # Replace the relevant field names (ignore zone 0)
             seen = []
             for z, a in iter(aliases.items()):
@@ -157,7 +156,7 @@ class ZoneBudget(object):
                     self._zonenamedict[z] = '_'.join(a.split())
                     seen.append(z)
 
-        self._iflow_recnames = self._get_internal_flow_record_names()
+        # self._iflow_recnames = self._get_internal_flow_record_names()
 
         # All record names in the cell-by-cell budget binary file
         self.record_names = [n.strip() for n in
@@ -397,8 +396,8 @@ class ZoneBudget(object):
             raise ImportError(msg)
 
         valid_index_keys = ['totim', 'kstpkper']
-        assert index_key in valid_index_keys, 'index_key "{}" is not valid.'.format(
-            index_key)
+        s = 'index_key "{}" is not valid.'.format(index_key)
+        assert index_key in valid_index_keys, s
 
         valid_timeunit = ['S', 'M', 'H', 'D', 'Y']
 
@@ -464,8 +463,8 @@ class ZoneBudget(object):
 
     def _compute_budget(self, kstpkper=None, totim=None):
         """
-        Creates a budget for the specified zone array. This function only supports the
-        use of a single time step/stress period or time.
+        Creates a budget for the specified zone array. This function only
+        supports the use of a single time step/stress period or time.
 
         Parameters
         ----------
@@ -523,22 +522,22 @@ class ZoneBudget(object):
 
         return
 
-    def _get_internal_flow_record_names(self):
-        """
-        Get internal flow record names
-
-        Returns
-        -------
-        iflow_recnames : np.recarray
-            recarray of internal flow terms
-
-        """
-        iflow_recnames = OrderedDict([(0, 'ZONE_0')])
-        for z, a in iter(self._zonenamedict.items()):
-            iflow_recnames[z] = '{}'.format(a)
-        dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
-        iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
-        return iflow_recnames
+    # def _get_internal_flow_record_names(self):
+    #     """
+    #     Get internal flow record names
+    #
+    #     Returns
+    #     -------
+    #     iflow_recnames : np.recarray
+    #         recarray of internal flow terms
+    #
+    #     """
+    #     iflow_recnames = OrderedDict()
+    #     for z, a in iter(self._zonenamedict.items()):
+    #         iflow_recnames[z] = '{}'.format(a)
+    #     dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
+    #     iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
+    #     return iflow_recnames
 
     def _add_empty_record(self, recordarray, recname, kstpkper=None,
                           totim=None):
@@ -617,8 +616,8 @@ class ZoneBudget(object):
                                                          recname.split()),
                                                      kstpkper, totim)
 
-        for z, n in self._iflow_recnames:
-            if n == 0 and 0 not in self.allzones:
+        for z, n in self._zonenamedict.items():
+            if z == 0 and 0 not in self.allzones:
                 continue
             else:
                 recordarray = self._add_empty_record(recordarray,
@@ -643,8 +642,8 @@ class ZoneBudget(object):
                                                          recname.split()),
                                                      kstpkper, totim)
 
-        for n in self._iflow_recnames['name']:
-            if n == 0 and 0 not in self.allzones:
+        for z, n in self._zonenamedict.items():
+            if z == 0 and 0 not in self.allzones:
                 continue
             else:
                 recordarray = self._add_empty_record(recordarray,
@@ -705,33 +704,21 @@ class ZoneBudget(object):
             return
 
         # Inflows
-        idx = np.logical_not(np.array([item in tz for item in [0] * len(tz)]))
+        idx = tz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = np.array(list(['FROM_' +
-                                  self._iflow_recnames[
-                                      self._iflow_recnames['zone'] == z][
-                                      'name'][0]
-                                  for z in fzi]))
-        colnames = np.array(list(
-            [self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
-             for z in tzi]))
+        rownames = ['FROM_' + self._zonenamedict[z] for z in fzi]
+        colnames = [self._zonenamedict[z] for z in tzi]
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
                                         totim)
 
         # Outflows
-        idx = np.logical_not(np.array([item in fz for item in [0] * len(fz)]))
+        idx = fz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = np.array(list(['TO_' +
-                                  self._iflow_recnames[
-                                      self._iflow_recnames['zone'] == z][
-                                      'name'][0]
-                                  for z in tzi]))
-        colnames = np.array(list(
-            [self._iflow_recnames[self._iflow_recnames['zone'] == z]['name'][0]
-             for z in fzi]))
+        rownames = ['TO_' + self._zonenamedict[z] for z in tzi]
+        colnames = [self._zonenamedict[z] for z in fzi]
         fluxes = f[idx]
         self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
                                         totim)
@@ -779,14 +766,14 @@ class ZoneBudget(object):
         try:
 
             if kstpkper is not None:
-                for rn, cn, flux in list(zip(rownames, colnames, fluxes)):
+                for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where(
                         (self._budget['time_step'] == kstpkper[0]) &
                         (self._budget['stress_period'] == kstpkper[1]) &
                         (self._budget['name'] == rn))
                     self._budget[cn][rowidx] += flux
             elif totim is not None:
-                for rn, cn, flux in list(zip(rownames, colnames, fluxes)):
+                for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where((self._budget['totim'] == totim) &
                                       (self._budget['name'] == rn))
                     self._budget[cn][rowidx] += flux
@@ -908,25 +895,21 @@ class ZoneBudget(object):
                 q = data[k, i, jl]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzl[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzl[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi[tzi != 0]]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -939,25 +922,21 @@ class ZoneBudget(object):
                 q = data[k, i, j]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzr[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzr[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -1043,25 +1022,21 @@ class ZoneBudget(object):
                 q = data[k, ia, j]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nza[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nza[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -1074,25 +1049,21 @@ class ZoneBudget(object):
                 q = data[k, i, j]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzb[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzb[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -1178,25 +1149,21 @@ class ZoneBudget(object):
                 q = data[ka, i, j]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nza[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nza[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -1209,25 +1176,21 @@ class ZoneBudget(object):
                 q = data[k, i, j]
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                tz = tzi[tzi != 0]
-                f = fi[tzi != 0]
-                fz = np.array(['FROM_CONSTANT_HEAD'] * len(tz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzb[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                fz = fzi[fzi != 0]
-                f = fi[fzi != 0]
-                fz = np.array(['TO_CONSTANT_HEAD'] * len(fz))
-                tz = np.array([self._zonenamedict[z] for z in tzi[tzi != 0]])
+                fzi, tzi, f = sum_flux_tuples(nzb[idx],
+                                              nz[idx],
+                                              q[idx])
+                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
                                              totim)
 
@@ -1246,8 +1209,9 @@ class ZoneBudget(object):
         data = self.cbc.get_data(text=recname, kstpkper=kstpkper,
                                  totim=totim)
         if len(data) == 0:
-            # Empty data, can occur during the first time step of a transient model when
-            # storage terms are zero and not in the cell-budget file.
+            # Empty data, can occur during the first time step of a transient
+            # model when storage terms are zero and not in the cell-budget
+            # file.
             return
         else:
             data = data[0]
@@ -1489,7 +1453,8 @@ def _numpyvoid2numeric(a):
 
 def write_zbarray(fname, X, fmtin=None, iprn=None):
     """
-    Saves a numpy array in a format readable by the zonebudget program executable.
+    Saves a numpy array in a format readable by the zonebudget program
+    executable.
 
     File format:
     line 1: nlay, nrow, ncol
@@ -1502,13 +1467,13 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     example from NACP:
     19 250 500
     INTERNAL      (10I8)
-         199     199     199     199     199     199     199     199     199     199
-         199     199     199     199     199     199     199     199     199     199
-         ...
+    199     199     199     199     199     199     199     199     199     199
+    199     199     199     199     199     199     199     199     199     199
+    ...
     INTERNAL      (10I8)
-         199     199     199     199     199     199     199     199     199     199
-         199     199     199     199     199     199     199     199     199     199
-         ...
+    199     199     199     199     199     199     199     199     199     199
+    199     199     199     199     199     199     199     199     199     199
+    ...
 
     Parameters
     ----------
@@ -1572,10 +1537,7 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
                         start = end
                         end = start + fmtin
                         vals = rowvals[start:end]
-                        # vals = rowvals[start:end]
-                        # if len(vals) > 0:
-                        #     s = ''.join([formatter(int(val)) for val in vals]) + '\n'
-                        #     f.write(s)
+
             elif fmtin == ncol:
                 for row in range(nrow):
                     vals = X[lay, row, :].ravel()
@@ -1586,7 +1548,8 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
 
 def read_zbarray(fname):
     """
-    Reads an ascii array in a format readable by the zonebudget program executable.
+    Reads an ascii array in a format readable by the zonebudget program
+    executable.
 
     Parameters
     ----------
@@ -1715,3 +1678,721 @@ def sort_tuple(tup, n=2):
     :return:
     """
     return tuple(sorted(tup, key=lambda t: t[:n]))
+
+
+def get_totim_modflow6(tdis):
+    """
+    Create a totim array from the tdis file in modflow 6
+
+    Parameters
+    ----------
+    tdis : ModflowTdis object
+
+    Returns
+    -------
+        totim : np.ndarray
+
+    """
+    recarray = tdis.perioddata.array
+    delt = []
+    for record in recarray:
+        perlen = record.perlen
+        nstp = record.nstp
+        tsmult = record.tsmult
+        for stp in range(nstp):
+            if stp == 0:
+                if tsmult != 1.0:
+                    dt = perlen * (tsmult - 1) / ((tsmult ** nstp) - 1)
+                else:
+                    dt = perlen / nstp
+            else:
+                dt = delt[-1] * tsmult
+
+            delt.append(dt)
+
+    totim = np.add.accumulate(delt)
+
+    return totim
+
+
+class ZBNetOutput(object):
+    """
+    Class that holds zonebudget netcdf output and allows export utilities
+    to recognize the output data type.
+
+    Parameters
+    ----------
+    zones : np.ndarray
+        array of zone numbers
+    time : np.ndarray
+        array of totim
+    arrays : dict
+        dictionary of budget term arrays.
+        axis 0 is totim,
+        axis 1 is zones
+    flux : bool
+        boolean flag to indicate if budget data is a flux "L^3/T"(True,
+        default) or if the data have been processed to
+        volumetric values "L^3" (False)
+    """
+
+    def __init__(self, zones, time, arrays, zone_array, flux=True):
+        self.zones = zones
+        self.time = time
+        self.arrays = arrays
+        self.zone_array = zone_array
+        self.flux = flux
+
+
+class ZoneBudgetOutput(object):
+    """
+    Class method to process zonebudget output into volumetric budgets
+
+    Parameters
+    ----------
+    f : str
+        zonebudget output file path
+    dis : flopy.modflow.ModflowDis object
+    zones : np.ndarray
+        numpy array of zones
+
+    """
+
+    def __init__(self, f, dis, zones):
+        import pandas as pd
+        from ..modflow import ModflowDis
+
+        self._filename = f
+        self._otype = None
+        self._zones = zones
+        self.__pd = pd
+
+        if isinstance(dis, ModflowDis):
+            self._totim = dis.get_totim()
+            self._nstp = dis.nstp.array
+            self._steady = dis.steady.array
+
+        else:
+            self._totim = get_totim_modflow6(dis)
+            self._nstp = np.array(dis.perioddata.array.nstp)
+            # self._steady is a placeholder, data not used for ZB6 read
+            self._steady = [False for _ in dis.perioddata.array]
+
+        self._tslen = None
+        self._date_time = None
+        self._data = None
+
+        if self._otype is None:
+            self._get_otype()
+
+        self._calculate_tslen()
+        self._read_file()
+
+    def __repr__(self):
+        """
+        String representation of the ZoneBudgetOutput class
+
+        """
+        zones = ", ".join([str(i) for i in self.zones])
+        l = ["ZoneBudgetOutput Class",
+             "----------------------\n",
+             "Number of zones: {}".format(len(self.zones)),
+             "Unique zones: {}".format(zones),
+             "Number of buget records: {}".format(len(self.dataframe))]
+
+        return "\n".join(l)
+
+    @property
+    def zone_array(self):
+        """
+        Property method to get the zone array
+
+        """
+        return np.asarray(self._zones, dtype=int)
+
+    @property
+    def zones(self):
+        """
+        Get a unique list of zones
+
+        """
+        return np.unique(self.zone_array)
+
+    @property
+    def dataframe(self):
+        """
+        Returns a net flux dataframe of the zonebudget output
+
+        """
+        return self.__pd.DataFrame.from_dict(self._data)
+
+    def _calculate_tslen(self):
+        """
+        Method to calculate each timestep length from totim
+        and reset totim to a dictionary of {(kstp, kper): totim}
+
+        """
+        n = 0
+        totim = {}
+        for ix, stp in enumerate(self._nstp):
+            for i in range(stp):
+                if self._tslen is None:
+                    tslen = self._totim[n]
+                    self._tslen = {(i, ix): tslen}
+                else:
+                    tslen = self._totim[n] - self._totim[n - 1]
+                    self._tslen[(i, ix)] = tslen
+
+                totim[(i, ix)] = self._totim[n]
+                n += 1
+
+        self._totim = totim
+
+    def _read_file(self):
+        """
+        Delegator method for reading zonebudget outputs
+
+        """
+        if self._otype == 1:
+            self._read_file1()
+        elif self._otype == 2:
+            self._read_file2()
+        elif self._otype == 3:
+            self._read_file3()
+        else:
+            raise AssertionError("Invalid otype supplied: {}"
+                                 .format(self._otype))
+
+    def _read_file1(self):
+        """
+        Read original style zonebudget output file
+
+        """
+
+        with open(self._filename) as foo:
+
+            data_in = {}
+            data_out = {}
+            read_in = False
+            read_out = False
+            flow_budget = False
+            empty = 0
+            while True:
+                line = foo.readline().strip().lower()
+
+                if "flow budget for zone" in line:
+                    flow_budget = True
+                    read_in = False
+                    read_out = False
+                    empty = 0
+                    t = line.split()
+                    zone = int(t[4])
+                    if len(t[7]) > 4:
+                        t.insert(8, t[7][4:])
+                    kstp = int(t[8]) - 1
+                    if len(t[11]) > 6:
+                        t.append(t[11][6:])
+                    kper = int(t[12]) - 1
+                    if "zone" not in data_in:
+                        data_in["zone"] = [zone]
+                        data_in['kstp'] = [kstp]
+                        data_in['kper'] = [kper]
+                    else:
+                        data_in['zone'].append(zone)
+                        data_in['kstp'].append(kstp)
+                        data_in['kper'].append(kper)
+
+                    if self._steady[kper]:
+                        try:
+                            data_in['storage'].append(0.)
+                            data_out['storage'].append(0.)
+                        except KeyError:
+                            data_in['storage'] = [0.]
+                            data_out['storage'] = [0.]
+
+                elif line in ("", " "):
+                    empty += 1
+
+                elif read_in:
+                    if "=" in line:
+                        t = line.split("=")
+                        label = t[0].strip()
+                        if "zone" in line:
+                            # currently we do not support zone to zone
+                            # flow for option 1
+                            pass
+                        else:
+                            if "total" in line:
+                                label = "total"
+
+                            if label in data_in:
+                                data_in[label].append(float(t[1]))
+                            else:
+                                data_in[label] = [float(t[1])]
+
+                    elif "out:" in line:
+                        read_out = True
+                        read_in = False
+
+                    else:
+                        pass
+
+                elif read_out:
+                    if "=" in line:
+                        t = line.split("=")
+                        label = t[0].strip()
+                        if "zone" in line:
+                            # currently we do not support zone to zone
+                            # flow for option 1
+                            pass
+
+                        elif "in - out" in line:
+                            pass
+
+                        elif "percent discrepancy" in line:
+                            pass
+
+                        else:
+                            if "total" in line:
+                                label = "total"
+
+                            if label in data_out:
+                                data_out[label].append(float(t[1]))
+                            else:
+                                data_out[label] = [float(t[1])]
+                    else:
+                        pass
+
+                elif flow_budget:
+                    if "in:" in line:
+                        read_in = True
+                        flow_budget = False
+
+                else:
+                    pass
+
+                if empty >= 30:
+                    break
+
+        data = self._net_flux(data_in, data_out)
+
+        self._data = data
+
+    def _read_file2(self):
+        """
+        Method to read csv output type 1
+
+        """
+        with open(self._filename) as foo:
+            data_in = {}
+            data_out = {}
+            zone_header = False
+            read_in = False
+            read_out = False
+            empty = 0
+            while True:
+                line = foo.readline().strip().lower()
+
+                if "time step" in line:
+                    t = line.split(",")
+                    kstp = int(t[1]) - 1
+                    kper = int(t[3]) - 1
+                    if "kstp" not in data_in:
+                        data_in['kstp'] = []
+                        data_in['kper'] = []
+                        data_in["zone"] = []
+
+                    zone_header = True
+                    empty = 0
+
+                elif zone_header:
+                    t = line.split(",")
+                    zones = [int(i.split()[-1]) for i in t[1:]
+                             if i not in ('',)]
+
+                    for zone in zones:
+                        data_in['kstp'].append(kstp)
+                        data_in['kper'].append(kper)
+                        data_in['zone'].append(zone)
+                        if self._steady[kper]:
+                            try:
+                                data_in['storage'].append(0.)
+                                data_out['storage'].append(0.)
+                            except KeyError:
+                                data_in['storage'] = [0.]
+                                data_out['storage'] = [0.]
+
+                    zone_header = False
+                    read_in = True
+
+                elif read_in:
+                    t = line.split(",")
+                    if "in" in t[1]:
+                        pass
+
+                    elif "out" in t[1]:
+                        read_in = False
+                        read_out = True
+
+                    else:
+                        if 'zone' in t[0]:
+                            label = " ".join(t[0].split()[1:])
+
+                        elif 'total' in t[0]:
+                            label = "total"
+
+                        else:
+                            label = t[0]
+
+                        if label not in data_in:
+                            data_in[label] = []
+
+                        for val in t[1:]:
+                            if val in ('',):
+                                continue
+
+                            data_in[label].append(float(val))
+
+                elif read_out:
+                    t = line.split(",")
+
+                    if "percent error" in line:
+                        read_out = False
+
+                    elif "in-out" in line:
+                        pass
+
+                    else:
+                        if 'zone' in t[0]:
+                            label = " ".join(t[0].split()[1:])
+
+                        elif 'total' in t[0]:
+                            label = "total"
+
+                        else:
+                            label = t[0]
+
+                        if label not in data_out:
+                            data_out[label] = []
+
+                        for val in t[1:]:
+                            if val in ('',):
+                                continue
+
+                            data_out[label].append(float(val))
+
+                elif line in ("", " "):
+                    empty += 1
+
+                else:
+                    pass
+
+                if empty >= 25:
+                    break
+
+        data = self._net_flux(data_in, data_out)
+
+        self._data = data
+
+    def _read_file3(self):
+        """
+        Method to read CSV2 output from zonebudget and CSV output
+        from Zonebudget6
+
+        """
+        with open(self._filename) as foo:
+            data_in = {}
+            data_out = {}
+            read_in = True
+            read_out = False
+            # read the header
+            header = foo.readline().lower().strip().split(',')
+            header = [i.strip() for i in header]
+
+            array = np.genfromtxt(foo, delimiter=",").T
+
+        for ix, label in enumerate(header):
+            if label in ('totim', 'in-out', 'percent error'):
+                continue
+
+            elif label == 'percent error':
+                continue
+
+            elif label == "step":
+                label = "kstp"
+
+            elif label == "period":
+                label = "kper"
+
+            elif "other zones" in label:
+                label = "other zones"
+
+            elif "from zone" in label or "to zone" in label:
+                if "from" in label:
+                    read_in = True
+                    read_out = False
+                else:
+                    read_out = True
+                    read_in = False
+                label = " ".join(label.split()[1:])
+
+            elif 'total' in label:
+                label = 'total'
+
+            elif label.split("-")[-1] == "in":
+                label = "-".join(label.split("-")[:-1])
+                read_in = True
+                read_out = False
+
+            elif label.split("-")[-1] == "out":
+                label = "-".join(label.split("-")[:-1])
+                read_in = False
+                read_out = True
+
+            else:
+                pass
+
+            if read_in:
+
+                if label in ('kstp', 'kper'):
+                    data_in[label] = np.asarray(array[ix], dtype=int) - 1
+
+                elif label == "zone":
+                    data_in[label] = np.asarray(array[ix], dtype=int)
+
+                else:
+                    data_in[label] = array[ix]
+
+                if label == 'total':
+                    read_in = False
+                    read_out = True
+
+            elif read_out:
+                data_out[label] = array[ix]
+
+            else:
+                pass
+
+        data = self._net_flux(data_in, data_out)
+
+        self._data = data
+
+    def _net_flux(self, data_in, data_out):
+        """
+        Method to create a single dictionary of net flux data
+
+        data_in : dict
+            inputs to the zone
+        data_out : dict
+            outputs from the zone
+
+        Returns
+        -------
+        dict : dictionary of netflux data to feed into a pandas dataframe
+        """
+        data = {}
+        # calculate net storage flux (subroutine this?)
+        for key, value in data_in.items():
+            if key in ("zone", "kstp", "kper"):
+                data[key] = np.asarray(value, dtype=int)
+            else:
+                arrayin = np.asarray(value)
+                arrayout = np.asarray(data_out[key])
+
+                data[key] = arrayin - arrayout
+
+        kstp = data['kstp']
+        kper = data['kper']
+        tslen = np.array([self._tslen[(stp, kper[ix])]
+                          for ix, stp in enumerate(kstp)])
+        totim = np.array([self._totim[(stp, kper[ix])]
+                          for ix, stp in enumerate(kstp)])
+
+        data["tslen"] = tslen
+        data['totim'] = totim
+
+        return data
+
+    def _get_otype(self):
+        """
+        Method to automatically distinguish output type based on the
+        zonebudget header
+
+        """
+        with open(self._filename) as foo:
+            line = foo.readline()
+            if "zonebudget version" in line.lower():
+                self._otype = 1
+            elif "time step" in line.lower():
+                self._otype = 2
+            elif "totim" in line.lower():
+                self._otype = 3
+            else:
+                raise AssertionError("Cant distinguish output type")
+
+    def export(self, f, ml, **kwargs):
+        """
+        Method to export a netcdf file, or add zonebudget output to
+        an open netcdf file instance
+
+        Parameters
+        ----------
+        f : str or flopy.export.netcdf.NetCdf object
+        ml : flopy.modflow.Modflow or flopy.mf6.ModflowGwf object
+        **kwargs :
+            logger : flopy.export.netcdf.Logger instance
+            masked_vals : list
+                list of values to mask
+
+        Returns
+        -------
+            flopy.export.netcdf.NetCdf object
+
+        """
+        from flopy.export.utils import output_helper
+
+        if isinstance(f, str):
+            if not f.endswith(".nc"):
+                raise AssertionError("File extension must end with .nc to "
+                                     "export a netcdf file")
+
+        zbncfobj = self.dataframe_to_netcdf_fmt(self.dataframe)
+        oudic = {"zbud": zbncfobj}
+        return output_helper(f, ml, oudic, **kwargs)
+
+    def volumetric_flux(self, extrapolate_kper=False):
+        """
+        Method to generate a volumetric budget table based on flux information
+
+        Parameters
+        ----------
+        extrapolate_kper : bool
+            flag to determine if we fill in data gaps with other
+            timestep information from the same stress period.
+            if True, we assume that flux is constant throughout a stress period
+            and the pandas dataframe returned contains a
+            volumetric budget per stress period
+
+            if False, calculates volumes from available flux data
+
+        Returns
+        -------
+            pd.DataFrame
+
+        """
+        nper = len(self._nstp)
+        volumetric_data = {}
+
+        for key in self._data:
+            volumetric_data[key] = []
+
+        if extrapolate_kper:
+            volumetric_data.pop("tslen")
+            volumetric_data.pop("kstp")
+            volumetric_data['perlen'] = []
+
+            perlen = []
+            for per in range(nper):
+                tslen = 0
+                for stp in range(self._nstp[per]):
+                    tslen += self._tslen[(stp, per)]
+
+                perlen.append(tslen)
+
+            totim = np.add.accumulate(perlen)
+
+            for per in range(nper):
+                idx = np.where(self._data["kper"] == per)[0]
+
+                if len(idx) == 0:
+                    continue
+
+                temp = self._data["zone"][idx]
+
+                for zone in self.zones:
+                    if zone == 0:
+                        continue
+
+                    zix = np.where(temp == zone)[0]
+
+                    if len(zix) == 0:
+                        raise Exception
+
+                    for key, value in self._data.items():
+                        if key == "totim":
+                            volumetric_data[key].append(totim[per])
+
+                        elif key == "tslen":
+                            volumetric_data["perlen"].append(perlen[per])
+
+                        elif key == "kstp":
+                            continue
+
+                        elif key == "kper":
+                            volumetric_data[key].append(per)
+
+                        elif key == "zone":
+                            volumetric_data[key].append(zone)
+
+                        else:
+                            tv = value[idx]
+                            zv = tv[zix]
+                            for i in zv:
+                                vol = i * perlen[per]
+                                volumetric_data[key].append(vol)
+                                break
+
+        else:
+
+            for key, value in self._data.items():
+                if key in ("zone", "kstp", "kper", "tslen"):
+                    volumetric_data[key] = value
+                else:
+                    volumetric_data[key] = value * self._data['tslen']
+
+        return self.__pd.DataFrame.from_dict(volumetric_data)
+
+    def dataframe_to_netcdf_fmt(self, df, flux=True):
+        """
+        Method to transform a volumetric zonebudget dataframe into
+        array format for netcdf.
+
+        time is on axis 0
+        zone is on axis 1
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+        flux : bool
+            boolean flag to indicate if budget data is a flux "L^3/T" (True,
+            default) or if the data have been processed to
+            volumetric values "L^3" (False)
+        zone_array : np.ndarray
+            zonebudget zones array
+
+        Returns
+        -------
+            ZBNetOutput object
+
+        """
+        zones = np.sort(np.unique(df.zone.values))
+        totim = np.sort(np.unique(df.totim.values))
+
+        data = {}
+        for col in df.columns:
+            if col in ('totim', 'zone', 'kper', 'perlen'):
+                pass
+            else:
+                data[col] = np.zeros((totim.size, zones.size), dtype=float)
+
+        for i, time in enumerate(totim):
+            tdf = df.loc[df.totim.isin([time, ])]
+            tdf = tdf.sort_values(by=['zone'])
+
+            for col in df.columns:
+                if col in ('totim', 'zone', 'kper', 'perlen'):
+                    pass
+                else:
+                    data[col][i, :] = tdf[col].values
+
+        return ZBNetOutput(zones, totim, data, self.zone_array, flux=flux)

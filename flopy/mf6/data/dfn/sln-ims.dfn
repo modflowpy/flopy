@@ -23,6 +23,7 @@ shape
 reader urword
 tagged true
 optional true
+deprecated 6.1.1
 longname
 description
 
@@ -34,8 +35,43 @@ in_record true
 reader urword
 tagged true
 optional false
+deprecated 6.1.1
 longname budget keyword
-description keyword to specify that the record corresponds to the comma separated values solver convergence output.
+description keyword to specify that the record corresponds to the comma separated values solver convergence output.  The CSV\_OUTPUT option has been deprecated and split into the CSV_OUTER_OUTPUT and CSV_INNER_OUTPUT options.  Starting with MODFLOW 6 version 6.1.1 if the CSV_OUTPUT option is specified, then it is treated as the CSV_OUTER_OUTPUT option.
+
+block options
+name csvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+deprecated 6.1.1
+longname file keyword
+description name of the ascii comma separated values output file to write solver convergence information. If PRINT\_OPTION is NONE or SUMMARY, comma separated values output includes maximum head change convergence information at the end of each outer iteration for each time step. If PRINT\_OPTION is ALL, comma separated values output includes maximum head change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
+
+block options
+name csv_outer_output_filerecord
+type record csv_outer_output fileout outer_csvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name csv_outer_output
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that the record corresponds to the comma separated values outer iteration convergence output.
 
 block options
 name fileout
@@ -49,7 +85,7 @@ longname file keyword
 description keyword to specify that an output filename is expected next.
 
 block options
-name csvfile
+name outer_csvfile
 type string
 preserve_case true
 shape
@@ -58,7 +94,40 @@ reader urword
 tagged false
 optional false
 longname file keyword
-description name of the ascii comma separated values output file to write solver convergence information. If PRINT\_OPTION is NONE or SUMMARY, comma separated values output includes maximum head change convergence information at the end of each outer iteration for each time step. If PRINT\_OPTION is ALL, comma separated values output includes maximum head change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
+description name of the ascii comma separated values output file to write maximum dependent-variable (for example, head) change convergence information at the end of each outer iteration for each time step.
+
+block options
+name csv_inner_output_filerecord
+type record csv_inner_output fileout inner_csvfile
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name csv_inner_output
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname budget keyword
+description keyword to specify that the record corresponds to the comma separated values solver convergence output.
+
+block options
+name inner_csvfile
+type string
+preserve_case true
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the ascii comma separated values output file to write solver convergence information. Comma separated values output includes maximum dependent-variable (for example, head) change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.
 
 block options
 name no_ptcrecord
@@ -95,17 +164,27 @@ block nonlinear
 name outer_hclose
 type double precision
 reader urword
-optional false
+optional true
+deprecated 6.1.1
 longname head change criterion
-description real value defining the head change criterion for convergence of the outer (nonlinear) iterations, in units of length. When the maximum absolute value of the head change at all nodes during an iteration is less than or equal to OUTER\_HCLOSE, iteration stops. Commonly, OUTER\_HCLOSE equals 0.01.
+description real value defining the head change criterion for convergence of the outer (nonlinear) iterations, in units of length. When the maximum absolute value of the head change at all nodes during an iteration is less than or equal to OUTER\_HCLOSE, iteration stops. Commonly, OUTER\_HCLOSE equals 0.01.  The OUTER\_HCLOSE option has been deprecated in favor of the more general OUTER\_DVCLOSE (for dependent variable), however either one can be specified in order to maintain backward compatibility.
+
+block nonlinear
+name outer_dvclose
+type double precision
+reader urword
+optional false
+longname dependent-variable change criterion
+description real value defining the dependent-variable (for example, head) change criterion for convergence of the outer (nonlinear) iterations, in units of the dependent-variable (for example, length for head). When the maximum absolute value of the dependent-variable change at all nodes during an iteration is less than or equal to OUTER\_DVCLOSE, iteration stops. Commonly, OUTER\_DVCLOSE equals 0.01. The keyword, OUTER\_HCLOSE can be still be specified instead of OUTER\_DVCLOSE for backward compatibility with previous versions of MODFLOW 6 but eventually OUTER\_HCLOSE will be deprecated and specification of OUTER\_HCLOSE will cause MODFLOW 6 to terminate with an error.
 
 block nonlinear
 name outer_rclosebnd
 type double precision
 reader urword
 optional true
+deprecated 6.1.1
+description real value defining the residual tolerance for convergence of model packages that solve a separate equation not solved by the IMS linear solver. This value represents the maximum allowable residual between successive outer iterations at any single model package element. An example of a model package that would use OUTER\_RCLOSEBND to evaluate convergence is the SFR package which solves a continuity equation for each reach.  The OUTER\_RCLOSEBND option is deprecated and has no effect on simulation results as of version 6.1.1.  The keyword, OUTER\_RCLOSEBND can be still be specified for backward compatibility with previous versions of MODFLOW 6 but eventually specificiation of OUTER\_RCLOSEBND will cause MODFLOW 6 to terminate with an error.
 longname boundary package flow residual tolerance
-description real value defining the residual tolerance for convergence of model packages that solve a separate equation not solved by the IMS linear solver. This value represents the maximum allowable residual between successive outer iterations at any single model package element. An example of a model package that would use OUTER\_RCLOSEBND to evaluate convergence is the SFR package which solves a continuity equation for each reach.   
 
 block nonlinear
 name outer_maximum
@@ -129,7 +208,7 @@ type double precision
 reader urword
 optional true
 longname under relaxation reduction factor
-description real value defining the reduction factor for the learning rate (under-relaxation term) of the delta-bar-delta algorithm. The value of UNDER\_RELAXATION\_THETA is between zero and one. If the change in the variable (head) is of opposite sign to that of the previous iteration, the under-relaxation term is reduced by a factor of UNDER\_RELAXATION\_THETA. The value usually ranges from 0.3 to 0.9; a value of 0.7 works well for most problems. UNDER\_RELAXATION\_THETA only needs to be specified if UNDER\_RELAXATION is DBD.
+description real value defining the reduction factor for the learning rate (under-relaxation term) of the delta-bar-delta algorithm. The value of UNDER\_RELAXATION\_THETA is between zero and one. If the change in the dependent-variable (for example, head) is of opposite sign to that of the previous iteration, the under-relaxation term is reduced by a factor of UNDER\_RELAXATION\_THETA. The value usually ranges from 0.3 to 0.9; a value of 0.7 works well for most problems. UNDER\_RELAXATION\_THETA only needs to be specified if UNDER\_RELAXATION is DBD.
 
 block nonlinear
 name under_relaxation_kappa
@@ -137,7 +216,7 @@ type double precision
 reader urword
 optional true
 longname under relaxation increment for the learning rate
-description real value defining the increment for the learning rate (under-relaxation term) of the delta-bar-delta algorithm. The value of UNDER\_RELAXATION\_kappa is between zero and one. If the change in the variable (head) is of the same sign to that of the previous iteration, the under-relaxation term is increased by an increment of UNDER\_RELAXATION\_KAPPA. The value usually ranges from 0.03 to 0.3; a value of 0.1 works well for most problems. UNDER\_RELAXATION\_KAPPA only needs to be specified if UNDER\_RELAXATION is DBD.
+description real value defining the increment for the learning rate (under-relaxation term) of the delta-bar-delta algorithm. The value of UNDER\_RELAXATION\_kappa is between zero and one. If the change in the dependent-variable (for example, head) is of the same sign to that of the previous iteration, the under-relaxation term is increased by an increment of UNDER\_RELAXATION\_KAPPA. The value usually ranges from 0.03 to 0.3; a value of 0.1 works well for most problems. UNDER\_RELAXATION\_KAPPA only needs to be specified if UNDER\_RELAXATION is DBD.
 
 block nonlinear
 name under_relaxation_gamma
@@ -202,9 +281,18 @@ block linear
 name inner_hclose
 type double precision
 reader urword
-optional false
+optional true
+deprecated 6.1.1
 longname head change tolerance
-description real value defining the head change criterion for convergence of the inner (linear) iterations, in units of length. When the maximum absolute value of the head change at all nodes during an iteration is less than or equal to INNER\_HCLOSE, the matrix solver assumes convergence. Commonly, INNER\_HCLOSE is set an order of magnitude less than the OUTER\_HCLOSE value specified for the NONLINEAR block.
+description real value defining the head change criterion for convergence of the inner (linear) iterations, in units of length. When the maximum absolute value of the head change at all nodes during an iteration is less than or equal to INNER\_HCLOSE, the matrix solver assumes convergence. Commonly, INNER\_HCLOSE is set an order of magnitude less than the OUTER\_HCLOSE value specified for the NONLINEAR block.  The INNER\_HCLOSE keyword has been deprecated in favor of the more general INNER\_DVCLOSE (for dependent variable), however either one can be specified in order to maintain backward compatibility.
+
+block linear
+name inner_dvclose
+type double precision
+reader urword
+optional false
+longname dependent-variable change tolerance
+description real value defining the dependent-variable (for example, head) change criterion for convergence of the inner (linear) iterations, in units of the dependent-variable (for example, length for head). When the maximum absolute value of the dependent-variable change at all nodes during an iteration is less than or equal to INNER\_DVCLOSE, the matrix solver assumes convergence. Commonly, INNER\_DVCLOSE is set an order of magnitude less than the OUTER\_DVCLOSE value specified for the NONLINEAR block. The keyword, INNER\_HCLOSE can be still be specified instead of INNER\_DVCLOSE for backward compatibility with previous versions of MODFLOW 6 but eventually INNER\_HCLOSE will be deprecated and specification of INNER\_HCLOSE will cause MODFLOW 6 to terminate with an error.
 
 block linear
 name rcloserecord
@@ -226,13 +314,13 @@ description real value that defines the flow residual tolerance for convergence 
 
 block linear
 name rclose_option
-type string 
+type string
 tagged false
 in_record true
 reader urword
 optional true
 longname flow residual tolerance
-description an optional keyword that defines the specific flow residual criterion used.  STRICT--an optional keyword that is used to specify that INNER\_RCLOSE represents a infinity-Norm (absolute convergence criteria) and that the head and flow convergence criteria must be met on the first inner iteration (this criteria is equivalent to the criteria used by the MODFLOW-2005 PCG package~\citep{hill1990preconditioned}). L2NORM\_RCLOSE--an optional keyword that is used to specify that INNER\_RCLOSE represents a L-2 Norm closure criteria instead of a infinity-Norm (absolute convergence criteria). When L2NORM\_RCLOSE is specified, a reasonable initial INNER\_RCLOSE value is 0.1 times the number of active cells when meters and seconds are the defined \mf length and time.  RELATIVE\_RCLOSE--an optional keyword that is used to specify that INNER\_RCLOSE represents a relative L-2 Norm reduction closure criteria instead of a infinity-Norm (absolute convergence criteria). When RELATIVE\_RCLOSE is specified, a reasonable initial INNER\_RCLOSE value is $1.0 \times 10^{-4}$ and convergence is achieved for a given inner (linear) iteration when $\Delta h \le$ INNER\_HCLOSE and the current L-2 Norm is $\le$ the product of the RELATIVE\_RCLOSE and the initial L-2 Norm for the current inner (linear) iteration. If RCLOSE\_OPTION is not specified, an absolute residual (infinity-norm) criterion is used.
+description an optional keyword that defines the specific flow residual criterion used.  STRICT--an optional keyword that is used to specify that INNER\_RCLOSE represents a infinity-Norm (absolute convergence criteria) and that the dependent-variable (for example, head) and flow convergence criteria must be met on the first inner iteration (this criteria is equivalent to the criteria used by the MODFLOW-2005 PCG package~\citep{hill1990preconditioned}). L2NORM\_RCLOSE--an optional keyword that is used to specify that INNER\_RCLOSE represents a L-2 Norm closure criteria instead of a infinity-Norm (absolute convergence criteria). When L2NORM\_RCLOSE is specified, a reasonable initial INNER\_RCLOSE value is 0.1 times the number of active cells when meters and seconds are the defined \mf length and time.  RELATIVE\_RCLOSE--an optional keyword that is used to specify that INNER\_RCLOSE represents a relative L-2 Norm reduction closure criteria instead of a infinity-Norm (absolute convergence criteria). When RELATIVE\_RCLOSE is specified, a reasonable initial INNER\_RCLOSE value is $1.0 \times 10^{-4}$ and convergence is achieved for a given inner (linear) iteration when $\Delta h \le$ INNER\_DVCLOSE and the current L-2 Norm is $\le$ the product of the RELATIVE\_RCLOSE and the initial L-2 Norm for the current inner (linear) iteration. If RCLOSE\_OPTION is not specified, an absolute residual (infinity-norm) criterion is used.
 
 block linear
 name linear_acceleration
@@ -272,7 +360,7 @@ type integer
 reader urword
 optional true
 longname drop tolerance used to drop preconditioner terms
-description optional integer value defining the interval used to explicitly recalculate the residual of the flow equation using the solver coefficient matrix, the latest head estimates, and the right hand side. For problems that benefit from explicit recalculation of the residual, a number between 4 and 10 is appropriate. By default, NUMBER\_ORTHOGONALIZATIONS is zero.
+description optional integer value defining the interval used to explicitly recalculate the residual of the flow equation using the solver coefficient matrix, the latest dependent-variable (for example, head) estimates, and the right hand side. For problems that benefit from explicit recalculation of the residual, a number between 4 and 10 is appropriate. By default, NUMBER\_ORTHOGONALIZATIONS is zero.
 
 block linear
 name scaling_method

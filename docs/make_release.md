@@ -20,7 +20,7 @@ Instructions for making a FloPy release
 
 ## Update the Software/Code citation for FloPy
 
-1. Update the `authors` list in `release/make-release.py` for the Software/Code citation for FloPy, if required.
+1. Update the `author_dict` in `flopy/version.py` for the Software/Code citation for FloPy, if required.
 
 
 ## Build USGS release notes
@@ -31,7 +31,13 @@ Instructions for making a FloPy release
     python make-release.py
     ```
 
-2.  Run pandoc from the terminal in the root directory to create USGS release notes using:
+2.  Manually run `update-version_changes.py` in the `release/` directory to update version changes information using:
+
+    ```
+    python update-version_changes.py
+    ```
+
+3.  Run pandoc from the terminal in the root directory to create USGS release notes using:
 
     ```
     pandoc -o ./docs/USGS_release.pdf ./docs/USGS_release.md ./docs/supported_packages.md ./docs/model_checks.md ./docs/version_changes.md

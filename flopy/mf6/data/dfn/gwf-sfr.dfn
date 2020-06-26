@@ -128,6 +128,38 @@ longname file keyword
 description name of the binary output file to write budget information.
 
 block options
+name package_convergence_filerecord
+type record package_convergence fileout package_convergence_filename
+shape
+reader urword
+tagged true
+optional true
+longname
+description
+
+block options
+name package_convergence
+type keyword
+shape
+in_record true
+reader urword
+tagged true
+optional false
+longname package_convergence keyword
+description keyword to specify that record corresponds to the package convergence comma spaced values file.
+
+block options
+name package_convergence_filename
+type string
+shape
+in_record true
+reader urword
+tagged false
+optional false
+longname file keyword
+description name of the comma spaced values output file to write package convergence information.
+
+block options
 name ts_filerecord
 type record ts6 filein ts6_filename
 shape
@@ -212,12 +244,20 @@ longname
 description REPLACE mover {'{#1}': 'SFR'}
 
 block options
+name maximum_picard_iterations
+type integer
+reader urword
+optional true
+longname SFR picard iterations
+description value that defines the maximum number of Streamflow Routing picard iterations allowed when solving for reach stages and flows as part of the GWF formulate step. Picard iterations are used to minimize differences in SFR package results between subsequent GWF picard (non-linear) iterations as a result of non-optimal reach numbering. If reaches are numbered in order, from upstream to downstream, MAXIMUM\_PICARD\_ITERATIONS can be set to 1 to reduce model run time. By default, MAXIMUM\_PICARD\_ITERATIONS is equal to 100.
+
+block options
 name maximum_iterations
 type integer
 reader urword
 optional true
 longname SFR Newton-Raphson iterations
-description value that defines the maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, MAXSFRIT is equal to 100.
+description value that defines the maximum number of Streamflow Routing Newton-Raphson iterations allowed for a reach. By default, MAXIMUM\_ITERATIONS is equal to 100.
 
 block options
 name maximum_depth_change
@@ -366,8 +406,9 @@ shape
 tagged false
 in_record true
 reader urword
+time_series true
 longname fraction of upstream flow
-description real value that defines the fraction of upstream flow from each upstream reach that is applied as upstream inflow to the reach. The sum of all USTRF values for all reaches connected to the same upstream reach must be equal to one and USTRF must be greater than or equal to zero.
+description real value that defines the fraction of upstream flow from each upstream reach that is applied as upstream inflow to the reach. The sum of all USTRF values for all reaches connected to the same upstream reach must be equal to one and USTRF must be greater than or equal to zero. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block packagedata
 name ndv
@@ -487,7 +528,7 @@ tagged false
 in_record true
 reader urword
 longname iprior code
-description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach RNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach RNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach RNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach RNO is less than the specified diversion flow (DIVFLOW), no water is diverted from reach RNO. If $Q_{DS}$ in reach RNO is greater than or equal to (DIVFLOW), (DIVFLOW) is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach RNO is greater than or equal to the specified diversion flow (DIVFLOW), $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach RNO is less than (DIVFLOW), DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach RNO. 
+description character string value that defines the the prioritization system for the diversion, such as when insufficient water is available to meet all diversion stipulations, and is used in conjunction with the value of FLOW value specified in the STRESS\_PERIOD\_DATA section. Available diversion options include:  (1) CPRIOR = `FRACTION', then the amount of the diversion is computed as a fraction of the streamflow leaving reach RNO ($Q_{DS}$); in this case, 0.0 $\le$ DIVFLOW $\le$ 1.0.  (2) CPRIOR = `EXCESS', a diversion is made only if $Q_{DS}$ for reach RNO exceeds the value of DIVFLOW. If this occurs, then the quantity of water diverted is the excess flow ($Q_{DS} -$ DIVFLOW) and $Q_{DS}$ from reach RNO is set equal to DIVFLOW. This represents a flood-control type of diversion, as described by Danskin and Hanson (2002). (3) CPRIOR = `THRESHOLD', then if $Q_{DS}$ in reach RNO is less than the specified diversion flow (DIVFLOW), no water is diverted from reach RNO. If $Q_{DS}$ in reach RNO is greater than or equal to (DIVFLOW), (DIVFLOW) is diverted and $Q_{DS}$ is set to the remainder ($Q_{DS} -$ DIVFLOW)). This approach assumes that once flow in the stream is sufficiently low, diversions from the stream cease, and is the `priority' algorithm that originally was programmed into the STR1 Package (Prudic, 1989).  (4) CPRIOR = `UPTO' -- if $Q_{DS}$ in reach RNO is greater than or equal to the specified diversion flow (DIVFLOW), $Q_{DS}$ is reduced by DIVFLOW. If $Q_{DS}$ in reach RNO is less than (DIVFLOW), DIVFLOW is set to $Q_{DS}$ and there will be no flow available for reaches connected to downstream end of reach RNO.
 
 
 # --------------------- gwf sfr period ---------------------
@@ -612,7 +653,7 @@ description real or character value that defines the volumetric rate of diffuse 
 
 block period
 name diversionrecord
-type record diversion idv divrate
+type record diversion idv divflow
 shape
 tagged
 in_record true
@@ -637,18 +678,18 @@ tagged false
 in_record true
 reader urword
 longname diversion number
-description diversion number.
+description an integer value specifying which diversion of reach RNO that DIVFLOW is being specified for.  Must be less or equal to ndv for the current reach (RNO).
 numeric_index true
 
 block period
-name divrate
+name divflow
 type double precision
 shape
 tagged false
 in_record true
 reader urword
 time_series true
-longname volumetric diversion rate
+longname volumetric diversion flow rate
 description real or character value that defines the volumetric diversion (DIVFLOW) rate for the streamflow routing reach. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
 
 block period

@@ -155,7 +155,8 @@ class Seawat(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -174,11 +175,13 @@ class Seawat(BaseModel):
                                          self.dis.top.array,
                                          self.dis.botm.array,
                                          idomain=ibound,
+                                         lenuni=self.dis.lenuni,
                                          proj4=self._modelgrid.proj4,
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,
                                          yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+                                         angrot=self._modelgrid.angrot,
+                                         nlay=self.dis.nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset

@@ -30,6 +30,17 @@ class MFScalar(mfdata.MFData):
     dimensions : MFDataDimensions
         dimension information related to the model, package, and array
 
+    Attributes
+    ----------
+    data_type : DataType
+        type of data stored in the scalar
+    plotable : bool
+        if the scalar is plotable
+    dtype : numpy.dtype
+        the scalar's numpy data type
+    data : variable
+        calls get_data with default parameters
+
     Methods
     -------
     has_data : () : bool
@@ -106,6 +117,10 @@ class MFScalar(mfdata.MFData):
                                   inspect.stack()[0][3], type_,
                                   value_, traceback_, None,
                                   self._simulation_data.debug, ex)
+
+    @property
+    def data(self):
+        return self.get_data()
 
     def get_data(self, apply_mult=False, **kwargs):
         try:
@@ -400,9 +415,10 @@ class MFScalar(mfdata.MFData):
                                            values)
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         super(MFScalar, self).load(first_line, file_handle, block_header,
-                                   pre_data_comments=None)
+                                   pre_data_comments=None,
+                                   external_file_info=None)
         self._resync()
         file_access = MFFileAccessScalar(
             self.structure, self._data_dimensions, self._simulation_data,
@@ -591,10 +607,11 @@ class MFScalarTransient(MFScalar, mfdata.MFTransient):
                          self).get_file_entry(ext_file_action=ext_file_action)
 
     def load(self, first_line, file_handle, block_header,
-             pre_data_comments=None):
+             pre_data_comments=None, external_file_info=None):
         self._load_prep(block_header)
         return super(MFScalarTransient, self).load(first_line, file_handle,
-                                                   pre_data_comments)
+                                                   pre_data_comments,
+                                                   external_file_info)
 
     def _new_storage(self, stress_period=0):
         return OrderedDict()

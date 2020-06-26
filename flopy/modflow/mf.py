@@ -157,6 +157,7 @@ class Modflow(BaseModel):
         self.mfnam_packages = {
             "zone": flopy.modflow.ModflowZon,
             "mult": flopy.modflow.ModflowMlt,
+            "ag": flopy.modflow.ModflowAg,
             "pval": flopy.modflow.ModflowPval,
             "bas6": flopy.modflow.ModflowBas,
             "dis": flopy.modflow.ModflowDis,
@@ -244,7 +245,8 @@ class Modflow(BaseModel):
                       'tsmult': self.dis.tsmult.array}
         self._model_time = ModelTime(data_frame,
                                      self.dis.itmuni_dict[self.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -278,7 +280,9 @@ class Modflow(BaseModel):
                                              epsg=self._modelgrid.epsg,
                                              xoff=self._modelgrid.xoffset,
                                              yoff=self._modelgrid.yoffset,
-                                             angrot=self._modelgrid.angrot)
+                                             angrot=self._modelgrid.angrot,
+                                             nlay=self.dis.nlay,
+                                             laycbd=self.dis.laycbd)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -433,9 +437,9 @@ class Modflow(BaseModel):
             if o:
                 replace_text = 'REPLACE'
             if b:
-                f_nam.write(
-                    'DATA(BINARY)   {0:5d}  '.format(u) + f +
-                     replace_text + '\n')
+                line = 'DATA(BINARY)   {0:5d}  '.format(u) + f + \
+                       replace_text + '\n'
+                f_nam.write(line)
             else:
                 f_nam.write('DATA           {0:5d}  '.format(u) + f + '\n')
 
@@ -680,6 +684,8 @@ class Modflow(BaseModel):
         if 'NWT' in ext_pkg_d or 'UPW' in ext_pkg_d:
             version = 'mfnwt'
         if 'GLOBAL' in ext_pkg_d:
+            if version != "mf2k":
+                ml.glo = ModflowGlobal(ml)
             version = 'mf2k'
         if 'SMS' in ext_pkg_d:
             version = 'mfusg'
@@ -815,7 +821,7 @@ class Modflow(BaseModel):
                 files_not_loaded.append(item.filename)
                 if ml.verbose:
                     msg = 3 * ' ' + '{:4s} '.format(item.filetype) + \
-                              'package load...skipped'
+                          'package load...skipped'
                     print(msg)
             elif "data" in item.filetype.lower():
                 if ml.verbose:
@@ -844,15 +850,16 @@ class Modflow(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if ml.verbose:
-                    msg = 'Warning: external file unit {} '.format(key) + \
+                    msg = '\nWARNING:\n    External file ' + \
+                          'unit {} '.format(key) + \
                           'does not exist in ext_unit_dict.'
                     print(msg)
 
         # write message indicating packages that were successfully loaded
         if ml.verbose:
-            msg =  3 * ' ' + 'The following ' + \
-                   '{} '.format(len(files_successfully_loaded)) + \
-                   'packages were successfully loaded.'
+            msg = 3 * ' ' + 'The following ' + \
+                  '{} '.format(len(files_successfully_loaded)) + \
+                  'packages were successfully loaded.'
             print('')
             print(msg)
             for fname in files_successfully_loaded:

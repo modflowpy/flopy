@@ -49,10 +49,11 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0)
+                            verbosity_level=0, verify_data=True)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation(silent=True)
 
     model = sim.get_model(model_name)
@@ -68,7 +69,7 @@ def test001a_tharmonic():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_obj.list_records()
         budget_frf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
@@ -111,7 +112,7 @@ def test001a_tharmonic():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_frf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
         # compare output to expected results
@@ -150,7 +151,8 @@ def test003_gwfs_disv():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -165,7 +167,7 @@ def test003_gwfs_disv():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_a)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
 
         head_file = os.path.join(os.getcwd(), expected_head_file_a)
@@ -180,8 +182,9 @@ def test003_gwfs_disv():
 
     # change some settings
     chd_head_left = model.get_package('CHD_LEFT')
-    chd_left_period = chd_head_left.stress_period_data.array
-    chd_left_period[0][4][1] = 15.0
+    chd_left_period = chd_head_left.stress_period_data.get_data(0)
+    chd_left_period[4][1] = 15.0
+    chd_head_left.stress_period_data.set_data(chd_left_period, 0)
 
     chd_head_right = model.get_package('CHD_RIGHT')
     chd_right_period = chd_head_right.stress_period_data
@@ -235,7 +238,7 @@ def test005_advgw_tidal():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=2)
+                            verbosity_level=2, verify_data=True)
 
     # test obs/ts package interface
     model = sim.get_model(model_name)
@@ -258,6 +261,7 @@ def test005_advgw_tidal():
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -270,34 +274,6 @@ def test005_advgw_tidal():
         outfile = os.path.join(run_folder, 'head_compare.dat')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new, outfile=outfile)
 
-    # change some settings
-    """
-    hydchr = sim.simulation_data.mfdata[(model_name, 'HFB8', 'PERIOD', 'hydchr')]
-    hydchr[2] = 0.000002
-    hydchr[3] = 0.000003
-    hydchr[4] = 0.0000004
-    cond = sim.simulation_data.mfdata[(model_name, 'DRN8_1', 'PERIOD', 'cond')]
-    for index in range(0, len(cond)):
-        cond[index] = 2.1
-
-    # write simulation again
-    sim.simulation_data.mfpath.set_sim_path(save_folder)
-    sim.write_simulation()
-
-    if run:
-        # run simulation
-        sim.run_simulation()
-
-        # get expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
-        head_obj = bf.HeadFile(head_file, precision='double')
-        head_valid = np.array(head_obj.get_alldata())
-
-        # compare output to expected results
-        head_file = os.path.join(os.getcwd(), expected_head_file_b)
-        head_new = os.path.join(save_folder, 'AdvGW_tidal.hds')
-        assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
-    """
 
 def test006_gwf3():
     # init paths
@@ -321,7 +297,8 @@ def test006_gwf3():
     array_util = PyListUtil()
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     model = sim.get_model()
     disu = model.get_package('disu')
@@ -336,6 +313,7 @@ def test006_gwf3():
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -379,7 +357,7 @@ def test006_gwf3():
 
         # get expected results
         budget_file = os.path.join(os.getcwd(), expected_cbc_file_b)
-        budget_obj = bf.CellBudgetFile(budget_file, precision='double')
+        budget_obj = bf.CellBudgetFile(budget_file, precision='auto')
         budget_fjf_valid = np.array(budget_obj.get_data(text='    FLOW JA FACE', full3D=True))
         jaentries = budget_fjf_valid.shape[-1]
         budget_fjf_valid.shape = (-1, jaentries)
@@ -460,7 +438,8 @@ def test045_lake1ss_table():
     expected_head_file_b = os.path.join(expected_output_folder, 'lakeex1b_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -532,12 +511,13 @@ def test006_2models_mvr():
     expected_head_file_bb = os.path.join(expected_output_folder, 'model2_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(sim_name, 'mf6', exe_name, pth, verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -685,7 +665,8 @@ def test001e_uzf_3lay():
     expected_head_file_b = os.path.join(expected_output_folder, 'test001e_UZF_3lay_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -766,7 +747,8 @@ def test045_lake2tr():
                                         'lakeex2a_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # write simulation to new location
     sim.simulation_data.mfpath.set_sim_path(run_folder)
@@ -787,7 +769,7 @@ def test045_lake2tr():
     evt.rate.set_data([0.05], key=0)
 
     lak = model.get_package('lak')
-    lak_period = lak.lakeperioddata
+    lak_period = lak.perioddata
     lak_period_data = lak_period.get_data()
     lak_period_data[0][2][2] = '0.05'
     lak_period.set_data(lak_period_data[0], 0)
@@ -824,12 +806,14 @@ def test036_twrihfb():
     expected_head_file_b = os.path.join(expected_output_folder, 'twrihfb2015_output_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data = True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
     sim.write_simulation()
 
     if run:
@@ -890,12 +874,19 @@ def test027_timeseriestest():
     expected_head_file_b = os.path.join(expected_output_folder, 'timeseriestest_adj.hds')
 
     # load simulation
-    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth)
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
+                            verify_data=True)
 
     # make temp folder to save simulation
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
+    sim.set_all_data_external()
+    sim.write_simulation()
+
+    # reload sim
+    sim = MFSimulation.load(model_name, 'mf6', exe_name, run_folder,
+                            verify_data=True)
     sim.write_simulation()
 
     if run:
@@ -929,6 +920,31 @@ def test027_timeseriestest():
         head_new = os.path.join(save_folder, 'timeseriestest.hds')
         assert pymake.compare_heads(None, None, files1=head_file, files2=head_new)
 
+        
+def test_cbc_precision():
+    pth = os.path.join(cpth, "test001e_UZF_3lay", "test001e_UZF_3lay.uzf.cbc")
+    cbc = flopy.utils.CellBudgetFile(pth, precision="auto")
+    data = cbc.get_data(text="GWF", full3D=False)
+    if data[2].node[0] != 1:
+        raise AssertionError("Budget precision error for imeth 6")
+
+        
+def test_replace_ims_package():
+    pth = os.path.join(cpth, "test001e_UZF_3lay")
+    sim = flopy.mf6.MFSimulation.load("mfsim", sim_ws=pth, exe_name=exe_name)
+
+    ims = sim.ims
+    sim.remove_package(ims)
+
+    ims = flopy.mf6.ModflowIms(sim, print_option='SUMMARY',
+                               complexity="COMPLEX")
+    sim.register_ims_package(ims, ["GwF_1", ])
+    sim.write_simulation()
+    success, buff = sim.run_simulation()
+
+    if not success:
+        raise AssertionError()
+
 
 if __name__ == '__main__':
     test001a_tharmonic()
@@ -941,3 +957,5 @@ if __name__ == '__main__':
     test036_twrihfb()
     test045_lake1ss_table()
     test045_lake2tr()
+    test_cbc_precision()
+    test_replace_ims_package()

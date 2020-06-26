@@ -216,7 +216,7 @@ tagged false
 in_record true
 reader urword
 longname mover type
-description is the character string signifying the method for determining how much water will be moved.  Supported values are ``FACTOR'' ``EXCESS'' ``THRESHOLD'' and ``UPTO''.  These four options determine how the receiver flow rate, $Q_R$, is calculated.  These options are based the options available in the SFR2 Package for diverting stream flow.
+description is the character string signifying the method for determining how much water will be moved.  Supported values are ``FACTOR'' ``EXCESS'' ``THRESHOLD'' and ``UPTO''.  These four options determine how the receiver flow rate, $Q_R$, is calculated.  These options mirror the options defined for the cprior variable in the SFR package, with the term ``FACTOR'' being functionally equivalent to the ``FRACTION'' option for cprior.
 
 block period
 name value

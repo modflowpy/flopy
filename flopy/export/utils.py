@@ -2,7 +2,8 @@ from __future__ import print_function
 import json
 import os
 import numpy as np
-from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile
+from ..utils import HeadFile, CellBudgetFile, UcnFile, FormattedHeadFile, \
+    ZBNetOutput
 from ..mbase import BaseModel, ModelInterface
 from ..pakbase import PackageInterface
 from ..datbase import DataType, DataInterface, DataListInterface
@@ -123,35 +124,48 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
     array = np.zeros((len(times), shape3d[0], shape3d[1], shape3d[2]),
                      dtype=np.float32)
     array[:] = np.NaN
-    for i, t in enumerate(times):
-        if t in out_obj.recordarray["totim"]:
-            try:
-                if text:
-                    a = out_obj.get_data(totim=t, full3D=True, text=text)
-                    if isinstance(a, list):
-                        a = a[0]
-                else:
-                    a = out_obj.get_data(totim=t)
-            except Exception as e:
-                estr = "error getting data for {0} at time {1}:{2}".format(
-                    var_name + text.decode().strip().lower(), t, str(e))
-                if logger:
-                    logger.warn(estr)
-                else:
-                    print(estr)
-                continue
-            if mask_array3d is not None and a.shape == mask_array3d.shape:
-                a[mask_array3d] = np.NaN
-            try:
-                array[i, :, :, :] = a.astype(np.float32)
-            except Exception as e:
-                estr = "error assigning {0} data to array for time {1}:{2}".format(
-                    var_name + text.decode().strip().lower(), t, str(e))
-                if logger:
-                    logger.warn(estr)
-                else:
-                    print(estr)
-                continue
+
+    if isinstance(out_obj, ZBNetOutput):
+        a = np.asarray(out_obj.zone_array, dtype=np.float32)
+        if mask_array3d is not None:
+            a[mask_array3d] = np.NaN
+        for i, _ in enumerate(times):
+            array[i, :, :, :] = a
+
+    else:
+        for i, t in enumerate(times):
+            if t in out_obj.recordarray["totim"]:
+                try:
+                    if text:
+                        a = out_obj.get_data(totim=t, full3D=True, text=text)
+                        if isinstance(a, list):
+                            a = a[0]
+                    else:
+                        a = out_obj.get_data(totim=t)
+                except Exception as e:
+                    estr = "error getting data for {0} at time" \
+                           " {1}:{2}".format(var_name +
+                                             text.decode().strip().lower(),
+                                             t, str(e))
+                    if logger:
+                        logger.warn(estr)
+                    else:
+                        print(estr)
+                    continue
+                if mask_array3d is not None and a.shape == mask_array3d.shape:
+                    a[mask_array3d] = np.NaN
+                try:
+                    array[i, :, :, :] = a.astype(np.float32)
+                except Exception as e:
+                    estr = "error assigning {0} data to array for time" \
+                           " {1}:{2}".format(var_name +
+                                             text.decode().strip().lower(),
+                                             t, str(e))
+                    if logger:
+                        logger.warn(estr)
+                    else:
+                        print(estr)
+                    continue
 
     if logger:
         logger.log("creating array for {0}".format(
@@ -206,6 +220,47 @@ def _add_output_nc_variable(f, times, shape3d, out_obj, var_name, logger=None,
             raise Exception(estr)
 
 
+def _add_output_nc_zonebudget_variable(f, array, var_name, flux,
+                                       logger=None):
+    """
+    Method to add zonebudget output data to netcdf file
+
+    Parameters
+    ----------
+    f : NetCdf object
+    array : np.ndarray
+        zonebudget output budget group array
+    var_name : str
+        variable name
+    flux : bool
+        flag for flux data or volumetric data
+    logger : None or Logger
+        logger instance
+
+    """
+    if logger:
+        logger.log("creating array for {}".format(var_name))
+
+    mn = np.min(array)
+    mx = np.max(array)
+
+    precision_str = "f4"
+    if flux:
+        units = "{}^3/{}".format(f.grid_units, f.time_units)
+    else:
+        units = "{}^3".format(f.grid_units)
+    attribs = {"long_name": var_name}
+    attribs["coordinates"] = "time zone"
+    attribs["min"] = mn
+    attribs["max"] = mx
+    attribs['units'] = units
+    dim_tuple = ('time', "zone")
+
+    var = f.create_group_variable('zonebudget', var_name, attribs,
+                                  precision_str, dim_tuple)
+
+    var[:] = array
+
 def output_helper(f, ml, oudic, **kwargs):
     """
     Export model outputs using the model spatial reference info.
@@ -221,6 +276,10 @@ def output_helper(f, ml, oudic, **kwargs):
         modelgrid : flopy.discretizaiton.Grid
             user supplied model grid instance that will be used for export
             in lieu of the models model grid instance
+        mflay : int
+            zero based model layer which can be used in shapefile exporting
+        kper : int
+            zero based stress period which can be used for shapefile exporting
 
     Returns
     -------
@@ -230,18 +289,31 @@ def output_helper(f, ml, oudic, **kwargs):
         casts down double precision to single precision for netCDF files
 
     """
-    assert isinstance(ml, BaseModel)
+    assert isinstance(ml, (BaseModel, ModelInterface))
     assert len(oudic.keys()) > 0
     logger = kwargs.pop("logger", None)
     stride = kwargs.pop("stride", 1)
     forgive = kwargs.pop("forgive", False)
     kwargs.pop("suffix", None)
     mask_vals = []
+    mflay = kwargs.pop('mflay', None)
+    kper = kwargs.pop('kper', None)
     if "masked_vals" in kwargs:
         mask_vals = kwargs.pop("masked_vals")
     if len(kwargs) > 0 and logger is not None:
         str_args = ','.join(kwargs)
         logger.warn("unused kwargs: " + str_args)
+
+    zonebud = None
+    zbkey = None
+    for key, value in oudic.items():
+        if isinstance(value, ZBNetOutput):
+            zbkey = key
+            break
+
+    if zbkey is not None:
+        zonebud = oudic.pop(zbkey)
+
     # ISSUE - need to round the totims in each output file instance so
     # that they will line up
     for key in oudic.keys():
@@ -255,6 +327,13 @@ def output_helper(f, ml, oudic, **kwargs):
         for t in df.recordarray["totim"]:
             if t not in times:
                 times.append(t)
+
+    if zonebud is not None and not oudic:
+        if isinstance(f, NetCdf):
+            times = f.time_values_arg
+        else:
+            times = zonebud.time
+
     assert len(times) > 0
     times.sort()
 
@@ -264,6 +343,8 @@ def output_helper(f, ml, oudic, **kwargs):
     for t in times:
         keep = True
         for filename, df in oudic.items():
+            if isinstance(df, ZBNetOutput):
+                continue
             if t not in df.recordarray["totim"]:
                 keep = False
                 break
@@ -271,6 +352,7 @@ def output_helper(f, ml, oudic, **kwargs):
             common_times.append(t)
         else:
             skipped_times.append(t)
+
     assert len(common_times) > 0
     if len(skipped_times) > 0:
         if logger:
@@ -289,15 +371,15 @@ def output_helper(f, ml, oudic, **kwargs):
         otimes = list(f.nc.variables["time"][:])
         assert otimes == times
     if isinstance(f, NetCdf) or isinstance(f, dict):
-        shape3d = (ml.nlay, ml.nrow, ml.ncol)
+        shape3d = (ml.modelgrid.nlay, ml.modelgrid.nrow, ml.modelgrid.ncol)
         mask_array3d = None
-        if ml.bas6:
-            mask_vals.append(ml.bas6.hnoflo)
-            mask_array3d = ml.bas6.ibound.array == 0
-        if ml.bcf6:
-            mask_vals.append(ml.bcf6.hdry)
-        if ml.lpf:
-            mask_vals.append(ml.lpf.hdry)
+        if ml.hdry is not None:
+            mask_vals.append(ml.hdry)
+        if ml.hnoflo is not None:
+            mask_vals.append(ml.hnoflo)
+
+        if ml.modelgrid.idomain is not None:
+            mask_array3d = ml.modelgrid.idomain == 0
 
         for filename, out_obj in oudic.items():
             filename = filename.lower()
@@ -335,11 +417,83 @@ def output_helper(f, ml, oudic, **kwargs):
                 else:
                     raise Exception(estr)
 
+        if zonebud is not None:
+            try:
+                f.initialize_group("zonebudget",
+                                   dimensions=('time', 'zone'),
+                                   dimension_data={'time': zonebud.time,
+                                                   'zone': zonebud.zones})
+            except AttributeError:
+                pass
+
+            for text, array in zonebud.arrays.items():
+                _add_output_nc_zonebudget_variable(f, array, text,
+                                                   zonebud.flux,
+                                                   logger)
+
+            # write the zone array to standard output
+            _add_output_nc_variable(f, times, shape3d, zonebud,
+                                    "budget_zones", logger=logger,
+                                    mask_vals=mask_vals,
+                                    mask_array3d=mask_array3d)
+
+    elif isinstance(f, str) and f.endswith('.shp'):
+        attrib_dict = {}
+        for _, out_obj in oudic.items():
+
+            if isinstance(out_obj, HeadFile) or \
+                    isinstance(out_obj, FormattedHeadFile) or \
+                    isinstance(out_obj, UcnFile):
+                if isinstance(out_obj, UcnFile):
+                    attrib_name = 'conc'
+                else:
+                    attrib_name = 'head'
+                plotarray = np.atleast_3d(out_obj.get_alldata()
+                                          .transpose()).transpose()
+
+                for per in range(plotarray.shape[0]):
+                    for k in range(plotarray.shape[1]):
+                        if kper is not None and per != kper:
+                            continue
+                        if mflay is not None and k != mflay:
+                            continue
+                        name = attrib_name + '{}_{}'.format(per, k)
+                        attrib_dict[name] = plotarray[per][k]
+
+            elif isinstance(out_obj, CellBudgetFile):
+                names = out_obj.get_unique_record_names(decode=True)
+
+                for attrib_name in names:
+                    plotarray = np.atleast_3d(out_obj.get_data(
+                                              text=attrib_name,
+                                              full3D=True))
+
+                    attrib_name = attrib_name.strip()
+                    if attrib_name == "FLOW RIGHT FACE":
+                        attrib_name = 'FRF'
+                    elif attrib_name == "FLOW FRONT FACE":
+                        attrib_name = "FFF"
+                    elif attrib_name == "FLOW LOWER FACE":
+                        attrib_name = "FLF"
+                    else:
+                        pass
+                    for per in range(plotarray.shape[0]):
+                        for k in range(plotarray.shape[1]):
+                            if kper is not None and per != kper:
+                                continue
+                            if mflay is not None and k != mflay:
+                                continue
+                            name = attrib_name + '{}_{}'.format(per, k)
+                            attrib_dict[name] = plotarray[per][k]
+
+        if attrib_dict:
+            shapefile_utils.write_grid_shapefile(f, ml.modelgrid, attrib_dict)
+
     else:
         if logger:
             logger.lraise("unrecognized export argument:{0}".format(f))
         else:
-            raise NotImplementedError("unrecognized export argument" + \
+            raise NotImplementedError("unrecognized export argument" +
                                       ":{0}".format(f))
     return f
 
@@ -355,32 +509,17 @@ def model_export(f, ml, fmt=None, **kwargs):
         or dictionary of ....
     ml : flopy.modflow.mbase.ModelInterface object
         flopy model object
-    fmt: str
-        output format flag. set to 'vtk' to export to vtk .vtu file
-
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
-         modelgrid: flopy.discretization.Grid
+        modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
             in modelgrid object
         epsg : int
             epsg projection code
         prj : str
             prj file name
-
-        smooth: bool
-            For vtk, if set to True will output smooth surface
-
-        point_scalars: bool
-            For vtk, if set to True will create point scalar values along
-            with cell values.
-
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
-
-        nanval: For vtk, no data value
-
-
+        if fmt is set to 'vtk', parameters of vtk.export_model
 
     """
     assert isinstance(ml, ModelInterface)
@@ -410,13 +549,17 @@ def model_export(f, ml, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk model export
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
+        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
+        true2d = kwargs.get('true2d', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_model(ml, f, package_names=package_names, smooth=smooth,
-                         point_scalars=point_scalars, binary=binary,
-                         nanval=nanval)
+        kpers = kwargs.get('kpers', None)
+        vtk.export_model(ml, f, package_names=package_names, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         vtk_grid_type=vtk_grid_type, true2d=true2d,
+                         binary=binary, kpers=kpers)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -434,8 +577,8 @@ def package_export(f, pak, fmt=None, **kwargs):
         output file name (ends in .shp for shapefile or .nc for netcdf)
     pak : flopy.pakbase.Package object
         package to export
-    fmt: str
-        output format flag. set to 'vtk' to export to vtk .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     ** kwargs : keword arguments
         modelgrid: flopy.discretization.Grid
             user supplied modelgrid object which will supercede the built
@@ -444,19 +587,7 @@ def package_export(f, pak, fmt=None, **kwargs):
             epsg projection code
         prj : str
             prj file name
-
-        smooth: bool
-            For vtk, if set to True will output smooth surface
-
-        point_scalars: bool
-            For vtk, if set to True will create point scalar values along
-            with cell values.
-
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
-
-        nanval: For vtk, no data value
+        if fmt is set to 'vtk', parameters of vtk.export_package
 
     Returns
     -------
@@ -486,9 +617,9 @@ def package_export(f, pak, fmt=None, **kwargs):
                                 "error adding {0} as variable".format(a.name))
                     elif a.data_type == DataType.array3d:
                         f = array3d_export(f, a, **kwargs)
-                    elif  a.data_type == DataType.transient2d:
+                    elif a.data_type == DataType.transient2d:
                         f = transient2d_export(f, a, **kwargs)
-                    elif  a.data_type == DataType.transientlist:
+                    elif a.data_type == DataType.transientlist:
                         f = mflist_export(f, a, **kwargs)
                     elif isinstance(a, list):
                         for v in a:
@@ -499,14 +630,17 @@ def package_export(f, pak, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk array export to folder
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
+        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
+        true2d = kwargs.get('true2d', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_package(pak.parent, pak.name, f, smooth=smooth,
-                           point_scalars=point_scalars, binary=binary,
-                           nanval=nanval)
-
+        kpers = kwargs.get('kpers', None)
+        vtk.export_package(pak.parent, pak.name, f, nanval=nanval,
+                           smooth=smooth, point_scalars=point_scalars,
+                           vtk_grid_type=vtk_grid_type, true2d=true2d,
+                           binary=binary, kpers=kpers)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -592,9 +726,10 @@ def mflist_export(f, mfl, **kwargs):
             model grid instance which will supercede the flopy.model.modelgrid
 
     """
-    assert isinstance(mfl, DataListInterface) and \
-           isinstance(mfl, DataInterface) \
-        , "mflist_helper only helps instances that support DataListInterface"
+    if not isinstance(mfl, (DataListInterface, DataInterface)):
+        err = "mflist_helper only helps instances that support " \
+              "DataListInterface"
+        raise AssertionError(err)
 
     modelgrid = mfl.model.modelgrid
     if "modelgrid" in kwargs:
@@ -633,8 +768,7 @@ def mflist_export(f, mfl, **kwargs):
         else:
             from ..export.shapefile_utils import recarray2shp
             from ..utils.geometry import Polygon
-            #if np.isscalar(kper):
-            #    kper = [kper]
+
             df = mfl.get_dataframe(squeeze=squeeze)
             if 'kper' in kwargs or df is None:
                 ra = mfl[kper]
@@ -716,25 +850,22 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
     -----------
     f : str
         filename or existing export instance type (NetCdf only for now)
-    u2d : Transient2d instance
-    fmt: set to 'vtk' to export a .vtu file
+    t2d : Transient2d instance
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to True will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_transient
 
     """
 
-    assert isinstance(t2d, DataInterface) \
-        , "transient2d_helper only helps instances that support " \
-          "DataInterface"
+    if not isinstance(t2d, DataInterface):
+        err = "transient2d_helper only helps instances that support " \
+              "DataInterface"
+        raise AssertionError(err)
 
     min_valid = kwargs.get("min_valid", -1.0e+9)
     max_valid = kwargs.get("max_valid", 1.0e+9)
@@ -829,13 +960,18 @@ def transient2d_export(f, t2d, fmt=None, **kwargs):
         return f
 
     elif fmt == 'vtk':
-        smooth = kwargs.get('smooth', False)
-        point_scalars = kwargs.get('point_scalars', False)
         name = kwargs.get('name', t2d.name)
         nanval = kwargs.get('nanval', -1e20)
-        vtk.export_transient(t2d.model, t2d.array, f, name, smooth=smooth,
-                             point_scalars=point_scalars, array2d=True,
-                             nanval=nanval)
+        smooth = kwargs.get('smooth', False)
+        point_scalars = kwargs.get('point_scalars', False)
+        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
+        true2d = kwargs.get('true2d', False)
+        binary = kwargs.get('binary', False)
+        kpers = kwargs.get('kpers', None)
+        vtk.export_transient(t2d.model, t2d.array, f, name, nanval=nanval,
+                             smooth=smooth, point_scalars=point_scalars,
+                             array2d=True, vtk_grid_type=vtk_grid_type,
+                             true2d=true2d, binary=binary, kpers=kpers)
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
 
@@ -848,19 +984,15 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
     -----------
     f : str
         filename or existing export instance type (NetCdf only for now)
-    u2d : Util3d instance
-    fmt: set to 'vtk' to export a .vtu file
+    u3d : Util3d instance
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
 
@@ -882,9 +1014,15 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
         array_dict = {}
         for ilay in range(modelgrid.nlay):
             u2d = u3d[ilay]
+            if isinstance(u2d, np.ndarray):
+                dname = u3d.name
+                array = u2d
+            else:
+                dname = u2d.name
+                array = u2d.array
             name = '{}_{}'.format(
-                shapefile_utils.shape_attr_name(u2d.name), ilay + 1)
-            array_dict[name] = u2d.array
+                shapefile_utils.shape_attr_name(dname), ilay + 1)
+            array_dict[name] = array
         shapefile_utils.write_grid_shapefile(f, modelgrid, array_dict)
 
     elif isinstance(f, NetCdf) or isinstance(f, dict):
@@ -980,17 +1118,20 @@ def array3d_export(f, u3d, fmt=None, **kwargs):
 
     elif fmt == 'vtk':
         # call vtk array export to folder
+        name = kwargs.get('name', u3d.name)
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
-        name = kwargs.get('name', u3d.name)
+        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
+        true2d = kwargs.get('true2d', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
         if isinstance(name, list) or isinstance(name, tuple):
             name = name[0]
 
-        vtk.export_array(u3d.model, u3d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars, binary=binary,
-                         nanval=nanval)
+        vtk.export_array(u3d.model, u3d.array, f, name, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         vtk_grid_type=vtk_grid_type, true2d=true2d,
+                         binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -1005,18 +1146,14 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
     f : str
         filename or existing export instance type (NetCdf only for now)
     u2d : Util2d instance
-    fmt: set to 'vtk' to export a .vtu file
+    fmt : str
+        output format flag. 'vtk' will export to vtk
     **kwargs : keyword arguments
         min_valid : minimum valid value
         max_valid : maximum valid value
         modelgrid : flopy.discretization.Grid
             model grid instance which will supercede the flopy.model.modelgrid
-        smooth: for vtk to output a smooth represenation of the model
-        point_scalars: for vtk to output point value scalars as well as cell
-        name: for vtk to set a specific name for array and output file
-        binary: bool
-            For vtk, if set to Ture will output binary .vtu files. Default
-            is False which exports standard text xml .vtu files.
+        if fmt is set to 'vtk', parameters of vtk.export_array
 
     """
     assert isinstance(u2d, DataInterface), "util2d_helper only helps " \
@@ -1065,9 +1202,9 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
                 array[array <= min_valid] = netcdf.FILLVALUE
                 array[array >= max_valid] = netcdf.FILLVALUE
                 if modelgrid.idomain is not None and \
-                                "ibound" not in u2d.name.lower() and \
-                                "idomain" not in u2d.name.lower() and \
-                                "icbund" not in u2d.name.lower():
+                        "ibound" not in u2d.name.lower() and \
+                        "idomain" not in u2d.name.lower() and \
+                        "icbund" not in u2d.name.lower():
                     array[modelgrid.idomain[0, :, :] == 0] = \
                         netcdf.FILLVALUE
         var_name = u2d.name
@@ -1112,14 +1249,17 @@ def array2d_export(f, u2d, fmt=None, **kwargs):
     elif fmt == 'vtk':
 
         # call vtk array export to folder
+        name = kwargs.get('name', u2d.name)
+        nanval = kwargs.get('nanval', -1e20)
         smooth = kwargs.get('smooth', False)
         point_scalars = kwargs.get('point_scalars', False)
-        name = kwargs.get('name', u2d.name)
+        vtk_grid_type = kwargs.get('vtk_grid_type', 'auto')
+        true2d = kwargs.get('true2d', False)
         binary = kwargs.get('binary', False)
-        nanval = kwargs.get('nanval', -1e20)
-        vtk.export_array(u2d.model, u2d.array, f, name, smooth=smooth,
-                         point_scalars=point_scalars, array2d=True,
-                         binary=binary, nanval=nanval)
+        vtk.export_array(u2d.model, u2d.array, f, name, nanval=nanval,
+                         smooth=smooth, point_scalars=point_scalars,
+                         array2d=True, vtk_grid_type=vtk_grid_type,
+                         true2d=true2d, binary=binary)
 
     else:
         raise NotImplementedError("unrecognized export argument:{0}".format(f))
@@ -1133,6 +1273,8 @@ def export_array(modelgrid, filename, a, nodata=-9999,
 
     Parameters
     ----------
+    modelgrid : flopy.discretization.StructuredGrid object
+        model grid
     filename : str
         Path of output file. Export format is determined by
         file extention.
@@ -1166,18 +1308,24 @@ def export_array(modelgrid, filename, a, nodata=-9999,
     """
 
     if filename.lower().endswith(".asc"):
-        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+        if len(np.unique(modelgrid.delr)) != \
+                len(np.unique(modelgrid.delc)) != 1 \
                 or modelgrid.delr[0] != modelgrid.delc[0]:
             raise ValueError('Arc ascii arrays require a uniform grid.')
 
         xoffset, yoffset = modelgrid.xoffset, modelgrid.yoffset
-        cellsize = modelgrid.delr[0] # * self.length_multiplier
+        cellsize = modelgrid.delr[0]
         fmt = kwargs.get('fmt', '%.18e')
         a = a.copy()
         a[np.isnan(a)] = nodata
         if modelgrid.angrot != 0:
             try:
                 from scipy.ndimage import rotate
+            except ImportError:
+                rotate = None
+                print('scipy package required to export rotated grid.')
+
+            if rotate is not None:
                 a = rotate(a, modelgrid.angrot, cval=nodata)
                 height_rot, width_rot = a.shape
                 xmin, ymin, xmax, ymax = modelgrid.extent
@@ -1185,8 +1333,6 @@ def export_array(modelgrid, filename, a, nodata=-9999,
                 dy = (ymax - ymin) / height_rot
                 cellsize = np.max((dx, dy))
                 xoffset, yoffset = xmin, ymin
-            except ImportError:
-                print('scipy package required to export rotated grid.')
 
         filename = '.'.join(
             filename.split('.')[:-1]) + '.asc'  # enforce .asc ending
@@ -1206,7 +1352,8 @@ def export_array(modelgrid, filename, a, nodata=-9999,
         print('wrote {}'.format(filename))
 
     elif filename.lower().endswith(".tif"):
-        if len(np.unique(modelgrid.delr)) != len(np.unique(modelgrid.delc)) != 1 \
+        if len(np.unique(modelgrid.delr)) != \
+                len(np.unique(modelgrid.delc)) != 1 \
                 or modelgrid.delr[0] != modelgrid.delc[0]:
             raise ValueError('GeoTIFF export require a uniform grid.')
         try:
@@ -1215,10 +1362,14 @@ def export_array(modelgrid, filename, a, nodata=-9999,
         except ImportError:
             print('GeoTIFF export requires the rasterio package.')
             return
-        dxdy = modelgrid.delc[0] # * self.length_multiplier
-        trans = Affine.translation(modelgrid.xoffset, modelgrid.yoffset) * \
-                Affine.rotation(modelgrid.angrot) * \
-                Affine.scale(dxdy, -dxdy)
+        dxdy = modelgrid.delc[0]
+        # because this is only implemented for a structured grid,
+        # we can get the xul and yul coordinate from modelgrid.xvertices(0, 0)
+        verts = modelgrid.get_cell_vertices(0, 0)
+        xul, yul = verts[0]
+        trans = Affine.translation(xul, yul) * \
+            Affine.rotation(modelgrid.angrot) * \
+            Affine.scale(dxdy, -dxdy)
 
         # third dimension is the number of bands
         a = a.copy()
@@ -1357,7 +1508,7 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
 
     try:
         from shapely import geometry
-    except:
+    except (ImportError, ModuleNotFoundError):
         raise ImportError('export_contourf requires python shapely package')
 
     from ..utils.geometry import Polygon
@@ -1421,12 +1572,16 @@ def export_array_contours(modelgrid, filename, a,
 
     Parameters
     ----------
+    modelgrid : flopy.discretization.Grid object
+        model grid object
     filename : str
         Path of output file with '.shp' extention.
     a : 2D numpy array
         Array to contour
     fieldname : str
         gis field name
+    interval : float
+        interval to calculate levels from
     levels : list
         list of contour levels
     maxlevels : int
@@ -1467,6 +1622,8 @@ def contour_array(modelgrid, ax, a, **kwargs):
 
     Parameters
     ----------
+    modelgrid : flopy.discretization.Grid object
+        modelgrid object
     ax : matplotlib.axes.Axes
         ax to add the contours
 

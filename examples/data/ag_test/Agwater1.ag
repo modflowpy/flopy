@@ -1,0 +1,567 @@
+# AG options
+options
+etdemand
+irrigation_diversion 1 6
+supplemental_well 6 1 
+irrigation_well 6 1 
+maxwells 6  
+diversionlist -2 
+welllist -2
+wellirrlist -2
+diversionirrlist -2
+timeseries_well
+timeseries_diversion
+timeseries_diversionet
+end
+# AG time series
+time series
+well 5 105   
+diversion 9 107      
+diversionet 9 108
+end
+# AG segment list
+segment list
+9
+end
+# AG well list
+well list
+         1         6         4    -100.00
+         1         6         5    -100.00
+         1         7         4    -100.00
+         1         7         5    -100.00
+         1         8         4    -100.00
+         1         8         5    -100.00
+end
+# AG stress period
+stress period 1
+IRRdiversion
+0
+IRRWELL
+0
+SUPWELL
+0
+END
+stress period 2
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 3
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 4
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 5
+IRRdiversion
+1                         NUMIRRSEGSP       
+9 6 0.0 0.0                       #SEGID NUMCELLSEG IRRPERIODSEG TRIGGERFACTSEG 
+6 4 0.0 0.16667           IRRROW IRRCOL EFF_FACT FIELD_FACT
+6 5 0.0 0.16667 
+7 4 0.0 0.16667 
+7 5 0.0 0.16667 
+8 4 0.0 0.16667 
+8 5 0.0 0.16667 
+IRRWELL
+6
+1 1  0.0 0.0                     #IRRWELLLID NUMCELLWELL IRRPERIODWELL TRIGGERPERIODWELL 
+6 4 0.0 1.0               IRRROW IRRCOL EFF_FACT FIELD_FACT 
+2 1
+6 5 0.0 1.0 
+3 1
+7 4 0.0 1.0 
+4 1
+7 5 0.0 1.0 
+5 1
+8 4 0.0 1.0 
+6 1
+8 5 0.0 1.0 
+SUPWELL
+6                        NUMSUPWELLLSP
+1 1                      SUPWELLLNUM   NUMSEGWELL
+9 1.0 1.0                  #SEGWELLID FACSUP FACSUPMAX             
+2 1 
+9 1.0 1.0 
+3 1 
+9 1.0 1.0 
+4 1 
+9 1.0 1.0 
+5 1 
+9 1.0 1.0 
+6 1 
+9 1.0 1.0 
+end
+stress period 6     
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1     
+END
+stress period 7
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 8
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 9
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 10
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 11
+IRRdiversion
+0
+IRRWELL
+0
+SUPWELL
+0
+END
+stress period 12
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 13
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END 
+stress period 14
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 15
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 16
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 17
+IRRdiversion
+1                         NUMIRRSEGSP       
+9 6 0.0 0.0                       #SEGID NUMCELLSEG IRRPERIODSEG TRIGGERFACTSEG 
+6 4 0.0 0.16667           IRRROW IRRCOL EFF_FACT FIELD_FACT
+6 5 0.0 0.16667 
+7 4 0.0 0.16667 
+7 5 0.0 0.16667 
+8 4 0.0 0.16667 
+8 5 0.0 0.16667 
+IRRWELL
+6
+1 1  0.0 0.0                     #IRRWELLLID NUMCELLWELL IRRPERIODWELL TRIGGERPERIODWELL 
+6 4 0.0 1.0               IRRROW IRRCOL EFF_FACT FIELD_FACT 
+2 1
+6 5 0.0 1.0 
+3 1
+7 4 0.0 1.0 
+4 1
+7 5 0.0 1.0 
+5 1
+8 4 0.0 1.0 
+6 1
+8 5 0.0 1.0 
+SUPWELL
+6                        NUMSUPWELLLSP
+1 1                      SUPWELLLNUM   NUMSEGWELL
+9 1.0 1.0                  #SEGWELLID FACSUP FACSUPMAX             
+2 1 
+9 1.0 1.0 
+3 1 
+9 1.0 1.0 
+4 1 
+9 1.0 1.0 
+5 1 
+9 1.0 1.0 
+6 1 
+9 1.0 1.0
+end
+stress period 18
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 19
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 20
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 21
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 22
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 23
+IRRdiversion
+0
+IRRWELL
+0
+SUPWELL
+0
+END
+stress period 24
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 25
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 26
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 27
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 28
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 29
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 30
+IRRdiversion
+1                         NUMIRRSEGSP       
+9 6 0.0 0.0                       #SEGID NUMCELLSEG IRRPERIODSEG TRIGGERFACTSEG 
+6 4 0.0 0.16667           IRRROW IRRCOL EFF_FACT FIELD_FACT
+6 5 0.0 0.16667 
+7 4 0.0 0.16667 
+7 5 0.0 0.16667 
+8 4 0.0 0.16667 
+8 5 0.0 0.16667 
+IRRWELL
+6
+1 1  0.0 0.0                     #IRRWELLLID NUMCELLWELL IRRPERIODWELL TRIGGERPERIODWELL 
+6 4 0.0 1.0               IRRROW IRRCOL EFF_FACT FIELD_FACT 
+2 1
+6 5 0.0 1.0 
+3 1
+7 4 0.0 1.0 
+4 1
+7 5 0.0 1.0 
+5 1
+8 4 0.0 1.0 
+6 1
+8 5 0.0 1.0 
+SUPWELL
+6                        NUMSUPWELLLSP
+1 1                      SUPWELLLNUM   NUMSEGWELL
+9 1.0 1.0                  #SEGWELLID FACSUP FACSUPMAX             
+2 1 
+9 1.0 1.0 
+3 1 
+9 1.0 1.0 
+4 1 
+9 1.0 1.0 
+5 1 
+9 1.0 1.0 
+6 1 
+9 1.0 1.0 
+end
+stress period 31     
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1     
+END
+stress period 32
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 33
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 34
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 35
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 36
+IRRdiversion
+0
+IRRWELL
+0
+SUPWELL
+0
+END
+stress period 37
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 38
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END 
+stress period 39
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 40
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 41
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 42
+IRRdiversion
+1                         NUMIRRSEGSP       
+9 6 0.0 0.0                       #SEGID NUMCELLSEG IRRPERIODSEG TRIGGERFACTSEG 
+6 4 0.0 0.16667           IRRROW IRRCOL EFF_FACT FIELD_FACT
+6 5 0.0 0.16667 
+7 4 0.0 0.16667 
+7 5 0.0 0.16667 
+8 4 0.0 0.16667 
+8 5 0.0 0.16667 
+IRRWELL
+6
+1 1  0.0 0.0                     #IRRWELLLID NUMCELLWELL IRRPERIODWELL TRIGGERPERIODWELL 
+6 4 0.0 1.0               IRRROW IRRCOL EFF_FACT FIELD_FACT 
+2 1
+6 5 0.0 1.0 
+3 1
+7 4 0.0 1.0 
+4 1
+7 5 0.0 1.0 
+5 1
+8 4 0.0 1.0 
+6 1
+8 5 0.0 1.0 
+SUPWELL
+6                        NUMSUPWELLLSP
+1 1                      SUPWELLLNUM   NUMSEGWELL
+9 1.0 1.0                  #SEGWELLID FACSUP FACSUPMAX             
+2 1 
+9 1.0 1.0 
+3 1 
+9 1.0 1.0 
+4 1 
+9 1.0 1.0 
+5 1 
+9 1.0 1.0 
+6 1 
+9 1.0 1.0
+end
+stress period 43
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 44
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 45
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 46
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 47
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 48
+IRRdiversion
+0
+IRRWELL
+0
+SUPWELL
+0
+END
+stress period 49
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 50
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END
+stress period 51
+IRRdiversion
+-1
+IRRWELL
+-1
+SUPWELL
+-1
+END

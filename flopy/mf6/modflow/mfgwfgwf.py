@@ -106,14 +106,22 @@ class ModflowGwfgwf(mfpackage.MFPackage):
           numbers of the cell. For a grid that uses the DISV input file,
           CELLIDM1 is the layer number and CELL2D number for the two cells. If
           the model uses the unstructured discretization (DISU) input file,
-          then CELLIDM1 is the node number for the cell.
+          then CELLIDM1 is the node number for the cell. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * cellidm2 ((integer, ...)) is the cellid of the cell in model 2 as
           specified in the simulation name file. For a structured grid that
           uses the DIS input file, CELLIDM2 is the layer, row, and column
           numbers of the cell. For a grid that uses the DISV input file,
           CELLIDM2 is the layer number and CELL2D number for the two cells. If
           the model uses the unstructured discretization (DISU) input file,
-          then CELLIDM2 is the node number for the cell.
+          then CELLIDM2 is the node number for the cell. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * ihc (integer) is an integer flag indicating the direction between
           node n and all of its m connections. If IHC = 0 then the connection
           is vertical. If IHC = 1 then the connection is horizontal. If IHC = 2

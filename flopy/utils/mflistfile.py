@@ -790,6 +790,7 @@ class ListBudget(object):
         tag = 'IN'
         incdict = collections.OrderedDict()
         cumdict = collections.OrderedDict()
+        entrydict = {}
         while True:
 
             if line == '':
@@ -824,12 +825,20 @@ class ListBudget(object):
                 elif 'PERCENT DISCREPANCY' in entry.upper():
                     key = entry.replace(' ', '_')
                 else:
-                    key = '{}_{}'.format(entry.replace(' ', '_'), tag)
+                    entry = entry.replace(' ', '_')
+                    if entry in entrydict:
+                        entrydict[entry] += 1
+                        inum = entrydict[entry]
+                        entry = '{}{}'.format(entry, inum + 1)
+                    else:
+                        entrydict[entry] = 0
+                    key = '{}_{}'.format(entry, tag)
                 incdict[key] = flux
                 cumdict[key] = cumu
             else:
                 if 'OUT:' in line.upper():
                     tag = 'OUT'
+                    entrydict = {}
             line = self.f.readline()
             if entry.upper() == 'PERCENT DISCREPANCY':
                 break
@@ -884,6 +893,14 @@ class ListBudget(object):
             elif '-----------------------------------------------------------' in line:
                 line = self.f.readline()
                 break
+
+        if isinstance(self, SwtListBudget):
+            translen = self._parse_time_line(line)
+            line = self.f.readline()
+            if translen is None:
+                print('error parsing translen for ts,sp', ts, sp)
+                return np.NaN, np.NaN, np.NaN
+
         tslen = self._parse_time_line(line)
         if tslen is None:
             print('error parsing tslen for ts,sp', ts, sp)

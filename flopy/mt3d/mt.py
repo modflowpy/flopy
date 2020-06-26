@@ -341,7 +341,8 @@ class Mt3dms(BaseModel):
         self._model_time = ModelTime(data_frame,
                                      self.mf.dis.itmuni_dict[
                                          self.mf.dis.itmuni],
-                                     self.dis.start_datetime, self.dis.steady)
+                                     self.dis.start_datetime,
+                                     self.dis.steady.array)
         return self._model_time
 
     @property
@@ -355,11 +356,13 @@ class Mt3dms(BaseModel):
             delr = self.btn.delr.array
             top = self.btn.htop.array
             botm = np.subtract(top, self.btn.dz.array.cumsum(axis=0))
+            nlay = self.btn.nlay
         else:
             delc = self.mf.dis.delc.array
             delr = self.mf.dis.delr.array
             top = self.mf.dis.top.array
             botm = self.mf.dis.botm.array
+            nlay = self.mf.nlay
             if self.mf.bas6 is not None:
                 ibound = self.mf.bas6.ibound.array
             else:
@@ -374,7 +377,8 @@ class Mt3dms(BaseModel):
                                          epsg=self._modelgrid.epsg,
                                          xoff=self._modelgrid.xoffset,
                                          yoff=self._modelgrid.yoffset,
-                                         angrot=self._modelgrid.angrot)
+                                         angrot=self._modelgrid.angrot,
+                                         nlay=nlay)
 
         # resolve offsets
         xoff = self._modelgrid.xoffset
@@ -662,10 +666,10 @@ class Mt3dms(BaseModel):
         ext_unit_dict.pop(btn_key).filehandle.close()
         ncomp = mt.btn.ncomp
         # reserved unit numbers for .ucn, s.ucn, .obs, .mas, .cnf
-        poss_output_units = set(list(range(201, 201+ncomp)) +
-                                list(range(301, 301+ncomp)) +
-                                list(range(401, 401+ncomp)) +
-                                list(range(601, 601+ncomp)) + [17])
+        poss_output_units = set(list(range(201, 201 + ncomp)) +
+                                list(range(301, 301 + ncomp)) +
+                                list(range(401, 401 + ncomp)) +
+                                list(range(601, 601 + ncomp)) + [17])
         if load_only is None:
             load_only = []
             for key, item in ext_unit_dict.items():
@@ -756,9 +760,9 @@ class Mt3dms(BaseModel):
                     item.filehandle.close()
             except KeyError:
                 if mt.verbose:
-                    sys.stdout.write(
-                        "Warning: external file unit "
-                        "{} does not exist in ext_unit_dict.\n".format(key))
+                    msg = "\nWARNING:\n    External file unit " + \
+                          "{} does not exist in ext_unit_dict.\n".format(key)
+                    sys.stdout.write(msg)
 
         # write message indicating packages that were successfully loaded
         if mt.verbose:

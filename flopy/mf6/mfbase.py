@@ -610,7 +610,7 @@ class PackageContainer(object):
         if name.lower() in self.package_key_dict:
             return self.package_key_dict[name.lower()]
 
-        # search for partial package name
+        # search for partial and case-insensitive package name
         for pp in self._packagelist:
             if pp.package_name is not None:
                 # get first package of the type requested

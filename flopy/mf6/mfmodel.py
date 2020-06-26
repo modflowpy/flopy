@@ -18,6 +18,7 @@ from flopy.discretization.modeltime import ModelTime
 from ..mbase import ModelInterface
 from .utils.mfenums import DiscretizationType
 from .data import mfstructure
+from ..utils.check import mf6check
 
 
 class MFModel(PackageContainer, ModelInterface):
@@ -76,6 +77,8 @@ class MFModel(PackageContainer, ModelInterface):
         checks the validity of the model and all of its packages
     rename_all_packages : (name : string)
         renames all packages in the model
+    set_all_data_external
+        sets the model's list and array data to be stored externally
 
     See Also
     --------
@@ -365,7 +368,35 @@ class MFModel(PackageContainer, ModelInterface):
                 botm=dis.bot.array, idomain=idomain,
                 lenuni=dis.length_units.array, proj4=self._modelgrid.proj4,
                 epsg=self._modelgrid.epsg, xoff=self._modelgrid.xoffset,
-                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot)
+                yoff=self._modelgrid.yoffset, angrot=self._modelgrid.angrot,
+                nodes=dis.nodes.get_data())
+        elif self.get_grid_type() == DiscretizationType.DISL:
+            dis = self.get_package('disl')
+            if not hasattr(dis, '_init_complete'):
+                if not hasattr(dis, 'cell1d'):
+                    # disv package has not yet been initialized
+                    return self._modelgrid
+                else:
+                    # disv package has been partially initialized
+                    self._modelgrid = VertexGrid(vertices=dis.vertices.array,
+                                                 cell1d=dis.cell1d.array,
+                                                 top=None,
+                                                 botm=None,
+                                                 idomain=None,
+                                                 lenuni=None,
+                                                 proj4=self._modelgrid.proj4,
+                                                 epsg=self._modelgrid.epsg,
+                                                 xoff=self._modelgrid.xoffset,
+                                                 yoff=self._modelgrid.yoffset,
+                                                 angrot=self._modelgrid.angrot)
+            else:
+                self._modelgrid = VertexGrid(
+                    vertices=dis.vertices.array, cell1d=dis.cell1d.array,
+                    top=dis.top.array, botm=dis.botm.array,
+                    idomain=dis.idomain.array, lenuni=dis.length_units.array,
+                    proj4=self._modelgrid.proj4, epsg=self._modelgrid.epsg,
+                    xoff=self._modelgrid.xoffset, yoff=self._modelgrid.yoffset,
+                    angrot=self._modelgrid.angrot)
         else:
             return self._modelgrid
 
@@ -463,6 +494,40 @@ class MFModel(PackageContainer, ModelInterface):
     @verbose.setter
     def verbose(self, verbose):
         self._verbose = verbose
+
+    def check(self, f=None, verbose=True, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+        # check instance for model-level check
+        chk = mf6check(self, f=f, verbose=verbose, level=level)
+
+        return self._check(chk, level)
 
     @classmethod
     def load_base(cls, simulation, structure, modelname='NewModel',
@@ -635,6 +700,10 @@ class MFModel(PackageContainer, ModelInterface):
                 'disu{}'.format(structure.get_version_string()),
                 0) is not None:
             return DiscretizationType.DISU
+        elif package_recarray.search_data(
+                'disl{}'.format(structure.get_version_string()),
+                0) is not None:
+            return DiscretizationType.DISL
 
         return DiscretizationType.UNDEFINED
 
@@ -800,7 +869,7 @@ class MFModel(PackageContainer, ModelInterface):
             if not isinstance(packages, list):
                 packages = [packages]
         for package in packages:
-            if package._model_or_sim.name != self.name:
+            if package.model_or_sim.name != self.name:
                 except_text = 'Package can not be removed from model {} ' \
                               'since it is ' \
                               'not part of '
@@ -824,7 +893,8 @@ class MFModel(PackageContainer, ModelInterface):
                 for item in package_data:
                     if item[1] != package._filename:
                         if new_rec_array is None:
-                            new_rec_array = np.rec.array(item, package_data.dtype)
+                            new_rec_array = np.rec.array([item.tolist()],
+                                                         package_data.dtype)
                         else:
                             new_rec_array = np.hstack((item, new_rec_array))
             except:
@@ -871,6 +941,10 @@ class MFModel(PackageContainer, ModelInterface):
                     name, package_type_count[package.package_type],
                     package.package_type)
 
+    def set_all_data_external(self):
+        for package in self.packagelist:
+            package.set_all_data_external()
+
     def register_package(self, package, add_to_package_list=True,
                          set_package_name=True, set_package_filename=True):
         """
@@ -899,16 +973,29 @@ class MFModel(PackageContainer, ModelInterface):
             path = package.parent_file.path + (package.package_type,)
         else:
             path = (self.name, package.package_type)
-
-        if add_to_package_list and path in self._package_paths and not \
-                set_package_name and package.package_name in \
-                self.package_name_dict:
-            # package of this type with this name already exists, replace it
-            if self.simulation_data.verbosity_level.value >= \
-                    VerbosityLevel.normal.value:
-                print('WARNING: Package with name {} already exists. '
-                      'Replacing existing package.'.format(package.package_name))
-            self.remove_package(self.package_name_dict[package.package_name])
+        package_struct = \
+            self.structure.get_package_struct(package.package_type)
+        if add_to_package_list and path in self._package_paths:
+            if not package_struct.multi_package_support:
+                # package of this type already exists, replace it
+                self.remove_package(package.package_type)
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print('WARNING: Package with type {} already exists. '
+                          'Replacing existing package'
+                          '.'.format(package.package_type))
+            elif not set_package_name and package.package_name in \
+                    self.package_name_dict:
+                # package of this type with this name already
+                # exists, replace it
+                self.remove_package(
+                    self.package_name_dict[package.package_name])
+                if self.simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.normal.value:
+                    print(
+                        'WARNING: Package with name {} already exists. '
+                        'Replacing existing package'
+                        '.'.format(package.package_name))
 
         # make sure path is unique
         if path in self._package_paths:
@@ -922,8 +1009,6 @@ class MFModel(PackageContainer, ModelInterface):
         if package.package_type.lower() == 'nam':
             return path, self.structure.name_file_struct_obj
 
-        package_struct = \
-          self.structure.get_package_struct(package.package_type)
         if set_package_name:
             # produce a default package name
             if package_struct is not None and \

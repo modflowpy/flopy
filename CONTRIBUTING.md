@@ -4,7 +4,6 @@ Contributing
 Contributions to FloPy are welcome from the community. As a contributor, here are the guidelines we would like you to follow:
 
  - [Code of Conduct](#coc)
- - [Question or Problem?](#question)
  - [Issues and Bugs](#issue)
  - [Feature Requests](#feature)
  - [Submission Guidelines](#submit)
@@ -13,18 +12,6 @@ Contributions to FloPy are welcome from the community. As a contributor, here ar
 
 ## <a name="coc"></a> Code of Conduct
 Help us keep FloPy open and inclusive. Please read and follow our [Code of Conduct][coc].
-
-## <a name="question"></a> Got a Question or Problem?
-
-Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/flopy) where the questions should be tagged with tag `flopy`.
-
-Stack Overflow is a much better place to ask questions since:
-
-- there are thousands of people willing to help on Stack Overflow
-- questions and answers stay available for public viewing so your question / answer might help someone else
-- Stack Overflow's voting system assures that the best answers are prominently visible.
-
-To save your and our time, we will systematically close all issues that are requests for general support and redirect people to Stack Overflow.
 
 ## <a name="issue"></a> Found a Bug?
 If you find a bug in the source code, you can help us by
@@ -73,9 +60,9 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     ```shell
     cd autotest
     nosetests -v build_exes.py
-    nosetests -v t*_test.py
+    nosetests -v
     ```
-   Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages.
+   Note: the FloPy test suite requires the [nosetests](https://pypi.org/project/nose/) and [pymake](https://github.com/modflowpy/pymake) python packages. All the FloPy dependencies must also be installed for the tests to pass.
 
 1. Commit your changes using a descriptive commit message that follows our
   [commit message conventions](#commit). Adherence to these conventions

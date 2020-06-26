@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
 import subprocess
 import os
 import sys
@@ -27,15 +26,18 @@ if len(paths) != len(files):
 
 pak = 'flopy'
 
-# authors list for Software/Code citation for FloPy
-# author should be defined LastName FirstName MiddleInitial
-# MiddleInitial can be absent. Use spaces instead of commas to separate
-# LastName, FirstName, and MiddleInitial.
-authors = ['Bakker Mark', 'Post Vincent', 'Langevin Christian D',
-           'Hughes Joseph D', 'White Jeremy T', 'Leaf Andrew T',
-           'Paulinski Scott R', 'Larsen Joshua D', 'Toews Michael W',
-           'Morway Eric D', 'Bellino Jason C', 'Starn Jeffrey J',
-           'Fienen Michael N']
+# local import of package variables in flopy/version.py
+# imports author_dict
+exec(open(os.path.join("..", "flopy", "version.py")).read())
+
+# build authors list for Software/Code citation for FloPy
+authors = []
+for key in author_dict.keys():
+    t = key.split()
+    author = '{}'.format(t[-1])
+    for str in t[0:-1]:
+        author += ' {}'.format(str)
+    authors.append(author)
 
 approved = '''Disclaimer
 ----------
@@ -130,6 +132,7 @@ def get_software_citation(version, is_approved):
     sb = ''
     if not is_approved:
         sb = ' &mdash; release candidate'
+    # format author names
     line = '['
     for ipos, author in enumerate(authors):
         if ipos > 0:
@@ -137,10 +140,19 @@ def get_software_citation(version, is_approved):
         if ipos == len(authors) - 1:
             line += 'and '
         sv = author.split()
-        tauthor = '{}, {}.'.format(sv[0], sv[1][0])
-        if len(sv) > 2:
-            tauthor += ' {}.'.format(sv[2][0])
+        tauthor = '{}'.format(sv[0])
+        if len(sv) < 3:
+            gname = sv[1]
+            if len(gname) > 1:
+                tauthor += ', {}'.format(gname)
+            else:
+                tauthor += ', {}.'.format(gname[0])
+        else:
+            tauthor += ', {}. {}.'.format(sv[1][0], sv[2][0])
+        # add formatted author name to line
         line += tauthor
+
+    # add the rest of the citation
     line += ', {}, '.format(now.year) + \
             'FloPy v{}{}: '.format(version, sb) + \
             'U.S. Geological Survey Software Release, ' + \
@@ -152,6 +164,7 @@ def get_software_citation(version, is_approved):
 
 
 def update_version():
+    name_pos = None
     try:
         fpth = os.path.join(paths[0], files[0])
 
@@ -159,7 +172,7 @@ def update_version():
         vminor = 0
         vmicro = 0
         lines = [line.rstrip('\n') for line in open(fpth, 'r')]
-        for line in lines:
+        for idx, line in enumerate(lines):
             t = line.split()
             if 'major =' in line:
                 vmajor = int(t[2])
@@ -167,6 +180,9 @@ def update_version():
                 vminor = int(t[2])
             elif 'micro =' in line:
                 vmicro = int(t[2])
+            elif '__version__' in line:
+                name_pos = idx + 1
+
     except:
         msg = 'There was a problem updating the version file'
         raise IOError(msg)
@@ -184,6 +200,11 @@ def update_version():
         f.write('minor = {}\n'.format(vminor))
         f.write('micro = {}\n'.format(vmicro))
         f.write("__version__ = '{:d}.{:d}.{:d}'.format(major, minor, micro)\n")
+
+        # write the remainder of the version file
+        if name_pos is not None:
+            for line in lines[name_pos:]:
+                f.write('{}\n'.format(line))
         f.close()
         print('Successfully updated version.py')
     except:
@@ -434,3 +455,4 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
 
 if __name__ == "__main__":
     update_version()
+    get_software_citation('3.1.1', True)

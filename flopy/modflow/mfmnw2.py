@@ -614,7 +614,7 @@ class Mnw(object):
             node_data = np.sort(node_data, order=['ztop'])[::-1]
         return node_data
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check mnw object for common errors.
 
@@ -637,7 +637,7 @@ class Mnw(object):
         chk : flopy.utils.check object
 
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
         if self.losstype.lower() not in ['none', 'thiem', 'skin', 'general',
                                          'sepecifycwc']:
             chk._add_to_summary(type='Error', k=self.k, i=self.i, j=self.j,
@@ -645,6 +645,12 @@ class Mnw(object):
 
         chk.summarize()
         return chk
+
+    def _get_check(self, f, verbose, level, checktype):
+        if checktype is not None:
+            return checktype(self, f=f, verbose=verbose, level=level)
+        else:
+            return check(self, f=f, verbose=verbose, level=level)
 
     def _set_attributes_from_node_data(self):
         """
@@ -1300,7 +1306,7 @@ class ModflowMnw2(Package):
                            stress_period_data=stress_period_data, itmp=itmp,
                            unitnumber=unitnumber, filenames=filenames)
 
-    def check(self, f=None, verbose=True, level=1):
+    def check(self, f=None, verbose=True, level=1, checktype=None):
         """
         Check mnw2 package data for common errors.
 
@@ -1329,7 +1335,7 @@ class ModflowMnw2(Package):
         >>> m = flopy.modflow.Modflow.load('model.nam')
         >>> m.mnw2.check()
         """
-        chk = check(self, f=f, verbose=verbose, level=level)
+        chk = self._get_check(f, verbose, level, checktype)
 
         # itmp
         if self.itmp[0] < 0:

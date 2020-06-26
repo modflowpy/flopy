@@ -82,6 +82,7 @@ def test_get_sat_thickness_gradients():
 
     m = mf.Modflow('junk', version='mfnwt', model_ws='temp')
     dis = mf.ModflowDis(m, nlay=nl, nrow=nr, ncol=nc, botm=botm, top=top)
+    lpf = mf.ModflowLpf(m, laytyp=np.ones(nl))
 
     grad = get_gradients(hds, m, nodata=nodata)
     dh = np.diff(hds[:, 1, 1])

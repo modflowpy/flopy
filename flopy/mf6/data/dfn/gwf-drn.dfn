@@ -19,6 +19,15 @@ longname name of auxiliary variable for multiplier
 description REPLACE auxmultname {'{#1}': 'drain conductance'}
 
 block options
+name auxdepthname
+type string
+shape
+reader urword
+optional true
+longname name of auxiliary variable for drainage depth
+description name of a variable listed in AUXILIARY that defines the depth at which drainage discharge will be scaled. If a positive value is specified for the AUXDEPTHNAME AUXILIARY variable, then ELEV is the elevation at which the drain starts to discharge and ELEV + DDRN (assuming DDRN is the AUXDEPTHNAME variable) is the elevation when the drain conductance (COND) scaling factor is 1. If a negative drainage depth value is specified for DDRN, then ELEV + DDRN is the elevation at which the drain starts to discharge and ELEV is the elevation when the conductance (COND) scaling factor is 1. A linear- or cubic-scaling is used to scale the drain conductance (COND) when the Standard or Newton-Raphson Formulation is used, respectively.
+
+block options
 name boundnames
 type keyword
 shape

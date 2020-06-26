@@ -42,12 +42,20 @@ class ModflowUtlobs(mfpackage.MFPackage):
           Otherwise ID is a cellid. If the model discretization is type DIS,
           cellid is three integers (layer, row, column). If the discretization
           is DISV, cellid is two integers (layer, cell number). If the
-          discretization is DISU, cellid is one integer (node number).
+          discretization is DISU, cellid is one integer (node number). This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * id2 (string) Text identifying cell adjacent to cell identified by ID.
           The form of ID2 is as described for ID. ID2 is used for intercell-
           flow observations of a GWF model, for three observation types of the
           LAK Package, for two observation types of the MAW Package, and one
-          observation type of the UZF Package.
+          observation type of the UZF Package. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
     filename : String
         File name for this package.
     pname : String

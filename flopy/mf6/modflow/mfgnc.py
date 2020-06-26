@@ -48,14 +48,21 @@ class ModflowGnc(mfpackage.MFPackage):
           cell. For a grid that uses the DISV input file, CELLIDN is the layer
           number and CELL2D number for the two cells. If the model uses the
           unstructured discretization (DISU) input file, then CELLIDN is the
-          node number for the cell.
+          node number for the cell. This argument is an index variable, which
+          means that it should be treated as zero-based when working with FloPy
+          and Python. Flopy will automatically subtract one when loading index
+          variables and add one when writing index variables.
         * cellidm ((integer, ...)) is the cellid of the connecting cell,
           :math:`m`, to which flow occurs from the ghost node. For a structured
           grid that uses the DIS input file, CELLIDM is the layer, row, and
           column numbers of the cell. For a grid that uses the DISV input file,
           CELLIDM is the layer number and CELL2D number for the two cells. If
           the model uses the unstructured discretization (DISU) input file,
-          then CELLIDM is the node number for the cell.
+          then CELLIDM is the node number for the cell. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
         * cellidsj ((integer, ...)) is the array of CELLIDS for the
           contributing j cells, which contribute to the interpolated head value
           at the ghost node. This item contains one CELLID for each of the
@@ -67,7 +74,10 @@ class ModflowGnc(mfpackage.MFPackage):
           numbers of the cell. For a grid that uses the DISV input file, CELLID
           is the layer number and cell2d number for the two cells. If the model
           uses the unstructured discretization (DISU) input file, then CELLID
-          is the node number for the cell.
+          is the node number for the cell. This argument is an index variable,
+          which means that it should be treated as zero-based when working with
+          FloPy and Python. Flopy will automatically subtract one when loading
+          index variables and add one when writing index variables.
         * alphasj (double) is the contributing factors for each contributing
           node in CELLIDSJ. Note that if the number of actual contributing
           cells is less than NUMALPHAJ for any ghost node, then dummy CELLIDS

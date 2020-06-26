@@ -51,7 +51,7 @@ class Grid(object):
     rotation : float
         rotation angle of model grid, as it is rotated around the origin point
 
-    Properties
+    Attributes
     ----------
     grid_type : enumeration
         type of model grid ('structured', 'vertex_layered',
@@ -136,7 +136,11 @@ class Grid(object):
         LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
         self.use_ref_coords = True
         self._grid_type = grid_type
+        if top is not None:
+            top = top.astype(float)
         self._top = top
+        if botm is not None:
+            botm = botm.astype(float)
         self._botm = botm
         self._idomain = idomain
 
@@ -270,22 +274,30 @@ class Grid(object):
         return copy.deepcopy(self._idomain)
 
     @property
+    def nnodes(self):
+        raise NotImplementedError(
+            'must define nnodes in child class')
+
+    @property
     def shape(self):
         raise NotImplementedError(
-            'must define extent in child '
-            'class to use this base class')
+            'must define shape in child class')
 
     @property
     def extent(self):
         raise NotImplementedError(
-            'must define extent in child '
-            'class to use this base class')
+            'must define extent in child class')
+
+    @property
+    def xyzextent(self):
+        return (np.min(self.xyzvertices[0]), np.max(self.xyzvertices[0]),
+                np.min(self.xyzvertices[1]), np.max(self.xyzvertices[1]),
+                np.min(self.xyzvertices[2]), np.max(self.xyzvertices[2]))
 
     @property
     def grid_lines(self):
         raise NotImplementedError(
-            'must define get_cellcenters in child '
-            'class to use this base class')
+            'must define grid_lines in child class')
 
     @property
     def xcellcenters(self):
@@ -320,8 +332,7 @@ class Grid(object):
     @property
     def xyzvertices(self):
         raise NotImplementedError(
-            'must define xyzgrid in child '
-            'class to use this base class')
+            'must define xyzvertices in child class')
 
     #@property
     #def indices(self):
@@ -409,6 +420,7 @@ class Grid(object):
         # check for reference info in the nam file header
         if namefile is None:
             return False
+        xul, yul = None, None
         header = []
         with open(namefile, 'r') as f:
             for line in f:
@@ -432,7 +444,6 @@ class Grid(object):
             elif "xul" in item.lower():
                 try:
                     xul = float(item.split(':')[1])
-                    self._xoff = self._xul_to_xll(xul)
                     warnings.warn(
                         'xul/yul have been deprecated. Use xll/yll instead.',
                         DeprecationWarning)
@@ -441,7 +452,6 @@ class Grid(object):
             elif "yul" in item.lower():
                 try:
                     yul = float(item.split(':')[1])
-                    self._yoff = self._yul_to_yll(yul)
                     warnings.warn(
                         'xul/yul have been deprecated. Use xll/yll instead.',
                         DeprecationWarning)
@@ -464,11 +474,21 @@ class Grid(object):
                     start_datetime = item.split(':')[1].strip()
                 except:
                     pass
+
+        # we need to rotate the modelgrid first, then we can
+        # calculate the xll and yll from xul and yul
+        if (xul, yul) != (None, None):
+            self.set_coord_info(xoff=self._xul_to_xll(xul),
+                                yoff=self._yul_to_yll(yul),
+                                angrot=self._angrot)
+
         return True
 
     def read_usgs_model_reference_file(self, reffile='usgs.model.reference'):
         """read spatial reference info from the usgs.model.reference file
         https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
+        xul = None
+        yul = None
         if os.path.exists(reffile):
             with open(reffile) as input:
                 for line in input:
@@ -482,17 +502,9 @@ class Grid(object):
                                 elif info[0] == 'yll':
                                     self._yoff = float(data)
                                 elif info[0] == 'xul':
-                                    self._xoff = self._xul_to_xll(
-                                        float(data))
-                                    warnings.warn(
-                                        'xul/yul have been deprecated. Use xll/yll instead.',
-                                        DeprecationWarning)
+                                    xul = float(data)
                                 elif info[0] == 'yul':
-                                    self._yoff = self._yul_to_yll(
-                                        float(data))
-                                    warnings.warn(
-                                        'xul/yul have been deprecated. Use xll/yll instead.',
-                                        DeprecationWarning)
+                                    yul = float(data)
                                 elif info[0] == 'rotation':
                                     self._angrot = float(data)
                                 elif info[0] == 'epsg':
@@ -501,6 +513,14 @@ class Grid(object):
                                     self._proj4 = data
                                 elif info[0] == 'start_date':
                                     start_datetime = data
+
+            # model must be rotated first, before setting xoff and yoff
+            # when xul and yul are provided.
+            if (xul, yul) != (None, None):
+                self.set_coord_info(xoff=self._xul_to_xll(xul),
+                                    yoff=self._yul_to_yll(yul),
+                                    angrot=self._angrot)
+
             return True
         else:
             return False

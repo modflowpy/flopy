@@ -59,6 +59,7 @@ class MFFileAccess(object):
             storage.pre_data_comments = None
 
         # read through any fully commented or empty lines
+        PyListUtil.reset_delimiter_used()
         arr_line = PyListUtil.split_data_line(line)
         while MFComment.is_comment(arr_line, True) and line != '':
             if storage.pre_data_comments:
@@ -379,7 +380,11 @@ class MFFileAccessArray(MFFileAccess):
         PyListUtil.reset_delimiter_used()
         while line != '' and len(data_raw) < data_size:
             line = fd.readline()
-            data_raw += PyListUtil.split_data_line(line, True)
+            arr_line = PyListUtil.split_data_line(line, True)
+            if not MFComment.is_comment(arr_line, True):
+                data_raw += arr_line
+            else:
+                PyListUtil.reset_delimiter_used()
 
         if len(data_raw) < data_size:
             message = 'Not enough data in file {} for data "{}".  ' \
@@ -400,7 +405,13 @@ class MFFileAccessArray(MFFileAccess):
                 traceback_, message,
                 self._simulation_data.debug)
 
-        data_out = np.fromiter(data_raw, dtype=data_type, count=data_size)
+        if data_type == DatumType.double_precision:
+            data_type = np.float64
+        elif data_type == DatumType.integer:
+            data_type = np.int32
+
+        data_out = np.fromiter(data_raw, dtype=data_type,
+                               count=data_size)
         data_out = self._resolve_cellid_numbers_from_file(data_out)
         if close_file:
             fd.close()
@@ -514,7 +525,7 @@ class MFFileAccessArray(MFFileAccess):
             try:
                 storage.store_internal([convert_data(
                     arr_line[1], self._data_dimensions, self.structure.type,
-                    di_struct)], layer, const=True, multiplier=[1.0])
+                    di_struct)], layer, const=True)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -787,9 +798,9 @@ class MFFileAccessList(MFFileAccess):
             return [False, arr_line]
         if len(arr_line) >= 2 and arr_line[0].upper() == 'OPEN/CLOSE':
             try:
-                storage.process_open_close_line(arr_line, 0)
+                storage.process_open_close_line(arr_line, (0,))
             except Exception as ex:
-                message = 'An error occurred while processing the following' \
+                message = 'An error occurred while processing the following ' \
                           'open/close line: {}'.format(current_line)
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -836,8 +847,16 @@ class MFFileAccessList(MFFileAccess):
                 self.simple_line = False
         if current_line is None:
             current_line = file_handle.readline()
+        PyListUtil.reset_delimiter_used()
         arr_line = PyListUtil.split_data_line(current_line)
         line_num = 0
+        # read any pre-data commented lines
+        while current_line and MFComment.is_comment(arr_line, True):
+            arr_line.insert(0, '\n')
+            storage.add_data_line_comment(arr_line, line_num)
+            PyListUtil.reset_delimiter_used()
+            current_line = file_handle.readline()
+            arr_line = PyListUtil.split_data_line(current_line)
 
         try:
             data_line = self._load_list_line(
@@ -867,7 +886,7 @@ class MFFileAccessList(MFFileAccess):
                             convert_data(arr_line[1], self._data_dimensions,
                                          struct.data_item_structures[1].type,
                                          struct.data_item_structures[0]),
-                            0, const=True, multiplier=[1.0])
+                            0, const=True)
                     else:
                         data_rec = storage._build_recarray(arr_line[1], None,
                                                            True)
@@ -945,6 +964,8 @@ class MFFileAccessList(MFFileAccess):
                                                                True)
                             storage.data_dimensions.unlock()
                             return data_rec
+            self.simple_line = self.simple_line \
+                               and self.structure.package_type != 'sfr'
             if self.simple_line:
                 line_len = len(self._last_line_info)
                 if struct.num_optional > 0 and not line_info_processed:
@@ -1403,9 +1424,8 @@ class MFFileAccessList(MFFileAccess):
             cellid_tuple = ()
             if not DatumUtil.is_int(arr_line[data_index]) and \
                     arr_line[data_index].lower() == 'none':
-                # special case where cellid is 'none', store as tuple of
-                # 'none's
-                cellid_tuple = ('none',) * cellid_size
+                # special case where cellid is 'none', store as 'none'
+                cellid_tuple = 'none'
                 if add_to_last_line:
                     self._last_line_info[-1].append([data_index,
                                                      data_item.type,

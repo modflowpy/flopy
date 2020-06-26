@@ -30,7 +30,7 @@ class ModflowLpf(Package):
     ipakcb : int
         A flag that is used to determine if cell-by-cell budget data should be
         saved. If ipakcb is non-zero cell-by-cell budget data will be saved.
-        (default is 53)
+        (default is 0)
     hdry : float
         Is the head that is assigned to cells that are converted to dry during
         a simulation. Although this value plays no role in the model

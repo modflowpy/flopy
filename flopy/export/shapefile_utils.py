@@ -51,9 +51,9 @@ def write_gridlines_shapefile(filename, mg):
             " instead.",
             category=DeprecationWarning)
     else:
-        grid_lines = mg.grid_lines()
+        grid_lines = mg.grid_lines
     for i, line in enumerate(grid_lines):
-        wr.poly([line])
+        wr.line([line])
         wr.record(i)
 
     wr.close()

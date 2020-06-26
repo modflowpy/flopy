@@ -36,8 +36,16 @@ class ModflowGwfhfb(mfpackage.MFPackage):
           that use the DIS and DISV grid types, the layer number for CELLID1
           and CELLID2 must be the same. For all grid types, cells must be
           horizontally adjacent or the program will terminate with an error.
+          This argument is an index variable, which means that it should be
+          treated as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * cellid2 ((integer, ...)) identifier for the second cell. See CELLID1
-          for description of how to specify.
+          for description of how to specify. This argument is an index
+          variable, which means that it should be treated as zero-based when
+          working with FloPy and Python. Flopy will automatically subtract one
+          when loading index variables and add one when writing index
+          variables.
         * hydchr (double) is the hydraulic characteristic of the horizontal-
           flow barrier. The hydraulic characteristic is the barrier hydraulic
           conductivity divided by the width of the horizontal-flow barrier. If

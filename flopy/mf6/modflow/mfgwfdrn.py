@@ -31,6 +31,19 @@ class ModflowGwfdrn(mfpackage.MFPackage):
     auxmultname : string
         * auxmultname (string) name of auxiliary variable to be used as
           multiplier of drain conductance.
+    auxdepthname : string
+        * auxdepthname (string) name of a variable listed in AUXILIARY that
+          defines the depth at which drainage discharge will be scaled. If a
+          positive value is specified for the AUXDEPTHNAME AUXILIARY variable,
+          then ELEV is the elevation at which the drain starts to discharge and
+          ELEV + DDRN (assuming DDRN is the AUXDEPTHNAME variable) is the
+          elevation when the drain conductance (COND) scaling factor is 1. If a
+          negative drainage depth value is specified for DDRN, then ELEV + DDRN
+          is the elevation at which the drain starts to discharge and ELEV is
+          the elevation when the conductance (COND) scaling factor is 1. A
+          linear- or cubic-scaling is used to scale the drain conductance
+          (COND) when the Standard or Newton-Raphson Formulation is used,
+          respectively.
     boundnames : boolean
         * boundnames (boolean) keyword to indicate that boundary names may be
           provided with the list of drain cells.
@@ -73,7 +86,11 @@ class ModflowGwfdrn(mfpackage.MFPackage):
           that uses the DIS input file, CELLID is the layer, row, and column.
           For a grid that uses the DISV input file, CELLID is the layer and
           CELL2D number. If the model uses the unstructured discretization
-          (DISU) input file, CELLID is the node number for the cell.
+          (DISU) input file, CELLID is the node number for the cell. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
         * elev (double) is the elevation of the drain. If the Options block
           includes a TIMESERIESFILE entry (see the "Time-Variable Input"
           section), values can be obtained from a time series by entering the
@@ -120,6 +137,8 @@ class ModflowGwfdrn(mfpackage.MFPackage):
     dfn = [["block options", "name auxiliary", "type string",
             "shape (naux)", "reader urword", "optional true"],
            ["block options", "name auxmultname", "type string", "shape",
+            "reader urword", "optional true"],
+           ["block options", "name auxdepthname", "type string", "shape",
             "reader urword", "optional true"],
            ["block options", "name boundnames", "type keyword", "shape",
             "reader urword", "optional true"],
@@ -179,9 +198,9 @@ class ModflowGwfdrn(mfpackage.MFPackage):
             "optional true"]]
 
     def __init__(self, model, loading_package=False, auxiliary=None,
-                 auxmultname=None, boundnames=None, print_input=None,
-                 print_flows=None, save_flows=None, timeseries=None,
-                 observations=None, mover=None, maxbound=None,
+                 auxmultname=None, auxdepthname=None, boundnames=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 timeseries=None, observations=None, mover=None, maxbound=None,
                  stress_period_data=None, filename=None, pname=None,
                  parent_file=None):
         super(ModflowGwfdrn, self).__init__(model, "drn", filename, pname,
@@ -190,6 +209,7 @@ class ModflowGwfdrn(mfpackage.MFPackage):
         # set up variables
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
+        self.auxdepthname = self.build_mfdata("auxdepthname", auxdepthname)
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)

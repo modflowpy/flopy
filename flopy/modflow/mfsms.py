@@ -304,6 +304,8 @@ class ModflowSms(Package):
         if options is None:
             self.options = []
         else:
+            if not isinstance(options, list):
+                options = [options]
             self.options = options
         self.parent.add_package(self)
         return
@@ -319,21 +321,25 @@ class ModflowSms(Package):
         """
         f = open(self.fn_path, 'w')
         f.write('{}\n'.format(self.heading))
+        nopt = len(self.options)
+        if nopt > 0:
+            f.write(' '.join(self.options) + '\n')
         f.write('{0} {1} {2} {3} {4} {5} {6}\n'.format(
             self.hclose, self.hiclose, self.mxiter, self.iter1,
             self.iprsms, self.nonlinmeth, self.linmeth))
-        if self.nonlinmeth != 0:
+        if self.nonlinmeth != 0 and nopt == 0:
             f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(
                 self.theta, self.akappa, self.gamma, self.amomentum,
                 self.numtrack, self.btol, self.breduc, self.reslim))
-        if self.linmeth == 1:
+        if self.linmeth == 1 and nopt == 0:
             f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(
                 self.iacl, self.norder, self.level, self.north,
                 self.iredsys, self.rrctol, self.idroptol, self.epsrn))
-        if self.linmeth == 2:
+        if self.linmeth == 2 and nopt == 0:
             f.write('{0} {1} {2} {3} {4} {5}\n'.format(
                 self.clin, self.ipc, self.iscl, self.iord,
                 self.rclosepcgu, self.relaxpcgu))
+        f.write('\n')
         f.close()
 
     @staticmethod
@@ -390,13 +396,12 @@ class ModflowSms(Package):
                 break
 
         # Record 1a
-        nopt = 0
         opts = ['simple', 'moderate', 'complex']
         options = []
-        for o in opts:
-            if o in line.lower():
-                options.append(o)
-                nopt += 1
+        firstentry = line.strip().split()[0]
+        if firstentry.lower() in opts:
+            options.append(firstentry)
+        nopt = len(options)
 
         if nopt > 0:
             line = f.readline()

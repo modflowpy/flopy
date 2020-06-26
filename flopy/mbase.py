@@ -24,7 +24,6 @@ from .version import __version__
 from .discretization.modeltime import ModelTime
 from .discretization.grid import Grid
 
-
 # Global variables
 iconst = 1  # Multiplier for individual array elements in integer and real arrays read by MODFLOW's U2DREL, U1DREL and U2DINT.
 iprn = -1  # Printout flag. If >= 0 then array values read are printed in listing file.
@@ -157,6 +156,105 @@ class ModelInterface(object):
         raise NotImplementedError(
             'must define verbose in child '
             'class to use this base class')
+
+    @abc.abstractmethod
+    def check(self, f=None, verbose=True, level=1):
+        raise NotImplementedError(
+            'must define check in child '
+            'class to use this base class')
+
+    def get_package_list(self, ftype=None):
+        """
+        Get a list of all the package names.
+
+        Parameters
+        ----------
+        ftype : str
+            Type of package, 'RIV', 'LPF', etc.
+
+        Returns
+        -------
+        val : list of strings
+            Can be used to see what packages are in the model, and can then
+            be used with get_package to pull out individual packages.
+
+        """
+        val = []
+        for pp in (self.packagelist):
+            if ftype is None:
+                val.append(pp.name[0].upper())
+            elif pp.package_type.lower() == ftype:
+                val.append(pp.name[0].upper())
+        return val
+
+    def _check(self, chk, level=1):
+        """
+        Check model data for common errors.
+
+        Parameters
+        ----------
+        f : str or file handle
+            String defining file name or file handle for summary file
+            of check method output. If a string is passed a file handle
+            is created. If f is None, check method does not write
+            results to a summary file. (default is None)
+        verbose : bool
+            Boolean flag used to determine if check method results are
+            written to the screen
+        level : int
+            Check method analysis level. If level=0, summary checks are
+            performed. If level=1, full checks are performed.
+        summarize : bool
+            Boolean flag used to determine if summary of results is written
+            to the screen
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+
+        >>> import flopy
+        >>> m = flopy.modflow.Modflow.load('model.nam')
+        >>> m.check()
+        """
+
+        # check instance for model-level check
+        results = {}
+
+        for p in self.packagelist:
+            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
+                results[p.name[0]] = p.check(f=None, verbose=False,
+                                             level=level - 1,
+                                             checktype=chk.__class__)
+
+        # model level checks
+        # solver check
+        if self.version in chk.solver_packages.keys():
+            solvers = set(chk.solver_packages[self.version]).intersection(
+                set(self.get_package_list()))
+            if not solvers:
+                chk._add_to_summary('Error', desc='\r    No solver package',
+                                    package='model')
+            elif len(list(solvers)) > 1:
+                for s in solvers:
+                    chk._add_to_summary('Error',
+                                        desc='\r    Multiple solver packages',
+                                        package=s)
+            else:
+                chk.passed.append('Compatible solver package')
+
+        # add package check results to model level check summary
+        for r in results.values():
+            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
+                chk.summary_array = np.append(chk.summary_array,
+                                              r.summary_array).view(
+                    np.recarray)
+                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
+                               for psd in r.passed]
+        chk.summarize()
+        return chk
 
 
 class BaseModel(ModelInterface):
@@ -436,17 +534,20 @@ class BaseModel(ModelInterface):
                         pn = p.name[idx]
                     except:
                         pn = p.name
-                    msg = "WARNING: unit {} ".format(u) + \
-                          "of package {} already in use".format(pn)
-                    print(msg)
+                    if self.verbose:
+                        msg = "\nWARNING:\n    unit {} ".format(u) + \
+                              "of package {} ".format(pn) + \
+                              "already in use."
+                        print(msg)
             self.package_units.append(u)
         for i, pp in enumerate(self.packagelist):
             if pp.allowDuplicates:
                 continue
             elif isinstance(p, type(pp)):
-                print('****Warning -- two packages of the same type: ',
-                      type(p), type(pp))
-                print('replacing existing Package...')
+                if self.verbose:
+                    print("\nWARNING:\n    Two packages of the same type, " +
+                          "Replacing existing " +
+                          "'{}' package.".format(p.name[0]))
                 self.packagelist[i] = p
                 return
         if self.verbose:
@@ -521,7 +622,8 @@ class BaseModel(ModelInterface):
                 return self.dis.start_datetime
             else:
                 return None
-        #return self.get_package(item)
+
+        # return self.get_package(item)
         # to avoid infinite recursion
         if item == "_packagelist" or item == "packagelist":
             raise AttributeError(item)
@@ -565,7 +667,7 @@ class BaseModel(ModelInterface):
     def add_output_file(self, unit, fname=None, extension='cbc',
                         binflag=True, package=None):
         """
-        Add an ascii or binary output file file for a package
+        Add an ascii or binary output file for a package
 
         Parameters
         ----------
@@ -646,8 +748,10 @@ class BaseModel(ModelInterface):
 
         """
         if fname in self.output_fnames:
-            print("BaseModel.add_output() warning: " +
-                  "replacing existing filename {0}".format(fname))
+            if self.verbose:
+                msg = "BaseModel.add_output() warning: " + \
+                      "replacing existing filename {}".format(fname)
+                print(msg)
             idx = self.output_fnames.index(fname)
             if self.verbose:
                 self._output_msg(idx, add=False)
@@ -701,8 +805,8 @@ class BaseModel(ModelInterface):
                     self.output_binflag.pop(i)
                     self.output_packages.pop(i)
         else:
-            raise Exception(
-                ' either fname or unit must be passed to remove_output()')
+            msg = ' either fname or unit must be passed to remove_output()'
+            raise Exception(msg)
         return
 
     def get_output(self, fname=None, unit=None):
@@ -729,8 +833,8 @@ class BaseModel(ModelInterface):
                     return self.output_fnames[i]
             return None
         else:
-            raise Exception(
-                ' either fname or unit must be passed to get_output()')
+            msg = ' either fname or unit must be passed to get_output()'
+            raise Exception(msg)
         return
 
     def set_output_attribute(self, fname=None, unit=None, attr=None):
@@ -760,9 +864,9 @@ class BaseModel(ModelInterface):
                     idx = i
                     break
         else:
-            raise Exception(
-                ' either fname or unit must be passed ' +
-                ' to set_output_attribute()')
+            msg = ' either fname or unit must be passed ' + \
+                  ' to set_output_attribute()'
+            raise Exception(msg)
         if attr is not None:
             if idx is not None:
                 for key, value in attr.items:
@@ -831,16 +935,20 @@ class BaseModel(ModelInterface):
 
         """
         if fname in self.external_fnames:
-            print("BaseModel.add_external() warning: " +
-                  "replacing existing filename {}".format(fname))
+            if self.verbose:
+                msg = "BaseModel.add_external() warning: " + \
+                      "replacing existing filename {}".format(fname)
+                print(msg)
             idx = self.external_fnames.index(fname)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
             self.external_binflag.pop(idx)
             self.external_output.pop(idx)
         if unit in self.external_units:
-            print("BaseModel.add_external() warning: " +
-                  "replacing existing unit {}".format(unit))
+            if self.verbose:
+                msg = "BaseModel.add_external() warning: " + \
+                      "replacing existing unit {}".format(unit)
+                print(msg)
             idx = self.external_units.index(unit)
             self.external_fnames.pop(idx)
             self.external_units.pop(idx)
@@ -876,8 +984,8 @@ class BaseModel(ModelInterface):
                 if u == unit:
                     plist.append(i)
         else:
-            raise Exception(
-                ' either fname or unit must be passed to remove_external()')
+            msg = ' either fname or unit must be passed to remove_external()'
+            raise Exception(msg)
         # remove external file
         j = 0
         for i in plist:
@@ -949,8 +1057,9 @@ class BaseModel(ModelInterface):
             for i in range(len(p.name)):
                 if p.unit_number[i] == 0:
                     continue
-                s = '{:14s} {:5d}  {}'.format(
-                        p.name[i], p.unit_number[i], p.file_name[i])
+                s = '{:14s} '.format(p.name[i]) + \
+                    '{:5d}  '.format(p.unit_number[i]) + \
+                    '{}'.format(p.file_name[i])
                 if p.extra[i]:
                     s += ' ' + p.extra[i]
                 lines.append(s)
@@ -1003,37 +1112,13 @@ class BaseModel(ModelInterface):
                 return pp
         return None
 
-    def get_package_list(self, ftype=None):
-        """
-        Get a list of all the package names.
-
-        Parameters
-        ----------
-        ftype : str
-            Type of package, 'RIV', 'LPF', etc.
-
-        Returns
-        -------
-        val : list of strings
-            Can be used to see what packages are in the model, and can then
-            be used with get_package to pull out individual packages.
-
-        """
-        val = []
-        for pp in (self.packagelist):
-            if ftype is None:
-                val.append(pp.name[0].upper())
-            elif pp.package_type.lower() == ftype:
-                val.append(pp.name[0].upper())
-        return val
-
     def set_version(self, version):
         self.version = version.lower()
 
         # check that this is a valid model version
         if self.version not in list(self.version_types.keys()):
-            err = 'Error: Unsupported model version ({}).'.format(
-                self.version) + \
+            err = 'Error: Unsupported model ' + \
+                  'version ({}).'.format(self.version) + \
                   ' Valid model versions are:'
             for v in list(self.version_types.keys()):
                 err += ' {}'.format(v)
@@ -1367,29 +1452,6 @@ class BaseModel(ModelInterface):
 
         # check instance for model-level check
         chk = utils.check(self, f=f, verbose=verbose, level=level)
-        results = {}
-
-        for p in self.packagelist:
-            if chk.package_check_levels.get(p.name[0].lower(), 0) <= level:
-                results[p.name[0]] = p.check(f=None, verbose=False,
-                                             level=level - 1)
-
-        # model level checks
-        # solver check
-        if self.version in chk.solver_packages.keys():
-            solvers = set(chk.solver_packages[self.version]).intersection(
-                set(self.get_package_list()))
-            if not solvers:
-                chk._add_to_summary('Error', desc='\r    No solver package',
-                                    package='model')
-            elif len(list(solvers)) > 1:
-                for s in solvers:
-                    chk._add_to_summary('Error',
-                                        desc='\r    Multiple solver packages',
-                                        package=s)
-            else:
-                chk.passed.append('Compatible solver package')
-
         # check for unit number conflicts
         package_units = {}
         duplicate_units = {}
@@ -1408,16 +1470,7 @@ class BaseModel(ModelInterface):
         else:
             chk.passed.append('Unit number conflicts')
 
-        # add package check results to model level check summary
-        for k, r in results.items():
-            if r is not None and r.summary_array is not None:  # currently SFR doesn't have one
-                chk.summary_array = np.append(chk.summary_array,
-                                              r.summary_array).view(
-                    np.recarray)
-                chk.passed += ['{} package: {}'.format(r.package.name[0], psd)
-                               for psd in r.passed]
-        chk.summarize()
-        return chk
+        return self._check(chk, level)
 
     def plot(self, SelPackList=None, **kwargs):
         """
