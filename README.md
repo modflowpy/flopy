@@ -38,7 +38,7 @@ The release candidate version can also be installed from the git repository usin
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://modflowpy.github.io/flopydoc/](https://modflowpy.github.io/flopydoc/)
 
 
 Getting Started

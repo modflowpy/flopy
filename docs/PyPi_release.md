@@ -6,27 +6,16 @@ FloPy includes support for MODFLOW 6, MODFLOW-2005, MODFLOW-NWT, MODFLOW-USG, an
 For general modeling issues, please consult a modeling forum, such as the [MODFLOW Users Group](https://groups.google.com/forum/#!forum/modflow).  Other MODFLOW resources are listed in the [MODFLOW Resources](https://github.com/modflowpy/flopy#modflow-resources) section.
 
 
-Installation
------------------------------------------------
-
-FloPy requires **Python** 3.5 (or higher) and **NumPy** 1.9 (or higher).  Dependencies for optional FloPy methods are summarized [here](docs/flopy_method_dependencies.md).
-
-To install FloPy type:
-
-    conda install -c conda-forge flopy
-
-or
-
-    pip install flopy
-
-
-The release candidate version can also be installed from the git repository using the instructions provided [below](#relcand).
-
-
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [http://modflowpy.github.io/flopydoc/](http://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://modflowpy.github.io/flopydoc/](https://modflowpy.github.io/flopydoc/)
+
+
+Contributing
+------------------------------------------------
+
+Bug reports, code contributions, or improvements to the documentation are welcome from the community. Prior to contributing, please read up on our guidelines for [contributing](https://github.com/modflowpy/flopy/blob/develop/CONTRIBUTING.md) and then check out one of our issues in the [hotlist: community-help](https://github.com/modflowpy/flopy/labels/hotlist%3A%20community%20help).
 
 
 How to Cite
@@ -53,14 +42,3 @@ constitute any such warranty. The software is provided on the condition that
 neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
 
-Installation
------------------------------------------------
-To install FloPy version 3.3.2:
-```
-pip install flopy
-```
-
-To update to FloPy version 3.3.2:
-```
-pip install flopy --upgrade
-```
