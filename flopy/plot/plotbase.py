@@ -340,7 +340,6 @@ class PlotCrossSection(object):
         # Find package to plot
         if package is not None:
             p = package
-            ftype = p.name[0]
         elif self.model is not None:
             if name is None:
                 raise Exception('ftype not specified')
