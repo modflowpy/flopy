@@ -178,7 +178,7 @@ class Modpath7Sim(Package):
         stoptime : float
             User-specified value of tracking time at which to stop a particle
             tracking simulation. Stop time is only used if the stop time option
-            is 'specified'. If stoptime is None amd the stop time option is
+            is 'specified'. If stoptime is None and the stop time option is
             'specified' particles will be terminated at the end of the last
             time step if 'forward' tracking or the beginning of the first time
             step if 'backward' tracking (default is None).
@@ -442,6 +442,10 @@ class Modpath7Sim(Package):
                     stoptime = self.parent.time_end
                 else:
                     stoptime = 0.
+        # set stoptime to the end of the simulation if it still None.
+        else:
+            stoptime = self.parent.time_end
+
         self.stoptime = stoptime
 
         # timepointdata
@@ -471,7 +475,7 @@ class Modpath7Sim(Package):
                         timepointoption = 1
         else:
             timepointoption = 1
-            timepointdata = [100, self.parent.time_end / 100.]
+            timepointdata = [100, self.stoptime / 100.]
             timepointdata[1] = np.array([timepointdata[1]])
         self.timepointoption = timepointoption
         self.timepointdata = timepointdata
