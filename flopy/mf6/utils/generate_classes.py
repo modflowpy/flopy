@@ -9,7 +9,6 @@ from .createpackages import create_packages
 thisfilepath = os.path.dirname(os.path.abspath( __file__ ))
 flopypth = os.path.join(thisfilepath, '..', '..')
 flopypth = os.path.abspath(flopypth)
-print('flopy is installed in {}'.format(flopypth))
 protected_dfns = ['flopy.dfn']
 
 
