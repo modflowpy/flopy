@@ -71,7 +71,7 @@ def get_disclaimer():
     # get current branch
     branch = get_branch()
 
-    if 'release' in branch.lower() or 'master' in branch.lower():
+    if branch.lower().startswith('release') or 'master' in branch.lower():
         disclaimer = approved
         is_approved = True
     else:
@@ -401,14 +401,22 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     for line in lines:
         if line == 'Introduction':
             writeline = True
+        elif line == 'Installation':
+            writeline = False
+        elif line == 'Documentation':
+            writeline = True
         elif line == 'Getting Started':
             writeline = False
+        elif line == 'Contributing':
+            writeline = True
         elif line == 'How to Cite':
             writeline = True
         elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
             writeline = True
             line = get_software_citation(version, is_approved)
         elif line == 'MODFLOW Resources':
+            writeline = False
+        elif 'Installing the latest FloPy release candidate' in line:
             writeline = False
         elif line == 'Disclaimer':
             writeline = True
@@ -441,11 +449,6 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
 
     # close the USGS_release.md file
     f.close()
-
-    line = line.replace(cweb, 'flopy')
-    line = line.replace(' from the USGS FloPy website', '')
-
-    f2.write(line)
 
     # close the PyPi_release.md file
     f2.close()
