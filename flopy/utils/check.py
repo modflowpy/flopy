@@ -773,5 +773,4 @@ class mf6check(check):
         if idomain is None:
             return np.ones(shape=mg.shape, dtype=bool)
         else:
-            id_active_zero = idomain - np.ones(shape=mg.shape, dtype=np.int32)
-            return np.invert(np.ma.make_mask(id_active_zero, shrink=False))
+            return idomain > 0

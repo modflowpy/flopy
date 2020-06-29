@@ -366,7 +366,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                         self._simulation_data.debug)
                                 idomain_val = idomain_val[cellid_part]
                             # cellid should be at an active cell
-                            if idomain_val != 1:
+                            if idomain_val < 1:
                                 message = 'Cellid {} is outside of the ' \
                                           'active model grid' \
                                           '.'.format(record[index])
