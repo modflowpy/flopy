@@ -378,7 +378,7 @@ def np002():
     botm = {'filename': botm_file, 'factor': 1.0}
     dis_package = ModflowGwfdis(model, length_units='FEET', nlay=1, nrow=1,
                                 ncol=10, delr=500.0, delc=500.0,
-                                top=top, botm=botm,
+                                top=top, botm=botm, idomain=2,
                                 filename='{}.dis'.format(model_name))
     ic_vals = [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
                100.0]
