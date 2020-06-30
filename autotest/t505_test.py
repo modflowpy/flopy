@@ -505,9 +505,31 @@ def test021_twri():
                              scaling_method='NONE', reordering_method='NONE',
                              relaxation_factor=0.97)
     sim.register_ims_package(ims_package, [model.name])
+    # build top binary data
+    text = 'TOP'
+    fname = 'top.bin'
+    nrow = 15
+    ncol = 15
+    pth = os.path.join(sim.simulation_data.mfpath.get_sim_path(), fname)
+    f = open(pth, 'wb')
+    header = flopy.utils.BinaryHeader.create(bintype='HEAD',
+                                             precision='double',
+                                             text=text,
+                                             nrow=nrow,
+                                             ncol=ncol,
+                                             ilay=1, pertim=1.0,
+                                             totim=1.0, kstp=1,
+                                             kper=1)
+    flopy.utils.Util2d.write_bin((nrow, ncol), f,
+                                 np.full((nrow, ncol), 200.0,
+                                 dtype=np.float64), header_data=header)
+    f.close()
+    top = {'factor': 1., 'filename': fname, 'data': None, 'binary': True,
+           'iprn': 1}
+
     dis_package = flopy.mf6.ModflowGwfdis(model, nlay=3, nrow=15, ncol=15,
                                           delr=5000.0, delc=5000.0,
-                                          top=200.0, botm=[-200, -300, -450],
+                                          top=top, botm=[-200, -300, -450],
                                           filename='{}.dis'.format(model_name))
     strt = [{'filename': 'strt.txt', 'factor': 1.0, 'data': 0.0},
             {'filename': 'strt2.bin', 'factor': 1.0, 'data': 1.0,
