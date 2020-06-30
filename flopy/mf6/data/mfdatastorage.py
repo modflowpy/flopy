@@ -1626,7 +1626,7 @@ class DataStorage(object):
                         read_file, self.get_data_dimensions(layer),
                         self.get_data_size(layer), self._data_type,
                         self._model_or_sim.modeldiscrit,
-                        not self.layered)[0] * mult
+                        False)[0] * mult
                 else:
                     data_out = file_access.read_text_data_from_file(
                         self.get_data_size(layer), np_data_type,
