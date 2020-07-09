@@ -399,20 +399,11 @@ class check:
                 dis = self.model.disu
 
             # make ibound of same shape as thicknesses/botm for quasi-3D models
+            active = self.model.bas6.ibound.array != 0
             if include_cbd and dis.laycbd.sum() > 0:
-                ncbd = np.sum(dis.laycbd.array > 0)
-                active = np.empty((dis.nlay + ncbd, dis.nrow, dis.ncol),
-                                  dtype=int)
-                l = 0
-                for cbd in dis.laycbd:
-                    active[l, :, :] = self.model.bas6.ibound.array[l, :,
-                                      :] != 0
-                    if cbd > 0:
-                        active[l + 1, :, :] = active[l, :, :]
-                    l += 1
-                active[-1, :, :] = self.model.bas6.ibound.array[-1, :, :] != 0
-            else:
-                active = self.model.bas6.ibound.array != 0
+                laycbd = np.flatnonzero(dis.laycbd.array > 0) # cbd layer index
+                active = np.insert(active, laycbd,  active[laycbd], axis=0)
+
         else:  # if bas package is missing
             active = np.ones(inds, dtype=bool)
         return active
