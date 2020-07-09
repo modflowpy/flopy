@@ -1508,7 +1508,7 @@ def export_contourf(filename, contours, fieldname='level', epsg=None,
 
     try:
         from shapely import geometry
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         raise ImportError('export_contourf requires python shapely package')
 
     from ..utils.geometry import Polygon
