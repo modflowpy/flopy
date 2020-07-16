@@ -6,7 +6,7 @@ import inspect
 import numpy as np
 from ..utils.mfenums import DiscretizationType
 from ..data import mfstructure, mfdata
-from ..mfbase import MFDataException, ExtFileAction
+from ..mfbase import MFDataException, ExtFileAction, VerbosityLevel
 from .mfstructure import DatumType
 from ...utils import datautil
 from ...datbase import DataListInterface, DataType
@@ -246,8 +246,13 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data = self._get_data()
                 # if not empty dataset
                 if data is not None:
+                    if self._simulation_data.verbosity_level.value >= \
+                            VerbosityLevel.verbose.value:
+                        print('Storing {} to external file {}..'
+                              '.'.format(self.structure.name,
+                                         external_file_path))
                     external_data = {'filename': external_file_path,
-                                     'data': self._get_data(),
+                                     'data': data,
                                      'binary': binary}
                     self._set_data(external_data)
 
