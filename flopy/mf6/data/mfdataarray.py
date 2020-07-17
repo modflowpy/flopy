@@ -4,7 +4,7 @@ from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 from ...utils.datautil import MultiList
-from ..mfbase import ExtFileAction, MFDataException
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 from .mffileaccess import MFFileAccessArray
@@ -435,6 +435,11 @@ class MFArray(MFMultiDimVar):
                 continue
             try:
                 # store layer's data in external file
+                if self._simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.verbose.value:
+                    print('Storing {} layer {} to external file {}..'
+                          '.'.format(self.structure.name, current_layer[0]+1,
+                                     file_path))
                 factor = storage.layer_storage[current_layer].factor
                 external_data = {'filename': file_path,
                                  'data': self._get_data(current_layer, True),

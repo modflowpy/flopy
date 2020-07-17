@@ -328,6 +328,11 @@ class MFScalar(mfdata.MFData):
                         if data_item.type == DatumType.keyword:
                             if current_data is not None and current_data != \
                                     False:
+                                if isinstance(data[index], str) and \
+                                        data[index] == '#':
+                                    # if data has been commented out,
+                                    # keep the comment
+                                    text_line.append(data[index])
                                 text_line.append(data_item.name.upper())
                         else:
                             try:
