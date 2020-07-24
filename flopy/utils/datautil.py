@@ -252,6 +252,7 @@ class PyListUtil(object):
             # apart the most
             max_split_size = len(clean_line)
             max_split_type = None
+            max_split_list = clean_line
             for delimiter in PyListUtil.delimiter_list:
                 comment_split = line.strip().split('#')
                 alt_split = comment_split[0].strip().split(delimiter)
@@ -268,9 +269,10 @@ class PyListUtil(object):
                             PyListUtil.delimiter_list[max_split_type]:
                         max_split_size = len(alt_split)
                         max_split_type = delimiter
+                        max_split_list = alt_split
 
             if max_split_type is not None:
-                clean_line = line.strip().split(max_split_type)
+                clean_line = max_split_list
                 if PyListUtil.line_num == 0:
                     PyListUtil.delimiter_used = max_split_type
                 elif PyListUtil.delimiter_used != max_split_type:

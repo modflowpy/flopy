@@ -1,5 +1,81 @@
 FloPy Changes
 -----------------------------------------------
+### Version 3.3.2
+
+* Bug fixes:
+
+    * [fix(Modpath7Sim)](https://github.com/modflowpy/flopy/commit/b27fccdee589c772e6e66160f27d60a8dd485645): Fix timepointinterval calculation for timepointoption 3 (#927). Committed by jdhughes-usgs on 2020-06-26.
+
+### Version 3.3.1
+
+* New features:
+
+    * [feat(ModflowAg)](https://github.com/modflowpy/flopy/commit/c89b2d83a81125c986c05df57ffc980fe10fd663): Add the modflowag package for nwt (pull request #922). Committed by Joshua Larsen on 2020-06-25.
+    * [feat(GridIntersect)](https://github.com/modflowpy/flopy/commit/176c9b45eb158217b1aeb0657d60ed06739e53e6): #902 (#903). Committed by Davíd Brakenhoff on 2020-06-10.
+    * [feat(mbase)](https://github.com/modflowpy/flopy/commit/4fc61d573c108be7601a2e8479a86c35040998c2): Suppress duplicate package warning if verbose is false (#908). Committed by Hughes, J.D on 2020-06-09.
+    * [feat(ModflowSms)](https://github.com/modflowpy/flopy/commit/f539d072e20cb5654fab8826ac3bbaf7d1f8b52e): Add support for simple, moderate, complex (#906). Committed by langevin-usgs on 2020-06-09.
+    * [feat(str)](https://github.com/modflowpy/flopy/commit/3182f57479c1a45d614151867f419a0d35f7f2c2): Add irdflg and iptflg control to str (#905). Committed by Hughes, J.D on 2020-06-09.
+    * [feat(Mf6ListBudget)](https://github.com/modflowpy/flopy/commit/04b74bd8fb4ed71cf0ed07f721204296b9fd4388): Add support for mf6 budgets with multiple packages with same name (#900). Committed by langevin-usgs on 2020-06-02.
+    * [feat(mfchd.py)](https://github.com/modflowpy/flopy/commit/88fbd4ccdf837dd4b2a70795522fcaa0a2470dfe): Prevent write chk-file always (#869). Committed by Ralf Junghanns on 2020-05-08.
+    * [feat(set all data external)](https://github.com/modflowpy/flopy/commit/0336b5c4f6c62994a7ffea26318240fbaa0ca1fb): Set all data external for simulation (#846). Committed by spaulins-usgs on 2020-04-08.
+    * [feat(vtk)](https://github.com/modflowpy/flopy/commit/e43dccc29d87e182aaa82687968d98391fa78e5d): Improve export at vertices (#844). Committed by Etienne Bresciani on 2020-04-06.
+    * [feat(netcdf)](https://github.com/modflowpy/flopy/commit/fb942b4675c335247b81f9287bdb8cdb3bcf360b): Use modern features from pyproj>=2.2.0 (#840). Committed by Mike Taves on 2020-03-31.
+    * [feat(vtk)](https://github.com/modflowpy/flopy/commit/b975368a9c5a25df616b024a08450056e92b6426): Export vectors to vtk. Committed by Etienne Bresciani on 2020-03-31.
+    * [feat(vtk)](https://github.com/modflowpy/flopy/commit/13c1dd28b9c470c70aac624b70888f5f6badf795): Export in .vti and .vtr when possible. Committed by Etienne Bresciani on 2020-03-28.
+    * [feat(vectors)](https://github.com/modflowpy/flopy/commit/1284871e5b8ed26c9d925e28295c2098a76b1bc9): Vector plots when stresses applied along boundaries (#817). Committed by langevin-usgs on 2020-03-05.
+    * [feat(plot_bc)](https://github.com/modflowpy/flopy/commit/207cd1ee5dde116e5b8912232d9b94a9c9304161): Updated plot_bc for maw, uzf, sfr, and multiple bc packages (#808). Committed by Joshua Larsen on 2020-02-11.
+    * [feat(disl grids)](https://github.com/modflowpy/flopy/commit/469727bcb695ee42611f3df227830ef3b25853f6): Support for 1d vertex grids. fix for writing gridlines to shapefile (#799). Committed by spaulins-usgs on 2020-02-04.
+    * [feat(zb netcdf)](https://github.com/modflowpy/flopy/commit/491f4fe3923a942e9a0d535a7da54173c4df1204): Zonebudget netcdf export support added  (#781). Committed by Joshua Larsen on 2020-01-17.
+    * [feat(mf6 checker)](https://github.com/modflowpy/flopy/commit/088f147f1d761875f3a1ffabdda82312c002305a): Input data check for mf6 (#779). Committed by spaulins-usgs on 2020-01-16.
+
+
+* Bug fixes:
+
+    * [fix(#280, #835)](https://github.com/modflowpy/flopy/commit/6dae1b0ed5df6836ce6ea981de7050621a90477f): Set_all_data_external now includes constants, cellids in list data are checked (#920). Committed by spaulins-usgs on 2020-06-23.
+    * [fix(mfsfr2.check)](https://github.com/modflowpy/flopy/commit/796b7b15385de0181cabd33d3bc1915bfa76a83b): Negative segments for lakes no longer included in segment numbering order check (#915). Committed by aleaf on 2020-06-23.
+    * [fix(GridIntersect)](https://github.com/modflowpy/flopy/commit/d5672f585faa31ead48973834d9b30cf70512cba): Fixes #916 and #917 (#918). Committed by Davíd Brakenhoff on 2020-06-22.
+    * [fix(ZoneBudget)](https://github.com/modflowpy/flopy/commit/0207372769c5389835c555820c11fc377a4370c7): Fix faulty logic in ZoneBudget (#911). Committed by Jason Bellino on 2020-06-22.
+    * [fix(SwtListBudget)](https://github.com/modflowpy/flopy/commit/eed5afdd03917256b097a797ec1137c2b80fb8a1): Totim was not being read correctly for seawat list file (#910). Committed by langevin-usgs on 2020-06-10.
+    * [fix(Seawat.modelgrid)](https://github.com/modflowpy/flopy/commit/7a31a1d7a210894d9970e2e7a3a6a6453518289b): Pass lenuni from dis file into modelgrid instance (#901). Committed by Joshua Larsen on 2020-06-02.
+    * [fix(mfsimulation)](https://github.com/modflowpy/flopy/commit/0958b28added4b572b168c35657f1d5fd968e952): Repair change for case insensitive model names (#897). Committed by langevin-usgs on 2020-06-01.
+    * [fix(_plot_util3d_helper, export_array)](https://github.com/modflowpy/flopy/commit/617b98dd0f5750c7cf4d1a9e8376e00fdb4e94bf): (#895). Committed by Joshua Larsen on 2020-06-01.
+    * [fix()](https://github.com/modflowpy/flopy/commit/8e70c9284490b220ef6fe759b0fafbb5d252f1ae): fix building in clean env (#894). Committed by Ritchie Vink on 2020-05-28.
+    * [fix(setup.py)](https://github.com/modflowpy/flopy/commit/b80a89c18821fe1bc7375c15e4c03d1e0be70916): Read package name, version, etc. from version.py (#893). Committed by Hughes, J.D on 2020-05-26.
+    * [fix(MFSimulation)](https://github.com/modflowpy/flopy/commit/3cec7929f323e7753ef80e95b31a64a6105dce41): Remove case sensitivity from register_ims_package() (#890). Committed by Joshua Larsen on 2020-05-25.
+    * [fix(modelgrid)](https://github.com/modflowpy/flopy/commit/bb861ac2f05e7e8d38a832d03ae0a45a2249d10d): Fix offset for xul and yul in read_usgs_model_reference_file and attribs_from_namfile_header (#889). Committed by Joshua Larsen on 2020-05-19.
+    * [fix(#886)](https://github.com/modflowpy/flopy/commit/f4e5ed39c5316e9bd2b7941c31f1b91253cd51e5): Mfarray aux variable now always returned as an numpy.ndarray. fixed problem with pylistutil not fully supporting numpy.ndarray type. (#887). Committed by spaulins-usgs on 2020-05-19.
+    * [fix(CellBudgetFile)](https://github.com/modflowpy/flopy/commit/29d7f849f8d2f160a537494661bd096a9e1c1253): Update for auto precision with imeth = 5 or 6 (#876). Committed by Joshua Larsen on 2020-05-14.
+    * [fix(#870)](https://github.com/modflowpy/flopy/commit/cbf1f65a8f3389f55bb55249ce8c358ac06cf75c): Update ims name file record after removing ims package (#880). Committed by Joshua Larsen on 2020-05-14.
+    * [fix](https://github.com/modflowpy/flopy/commit/e3a6c26fe8ad39c69cd5fec78064f12d2edbb521): #868, #874, #879 (#881). Committed by spaulins-usgs on 2020-05-14.
+    * [fix(#867)](https://github.com/modflowpy/flopy/commit/265fc7c64956b9165b9be2607680de086a9cf973): Fixed minimum record entry count for lists to never include keywords in the count (#875). Committed by spaulins-usgs on 2020-05-11.
+    * [fix(SfrFile)](https://github.com/modflowpy/flopy/commit/4100de2b80cdb542e820f3b41a88eaf9865fa63d): Update sfrfile for streambed elevation when present (#866). Committed by Joshua Larsen on 2020-05-04.
+    * [fix(#831,#858)](https://github.com/modflowpy/flopy/commit/a177d59c691367e568de07b340d53e8b1f2322fb): Data length check and case-insensitive lookup (#864). Committed by spaulins-usgs on 2020-05-01.
+    * [fix(#856)](https://github.com/modflowpy/flopy/commit/c45a5e5f1fb2f8224d87307564b68dc1c30063d9): Specifying period data with value none now only removes data from that period. also, fixed an unrelated problem by updating the multi-package list. (#857). Committed by spaulins-usgs on 2020-04-22.
+    * [fix(plot_array)](https://github.com/modflowpy/flopy/commit/f6545ff28004f4f6573e07aab939d774230df0a6): Update plot_array method to mask using np.ma.masked_values (#851). Committed by Joshua Larsen on 2020-04-15.
+    * [fix(ModflowDis)](https://github.com/modflowpy/flopy/commit/52ecd98a11fc4f459c9bd0b59cb854ff402eeb08): Zero based get_node() and get_lrc()… (#847). Committed by Joshua Larsen on 2020-04-10.
+    * [fix(binaryfile_utils, CellbudgetFile)](https://github.com/modflowpy/flopy/commit/f514a22a38264dc81c0db6dae62db4beae8df227): Update for imeth == 6 (#823). Committed by Joshua Larsen on 2020-04-10.
+    * [fix(utils.gridintersect)](https://github.com/modflowpy/flopy/commit/14040ff605dfe496d8ec88ca8eeb3f73daeee06e): Bug in gridintersect for vertex grids (#845). Committed by Davíd Brakenhoff on 2020-04-06.
+    * [fix(mflmt.py)](https://github.com/modflowpy/flopy/commit/1f322f0ef50be9dfaa2252cacb091aded4159113): Clean up docstring for package_flows argument in lmt. Committed by emorway-usgs on 2020-03-31.
+    * [fix(str)](https://github.com/modflowpy/flopy/commit/59cac5c0466b497c36e833784b436d4a5e47fcd5): Add consistent fixed and free format approach (#838). Committed by Hughes, J.D on 2020-03-31.
+    * [fix(vtk)](https://github.com/modflowpy/flopy/commit/aa9f3148008dd4c23d86db4e4dae5bae8c8bc564): Issues related to nan and type cast. Committed by Etienne Bresciani on 2020-03-31.
+    * [fix(pyproj)](https://github.com/modflowpy/flopy/commit/9a1b9e344aefad4ed222bd8d10eb6b9000c9c7d0): Pyproj.proj's errcheck keyword option not reliable (#837). Committed by Mike Taves on 2020-03-29.
+    * [fix](https://github.com/modflowpy/flopy/commit/4bfab916592784180d57df59b78d190e28c9099b): (#830): handling 'none' cellids in sfr package (#834). Committed by spaulins-usgs on 2020-03-25.
+    * [fix()](https://github.com/modflowpy/flopy/commit/90a498ea2356e0eca7ddbf1c89a0f5f12f14b5a3): Fix quasi3d plotting (#819). Committed by Ruben Caljé on 2020-03-02.
+    * [fix(ModflowSfr2.export)](https://github.com/modflowpy/flopy/commit/b6c9a3a6668ee8a35fda785da3709bd4842b7ba9): Update modflowsfr2.export() to use grid instead of spatialreference (#820). Committed by Joshua Larsen on 2020-02-28.
+    * [fix(flopy3_MT3DMS_examples.ipynb)](https://github.com/modflowpy/flopy/commit/65e8adaeea55a14a3d61c125801741c5b9ceb699): Wrong indices were indexed (#815). Committed by Eric Morway on 2020-02-20.
+    * [fix(build_exes.py)](https://github.com/modflowpy/flopy/commit/f3136a233274baa63ace7555d862c43bc67894f5): Fix bugs for windows (#810) (#813). Committed by Etienne Bresciani on 2020-02-18.
+    * [fix(mflist)](https://github.com/modflowpy/flopy/commit/4a885a107ee5ead5a116f95bb1f7f60549cba295): Default value not working (#812). Committed by langevin-usgs on 2020-02-13.
+    * [fix(flopy3_MT3DMS_examples.ipynb)](https://github.com/modflowpy/flopy/commit/0d152513d4ecb84fd474cb0495dd0676f05d5b72): Match constant heads to original problem (#809). Committed by Eric Morway on 2020-02-11.
+    * [fix(vtk)](https://github.com/modflowpy/flopy/commit/ab8120bc3dc1214fef90077ade226471900b89d5): Change in export_cbc output file name (#795). Committed by rodrperezi on 2020-01-30.
+    * [fix(mf6)](https://github.com/modflowpy/flopy/commit/84ee8a72b00fbcd8e7f396af9b356170634cfda6): Update create packages to support additional models (#790). Committed by Hughes, J.D on 2020-01-24.
+    * [fix(remove_package)](https://github.com/modflowpy/flopy/commit/102d25b23dc0281cccf65eb0a9d3cc8b05755484): Fixed remove_package to rebuild namefile recarray correctly after removing package - issue #776 (#784). Committed by spaulins-usgs on 2020-01-17.
+    * [fix(gridgen)](https://github.com/modflowpy/flopy/commit/061c72771ae4bc023e970bf9048a4c53bba2ba80): X, y center was not correct for rotated grids (#783). Committed by langevin-usgs on 2020-01-16.
+    * [fix(mtssm.py)](https://github.com/modflowpy/flopy/commit/f7886e2762464f69ae6b1e3ef1124bbee017b8a8): Handle 1st stress period with incrch equal to -1 (#780). Committed by Eric Morway on 2020-01-16.
+    * [fix(vtk)](https://github.com/modflowpy/flopy/commit/73f70518238ff383628ba25066c41647e875dc2e): Change in export_model when packages_names is none (#770). Committed by rodrperezi on 2019-12-30.
+    * [fix()](https://github.com/modflowpy/flopy/commit/ec71e6ce2d2f4bc3d05e3172cccba6c42bf26b87): fix(repeating blocks) (#771). Committed by spaulins-usgs on 2019-12-30.
+    * [fix(replace package)](https://github.com/modflowpy/flopy/commit/cf3586f0602acd20c9c672b2c763f09c6a252e00): When a second package of the same type is added to a model, the model now checks to see if the package type supports multiple packages. if it does not it automatically removes the first package before adding the second (#767). (#768). Committed by spaulins-usgs on 2019-12-18.
+    * [fix(Mflist)](https://github.com/modflowpy/flopy/commit/51d80641e81f844490306d2cddefacb21bda8302): Allow none as a list entry (#765). Committed by langevin-usgs on 2019-12-16.
+
 ### Version 3.3.0
 
 * Dropped support for python 2.7

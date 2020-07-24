@@ -4,7 +4,7 @@ from collections import OrderedDict
 from ..data.mfstructure import DatumType
 from .mfdatastorage import DataStorage, DataStructureType, DataStorageType
 from ...utils.datautil import MultiList
-from ..mfbase import ExtFileAction, MFDataException
+from ..mfbase import ExtFileAction, MFDataException, VerbosityLevel
 from ..utils.mfenums import DiscretizationType
 from ...datbase import DataType
 from .mffileaccess import MFFileAccessArray
@@ -258,7 +258,7 @@ class MFArray(MFMultiDimVar):
                 k = (k,)
             # for layered data treat k as a layer number
             try:
-               storage.layer_storage[k]._set_data(value)
+                storage.layer_storage[k]._set_data(value)
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(self.structure.get_model(),
@@ -393,12 +393,16 @@ class MFArray(MFMultiDimVar):
             for index in range(0, storage.layer_storage.get_total_size()):
                 if replace_existing_external or \
                         storage.layer_storage[index].data_storage_type == \
-                        DataStorageType.internal_array:
+                        DataStorageType.internal_array or \
+                        storage.layer_storage[index].data_storage_type == \
+                        DataStorageType.internal_constant:
                     layer_list.append(index)
         else:
             if replace_existing_external or \
                     storage.layer_storage[layer].data_storage_type == \
-                    DataStorageType.internal_array:
+                    DataStorageType.internal_array or \
+                    storage.layer_storage[layer].data_storage_type == \
+                    DataStorageType.internal_constant:
                 layer_list = [layer]
             else:
                 layer_list = []
@@ -431,6 +435,11 @@ class MFArray(MFMultiDimVar):
                 continue
             try:
                 # store layer's data in external file
+                if self._simulation_data.verbosity_level.value >= \
+                        VerbosityLevel.verbose.value:
+                    print('Storing {} layer {} to external file {}..'
+                          '.'.format(self.structure.name, current_layer[0]+1,
+                                     file_path))
                 factor = storage.layer_storage[current_layer].factor
                 external_data = {'filename': file_path,
                                  'data': self._get_data(current_layer, True),

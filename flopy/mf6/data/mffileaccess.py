@@ -832,6 +832,7 @@ class MFFileAccessList(MFFileAccess):
     def read_list_data_from_file(self, file_handle, storage, current_key,
                                  current_line=None, data_line=None,
                                  store_internal=True):
+        self._data_dimensions.package_dim.locked = True
         data_rec = None
         data_loaded = []
         self._temp_dict = {}
@@ -1072,6 +1073,7 @@ class MFFileAccessList(MFFileAccess):
             # store as rec array
             storage.store_internal(data_loaded, None, False, current_key)
             storage.data_dimensions.unlock()
+        self._data_dimensions.package_dim.locked = False
         if not store_internal:
             return data_rec
         else:

@@ -928,7 +928,7 @@ class NetCdf(object):
         self.log("{} group created".format(group))
 
         self.log("creating {} group dimensions".format(group))
-        for ix, dim in enumerate(dimensions):
+        for dim in dimensions:
             if dim == "time":
                 if "time" not in dimension_data:
                     time_values = np.cumsum(self.model_time.perlen)

@@ -134,7 +134,7 @@ class ZoneBudget(object):
             izone[:] = z[0, :, :]
         else:
             e = 'Shape of the zone array is not recognized: {}'.format(
-                    z.shape)
+                z.shape)
             raise Exception(e)
 
         self.izone = izone
@@ -144,7 +144,7 @@ class ZoneBudget(object):
 
         if aliases is not None:
             s = 'Input aliases not recognized. Please pass a dictionary ' \
-                                     'with key,value pairs of zone/alias.'
+                'with key,value pairs of zone/alias.'
             assert isinstance(aliases, dict), s
             # Replace the relevant field names (ignore zone 0)
             seen = []
@@ -896,8 +896,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzl[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -906,8 +906,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzl[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi[tzi != 0]]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -923,8 +923,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzr[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -933,8 +933,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzr[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1023,8 +1023,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1033,8 +1033,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1050,8 +1050,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1060,8 +1060,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1150,8 +1150,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1160,8 +1160,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1177,8 +1177,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1187,8 +1187,8 @@ class ZoneBudget(object):
                 idx = np.where(
                     (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
                 fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
+                                              nz[idx],
+                                              q[idx])
                 fz = ['TO_CONSTANT_HEAD'] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
                 self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
@@ -1680,6 +1680,41 @@ def sort_tuple(tup, n=2):
     return tuple(sorted(tup, key=lambda t: t[:n]))
 
 
+def get_totim_modflow6(tdis):
+    """
+    Create a totim array from the tdis file in modflow 6
+
+    Parameters
+    ----------
+    tdis : ModflowTdis object
+
+    Returns
+    -------
+        totim : np.ndarray
+
+    """
+    recarray = tdis.perioddata.array
+    delt = []
+    for record in recarray:
+        perlen = record.perlen
+        nstp = record.nstp
+        tsmult = record.tsmult
+        for stp in range(nstp):
+            if stp == 0:
+                if tsmult != 1.0:
+                    dt = perlen * (tsmult - 1) / ((tsmult ** nstp) - 1)
+                else:
+                    dt = perlen / nstp
+            else:
+                dt = delt[-1] * tsmult
+
+            delt.append(dt)
+
+    totim = np.add.accumulate(delt)
+
+    return totim
+
+
 class ZBNetOutput(object):
     """
     Class that holds zonebudget netcdf output and allows export utilities
@@ -1700,6 +1735,7 @@ class ZBNetOutput(object):
         default) or if the data have been processed to
         volumetric values "L^3" (False)
     """
+
     def __init__(self, zones, time, arrays, zone_array, flux=True):
         self.zones = zones
         self.time = time
@@ -1721,6 +1757,7 @@ class ZoneBudgetOutput(object):
         numpy array of zones
 
     """
+
     def __init__(self, f, dis, zones):
         import pandas as pd
         from ..modflow import ModflowDis
@@ -1736,7 +1773,7 @@ class ZoneBudgetOutput(object):
             self._steady = dis.steady.array
 
         else:
-            self._totim = self._get_totim_modflow6(dis)
+            self._totim = get_totim_modflow6(dis)
             self._nstp = np.array(dis.perioddata.array.nstp)
             # self._steady is a placeholder, data not used for ZB6 read
             self._steady = [False for _ in dis.perioddata.array]
@@ -1788,40 +1825,6 @@ class ZoneBudgetOutput(object):
 
         """
         return self.__pd.DataFrame.from_dict(self._data)
-
-    def _get_totim_modflow6(self, tdis):
-        """
-        Create a totim array from the tdis file in modflow 6
-
-        Parameters
-        ----------
-        tdis : ModflowTdis object
-
-        Returns
-        -------
-            totim : np.ndarray
-
-        """
-        recarray = tdis.perioddata.array
-        delt = []
-        for record in recarray:
-            perlen = record.perlen
-            nstp = record.nstp
-            tsmult = record.tsmult
-            for stp in range(nstp):
-                if stp == 0:
-                    if tsmult != 1.0:
-                        dt = perlen * (tsmult - 1)/((tsmult ** nstp) - 1)
-                    else:
-                        dt = perlen / nstp
-                else:
-                    dt = delt[-1] * tsmult
-
-                delt.append(dt)
-
-        totim = np.add.accumulate(delt)
-
-        return totim
 
     def _calculate_tslen(self):
         """

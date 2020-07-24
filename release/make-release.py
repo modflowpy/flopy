@@ -71,7 +71,7 @@ def get_disclaimer():
     # get current branch
     branch = get_branch()
 
-    if 'release' in branch.lower() or 'master' in branch.lower():
+    if branch.lower().startswith('release') or 'master' in branch.lower():
         disclaimer = approved
         is_approved = True
     else:
@@ -242,7 +242,7 @@ def update_codejson(vmajor, vminor, vmicro):
     now = datetime.datetime.now()
     sdate = now.strftime('%Y-%m-%d')
     data[0]['date']['metadataLastUpdated'] = sdate
-    if 'release' in branch.lower() or 'master' in branch.lower():
+    if branch.lower().startswith('release') or 'master' in branch.lower():
         data[0]['version'] = version
         data[0]['status'] = 'Production'
     else:
@@ -352,6 +352,12 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     # create disclaimer text
     is_approved, disclaimer = get_disclaimer()
 
+    # set repo branch string based on is_approved
+    if is_approved:
+        repo_str = 'master'
+    else:
+        repo_str = 'develop'
+
     # create version
     version = get_tag(vmajor, vminor, vmicro)
 
@@ -401,8 +407,14 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     for line in lines:
         if line == 'Introduction':
             writeline = True
+        elif line == 'Installation':
+            writeline = False
+        elif line == 'Documentation':
+            writeline = True
         elif line == 'Getting Started':
             writeline = False
+        elif line == 'Contributing':
+            writeline = True
         elif line == 'How to Cite':
             writeline = True
         elif 'http://dx.doi.org/10.5066/F7BK19FH' in line:
@@ -410,14 +422,23 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
             line = get_software_citation(version, is_approved)
         elif line == 'MODFLOW Resources':
             writeline = False
+        elif 'Installing the latest FloPy release candidate' in line:
+            writeline = False
         elif line == 'Disclaimer':
             writeline = True
         elif '[MODFLOW 6](docs/mf6.md)' in line:
             line = line.replace('[MODFLOW 6](docs/mf6.md)', 'MODFLOW 6')
+
         if writeline:
+            # USGS_release.md
             f.write('{}\n'.format(line))
+            # PyPi_release.md
             line = line.replace('***', '*')
             line = line.replace('##### ', '')
+            if 'CONTRIBUTING.md' in line:
+                rstr = 'https://github.com/modflowpy/flopy/blob/' + \
+                       '{}/CONTRIBUTING.md'.format(repo_str)
+                line = line.replace('CONTRIBUTING.md', rstr)
             f2.write('{}\n'.format(line))
 
     # write installation information
@@ -436,16 +457,11 @@ def update_USGSmarkdown(vmajor, vminor, vmicro):
     line += 'pip install {} --upgrade\n'.format(cweb)
     line += '```\n'
 
-    #
+    # write installation instructions of USGS_release.md
     f.write(line)
 
     # close the USGS_release.md file
     f.close()
-
-    line = line.replace(cweb, 'flopy')
-    line = line.replace(' from the USGS FloPy website', '')
-
-    f2.write(line)
 
     # close the PyPi_release.md file
     f2.close()

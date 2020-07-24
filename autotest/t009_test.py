@@ -184,6 +184,8 @@ def test_sfr():
                                        / sfr.reach_data.rchlen[reach_inds]
     chk = sfr.check()
     assert sfr.reach_data.slope.min() < 0.0001 and 'minimum slope' in chk.warnings
+    # negative segments for lakes shouldn't be included in segment numbering order check
+    assert 'segment numbering order' not in chk.warnings
     sfr.reach_data.slope[0] = 1.1
     chk.slope(maximum_slope=1.0)
     assert 'maximum slope' in chk.warnings
@@ -581,7 +583,7 @@ def test_sfr_plot():
 
 
 if __name__ == '__main__':
-    # test_sfr()
+    test_sfr()
     # test_ds_6d_6e_disordered()
     # test_disordered_reachdata_fields()
     # test_sfr_renumbering()
@@ -590,6 +592,6 @@ if __name__ == '__main__':
     # test_transient_example()
     # mtest_sfr_plot()
     # test_assign_layers()
-    test_SfrFile()
+    #test_SfrFile()
     # test_const()
     pass

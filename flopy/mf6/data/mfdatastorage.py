@@ -1626,7 +1626,7 @@ class DataStorage(object):
                         read_file, self.get_data_dimensions(layer),
                         self.get_data_size(layer), self._data_type,
                         self._model_or_sim.modeldiscrit,
-                        not self.layered)[0] * mult
+                        False)[0] * mult
                 else:
                     data_out = file_access.read_text_data_from_file(
                         self.get_data_size(layer), np_data_type,
@@ -1809,6 +1809,7 @@ class DataStorage(object):
                         nseg=None):
         if data_set is None:
             self._recarray_type_list = []
+            self.recarray_cellid_list = []
             data_set = self.data_dimensions.structure
         initial_keyword = True
         package_dim = self.data_dimensions.package_dim
@@ -1833,6 +1834,7 @@ class DataStorage(object):
                             if aux_var_name.lower() != 'auxiliary':
                                 self._recarray_type_list.append((aux_var_name,
                                                                  data_type))
+                                self.recarray_cellid_list.append(False)
 
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
@@ -1840,6 +1842,7 @@ class DataStorage(object):
                 elif data_item.type == DatumType.keystring:
                     self._recarray_type_list.append((data_item.name,
                                                      data_type))
+                    self.recarray_cellid_list.append(data_item.is_cellid)
                     # add potential data after keystring to type list
                     ks_data_item = deepcopy(data_item)
                     ks_data_item.type = DatumType.string
@@ -1847,6 +1850,7 @@ class DataStorage(object):
                     ks_rec_type = ks_data_item.get_rec_type()
                     self._recarray_type_list.append((ks_data_item.name,
                                                      ks_rec_type))
+                    self.recarray_cellid_list.append(ks_data_item.is_cellid)
                     if index == len(data_set.data_item_structures) - 1:
                         idx = 1
                         data_line_max_size = self._get_max_data_line_size(data)
@@ -1860,6 +1864,9 @@ class DataStorage(object):
                             self._recarray_type_list.append(
                                     ('{}_{}'.format(ks_data_item.name, idx),
                                                     ks_rec_type))
+                            self.recarray_cellid_list.append(
+                                ks_data_item.is_cellid)
+
                             idx += 1
 
                 elif data_item.name != 'boundname' or \
@@ -1876,6 +1883,8 @@ class DataStorage(object):
                                 self._recarray_type_list.append(
                                         ('{}_label'.format(data_item.name),
                                                            object))
+                                self.recarray_cellid_list.append(
+                                    data_item.is_cellid)
                         if nseg is not None and len(data_item.shape) > 0 and \
                                 isinstance(data_item.shape[0], str) and \
                                 data_item.shape[0][0:4] == 'nseg':
@@ -1899,7 +1908,9 @@ class DataStorage(object):
                                 resolved_shape, shape_rule = \
                                         data_dim.get_data_shape(data_item,
                                                                 data_set,
-                                                                data, key)
+                                                                data,
+                                                                repeating_key=
+                                                                key)
                             else:
                                 resolved_shape = [1]
                         if not resolved_shape or len(resolved_shape) == 0 or \
@@ -1938,6 +1949,9 @@ class DataStorage(object):
                             else:
                                 self._recarray_type_list.append(
                                         (data_item.name, data_type))
+                            self.recarray_cellid_list.append(
+                                data_item.is_cellid)
+
         return self._recarray_type_list
 
     def get_default_mult(self):

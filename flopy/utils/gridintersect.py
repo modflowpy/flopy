@@ -1,7 +1,7 @@
 import numpy as np
 try:
     import matplotlib.pyplot as plt
-except ModuleNotFoundError:
+except ImportError:
     plt = None
 
 from .geometry import transform
@@ -13,7 +13,7 @@ try:
     from shapely.affinity import translate, rotate
     from shapely.prepared import prep
     shply = True
-except ModuleNotFoundError:
+except ImportError:
     shply = False
 
 
@@ -107,7 +107,7 @@ class GridIntersect:
             msg = ("Shapely is needed for grid intersect operations! "
                    "Please install shapely if you need to use grid intersect "
                    "functionality.")
-            raise ModuleNotFoundError(msg)
+            raise ImportError(msg)
 
         self.mfgrid = mfgrid
         if method is None:
@@ -1240,16 +1240,16 @@ class GridIntersect:
         """
         try:
             from descartes import PolygonPatch
-        except ModuleNotFoundError:
+        except ImportError:
             msg = 'descartes package needed for plotting polygons'
             if plt is None:
                 msg = 'matplotlib and descartes packages needed for ' + \
                       'plotting polygons'
-            raise ModuleNotFoundError(msg)
+            raise ImportError(msg)
 
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
-            raise ModuleNotFoundError(msg)
+            raise ImportError(msg)
 
         if ax is None:
             _, ax = plt.subplots()
@@ -1288,7 +1288,7 @@ class GridIntersect:
         """
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
-            raise ModuleNotFoundError(msg)
+            raise ImportError(msg)
 
         if ax is None:
             _, ax = plt.subplots()
@@ -1333,7 +1333,7 @@ class GridIntersect:
         """
         if plt is None:
             msg = 'matplotlib package needed for plotting polygons'
-            raise ModuleNotFoundError(msg)
+            raise ImportError(msg)
 
         if ax is None:
             _, ax = plt.subplots()
