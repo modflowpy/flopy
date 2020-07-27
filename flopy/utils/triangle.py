@@ -692,7 +692,7 @@ class Triangle(object):
         f.write(s)
         ip = 0
         for p in self._polygons:
-            for i, vertex in enumerate(p):
+            for vertex in p:
                 s = '{} {} {}\n'.format(ip, vertex[0], vertex[1])
                 f.write(s)
                 ip += 1
@@ -759,7 +759,7 @@ class Triangle(object):
 
         """
         edgedict = {}
-        for ie, iv1, iv2, iseg in self.edge:
+        for _, iv1, iv2, iseg in self.edge:
             if iseg != 0:
                 edgedict[(iv1, iv2)] = iseg
                 edgedict[(iv2, iv1)] = iseg
