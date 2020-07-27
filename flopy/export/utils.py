@@ -1593,7 +1593,11 @@ def export_array_contours(modelgrid, filename, a,
     **kwargs : keyword arguments to flopy.export.shapefile_utils.recarray2shp
 
     """
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except:
+        err_msg = "matplotlib must be installed to use export_array_contours()"
+        raise ImportError(err_msg)
 
     if epsg is None:
         epsg = modelgrid.epsg

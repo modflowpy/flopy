@@ -81,7 +81,7 @@ class Polygon:
     def geojson(self):
         return {'coordinates': tuple(
             [self.exterior] + [i for i in self.interiors]),
-                'type': self.type}
+            'type': self.type}
 
     @property
     def pyshp_parts(self):

@@ -1245,7 +1245,6 @@ class StructuredGrid(Grid):
         return afaces
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
     delc = np.ones((10,)) * 1
     delr = np.ones((20,)) * 1
 
@@ -1255,24 +1254,11 @@ if __name__ == "__main__":
     t = StructuredGrid(delc, delr, top, botm, xoff=0, yoff=0,
                        angrot=45)
 
-    #plt.scatter(np.ravel(t.xcenters), np.ravel(t.ycenters), c="b")
-    #t.plot_grid_lines()
-    #plt.show()
-    #plt.close()
-
-    #delc = np.ones(10,) * 2
-    #t.delc = delc
-
-    #plt.scatter(np.ravel(t.xcenters), np.ravel(t.ycenters), c="b")
-    #t.plot_grid_lines()
-    #plt.show()
-
     t.use_ref_coords = False
     x = t.xvertices
     y = t.yvertices
     xc = t.xcellcenters
     yc = t.ycellcenters
-    #extent = t.extent
     grid = t.grid_lines
 
     t.use_ref_coords = True
@@ -1280,8 +1266,5 @@ if __name__ == "__main__":
     sr_y = t.yvertices
     sr_xc = t.xcellcenters
     sr_yc = t.ycellcenters
-    #sr_extent = t.extent
     sr_grid = t.grid_lines
     print(sr_grid)
-    #t.plot_grid_lines()
-    #plt.show()

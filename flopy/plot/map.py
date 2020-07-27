@@ -223,7 +223,7 @@ class PlotMapView(object):
         try:
             import matplotlib.tri as tri
         except ImportError:
-            err_msg = "Matplotlib must be updated to use contour_array"
+            err_msg = "matplotlib must be installed to use contour_array()"
             raise ImportError(err_msg)
 
         a = np.copy(a)
@@ -280,13 +280,13 @@ class PlotMapView(object):
 
         # workaround for tri-contour nan issue
         # use -2**31 to allow for 32 bit int arrays
-        plotarray[np.isnan(plotarray)] = -2**31
+        plotarray[np.isnan(plotarray)] = -2 ** 31
         if masked_values is None:
-            masked_values = [-2**31]
+            masked_values = [-2 ** 31]
         else:
             masked_values = list(masked_values)
-            if -2**31 not in masked_values:
-                masked_values.append(-2**31)
+            if -2 ** 31 not in masked_values:
+                masked_values.append(-2 ** 31)
 
         ismasked = None
         if masked_values is not None:
@@ -361,6 +361,10 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_inactive()"
+            raise ImportError(err_msg)
+
         if ibound is None:
             if self.mg.idomain is None:
                 raise AssertionError("Ibound/Idomain array must be provided")
@@ -399,7 +403,9 @@ class PlotMapView(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        import matplotlib.colors
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_ibound()"
+            raise ImportError(err_msg)
 
         if ibound is None:
             if self.model is not None:
@@ -437,7 +443,11 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        from matplotlib.collections import LineCollection
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_grid()"
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.collections import LineCollection
 
         if 'ax' in kwargs:
             ax = kwargs.pop('ax')
@@ -520,7 +530,7 @@ class PlotMapView(object):
                         return
 
                     t = np.array([list(i) for i in mflist['cellid']],
-                                     dtype=int).T
+                                 dtype=int).T
 
                 if len(idx) == 0:
                     idx = np.copy(t)
@@ -650,7 +660,7 @@ class PlotMapView(object):
         try:
             import matplotlib.tri as tri
         except ImportError:
-            err_msg = "Matplotlib must be updated to use contour_array"
+            err_msg = "matplotlib must be updated to use contour_array()"
             raise ImportError(err_msg)
 
         if 'ncpl' in kwargs:
@@ -774,7 +784,7 @@ class PlotMapView(object):
         # mask values
         if masked_values is not None:
             for mval in masked_values:
-                to_mask = np.logical_or(u==mval, v==mval)
+                to_mask = np.logical_or(u == mval, v == mval)
                 u[to_mask] = np.nan
                 v[to_mask] = np.nan
 
@@ -977,7 +987,7 @@ class PlotMapView(object):
                     if cbd > 0:
                         kon += 1
                         active[kon] = 0
-                botm = botm[active==1]
+                botm = botm[active == 1]
 
             # If no access to head or laytyp, then calculate confined saturated
             # thickness by setting laytyp to zeros
@@ -1044,7 +1054,12 @@ class PlotMapView(object):
         lc : matplotlib.collections.LineCollection
 
         """
-        from matplotlib.collections import LineCollection
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_pathline()"
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.collections import LineCollection
+
         # make sure pathlines is a list
         if not isinstance(pl, list):
             pl = [pl]
@@ -1189,6 +1204,9 @@ class PlotMapView(object):
         -------
             lo : list of Line2D objects
         """
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_timeseries()"
+            raise ImportError(err_msg)
 
         # make sure timeseries is a list
         if not isinstance(ts, list):
@@ -1318,6 +1336,10 @@ class PlotMapView(object):
         sp : matplotlib.pyplot.scatter
 
         """
+        if plt is None:
+            err_msg = "matplotlib must be installed to use plot_endpoint()"
+            raise ImportError(err_msg)
+
         ep = ep.copy()
         direction = direction.lower()
         if direction == 'starting':
