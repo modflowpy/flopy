@@ -66,6 +66,14 @@ class Lgr(object):
         self.ncpp = ncpp
         self.ncppl = Util2d(m, (nlayp,), np.int, ncppl, 'ncppl').array
 
+        # calculate ibcl which is the bottom child layer (one based) in each
+        # parent layer
+        self.ibcl = np.zeros(self.nlayp, dtype=np.int)
+        self.ibcl[0] = self.ncppl[0]
+        for k in range(1, self.nlayp):
+            if self.ncppl[k] > 0:
+                self.ibcl[k] = self.ibcl[k - 1] + self.ncppl[k]
+
         # parent lower left
         self.xllp = xllp
         self.yllp = yllp
@@ -152,8 +160,8 @@ class Lgr(object):
                 for kp in range(self.nplbeg, self.nplend + 1):
                     top = pbotm[kp, ip, jp]
                     bot = pbotm[kp + 1, ip, jp]
-                    dz = (top - bot) / self.ncppl[kp - 1]
-                    for _ in range(self.ncppl[kp - 1]):
+                    dz = (top - bot) / self.ncppl[kp]
+                    for _ in range(self.ncppl[kp]):
                         botm[kc, icrowstart:icrowend,
                         iccolstart: iccolend] = botm[kc - 1,
                                                 icrowstart:icrowend,
@@ -273,7 +281,7 @@ class Lgr(object):
         # parent cell to top is not possible
 
         # parent cell to bottom
-        if kc + 1 == self.ncppl[kp]:
+        if kc + 1 == self.ibcl[kp]:
             if kp + 1 < self.nlayp:
                 if self.idomain[kp + 1, ip, jp] != 0:
                     parentlist.append(((kp + 1, ip, jp), -3))
@@ -335,6 +343,12 @@ class Lgr(object):
                             continue
 
                         # horizontal or vertical connection
+                        # 1 if a child cell horizontally connected to a parent
+                        #   cell
+                        # 2 if more than one child cells horizontally connected
+                        #   to parent cell
+                        # 0 if a vertical connection
+
                         ihc = 1
                         if self.ncppl[kp] > 1:
                             ihc = 2
