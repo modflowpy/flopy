@@ -13,6 +13,7 @@ from ..export.shapefile_utils import import_shapefile
 
 shapefile = import_shapefile()
 
+
 # todo
 # creation of line and polygon shapefiles from features (holes!)
 # program layer functionality for plot method
@@ -531,7 +532,13 @@ class Gridgen(object):
         pc : matplotlib.collections.PatchCollection
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use gridgen.plot()"
+            raise ImportError(err_msg)
+
         from ..plot import plot_shapefile, shapefile_extents
 
         if ax is None:

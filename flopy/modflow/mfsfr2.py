@@ -1444,10 +1444,15 @@ class ModflowSfr2(Package):
         -------
         ax : matplotlib.axes._subplots.AxesSubplot object
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to use " + \
+                     "ModflowSfr2.plot_path()"
+            raise ImportError(err_msg)
         if not pd:
-            msg = 'ModflowSfr2.plot_path: pandas not available'
-            raise ImportError(msg)
+            err_msg = 'ModflowSfr2.plot_path: pandas not available'
+            raise ImportError(err_msg)
 
         df = self.df
         m = self.parent

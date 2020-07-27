@@ -205,7 +205,12 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.plot()"
+            raise ImportError(err_msg)
 
         if ax is None:
             ax = plt.gca()
@@ -256,7 +261,12 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.plot_boundary()"
+            raise ImportError(err_msg)
         if ax is None:
             ax = plt.gca()
         idx = np.where(self.edge['boundary_marker'] == ibm)[0]
@@ -287,7 +297,12 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.plot_vertices()"
+            raise ImportError(err_msg)
         if ax is None:
             ax = plt.gca()
         ax.plot(self.node['x'], self.node['y'], lw=0, **kwargs)
@@ -314,7 +329,12 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.label_vertices()"
+            raise ImportError(err_msg)
         if ax is None:
             ax = plt.gca()
         for i in range(self.verts.shape[0]):
@@ -344,7 +364,13 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.plot_centroids()"
+            raise ImportError(err_msg)
+
         if ax is None:
             ax = plt.gca()
         xcyc = self.get_xcyc()
@@ -372,7 +398,12 @@ class Triangle(object):
         None
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use triangle.lavel_cells()"
+            raise ImportError(err_msg)
         if ax is None:
             ax = plt.gca()
         xcyc = self.get_xcyc()

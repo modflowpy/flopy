@@ -987,7 +987,13 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        from matplotlib.collections import QuadMesh
+        try:
+            from matplotlib.collections import QuadMesh
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use get_grid_map_plotter()"
+            raise ImportError(err_msg)
+
         verts = np.vstack((self.xgrid.flatten(), self.ygrid.flatten())).T
         qm = QuadMesh(self.ncol, self.nrow, verts)
         return qm
@@ -1005,7 +1011,13 @@ class SpatialReference(object):
         quadmesh : matplotlib.collections.QuadMesh
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use reference.plot_array()"
+            raise ImportError(err_msg)
+
         if ax is None:
             ax = plt.gca()
         qm = ax.pcolormesh(self.xgrid, self.ygrid, a, **kwargs)
@@ -1222,7 +1234,12 @@ class SpatialReference(object):
         **kwargs : key-word arguments to flopy.export.shapefile_utils.recarray2shp
 
         """
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            err_msg = "matplotlib must be installed to " + \
+                      "use cvfd_to_patch_collection()"
+            raise ImportError(err_msg)
 
         if epsg is None:
             epsg = self._epsg
@@ -2183,7 +2200,7 @@ def get_spatialreference(epsg, text='esriwkt'):
     elif result is None and text != 'epsg':
         for cat in epsg_categories:
             error_msg = 'No internet connection or ' + \
-                        'epsg code {} '.format(epsg) +  \
+                        'epsg code {} '.format(epsg) + \
                         'not found at {}/ref/'.format(srefhttp) + \
                         '{}/{}/{}'.format(cat, cat, epsg)
             print(error_msg)

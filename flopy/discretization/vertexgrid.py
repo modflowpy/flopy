@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     from matplotlib.path import Path
 except ImportError:
@@ -54,14 +55,14 @@ class VertexGrid(Grid):
     @property
     def is_valid(self):
         if self._vertices is not None and (self._cell2d is not None or
-                self._cell1d is not None):
+                                           self._cell1d is not None):
             return True
         return False
 
     @property
     def is_complete(self):
         if self._vertices is not None and (self._cell2d is not None or
-                self._cell1d is not None) and \
+                                           self._cell1d is not None) and \
                 super(VertexGrid, self).is_complete:
             return True
         return False
@@ -83,7 +84,7 @@ class VertexGrid(Grid):
             return len(self._botm[0])
         else:
             return self._ncpl
-    
+
     @property
     def nnodes(self):
         return self.nlay * self.ncpl
@@ -158,10 +159,10 @@ class VertexGrid(Grid):
     def intersect(self, x, y, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
-        
+
         When the point is on the edge of two cells, the cell with the lowest
         CELL2D number is returned.
-        
+
         Parameters
         ----------
         x : float
@@ -173,12 +174,12 @@ class VertexGrid(Grid):
         forgive: bool (optional)
             Forgive x,y arguments that fall outside the model grid and
             return NaNs instead (defaults to False - will throw exception)
-    
+
         Returns
         -------
         icell2d : int
             The CELL2D number
-        
+
         """
         if Path is None:
             s = 'Could not import matplotlib.  Must install matplotlib ' + \
@@ -187,7 +188,7 @@ class VertexGrid(Grid):
 
         if local:
             # transform x and y to real-world coordinates
-            x, y = super(VertexGrid, self).get_coords(x,y)
+            x, y = super(VertexGrid, self).get_coords(x, y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])
