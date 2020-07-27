@@ -8,3 +8,4 @@ pyshp
 pandas
 scipy
 affine
+requests
