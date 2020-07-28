@@ -1,4 +1,5 @@
 import os
+import io
 import textwrap
 from enum import Enum
 from flopy.mf6.data import mfstructure, mfdatautil
@@ -334,8 +335,9 @@ def create_packages():
                                  package.file_type))
 
     util_path, tail = os.path.split(os.path.realpath(__file__))
-    init_file = open(os.path.join(util_path, '..', 'modflow', '__init__.py'),
-                     'w')
+    init_file = io.open(os.path.join(util_path, '..', 'modflow',
+                                     '__init__.py'),
+                        'w', newline='\n')
     init_file.write('# imports\n')
     init_file.write('from .mfsimulation import MFSimulation\n')
 
@@ -499,8 +501,9 @@ def create_packages():
             init_string_full, parent_init_string, init_vars)
 
         # open new Packages file
-        pb_file = open(os.path.join(util_path, '..', 'modflow',
-                                    'mf{}.py'.format(package_name)), 'w')
+        pb_file = io.open(os.path.join(util_path, '..', 'modflow',
+                                       'mf{}.py'.format(package_name)), 'w',
+                          newline='\n')
         pb_file.write(package_string)
 
         if package[2] == 'utl' and package_abbr != 'utltab':
@@ -616,9 +619,9 @@ def create_packages():
                 comment_string, nam_import_string, class_def_string,
                 doc_string.get_doc_string(True), doc_text, class_var_string,
                 init_string_model, mparent_init_string, init_vars, load_txt)
-            md_file = open(os.path.join(util_path, '..', 'modflow',
-                           'mf{}.py'.format(model_name)),
-                           'w')
+            md_file = io.open(os.path.join(util_path, '..', 'modflow',
+                                           'mf{}.py'.format(model_name)),
+                              'w', newline='\n')
             md_file.write(package_string)
             md_file.close()
             init_file.write('from .mf{} import '
