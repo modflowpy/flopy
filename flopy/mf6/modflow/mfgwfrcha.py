@@ -70,7 +70,11 @@ class ModflowGwfrcha(mfpackage.MFPackage):
           recharge by default is applied to cells in layer 1. IRCH can only be
           used if READASARRAYS is specified in the OPTIONS block. If IRCH is
           specified, it must be specified as the first variable in the PERIOD
-          block or MODFLOW will terminate with an error.
+          block or MODFLOW will terminate with an error. This argument is an
+          index variable, which means that it should be treated as zero-based
+          when working with FloPy and Python. Flopy will automatically subtract
+          one when loading index variables and add one when writing index
+          variables.
     recharge : [double]
         * recharge (double) is the recharge flux rate (:math:`LT^{-1}`). This
           rate is multiplied inside the program by the surface area of the cell
@@ -150,7 +154,8 @@ class ModflowGwfrcha(mfpackage.MFPackage):
             "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
            ["block period", "name irch", "type integer",
-            "shape (ncol*nrow; ncpl)", "reader readarray", "optional true"],
+            "shape (ncol*nrow; ncpl)", "reader readarray",
+            "numeric_index true", "optional true"],
            ["block period", "name recharge", "type double precision",
             "shape (ncol*nrow; ncpl)", "reader readarray",
             "default_value 1.e-3"],

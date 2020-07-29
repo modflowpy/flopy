@@ -69,7 +69,11 @@ class ModflowGwfevta(mfpackage.MFPackage):
           each vertical column where evapotranspiration is applied. If IEVT is
           omitted, evapotranspiration by default is applied to cells in layer
           1. If IEVT is specified, it must be specified as the first variable
-          in the PERIOD block or MODFLOW will terminate with an error.
+          in the PERIOD block or MODFLOW will terminate with an error. This
+          argument is an index variable, which means that it should be treated
+          as zero-based when working with FloPy and Python. Flopy will
+          automatically subtract one when loading index variables and add one
+          when writing index variables.
     surface : [double]
         * surface (double) is the elevation of the ET surface (:math:`L`).
     rate : [double]
@@ -153,7 +157,8 @@ class ModflowGwfevta(mfpackage.MFPackage):
             "block_variable True", "in_record true", "tagged false", "shape",
             "valid", "reader urword", "optional false"],
            ["block period", "name ievt", "type integer",
-            "shape (ncol*nrow; ncpl)", "reader readarray", "optional true"],
+            "shape (ncol*nrow; ncpl)", "reader readarray",
+            "numeric_index true", "optional true"],
            ["block period", "name surface", "type double precision",
             "shape (ncol*nrow; ncpl)", "reader readarray", "default_value 0."],
            ["block period", "name rate", "type double precision",

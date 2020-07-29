@@ -408,6 +408,11 @@ class MFData(DataInterface):
 
     def _get_constant_formatting_string(self, const_val, layer, data_type,
                                         suffix='\n'):
+        if self.structure.data_item_structures[0].numeric_index or \
+                self.structure.data_item_structures[0].is_cellid:
+            # for cellid and numeric indices convert from 0 base to 1 based
+            const_val = abs(const_val) + 1
+
         sim_data = self._simulation_data
         const_format = list(sim_data.constant_formatting)
         const_format[1] = to_string(const_val, data_type, self._simulation_data,

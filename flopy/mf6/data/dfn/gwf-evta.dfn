@@ -157,6 +157,7 @@ name ievt
 type integer
 shape (ncol*nrow; ncpl)
 reader readarray
+numeric_index true
 optional true
 longname layer number for evapotranspiration
 description IEVT is the layer number that defines the layer in each vertical column where evapotranspiration is applied. If IEVT is omitted, evapotranspiration by default is applied to cells in layer 1.  If IEVT is specified, it must be specified as the first variable in the PERIOD block or MODFLOW will terminate with an error.
