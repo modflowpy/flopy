@@ -369,11 +369,25 @@ def create_packages():
                     package[2])
             else:
                 package_container_text = ''
-            doc_string = mfdatautil.MFDocString(
-                'Modflow{} defines a {} package'
-                '{}.'.format(package_name.title(),
+            ds = 'Modflow{} defines a {} package' \
+                 '{}.'.format(package_name.title(),
                              package[0].file_type,
-                             package_container_text))
+                             package_container_text)
+            if package[0].file_type == 'mvr':
+                # mvr package warning
+                if package[2]:
+                    ds = '{} This package\n    can only be used to move ' \
+                         'water between packages within a single model.' \
+                         '\n    To move water between models use ModflowMvr' \
+                         '.'.format(ds)
+                else:
+                    ds = '{} This package can only be used to move\n    ' \
+                         'water between two different models. To move ' \
+                         'water between two packages\n    in the same ' \
+                         'model use the "model level" mover package (ex. ' \
+                         'ModflowGwfmvr).'.format(ds)
+
+            doc_string = mfdatautil.MFDocString(ds)
 
         if package[0].dfn_type == mfstructure.DfnType.exch_file:
             add_var(init_vars, None, init_param_list, package_properties,
