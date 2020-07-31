@@ -6,7 +6,9 @@ from ..data.mfdatautil import ListTemplateGenerator
 
 class ModflowGwfmvr(mfpackage.MFPackage):
     """
-    ModflowGwfmvr defines a mvr package within a gwf6 model.
+    ModflowGwfmvr defines a mvr package within a gwf6 model. This package
+    can only be used to move water between packages within a single model.
+    To move water between models use ModflowMvr.
 
     Parameters
     ----------
