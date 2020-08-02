@@ -184,9 +184,8 @@ class ModflowDisU(Package):
 
     Notes
     -----
-    Does not work yet for multi-layer USG models because top and bot cannot
-    be u3d instances until u3d is modified to handle multiple u2d instances
-    of different size.
+    Now works for multi-layer USG models since u3d was modified to handle
+    multiple u2d instances of different size.
 
     Examples
     --------
