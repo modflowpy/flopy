@@ -106,80 +106,244 @@ class ModflowMvr(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    budget_filerecord = ListTemplateGenerator(('mvr', 'options',
-                                               'budget_filerecord'))
-    packages = ListTemplateGenerator(('mvr', 'packages', 'packages'))
-    perioddata = ListTemplateGenerator(('mvr', 'period', 'perioddata'))
+
+    budget_filerecord = ListTemplateGenerator(
+        ("mvr", "options", "budget_filerecord")
+    )
+    packages = ListTemplateGenerator(("mvr", "packages", "packages"))
+    perioddata = ListTemplateGenerator(("mvr", "period", "perioddata"))
     package_abbr = "mvr"
     _package_type = "mvr"
     dfn_file_name = "gwf-mvr.dfn"
 
-    dfn = [["block options", "name print_input", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name modelnames", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name budget_filerecord",
-            "type record budget fileout budgetfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name budget", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"],
-           ["block dimensions", "name maxmvr", "type integer",
-            "reader urword", "optional false"],
-           ["block dimensions", "name maxpackages", "type integer",
-            "reader urword", "optional false"],
-           ["block packages", "name packages", "type recarray mname pname",
-            "reader urword", "shape (npackages)", "optional false"],
-           ["block packages", "name mname", "type string", "reader urword",
-            "shape", "tagged false", "in_record true", "optional true"],
-           ["block packages", "name pname", "type string", "reader urword",
-            "shape", "tagged false", "in_record true", "optional false"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name perioddata",
+    dfn = [
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name modelnames",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name maxmvr",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block dimensions",
+            "name maxpackages",
+            "type integer",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packages",
+            "name packages",
+            "type recarray mname pname",
+            "reader urword",
+            "shape (npackages)",
+            "optional false",
+        ],
+        [
+            "block packages",
+            "name mname",
+            "type string",
+            "reader urword",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "optional true",
+        ],
+        [
+            "block packages",
+            "name pname",
+            "type string",
+            "reader urword",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name perioddata",
             "type recarray mname1 pname1 id1 mname2 pname2 id2 mvrtype value",
-            "shape (maxbound)", "reader urword"],
-           ["block period", "name mname1", "type string", "reader urword",
-            "shape", "tagged false", "in_record true", "optional true"],
-           ["block period", "name pname1", "type string", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name id1", "type integer", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "numeric_index true"],
-           ["block period", "name mname2", "type string", "reader urword",
-            "shape", "tagged false", "in_record true", "optional true"],
-           ["block period", "name pname2", "type string", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name id2", "type integer", "shape",
-            "tagged false", "in_record true", "reader urword",
-            "numeric_index true"],
-           ["block period", "name mvrtype", "type string", "shape",
-            "tagged false", "in_record true", "reader urword"],
-           ["block period", "name value", "type double precision", "shape",
-            "tagged false", "in_record true", "reader urword"]]
+            "shape (maxbound)",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name mname1",
+            "type string",
+            "reader urword",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name pname1",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name id1",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block period",
+            "name mname2",
+            "type string",
+            "reader urword",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name pname2",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name id2",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block period",
+            "name mvrtype",
+            "type string",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+        [
+            "block period",
+            "name value",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, simulation, loading_package=False, print_input=None,
-                 print_flows=None, modelnames=None, budget_filerecord=None,
-                 maxmvr=None, maxpackages=None, packages=None, perioddata=None,
-                 filename=None, pname=None, parent_file=None):
-        super(ModflowMvr, self).__init__(simulation, "mvr", filename, pname,
-                                         loading_package, parent_file)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        print_input=None,
+        print_flows=None,
+        modelnames=None,
+        budget_filerecord=None,
+        maxmvr=None,
+        maxpackages=None,
+        packages=None,
+        perioddata=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowMvr, self).__init__(
+            simulation, "mvr", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.modelnames = self.build_mfdata("modelnames", modelnames)
-        self.budget_filerecord = self.build_mfdata("budget_filerecord",
-                                                   budget_filerecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
         self.maxmvr = self.build_mfdata("maxmvr", maxmvr)
         self.maxpackages = self.build_mfdata("maxpackages", maxpackages)
         self.packages = self.build_mfdata("packages", packages)

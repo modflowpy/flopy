@@ -129,9 +129,21 @@ class Grid(object):
     Examples
     --------
     """
-    def __init__(self, grid_type=None, top=None, botm=None, idomain=None,
-                 lenuni=None, epsg=None, proj4=None, prj=None, xoff=0.0, yoff=0.0,
-                 angrot=0.0):
+
+    def __init__(
+        self,
+        grid_type=None,
+        top=None,
+        botm=None,
+        idomain=None,
+        lenuni=None,
+        epsg=None,
+        proj4=None,
+        prj=None,
+        xoff=0.0,
+        yoff=0.0,
+        angrot=0.0,
+    ):
         lenunits = {0: "undefined", 1: "feet", 2: "meters", 3: "centimeters"}
         LENUNI = {"u": 0, "f": 1, "m": 2, "c": 3}
         self.use_ref_coords = True
@@ -167,19 +179,23 @@ class Grid(object):
     ###################################
     def __repr__(self):
         items = []
-        if self.xoffset is not None and self.yoffset is not None \
-                and self.angrot is not None:
+        if (
+            self.xoffset is not None
+            and self.yoffset is not None
+            and self.angrot is not None
+        ):
             items += [
                 "xll:" + str(self.xoffset),
                 "yll:" + str(self.yoffset),
-                "rotation:" + str(self.angrot)]
+                "rotation:" + str(self.angrot),
+            ]
         if self.proj4 is not None:
             items.append("proj4_str:" + str(self.proj4))
         if self.units is not None:
             items.append("units:" + str(self.units))
         if self.lenuni is not None:
             items.append("lenuni:" + str(self.lenuni))
-        return '; '.join(items)
+        return "; ".join(items)
 
     @property
     def is_valid(self):
@@ -187,8 +203,11 @@ class Grid(object):
 
     @property
     def is_complete(self):
-        if self._top is not None and self._botm is not None and \
-                self._idomain is not None:
+        if (
+            self._top is not None
+            and self._botm is not None
+            and self._idomain is not None
+        ):
             return True
         return False
 
@@ -210,7 +229,7 @@ class Grid(object):
 
     @property
     def angrot_radians(self):
-        return self._angrot * np.pi / 180.
+        return self._angrot * np.pi / 180.0
 
     @property
     def epsg(self):
@@ -227,13 +246,12 @@ class Grid(object):
             if "epsg" in self._proj4.lower():
                 proj4 = self._proj4
                 # set the epsg if proj4 specifies it
-                tmp = [i for i in self._proj4.split() if
-                       'epsg' in i.lower()]
-                self._epsg = int(tmp[0].split(':')[1])
+                tmp = [i for i in self._proj4.split() if "epsg" in i.lower()]
+                self._epsg = int(tmp[0].split(":")[1])
             else:
                 proj4 = self._proj4
         elif self.epsg is not None:
-            proj4 = 'epsg:{}'.format(self.epsg)
+            proj4 = "epsg:{}".format(self.epsg)
         return proj4
 
     @proj4.setter
@@ -275,29 +293,30 @@ class Grid(object):
 
     @property
     def nnodes(self):
-        raise NotImplementedError(
-            'must define nnodes in child class')
+        raise NotImplementedError("must define nnodes in child class")
 
     @property
     def shape(self):
-        raise NotImplementedError(
-            'must define shape in child class')
+        raise NotImplementedError("must define shape in child class")
 
     @property
     def extent(self):
-        raise NotImplementedError(
-            'must define extent in child class')
+        raise NotImplementedError("must define extent in child class")
 
     @property
     def xyzextent(self):
-        return (np.min(self.xyzvertices[0]), np.max(self.xyzvertices[0]),
-                np.min(self.xyzvertices[1]), np.max(self.xyzvertices[1]),
-                np.min(self.xyzvertices[2]), np.max(self.xyzvertices[2]))
+        return (
+            np.min(self.xyzvertices[0]),
+            np.max(self.xyzvertices[0]),
+            np.min(self.xyzvertices[1]),
+            np.max(self.xyzvertices[1]),
+            np.min(self.xyzvertices[2]),
+            np.max(self.xyzvertices[2]),
+        )
 
     @property
     def grid_lines(self):
-        raise NotImplementedError(
-            'must define grid_lines in child class')
+        raise NotImplementedError("must define grid_lines in child class")
 
     @property
     def xcellcenters(self):
@@ -314,8 +333,9 @@ class Grid(object):
     @property
     def xyzcellcenters(self):
         raise NotImplementedError(
-            'must define get_cellcenters in child '
-            'class to use this base class')
+            "must define get_cellcenters in child "
+            "class to use this base class"
+        )
 
     @property
     def xvertices(self):
@@ -331,11 +351,10 @@ class Grid(object):
 
     @property
     def xyzvertices(self):
-        raise NotImplementedError(
-            'must define xyzvertices in child class')
+        raise NotImplementedError("must define xyzvertices in child class")
 
-    #@property
-    #def indices(self):
+    # @property
+    # def indices(self):
     #    raise NotImplementedError(
     #        'must define indices in child '
     #        'class to use this base class')
@@ -353,8 +372,9 @@ class Grid(object):
 
         x += self._xoff
         y += self._yoff
-        return geometry.rotate(x, y, self._xoff, self._yoff,
-                               self.angrot_radians)
+        return geometry.rotate(
+            x, y, self._xoff, self._yoff, self.angrot_radians
+        )
 
     def get_local_coords(self, x, y):
         """
@@ -367,8 +387,9 @@ class Grid(object):
         if not np.isscalar(x):
             x, y = x.copy(), y.copy()
 
-        x, y = geometry.rotate(x, y, self._xoff, self._yoff,
-                               -self.angrot_radians)
+        x, y = geometry.rotate(
+            x, y, self._xoff, self._yoff, -self.angrot_radians
+        )
         x -= self._xoff
         y -= self._yoff
 
@@ -380,8 +401,15 @@ class Grid(object):
         else:
             return x, y
 
-    def set_coord_info(self, xoff=0.0, yoff=0.0, angrot=0.0, epsg=None,
-                       proj4=None, merge_coord_info=True):
+    def set_coord_info(
+        self,
+        xoff=0.0,
+        yoff=0.0,
+        angrot=0.0,
+        epsg=None,
+        proj4=None,
+        merge_coord_info=True,
+    ):
         if merge_coord_info:
             if xoff is None:
                 xoff = self._xoff
@@ -401,7 +429,7 @@ class Grid(object):
         self._proj4 = proj4
         self._require_cache_updates()
 
-    def load_coord_info(self, namefile=None, reffile='usgs.model.reference'):
+    def load_coord_info(self, namefile=None, reffile="usgs.model.reference"):
         """Attempts to load spatial reference information from
         the following files (in order):
         1) usgs.model.reference
@@ -422,69 +450,73 @@ class Grid(object):
             return False
         xul, yul = None, None
         header = []
-        with open(namefile, 'r') as f:
+        with open(namefile, "r") as f:
             for line in f:
-                if not line.startswith('#'):
+                if not line.startswith("#"):
                     break
-                header.extend(line.strip().replace('#', '').split(';'))
+                header.extend(line.strip().replace("#", "").split(";"))
 
         for item in header:
             if "xll" in item.lower():
                 try:
-                    xll = float(item.split(':')[1])
+                    xll = float(item.split(":")[1])
                     self._xoff = xll
                 except:
                     pass
             elif "yll" in item.lower():
                 try:
-                    yll = float(item.split(':')[1])
+                    yll = float(item.split(":")[1])
                     self._yoff = yll
                 except:
                     pass
             elif "xul" in item.lower():
                 try:
-                    xul = float(item.split(':')[1])
+                    xul = float(item.split(":")[1])
                     warnings.warn(
-                        'xul/yul have been deprecated. Use xll/yll instead.',
-                        DeprecationWarning)
+                        "xul/yul have been deprecated. Use xll/yll instead.",
+                        DeprecationWarning,
+                    )
                 except:
                     pass
             elif "yul" in item.lower():
                 try:
-                    yul = float(item.split(':')[1])
+                    yul = float(item.split(":")[1])
                     warnings.warn(
-                        'xul/yul have been deprecated. Use xll/yll instead.',
-                        DeprecationWarning)
+                        "xul/yul have been deprecated. Use xll/yll instead.",
+                        DeprecationWarning,
+                    )
                 except:
                     pass
             elif "rotation" in item.lower():
                 try:
-                    self._angrot = float(item.split(':')[1])
+                    self._angrot = float(item.split(":")[1])
                 except:
                     pass
             elif "proj4_str" in item.lower():
                 try:
-                    self._proj4 = ':'.join(item.split(':')[1:]).strip()
-                    if self._proj4.lower() == 'none':
+                    self._proj4 = ":".join(item.split(":")[1:]).strip()
+                    if self._proj4.lower() == "none":
                         self._proj4 = None
                 except:
                     pass
             elif "start" in item.lower():
                 try:
-                    start_datetime = item.split(':')[1].strip()
+                    start_datetime = item.split(":")[1].strip()
                 except:
                     pass
 
         # we need to rotate the modelgrid first, then we can
         # calculate the xll and yll from xul and yul
         if (xul, yul) != (None, None):
-            self.set_coord_info(xoff=self._xul_to_xll(xul),
-                                yoff=self._yul_to_yll(yul),
-                                angrot=self._angrot)
+            self.set_coord_info(
+                xoff=self._xul_to_xll(xul),
+                yoff=self._yul_to_yll(yul),
+                angrot=self._angrot,
+            )
 
         return True
 
-    def read_usgs_model_reference_file(self, reffile='usgs.model.reference'):
+    def read_usgs_model_reference_file(self, reffile="usgs.model.reference"):
         """read spatial reference info from the usgs.model.reference file
         https://water.usgs.gov/ogw/policy/gw-model/modelers-setup.html"""
         xul = None
@@ -493,33 +525,35 @@ class Grid(object):
             with open(reffile) as input:
                 for line in input:
                     if len(line) > 1:
-                        if line.strip()[0] != '#':
-                            info = line.strip().split('#')[0].split()
+                        if line.strip()[0] != "#":
+                            info = line.strip().split("#")[0].split()
                             if len(info) > 1:
-                                data = ' '.join(info[1:])
-                                if info[0] == 'xll':
+                                data = " ".join(info[1:])
+                                if info[0] == "xll":
                                     self._xoff = float(data)
-                                elif info[0] == 'yll':
+                                elif info[0] == "yll":
                                     self._yoff = float(data)
-                                elif info[0] == 'xul':
+                                elif info[0] == "xul":
                                     xul = float(data)
-                                elif info[0] == 'yul':
+                                elif info[0] == "yul":
                                     yul = float(data)
-                                elif info[0] == 'rotation':
+                                elif info[0] == "rotation":
                                     self._angrot = float(data)
-                                elif info[0] == 'epsg':
+                                elif info[0] == "epsg":
                                     self._epsg = int(data)
-                                elif info[0] == 'proj4':
+                                elif info[0] == "proj4":
                                     self._proj4 = data
-                                elif info[0] == 'start_date':
+                                elif info[0] == "start_date":
                                     start_datetime = data
 
             # model must be rotated first, before setting xoff and yoff
             # when xul and yul are provided.
             if (xul, yul) != (None, None):
-                self.set_coord_info(xoff=self._xul_to_xll(xul),
-                                    yoff=self._yul_to_yll(yul),
-                                    angrot=self._angrot)
+                self.set_coord_info(
+                    xoff=self._xul_to_xll(xul),
+                    yoff=self._yul_to_yll(yul),
+                    angrot=self._angrot,
+                )
 
             return True
         else:
@@ -566,7 +600,7 @@ class Grid(object):
             zbdryelevs = np.concatenate((top_3d, self.botm), axis=0)
 
             for ix in range(1, len(zbdryelevs)):
-                zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.)
+                zcenters.append((zbdryelevs[ix - 1] + zbdryelevs[ix]) / 2.0)
         else:
             zbdryelevs = None
             zcenters = None

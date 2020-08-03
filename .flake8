@@ -30,4 +30,5 @@ ignore =
     W391, # blank line at end of file
     W503, # line break before binary operator
     W504  # line break after binary operator
+    W605  # invalid escape sequence
 statistics = True

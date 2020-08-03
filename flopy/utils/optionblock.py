@@ -20,31 +20,37 @@ class OptionBlock(object):
         flag to write as single line or block type
 
     """
+
     nested = "nested"
     dtype = "dtype"
     n_nested = "nvars"
     vars = "vars"
     optional = "optional"
 
-    simple_flag = OrderedDict([(dtype, np.bool_),
-                               (nested, False),
-                               (optional, False)])
-    simple_str = OrderedDict([(dtype, str),
-                              (nested, False),
-                              (optional, False)])
-    simple_float = OrderedDict([(dtype, float),
-                                (nested, False),
-                                (optional, False)])
-    simple_int = OrderedDict([(dtype, int),
-                              (nested, False),
-                              (optional, False)])
+    simple_flag = OrderedDict(
+        [(dtype, np.bool_), (nested, False), (optional, False)]
+    )
+    simple_str = OrderedDict(
+        [(dtype, str), (nested, False), (optional, False)]
+    )
+    simple_float = OrderedDict(
+        [(dtype, float), (nested, False), (optional, False)]
+    )
+    simple_int = OrderedDict(
+        [(dtype, int), (nested, False), (optional, False)]
+    )
 
-    simple_tabfile = OrderedDict([(dtype, np.bool_),
-                                  (nested, True),
-                                  (n_nested, 2),
-                                  (vars, OrderedDict([('numtab', simple_int),
-                                                      ('maxval',
-                                                       simple_int)]))])
+    simple_tabfile = OrderedDict(
+        [
+            (dtype, np.bool_),
+            (nested, True),
+            (n_nested, 2),
+            (
+                vars,
+                OrderedDict([("numtab", simple_int), ("maxval", simple_int)]),
+            ),
+        ]
+    )
 
     def __init__(self, options_line, package, block=True):
         self._context = package._options
@@ -123,8 +129,9 @@ class OptionBlock(object):
                             if v == "None" and d[OptionBlock.optional]:
                                 pass
                             else:
-                                val.append(str((object.__getattribute__(self,
-                                                                        k))))
+                                val.append(
+                                    str((object.__getattribute__(self, k)))
+                                )
 
                 if "None" in val:
                     pass
@@ -162,28 +169,24 @@ class OptionBlock(object):
             for name in value.dtype.names:
                 if self._attr_types[name] == np.bool_:
                     if not isinstance(value, (bool, np.bool_, np.bool)):
-                        raise TypeError(err_msg.format(
-                            self._attr_types[name]))
+                        raise TypeError(err_msg.format(self._attr_types[name]))
                 else:
                     try:
                         value = self._attr_types[name](value)
                     except ValueError:
-                        raise TypeError(err_msg.format(
-                            self._attr_types[name]))
+                        raise TypeError(err_msg.format(self._attr_types[name]))
 
                 self.__dict__[name] = value[name][0]
 
         elif key in self._attr_types:
             if self._attr_types[key] == np.bool_:
                 if not isinstance(value, (bool, np.bool_, np.bool)):
-                    raise TypeError(err_msg.format(
-                        self._attr_types[key]))
+                    raise TypeError(err_msg.format(self._attr_types[key]))
             else:
                 try:
                     value = self._attr_types[key](value)
                 except ValueError:
-                    raise TypeError(err_msg.format(
-                        self._attr_types[key]))
+                    raise TypeError(err_msg.format(self._attr_types[key]))
 
             self.__dict__[key] = value
 
@@ -352,13 +355,15 @@ class OptionBlock(object):
         """
         context = package._options
 
-        openfile = not hasattr(options, 'read')
+        openfile = not hasattr(options, "read")
         if openfile:
             try:
                 options = open(options, "r")
             except IOError:
-                err_msg = "Unrecognized type for options" \
-                          " variable: {}".format(type(options))
+                err_msg = (
+                    "Unrecognized type for options"
+                    " variable: {}".format(type(options))
+                )
                 raise TypeError(err_msg)
 
         option_line = ""
@@ -393,8 +398,10 @@ class OptionBlock(object):
                                 valid = True
 
                             if not valid:
-                                err_msg = "Invalid type set to variable " \
-                                          "{} in option block".format(k)
+                                err_msg = (
+                                    "Invalid type set to variable "
+                                    "{} in option block".format(k)
+                                )
                                 raise TypeError(err_msg)
 
                             option_line += t[ix] + " "
@@ -403,12 +410,10 @@ class OptionBlock(object):
             else:
                 if openfile:
                     options.close()
-                return OptionBlock(options_line=option_line,
-                                   package=package)
+                return OptionBlock(options_line=option_line, package=package)
 
 
 class OptionUtil(object):
-
     @staticmethod
     def isfloat(s):
         """
@@ -483,8 +488,10 @@ class OptionUtil(object):
                 pass
 
         if not valid:
-            err_msg = "Invalid type set to variable " \
-                      "{} in option block".format(val)
+            err_msg = (
+                "Invalid type set to variable "
+                "{} in option block".format(val)
+            )
             raise TypeError(err_msg)
 
         return valid

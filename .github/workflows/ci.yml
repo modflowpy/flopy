@@ -1,0 +1,78 @@
+name: pymake continuous integration
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+
+jobs:
+
+  flopy_lint:
+    name: flopy linting
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - uses: s-weigand/setup-conda@v1
+    - name: Install packages
+      run: |
+        pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.travis.txt; fi
+        pip install --no-binary rasterio rasterio
+        pip install --upgrade numpy
+        pip install shapely[vectorize]
+        pip install https://github.com/modflowpy/pymake/zipball/master
+        pip install pylint flake8 black
+    - name: Run black
+      run: black --check --line-length 79 ./flopy
+    - name: Run flake8
+      run: flake8 --count --show-source --exit-zero ./flopy
+    - name: Run pylint
+      run: |
+        pylint --jobs=2 --errors-only ./flopy || pylint-exit $?
+        if [ $? -ne 0 ]; then
+          echo "An error occurred while running pylint." >&2
+          exit 1
+        fi
+
+  flopyCI:
+    name: Run pymake CI on different python versions and different OSs
+    needs: flopy_lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up conda ${{ matrix.python-version }}
+      uses: s-weigand/setup-conda@v1
+      with:
+        update-conda: true
+        python-version: ${{ matrix.python-version }}
+        conda-channels: anaconda, conda-forge
+
+    - name: Install python packages
+      shell: bash
+      run: |
+        pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.travis.txt; fi
+        pip install --no-binary rasterio rasterio
+        pip install --upgrade numpy
+        pip install shapely[vectorize]
+        pip install coveralls nose-timer
+        pip install pylint flake8 black
+        pip install https://github.com/modflowpy/pymake/zipball/master
+        echo "Install flopy..."
+        pip install .
+
+    - name: Run nosetests
+      shell: bash
+      run: |
+        echo "Building executables..."
+        nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+        echo "Running autotests..."
+        nosetests -v --with-id --with-timer -w ./autotest

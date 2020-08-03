@@ -9,7 +9,7 @@ except:
     print('pymake is not installed...will not build executables')
     pymake = None
 
-os.environ["TRAVIS"] = "1"
+os.environ["CI"] = "1"
 
 # path where downloaded executables will be extracted
 exe_pth = 'exe_download'
@@ -18,16 +18,16 @@ if not os.path.isdir(exe_pth):
     os.makedirs(exe_pth)
 
 # determine if running on Travis
-is_travis = 'TRAVIS' in os.environ
+is_CI = 'CI' in os.environ
 
 bindir = '.'
 dotlocal = False
-if is_travis:
+if is_CI:
     dotlocal = True
 
 if not dotlocal:
     for idx, arg in enumerate(sys.argv):
-        if '--travis' in arg.lower():
+        if '--ci' in arg.lower():
             dotlocal = True
             break
 if dotlocal:

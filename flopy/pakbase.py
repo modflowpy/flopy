@@ -25,72 +25,78 @@ class PackageInterface(object):
     @abc.abstractmethod
     def name(self):
         raise NotImplementedError(
-            'must define name in child '
-            'class to use this base class')
+            "must define name in child " "class to use this base class"
+        )
 
     @name.setter
     @abc.abstractmethod
     def name(self, name):
         raise NotImplementedError(
-            'must define name in child '
-            'class to use this base class')
+            "must define name in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def parent(self):
         raise NotImplementedError(
-            'must define parent in child '
-            'class to use this base class')
+            "must define parent in child " "class to use this base class"
+        )
 
     @parent.setter
     @abc.abstractmethod
     def parent(self, name):
         raise NotImplementedError(
-            'must define parent in child '
-            'class to use this base class')
+            "must define parent in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def package_type(self):
         raise NotImplementedError(
-            'must define package_type in child '
-            'class to use this base class')
+            "must define package_type in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def data_list(self):
         # [data_object, data_object, ...]
         raise NotImplementedError(
-            'must define data_list in child '
-            'class to use this base class')
+            "must define data_list in child " "class to use this base class"
+        )
 
     @abc.abstractmethod
     def export(self, f, **kwargs):
         raise NotImplementedError(
-            'must define export in child '
-            'class to use this base class')
+            "must define export in child " "class to use this base class"
+        )
 
     @property
     @abc.abstractmethod
     def plotable(self):
         raise NotImplementedError(
-            'must define plotable in child '
-            'class to use this base class')
+            "must define plotable in child " "class to use this base class"
+        )
 
     @property
     def has_stress_period_data(self):
-        return self.__dict__.get('stress_period_data', None) is not None
+        return self.__dict__.get("stress_period_data", None) is not None
 
     @staticmethod
     def _check_thresholds(chk, array, active, thresholds, name):
         """Checks array against min and max threshold values."""
         mn, mx = thresholds
-        chk.values(array, active & (array < mn),
-                   '{} values below checker threshold of {}'
-                   .format(name, mn), 'Warning')
-        chk.values(array, active & (array > mx),
-                   '{} values above checker threshold of {}'
-                   .format(name, mx), 'Warning')
+        chk.values(
+            array,
+            active & (array < mn),
+            "{} values below checker threshold of {}".format(name, mn),
+            "Warning",
+        )
+        chk.values(
+            array,
+            active & (array > mx),
+            "{} values above checker threshold of {}".format(name, mx),
+            "Warning",
+        )
 
     @staticmethod
     def _confined_layer_check(chk):
@@ -98,9 +104,12 @@ class PackageInterface(object):
 
     def _other_xpf_checks(self, chk, active):
         # check for negative hani
-        chk.values(self.__dict__['hani'].array,
-                   active & (self.__dict__['hani'].array < 0),
-                   'negative horizontal anisotropy values', 'Error')
+        chk.values(
+            self.__dict__["hani"].array,
+            active & (self.__dict__["hani"].array < 0),
+            "negative horizontal anisotropy values",
+            "Error",
+        )
 
         # check vkcb if there are any quasi-3D layers
         if self.parent.dis.laycbd.sum() > 0:
@@ -113,12 +122,19 @@ class PackageInterface(object):
                     # won't violate checker
                     # (allows for same structure as other checks)
                     vkcb[l, :, :] = 1
-            chk.values(vkcb, active & (vkcb <= 0),
-                       'zero or negative quasi-3D confining bed Kv values',
-                       'Error')
-            self._check_thresholds(chk, vkcb, active,
-                                   chk.property_threshold_values['vkcb'],
-                                   'quasi-3D confining bed Kv')
+            chk.values(
+                vkcb,
+                active & (vkcb <= 0),
+                "zero or negative quasi-3D confining bed Kv values",
+                "Error",
+            )
+            self._check_thresholds(
+                chk,
+                vkcb,
+                active,
+                chk.property_threshold_values["vkcb"],
+                "quasi-3D confining bed Kv",
+            )
 
     @staticmethod
     def _get_nan_exclusion_list():
@@ -133,7 +149,7 @@ class PackageInterface(object):
     def _check_oc(self, f=None, verbose=True, level=1, checktype=None):
         spd_inds_valid = True
         chk = self._get_check(f, verbose, level, checktype)
-        spd = getattr(self, 'stress_period_data')
+        spd = getattr(self, "stress_period_data")
         nan_exclusion_list = self._get_nan_exclusion_list()
         for per in spd.data.keys():
             if isinstance(spd.data[per], np.recarray):
@@ -142,8 +158,7 @@ class PackageInterface(object):
 
                 # General BC checks
                 # check for valid cell indices
-                spd_inds_valid = \
-                    chk._stress_period_data_valid_indices(spdata)
+                spd_inds_valid = chk._stress_period_data_valid_indices(spdata)
 
                 # first check for and list nan values
                 chk._stress_period_data_nans(spdata, nan_exclusion_list)
@@ -161,38 +176,42 @@ class PackageInterface(object):
                         mg = self.parent.modelgrid
                         botms = mg.botm[inds]
                         test = spdata[elev_name] < botms
-                        en = 'BC elevation below cell bottom'
-                        chk.stress_period_data_values(spdata,
-                                                      test,
-                                                      col=elev_name,
-                                                      error_name=en,
-                                                      error_type='Error')
+                        en = "BC elevation below cell bottom"
+                        chk.stress_period_data_values(
+                            spdata,
+                            test,
+                            col=elev_name,
+                            error_name=en,
+                            error_type="Error",
+                        )
 
         chk.summarize()
         return chk
 
     def _get_kparams(self):
         # build model specific parameter lists
-        kparams_all = {'hk': 'horizontal hydraulic conductivity',
-                       'vka': 'vertical hydraulic conductivity',
-                       'k': 'horizontal hydraulic conductivity',
-                       'k22': 'hydraulic conductivity second axis',
-                       'k33': 'vertical hydraulic conductivity'}
+        kparams_all = {
+            "hk": "horizontal hydraulic conductivity",
+            "vka": "vertical hydraulic conductivity",
+            "k": "horizontal hydraulic conductivity",
+            "k22": "hydraulic conductivity second axis",
+            "k33": "vertical hydraulic conductivity",
+        }
         kparams = {}
         vka_param = None
         for kp, name in kparams_all.items():
             if kp in self.__dict__:
                 kparams[kp] = name
-        if 'hk' in self.__dict__:
+        if "hk" in self.__dict__:
             hk = self.hk.array.copy()
         else:
             hk = self.k.array.copy()
-        if 'vka' in self.__dict__ and self.layvka.sum() > 0:
+        if "vka" in self.__dict__ and self.layvka.sum() > 0:
             vka = self.vka.array
-            vka_param = kparams.pop('vka')
-        elif 'k33' in self.__dict__:
+            vka_param = kparams.pop("vka")
+        elif "k33" in self.__dict__:
             vka = self.k33.array
-            vka_param = kparams.pop('k33')
+            vka_param = kparams.pop("k33")
         else:
             vka = None
         if vka is not None:
@@ -210,34 +229,44 @@ class PackageInterface(object):
         # anisotropy, and quasi-3D confining beds
         for kp, name in kparams.items():
             if self.__dict__[kp].array is not None:
-                chk.values(self.__dict__[kp].array,
-                           active & (self.__dict__[kp].array <= 0),
-                           'zero or negative {} values'.format(name),
-                           'Error')
+                chk.values(
+                    self.__dict__[kp].array,
+                    active & (self.__dict__[kp].array <= 0),
+                    "zero or negative {} values".format(name),
+                    "Error",
+                )
 
-        if 'hani' in self.__dict__:
+        if "hani" in self.__dict__:
             self._other_xpf_checks(chk, active)
 
         # check for unusually high or low values of hydraulic conductivity
         # convert vertical anisotropy to Kv for checking
         if vka is not None:
-            if 'layvka' in self.__dict__:
+            if "layvka" in self.__dict__:
                 for l in range(vka.shape[0]):
                     vka[l] *= hk[l] if self.layvka.array[l] != 0 else 1
-            self._check_thresholds(chk, vka, active,
-                                   chk.property_threshold_values['vka'],
-                                   vka_param)
+            self._check_thresholds(
+                chk,
+                vka,
+                active,
+                chk.property_threshold_values["vka"],
+                vka_param,
+            )
 
         for kp, name in kparams.items():
             if self.__dict__[kp].array is not None:
-                self._check_thresholds(chk, self.__dict__[kp].array,
-                                       active,
-                                       chk.property_threshold_values[kp],
-                                       name)
-        if self.name[0] in ['UPW', 'LPF']:
-            storage_coeff = 'STORAGECOEFFICIENT' in self.options or \
-                            ('storagecoefficient' in self.__dict__ and
-                             self.storagecoefficient.get_data())
+                self._check_thresholds(
+                    chk,
+                    self.__dict__[kp].array,
+                    active,
+                    chk.property_threshold_values[kp],
+                    name,
+                )
+        if self.name[0] in ["UPW", "LPF"]:
+            storage_coeff = "STORAGECOEFFICIENT" in self.options or (
+                "storagecoefficient" in self.__dict__
+                and self.storagecoefficient.get_data()
+            )
             self._check_storage(chk, storage_coeff)
         chk.summarize()
         return chk
@@ -277,26 +306,31 @@ class PackageInterface(object):
         """
         chk = None
 
-        if self.has_stress_period_data and self.name[0] != 'OC' and \
-                self.package_type.upper() != 'OC':
+        if (
+            self.has_stress_period_data
+            and self.name[0] != "OC"
+            and self.package_type.upper() != "OC"
+        ):
             chk = self._check_oc(f, verbose, level, checktype)
         # check property values in upw and lpf packages
-        elif self.name[0] in ['UPW', 'LPF'] or \
-                self.package_type.upper() in ['NPF']:
+        elif self.name[0] in ["UPW", "LPF"] or self.package_type.upper() in [
+            "NPF"
+        ]:
             chk = self._check_flowp(f, verbose, level, checktype)
-        elif self.package_type.upper() in ['STO']:
+        elif self.package_type.upper() in ["STO"]:
             chk = self._get_check(f, verbose, level, checktype)
             storage_coeff = self.storagecoefficient.get_data()
             if storage_coeff is None:
                 storage_coeff = False
             self._check_storage(chk, storage_coeff)
         else:
-            txt = 'check method not implemented for ' + \
-                  '{} Package.'.format(self.name[0])
+            txt = "check method not implemented for " + "{} Package.".format(
+                self.name[0]
+            )
             if f is not None:
                 if isinstance(f, str):
                     pth = os.path.join(self.parent.model_ws, f)
-                    f = open(pth, 'w')
+                    f = open(pth, "w")
                     f.write(txt)
                     f.close()
             if verbose:
@@ -308,38 +342,62 @@ class PackageInterface(object):
         if not np.all(self.parent.modeltime.steady_state):
             active = chk.get_active()
             # do the same for storage if the model is transient
-            sarrays = {'ss': self.ss.array, 'sy': self.sy.array}
+            sarrays = {"ss": self.ss.array, "sy": self.sy.array}
             # convert to specific for checking
             if storage_coeff:
-                desc = '\r    STORAGECOEFFICIENT option is ' + \
-                       'activated, storage values are read ' + \
-                       'storage coefficients'
-                chk._add_to_summary(type='Warning', desc=desc)
+                desc = (
+                    "\r    STORAGECOEFFICIENT option is "
+                    + "activated, storage values are read "
+                    + "storage coefficients"
+                )
+                chk._add_to_summary(type="Warning", desc=desc)
 
-            chk.values(sarrays['ss'], active & (sarrays['ss'] < 0),
-                       'zero or negative specific storage values', 'Error')
-            self._check_thresholds(chk, sarrays['ss'], active,
-                                   chk.property_threshold_values['ss'],
-                                   'specific storage')
+            chk.values(
+                sarrays["ss"],
+                active & (sarrays["ss"] < 0),
+                "zero or negative specific storage values",
+                "Error",
+            )
+            self._check_thresholds(
+                chk,
+                sarrays["ss"],
+                active,
+                chk.property_threshold_values["ss"],
+                "specific storage",
+            )
 
             # only check specific yield for convertible layers
-            if 'laytyp' in self.__dict__:
+            if "laytyp" in self.__dict__:
                 inds = np.array(
-                    [True if l > 0 or l < 0 and 'THICKSTRT' in self.options
-                     else False for l in self.laytyp])
-                sarrays['sy'] = sarrays['sy'][inds, :, :]
+                    [
+                        True
+                        if l > 0 or l < 0 and "THICKSTRT" in self.options
+                        else False
+                        for l in self.laytyp
+                    ]
+                )
+                sarrays["sy"] = sarrays["sy"][inds, :, :]
                 active = active[inds, :, :]
             else:
                 iconvert = self.iconvert.array
                 for ishape in np.ndindex(active.shape):
                     if active[ishape]:
-                        active[ishape] = iconvert[ishape] > 0 or \
-                                         iconvert[ishape] < 0
-            chk.values(sarrays['sy'], active & (sarrays['sy'] < 0),
-                       'zero or negative specific yield values', 'Error')
-            self._check_thresholds(chk, sarrays['sy'], active,
-                                   chk.property_threshold_values['sy'],
-                                   'specific yield')
+                        active[ishape] = (
+                            iconvert[ishape] > 0 or iconvert[ishape] < 0
+                        )
+            chk.values(
+                sarrays["sy"],
+                active & (sarrays["sy"] < 0),
+                "zero or negative specific yield values",
+                "Error",
+            )
+            self._check_thresholds(
+                chk,
+                sarrays["sy"],
+                active,
+                chk.property_threshold_values["sy"],
+                "specific yield",
+            )
 
 
 class Package(PackageInterface):
@@ -348,8 +406,16 @@ class Package(PackageInterface):
 
     """
 
-    def __init__(self, parent, extension='glo', name='GLOBAL', unit_number=1,
-                 extra='', filenames=None, allowDuplicates=False):
+    def __init__(
+        self,
+        parent,
+        extension="glo",
+        name="GLOBAL",
+        unit_number=1,
+        extra="",
+        filenames=None,
+        allowDuplicates=False,
+    ):
         """
         Package init
 
@@ -362,7 +428,7 @@ class Package(PackageInterface):
         self.file_name = []
         for idx, e in enumerate(extension):
             self.extension.append(e)
-            file_name = self.parent.name + '.' + e
+            file_name = self.parent.name + "." + e
             if filenames is not None:
                 if idx < len(filenames):
                     if filenames[idx] is not None:
@@ -370,17 +436,17 @@ class Package(PackageInterface):
             self.file_name.append(file_name)
 
         self.fn_path = os.path.join(self.parent.model_ws, self.file_name[0])
-        if (not isinstance(name, list)):
+        if not isinstance(name, list):
             name = [name]
         self._name = name
-        if (not isinstance(unit_number, list)):
+        if not isinstance(unit_number, list):
             unit_number = [unit_number]
         self.unit_number = unit_number
-        if (not isinstance(extra, list)):
+        if not isinstance(extra, list):
             self.extra = len(self.unit_number) * [extra]
         else:
             self.extra = extra
-        self.url = 'index.html'
+        self.url = "index.html"
         self.allowDuplicates = allowDuplicates
 
         self.acceptable_dtypes = [int, np.float32, str]
@@ -389,43 +455,57 @@ class Package(PackageInterface):
 
     def __repr__(self):
         s = self.__doc__
-        exclude_attributes = ['extension', 'heading', 'name', 'parent', 'url']
+        exclude_attributes = ["extension", "heading", "name", "parent", "url"]
         for attr, value in sorted(self.__dict__.items()):
             if not (attr in exclude_attributes):
                 if isinstance(value, list):
                     if len(value) == 1:
-                        s += ' {:s} = {:s}\n'.format(attr, str(value[0]))
+                        s += " {:s} = {:s}\n".format(attr, str(value[0]))
                     else:
-                        s += ' {:s} '.format(attr) + \
-                             '(list, items = {:d})\n'.format(len(value))
+                        s += " {:s} ".format(
+                            attr
+                        ) + "(list, items = {:d})\n".format(len(value))
                 elif isinstance(value, np.ndarray):
-                    s += ' {:s} (array, shape = '.format(attr) + \
-                         '{:s})\n'.format(value.shape.__str__()[1:-1])
+                    s += " {:s} (array, shape = ".format(
+                        attr
+                    ) + "{:s})\n".format(value.shape.__str__()[1:-1])
                 else:
-                    s += ' {:s} = '.format(attr) + \
-                         '{:s} '.format(str(value)) + \
-                         '({:s})\n'.format(str(type(value))[7:-2])
+                    s += (
+                        " {:s} = ".format(attr)
+                        + "{:s} ".format(str(value))
+                        + "({:s})\n".format(str(type(value))[7:-2])
+                    )
         return s
 
     def __getitem__(self, item):
-        if hasattr(self, 'stress_period_data'):
+        if hasattr(self, "stress_period_data"):
             # added this check because stress_period_data also used in Oc and
             # Oc88 but is not a MfList
-            spd = getattr(self, 'stress_period_data')
+            spd = getattr(self, "stress_period_data")
             if isinstance(item, MfList):
                 if not isinstance(item, list) and not isinstance(item, tuple):
-                    msg = 'package.__getitem__() kper ' + \
-                          str(item) + ' not in data.keys()'
+                    msg = (
+                        "package.__getitem__() kper "
+                        + str(item)
+                        + " not in data.keys()"
+                    )
                     assert item in list(spd.data.keys()), msg
                     return spd[item]
 
                 if item[1] not in self.dtype.names:
-                    msg = 'package.__getitem(): item ' + str(item) + \
-                          ' not in dtype names ' + str(self.dtype.names)
+                    msg = (
+                        "package.__getitem(): item "
+                        + str(item)
+                        + " not in dtype names "
+                        + str(self.dtype.names)
+                    )
                     raise Exception(msg)
 
-                msg = 'package.__getitem__() kper ' + str(item[0]) + \
-                      ' not in data.keys()'
+                msg = (
+                    "package.__getitem__() kper "
+                    + str(item[0])
+                    + " not in data.keys()"
+                )
                 assert item[0] in list(spd.data.keys()), msg
 
                 if spd.vtype[item[0]] == np.recarray:
@@ -439,47 +519,70 @@ class Package(PackageInterface):
         if key in list(var_dict.keys()):
             old_value = var_dict[key]
             if isinstance(old_value, Util2d):
-                value = Util2d(self.parent, old_value.shape,
-                               old_value.dtype, value,
-                               name=old_value.name,
-                               fmtin=old_value.format.fortran,
-                               locat=old_value.locat,
-                               array_free_format=old_value.format.array_free_format)
+                value = Util2d(
+                    self.parent,
+                    old_value.shape,
+                    old_value.dtype,
+                    value,
+                    name=old_value.name,
+                    fmtin=old_value.format.fortran,
+                    locat=old_value.locat,
+                    array_free_format=old_value.format.array_free_format,
+                )
             elif isinstance(old_value, Util3d):
-                value = Util3d(self.parent, old_value.shape,
-                               old_value.dtype, value,
-                               name=old_value.name_base,
-                               fmtin=old_value.fmtin,
-                               locat=old_value.locat,
-                               array_free_format=old_value.array_free_format)
+                value = Util3d(
+                    self.parent,
+                    old_value.shape,
+                    old_value.dtype,
+                    value,
+                    name=old_value.name_base,
+                    fmtin=old_value.fmtin,
+                    locat=old_value.locat,
+                    array_free_format=old_value.array_free_format,
+                )
             elif isinstance(old_value, Transient2d):
-                value = Transient2d(self.parent, old_value.shape,
-                                    old_value.dtype, value,
-                                    name=old_value.name_base,
-                                    fmtin=old_value.fmtin,
-                                    locat=old_value.locat)
+                value = Transient2d(
+                    self.parent,
+                    old_value.shape,
+                    old_value.dtype,
+                    value,
+                    name=old_value.name_base,
+                    fmtin=old_value.fmtin,
+                    locat=old_value.locat,
+                )
             elif isinstance(old_value, MfList):
-                value = MfList(self, dtype=old_value.dtype,
-                               data=value)
+                value = MfList(self, dtype=old_value.dtype, data=value)
             elif isinstance(old_value, list):
                 if len(old_value) > 0:
                     if isinstance(old_value[0], Util3d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(Util3d(self.parent, vo.shape,
-                                                   vo.dtype, v,
-                                                   name=vo.name_base,
-                                                   fmtin=vo.fmtin,
-                                                   locat=vo.locat))
+                            new_list.append(
+                                Util3d(
+                                    self.parent,
+                                    vo.shape,
+                                    vo.dtype,
+                                    v,
+                                    name=vo.name_base,
+                                    fmtin=vo.fmtin,
+                                    locat=vo.locat,
+                                )
+                            )
                         value = new_list
                     elif isinstance(old_value[0], Util2d):
                         new_list = []
                         for vo, v in zip(old_value, value):
-                            new_list.append(Util2d(self.parent, vo.shape,
-                                                   vo.dtype, v,
-                                                   name=vo.name,
-                                                   fmtin=vo.fmtin,
-                                                   locat=vo.locat))
+                            new_list.append(
+                                Util2d(
+                                    self.parent,
+                                    vo.shape,
+                                    vo.dtype,
+                                    v,
+                                    name=vo.name,
+                                    fmtin=vo.fmtin,
+                                    locat=vo.locat,
+                                )
+                            )
                         value = new_list
 
         super(Package, self).__setattr__(key, value)
@@ -514,12 +617,12 @@ class Package(PackageInterface):
         # return [data_object, data_object, ...]
         dl = []
         attrs = dir(self)
-        if 'sr' in attrs:
-            attrs.remove('sr')
-        if 'start_datetime' in attrs:
-            attrs.remove('start_datetime')
+        if "sr" in attrs:
+            attrs.remove("sr")
+        if "start_datetime" in attrs:
+            attrs.remove("start_datetime")
         for attr in attrs:
-            if '__' in attr or 'data_list' in attr:
+            if "__" in attr or "data_list" in attr:
                 continue
             dl.append(self.__getattribute__(attr))
         return dl
@@ -544,6 +647,7 @@ class Package(PackageInterface):
 
         """
         from flopy import export
+
         return export.utils.package_export(f, self, **kwargs)
 
     @staticmethod
@@ -584,16 +688,18 @@ class Package(PackageInterface):
         confined = False
         thickstrt = False
         for option in self.options:
-            if option.lower() == 'thickstrt':
+            if option.lower() == "thickstrt":
                 thickstrt = True
         for i, l in enumerate(self.laytyp.array.tolist()):
             if l == 0 or l < 0 and thickstrt:
                 confined = True
                 continue
             if confined and l > 0:
-                desc = '\r    LAYTYP: unconfined (convertible) ' + \
-                       'layer below confined layer'
-                chk._add_to_summary(type='Warning', desc=desc)
+                desc = (
+                    "\r    LAYTYP: unconfined (convertible) "
+                    + "layer below confined layer"
+                )
+                chk._add_to_summary(type="Warning", desc=desc)
 
     def level1_arraylist(self, idx, v, name, txt):
         ndim = v.ndim
@@ -602,28 +708,31 @@ class Package(PackageInterface):
             for [k, i, j] in idx:
                 if k > kon:
                     kon = k
-                    tag = name[k].lower().replace(' layer ', '')
-                    txt += '    {:>10s}'.format('layer') + \
-                           '{:>10s}'.format('row') + \
-                           '{:>10s}'.format('column') + \
-                           '{:>15s}\n'.format(tag)
-                txt += '    {:10d}{:10d}{:10d}{:15.7g}\n'.format(k + 1,
-                                                                 i + 1,
-                                                                 j + 1,
-                                                                 v[k, i, j])
+                    tag = name[k].lower().replace(" layer ", "")
+                    txt += (
+                        "    {:>10s}".format("layer")
+                        + "{:>10s}".format("row")
+                        + "{:>10s}".format("column")
+                        + "{:>15s}\n".format(tag)
+                    )
+                txt += "    {:10d}{:10d}{:10d}{:15.7g}\n".format(
+                    k + 1, i + 1, j + 1, v[k, i, j]
+                )
         elif ndim == 2:
-            tag = name[0].lower().replace(' layer ', '')
-            txt += '    {:>10s}'.format('row') + \
-                   '{:>10s}'.format('column') + \
-                   '{:>15s}\n'.format(tag)
+            tag = name[0].lower().replace(" layer ", "")
+            txt += (
+                "    {:>10s}".format("row")
+                + "{:>10s}".format("column")
+                + "{:>15s}\n".format(tag)
+            )
             for [i, j] in idx:
-                txt += '    {:10d}{:10d}{:15.7g}\n'.format(i + 1,
-                                                           j + 1,
-                                                           v[i, j])
+                txt += "    {:10d}{:10d}{:15.7g}\n".format(
+                    i + 1, j + 1, v[i, j]
+                )
         elif ndim == 1:
-            txt += '    {:>10s}{:>15s}\n'.format('number', name[0])
+            txt += "    {:>10s}{:>15s}\n".format("number", name[0])
             for i in idx:
-                txt += '    {:10d}{:15.7g}\n'.format(i + 1, v[i])
+                txt += "    {:10d}{:15.7g}\n".format(i + 1, v[i])
         return txt
 
     def plot(self, **kwargs):
@@ -705,19 +814,26 @@ class Package(PackageInterface):
 
         """
         import warnings
+
         warnings.warn("to_shapefile() is deprecated. use .export()")
         self.export(filename)
 
     def webdoc(self):
-        if self.parent.version == 'mf2k':
-            wa = 'http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/' + \
-                 self.url
-        elif self.parent.version == 'mf2005':
-            wa = 'http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/' + \
-                 self.url
-        elif self.parent.version == 'ModflowNwt':
-            wa = 'http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/' + \
-                 self.url
+        if self.parent.version == "mf2k":
+            wa = (
+                "http://water.usgs.gov/nrp/gwsoftware/modflow2000/Guide/"
+                + self.url
+            )
+        elif self.parent.version == "mf2005":
+            wa = (
+                "http://water.usgs.gov/ogw/modflow/MODFLOW-2005-Guide/"
+                + self.url
+            )
+        elif self.parent.version == "ModflowNwt":
+            wa = (
+                "http://water.usgs.gov/ogw/modflow-nwt/MODFLOW-NWT-Guide/"
+                + self.url
+            )
         else:
             wa = None
 
@@ -730,7 +846,7 @@ class Package(PackageInterface):
         Every Package needs its own write_file function
 
         """
-        print('IMPLEMENTATION ERROR: write_file must be overloaded')
+        print("IMPLEMENTATION ERROR: write_file must be overloaded")
         return
 
     @staticmethod
@@ -741,28 +857,28 @@ class Package(PackageInterface):
         """
 
         # parse keywords
-        if 'nper' in kwargs:
-            nper = kwargs.pop('nper')
+        if "nper" in kwargs:
+            nper = kwargs.pop("nper")
         else:
             nper = None
-        if 'unitnumber' in kwargs:
-            unitnumber = kwargs.pop('unitnumber')
+        if "unitnumber" in kwargs:
+            unitnumber = kwargs.pop("unitnumber")
         else:
             unitnumber = None
-        if 'check' in kwargs:
-            check = kwargs.pop('check')
+        if "check" in kwargs:
+            check = kwargs.pop("check")
         else:
             check = True
 
         # open the file if not already open
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
-        elif hasattr(f, 'name'):
+            f = open(filename, "r")
+        elif hasattr(f, "name"):
             filename = f.name
         else:
-            filename = '?'
+            filename = "?"
 
         # set string from pak_type
         pak_type_str = str(pak_type).lower()
@@ -770,7 +886,7 @@ class Package(PackageInterface):
         # dataset 0 -- header
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # check for mfnwt version 11 option block
@@ -788,8 +904,11 @@ class Package(PackageInterface):
             if nppak > 0:
                 mxl = np.int(t[2])
                 if model.verbose:
-                    msg = 3 * ' ' + 'Parameters detected. Number of ' + \
-                          'parameters = {}'.format(nppak)
+                    msg = (
+                        3 * " "
+                        + "Parameters detected. Number of "
+                        + "parameters = {}".format(nppak)
+                    )
                     print(msg)
             line = f.readline()
 
@@ -801,22 +920,25 @@ class Package(PackageInterface):
             ipakcb = int(t[1])
         except:
             if model.verbose:
-                msg = 3 * ' ' + 'implicit ipakcb in {}'.format(filename)
+                msg = 3 * " " + "implicit ipakcb in {}".format(filename)
                 print(msg)
-        if 'modflowdrt' in pak_type_str:
+        if "modflowdrt" in pak_type_str:
             try:
                 nppak = int(t[2])
                 imax += 1
             except:
                 if model.verbose:
-                    msg = 3 * ' ' + 'implicit nppak in {}'.format(filename)
+                    msg = 3 * " " + "implicit nppak in {}".format(filename)
                     print(msg)
             if nppak > 0:
                 mxl = np.int(t[3])
                 imax += 1
                 if model.verbose:
-                    msg = 3 * ' ' + 'Parameters detected. Number of ' + \
-                          'parameters = {}'.format(nppak)
+                    msg = (
+                        3 * " "
+                        + "Parameters detected. Number of "
+                        + "parameters = {}".format(nppak)
+                    )
                     print(msg)
 
         options = []
@@ -825,17 +947,17 @@ class Package(PackageInterface):
             it = imax
             while it < len(t):
                 toption = t[it]
-                if toption.lower() == 'noprint':
+                if toption.lower() == "noprint":
                     options.append(toption.lower())
-                elif 'aux' in toption.lower():
-                    options.append(' '.join(t[it:it + 2]))
+                elif "aux" in toption.lower():
+                    options.append(" ".join(t[it : it + 2]))
                     aux_names.append(t[it + 1].lower())
                     it += 1
                 it += 1
 
         # add auxillary information to nwt options
         if nwt_options is not None and options:
-            if options[0] == 'noprint':
+            if options[0] == "noprint":
                 nwt_options.noprint = True
                 if len(options) > 1:
                     nwt_options.auxillary = options[1:]
@@ -846,19 +968,20 @@ class Package(PackageInterface):
 
         # set partype
         #  and read phiramp for modflow-nwt well package
-        partype = ['cond']
-        if 'modflowwel' in pak_type_str:
-            partype = ['flux']
+        partype = ["cond"]
+        if "modflowwel" in pak_type_str:
+            partype = ["flux"]
 
         # check for "standard" single line options from mfnwt
-        if 'nwt' in model.version.lower():
-            if 'flopy.modflow.mfwel.modflowwel'.lower() in pak_type_str:
+        if "nwt" in model.version.lower():
+            if "flopy.modflow.mfwel.modflowwel".lower() in pak_type_str:
                 ipos = f.tell()
                 line = f.readline()
                 # test for specify keyword if a NWT well file
-                if 'specify' in line.lower():
-                    nwt_options = OptionBlock(line.lower().strip(),
-                                              pak_type, block=False)
+                if "specify" in line.lower():
+                    nwt_options = OptionBlock(
+                        line.lower().strip(), pak_type, block=False
+                    )
                     if options:
                         if options[0] == "noprint":
                             nwt_options.noprint = True
@@ -870,18 +993,20 @@ class Package(PackageInterface):
                     options = nwt_options
                 else:
                     f.seek(ipos)
-        elif 'flopy.modflow.mfchd.modflowchd'.lower() in pak_type_str:
-            partype = ['shead', 'ehead']
+        elif "flopy.modflow.mfchd.modflowchd".lower() in pak_type_str:
+            partype = ["shead", "ehead"]
 
         # get the list columns that should be scaled with sfac
         sfac_columns = pak_type.get_sfac_columns()
 
         # read parameter data
         if nppak > 0:
-            dt = pak_type.get_empty(1, aux_names=aux_names,
-                                    structured=model.structured).dtype
-            pak_parms = mfparbc.load(f, nppak, dt, model, ext_unit_dict,
-                                     model.verbose)
+            dt = pak_type.get_empty(
+                1, aux_names=aux_names, structured=model.structured
+            ).dtype
+            pak_parms = mfparbc.load(
+                f, nppak, dt, model, ext_unit_dict, model.verbose
+            )
 
         if nper is None:
             nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -892,11 +1017,14 @@ class Package(PackageInterface):
         current = None
         for iper in range(nper):
             if model.verbose:
-                msg = '   loading ' + str(pak_type) + \
-                      ' for kper {:5d}'.format(iper + 1)
+                msg = (
+                    "   loading "
+                    + str(pak_type)
+                    + " for kper {:5d}".format(iper + 1)
+                )
                 print(msg)
             line = f.readline()
-            if line == '':
+            if line == "":
                 break
             t = line.strip().split()
             itmp = int(t[0])
@@ -905,23 +1033,26 @@ class Package(PackageInterface):
                 itmpp = int(t[1])
             except:
                 if model.verbose:
-                    print('   implicit itmpp in {}'.format(filename))
+                    print("   implicit itmpp in {}".format(filename))
 
             if itmp == 0:
                 bnd_output = None
-                current = pak_type.get_empty(itmp, aux_names=aux_names,
-                                             structured=model.structured)
+                current = pak_type.get_empty(
+                    itmp, aux_names=aux_names, structured=model.structured
+                )
             elif itmp > 0:
-                current = pak_type.get_empty(itmp, aux_names=aux_names,
-                                             structured=model.structured)
-                current = ulstrd(f, itmp, current, model, sfac_columns,
-                                 ext_unit_dict)
+                current = pak_type.get_empty(
+                    itmp, aux_names=aux_names, structured=model.structured
+                )
+                current = ulstrd(
+                    f, itmp, current, model, sfac_columns, ext_unit_dict
+                )
                 if model.structured:
-                    current['k'] -= 1
-                    current['i'] -= 1
-                    current['j'] -= 1
+                    current["k"] -= 1
+                    current["i"] -= 1
+                    current["j"] -= 1
                 else:
-                    current['node'] -= 1
+                    current["node"] -= 1
                 bnd_output = np.recarray.copy(current)
             else:
                 if current is None:
@@ -933,7 +1064,7 @@ class Package(PackageInterface):
                 line = f.readline()
                 t = line.strip().split()
                 pname = t[0].lower()
-                iname = 'static'
+                iname = "static"
                 try:
                     tn = t[1]
                     c = tn.lower()
@@ -941,38 +1072,43 @@ class Package(PackageInterface):
                     if c in instance_dict:
                         iname = c
                     else:
-                        iname = 'static'
+                        iname = "static"
                 except:
                     if model.verbose:
-                        print('  implicit static instance for ' +
-                              'parameter {}'.format(pname))
+                        print(
+                            "  implicit static instance for "
+                            + "parameter {}".format(pname)
+                        )
 
                 par_dict, current_dict = pak_parms.get(pname)
                 data_dict = current_dict[iname]
 
-                par_current = pak_type.get_empty(par_dict['nlst'],
-                                                 aux_names=aux_names)
+                par_current = pak_type.get_empty(
+                    par_dict["nlst"], aux_names=aux_names
+                )
 
                 #  get appropriate parval
                 if model.mfpar.pval is None:
-                    parval = np.float(par_dict['parval'])
+                    parval = np.float(par_dict["parval"])
                 else:
                     try:
                         parval = np.float(model.mfpar.pval.pval_dict[pname])
                     except:
-                        parval = np.float(par_dict['parval'])
+                        parval = np.float(par_dict["parval"])
 
                 # fill current parameter data (par_current)
                 for ibnd, t in enumerate(data_dict):
                     t = tuple(t)
-                    par_current[ibnd] = tuple(t[:len(par_current.dtype.names)])
+                    par_current[ibnd] = tuple(
+                        t[: len(par_current.dtype.names)]
+                    )
 
                 if model.structured:
-                    par_current['k'] -= 1
-                    par_current['i'] -= 1
-                    par_current['j'] -= 1
+                    par_current["k"] -= 1
+                    par_current["i"] -= 1
+                    par_current["j"] -= 1
                 else:
-                    par_current['node'] -= 1
+                    par_current["node"] -= 1
 
                 for ptype in partype:
                     par_current[ptype] *= parval
@@ -980,16 +1116,20 @@ class Package(PackageInterface):
                 if bnd_output is None:
                     bnd_output = np.recarray.copy(par_current)
                 else:
-                    bnd_output = stack_arrays((bnd_output, par_current),
-                                              asrecarray=True, usemask=False)
+                    bnd_output = stack_arrays(
+                        (bnd_output, par_current),
+                        asrecarray=True,
+                        usemask=False,
+                    )
 
             if bnd_output is None:
                 stress_period_data[iper] = itmp
             else:
                 stress_period_data[iper] = bnd_output
 
-        dtype = pak_type.get_empty(0, aux_names=aux_names,
-                                   structured=model.structured).dtype
+        dtype = pak_type.get_empty(
+            0, aux_names=aux_names, structured=model.structured
+        ).dtype
 
         if openfile:
             f.close()
@@ -997,19 +1137,28 @@ class Package(PackageInterface):
         # set package unit number
         filenames = [None, None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=pak_type.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=pak_type.ftype()
+            )
             if ipakcb > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=ipakcb
+                )
                 model.add_pop_key_list(ipakcb)
 
-        pak = pak_type(model, ipakcb=ipakcb,
-                       stress_period_data=stress_period_data,
-                       dtype=dtype, options=options,
-                       unitnumber=unitnumber, filenames=filenames)
+        pak = pak_type(
+            model,
+            ipakcb=ipakcb,
+            stress_period_data=stress_period_data,
+            dtype=dtype,
+            options=options,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
         if check:
-            pak.check(f='{}.chk'.format(pak.name[0]),
-                      verbose=pak.parent.verbose, level=0)
+            pak.check(
+                f="{}.chk".format(pak.name[0]),
+                verbose=pak.parent.verbose,
+                level=0,
+            )
         return pak

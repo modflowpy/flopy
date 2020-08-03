@@ -13,9 +13,9 @@ class MFInvalidTransientBlockHeaderException(Exception):
     """
 
     def __init__(self, error):
-        Exception.__init__(self,
-                           "MFInvalidTransientBlockHeaderException: {}".format(
-                               error))
+        Exception.__init__(
+            self, "MFInvalidTransientBlockHeaderException: {}".format(error)
+        )
 
 
 class ReadAsArraysException(Exception):
@@ -33,10 +33,11 @@ class FlopyException(Exception):
     General Flopy Exception
     """
 
-    def __init__(self, error, location=''):
+    def __init__(self, error, location=""):
         self.message = error
-        Exception.__init__(self,
-                           "FlopyException: {} ({})".format(error, location))
+        Exception.__init__(
+            self, "FlopyException: {} ({})".format(error, location)
+        )
 
 
 class StructException(Exception):
@@ -46,21 +47,34 @@ class StructException(Exception):
 
     def __init__(self, error, location):
         self.message = error
-        Exception.__init__(self,
-                           "StructException: {} ({})".format(error, location))
+        Exception.__init__(
+            self, "StructException: {} ({})".format(error, location)
+        )
 
 
 class MFDataException(Exception):
     """
     Exception related to MODFLOW input/output data
     """
-    def __init__(self, model=None, package=None, path=None,
-                 current_process=None, data_element=None,
-                 method_caught_in=None, org_type=None, org_value=None,
-                 org_traceback=None, message=None, debug=None,
-                 mfdata_except=None):
-        if mfdata_except is not None and \
-                isinstance(mfdata_except, MFDataException):
+
+    def __init__(
+        self,
+        model=None,
+        package=None,
+        path=None,
+        current_process=None,
+        data_element=None,
+        method_caught_in=None,
+        org_type=None,
+        org_value=None,
+        org_traceback=None,
+        message=None,
+        debug=None,
+        mfdata_except=None,
+    ):
+        if mfdata_except is not None and isinstance(
+            mfdata_except, MFDataException
+        ):
             # copy constructor - copying values from original exception
             self.model = mfdata_except.model
             self.package = mfdata_except.package
@@ -76,9 +90,10 @@ class MFDataException(Exception):
             self.org_tb_string = mfdata_except.org_tb_string
         else:
             self.messages = []
-            if mfdata_except is not None and \
-                    (isinstance(mfdata_except, StructException) or
-                    isinstance(mfdata_except, FlopyException)):
+            if mfdata_except is not None and (
+                isinstance(mfdata_except, StructException)
+                or isinstance(mfdata_except, FlopyException)
+            ):
                 self.messages.append(mfdata_except.message)
             self.model = None
             self.package = None
@@ -114,35 +129,41 @@ class MFDataException(Exception):
             self.org_value = org_value
         if org_traceback is not None:
             self.org_traceback = org_traceback
-        self.org_tb_string = traceback.format_exception(self.org_type,
-                                                        self.org_value,
-                                                        self.org_traceback)
+        self.org_tb_string = traceback.format_exception(
+            self.org_type, self.org_value, self.org_traceback
+        )
         # build error string
-        error_message_0 = 'An error occurred in '
-        if self.data_element is not None and self.data_element != '':
-            error_message_1 = 'data element "{}"' \
-                              ' '.format(self.data_element)
+        error_message_0 = "An error occurred in "
+        if self.data_element is not None and self.data_element != "":
+            error_message_1 = 'data element "{}"' " ".format(self.data_element)
         else:
-            error_message_1 = ''
-        if self.model is not None and self.model != '':
+            error_message_1 = ""
+        if self.model is not None and self.model != "":
             error_message_2 = 'model "{}" '.format(self.model)
         else:
-            error_message_2 = ''
+            error_message_2 = ""
         error_message_3 = 'package "{}".'.format(self.package)
-        error_message_4 = ' The error occurred while {} in the "{}" method' \
-                          '.'.format(self.current_process,
-                                     self.method_caught_in)
+        error_message_4 = (
+            ' The error occurred while {} in the "{}" method'
+            ".".format(self.current_process, self.method_caught_in)
+        )
         if len(self.messages) > 0:
-            error_message_5 = '\nAdditional Information:\n'
+            error_message_5 = "\nAdditional Information:\n"
             for index, message in enumerate(self.messages):
-                error_message_5 = '{}({}) {}\n'.format(error_message_5,
-                                                       index + 1, message)
+                error_message_5 = "{}({}) {}\n".format(
+                    error_message_5, index + 1, message
+                )
         else:
-            error_message_5 = ''
-        error_message = '{}{}{}{}{}{}'.format(error_message_0, error_message_1,
-                                              error_message_2, error_message_3,
-                                              error_message_4, error_message_5)
-        #if self.debug:
+            error_message_5 = ""
+        error_message = "{}{}{}{}{}{}".format(
+            error_message_0,
+            error_message_1,
+            error_message_2,
+            error_message_3,
+            error_message_4,
+            error_message_5,
+        )
+        # if self.debug:
         #    tb_string = ''.join(self.org_tb_string)
         #    error_message = '{}\nCall Stack\n{}'.format(error_message,
         #                                                tb_string)
@@ -170,7 +191,7 @@ class ExtFileAction(Enum):
 class MFFilePath(object):
     def __init__(self, file_path, model_name):
         self.file_path = file_path
-        self.model_name = {model_name:0}
+        self.model_name = {model_name: 0}
 
     def isabs(self):
         return os.path.isabs(self.file_path)
@@ -203,8 +224,9 @@ class MFFileMgmt(object):
         sets the simulation working path
 
     """
+
     def __init__(self, path):
-        self._sim_path = ''
+        self._sim_path = ""
         self.set_sim_path(path)
 
         # keys:fully pathed filenames, vals:FilePath instances
@@ -223,46 +245,50 @@ class MFFileMgmt(object):
                 # resolve previous simulation path.  if mf6 changes
                 # so that paths are relative to the model folder, then
                 # this call should have "model_name" instead of "None"
-                path_old = self.resolve_path(mffile_path, None,
-                                             True)
-                if os.path.isfile(path_old) and \
-                  (not mffile_path.isabs() or not copy_relative_only):
+                path_old = self.resolve_path(mffile_path, None, True)
+                if os.path.isfile(path_old) and (
+                    not mffile_path.isabs() or not copy_relative_only
+                ):
                     # change "None" to "model_name" as above if mf6
                     # supports model relative paths
-                    path_new = self.resolve_path(mffile_path,
-                                                 None)
+                    path_new = self.resolve_path(mffile_path, None)
                     if path_old != path_new:
                         new_folders = os.path.split(path_new)[0]
                         if not os.path.exists(new_folders):
                             os.makedirs(new_folders)
                         try:
-                            copyfile(path_old,
-                                     path_new)
+                            copyfile(path_old, path_new)
                         except:
                             type_, value_, traceback_ = sys.exc_info()
-                            raise MFDataException(self.structure.get_model(),
-                                                  self.structure.get_package(),
-                                                  self._path,
-                                                  'appending data',
-                                                  self.structure.name,
-                                                  inspect.stack()[0][3], type_,
-                                                  value_,
-                                                  traceback_, None,
-                                                  self._simulation_data.debug)
+                            raise MFDataException(
+                                self.structure.get_model(),
+                                self.structure.get_package(),
+                                self._path,
+                                "appending data",
+                                self.structure.name,
+                                inspect.stack()[0][3],
+                                type_,
+                                value_,
+                                traceback_,
+                                None,
+                                self._simulation_data.debug,
+                            )
 
                         num_files_copied += 1
         return num_files_copied
 
-    def get_updated_path(self, external_file_path, model_name,
-                         ext_file_action):
+    def get_updated_path(
+        self, external_file_path, model_name, ext_file_action
+    ):
         external_file_path = self.string_to_file_path(external_file_path)
         if ext_file_action == ExtFileAction.copy_all:
             if os.path.isabs(external_file_path):
                 # move file path to local model or simulation path
                 file_name = os.path.split(external_file_path)[1]
                 if model_name:
-                    return os.path.join(self.get_model_path(model_name),
-                                        file_name)
+                    return os.path.join(
+                        self.get_model_path(model_name), file_name
+                    )
                 else:
                     return os.path.join(self.get_sim_path(), file_name)
             else:
@@ -273,14 +299,15 @@ class MFFileMgmt(object):
             if os.path.isabs(external_file_path):
                 return external_file_path
             else:
-                return os.path.join(self._build_relative_path(model_name),
-                                    external_file_path)
+                return os.path.join(
+                    self._build_relative_path(model_name), external_file_path
+                )
         else:
             return None
 
     def _build_relative_path(self, model_name):
-        old_abs_path = self.resolve_path('', model_name, True)
-        current_abs_path = self.resolve_path('', model_name, False)
+        old_abs_path = self.resolve_path("", model_name, True)
+        current_abs_path = self.resolve_path("", model_name, False)
         return os.path.relpath(old_abs_path, current_abs_path)
 
     def strip_model_relative_path(self, model_name, path):
@@ -307,20 +334,21 @@ class MFFileMgmt(object):
     def _build_file(file_name, num):
         file, ext = os.path.splitext(file_name)
         if ext:
-            return '{}_{}{}'.format(file, num, ext)
+            return "{}_{}{}".format(file, num, ext)
         else:
-            return '{}_{}'.format(file, num)
+            return "{}_{}".format(file, num)
 
     @staticmethod
     def string_to_file_path(fp_string):
-        file_delimiters = ['/','\\']
+        file_delimiters = ["/", "\\"]
         new_string = fp_string
         for delimiter in file_delimiters:
             arr_string = new_string.split(delimiter)
             if len(arr_string) > 1:
                 if os.path.isabs(fp_string):
-                    new_string = '{}{}{}'.format(arr_string[0], delimiter,
-                                                 arr_string[1])
+                    new_string = "{}{}{}".format(
+                        arr_string[0], delimiter, arr_string[1]
+                    )
                 else:
                     new_string = os.path.join(arr_string[0], arr_string[1])
                 if len(arr_string) > 2:
@@ -338,11 +366,15 @@ class MFFileMgmt(object):
 
     def get_model_path(self, key, last_loaded_path=False):
         if last_loaded_path:
-            return os.path.join(self._last_loaded_sim_path,
-                                self._last_loaded_model_relative_path[key])
+            return os.path.join(
+                self._last_loaded_sim_path,
+                self._last_loaded_model_relative_path[key],
+            )
         else:
             if key in self.model_relative_path:
-                return os.path.join(self._sim_path, self.model_relative_path[key])
+                return os.path.join(
+                    self._sim_path, self.model_relative_path[key]
+                )
             else:
                 return self._sim_path
 
@@ -357,8 +389,7 @@ class MFFileMgmt(object):
             if model_name not in self.existing_file_dict[file_path].model_name:
                 self.existing_file_dict[file_path].model_name[model_name] = 0
         else:
-            new_file_path = MFFilePath(file_path,
-                                       model_name)
+            new_file_path = MFFilePath(file_path, model_name)
             self.existing_file_dict[file_path] = new_file_path
 
     def set_sim_path(self, path):
@@ -388,8 +419,9 @@ class MFFileMgmt(object):
             # assume path is relative to working directory
             self._sim_path = os.path.join(os.getcwd(), path)
 
-    def resolve_path(self, path, model_name, last_loaded_path=False,
-                     move_abs_paths=False):
+    def resolve_path(
+        self, path, model_name, last_loaded_path=False, move_abs_paths=False
+    ):
         if isinstance(path, MFFilePath):
             file_path = path.file_path
         else:
@@ -407,12 +439,14 @@ class MFFileMgmt(object):
         else:
             # path is a relative path
             if model_name is None:
-                return os.path.join(self.get_sim_path(last_loaded_path),
-                                    file_path)
+                return os.path.join(
+                    self.get_sim_path(last_loaded_path), file_path
+                )
             else:
-                return os.path.join(self.get_model_path(model_name,
-                                                        last_loaded_path),
-                                    file_path)
+                return os.path.join(
+                    self.get_model_path(model_name, last_loaded_path),
+                    file_path,
+                )
 
 
 class PackageContainer(object):
@@ -452,7 +486,7 @@ class PackageContainer(object):
     """
 
     def __init__(self, simulation_data, name):
-        self.type = 'PackageContainer'
+        self.type = "PackageContainer"
         self.simulation_data = simulation_data
         self.name = name
         self._packagelist = []
@@ -462,8 +496,8 @@ class PackageContainer(object):
 
     @staticmethod
     def package_factory(package_type, model_type):
-        package_abbr = '{}{}'.format(model_type, package_type)
-        package_utl_abbr = 'utl{}'.format(package_type)
+        package_abbr = "{}{}".format(model_type, package_type)
+        package_utl_abbr = "utl{}".format(package_type)
         package_list = []
         # iterate through python files
         package_file_paths = PackageContainer.get_package_file_paths()
@@ -472,18 +506,21 @@ class PackageContainer(object):
             if module is not None:
                 # iterate imported items
                 for item in dir(module):
-                    value = PackageContainer.get_module_val(module, item,
-                                                            'package_abbr')
+                    value = PackageContainer.get_module_val(
+                        module, item, "package_abbr"
+                    )
                     if value is not None:
                         abbr = value.package_abbr
                         if package_type is None:
                             # don't store packages "group" classes
-                            if len(abbr) <= 8 or abbr[-8:] != 'packages':
+                            if len(abbr) <= 8 or abbr[-8:] != "packages":
                                 package_list.append(value)
                         else:
                             # check package type
-                            if value.package_abbr == package_abbr or \
-                              value.package_abbr == package_utl_abbr:
+                            if (
+                                value.package_abbr == package_abbr
+                                or value.package_abbr == package_utl_abbr
+                            ):
                                 return value
         if package_type is None:
             return package_list
@@ -498,8 +535,9 @@ class PackageContainer(object):
             if module is not None:
                 # iterate imported items
                 for item in dir(module):
-                    value = PackageContainer.get_module_val(module, item,
-                                                            'model_type')
+                    value = PackageContainer.get_module_val(
+                        module, item, "model_type"
+                    )
                     if value is not None and value.model_type == model_type:
                         return value
         return None
@@ -508,8 +546,11 @@ class PackageContainer(object):
     def get_module_val(module, item, attrb):
         value = getattr(module, item)
         # verify this is a class
-        if not value or not inspect.isclass(value) or not \
-                hasattr(value, attrb):
+        if (
+            not value
+            or not inspect.isclass(value)
+            or not hasattr(value, attrb)
+        ):
             return None
         return value
 
@@ -517,19 +558,21 @@ class PackageContainer(object):
     def get_module(package_file_path):
         package_file_name = os.path.basename(package_file_path)
         module_path = os.path.splitext(package_file_name)[0]
-        module_name = '{}{}{}'.format('Modflow', module_path[2].upper(),
-                                      module_path[3:])
+        module_name = "{}{}{}".format(
+            "Modflow", module_path[2].upper(), module_path[3:]
+        )
         if module_name.startswith("__"):
             return None
 
         # import
-        return importlib.import_module("flopy.mf6.modflow.{}".format(
-            module_path))
+        return importlib.import_module(
+            "flopy.mf6.modflow.{}".format(module_path)
+        )
 
     @staticmethod
     def get_package_file_paths():
         base_path = os.path.split(os.path.realpath(__file__))[0]
-        package_path = os.path.join(base_path, 'modflow')
+        package_path = os.path.join(base_path, "modflow")
         return glob.glob(os.path.join(package_path, "*.py"))
 
     @property
@@ -552,8 +595,10 @@ class PackageContainer(object):
 
     def _remove_package(self, package):
         self._packagelist.remove(package)
-        if package.package_name is not None and \
-                package.package_name.lower() in self.package_name_dict:
+        if (
+            package.package_name is not None
+            and package.package_name.lower() in self.package_name_dict
+        ):
             del self.package_name_dict[package.package_name.lower()]
         del self.package_key_dict[package.path[-1].lower()]
         package_list = self.package_type_dict[package.package_type.lower()]
@@ -616,7 +661,7 @@ class PackageContainer(object):
                 # get first package of the type requested
                 package_name = pp.package_name.lower()
                 if len(package_name) > len(name):
-                    package_name = package_name[0:len(name)]
+                    package_name = package_name[0 : len(name)]
                 if package_name.lower() == name.lower():
                     return pp
 
@@ -633,9 +678,11 @@ class PackageContainer(object):
         if isinstance(load_only, dict):
             return load_only
         if not isinstance(load_only, collections.Iterable):
-            raise FlopyException('load_only must be iterable or None. '
-                                 'load_only value of "{}" is '
-                                 'invalid'.format(load_only))
+            raise FlopyException(
+                "load_only must be iterable or None. "
+                'load_only value of "{}" is '
+                "invalid".format(load_only)
+            )
         load_only_dict = {}
         for item in load_only:
             load_only_dict[item.lower()] = True
@@ -651,13 +698,13 @@ class PackageContainer(object):
             return True
 
         # split to make cases like "gwf6-gwf6" easier to process
-        pkg_type = pkg_type.split('-')
+        pkg_type = pkg_type.split("-")
         try:
             # if there is a number on the end of the package try
             # excluding it
             int(pkg_type[0][-1])
             for key in pkg_list.keys():
-                key = key.split('-')
+                key = key.split("-")
                 if len(key) == len(pkg_type):
                     matches = True
                     for key_item, pkg_item in zip(key, pkg_type):

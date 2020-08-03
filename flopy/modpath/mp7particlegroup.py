@@ -39,7 +39,7 @@ class _Modpath7ParticleGroup(object):
 
         """
         self.particlegroupname = particlegroupname
-        if filename == '':
+        if filename == "":
             filename = None
         self.filename = filename
         if self.filename is None:
@@ -48,8 +48,10 @@ class _Modpath7ParticleGroup(object):
             self.external = True
 
         if releasedata is None:
-            msg = 'releasedata must be provided to instantiate ' + \
-                  'a MODPATH 7 particle group'
+            msg = (
+                "releasedata must be provided to instantiate "
+                + "a MODPATH 7 particle group"
+            )
             raise ValueError(msg)
 
         # convert releasedata to a list, if required
@@ -60,7 +62,7 @@ class _Modpath7ParticleGroup(object):
 
         # validate that releasedata is a list or tuple
         if not isinstance(releasedata, (list, tuple)):
-            msg = 'releasedata must be a float, int, list, or tuple'
+            msg = "releasedata must be a float, int, list, or tuple"
             raise ValueError(msg)
 
         # process releasedata
@@ -79,18 +81,21 @@ class _Modpath7ParticleGroup(object):
             releasetimecount = int(releasedata[0])
             releaseinterval = 0
             # convert releasetimes list or tuple to a numpy array
-            if isinstance(releasedata[1], list) \
-                    or isinstance(releasedata[1], tuple):
+            if isinstance(releasedata[1], list) or isinstance(
+                releasedata[1], tuple
+            ):
                 releasedata[1] = np.array(releasedata[1])
             if releasedata[1].shape[0] != releasetimecount:
-                msg = 'The number of releasetimes data ' + \
-                      '({}) '.format(releasedata[1].shape[0]) + \
-                      'is not equal to releasetimecount ' + \
-                      '({}).'.format(releasetimecount)
+                msg = (
+                    "The number of releasetimes data "
+                    + "({}) ".format(releasedata[1].shape[0])
+                    + "is not equal to releasetimecount "
+                    + "({}).".format(releasetimecount)
+                )
                 raise ValueError(msg)
             releasetimes = np.array(releasedata[1], dtype=np.float32)
         else:
-            msg = 'releasedata must have 1, 2, or 3 entries'
+            msg = "releasedata must have 1, 2, or 3 entries"
             raise ValueError(msg)
 
         # set release data
@@ -99,7 +104,7 @@ class _Modpath7ParticleGroup(object):
         self.releaseinterval = releaseinterval
         self.releasetimes = releasetimes
 
-    def write(self, fp=None, ws='.'):
+    def write(self, fp=None, ws="."):
         """
         Common write of MODPATH 7 simulation file items 26 through 32
 
@@ -116,43 +121,48 @@ class _Modpath7ParticleGroup(object):
         """
 
         # validate that a valid file object was passed
-        if not hasattr(fp, 'write'):
-            msg = 'Cannot write data for particle group ' + \
-                  '{} '.format(self.particlegroupname) + \
-                  'without passing a valid file object ({}) '.format(fp) + \
-                  'open for writing'
+        if not hasattr(fp, "write"):
+            msg = (
+                "Cannot write data for particle group "
+                + "{} ".format(self.particlegroupname)
+                + "without passing a valid file object ({}) ".format(fp)
+                + "open for writing"
+            )
             raise ValueError(msg)
 
         # item 26
-        fp.write('{}\n'.format(self.particlegroupname))
+        fp.write("{}\n".format(self.particlegroupname))
 
         # item 27
-        fp.write('{}\n'.format(self.releaseoption))
+        fp.write("{}\n".format(self.releaseoption))
 
         if self.releaseoption == 1:
             # item 28
-            fp.write('{}\n'.format(self.releasetimes[0]))
+            fp.write("{}\n".format(self.releasetimes[0]))
         elif self.releaseoption == 2:
             # item 29
-            fp.write('{} {} {}\n'.format(self.releasetimecount,
-                                         self.releasetimes[0],
-                                         self.releaseinterval))
+            fp.write(
+                "{} {} {}\n".format(
+                    self.releasetimecount,
+                    self.releasetimes[0],
+                    self.releaseinterval,
+                )
+            )
         elif self.releaseoption == 3:
             # item 30
-            fp.write('{}\n'.format(self.releasetimecount))
+            fp.write("{}\n".format(self.releasetimecount))
             # item 31
             tp = self.releasetimes
-            v = Util2d(self, (tp.shape[0],),
-                       np.float32, tp,
-                       name='temp',
-                       locat=0)
+            v = Util2d(
+                self, (tp.shape[0],), np.float32, tp, name="temp", locat=0
+            )
             fp.write(v.string)
 
         # item 32
         if self.external:
-            line = 'EXTERNAL {}\n'.format(self.filename)
+            line = "EXTERNAL {}\n".format(self.filename)
         else:
-            line = 'INTERNAL\n'
+            line = "INTERNAL\n"
         fp.write(line)
 
         return
@@ -196,18 +206,23 @@ class ParticleGroup(_Modpath7ParticleGroup):
 
     """
 
-    def __init__(self, particlegroupname='PG1', filename=None,
-                 releasedata=0.0,
-                 particledata=None):
+    def __init__(
+        self,
+        particlegroupname="PG1",
+        filename=None,
+        releasedata=0.0,
+        particledata=None,
+    ):
         """
         Class constructor
 
         """
 
         # instantiate base class
-        _Modpath7ParticleGroup.__init__(self, particlegroupname, filename,
-                                        releasedata)
-        self.name = 'ParticleGroup'
+        _Modpath7ParticleGroup.__init__(
+            self, particlegroupname, filename, releasedata
+        )
+        self.name = "ParticleGroup"
 
         # create default node-based particle data if not passed
         if particledata is None:
@@ -215,8 +230,9 @@ class ParticleGroup(_Modpath7ParticleGroup):
 
         # convert particledata to a list if a ParticleData type
         if not isinstance(particledata, ParticleData):
-            msg = '{}: particledata must be a'.format(self.name) + \
-                  ' ParticleData instance not a {}'.format(type(particledata))
+            msg = "{}: particledata must be a".format(
+                self.name
+            ) + " ParticleData instance not a {}".format(type(particledata))
             raise TypeError(msg)
 
         # set attributes
@@ -228,7 +244,7 @@ class ParticleGroup(_Modpath7ParticleGroup):
 
         return
 
-    def write(self, fp=None, ws='.'):
+    def write(self, fp=None, ws="."):
         """
         Write MODPATH 7 particle data items 1 through 5
 
@@ -250,19 +266,18 @@ class ParticleGroup(_Modpath7ParticleGroup):
         # open external file if required
         if self.external:
             fpth = os.path.join(ws, self.filename)
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
         else:
             f = fp
 
         # particle data item 1
-        f.write('{}\n'.format(self.inputstyle))
+        f.write("{}\n".format(self.inputstyle))
 
         # particle data item 2
-        f.write('{}\n'.format(self.locationstyle))
+        f.write("{}\n".format(self.locationstyle))
 
         # particle data item 3
-        f.write('{} {}\n'.format(self.particlecount,
-                                 self.particleidoption))
+        f.write("{} {}\n".format(self.particlecount, self.particleidoption))
 
         # particle data item 4 and 5
         # call the write method in ParticleData
@@ -283,17 +298,17 @@ class _ParticleGroupTemplate(_Modpath7ParticleGroup):
 
     """
 
-    def __init__(self, particlegroupname, filename,
-                 releasedata):
+    def __init__(self, particlegroupname, filename, releasedata):
         """
         Base class constructor
 
         """
         # instantiate base class
-        _Modpath7ParticleGroup.__init__(self, particlegroupname, filename,
-                                        releasedata)
+        _Modpath7ParticleGroup.__init__(
+            self, particlegroupname, filename, releasedata
+        )
 
-    def write(self, fp=None, ws='.'):
+    def write(self, fp=None, ws="."):
         """
 
         Parameters
@@ -340,18 +355,23 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
 
     """
 
-    def __init__(self, particlegroupname='PG1', filename=None,
-                 releasedata=(0.0,),
-                 particledata=None):
+    def __init__(
+        self,
+        particlegroupname="PG1",
+        filename=None,
+        releasedata=(0.0,),
+        particledata=None,
+    ):
         """
         Class constructor
 
         """
-        self.name = 'ParticleGroupLRCTemplate'
+        self.name = "ParticleGroupLRCTemplate"
 
         # instantiate base class
-        _ParticleGroupTemplate.__init__(self, particlegroupname, filename,
-                                        releasedata)
+        _ParticleGroupTemplate.__init__(
+            self, particlegroupname, filename, releasedata
+        )
         # validate particledata
         if particledata is None:
             particledata = NodeParticleData()
@@ -359,7 +379,7 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
         self.inputstyle = 2
         self.particledata = particledata
 
-    def write(self, fp=None, ws='.'):
+    def write(self, fp=None, ws="."):
         """
 
         Parameters
@@ -374,10 +394,13 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
 
         """
         # validate that a valid file object was passed
-        if not hasattr(fp, 'write'):
-            msg = '{}: cannot write data for '.format(self.name) + \
-                  'template without passing a valid file object ' + \
-                  '({}) '.format(fp) + 'open for writing'
+        if not hasattr(fp, "write"):
+            msg = (
+                "{}: cannot write data for ".format(self.name)
+                + "template without passing a valid file object "
+                + "({}) ".format(fp)
+                + "open for writing"
+            )
             raise ValueError(msg)
 
         # call base class write method to write common data
@@ -386,12 +409,12 @@ class ParticleGroupLRCTemplate(_ParticleGroupTemplate):
         # open external file if required
         if self.external:
             fpth = os.path.join(ws, self.filename)
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
         else:
             f = fp
 
         # item 1
-        f.write('{}\n'.format(self.inputstyle))
+        f.write("{}\n".format(self.inputstyle))
 
         # items 2, 3, 4 or 5, and 6
         self.particledata.write(f)
@@ -433,18 +456,23 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
 
     """
 
-    def __init__(self, particlegroupname='PG1', filename=None,
-                 releasedata=(0.0,),
-                 particledata=None):
+    def __init__(
+        self,
+        particlegroupname="PG1",
+        filename=None,
+        releasedata=(0.0,),
+        particledata=None,
+    ):
         """
         Class constructor
 
         """
-        self.name = 'ParticleGroupNodeTemplate'
+        self.name = "ParticleGroupNodeTemplate"
 
         # instantiate base class
-        _ParticleGroupTemplate.__init__(self, particlegroupname, filename,
-                                        releasedata)
+        _ParticleGroupTemplate.__init__(
+            self, particlegroupname, filename, releasedata
+        )
         # validate particledata
         if particledata is None:
             particledata = NodeParticleData()
@@ -452,7 +480,7 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         self.inputstyle = 3
         self.particledata = particledata
 
-    def write(self, fp=None, ws='.'):
+    def write(self, fp=None, ws="."):
         """
 
         Parameters
@@ -467,10 +495,13 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
 
         """
         # validate that a valid file object was passed
-        if not hasattr(fp, 'write'):
-            msg = '{}: cannot write data for '.format(self.name) + \
-                  'template without passing a valid file object ' + \
-                  '({}) '.format(fp) + 'open for writing'
+        if not hasattr(fp, "write"):
+            msg = (
+                "{}: cannot write data for ".format(self.name)
+                + "template without passing a valid file object "
+                + "({}) ".format(fp)
+                + "open for writing"
+            )
             raise ValueError(msg)
 
         # call base class write method to write common data
@@ -479,12 +510,12 @@ class ParticleGroupNodeTemplate(_ParticleGroupTemplate):
         # open external file if required
         if self.external:
             fpth = os.path.join(ws, self.filename)
-            f = open(fpth, 'w')
+            f = open(fpth, "w")
         else:
             f = fp
 
         # item 1
-        f.write('{}\n'.format(self.inputstyle))
+        f.write("{}\n".format(self.inputstyle))
 
         # items 2, 3, 4 or 5, and 6
         self.particledata.write(f)

@@ -71,8 +71,9 @@ class NamData(object):
             self.package = packages[self.filetype.lower()]
 
     def __repr__(self):
-        return "filename:{0}, filetype:{1}".format(self.filename,
-                                                   self.filetype)
+        return "filename:{0}, filetype:{1}".format(
+            self.filename, self.filetype
+        )
 
 
 def getfiletypeunit(nf, filetype):
@@ -130,40 +131,41 @@ def parsenamefile(namfilename, packages, verbose=True):
     ext_unit_dict = dict()
 
     if verbose:
-        print('Parsing the namefile --> {0:s}'.format(namfilename))
+        print("Parsing the namefile --> {0:s}".format(namfilename))
 
     if not os.path.isfile(namfilename):
         # help diagnose the namfile and directory
-        e = 'Could not find {} '.format(namfilename) + \
-            'in directory {}'.format(os.path.dirname(namfilename))
+        e = "Could not find {} ".format(
+            namfilename
+        ) + "in directory {}".format(os.path.dirname(namfilename))
         raise IOError(e)
-    with open(namfilename, 'r') as fp:
+    with open(namfilename, "r") as fp:
         lines = fp.readlines()
 
     for ln, line in enumerate(lines, 1):
         line = line.strip()
-        if len(line) == 0 or line.startswith('#'):
+        if len(line) == 0 or line.startswith("#"):
             # skip blank lines or comments
             continue
         items = line.split()
         # ensure we have at least three items
         if len(items) < 3:
-            e = 'line number {} has fewer than 3 items: {}'.format(ln, line)
+            e = "line number {} has fewer than 3 items: {}".format(ln, line)
             raise ValueError(e)
         ftype, key, fpath = items[0:3]
         ftype = ftype.upper()
 
         # remove quotes in file path
         if '"' in fpath:
-            fpath = fpath.replace('"', '')
+            fpath = fpath.replace('"', "")
         if "'" in fpath:
             fpath = fpath.replace("'", "")
 
         # need make filenames with paths system agnostic
-        if '/' in fpath:
-            raw = fpath.split('/')
-        elif '\\' in fpath:
-            raw = fpath.split('\\')
+        if "/" in fpath:
+            raw = fpath.split("/")
+        elif "\\" in fpath:
+            raw = fpath.split("\\")
         else:
             raw = [fpath]
         fpath = os.path.join(*raw)
@@ -180,23 +182,25 @@ def parsenamefile(namfilename, packages, verbose=True):
                 fname = os.path.join(dn, fls[idx])
         # open the file
         kwargs = {}
-        if ftype == 'DATA(BINARY)':
-            openmode = 'rb'
+        if ftype == "DATA(BINARY)":
+            openmode = "rb"
         else:
-            openmode = 'r'
-            kwargs['errors'] = 'replace'
+            openmode = "r"
+            kwargs["errors"] = "replace"
         try:
             filehandle = open(fname, openmode, **kwargs)
         except IOError:
             if verbose:
-                print('could not set filehandle to {0:s}'.format(fpath))
+                print("could not set filehandle to {0:s}".format(fpath))
             filehandle = None
         # be sure the second value is an integer
         try:
             key = int(key)
         except ValueError:
-            raise ValueError('line number {}: the unit number (second item) '
-                             'is not an integer: {}'.format(ln, line))
+            raise ValueError(
+                "line number {}: the unit number (second item) "
+                "is not an integer: {}".format(ln, line)
+            )
         # Trap for the case where unit numbers are specified as zero
         # In this case, the package must have a variable called
         # unit number attached to it.  If not, then the key is set
@@ -213,68 +217,70 @@ def parsenamefile(namfilename, packages, verbose=True):
 
 def attribs_from_namfile_header(namefile):
     # check for reference info in the nam file header
-    defaults = {"xll": None, "yll": None,
-                "xul": None, "yul": None, "rotation": 0.,
-                "proj4_str": None}
+    defaults = {
+        "xll": None,
+        "yll": None,
+        "xul": None,
+        "yul": None,
+        "rotation": 0.0,
+        "proj4_str": None,
+    }
     if namefile is None:
         return defaults
     header = []
-    with open(namefile, 'r') as f:
+    with open(namefile, "r") as f:
         for line in f:
-            if not line.startswith('#'):
+            if not line.startswith("#"):
                 break
-            header.extend(line.strip().replace('#', '').split(';'))
+            header.extend(line.strip().replace("#", "").split(";"))
 
     for item in header:
         if "xll" in item.lower():
             try:
-                xll = float(item.split(':')[1])
+                xll = float(item.split(":")[1])
                 defaults["xll"] = xll
             except:
-                print('   could not parse xll ' +
-                      'in {}'.format(namefile))
+                print("   could not parse xll " + "in {}".format(namefile))
         elif "yll" in item.lower():
             try:
-                yll = float(item.split(':')[1])
+                yll = float(item.split(":")[1])
                 defaults["yll"] = yll
             except:
-                print('   could not parse yll ' +
-                      'in {}'.format(namefile))
+                print("   could not parse yll " + "in {}".format(namefile))
         elif "xul" in item.lower():
             try:
-                xul = float(item.split(':')[1])
+                xul = float(item.split(":")[1])
                 defaults["xul"] = xul
             except:
-                print('   could not parse xul ' +
-                      'in {}'.format(namefile))
+                print("   could not parse xul " + "in {}".format(namefile))
         elif "yul" in item.lower():
             try:
-                yul = float(item.split(':')[1])
+                yul = float(item.split(":")[1])
                 defaults["yul"] = yul
             except:
-                print('   could not parse yul ' +
-                      'in {}'.format(namefile))
+                print("   could not parse yul " + "in {}".format(namefile))
         elif "rotation" in item.lower():
             try:
-                angrot = float(item.split(':')[1])
+                angrot = float(item.split(":")[1])
                 defaults["rotation"] = angrot
             except:
-                print('   could not parse rotation ' +
-                      'in {}'.format(namefile))
+                print(
+                    "   could not parse rotation " + "in {}".format(namefile)
+                )
         elif "proj4_str" in item.lower():
             try:
-                proj4 = ':'.join(item.split(':')[1:]).strip()
-                if proj4.lower() == 'none':
+                proj4 = ":".join(item.split(":")[1:]).strip()
+                if proj4.lower() == "none":
                     proj4 = None
-                defaults['proj4_str'] = proj4
+                defaults["proj4_str"] = proj4
             except:
-                print('   could not parse proj4_str ' +
-                      'in {}'.format(namefile))
+                print(
+                    "   could not parse proj4_str " + "in {}".format(namefile)
+                )
         elif "start" in item.lower():
             try:
-                start_datetime = item.split(':')[1].strip()
+                start_datetime = item.split(":")[1].strip()
                 defaults["start_datetime"] = start_datetime
             except:
-                print('   could not parse start ' +
-                      'in {}'.format(namefile))
+                print("   could not parse start " + "in {}".format(namefile))
     return defaults
