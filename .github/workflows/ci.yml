@@ -27,7 +27,6 @@ jobs:
         conda install -c anaconda pip
         conda install -c conda-forge --yes --file requirements.txt
         conda install -c conda-forge --yes --file requirements.spatial.txt
-        pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
 
     - name: Run black
@@ -66,18 +65,23 @@ jobs:
         conda install -c anaconda pip
         pip install nose-timer nose-cov
         conda install -c conda-forge --yes --file requirements.txt
-        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Install spatial python packages
       shell: bash
       run: |
         conda install -c conda-forge --yes --file requirements.spatial.txt
 
-    - name: Install flopy
+    - name: Clone pymake
+      shell: bash
+      run: |
+        git clone https://github.com/modflowpy/pymake.git ../pymake
+
+    - name: Install pymake flopy
       shell: bash
       run: |
         echo "Install flopy..."
         conda-develop ../flopy/
+        conda-develop ../pymake/
 
     - name: Print python package versions
       shell: python
