@@ -16,7 +16,7 @@ jobs:
     - uses: s-weigand/setup-conda@v1
     - name: Install packages
       run: |
-        pip install --upgrade pip
+        conda install -c anaconda pip
         if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
@@ -50,7 +50,7 @@ jobs:
     - name: Install python packages
       shell: bash
       run: |
-        pip install --upgrade pip
+        conda install -c anaconda pip
         if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
         pip install nose-timer nose-cov
         pip install https://github.com/modflowpy/pymake/zipball/master
