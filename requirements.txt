@@ -1,4 +1,4 @@
-appdirs
+numpy
 matplotlib
 netcdf4
 rasterio
@@ -10,4 +10,5 @@ shapely
 pandas
 scipy
 affine
+appdirs
 requests

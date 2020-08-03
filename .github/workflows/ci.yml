@@ -15,8 +15,10 @@ jobs:
     - uses: actions/checkout@v2
     - uses: s-weigand/setup-conda@v1
     - name: Install packages
+      shell: bash
       run: |
         conda install -c anaconda pip
+        pip uninstall numpy
         conda install -c conda-forge --yes --file requirements.txt
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
@@ -51,7 +53,7 @@ jobs:
       shell: bash
       run: |
         conda install -c anaconda pip
-        pip -U numpy
+        pip uninstall numpy
         conda install -c conda-forge --yes --file requirements.txt
         pip install nose-timer nose-cov
         pip install https://github.com/modflowpy/pymake/zipball/master
