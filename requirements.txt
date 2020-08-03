@@ -1,5 +1,12 @@
-conda-build
-numpy!=1.19.1
-matplotlib
 appdirs
 requests
+netcdf4
+rasterio
+fiona
+descartes
+pyproj
+pyshp
+shapely
+pandas
+scipy
+affine

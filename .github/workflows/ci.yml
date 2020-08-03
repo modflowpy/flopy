@@ -24,10 +24,11 @@ jobs:
     - name: Install packages
       shell: bash
       run: |
-        conda install -c anaconda pip
-        conda install -c conda-forge --yes --file requirements.txt
-        conda install -c conda-forge --yes --file requirements.spatial.txt
+        conda install pip
         pip install pylint flake8 black
+        echo "use pip to install numpy and matplotlib because of a windows issue..."
+        pip install numpy matplotlib
+        conda install --yes --file requirements.txt
 
     - name: Run black
       run: black --check --line-length 79 ./flopy
@@ -62,27 +63,19 @@ jobs:
     - name: Install python packages
       shell: bash
       run: |
-        conda install -c anaconda pip
+        conda install pip
         pip install nose-timer nose-cov
-        conda install -c conda-forge --yes --file requirements.txt
+        echo "use pip to install numpy and matplotlib because of a windows issue..."
+        pip install numpy matplotlib
+        conda install --yes --file requirements.txt
 
-    - name: Install spatial python packages
-      shell: bash
-      run: |
-        conda install -c conda-forge --yes --file requirements.spatial.txt
-
-    - name: Clone pymake
-      shell: bash
-      run: |
-        git clone https://github.com/modflowpy/pymake.git ../pymake
-
-    - name: Install pymake flopy
+    - name: Install pymake and flopy
       shell: bash
       run: |
         echo "Install flopy..."
         pip install .
         echo "Install pymake..."
-        pip install ../pymake/
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Print python package versions
       shell: python
