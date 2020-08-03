@@ -21,27 +21,32 @@ jobs:
         update-conda: true
         conda-channels: anaconda, conda-forge
 
-    - name: Install python packages using pip
+    - name: Create a conda environment
       shell: bash
       run: |
+        conda create -n flopy python=3.8
+
+    - name: Install python packages
+      shell: bash
+      run: |
+        conda activate flopy
         conda install pip
         pip install pylint flake8 black
-        echo "use pip to install numpy and matplotlib because of a windows issue..."
-        pip install numpy matplotlib
-
-    - name: Install remaining python packages using conda
-      shell: bash
-      run: |
         conda install --yes --file requirements.txt
 
     - name: Run black
-      run: black --check --line-length 79 ./flopy
+      run: |
+        conda activate flopy
+        black --check --line-length 79 ./flopy
 
     - name: Run flake8
-      run: flake8 --count --show-source --exit-zero ./flopy
+      run: |
+        conda activate flopy
+        flake8 --count --show-source --exit-zero ./flopy
 
     - name: Run pylint
       run: |
+        conda activate flopy
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
   flopyCI:
@@ -61,59 +66,36 @@ jobs:
       uses: s-weigand/setup-conda@v1.0.3
       with:
         update-conda: true
-        python-version: ${{ matrix.python-version }}
         conda-channels: anaconda, conda-forge
 
-    - name: Install python packages using pip
+    - name: Create a conda environment
       shell: bash
       run: |
+        conda create -n flopy python=${{ matrix.python-version }}
+
+    - name: Install python packages
+      shell: bash
+      run: |
+        conda activate flopy
         conda install pip
         pip install nose-timer nose-cov
-        echo "use pip to install numpy and matplotlib because of a windows issue..."
-        pip install numpy matplotlib
-
-    - name: Install remaining python packages using conda
-      shell: bash
-      run: |
         conda install --yes --file requirements.txt
 
     - name: Install pymake and flopy
       shell: bash
       run: |
+        conda activate flopy
         echo "Install flopy..."
         pip install .
         echo "Install pymake..."
         pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: Print python package versions
-      shell: python
-      run: |
-        import sys
-        import nose
-        import numpy as np
-        import matplotlib as mpl
-        import flopy
-        import pymake
-        flopypth = flopy.__path__[0]
-        pymakepth = pymake.__path__[0]
-        print("python version:     {}".format(sys.version))
-        print("nosetest version:   {}".format(nose.__version__))
-        print("numpy version:      {}".format(np.__version__))
-        print("matplotlib version: {}".format(mpl.__version__))
-        print("flopy version:      {}".format(flopy.__version__))
-        print("pymake version:     {}".format(pymake.__version__))
-        print("")
-        print("flopy is installed in:  {}".format(flopypth))
-        print("pymake is installed in: {}".format(pymakepth))
-
     - name: Download executables
       shell: bash
       run: |
         echo "Download executables..."
-        cd autotest
-        python get_exes.py
-        cd ..
-        #nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+        conda activate flopy
+        nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add bin directory on Linux, macOS, and Windows
       shell: bash
@@ -124,6 +106,7 @@ jobs:
       shell: bash
       run: |
         echo "Running autotests..."
+        conda activate flopy
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov

@@ -1,5 +1,7 @@
 appdirs
 requests
+numpy
+matplotlib
 netcdf4
 rasterio
 fiona
