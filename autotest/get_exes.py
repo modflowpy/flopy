@@ -33,6 +33,7 @@ if not dotlocal:
 if dotlocal:
     bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
     bindir = os.path.abspath(bindir)
+    print("bindir: {}".format(bindir))
     if not os.path.isdir(bindir):
         os.makedirs(bindir)
 

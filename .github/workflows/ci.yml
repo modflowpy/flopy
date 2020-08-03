@@ -57,11 +57,20 @@ jobs:
         echo "Install flopy..."
         pip install .
 
+    - name: Add bin directory on Linux, macOS, and Windows
+      shell: bash
+      run: |
+        echo "::add-path::$HOME/.local/bin"
+
+
     - name: Run nosetests
       shell: bash
       run: |
         echo "Building executables..."
-        nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+        cd autotest
+        python get_exes.py
+        cd ..
+        #nosetests -v get_exes.py --with-id --with-timer -w ./autotest
         echo "Running autotests..."
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
