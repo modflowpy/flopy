@@ -25,7 +25,7 @@ jobs:
       shell: bash
       run: |
         conda install pip
-        pip install nose-timer nose-cov
+        pip install pylint flake8 black
         echo "use pip to install numpy and matplotlib because of a windows issue..."
         pip install numpy matplotlib
 
