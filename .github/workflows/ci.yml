@@ -17,8 +17,7 @@ jobs:
     - name: Install packages
       run: |
         conda install -c anaconda pip
-        pip install numpy
-        if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
+        conda install -c conda-forge --yes --file requirements.txt
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
     - name: Run black
@@ -36,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.8, 3.7, 3.9]
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
@@ -52,29 +51,34 @@ jobs:
       shell: bash
       run: |
         conda install -c anaconda pip
-        pip install numpy
-        if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
+        pip -U numpy
+        conda install -c conda-forge --yes --file requirements.txt
         pip install nose-timer nose-cov
         pip install https://github.com/modflowpy/pymake/zipball/master
         echo "Install flopy..."
         pip install .
 
-    - name: Add bin directory on Linux, macOS, and Windows
+    - name: Download executables
       shell: bash
       run: |
-        echo "::add-path::$HOME/.local/bin"
-
-
-    - name: Run nosetests
-      shell: bash
-      run: |
-        echo "Building executables..."
+        echo "Download executables..."
         cd autotest
         python get_exes.py
         cd ..
         #nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+
+    - name: Add bin directory on Linux, macOS, and Windows
+      shell: bash
+      run: |
+        echo "::add-path::$HOME/.local/bin"
+        $PATH
+
+    - name: Run nosetests
+      shell: bash
+      run: |
         echo "Running autotests..."
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
+
