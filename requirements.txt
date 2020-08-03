@@ -1,15 +1,5 @@
 conda-build
 numpy
 matplotlib
-netcdf4
-rasterio
-fiona
-descartes
-pyproj
-pyshp
-shapely
-pandas
-scipy
-affine
 appdirs
 requests

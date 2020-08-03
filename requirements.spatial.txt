@@ -1,0 +1,10 @@
+netcdf4
+rasterio
+fiona
+descartes
+pyproj
+pyshp
+shapely
+pandas
+scipy
+affine
