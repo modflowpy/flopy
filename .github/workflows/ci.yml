@@ -20,8 +20,8 @@ jobs:
       with:
         python-version: 3.8
         activate-environment: flopy
-        update-conda: true
-        conda-channels: anaconda, conda-forge
+        auto-update-conda: true
+        channels: anaconda, conda-forge
 
     - name: Install python packages
       shell: bash -l {0}
@@ -62,8 +62,9 @@ jobs:
       uses: goanpeca/setup-miniconda@v1.6.0
       with:
         python-version: ${{ matrix.python-version }}
-        update-conda: true
-        conda-channels: anaconda, conda-forge
+        activate-environment: flopy
+        auto-update-conda: true
+        channels: anaconda, conda-forge
 
     - name: Install python packages
       shell: bash -l {0}
