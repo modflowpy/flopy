@@ -1,3 +1,4 @@
+conda-build
 numpy
 matplotlib
 netcdf4

@@ -59,25 +59,44 @@ jobs:
         python-version: ${{ matrix.python-version }}
         conda-channels: anaconda, conda-forge
 
-    - name: Install python packages
+    - name: Install pip and pip installed packages
       shell: bash
       run: |
         conda install -c anaconda pip
-        conda install -c conda-forge --yes --file requirements.txt
         pip install nose-timer nose-cov
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: Remove numpy and reinstall with pip (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        conda uninstall numpy
-        pip install numpy
-
-    - name: Install pymake and flopy
+    - name: Install python packages
       shell: bash
       run: |
-        pip install https://github.com/modflowpy/pymake/zipball/master
+        conda install -c conda-forge --yes --file requirements.txt
+
+    - name: Install flopy
+      shell: bash
+      run: |
         echo "Install flopy..."
-        pip install .
+        conda-develop ../flopy/
+
+    - name: Print python package versions
+      shell: python
+      run: |
+        import sys
+        import nose
+        import numpy as np
+        import matplotlib as mpl
+        import flopy
+        import pymake
+        flopypth = flopy.__path__[0]
+        pymakepth = pymake.__path__[0]
+        print("python version:     {}".format(sys.version))
+        print("nosetest version:   {}".format(nose.__version__))
+        print("numpy version:      {}".format(np.__version__))
+        print("matplotlib version: {}".format(mpl.__version__))
+        print("flopy version:      {}".format(flopy.__version__))
+        print("pymake version:     {}".format(pymake.__version__))
+        print("")
+        print("flopy is installed in:  {}".format(flopypth))
+        print("pymake is installed in: {}".format(pymakepth))
 
     - name: Download executables
       shell: bash
