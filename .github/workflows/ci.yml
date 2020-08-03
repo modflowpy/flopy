@@ -17,10 +17,7 @@ jobs:
     - name: Install packages
       run: |
         pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.travis.txt; fi
-        pip install --no-binary rasterio rasterio
-        pip install --upgrade numpy
-        pip install shapely[vectorize]
+        if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
     - name: Run black
@@ -58,12 +55,8 @@ jobs:
       shell: bash
       run: |
         pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.travis.txt; fi
-        pip install --no-binary rasterio rasterio
-        pip install --upgrade numpy
-        pip install shapely[vectorize]
-        pip install coveralls nose-timer
-        pip install pylint flake8 black
+        if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
+        pip install nose-timer nose-cov
         pip install https://github.com/modflowpy/pymake/zipball/master
         echo "Install flopy..."
         pip install .
@@ -74,4 +67,7 @@ jobs:
         echo "Building executables..."
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
         echo "Running autotests..."
-        nosetests -v --with-id --with-timer -w ./autotest
+        nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
