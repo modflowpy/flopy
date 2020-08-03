@@ -24,6 +24,7 @@ jobs:
     - name: Create a conda environment
       shell: bash
       run: |
+        conda init bash
         conda create -n flopy python=3.8
 
     - name: Install python packages
@@ -71,6 +72,7 @@ jobs:
     - name: Create a conda environment
       shell: bash
       run: |
+        conda init bash
         conda create -n flopy python=${{ matrix.python-version }}
 
     - name: Install python packages
