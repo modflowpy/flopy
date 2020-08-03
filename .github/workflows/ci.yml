@@ -12,8 +12,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
+
     - uses: actions/checkout@v2
-    - uses: s-weigand/setup-conda@v1
+
+    - name: setup-conda
+      uses: s-weigand/setup-conda@v1.0.3
+        update-conda: true
+        conda-channels: anaconda, conda-forge
+
     - name: Install packages
       shell: bash
       run: |
@@ -37,13 +43,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.7, 3.9]
+        python-version: [3.8, 3.7, 3.6]
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up conda ${{ matrix.python-version }}
-      uses: s-weigand/setup-conda@v1
+
+    - name: setup-conda ${{ matrix.python-version }}
+      uses: s-weigand/setup-conda@v1.0.3
       with:
         update-conda: true
         python-version: ${{ matrix.python-version }}
@@ -53,9 +60,18 @@ jobs:
       shell: bash
       run: |
         conda install -c anaconda pip
-        pip uninstall numpy
         conda install -c conda-forge --yes --file requirements.txt
         pip install nose-timer nose-cov
+
+    - name: Remove numpy and reinstall with pip (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        conda uninstall numpy
+        pip install numpy
+
+    - name: Install pymake and flopy
+      shell: bash
+      run: |
         pip install https://github.com/modflowpy/pymake/zipball/master
         echo "Install flopy..."
         pip install .
@@ -73,7 +89,6 @@ jobs:
       shell: bash
       run: |
         echo "::add-path::$HOME/.local/bin"
-        $PATH
 
     - name: Run nosetests
       shell: bash
@@ -83,4 +98,3 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
-
