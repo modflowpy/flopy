@@ -26,11 +26,7 @@ jobs:
       run: flake8 --count --show-source --exit-zero ./flopy
     - name: Run pylint
       run: |
-        pylint --jobs=2 --errors-only ./flopy || pylint-exit $?
-        if [ $? -ne 0 ]; then
-          echo "An error occurred while running pylint." >&2
-          exit 1
-        fi
+        pylint --jobs=2 --errors-only --exit-zero ./flopy
 
   flopyCI:
     name: Run pymake CI on different python versions and different OSs
