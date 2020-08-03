@@ -80,8 +80,9 @@ jobs:
       shell: bash
       run: |
         echo "Install flopy..."
-        conda-develop ../flopy/
-        conda-develop ../pymake/
+        pip install .
+        echo "Install pymake..."
+        pip install ../pymake/
 
     - name: Print python package versions
       shell: python
