@@ -15,44 +15,34 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: setup-conda
-      uses: s-weigand/setup-conda@v1.0.3
+    - name: Setup Miniconda
+      uses: goanpeca/setup-miniconda@v1.6.0
       with:
-        activate-conda: false
+        python-version: 3.8
+        activate-environment: flopy
         update-conda: true
         conda-channels: anaconda, conda-forge
 
-    - name: Activate conda
-      shell: bash
-      run: |
-        conda init bash
-
-    - name: Create a conda environment
-      shell: bash
-      run: |
-        conda create -n flopy python=3.8
-
     - name: Install python packages
-      shell: bash
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         conda install pip
         pip install pylint flake8 black
         conda install --yes --file requirements.txt
 
     - name: Run black
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         black --check --line-length 79 ./flopy
 
     - name: Run flake8
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         flake8 --count --show-source --exit-zero ./flopy
 
     - name: Run pylint
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
   flopyCI:
@@ -68,57 +58,43 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: setup-conda ${{ matrix.python-version }}
-      uses: s-weigand/setup-conda@v1.0.3
+    - name: Setup Miniconda
+      uses: goanpeca/setup-miniconda@v1.6.0
       with:
-        activate-conda: false
+        python-version: ${{ matrix.python-version }}
         update-conda: true
         conda-channels: anaconda, conda-forge
 
-    - name: Activate conda
-      shell: bash
-      run: |
-        conda init bash
-
-    - name: Create a conda environment
-      shell: bash
-      run: |
-        conda create -n flopy python=${{ matrix.python-version }}
-
     - name: Install python packages
-      shell: bash
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         conda install pip
         pip install nose-timer nose-cov
         conda install --yes --file requirements.txt
 
     - name: Install pymake and flopy
-      shell: bash
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         echo "Install flopy..."
         pip install .
         echo "Install pymake..."
         pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Download executables
-      shell: bash
+      shell: bash -l {0}
       run: |
-        conda activate flopy
         echo "Download executables..."
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add bin directory on Linux, macOS, and Windows
-      shell: bash
+      shell: bash -l {0}
       run: |
         echo "::add-path::$HOME/.local/bin"
 
     - name: Run nosetests
-      shell: bash
+      shell: bash -l {0}
       run: |
         echo "Running autotests..."
-        conda activate flopy
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov
