@@ -17,6 +17,7 @@ jobs:
 
     - name: setup-conda
       uses: s-weigand/setup-conda@v1.0.3
+      with:
         update-conda: true
         conda-channels: anaconda, conda-forge
 
@@ -24,14 +25,16 @@ jobs:
       shell: bash
       run: |
         conda install -c anaconda pip
-        pip uninstall numpy
         conda install -c conda-forge --yes --file requirements.txt
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
+
     - name: Run black
       run: black --check --line-length 79 ./flopy
+
     - name: Run flake8
       run: flake8 --count --show-source --exit-zero ./flopy
+
     - name: Run pylint
       run: |
         pylint --jobs=2 --errors-only --exit-zero ./flopy
