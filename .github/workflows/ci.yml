@@ -21,13 +21,17 @@ jobs:
         update-conda: true
         conda-channels: anaconda, conda-forge
 
-    - name: Install packages
+    - name: Install python packages using pip
       shell: bash
       run: |
         conda install pip
-        pip install pylint flake8 black
+        pip install nose-timer nose-cov
         echo "use pip to install numpy and matplotlib because of a windows issue..."
         pip install numpy matplotlib
+
+    - name: Install remaining python packages using conda
+      shell: bash
+      run: |
         conda install --yes --file requirements.txt
 
     - name: Run black
@@ -60,13 +64,17 @@ jobs:
         python-version: ${{ matrix.python-version }}
         conda-channels: anaconda, conda-forge
 
-    - name: Install python packages
+    - name: Install python packages using pip
       shell: bash
       run: |
         conda install pip
         pip install nose-timer nose-cov
         echo "use pip to install numpy and matplotlib because of a windows issue..."
         pip install numpy matplotlib
+
+    - name: Install remaining python packages using conda
+      shell: bash
+      run: |
         conda install --yes --file requirements.txt
 
     - name: Install pymake and flopy
