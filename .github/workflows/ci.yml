@@ -18,19 +18,23 @@ jobs:
     - name: setup-conda
       uses: s-weigand/setup-conda@v1.0.3
       with:
+        activate-conda: false
         update-conda: true
         conda-channels: anaconda, conda-forge
+
+    - name: Activate conda
+      shell: bash
+      run: |
+        conda init bash
 
     - name: Create a conda environment
       shell: bash
       run: |
-        conda init bash
         conda create -n flopy python=3.8
 
     - name: Install python packages
       shell: bash
       run: |
-        conda init bash
         conda activate flopy
         conda install pip
         pip install pylint flake8 black
@@ -38,19 +42,16 @@ jobs:
 
     - name: Run black
       run: |
-        conda init bash
         conda activate flopy
         black --check --line-length 79 ./flopy
 
     - name: Run flake8
       run: |
-        conda init bash
         conda activate flopy
         flake8 --count --show-source --exit-zero ./flopy
 
     - name: Run pylint
       run: |
-        conda init bash
         conda activate flopy
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
@@ -70,8 +71,14 @@ jobs:
     - name: setup-conda ${{ matrix.python-version }}
       uses: s-weigand/setup-conda@v1.0.3
       with:
+        activate-conda: false
         update-conda: true
         conda-channels: anaconda, conda-forge
+
+    - name: Activate conda
+      shell: bash
+      run: |
+        conda init bash
 
     - name: Create a conda environment
       shell: bash
@@ -81,7 +88,6 @@ jobs:
     - name: Install python packages
       shell: bash
       run: |
-        conda init bash
         conda activate flopy
         conda install pip
         pip install nose-timer nose-cov
@@ -90,7 +96,6 @@ jobs:
     - name: Install pymake and flopy
       shell: bash
       run: |
-        conda init bash
         conda activate flopy
         echo "Install flopy..."
         pip install .
@@ -100,7 +105,6 @@ jobs:
     - name: Download executables
       shell: bash
       run: |
-        conda init bash
         conda activate flopy
         echo "Download executables..."
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
@@ -114,7 +118,6 @@ jobs:
       shell: bash
       run: |
         echo "Running autotests..."
-        conda init bash
         conda activate flopy
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
