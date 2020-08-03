@@ -1,5 +1,4 @@
 appdirs
-numpy
 matplotlib
 netcdf4
 rasterio

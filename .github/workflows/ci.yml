@@ -17,6 +17,7 @@ jobs:
     - name: Install packages
       run: |
         conda install -c anaconda pip
+        pip install numpy
         if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
         pip install https://github.com/modflowpy/pymake/zipball/master
         pip install pylint flake8 black
@@ -51,6 +52,7 @@ jobs:
       shell: bash
       run: |
         conda install -c anaconda pip
+        pip install numpy
         if [ -f requirements.txt ]; then conda install -c conda-forge --yes --file requirements.txt; fi
         pip install nose-timer nose-cov
         pip install https://github.com/modflowpy/pymake/zipball/master

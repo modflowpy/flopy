@@ -6,7 +6,7 @@ import shutil
 try:
     import pymake
 except:
-    print('pymake is not installed...will not build executables')
+    print('pymake is not installed...will not download executables')
     pymake = None
 
 os.environ["CI"] = "1"
@@ -64,7 +64,7 @@ def test_download_and_unzip():
         src = os.path.join(exe_pth, file)
         dst = os.path.join(bindir, file)
         print('moving {} -> {}'.format(src, dst))
-        os.replace(src, dst)
+        shutil.move(src, dst)
 
 
 def test_cleanup():
