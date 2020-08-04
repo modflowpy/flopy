@@ -128,10 +128,10 @@ jobs:
       run: |
         nosetests -v --with-id --with-timer --with-coverage -w ./autotest
 
-    - name: List xml files in the root directory
+    - name: List files in the root directory
       shell: bash
       run: |
-        ls -l *.xml
+        ls -l
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12
