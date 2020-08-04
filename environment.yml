@@ -12,8 +12,8 @@ dependencies:
   - pandas
   - netcdf4
   - pyshp
-  - conda-forge::rasterio
-  - conda-forge::fiona
-  - conda-forge::descartes
-  - conda-forge::pyproj
-  - conda-forge::shapely
+  - rasterio
+  - fiona
+  - descartes
+  - pyproj
+  - shapely

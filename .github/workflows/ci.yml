@@ -73,7 +73,6 @@ jobs:
       shell: bash -l {0}
       run: |
         conda info
-        conda info --envs
         conda list
 
     - name: Install pymake and flopy
@@ -85,7 +84,6 @@ jobs:
     - name: Download executables
       shell: bash -l {0}
       run: |
-        conda info
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add bin directory on Linux, macOS, and Windows
@@ -96,7 +94,6 @@ jobs:
     - name: Run nosetests
       shell: bash -l {0}
       run: |
-        conda info
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov
