@@ -28,9 +28,15 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: Print python version
+      shell: bash -l {0}
+      run: |
+        python --version
+
     - name: Install Python 3.8 packages
       shell: bash -l {0}
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.pip.txt
 
     - name: Run black
@@ -83,9 +89,15 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Print python version
+      shell: bash -l {0}
+      run: |
+        python --version
+
     - name: Install Python ${{ matrix.python-version }} packages
       shell: bash -l {0}
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.pip.txt
 
     - name: Install pymake and flopy
