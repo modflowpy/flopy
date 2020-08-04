@@ -76,7 +76,7 @@ jobs:
       run: |
         pip install .
         git clone https://github.com/modflowpy/pymake.git ../pymake
-        conda-build ../pymake
+        conda-develop ../pymake
 
     - name: Download executables
       shell: bash -l {0}
