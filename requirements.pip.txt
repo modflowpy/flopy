@@ -11,11 +11,10 @@ matplotlib
 scipy
 affine
 netcdf4
-gdal
+pyshp
+pyproj
 fiona
 descartes
-pyproj
-pyshp
 pandas
 bmipy
 xmipy
