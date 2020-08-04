@@ -1,0 +1,19 @@
+name: flopy
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - appdirs
+  - requests
+  - numpy
+  - matplotlib
+  - affine
+  - scipy
+  - pandas
+  - netcdf4
+  - pyshp
+  - conda-forge::rasterio
+  - conda-forge::fiona
+  - conda-forge::descartes
+  - conda-forge::pyproj
+  - conda-forge::shapely

@@ -21,12 +21,11 @@ jobs:
         python-version: 3.8
         activate-environment: flopy
         auto-update-conda: true
-        channels: anaconda, conda-forge
+        environment-file: environment.yml
 
-    - name: Install python packages
+    - name: Install additional python packages with pip
       shell: bash -l {0}
       run: |
-        conda install --yes --file requirements.txt
         pip install pylint flake8 black
 
     - name: Run black
@@ -63,26 +62,23 @@ jobs:
         python-version: ${{ matrix.python-version }}
         activate-environment: flopy
         auto-update-conda: true
-        channels: anaconda, conda-forge
+        environment-file: environment.yml
 
-    - name: Install python packages
+    - name: Install additional python packages with pip
       shell: bash -l {0}
       run: |
-        conda info
-        conda install --yes --file requirements.txt
         pip install nose-timer nose-cov
 
     - name: Determine python environment
       shell: bash -l {0}
       run: |
         conda info
-        conda list
         conda info --envs
+        conda list
 
     - name: Install pymake and flopy
       shell: bash -l {0}
       run: |
-        conda info
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
