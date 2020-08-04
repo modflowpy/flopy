@@ -47,7 +47,7 @@ jobs:
       run: |
         echo "if black check fails run"
         echo "  black --line-length 79 ./flopy"
-        echo "and the commit changes."
+        echo "and then commit the changes."
         black --check --line-length 79 ./flopy
 
     - name: Run flake8
