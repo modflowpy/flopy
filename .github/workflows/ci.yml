@@ -26,9 +26,8 @@ jobs:
     - name: Install python packages
       shell: bash -l {0}
       run: |
-        conda install pip
-        pip install pylint flake8 black
         conda install --yes --file requirements.txt
+        pip install pylint flake8 black
 
     - name: Run black
       shell: bash -l {0}
@@ -69,22 +68,19 @@ jobs:
     - name: Install python packages
       shell: bash -l {0}
       run: |
-        conda install pip
-        pip install nose-timer nose-cov
         conda install --yes --file requirements.txt
+        pip install nose-timer nose-cov
 
     - name: Install pymake and flopy
       shell: bash -l {0}
       run: |
-        echo "Install flopy..."
         pip install .
-        echo "Install pymake..."
-        pip install https://github.com/modflowpy/pymake/zipball/master
+        git clone https://github.com/modflowpy/pymake.git ../pymake/
+        conda-build ../pymake/
 
     - name: Download executables
       shell: bash -l {0}
       run: |
-        echo "Download executables..."
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add bin directory on Linux, macOS, and Windows
@@ -95,7 +91,6 @@ jobs:
     - name: Run nosetests
       shell: bash -l {0}
       run: |
-        echo "Running autotests..."
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov
