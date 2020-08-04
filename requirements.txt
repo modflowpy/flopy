@@ -1,6 +1,6 @@
-conda-build
 appdirs
 requests
+mkl
 numpy
 matplotlib
 netcdf4
