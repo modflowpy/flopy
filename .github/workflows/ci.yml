@@ -29,18 +29,21 @@ jobs:
         python-version: 3.8
 
     - name: Print python version
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         python --version
 
     - name: Install Python 3.8 packages
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.pip.txt
 
     - name: Run black
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         echo "if black check fails run"
         echo "  black --line-length 79 ./flopy"
@@ -48,12 +51,14 @@ jobs:
         black --check --line-length 79 ./flopy
 
     - name: Run flake8
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         flake8 --count --show-source --exit-zero ./flopy
 
     - name: Run pylint
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
@@ -90,39 +95,46 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Print python version
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         python --version
 
     - name: Install Python ${{ matrix.python-version }} packages
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.pip.txt
 
     - name: Install pymake and flopy
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Download executables
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add executables directory to path
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         echo "::add-path::$HOME/.local/bin"
 
     - name: Run nosetests
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         nosetests -v --with-id --with-timer --with-coverage -w ./autotest
 
     - name: List xml files in the root directory
-      shell: bash -l {0}
+      # shell: bash -l {0}
+      shell: bash
       run: |
         ls -l *.xml
 
