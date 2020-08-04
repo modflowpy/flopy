@@ -4,7 +4,7 @@ import sys
 import shutil
 
 try:
-    import pymake
+    from pymake import getmfexes
 except:
     print('pymake is not installed...will not download executables')
     pymake = None
@@ -54,7 +54,7 @@ def list_exes():
 
 
 def test_download_and_unzip():
-    pymake.getmfexes(exe_pth)
+    getmfexes(exe_pth)
 
     # move the exes from exe_pth to bindir
     files = os.listdir(exe_pth)

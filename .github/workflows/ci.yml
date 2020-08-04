@@ -68,19 +68,28 @@ jobs:
     - name: Install python packages
       shell: bash -l {0}
       run: |
+        conda info
         conda install --yes --file requirements.txt
         pip install nose-timer nose-cov
+
+    - name: Determine python environment
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+        conda info --envs
 
     - name: Install pymake and flopy
       shell: bash -l {0}
       run: |
+        conda info
         pip install .
-        git clone https://github.com/modflowpy/pymake.git ../pymake
-        conda-develop ../pymake
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Download executables
       shell: bash -l {0}
       run: |
+        conda info
         nosetests -v get_exes.py --with-id --with-timer -w ./autotest
 
     - name: Add bin directory on Linux, macOS, and Windows
@@ -91,6 +100,7 @@ jobs:
     - name: Run nosetests
       shell: bash -l {0}
       run: |
+        conda info
         nosetests -v --with-id --with-timer --with-cov --cov-report=xml --cov=flopy -w ./autotest
 
     - name: Upload coverage to Codecov
