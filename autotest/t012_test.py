@@ -293,11 +293,10 @@ def test_mf2000_zeroth():
 
 def test_mfnwt_CrnkNic():
     # fix for CI failures on GitHub actions - remove once fixed in MT3D-USGS
+    runTest = True
     if 'CI' in os.environ:
         if sys.platform.lower() in ("win32", "darwin"):
             runTest = False
-    else:
-        runTest = True
 
     if runTest:
         pth = os.path.join(pthNWT, 'sft_crnkNic')

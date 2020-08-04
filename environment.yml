@@ -3,6 +3,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - pylint
+  - flake8
+  - black
+  - nose
+  - nose-timer
+  - nose-cov
   - appdirs
   - requests
   - numpy

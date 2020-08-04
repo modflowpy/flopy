@@ -1,4 +1,4 @@
-name: pymake continuous integration
+name: flopy continuous integration
 
 on:
   push:
@@ -23,14 +23,12 @@ jobs:
         auto-update-conda: true
         environment-file: environment.yml
 
-    - name: Install additional python packages with pip
-      shell: bash -l {0}
-      run: |
-        pip install pylint flake8 black
-
     - name: Run black
       shell: bash -l {0}
       run: |
+        echo "if black check fails run"
+        echo "  black --line-length 79 ./flopy"
+        echo "and the commit changes."
         black --check --line-length 79 ./flopy
 
     - name: Run flake8
@@ -63,11 +61,6 @@ jobs:
         activate-environment: flopy
         auto-update-conda: true
         environment-file: environment.yml
-
-    - name: Install additional python packages with pip
-      shell: bash -l {0}
-      run: |
-        pip install nose-timer nose-cov
 
     - name: Determine python environment
       shell: bash -l {0}
