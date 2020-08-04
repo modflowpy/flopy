@@ -6,6 +6,7 @@ nose-timer
 coverage
 requests
 appdirs
+numpy
 matplotlib
 scipy
 affine
