@@ -8,7 +8,7 @@ dependencies:
   - black
   - nose
   - nose-timer
-  - nose-cov
+  - coverage
   - appdirs
   - requests
   - numpy

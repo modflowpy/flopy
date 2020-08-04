@@ -1,0 +1,10 @@
+[run]
+include=flopy/*
+
+[report]
+ignore_errors = True
+omit =
+    autotest/*
+    examples/*
+    release/*
+    travis/*
