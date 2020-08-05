@@ -1,6 +1,4 @@
 name: flopy
-channels:
-  - conda-forge
 dependencies:
   - pylint
   - flake8

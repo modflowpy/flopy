@@ -175,7 +175,7 @@ jobs:
       shell: bash -l {0}
       run: |
         coverage run -m nose -v --with-id --with-timer \
-        --with-coverage --cover-package=flopy \
+        --with-coverage --cover-package=flopy --cover-xml \
         --cover-xml-file=../coverage.xml -w ./autotest
 
     - name: List files in the root directory
