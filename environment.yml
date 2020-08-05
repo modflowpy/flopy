@@ -1,7 +1,6 @@
 name: flopy
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - pylint
   - flake8
