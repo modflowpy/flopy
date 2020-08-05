@@ -69,7 +69,7 @@ class TestModflowPerformance():
         """test write time"""
         print('writing files...')
         mfp = TestModflowPerformance()
-        target = 5
+        target = 10.
         t0 = time.time()
         mfp.m.write_input()
         t1 = time.time() - t0
