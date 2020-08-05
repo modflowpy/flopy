@@ -62,9 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         test-file: [autotest_notebooks.py, autotest_scripts.py]
-
     steps:
-
     # check out repo
     - name: Checkout flopy repo
       uses: actions/checkout@v2
@@ -89,7 +87,7 @@ jobs:
         pip install -r requirements.pip.txt
 
     - name: Install additional Python 3.8 packages
-    - if: matrix.test-file == 'autotest_notebooks.py'
+      if: matrix.test-file == 'autotest_notebooks.py'
       shell: bash
       run: |
         pip install nbconvert jupyter
