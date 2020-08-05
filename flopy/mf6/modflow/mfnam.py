@@ -71,72 +71,204 @@ class ModflowNam(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    models = ListTemplateGenerator(('nam', 'models', 'models'))
-    exchanges = ListTemplateGenerator(('nam', 'exchanges', 'exchanges'))
-    solutiongroup = ListTemplateGenerator(('nam', 'solutiongroup',
-                                           'solutiongroup'))
+
+    models = ListTemplateGenerator(("nam", "models", "models"))
+    exchanges = ListTemplateGenerator(("nam", "exchanges", "exchanges"))
+    solutiongroup = ListTemplateGenerator(
+        ("nam", "solutiongroup", "solutiongroup")
+    )
     package_abbr = "nam"
     _package_type = "nam"
     dfn_file_name = "sim-nam.dfn"
 
-    dfn = [["block options", "name continue", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name nocheck", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name memory_print_option", "type string",
-            "reader urword", "optional true"],
-           ["block options", "name maxerrors", "type integer",
-            "reader urword", "optional true"],
-           ["block timing", "name tdis6", "preserve_case true",
-            "type string", "reader urword", "optional"],
-           ["block models", "name models",
-            "type recarray mtype mfname mname", "reader urword", "optional"],
-           ["block models", "name mtype", "in_record true", "type string",
-            "tagged false", "reader urword"],
-           ["block models", "name mfname", "in_record true", "type string",
-            "preserve_case true", "tagged false", "reader urword"],
-           ["block models", "name mname", "in_record true", "type string",
-            "tagged false", "reader urword"],
-           ["block exchanges", "name exchanges",
+    dfn = [
+        [
+            "block options",
+            "name continue",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name nocheck",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name memory_print_option",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name maxerrors",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block timing",
+            "name tdis6",
+            "preserve_case true",
+            "type string",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block models",
+            "name models",
+            "type recarray mtype mfname mname",
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block models",
+            "name mtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block models",
+            "name mfname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block models",
+            "name mname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exchanges",
             "type recarray exgtype exgfile exgmnamea exgmnameb",
-            "reader urword", "optional"],
-           ["block exchanges", "name exgtype", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block exchanges", "name exgfile", "in_record true",
-            "type string", "preserve_case true", "tagged false",
-            "reader urword"],
-           ["block exchanges", "name exgmnamea", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block exchanges", "name exgmnameb", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block solutiongroup", "name group_num", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "reader urword"],
-           ["block solutiongroup", "name mxiter", "type integer",
-            "reader urword", "optional true"],
-           ["block solutiongroup", "name solutiongroup",
-            "type recarray slntype slnfname slnmnames", "reader urword"],
-           ["block solutiongroup", "name slntype", "type string",
-            "valid ims6", "in_record true", "tagged false", "reader urword"],
-           ["block solutiongroup", "name slnfname", "type string",
-            "preserve_case true", "in_record true", "tagged false",
-            "reader urword"],
-           ["block solutiongroup", "name slnmnames", "type string",
-            "in_record true", "shape (:)", "tagged false", "reader urword"]]
+            "reader urword",
+            "optional",
+        ],
+        [
+            "block exchanges",
+            "name exgtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgfile",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgmnamea",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block exchanges",
+            "name exgmnameb",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name group_num",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name mxiter",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block solutiongroup",
+            "name solutiongroup",
+            "type recarray slntype slnfname slnmnames",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slntype",
+            "type string",
+            "valid ims6",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slnfname",
+            "type string",
+            "preserve_case true",
+            "in_record true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block solutiongroup",
+            "name slnmnames",
+            "type string",
+            "in_record true",
+            "shape (:)",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, simulation, loading_package=False, continue_=None,
-                 nocheck=None, memory_print_option=None, maxerrors=None,
-                 tdis6=None, models=None, exchanges=None, mxiter=None,
-                 solutiongroup=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowNam, self).__init__(simulation, "nam", filename, pname,
-                                         loading_package, parent_file)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        continue_=None,
+        nocheck=None,
+        memory_print_option=None,
+        maxerrors=None,
+        tdis6=None,
+        models=None,
+        exchanges=None,
+        mxiter=None,
+        solutiongroup=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowNam, self).__init__(
+            simulation, "nam", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.continue_ = self.build_mfdata("continue", continue_)
         self.nocheck = self.build_mfdata("nocheck", nocheck)
-        self.memory_print_option = self.build_mfdata("memory_print_option",
-                                                     memory_print_option)
+        self.memory_print_option = self.build_mfdata(
+            "memory_print_option", memory_print_option
+        )
         self.maxerrors = self.build_mfdata("maxerrors", maxerrors)
         self.tdis6 = self.build_mfdata("tdis6", tdis6)
         self.models = self.build_mfdata("models", models)

@@ -68,43 +68,115 @@ class ModflowGwfnam(mfpackage.MFPackage):
         a mfgwflak package parent_file.
 
     """
-    packages = ListTemplateGenerator(('gwf6', 'nam', 'packages',
-                                      'packages'))
+
+    packages = ListTemplateGenerator(("gwf6", "nam", "packages", "packages"))
     package_abbr = "gwfnam"
     _package_type = "nam"
     dfn_file_name = "gwf-nam.dfn"
 
-    dfn = [["block options", "name list", "type string", "reader urword",
-            "optional true"],
-           ["block options", "name print_input", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name newtonoptions",
-            "type record newton under_relaxation", "reader urword",
-            "optional true"],
-           ["block options", "name newton", "in_record true",
-            "type keyword", "reader urword"],
-           ["block options", "name under_relaxation", "in_record true",
-            "type keyword", "reader urword", "optional true"],
-           ["block packages", "name packages",
-            "type recarray ftype fname pname", "reader urword",
-            "optional false"],
-           ["block packages", "name ftype", "in_record true", "type string",
-            "tagged false", "reader urword"],
-           ["block packages", "name fname", "in_record true", "type string",
-            "preserve_case true", "tagged false", "reader urword"],
-           ["block packages", "name pname", "in_record true", "type string",
-            "tagged false", "reader urword", "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name list",
+            "type string",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name newtonoptions",
+            "type record newton under_relaxation",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name newton",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+        ],
+        [
+            "block options",
+            "name under_relaxation",
+            "in_record true",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packages",
+            "name packages",
+            "type recarray ftype fname pname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packages",
+            "name ftype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packages",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packages",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, list=None,
-                 print_input=None, print_flows=None, save_flows=None,
-                 newtonoptions=None, packages=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwfnam, self).__init__(model, "nam", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        list=None,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        newtonoptions=None,
+        packages=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwfnam, self).__init__(
+            model, "nam", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.list = self.build_mfdata("list", list)

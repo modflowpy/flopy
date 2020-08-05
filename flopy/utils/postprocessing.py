@@ -1,9 +1,17 @@
 import numpy as np
 
 
-def get_transmissivities(heads, m,
-                         r=None, c=None, x=None, y=None,
-                         sctop=None, scbot=None, nodata=-999):
+def get_transmissivities(
+    heads,
+    m,
+    r=None,
+    c=None,
+    x=None,
+    y=None,
+    sctop=None,
+    scbot=None,
+    nodata=-999,
+):
     """
     Computes transmissivity in each model layer at specified locations and
     open intervals. A saturated thickness is determined for each row, column
@@ -45,23 +53,23 @@ def get_transmissivities(heads, m,
         # get row, col for observation locations
         r, c = m.sr.get_ij(x, y)
     else:
-        raise ValueError('Must specify row, column or x, y locations.')
+        raise ValueError("Must specify row, column or x, y locations.")
 
     # get k-values and botms at those locations
     paklist = m.get_package_list()
-    if 'LPF' in paklist:
+    if "LPF" in paklist:
         hk = m.lpf.hk.array[:, r, c]
-    elif 'UPW' in paklist:
+    elif "UPW" in paklist:
         hk = m.upw.hk.array[:, r, c]
     else:
-        raise ValueError('No LPF or UPW package.')
+        raise ValueError("No LPF or UPW package.")
 
     botm = m.dis.botm.array[:, r, c]
 
     if heads.shape == (m.nlay, m.nrow, m.ncol):
         heads = heads[:, r, c]
 
-    msg = 'Shape of heads array must be nlay x nhyd'
+    msg = "Shape of heads array must be nlay x nhyd"
     assert heads.shape == botm.shape, msg
 
     # set open interval tops/bottoms to model top/bottom if None
@@ -106,7 +114,7 @@ def get_transmissivities(heads, m,
     for i, n in enumerate(not_in_any_layer):
         if n:
             closest = np.argmax(thick[:, i])
-            thick[closest, i] = 1.
+            thick[closest, i] = 1.0
     thick[thick < 0] = 0
     thick[heads == nodata] = 0  # exclude nodata cells
 
@@ -191,10 +199,10 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
         per_idx = [per_idx]
 
     # get confined or unconfined/convertible info
-    if m.has_package('BCF6') or m.has_package('LPF') or m.has_package('UPW'):
-        if m.has_package('BCF6'):
+    if m.has_package("BCF6") or m.has_package("LPF") or m.has_package("UPW"):
+        if m.has_package("BCF6"):
             laytyp = m.lpf.laycon.array
-        elif m.has_package('LPF'):
+        elif m.has_package("LPF"):
             laytyp = m.lpf.laytyp.array
         else:
             laytyp = m.upw.laytyp.array
@@ -202,13 +210,16 @@ def get_saturated_thickness(heads, m, nodata, per_idx=None):
             is_conf = np.full(m.modelgrid.shape, laytyp == 0)
         else:
             laytyp = laytyp.reshape(m.modelgrid.nlay, 1, 1)
-            is_conf = np.logical_and((laytyp == 0),
-                                     np.full(m.modelgrid.shape, True))
-    elif m.has_package('NPF'):
+            is_conf = np.logical_and(
+                (laytyp == 0), np.full(m.modelgrid.shape, True)
+            )
+    elif m.has_package("NPF"):
         is_conf = m.npf.icelltype.array == 0
     else:
-        raise ValueError('No flow package was found when trying to determine '
-                         'the layer type.')
+        raise ValueError(
+            "No flow package was found when trying to determine "
+            "the layer type."
+        )
 
     # calculate saturated thickness
     sat_thickness = []
@@ -267,9 +278,17 @@ def get_gradients(heads, m, nodata, per_idx=None):
         grad.append((dh / dz).filled(np.nan))
     return np.squeeze(grad)
 
-def get_extended_budget(cbcfile, precision='single', idx=None,
-                        kstpkper=None, totim=None, boundary_ifaces=None,
-                        hdsfile=None, model=None):
+
+def get_extended_budget(
+    cbcfile,
+    precision="single",
+    idx=None,
+    kstpkper=None,
+    totim=None,
+    boundary_ifaces=None,
+    hdsfile=None,
+    model=None,
+):
     """
     Get the flow rate across cell faces including potential stresses applied
     along boundaries at a given time. Only implemented for "classical" MODFLOW
@@ -330,89 +349,106 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
     cbf = bf.CellBudgetFile(cbcfile, precision=precision)
     nlay, nrow, ncol = cbf.nlay, cbf.nrow, cbf.ncol
     rec_names = cbf.get_unique_record_names(decode=True)
-    err_msg = ' not found in the budget file.'
+    err_msg = " not found in the budget file."
 
     # get flow across right face
     Qx_ext = np.zeros((nlay, nrow, ncol + 1), dtype=np.float32)
     if ncol > 1:
-        budget_term = 'FLOW RIGHT FACE'
+        budget_term = "FLOW RIGHT FACE"
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        frf = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                           text=budget_term)
+        frf = cbf.get_data(
+            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
+        )
         Qx_ext[:, :, 1:] = frf[0]
         # SWI2 package
-        budget_term_swi = 'SWIADDTOFRF'
+        budget_term_swi = "SWIADDTOFRF"
         matched_name_swi = [s for s in rec_names if budget_term_swi in s]
         if matched_name_swi:
-            frf_swi = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                                   text=budget_term_swi)
+            frf_swi = cbf.get_data(
+                idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term_swi
+            )
             Qx_ext[:, :, 1:] += frf_swi[0]
 
     # get flow across front face
     Qy_ext = np.zeros((nlay, nrow + 1, ncol), dtype=np.float32)
     if nrow > 1:
-        budget_term = 'FLOW FRONT FACE'
+        budget_term = "FLOW FRONT FACE"
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        fff = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                           text=budget_term)
-        Qy_ext[:, 1:, :] = - fff[0]
+        fff = cbf.get_data(
+            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
+        )
+        Qy_ext[:, 1:, :] = -fff[0]
         # SWI2 package
-        budget_term_swi = 'SWIADDTOFFF'
+        budget_term_swi = "SWIADDTOFFF"
         matched_name_swi = [s for s in rec_names if budget_term_swi in s]
         if matched_name_swi:
-            fff_swi = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                                   text=budget_term_swi)
+            fff_swi = cbf.get_data(
+                idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term_swi
+            )
             Qy_ext[:, 1:, :] -= fff_swi[0]
 
     # get flow across lower face
     Qz_ext = np.zeros((nlay + 1, nrow, ncol), dtype=np.float32)
     if nlay > 1:
-        budget_term = 'FLOW LOWER FACE'
+        budget_term = "FLOW LOWER FACE"
         matched_name = [s for s in rec_names if budget_term in s]
         if not matched_name:
             raise RuntimeError(budget_term + err_msg)
-        flf = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                           text=budget_term)
-        Qz_ext[1:, :, :] = - flf[0]
+        flf = cbf.get_data(
+            idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term
+        )
+        Qz_ext[1:, :, :] = -flf[0]
         # SWI2 package
-        budget_term_swi = 'SWIADDTOFLF'
+        budget_term_swi = "SWIADDTOFLF"
         matched_name_swi = [s for s in rec_names if budget_term_swi in s]
         if matched_name_swi:
-            flf_swi = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                                   text=budget_term_swi)
+            flf_swi = cbf.get_data(
+                idx=idx, kstpkper=kstpkper, totim=totim, text=budget_term_swi
+            )
             Qz_ext[1:, :, :] -= flf_swi[0]
 
     # deal with boundary cells
     if boundary_ifaces is not None:
         # need calculated heads for some stresses and to check hnoflo and hdry
         if hdsfile is None:
-            raise ValueError('hdsfile must be provided when using '
-                             'boundary_ifaces')
+            raise ValueError(
+                "hdsfile must be provided when using " "boundary_ifaces"
+            )
         hds = bf.HeadFile(hdsfile, precision=precision)
         head = hds.get_data(idx=idx, kstpkper=kstpkper, totim=totim)
 
         # get hnoflo and hdry values
         if model is None:
-            raise ValueError('model must be provided when using '
-                             'boundary_ifaces')
-        noflo_or_dry = np.logical_or(head==model.hnoflo, head==model.hdry)
+            raise ValueError(
+                "model must be provided when using " "boundary_ifaces"
+            )
+        noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
 
         for budget_term, iface_info in boundary_ifaces.items():
             # look for budget term in budget file
             matched_name = [s for s in rec_names if budget_term in s]
             if not matched_name:
-                raise RuntimeError('Budget term ' + budget_term + ' not found'
-                                   ' in "' + cbcfile + '" file.')
+                raise RuntimeError(
+                    "Budget term " + budget_term + " not found"
+                    ' in "' + cbcfile + '" file.'
+                )
             if len(matched_name) > 1:
-                raise RuntimeError('Budget term ' + budget_term + ' found'
-                                   ' in several record names. Use a more '
-                                   ' precise name.')
-            Q_stress = cbf.get_data(idx=idx, kstpkper=kstpkper, totim=totim,
-                                    text=matched_name[0], full3D=True)[0]
+                raise RuntimeError(
+                    "Budget term " + budget_term + " found"
+                    " in several record names. Use a more "
+                    " precise name."
+                )
+            Q_stress = cbf.get_data(
+                idx=idx,
+                kstpkper=kstpkper,
+                totim=totim,
+                text=matched_name[0],
+                full3D=True,
+            )[0]
 
             # remove potential leading and trailing spaces
             budget_term = budget_term.strip()
@@ -420,7 +456,7 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
             # weirdly, MODFLOW puts recharge in all potential recharge cells
             # and not only the actual cells; thus, correct this by putting 0
             # away from water table cells
-            if budget_term == 'RECHARGE':
+            if budget_term == "RECHARGE":
                 # find the water table as the first active cell in each column
                 water_table = np.full((nlay, nrow, ncol), False)
                 water_table[0, :, :] = np.logical_not(noflo_or_dry[0, :, :])
@@ -430,10 +466,12 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
                         break
                     water_table[lay, :, :] = np.logical_and(
                         np.logical_not(noflo_or_dry[lay, :, :]),
-                        np.logical_not(already_found))
-                    already_found = np.logical_or(already_found,
-                                                  water_table[lay, :, :])
-                Q_stress[np.logical_not(water_table)] = 0.
+                        np.logical_not(already_found),
+                    )
+                    already_found = np.logical_or(
+                        already_found, water_table[lay, :, :]
+                    )
+                Q_stress[np.logical_not(water_table)] = 0.0
 
             # case where the same iface is assigned to all cells
             if isinstance(iface_info, int):
@@ -455,14 +493,19 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
                 # impose a unique iface (normally = 6) for some stresses
                 # (note: UZF RECHARGE, GW ET and SURFACE LEAKAGE are all
                 # related to the UZF package)
-                if budget_term == 'RECHARGE' or \
-                   budget_term == 'ET' or \
-                   budget_term == 'UZF RECHARGE' or \
-                   budget_term == 'GW ET' or \
-                   budget_term == 'SURFACE LEAKAGE':
-                    raise ValueError('This function imposes the use of a '
-                                     'unique iface (normally = 6) for the '
-                                     + budget_term + ' budget term.')
+                if (
+                    budget_term == "RECHARGE"
+                    or budget_term == "ET"
+                    or budget_term == "UZF RECHARGE"
+                    or budget_term == "GW ET"
+                    or budget_term == "SURFACE LEAKAGE"
+                ):
+                    raise ValueError(
+                        "This function imposes the use of a "
+                        "unique iface (normally = 6) for the "
+                        + budget_term
+                        + " budget term."
+                    )
 
                 # loop through boundary cells
                 for cell_info in iface_info:
@@ -492,14 +535,14 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
                     # - MNW1 package (we would need to retrieve well head and
                     #   conductance from model outputs; complicated)
                     # - MNW2 package (even more complicated than MNW1)
-                    if budget_term == 'WELLS':
+                    if budget_term == "WELLS":
                         Q_stress_cell = cell_info[3]
-                    elif budget_term == 'HEAD DEP BOUNDS':
+                    elif budget_term == "HEAD DEP BOUNDS":
                         ghb_head = cell_info[3]
                         ghb_cond = cell_info[4]
                         model_head = head[lay, row, col]
                         Q_stress_cell = ghb_cond * (ghb_head - model_head)
-                    elif budget_term == 'RIVER LEAKAGE':
+                    elif budget_term == "RIVER LEAKAGE":
                         riv_stage = cell_info[3]
                         riv_cond = cell_info[4]
                         riv_rbot = cell_info[5]
@@ -508,7 +551,7 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
                             Q_stress_cell = riv_cond * (riv_stage - model_head)
                         else:
                             Q_stress_cell = riv_cond * (riv_stage - riv_rbot)
-                    elif budget_term == 'DRAINS':
+                    elif budget_term == "DRAINS":
                         drn_stage = cell_info[3]
                         drn_cond = cell_info[4]
                         model_head = head[lay, row, col]
@@ -538,24 +581,34 @@ def get_extended_budget(cbcfile, precision='single', idx=None,
                     if iface == 1:
                         Qx_ext[lay, row, col] += Q_stress_cell
                     elif iface == 2:
-                        Qx_ext[lay, row, col+1] -= Q_stress_cell
+                        Qx_ext[lay, row, col + 1] -= Q_stress_cell
                     elif iface == 3:
-                        Qy_ext[lay, row+1, col] += Q_stress_cell
+                        Qy_ext[lay, row + 1, col] += Q_stress_cell
                     elif iface == 4:
                         Qy_ext[lay, row, col] -= Q_stress_cell
                     elif iface == 5:
-                        Qz_ext[lay+1, row, col] += Q_stress_cell
+                        Qz_ext[lay + 1, row, col] += Q_stress_cell
                     elif iface == 6:
                         Qz_ext[lay, row, col] -= Q_stress_cell
             else:
-                raise TypeError('boundary_ifaces value must be either '\
-                                'int or list.')
+                raise TypeError(
+                    "boundary_ifaces value must be either " "int or list."
+                )
 
     return Qx_ext, Qy_ext, Qz_ext
 
-def get_specific_discharge(model, cbcfile, precision='single', idx=None,
-                           kstpkper=None, totim=None, boundary_ifaces=None,
-                           hdsfile=None, position='centers'):
+
+def get_specific_discharge(
+    model,
+    cbcfile,
+    precision="single",
+    idx=None,
+    kstpkper=None,
+    totim=None,
+    boundary_ifaces=None,
+    hdsfile=None,
+    position="centers",
+):
     """
     Get the discharge vector at cell centers at a given time. For "classical"
     MODFLOW versions, we calculate it from the flow rate across cell faces.
@@ -626,8 +679,11 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
     # check if budget file has classical budget terms
     cbf = bf.CellBudgetFile(cbcfile, precision=precision)
     rec_names = cbf.get_unique_record_names(decode=True)
-    classical_budget_terms = ['FLOW RIGHT FACE', 'FLOW FRONT FACE',
-                              'FLOW RIGHT FACE']
+    classical_budget_terms = [
+        "FLOW RIGHT FACE",
+        "FLOW FRONT FACE",
+        "FLOW RIGHT FACE",
+    ]
     classical_budget = False
     for budget_term in classical_budget_terms:
         matched_name = [s for s in rec_names if budget_term in s]
@@ -641,9 +697,16 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
 
     if classical_budget:
         # get extended budget
-        Qx_ext, Qy_ext, Qz_ext = get_extended_budget(cbcfile,
-            precision=precision, idx=idx, kstpkper=kstpkper, totim=totim,
-            boundary_ifaces=boundary_ifaces, hdsfile=hdsfile, model=model)
+        Qx_ext, Qy_ext, Qz_ext = get_extended_budget(
+            cbcfile,
+            precision=precision,
+            idx=idx,
+            kstpkper=kstpkper,
+            totim=totim,
+            boundary_ifaces=boundary_ifaces,
+            hdsfile=hdsfile,
+            model=model,
+        )
 
         # get saturated thickness (head - bottom elev for unconfined layer)
         if hdsfile is None:
@@ -657,7 +720,9 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
         if modelgrid._idomain is None:
             modelgrid._idomain = model.dis.ibound
         if hdsfile is not None:
-            noflo_or_dry = np.logical_or(head==model.hnoflo, head==model.hdry)
+            noflo_or_dry = np.logical_or(
+                head == model.hnoflo, head == model.hdry
+            )
             modelgrid._idomain[noflo_or_dry] = 0
 
         # get cross section areas along x
@@ -674,21 +739,22 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
         cross_area_z = np.ones(modelgrid.shape) * delc * delr
 
         # calculate qx, qy, qz
-        if position == 'centers':
+        if position == "centers":
             qx = 0.5 * (Qx_ext[:, :, 1:] + Qx_ext[:, :, :-1]) / cross_area_x
             qy = 0.5 * (Qy_ext[:, 1:, :] + Qy_ext[:, :-1, :]) / cross_area_y
             qz = 0.5 * (Qz_ext[1:, :, :] + Qz_ext[:-1, :, :]) / cross_area_z
-        elif position == 'faces' or position == 'vertices':
-            cross_area_x = modelgrid.array_at_faces(cross_area_x, 'x')
-            cross_area_y = modelgrid.array_at_faces(cross_area_y, 'y')
-            cross_area_z = modelgrid.array_at_faces(cross_area_z, 'z')
+        elif position == "faces" or position == "vertices":
+            cross_area_x = modelgrid.array_at_faces(cross_area_x, "x")
+            cross_area_y = modelgrid.array_at_faces(cross_area_y, "y")
+            cross_area_z = modelgrid.array_at_faces(cross_area_z, "z")
             qx = Qx_ext / cross_area_x
             qy = Qy_ext / cross_area_y
             qz = Qz_ext / cross_area_z
         else:
-            raise ValueError('"' + position + '" is not a valid value for '
-                             'position')
-        if position == 'vertices':
+            raise ValueError(
+                '"' + position + '" is not a valid value for ' "position"
+            )
+        if position == "vertices":
             qx = modelgrid.array_at_verts(qx)
             qy = modelgrid.array_at_verts(qy)
             qz = modelgrid.array_at_verts(qz)
@@ -697,46 +763,52 @@ def get_specific_discharge(model, cbcfile, precision='single', idx=None,
         # check valid options
         if boundary_ifaces is not None:
             import warnings
-            warnings.warn('the boundary_ifaces option is not implemented '
-                          'for "non-classical" MODFLOW versions where the '
-                          'budget is not recorded as FLOW RIGHT FACE, '
-                          'FLOW FRONT FACE and FLOW LOWER FACE; it will be '
-                          'ignored', UserWarning)
-        if position != 'centers':
-            raise NotImplementedError('position can only be "centers" for '
-                                      '"non-classical" MODFLOW versions where '
-                                      'the budget is not recorded as FLOW '
-                                      'RIGHT FACE, FLOW FRONT FACE and FLOW '
-                                      'LOWER FACE')
 
-        is_spdis = [s for s in rec_names if 'DATA-SPDIS' in s]
+            warnings.warn(
+                "the boundary_ifaces option is not implemented "
+                'for "non-classical" MODFLOW versions where the '
+                "budget is not recorded as FLOW RIGHT FACE, "
+                "FLOW FRONT FACE and FLOW LOWER FACE; it will be "
+                "ignored",
+                UserWarning,
+            )
+        if position != "centers":
+            raise NotImplementedError(
+                'position can only be "centers" for '
+                '"non-classical" MODFLOW versions where '
+                "the budget is not recorded as FLOW "
+                "RIGHT FACE, FLOW FRONT FACE and FLOW "
+                "LOWER FACE"
+            )
+
+        is_spdis = [s for s in rec_names if "DATA-SPDIS" in s]
         if not is_spdis:
-            err_msg = 'Could not find suitable records in the budget file ' \
-                      'to construct the discharge vector.'
+            err_msg = (
+                "Could not find suitable records in the budget file "
+                "to construct the discharge vector."
+            )
             raise RuntimeError(err_msg)
-        spdis = cbf.get_data(text='DATA-SPDIS', idx=idx, kstpkper=kstpkper,
-                             totim=totim)[0]
+        spdis = cbf.get_data(
+            text="DATA-SPDIS", idx=idx, kstpkper=kstpkper, totim=totim
+        )[0]
         nnodes = model.modelgrid.nnodes
         qx = np.full((nnodes), np.nan)
         qy = np.full((nnodes), np.nan)
         qz = np.full((nnodes), np.nan)
-        idx = np.array(spdis['node']) - 1
-        qx[idx] = spdis['qx']
-        qy[idx] = spdis['qy']
-        qz[idx] = spdis['qz']
+        idx = np.array(spdis["node"]) - 1
+        qx[idx] = spdis["qx"]
+        qy[idx] = spdis["qy"]
+        qz[idx] = spdis["qz"]
         shape = model.modelgrid.shape
         qx.shape = shape
         qy.shape = shape
         qz.shape = shape
 
     # set no-flow and dry cells to NaN
-    if hdsfile is not None and position == 'centers':
-        noflo_or_dry = np.logical_or(head==model.hnoflo, head==model.hdry)
+    if hdsfile is not None and position == "centers":
+        noflo_or_dry = np.logical_or(head == model.hnoflo, head == model.hdry)
         qx[noflo_or_dry] = np.nan
         qy[noflo_or_dry] = np.nan
         qz[noflo_or_dry] = np.nan
 
     return qx, qy, qz
-
-
-

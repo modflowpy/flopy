@@ -1,0 +1,25 @@
+name: flopy
+channels:
+  - conda-forge
+dependencies:
+  - pylint
+  - flake8
+  - black
+  - nose
+  - nose-timer
+  - coverage
+  - appdirs
+  - requests
+  - numpy
+  - matplotlib
+  - bmipy
+  - affine
+  - scipy
+  - pandas
+  - netcdf4
+  - pyshp
+  - rasterio
+  - fiona
+  - descartes
+  - pyproj
+  - shapely

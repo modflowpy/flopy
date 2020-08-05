@@ -35,42 +35,54 @@ def convert_data(data, data_dimensions, data_type, data_item=None):
             try:
                 return float(val)
             except (ValueError, TypeError):
-                message = 'Data "{}" with value "{}" can ' \
-                          'not be converted to float' \
-                           '.'.format(data_dimensions.structure.name,
-                                      data)
+                message = (
+                    'Data "{}" with value "{}" can '
+                    "not be converted to float"
+                    ".".format(data_dimensions.structure.name, data)
+                )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     data_dimensions.structure.get_model(),
                     data_dimensions.structure.get_package(),
-                    data_dimensions.structure.path, 'converting data',
+                    data_dimensions.structure.path,
+                    "converting data",
                     data_dimensions.structure.name,
-                    inspect.stack()[0][3], type_, value_, traceback_,
-                    message, False)
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    message,
+                    False,
+                )
         else:
             try:
                 if isinstance(data, str):
                     # fix any scientific formatting that python can't handle
-                    data = data.replace('d', 'e')
+                    data = data.replace("d", "e")
                 return float(data)
             except (ValueError, TypeError):
                 try:
                     return float(PyListUtil.clean_numeric(data))
                 except (ValueError, TypeError):
-                    message = 'Data "{}" with value "{}" can ' \
-                              'not be converted to float' \
-                               '.'.format(data_dimensions.structure.
-                                          name,
-                                          data)
+                    message = (
+                        'Data "{}" with value "{}" can '
+                        "not be converted to float"
+                        ".".format(data_dimensions.structure.name, data)
+                    )
                     type_, value_, traceback_ = sys.exc_info()
                     raise MFDataException(
                         data_dimensions.structure.get_model(),
                         data_dimensions.structure.get_package(),
                         data_dimensions.structure.path,
-                        'converting data',
+                        "converting data",
                         data_dimensions.structure.name,
-                        inspect.stack()[0][3], type_, value_,
-                        traceback_, message, False)
+                        inspect.stack()[0][3],
+                        type_,
+                        value_,
+                        traceback_,
+                        message,
+                        False,
+                    )
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
             return int(PyListUtil.clean_numeric(data)) - 1
@@ -80,18 +92,25 @@ def convert_data(data, data_dimensions, data_type, data_item=None):
             try:
                 return int(PyListUtil.clean_numeric(data))
             except (ValueError, TypeError):
-                message = 'Data "{}" with value "{}" can not be ' \
-                          'converted to int' \
-                          '.'.format(data_dimensions.structure.name,
-                                     data)
+                message = (
+                    'Data "{}" with value "{}" can not be '
+                    "converted to int"
+                    ".".format(data_dimensions.structure.name, data)
+                )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     data_dimensions.structure.get_model(),
                     data_dimensions.structure.get_package(),
-                    data_dimensions.structure.path, 'converting data',
+                    data_dimensions.structure.path,
+                    "converting data",
                     data_dimensions.structure.name,
-                    inspect.stack()[0][3], type_, value_, traceback_,
-                    message, False)
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    message,
+                    False,
+                )
     elif data_type == DatumType.string and data is not None:
         if data_item is None or not data_item.preserve_case:
             # keep strings lower case
@@ -99,59 +118,74 @@ def convert_data(data, data_dimensions, data_type, data_item=None):
     return data
 
 
-def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
-              possible_cellid=False, data_item=None):
+def to_string(
+    val,
+    data_type,
+    sim_data,
+    data_dim,
+    is_cellid=False,
+    possible_cellid=False,
+    data_item=None,
+):
     if data_type == DatumType.double_precision:
         if data_item is not None and data_item.support_negative_index:
             if val > 0:
-                return (str(int(val + 1)))
+                return str(int(val + 1))
             elif val == 0.0:
-                if struct.pack('>d', val) == \
-                        b'\x80\x00\x00\x00\x00\x00\x00\x00':
+                if (
+                    struct.pack(">d", val)
+                    == b"\x80\x00\x00\x00\x00\x00\x00\x00"
+                ):
                     # value is negative zero
-                    return (str(int(val - 1)))
+                    return str(int(val - 1))
                 else:
                     # value is positive zero
-                    return (str(int(val + 1)))
+                    return str(int(val + 1))
             else:
-                return (str(int(val - 1)))
+                return str(int(val - 1))
         else:
             try:
                 abs_val = abs(val)
             except TypeError:
                 return str(val)
-            if (abs_val > sim_data._sci_note_upper_thres or
-                    abs_val < sim_data._sci_note_lower_thres) \
-                    and abs_val != 0:
+            if (
+                abs_val > sim_data._sci_note_upper_thres
+                or abs_val < sim_data._sci_note_lower_thres
+            ) and abs_val != 0:
                 return sim_data.reg_format_str.format(val)
             else:
                 return sim_data.sci_format_str.format(val)
     elif is_cellid or (possible_cellid and isinstance(val, tuple)):
         if DatumUtil.is_int(val):
             return str(val + 1)
-        if len(val) > 0 and isinstance(val, str) and \
-                val.lower() == 'none':
+        if len(val) > 0 and isinstance(val, str) and val.lower() == "none":
             # handle case that cellid is 'none'
             return val
-        if is_cellid and \
-                data_dim.get_model_dim(None).model_name is not \
-                None:
+        if is_cellid and data_dim.get_model_dim(None).model_name is not None:
             model_grid = data_dim.get_model_grid()
             cellid_size = model_grid.get_num_spatial_coordinates()
             if len(val) != cellid_size:
-                message = 'Cellid "{}" contains {} integer(s). Expected a' \
-                          ' cellid containing {} integer(s) for grid type' \
-                          ' {}.'.format(val, len(val), cellid_size,
-                                       str(model_grid.grid_type()))
+                message = (
+                    'Cellid "{}" contains {} integer(s). Expected a'
+                    " cellid containing {} integer(s) for grid type"
+                    " {}.".format(
+                        val, len(val), cellid_size, str(model_grid.grid_type())
+                    )
+                )
                 type_, value_, traceback_ = sys.exc_info()
                 raise MFDataException(
                     data_dim.structure.get_model(),
                     data_dim.structure.get_package(),
                     data_dim.structure.path,
-                    'converting cellid to string',
-                    data_dim.structure.name, inspect.stack()[0][3],
-                    type_, value_, traceback_, message,
-                    sim_data.debug)
+                    "converting cellid to string",
+                    data_dim.structure.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    message,
+                    sim_data.debug,
+                )
 
         string_val = []
         if isinstance(val, str):
@@ -159,13 +193,13 @@ def to_string(val, data_type, sim_data, data_dim, is_cellid=False,
         else:
             for item in val:
                 string_val.append(str(item + 1))
-        return ' '.join(string_val)
+        return " ".join(string_val)
     elif data_type == DatumType.integer:
         if data_item is not None and data_item.numeric_index:
             if isinstance(val, str):
                 return str(int(val) + 1)
             else:
-                return str(int(val)+1)
+                return str(int(val) + 1)
         return str(int(val))
     elif data_type == DatumType.string:
         try:
@@ -235,11 +269,17 @@ class MFComment(object):
 
 
     """
+
     def __init__(self, comment, path, sim_data, line_number=0):
-        if not (isinstance(comment, str) or isinstance(comment, list) or
-                        comment is None):
-            raise FlopyException('Comment "{}" not valid.  Comment must be '
-                                 'of type str of list.'.format(comment))
+        if not (
+            isinstance(comment, str)
+            or isinstance(comment, list)
+            or comment is None
+        ):
+            raise FlopyException(
+                'Comment "{}" not valid.  Comment must be '
+                "of type str of list.".format(comment)
+            )
         self.text = comment
         self.path = path
         self.line_number = line_number
@@ -253,12 +293,13 @@ class MFComment(object):
     additional_text: string
         text to add
     """
+
     def add_text(self, additional_text):
         if additional_text:
             if isinstance(self.text, list):
                 self.text.append(additional_text)
             else:
-                self.text = '{} {}'.format(self.text, additional_text)
+                self.text = "{} {}".format(self.text, additional_text)
 
     """
     Get the comment text in the format to write to package files.
@@ -271,8 +312,9 @@ class MFComment(object):
     -------
     string : comment text
     """
+
     def get_file_entry(self, eoln_suffix=True):
-        file_entry = ''
+        file_entry = ""
         if self.text and self.sim_data.comments_on:
             if not isinstance(self.text, str) and isinstance(self.text, list):
                 file_entry = self._recursive_get(self.text)
@@ -280,18 +322,19 @@ class MFComment(object):
                 if self.text.strip():
                     file_entry = self.text
             if eoln_suffix:
-                file_entry = '{}\n'.format(file_entry)
+                file_entry = "{}\n".format(file_entry)
         return file_entry
 
     def _recursive_get(self, base_list):
-        file_entry = ''
+        file_entry = ""
         if base_list and self.sim_data.comments_on:
             for item in base_list:
                 if not isinstance(item, str) and isinstance(item, list):
-                    file_entry = '{}{}'.format(file_entry,
-                                               self._recursive_get(item))
+                    file_entry = "{}{}".format(
+                        file_entry, self._recursive_get(item)
+                    )
                 else:
-                    file_entry = '{} {}'.format(file_entry, item)
+                    file_entry = "{} {}".format(file_entry, item)
         return file_entry
 
     """
@@ -304,6 +347,7 @@ class MFComment(object):
     eoln_suffix: boolean
         have comment text end with end of line character
     """
+
     def write(self, fd, eoln_suffix=True):
         if self.text and self.sim_data.comments_on:
             if not isinstance(self.text, str) and isinstance(self.text, list):
@@ -312,7 +356,7 @@ class MFComment(object):
                 if self.text.strip():
                     fd.write(self.text)
             if eoln_suffix:
-                fd.write('\n')
+                fd.write("\n")
 
     """
     Check for comment text
@@ -325,6 +369,7 @@ class MFComment(object):
     -------
     boolean : True if comment text exists
     """
+
     def is_empty(self, include_whitespace=True):
         if include_whitespace:
             if self.text():
@@ -348,6 +393,7 @@ class MFComment(object):
     -------
     boolean : True if text is valid comment text
     """
+
     @staticmethod
     def is_comment(text, include_empty_line=False):
         if not text:
@@ -359,8 +405,11 @@ class MFComment(object):
             text_clean = text.strip()
         if include_empty_line and not text_clean:
             return True
-        if text_clean and (text_clean[0] == '#' or text_clean[0] == '!' or
-                           text_clean[0] == '//'):
+        if text_clean and (
+            text_clean[0] == "#"
+            or text_clean[0] == "!"
+            or text_clean[0] == "//"
+        ):
             return True
         return False
 
@@ -371,7 +420,7 @@ class MFComment(object):
                 if not isinstance(item, str) and isinstance(item, list):
                     self._recursive_write(fd, item)
                 else:
-                    fd.write(' {}'.format(item))
+                    fd.write(" {}".format(item))
 
 
 class TemplateGenerator(object):
@@ -386,6 +435,7 @@ class TemplateGenerator(object):
         tuple containing path of data is described in dfn files
         (<model>,<package>,<block>,<data name>)
     """
+
     def __init__(self, path):
         self.path = path
 
@@ -399,24 +449,26 @@ class TemplateGenerator(object):
 
         # get dimension info
         data_struct = sim_struct.get_data_structure(self.path)
-        package_dim = modeldimensions.PackageDimensions([model.dimensions],
-                                                        package_struct,
-                                                        self.path[0:-1])
-        return data_struct, modeldimensions.DataDimensions(package_dim,
-                                                           data_struct)
+        package_dim = modeldimensions.PackageDimensions(
+            [model.dimensions], package_struct, self.path[0:-1]
+        )
+        return (
+            data_struct,
+            modeldimensions.DataDimensions(package_dim, data_struct),
+        )
 
     def build_type_header(self, ds_type, data=None):
         from ..data.mfdatastorage import DataStorageType
 
         if ds_type == DataStorageType.internal_array:
             if isinstance(self, ArrayTemplateGenerator):
-                return {'factor':1.0, 'iprn':1, 'data':data}
+                return {"factor": 1.0, "iprn": 1, "data": data}
             else:
                 return None
         elif ds_type == DataStorageType.internal_constant:
             return data
         elif ds_type == DataStorageType.external_file:
-            return {'filename':'', 'factor':1.0, 'iprn':1}
+            return {"filename": "", "factor": 1.0, "iprn": 1}
         return None
 
 
@@ -447,11 +499,17 @@ class ArrayTemplateGenerator(TemplateGenerator):
         otherwise each ndarray in the data template will be populated with
         np.empty (0 or 0.0 if the DataStorageType is a constant).
     """
+
     def __init__(self, path):
         super(ArrayTemplateGenerator, self).__init__(path)
 
-    def empty(self, model=None, layered=False, data_storage_type_list=None,
-              default_value=None):
+    def empty(
+        self,
+        model=None,
+        layered=False,
+        data_storage_type_list=None,
+        default_value=None,
+    ):
         from ..data import mfdatastorage, mfstructure
         from ..data.mfdatastorage import DataStorageType, DataStructureType
 
@@ -461,30 +519,45 @@ class ArrayTemplateGenerator(TemplateGenerator):
         data_type = data_struct.get_datatype()
         # build a temporary data storage object
         data_storage = mfdatastorage.DataStorage(
-                model.simulation_data, model, data_dimensions, None,
-                DataStorageType.internal_array,
-                DataStructureType.recarray, data_path=self.path)
+            model.simulation_data,
+            model,
+            data_dimensions,
+            None,
+            DataStorageType.internal_array,
+            DataStructureType.recarray,
+            data_path=self.path,
+        )
         dimension_list = data_storage.get_data_dimensions(None)
 
         # if layered data
         if layered and dimension_list[0] > 1:
-            if data_storage_type_list is not None and \
-                    len(data_storage_type_list) != dimension_list[0]:
-                comment = 'data_storage_type_list specified with the ' \
-                          'wrong size.  Size {} but expected to be ' \
-                          'the same as the number of layers, ' \
-                          '{}.'.format(len(data_storage_type_list),
-                                       dimension_list[0])
+            if (
+                data_storage_type_list is not None
+                and len(data_storage_type_list) != dimension_list[0]
+            ):
+                comment = (
+                    "data_storage_type_list specified with the "
+                    "wrong size.  Size {} but expected to be "
+                    "the same as the number of layers, "
+                    "{}.".format(
+                        len(data_storage_type_list), dimension_list[0]
+                    )
+                )
                 type_, value_, traceback_ = sys.exc_info()
 
-                raise MFDataException(data_struct.get_model(),
-                                      data_struct.get_package(),
-                                      data_struct.path,
-                                      'generating array template',
-                                      data_struct.name,
-                                      inspect.stack()[0][3],
-                                      type_, value_, traceback_, comment,
-                                      model.simulation_data.debug)
+                raise MFDataException(
+                    data_struct.get_model(),
+                    data_struct.get_package(),
+                    data_struct.path,
+                    "generating array template",
+                    data_struct.name,
+                    inspect.stack()[0][3],
+                    type_,
+                    value_,
+                    traceback_,
+                    comment,
+                    model.simulation_data.debug,
+                )
             # build each layer
             data_with_header = []
             for layer in range(0, dimension_list[0]):
@@ -494,32 +567,46 @@ class ArrayTemplateGenerator(TemplateGenerator):
                 else:
                     data_storage_type = data_storage_type_list[layer]
                 # build data type header
-                data_with_header.append(self._build_layer(datum_type,
-                                                          data_storage_type,
-                                                          default_value,
-                                                          dimension_list))
+                data_with_header.append(
+                    self._build_layer(
+                        datum_type,
+                        data_storage_type,
+                        default_value,
+                        dimension_list,
+                    )
+                )
         else:
-            if data_storage_type_list is None or \
-                    data_storage_type_list[0] == \
-                            DataStorageType.internal_array:
+            if (
+                data_storage_type_list is None
+                or data_storage_type_list[0] == DataStorageType.internal_array
+            ):
                 data_storage_type = DataStorageType.internal_array
             else:
                 data_storage_type = data_storage_type_list[0]
             # build data type header
-            data_with_header = self._build_layer(datum_type,
-                                                 data_storage_type,
-                                                 default_value,
-                                                 dimension_list, True)
+            data_with_header = self._build_layer(
+                datum_type,
+                data_storage_type,
+                default_value,
+                dimension_list,
+                True,
+            )
 
         # if transient/multiple list
         if data_type == mfstructure.DataType.array_transient:
             # Return as dictionary
-            return {0:data_with_header}
+            return {0: data_with_header}
         else:
             return data_with_header
 
-    def _build_layer(self, data_type, data_storage_type, default_value,
-                     dimension_list, all_layers=False):
+    def _build_layer(
+        self,
+        data_type,
+        data_storage_type,
+        default_value,
+        dimension_list,
+        all_layers=False,
+    ):
         from ..data.mfdatastorage import DataStorageType
 
         # build data
@@ -533,8 +620,9 @@ class ArrayTemplateGenerator(TemplateGenerator):
                 if all_layers:
                     data = np.full(dimension_list, default_value, data_type)
                 else:
-                    data = np.full(dimension_list[1:], default_value,
-                                   data_type)
+                    data = np.full(
+                        dimension_list[1:], default_value, data_type
+                    )
         elif data_storage_type == DataStorageType.internal_constant:
             if default_value is None:
                 if data_type == np.int32:
@@ -575,6 +663,7 @@ class ListTemplateGenerator(TemplateGenerator):
         only used on list data that contains segments.  If timeseries is true,
         a template that is compatible with time series data is returned.
     """
+
     def __init__(self, path):
         super(ListTemplateGenerator, self).__init__(path)
 
@@ -589,28 +678,41 @@ class ListTemplateGenerator(TemplateGenerator):
                 template_data.append(None)
         return tuple(template_data)
 
-    def empty(self, model, maxbound=None, aux_vars=None, boundnames=False,
-              nseg=None, timeseries=False, stress_periods=None):
+    def empty(
+        self,
+        model,
+        maxbound=None,
+        aux_vars=None,
+        boundnames=False,
+        nseg=None,
+        timeseries=False,
+        stress_periods=None,
+    ):
         from ..data import mfdatastorage, mfstructure
 
         data_struct, data_dimensions = self._get_data_dimensions(model)
         data_type = data_struct.get_datatype()
         # build a temporary data storage object
         data_storage = mfdatastorage.DataStorage(
-                model.simulation_data, model, data_dimensions, None,
-                mfdatastorage.DataStorageType.internal_array,
-                mfdatastorage.DataStructureType.recarray)
+            model.simulation_data,
+            model,
+            data_dimensions,
+            None,
+            mfdatastorage.DataStorageType.internal_array,
+            mfdatastorage.DataStructureType.recarray,
+        )
 
         # build type list
         type_list = data_storage.build_type_list(nseg=nseg)
         if aux_vars is not None:
-            if len(aux_vars) > 0 and (isinstance(aux_vars[0], list) or
-                    isinstance(aux_vars[0], tuple)):
+            if len(aux_vars) > 0 and (
+                isinstance(aux_vars[0], list) or isinstance(aux_vars[0], tuple)
+            ):
                 aux_vars = aux_vars[0]
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))
         if boundnames:
-            type_list.append(('boundname', object))
+            type_list.append(("boundname", object))
 
         if timeseries:
             # fix type list to make all types objects
@@ -628,11 +730,13 @@ class ListTemplateGenerator(TemplateGenerator):
         rec_array = np.rec.array(rec_array_data, type_list)
 
         # if transient/multiple list
-        if data_type == mfstructure.DataType.list_transient or \
-                data_type == mfstructure.DataType.list_multiple:
+        if (
+            data_type == mfstructure.DataType.list_transient
+            or data_type == mfstructure.DataType.list_multiple
+        ):
             # Return as dictionary
             if stress_periods is None:
-                return {0:rec_array}
+                return {0: rec_array}
             else:
                 template = {}
                 for stress_period in stress_periods:
@@ -670,16 +774,19 @@ class MFDocString(object):
     get_doc_string : () : string
         builds and returns the docstring for the class
     """
+
     def __init__(self, description):
-        self.indent = '    '
+        self.indent = "    "
         self.description = description
-        self.parameter_header = '{}Parameters\n{}' \
-                                '----------'.format(self.indent, self.indent)
+        self.parameter_header = "{}Parameters\n{}" "----------".format(
+            self.indent, self.indent
+        )
         self.parameters = []
         self.model_parameters = []
 
-    def add_parameter(self, param_descr, beginning_of_list=False,
-                      model_parameter=False):
+    def add_parameter(
+        self, param_descr, beginning_of_list=False, model_parameter=False
+    ):
         if beginning_of_list:
             self.parameters.insert(0, param_descr)
             if model_parameter:
@@ -690,24 +797,26 @@ class MFDocString(object):
                 self.model_parameters.append(param_descr)
 
     def get_doc_string(self, model_doc_string=False):
-        doc_string = '{}"""\n{}{}\n\n{}\n'.format(self.indent, self.indent,
-                                                  self.description,
-                                                  self.parameter_header)
+        doc_string = '{}"""\n{}{}\n\n{}\n'.format(
+            self.indent, self.indent, self.description, self.parameter_header
+        )
         if model_doc_string:
             param_list = self.model_parameters
-            doc_string = '{}    modelname : string\n        name of the ' \
-                         'model\n    model_nam_file : string\n' \
-                         '        relative path to the model name file from ' \
-                         'model working folder\n    version : string\n' \
-                         '        version of modflow\n    exe_name : string\n'\
-                         '        model executable name\n' \
-                         '    model_ws : string\n' \
-                         '        model working folder path' \
-                         '\n'.format(doc_string)
+            doc_string = (
+                "{}    modelname : string\n        name of the "
+                "model\n    model_nam_file : string\n"
+                "        relative path to the model name file from "
+                "model working folder\n    version : string\n"
+                "        version of modflow\n    exe_name : string\n"
+                "        model executable name\n"
+                "    model_ws : string\n"
+                "        model working folder path"
+                "\n".format(doc_string)
+            )
         else:
             param_list = self.parameters
         for parameter in param_list:
-            doc_string += '{}\n'.format(parameter)
+            doc_string += "{}\n".format(parameter)
         if not model_doc_string:
             doc_string += '\n{}"""'.format(self.indent)
         return doc_string

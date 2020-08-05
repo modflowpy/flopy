@@ -22,7 +22,7 @@ class Modpath7List(Package):
 
     """
 
-    def __init__(self, model, extension='list', unitnumber=None):
+    def __init__(self, model, extension="list", unitnumber=None):
         """
         Package constructor.
 
@@ -32,7 +32,7 @@ class Modpath7List(Package):
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(self, model, extension, 'LIST', unitnumber)
+        Package.__init__(self, model, extension, "LIST", unitnumber)
         # self.parent.add_package(self) This package is not added to the base
         # model so that it is not included in get_name_file_entries()
         return
@@ -88,74 +88,104 @@ class Modpath7(BaseModel):
 
     """
 
-    def __init__(self, modelname='modpath7test', simfile_ext='mpsim',
-                 namefile_ext='mpnam', version='modpath7', exe_name='mp7.exe',
-                 flowmodel=None, headfilename=None, budgetfilename=None,
-                 model_ws=None, verbose=False):
+    def __init__(
+        self,
+        modelname="modpath7test",
+        simfile_ext="mpsim",
+        namefile_ext="mpnam",
+        version="modpath7",
+        exe_name="mp7.exe",
+        flowmodel=None,
+        headfilename=None,
+        budgetfilename=None,
+        model_ws=None,
+        verbose=False,
+    ):
 
         """
         Model constructor.
 
         """
 
-        BaseModel.__init__(self, modelname, simfile_ext, exe_name,
-                           model_ws=model_ws, verbose=verbose)
+        BaseModel.__init__(
+            self,
+            modelname,
+            simfile_ext,
+            exe_name,
+            model_ws=model_ws,
+            verbose=verbose,
+        )
 
-        self.version_types = {'modpath7': 'MODPATH 7'}
+        self.version_types = {"modpath7": "MODPATH 7"}
         self.set_version(version)
 
         self.lst = Modpath7List(self)
 
-        self.mpnamefile = '{}.{}'.format(self.name, namefile_ext)
-        self.mpbas_file = '{}.mpbas'.format(modelname)
+        self.mpnamefile = "{}.{}".format(self.name, namefile_ext)
+        self.mpbas_file = "{}.mpbas".format(modelname)
 
         if not isinstance(flowmodel, (Modflow, MFModel)):
-            msg = 'Modpath7: flow model is not an instance of ' + \
-                  'flopy.modflow.Modflow or flopy.mf6.MFModel. ' + \
-                  'Passed object of type {}'.format(type(flowmodel))
+            msg = (
+                "Modpath7: flow model is not an instance of "
+                + "flopy.modflow.Modflow or flopy.mf6.MFModel. "
+                + "Passed object of type {}".format(type(flowmodel))
+            )
             raise TypeError(msg)
 
         # if a MFModel instance ensure flowmodel is a MODFLOW 6 GWF model
         if isinstance(flowmodel, MFModel):
-            if flowmodel.model_type != 'gwf' and \
-                    flowmodel.model_type != 'gwf6':
-                msg = 'Modpath7: flow model type must be gwf. ' + \
-                      'Passed model_type is {}.'.format(flowmodel.model_type)
+            if (
+                flowmodel.model_type != "gwf"
+                and flowmodel.model_type != "gwf6"
+            ):
+                msg = (
+                    "Modpath7: flow model type must be gwf. "
+                    + "Passed model_type is {}.".format(flowmodel.model_type)
+                )
                 raise TypeError(msg)
 
         # set flowmodel and flow_version attributes
         self.flowmodel = flowmodel
         self.flow_version = self.flowmodel.version
 
-        if self.flow_version == 'mf6':
+        if self.flow_version == "mf6":
             # get discretization package
             ibound = None
-            dis = self.flowmodel.get_package('DIS')
+            dis = self.flowmodel.get_package("DIS")
             if dis is None:
-                msg = 'DIS, DISV, or DISU packages must be ' + \
-                      'included in the passed MODFLOW 6 model'
+                msg = (
+                    "DIS, DISV, or DISU packages must be "
+                    + "included in the passed MODFLOW 6 model"
+                )
                 raise Exception(msg)
             else:
-                if dis.package_name.lower() == 'dis':
-                    nlay, nrow, ncol = dis.nlay.array, dis.nrow.array, \
-                                       dis.ncol.array
+                if dis.package_name.lower() == "dis":
+                    nlay, nrow, ncol = (
+                        dis.nlay.array,
+                        dis.nrow.array,
+                        dis.ncol.array,
+                    )
                     shape = (nlay, nrow, ncol)
-                elif dis.package_name.lower() == 'disv':
+                elif dis.package_name.lower() == "disv":
                     nlay, ncpl = dis.nlay.array, dis.ncpl.array
                     shape = (nlay, ncpl)
-                elif dis.package_name.lower() == 'disu':
+                elif dis.package_name.lower() == "disu":
                     nodes = dis.nodes.array
-                    shape = tuple(nodes, )
+                    shape = tuple(nodes,)
                 else:
-                    msg = 'DIS, DISV, or DISU packages must be ' + \
-                          'included in the passed MODFLOW 6 model'
+                    msg = (
+                        "DIS, DISV, or DISU packages must be "
+                        + "included in the passed MODFLOW 6 model"
+                    )
                     raise TypeError(msg)
 
             # terminate (for now) if mf6 model does not use dis or disv
             if len(shape) < 2:
-                msg = 'DIS and DISV are currently the only supported ' + \
-                      'MODFLOW 6 discretization packages that can be ' + \
-                      'used with MODPATH 7'
+                msg = (
+                    "DIS and DISV are currently the only supported "
+                    + "MODFLOW 6 discretization packages that can be "
+                    + "used with MODPATH 7"
+                )
                 raise TypeError(msg)
 
             # set ib
@@ -166,13 +196,15 @@ class Modpath7(BaseModel):
 
             # set dis and grbdis file name
             dis_file = None
-            grbdis_file = dis.filename + '.grb'
-            grbtag = 'GRB{}'.format(dis.package_name.upper())
+            grbdis_file = dis.filename + ".grb"
+            grbtag = "GRB{}".format(dis.package_name.upper())
 
-            tdis = self.flowmodel.simulation.get_package('TDIS')
+            tdis = self.flowmodel.simulation.get_package("TDIS")
             if tdis is None:
-                msg = 'TDIS package must be ' + \
-                      'included in the passed MODFLOW 6 model'
+                msg = (
+                    "TDIS package must be "
+                    + "included in the passed MODFLOW 6 model"
+                )
                 raise Exception(msg)
             tdis_file = tdis.filename
 
@@ -188,28 +220,31 @@ class Modpath7(BaseModel):
             nstp = np.array(nstp, dtype=np.int32)
 
             # get oc file
-            oc = self.flowmodel.get_package('OC')
+            oc = self.flowmodel.get_package("OC")
             if oc is not None:
                 # set head file name
                 if headfilename is None:
-                    headfilename = oc.head_filerecord.array['headfile'][0]
+                    headfilename = oc.head_filerecord.array["headfile"][0]
 
                 # set budget file name
                 if budgetfilename is None:
-                    budgetfilename = \
-                        oc.budget_filerecord.array['budgetfile'][0]
+                    budgetfilename = oc.budget_filerecord.array["budgetfile"][
+                        0
+                    ]
         else:
             shape = None
             # extract data from DIS or DISU files and set shape
-            dis = self.flowmodel.get_package('DIS')
+            dis = self.flowmodel.get_package("DIS")
             if dis is None:
-                dis = self.flowmodel.get_package('DISU')
+                dis = self.flowmodel.get_package("DISU")
             elif dis is not None and shape is None:
                 nlay, nrow, ncol = dis.nlay, dis.nrow, dis.ncol
                 shape = (nlay, nrow, ncol)
             if dis is None:
-                msg = 'DIS, or DISU packages must be ' + \
-                      'included in the passed MODFLOW model'
+                msg = (
+                    "DIS, or DISU packages must be "
+                    + "included in the passed MODFLOW model"
+                )
                 raise Exception(msg)
             elif dis is not None and shape is None:
                 nlay, nodes = dis.nlay, dis.nodes
@@ -217,9 +252,11 @@ class Modpath7(BaseModel):
 
             # terminate (for now) if mf6 model does not use dis
             if len(shape) != 3:
-                msg = 'DIS currently the only supported MODFLOW ' + \
-                      'discretization package that can be used with ' + \
-                      'MODPATH 7'
+                msg = (
+                    "DIS currently the only supported MODFLOW "
+                    + "discretization package that can be used with "
+                    + "MODPATH 7"
+                )
                 raise Exception(msg)
 
             # get stress period data
@@ -243,14 +280,16 @@ class Modpath7(BaseModel):
                 headfilename = self.flowmodel.get_output(unit=iu)
 
             # get discretization package
-            p = self.flowmodel.get_package('LPF')
+            p = self.flowmodel.get_package("LPF")
             if p is None:
-                p = self.flowmodel.get_package('BCF6')
+                p = self.flowmodel.get_package("BCF6")
             if p is None:
-                p = self.flowmodel.get_package('UPW')
+                p = self.flowmodel.get_package("UPW")
             if p is None:
-                msg = 'LPF, BCF6, or UPW packages must be ' + \
-                      'included in the passed MODFLOW model'
+                msg = (
+                    "LPF, BCF6, or UPW packages must be "
+                    + "included in the passed MODFLOW model"
+                )
                 raise Exception(msg)
 
             # set budget file name
@@ -259,7 +298,7 @@ class Modpath7(BaseModel):
                 budgetfilename = self.flowmodel.get_output(unit=iu)
 
             # set hnoflo and ibound from BAS6 package
-            bas = self.flowmodel.get_package('BAS6')
+            bas = self.flowmodel.get_package("BAS6")
             ib = bas.ibound.array
             # reset to constant values if possible
             ibound = []
@@ -290,16 +329,22 @@ class Modpath7(BaseModel):
 
         # make sure the valid files are available
         if self.headfilename is None:
-            msg = 'the head file in the MODFLOW model or passed ' + \
-                  'to __init__ cannot be None'
+            msg = (
+                "the head file in the MODFLOW model or passed "
+                + "to __init__ cannot be None"
+            )
             raise ValueError(msg)
         if self.budgetfilename is None:
-            msg = 'the budget file in the MODFLOW model or passed ' + \
-                  'to __init__ cannot be None'
+            msg = (
+                "the budget file in the MODFLOW model or passed "
+                + "to __init__ cannot be None"
+            )
             raise ValueError(msg)
         if self.dis_file is None and self.grbdis_file is None:
-            msg = 'the dis file in the MODFLOW model or passed ' + \
-                  'to __init__ cannot be None'
+            msg = (
+                "the dis file in the MODFLOW model or passed "
+                + "to __init__ cannot be None"
+            )
             raise ValueError(msg)
 
         # set ib and ibound
@@ -308,22 +353,24 @@ class Modpath7(BaseModel):
 
         # set file attributes
         self.array_free_format = True
-        self.array_format = 'modflow'
+        self.array_format = "modflow"
         self.external = False
 
         return
 
     def __repr__(self):
-        return 'MODPATH 7 model'
+        return "MODPATH 7 model"
 
     @property
     def laytyp(self):
         if self.flowmodel.version == "mf6":
             icelltype = self.flowmodel.npf.icelltype.array
-            laytyp = [icelltype[k].max() for k in
-                      range(self.flowmodel.modelgrid.nlay)]
+            laytyp = [
+                icelltype[k].max()
+                for k in range(self.flowmodel.modelgrid.nlay)
+            ]
         else:
-            p = self.flowmodel.get_package('BCF6')
+            p = self.flowmodel.get_package("BCF6")
             if p is None:
                 laytyp = self.flowmodel.laytyp
             else:
@@ -354,28 +401,35 @@ class Modpath7(BaseModel):
 
         """
         fpth = os.path.join(self.model_ws, self.mpnamefile)
-        f = open(fpth, 'w')
-        f.write('{}\n'.format(self.heading))
+        f = open(fpth, "w")
+        f.write("{}\n".format(self.heading))
         if self.mpbas_file is not None:
-            f.write('{:10s} {}\n'.format('MPBAS', self.mpbas_file))
+            f.write("{:10s} {}\n".format("MPBAS", self.mpbas_file))
         if self.dis_file is not None:
-            f.write('{:10s} {}\n'.format('DIS', self.dis_file))
+            f.write("{:10s} {}\n".format("DIS", self.dis_file))
         if self.grbdis_file is not None:
-            f.write('{:10s} {}\n'.format(self.grbtag, self.grbdis_file))
+            f.write("{:10s} {}\n".format(self.grbtag, self.grbdis_file))
         if self.tdis_file is not None:
-            f.write('{:10s} {}\n'.format('TDIS', self.tdis_file))
+            f.write("{:10s} {}\n".format("TDIS", self.tdis_file))
         if self.headfilename is not None:
-            f.write('{:10s} {}\n'.format('HEAD', self.headfilename))
+            f.write("{:10s} {}\n".format("HEAD", self.headfilename))
         if self.budgetfilename is not None:
-            f.write('{:10s} {}\n'.format('BUDGET', self.budgetfilename))
+            f.write("{:10s} {}\n".format("BUDGET", self.budgetfilename))
         f.close()
 
     @staticmethod
-    def create_mp7(modelname='modpath7test', trackdir='forward',
-                   flowmodel=None, exe_name='mp7', model_ws='.',
-                   verbose=False, columncelldivisions=2,
-                   rowcelldivisions=2, layercelldivisions=2,
-                   nodes=None):
+    def create_mp7(
+        modelname="modpath7test",
+        trackdir="forward",
+        flowmodel=None,
+        exe_name="mp7",
+        model_ws=".",
+        verbose=False,
+        columncelldivisions=2,
+        rowcelldivisions=2,
+        layercelldivisions=2,
+        nodes=None,
+    ):
         """
         Create a default MODPATH 7 model using a passed flowmodel with
         8 particles in user-specified node locations or every active model
@@ -424,14 +478,19 @@ class Modpath7(BaseModel):
 
         """
         # create MODPATH 7 model instance
-        mp = Modpath7(modelname=modelname, flowmodel=flowmodel,
-                      exe_name=exe_name, model_ws=model_ws, verbose=verbose)
+        mp = Modpath7(
+            modelname=modelname,
+            flowmodel=flowmodel,
+            exe_name=exe_name,
+            model_ws=model_ws,
+            verbose=verbose,
+        )
 
         # set default iface for recharge and et
-        if mp.flow_version == 'mf6':
-            defaultiface = {'RCH': 6, 'EVT': 6}
+        if mp.flow_version == "mf6":
+            defaultiface = {"RCH": 6, "EVT": 6}
         else:
-            defaultiface = {'RECHARGE': 6, 'ET': 6}
+            defaultiface = {"RECHARGE": 6, "ET": 6}
 
         # create MODPATH 7 basic file and add to the MODPATH 7
         # model instance (mp)
@@ -445,19 +504,24 @@ class Modpath7(BaseModel):
                 if ib > 0:
                     nodes.append(node)
                 node += 1
-        sd = CellDataType(columncelldivisions=columncelldivisions,
-                          rowcelldivisions=rowcelldivisions,
-                          layercelldivisions=layercelldivisions)
+        sd = CellDataType(
+            columncelldivisions=columncelldivisions,
+            rowcelldivisions=rowcelldivisions,
+            layercelldivisions=layercelldivisions,
+        )
         p = NodeParticleData(subdivisiondata=sd, nodes=nodes)
         pg = ParticleGroupNodeTemplate(particledata=p)
 
         # create MODPATH 7 simulation file and add to the MODPATH 7
         # model instance (mp)
-        Modpath7Sim(mp, simulationtype='combined',
-                    trackingdirection=trackdir,
-                    weaksinkoption='pass_through',
-                    weaksourceoption='pass_through',
-                    referencetime=0.,
-                    stoptimeoption='extend',
-                    particlegroups=pg)
+        Modpath7Sim(
+            mp,
+            simulationtype="combined",
+            trackingdirection=trackdir,
+            weaksinkoption="pass_through",
+            weaksourceoption="pass_through",
+            referencetime=0.0,
+            stoptimeoption="extend",
+            particlegroups=pg,
+        )
         return mp

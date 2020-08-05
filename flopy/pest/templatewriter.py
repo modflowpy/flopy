@@ -29,6 +29,7 @@ class TemplateWriter(object):
 
         # Import and initialize
         import copy
+
         pakdict = {}
 
         # Create a list of packages that have parameters applied to them.
@@ -42,20 +43,24 @@ class TemplateWriter(object):
                 try:
                     pak = self.model.get_package(ftype)
                 except:
-                    raise Exception('Package type {} not found.'.format(ftype))
+                    raise Exception("Package type {} not found.".format(ftype))
 
                 # Check to make sure pak has p.type as an attribute
                 if not hasattr(pak, p.type.lower()):
-                    msg = ('Parameter named {} of type {} not found in '
-                           'package {}'.format(p.name, p.type.lower(), ftype))
+                    msg = (
+                        "Parameter named {} of type {} not found in "
+                        "package {}".format(p.name, p.type.lower(), ftype)
+                    )
                     raise Exception(msg)
 
                 # Ftype is valid and package has attribute so store in list
                 ftypelist.append(ftype)
 
         # Print a list of packages that will be parameterized
-        print('The following packages will be parameterized: '
-              '{}\n'.format(ftypelist))
+        print(
+            "The following packages will be parameterized: "
+            "{}\n".format(ftypelist)
+        )
 
         # Go through each package, and then through each parameter and make
         # the substitution.  Then write the template file.
@@ -84,10 +89,11 @@ class TemplateWriter(object):
                 tpla.add_parameter(p)
 
             # Write the file
-            paktpl.heading = 'ptf ~\n' + paktpl.heading
-            paktpl.fn_path += '.tpl'
+            paktpl.heading = "ptf ~\n" + paktpl.heading
+            paktpl.fn_path += ".tpl"
             paktpl.write_file(
-                check=False)  # fot now, turn off checks for template files
+                check=False
+            )  # fot now, turn off checks for template files
 
             # Destroy the template version of the package
             paktpl = None

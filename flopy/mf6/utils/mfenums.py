@@ -5,6 +5,7 @@ class DiscretizationType(Enum):
     """
     Enumeration of discretization types
     """
+
     UNDEFINED = 0
     DIS = 1
     DISV = 2

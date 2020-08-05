@@ -18,6 +18,7 @@ def centroid_of_polygon(points):
     http://stackoverflow.com/a/14115494/190597 (mgamba)
     """
     import itertools as IT
+
     area = area_of_polygon(*zip(*points))
     result_x = 0
     result_y = 0
@@ -30,8 +31,8 @@ def centroid_of_polygon(points):
         cross = (x0 * y1) - (x1 * y0)
         result_x += (x0 + x1) * cross
         result_y += (y0 + y1) * cross
-    result_x /= (area * 6.0)
-    result_y /= (area * 6.0)
+    result_x /= area * 6.0
+    result_y /= area * 6.0
     return (result_x, result_y)
 
 
@@ -44,13 +45,16 @@ class Point(object):
 
 def isBetween(a, b, c, epsilon=0.001):
     crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y)
-    if abs(crossproduct) > epsilon: return False  # (or != 0 if using integers)
+    if abs(crossproduct) > epsilon:
+        return False  # (or != 0 if using integers)
 
     dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y)
-    if dotproduct < 0: return False
+    if dotproduct < 0:
+        return False
 
     squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)
-    if dotproduct > squaredlengthba: return False
+    if dotproduct > squaredlengthba:
+        return False
 
     return True
 
@@ -60,7 +64,7 @@ def shared_face(ivlist1, ivlist2):
         iv1 = ivlist1[i]
         iv2 = ivlist1[i + 1]
         for i2 in range(len(ivlist2) - 1):
-            if ivlist2[i2: i2 + 1] == [iv2, iv1]:
+            if ivlist2[i2 : i2 + 1] == [iv2, iv1]:
                 return True
     return False
 
@@ -94,8 +98,13 @@ def segment_face(ivert, ivlist1, ivlist2, vertices):
     return
 
 
-def to_cvfd(vertdict, nodestart=None, nodestop=None,
-            skip_hanging_node_check=False, verbose=False):
+def to_cvfd(
+    vertdict,
+    nodestart=None,
+    nodestop=None,
+    skip_hanging_node_check=False,
+    verbose=False,
+):
     """
     Convert a vertex dictionary
 
@@ -142,10 +151,13 @@ def to_cvfd(vertdict, nodestart=None, nodestop=None,
     iv = 0
     nvertstart = 0
     if verbose:
-        print('Converting vertdict to cvfd representation.')
-        print('Number of cells in vertdict is: {}'.format(len(vertdict)))
-        print('Cell {} up to {} (but not including) will be processed.'
-              .format(nodestart, nodestop))
+        print("Converting vertdict to cvfd representation.")
+        print("Number of cells in vertdict is: {}".format(len(vertdict)))
+        print(
+            "Cell {} up to {} (but not including) will be processed.".format(
+                nodestart, nodestop
+            )
+        )
     for icell in range(nodestart, nodestop):
         points = vertdict[icell]
         nvertstart += len(points)
@@ -163,18 +175,19 @@ def to_cvfd(vertdict, nodestart=None, nodestop=None,
                 iv += 1
             ivertlist.append(ivert)
         if ivertlist[0] != ivertlist[-1]:
-            raise Exception('Cell {} not closed'.format(icell))
+            raise Exception("Cell {} not closed".format(icell))
         vertexlist.append(ivertlist)
 
     # next create vertex_cell_dict = {}; for each vertex, store list of cells
     # that use it
     nvert = len(vertexdict)
     if verbose:
-        print('Started with {} vertices.'.format(nvertstart))
-        print('Ended up with {} vertices.'.format(nvert))
-        print('Reduced total number of vertices by {}'.format(nvertstart -
-                                                              nvert))
-        print('Creating dict of vertices with their associated cells')
+        print("Started with {} vertices.".format(nvertstart))
+        print("Ended up with {} vertices.".format(nvert))
+        print(
+            "Reduced total number of vertices by {}".format(nvertstart - nvert)
+        )
+        print("Creating dict of vertices with their associated cells")
     vertex_cell_dict = OrderedDict()
     for icell in range(nodestart, nodestop):
         ivertlist = vertexlist[icell]
@@ -188,8 +201,8 @@ def to_cvfd(vertdict, nodestart=None, nodestop=None,
     # For quadtree-like grids, there may be a need to add a new hanging node
     # vertex to the larger cell.
     if verbose:
-        print('Done creating dict of vertices with their associated cells')
-        print('Checking for hanging nodes.')
+        print("Done creating dict of vertices with their associated cells")
+        print("Checking for hanging nodes.")
     vertexdict_keys = list(vertexdict.keys())
     for ivert, cell_list in vertex_cell_dict.items():
         for icell1 in cell_list:
@@ -208,7 +221,7 @@ def to_cvfd(vertdict, nodestart=None, nodestop=None,
                 # don't share a face, so need to segment if necessary
                 segment_face(ivert, ivertlist1, ivertlist2, vertexdict_keys)
     if verbose:
-        print('Done checking for hanging nodes.')
+        print("Done checking for hanging nodes.")
 
     verts = np.array(vertexdict_keys)
     iverts = vertexlist
@@ -218,7 +231,8 @@ def to_cvfd(vertdict, nodestart=None, nodestop=None,
 
 def shapefile_to_cvfd(shp, **kwargs):
     import shapefile
-    print('Translating shapefile ({}) into cvfd format'.format(shp))
+
+    print("Translating shapefile ({}) into cvfd format".format(shp))
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     vertdict = {}
@@ -246,7 +260,8 @@ def shapefile_to_xcyc(shp):
 
     """
     import shapefile
-    print('Translating shapefile ({}) into cell centroids'.format(shp))
+
+    print("Translating shapefile ({}) into cell centroids".format(shp))
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     ncells = len(shapes)

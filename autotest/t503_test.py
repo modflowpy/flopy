@@ -42,8 +42,8 @@ os.mkdir(out_dir)
 
 mf6path = download_mf6_distribution()
 distpth = os.path.join(mf6path, 'examples')
-folders = [f for f in os.listdir(distpth)
-           if os.path.isdir(os.path.join(distpth, f))]
+folders = sorted([f for f in os.listdir(distpth)
+                  if os.path.isdir(os.path.join(distpth, f))])
 
 for f in folders:
     src = os.path.join(distpth, f)
@@ -59,7 +59,6 @@ if v is None:
 
 
 def runmodel(f):
-
     print('\n\n')
     print('**** RUNNING TEST: {} ****'.format(f))
     print('\n')
@@ -112,9 +111,8 @@ def runmodels():
 
 
 if __name__ == '__main__':
-
     # to run them all with python
     runmodels()
 
     # or to run just test, pass the example name into runmodel
-    #runmodel('ex30-vilhelmsen-gf')
+    # runmodel('ex30-vilhelmsen-gf')

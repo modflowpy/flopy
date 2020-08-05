@@ -164,12 +164,28 @@ class Mt3dAdv(Package):
 
     """
 
-    def __init__(self, model, mixelm=3, percel=0.75, mxpart=800000, nadvfd=1,
-                 itrack=3, wd=0.5,
-                 dceps=1e-5, nplane=2, npl=10, nph=40, npmin=5, npmax=80,
-                 nlsink=0, npsink=15,
-                 dchmoc=0.0001, extension='adv', unitnumber=None,
-                 filenames=None):
+    def __init__(
+        self,
+        model,
+        mixelm=3,
+        percel=0.75,
+        mxpart=800000,
+        nadvfd=1,
+        itrack=3,
+        wd=0.5,
+        dceps=1e-5,
+        nplane=2,
+        npl=10,
+        nph=40,
+        npmin=5,
+        npmax=80,
+        nlsink=0,
+        npsink=15,
+        dchmoc=0.0001,
+        extension="adv",
+        unitnumber=None,
+        filenames=None,
+    ):
 
         if unitnumber is None:
             unitnumber = Mt3dAdv.defaultunit()
@@ -185,14 +201,21 @@ class Mt3dAdv(Package):
         # Fill namefile items
         name = [Mt3dAdv.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         self.mixelm = mixelm
         self.percel = percel
@@ -223,22 +246,31 @@ class Mt3dAdv(Package):
         None
 
         """
-        f_adv = open(self.fn_path, 'w')
-        f_adv.write('%10i%10f%10i%10i\n' % (self.mixelm, self.percel,
-                                            self.mxpart, self.nadvfd))
-        if (self.mixelm > 0):
-            f_adv.write('%10i%10f\n' % (self.itrack, self.wd))
-        if ((self.mixelm == 1) or (self.mixelm == 3)):
-            f_adv.write('%10.4e%10i%10i%10i%10i%10i\n' % (self.dceps,
-                                                          self.nplane,
-                                                          self.npl, self.nph,
-                                                          self.npmin,
-                                                          self.npmax))
-        if ((self.mixelm == 2) or (self.mixelm == 3)):
-            f_adv.write('%10i%10i%10i\n' % (self.interp, self.nlsink,
-                                            self.npsink))
-        if (self.mixelm == 3):
-            f_adv.write('%10f\n' % (self.dchmoc))
+        f_adv = open(self.fn_path, "w")
+        f_adv.write(
+            "%10i%10f%10i%10i\n"
+            % (self.mixelm, self.percel, self.mxpart, self.nadvfd)
+        )
+        if self.mixelm > 0:
+            f_adv.write("%10i%10f\n" % (self.itrack, self.wd))
+        if (self.mixelm == 1) or (self.mixelm == 3):
+            f_adv.write(
+                "%10.4e%10i%10i%10i%10i%10i\n"
+                % (
+                    self.dceps,
+                    self.nplane,
+                    self.npl,
+                    self.nph,
+                    self.npmin,
+                    self.npmax,
+                )
+            )
+        if (self.mixelm == 2) or (self.mixelm == 3):
+            f_adv.write(
+                "%10i%10i%10i\n" % (self.interp, self.nlsink, self.npsink)
+            )
+        if self.mixelm == 3:
+            f_adv.write("%10f\n" % (self.dchmoc))
         f_adv.close()
         return
 
@@ -276,23 +308,23 @@ class Mt3dAdv(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading adv package file...\n')
+            sys.stdout.write("loading adv package file...\n")
 
         # Open file, if necessary
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Dataset 0 -- comment line
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # Item B1: MIXELM, PERCEL, MXPART, NADVFD - line already read above
         if model.verbose:
-            print('   loading MIXELM, PERCEL, MXPART, NADVFD...')
+            print("   loading MIXELM, PERCEL, MXPART, NADVFD...")
         mixelm = int(line[0:10])
         percel = float(line[10:20])
         mxpart = 0
@@ -304,23 +336,23 @@ class Mt3dAdv(Package):
             if len(line[30:40].strip()) > 0:
                 nadvfd = int(line[30:40])
         if model.verbose:
-            print('   MIXELM {}'.format(mixelm))
-            print('   PERCEL {}'.format(nadvfd))
-            print('   MXPART {}'.format(mxpart))
-            print('   NADVFD {}'.format(nadvfd))
+            print("   MIXELM {}".format(mixelm))
+            print("   PERCEL {}".format(nadvfd))
+            print("   MXPART {}".format(mxpart))
+            print("   NADVFD {}".format(nadvfd))
 
         # Item B2: ITRACK WD
         itrack = None
         wd = None
         if mixelm == 1 or mixelm == 2 or mixelm == 3:
             if model.verbose:
-                print('   loading ITRACK, WD...')
+                print("   loading ITRACK, WD...")
             line = f.readline()
             itrack = int(line[0:10])
             wd = float(line[10:20])
             if model.verbose:
-                print('   ITRACK {}'.format(itrack))
-                print('   WD {}'.format(wd))
+                print("   ITRACK {}".format(itrack))
+                print("   WD {}".format(wd))
 
         # Item B3: DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX
         dceps = None
@@ -331,7 +363,7 @@ class Mt3dAdv(Package):
         npmax = None
         if mixelm == 1 or mixelm == 3:
             if model.verbose:
-                print('   loading DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX...')
+                print("   loading DCEPS, NPLANE, NPL, NPH, NPMIN, NPMAX...")
             line = f.readline()
             dceps = float(line[0:10])
             nplane = int(line[10:20])
@@ -340,12 +372,12 @@ class Mt3dAdv(Package):
             npmin = int(line[40:50])
             npmax = int(line[50:60])
             if model.verbose:
-                print('   DCEPS {}'.format(dceps))
-                print('   NPLANE {}'.format(nplane))
-                print('   NPL {}'.format(npl))
-                print('   NPH {}'.format(nph))
-                print('   NPMIN {}'.format(npmin))
-                print('   NPMAX {}'.format(npmax))
+                print("   DCEPS {}".format(dceps))
+                print("   NPLANE {}".format(nplane))
+                print("   NPL {}".format(npl))
+                print("   NPH {}".format(nph))
+                print("   NPMIN {}".format(npmin))
+                print("   NPMAX {}".format(npmax))
 
         # Item B4: INTERP, NLSINK, NPSINK
         interp = None
@@ -353,25 +385,25 @@ class Mt3dAdv(Package):
         npsink = None
         if mixelm == 2 or mixelm == 3:
             if model.verbose:
-                print('   loading INTERP, NLSINK, NPSINK...')
+                print("   loading INTERP, NLSINK, NPSINK...")
             line = f.readline()
             interp = int(line[0:10])
             nlsink = int(line[10:20])
             npsink = int(line[20:30])
             if model.verbose:
-                print('   INTERP {}'.format(interp))
-                print('   NLSINK {}'.format(nlsink))
-                print('   NPSINK {}'.format(npsink))
+                print("   INTERP {}".format(interp))
+                print("   NLSINK {}".format(nlsink))
+                print("   NPSINK {}".format(npsink))
 
         # Item B5: DCHMOC
         dchmoc = None
         if mixelm == 3:
             if model.verbose:
-                print('   loading DCHMOC...')
+                print("   loading DCHMOC...")
             line = f.readline()
             dchmoc = float(line[0:10])
             if model.verbose:
-                print('   DCHMOC {}'.format(dchmoc))
+                print("   DCHMOC {}".format(dchmoc))
 
         if openfile:
             f.close()
@@ -380,24 +412,36 @@ class Mt3dAdv(Package):
         unitnumber = None
         filenames = [None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=Mt3dAdv.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=Mt3dAdv.ftype()
+            )
 
         # Construct and return adv package
-        adv = Mt3dAdv(model, mixelm=mixelm, percel=percel,
-                      mxpart=mxpart, nadvfd=nadvfd,
-                      itrack=itrack, wd=wd,
-                      dceps=dceps, nplane=nplane, npl=npl, nph=nph,
-                      npmin=npmin, npmax=npmax,
-                      nlsink=nlsink, npsink=npsink,
-                      dchmoc=dchmoc, unitnumber=unitnumber,
-                      filenames=filenames)
+        adv = Mt3dAdv(
+            model,
+            mixelm=mixelm,
+            percel=percel,
+            mxpart=mxpart,
+            nadvfd=nadvfd,
+            itrack=itrack,
+            wd=wd,
+            dceps=dceps,
+            nplane=nplane,
+            npl=npl,
+            nph=nph,
+            npmin=npmin,
+            npmax=npmax,
+            nlsink=nlsink,
+            npsink=npsink,
+            dchmoc=dchmoc,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
         return adv
 
     @staticmethod
     def ftype():
-        return 'ADV'
+        return "ADV"
 
     @staticmethod
     def defaultunit():

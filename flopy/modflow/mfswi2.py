@@ -184,16 +184,48 @@ class ModflowSwi2(Package):
     >>> swi2 = flopy.modflow.ModflowSwi2(m)
     """
 
-    def __init__(self, model, nsrf=1, istrat=1, nobs=0, iswizt=None,
-                 ipakcb=None, iswiobs=0, options=None,
-                 nsolver=1, iprsol=0, mutsol=3,
-                 solver2params={'mxiter': 100, 'iter1': 20, 'npcond': 1,
-                                'zclose': 1e-3, 'rclose': 1e-4, 'relax': 1.0,
-                                'nbpol': 2, 'damp': 1.0, 'dampt': 1.0},
-                 toeslope=0.05, tipslope=0.05, alpha=None, beta=0.1, nadptmx=1,
-                 nadptmn=1, adptfct=1.0, nu=0.025, zeta=[0.0], ssz=0.25,
-                 isource=0, obsnam=None, obslrc=None, npln=None,
-                 extension='swi2', unitnumber=None, filenames=None):
+    def __init__(
+        self,
+        model,
+        nsrf=1,
+        istrat=1,
+        nobs=0,
+        iswizt=None,
+        ipakcb=None,
+        iswiobs=0,
+        options=None,
+        nsolver=1,
+        iprsol=0,
+        mutsol=3,
+        solver2params={
+            "mxiter": 100,
+            "iter1": 20,
+            "npcond": 1,
+            "zclose": 1e-3,
+            "rclose": 1e-4,
+            "relax": 1.0,
+            "nbpol": 2,
+            "damp": 1.0,
+            "dampt": 1.0,
+        },
+        toeslope=0.05,
+        tipslope=0.05,
+        alpha=None,
+        beta=0.1,
+        nadptmx=1,
+        nadptmn=1,
+        adptfct=1.0,
+        nu=0.025,
+        zeta=[0.0],
+        ssz=0.25,
+        isource=0,
+        obsnam=None,
+        obslrc=None,
+        npln=None,
+        extension="swi2",
+        unitnumber=None,
+        filenames=None,
+    ):
         """Package constructor."""
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -212,8 +244,12 @@ class ModflowSwi2(Package):
         # update external file information with zeta output, if necessary
         if iswizt is not None:
             fname = filenames[1]
-            model.add_output_file(iswizt, fname=fname, extension='zta',
-                                  package=ModflowSwi2.ftype())
+            model.add_output_file(
+                iswizt,
+                fname=fname,
+                extension="zta",
+                package=ModflowSwi2.ftype(),
+            )
         else:
             iswizt = 0
 
@@ -221,14 +257,15 @@ class ModflowSwi2(Package):
         # if necessary
         if ipakcb is not None:
             fname = filenames[2]
-            model.add_output_file(ipakcb, fname=fname,
-                                  package=ModflowSwi2.ftype())
+            model.add_output_file(
+                ipakcb, fname=fname, package=ModflowSwi2.ftype()
+            )
         else:
             ipakcb = 0
 
         # Process observations
         if nobs != 0:
-            print('ModflowSwi2: specification of nobs is deprecated.')
+            print("ModflowSwi2: specification of nobs is deprecated.")
         nobs = 0
         if obslrc is not None:
             if isinstance(obslrc, list) or isinstance(obslrc, tuple):
@@ -237,58 +274,76 @@ class ModflowSwi2(Package):
                 if obslrc.ndim == 1 and obslrc.size == 3:
                     obslrc = obslrc.reshape((1, 3))
             else:
-                errmsg = 'ModflowSwi2: obslrc must be a tuple or ' + \
-                         'list of tuples.'
+                errmsg = (
+                    "ModflowSwi2: obslrc must be a tuple or "
+                    + "list of tuples."
+                )
                 raise Exception(errmsg)
             nobs = obslrc.shape[0]
 
             if obsnam is None:
                 obsnam = []
                 for n in range(nobs):
-                    obsnam.append('Obs{:03}'.format(n + 1))
+                    obsnam.append("Obs{:03}".format(n + 1))
             else:
                 if not isinstance(obsnam, list):
                     obsnam = [obsnam]
                 if len(obsnam) != nobs:
-                    errmsg = 'ModflowSwi2: obsnam must be a list with a ' + \
-                             'length of {} not {}.'.format(nobs, len(obsnam))
+                    errmsg = (
+                        "ModflowSwi2: obsnam must be a list with a "
+                        + "length of {} not {}.".format(nobs, len(obsnam))
+                    )
                     raise Exception(errmsg)
 
         if nobs > 0:
             binflag = False
-            ext = 'zobs.out'
+            ext = "zobs.out"
             fname = filenames[3]
             if iswiobs is not None:
                 if iswiobs < 0:
                     binflag = True
-                    ext = 'zobs.bin'
+                    ext = "zobs.bin"
             else:
                 iswiobs = 1053
 
             # update external file information with swi2 observation output,
             # if necessary
-            model.add_output_file(iswiobs, fname=fname, binflag=binflag,
-                                  extension=ext, package=ModflowSwi2.ftype())
+            model.add_output_file(
+                iswiobs,
+                fname=fname,
+                binflag=binflag,
+                extension=ext,
+                package=ModflowSwi2.ftype(),
+            )
         else:
             iswiobs = 0
 
         # Fill namefile items
         name = [ModflowSwi2.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        self.heading = '# {} package for '.format(self.name[0]) + \
-                       ' {}, '.format(model.version_types[model.version]) + \
-                       'generated by Flopy.'
+        self.heading = (
+            "# {} package for ".format(self.name[0])
+            + " {}, ".format(model.version_types[model.version])
+            + "generated by Flopy."
+        )
 
         # options
         self.fsssopt, self.adaptive = False, False
@@ -298,22 +353,24 @@ class ModflowSwi2(Package):
             else:
                 self.options = options
                 for o in self.options:
-                    if o.lower() == 'fsssopt':
+                    if o.lower() == "fsssopt":
                         self.fsssopt = True
-                    elif o.lower() == 'adaptive':
+                    elif o.lower() == "adaptive":
                         self.adaptive = True
         else:
             self.options = None
 
         if npln is not None:
-            print('npln keyword is deprecated. use the nsrf keyword')
+            print("npln keyword is deprecated. use the nsrf keyword")
             nsrf = npln
 
-        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = nsrf, \
-                                                                       istrat, \
-                                                                       nobs, \
-                                                                       iswizt, \
-                                                                       iswiobs
+        self.nsrf, self.istrat, self.nobs, self.iswizt, self.iswiobs = (
+            nsrf,
+            istrat,
+            nobs,
+            iswizt,
+            iswiobs,
+        )
         # set cbc unit
         self.ipakcb = ipakcb
 
@@ -323,27 +380,40 @@ class ModflowSwi2(Package):
         # set solver parameters
         self.solver2params = solver2params
         #
-        self.toeslope, self.tipslope, self.alpha, self.beta = toeslope, \
-                                                              tipslope, \
-                                                              alpha, \
-                                                              beta
+        self.toeslope, self.tipslope, self.alpha, self.beta = (
+            toeslope,
+            tipslope,
+            alpha,
+            beta,
+        )
         self.nadptmx, self.nadptmn, self.adptfct = nadptmx, nadptmn, adptfct
 
         # Create arrays so that they have the correct size
         if self.istrat == 1:
-            self.nu = Util2d(model, (self.nsrf + 1,), np.float32, nu,
-                             name='nu')
+            self.nu = Util2d(
+                model, (self.nsrf + 1,), np.float32, nu, name="nu"
+            )
         else:
-            self.nu = Util2d(model, (self.nsrf + 2,), np.float32, nu,
-                             name='nu')
+            self.nu = Util2d(
+                model, (self.nsrf + 2,), np.float32, nu, name="nu"
+            )
         self.zeta = []
         for i in range(self.nsrf):
-            self.zeta.append(Util3d(model, (nlay, nrow, ncol), np.float32,
-                                    zeta[i], name='zeta_' + str(i + 1)))
-        self.ssz = Util3d(model, (nlay, nrow, ncol), np.float32, ssz,
-                          name='ssz')
-        self.isource = Util3d(model, (nlay, nrow, ncol), np.int32, isource,
-                              name='isource')
+            self.zeta.append(
+                Util3d(
+                    model,
+                    (nlay, nrow, ncol),
+                    np.float32,
+                    zeta[i],
+                    name="zeta_" + str(i + 1),
+                )
+            )
+        self.ssz = Util3d(
+            model, (nlay, nrow, ncol), np.float32, ssz, name="ssz"
+        )
+        self.isource = Util3d(
+            model, (nlay, nrow, ncol), np.int32, isource, name="isource"
+        )
         #
         self.obsnam = obsnam
         self.obslrc = obslrc
@@ -368,86 +438,95 @@ class ModflowSwi2(Package):
 
         # Open file for writing
         if f is None:
-            f = open(self.fn_path, 'w')
+            f = open(self.fn_path, "w")
 
         # First line: heading
-        f.write('{}\n'.format(
-            self.heading))  # Writing heading not allowed in SWI???
+        f.write(
+            "{}\n".format(self.heading)
+        )  # Writing heading not allowed in SWI???
 
         # write dataset 1
-        f.write('# Dataset 1\n')
+        f.write("# Dataset 1\n")
         f.write(
-            '{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}'.format(self.nsrf,
-                                                          self.istrat,
-                                                          self.nobs,
-                                                          self.iswizt,
-                                                          self.ipakcb,
-                                                          self.iswiobs))
+            "{:10d}{:10d}{:10d}{:10d}{:10d}{:10d}".format(
+                self.nsrf,
+                self.istrat,
+                self.nobs,
+                self.iswizt,
+                self.ipakcb,
+                self.iswiobs,
+            )
+        )
 
         # write SWI2 options
         if self.options != None:
             for o in self.options:
-                f.write(' {}'.format(o))
-        f.write('\n')
+                f.write(" {}".format(o))
+        f.write("\n")
 
         # write dataset 2a
-        f.write('# Dataset 2a\n')
-        f.write('{:10d}{:10d}{:10d}\n'.format(self.nsolver, self.iprsol,
-                                              self.mutsol))
+        f.write("# Dataset 2a\n")
+        f.write(
+            "{:10d}{:10d}{:10d}\n".format(
+                self.nsolver, self.iprsol, self.mutsol
+            )
+        )
 
         # write dataset 2b
         if self.nsolver == 2:
-            f.write('# Dataset 2b\n')
-            f.write('{:10d}'.format(self.solver2params['mxiter']))
-            f.write('{:10d}'.format(self.solver2params['iter1']))
-            f.write('{:10d}'.format(self.solver2params['npcond']))
-            f.write('{:14.6g}'.format(self.solver2params['zclose']))
-            f.write('{:14.6g}'.format(self.solver2params['rclose']))
-            f.write('{:14.6g}'.format(self.solver2params['relax']))
-            f.write('{:10d}'.format(self.solver2params['nbpol']))
-            f.write('{:14.6g}'.format(self.solver2params['damp']))
-            f.write('{:14.6g}\n'.format(self.solver2params['dampt']))
+            f.write("# Dataset 2b\n")
+            f.write("{:10d}".format(self.solver2params["mxiter"]))
+            f.write("{:10d}".format(self.solver2params["iter1"]))
+            f.write("{:10d}".format(self.solver2params["npcond"]))
+            f.write("{:14.6g}".format(self.solver2params["zclose"]))
+            f.write("{:14.6g}".format(self.solver2params["rclose"]))
+            f.write("{:14.6g}".format(self.solver2params["relax"]))
+            f.write("{:10d}".format(self.solver2params["nbpol"]))
+            f.write("{:14.6g}".format(self.solver2params["damp"]))
+            f.write("{:14.6g}\n".format(self.solver2params["dampt"]))
 
         # write dataset 3a
-        f.write('# Dataset 3a\n')
-        f.write('{:14.6g}{:14.6g}'.format(self.toeslope, self.tipslope))
+        f.write("# Dataset 3a\n")
+        f.write("{:14.6g}{:14.6g}".format(self.toeslope, self.tipslope))
         if self.alpha is not None:
-            f.write('{:14.6g}{:14.6g}'.format(self.alpha, self.beta))
-        f.write('\n')
+            f.write("{:14.6g}{:14.6g}".format(self.alpha, self.beta))
+        f.write("\n")
 
         # write dataset 3b
         if self.adaptive is True:
-            f.write('# Dataset 3b\n')
-            f.write('{:10d}{:10d}{:14.6g}\n'.format(self.nadptmx,
-                                                    self.nadptmn,
-                                                    self.adptfct))
+            f.write("# Dataset 3b\n")
+            f.write(
+                "{:10d}{:10d}{:14.6g}\n".format(
+                    self.nadptmx, self.nadptmn, self.adptfct
+                )
+            )
         # write dataset 4
-        f.write('# Dataset 4\n')
+        f.write("# Dataset 4\n")
         f.write(self.nu.get_file_entry())
 
         # write dataset 5
-        f.write('# Dataset 5\n')
+        f.write("# Dataset 5\n")
         for isur in range(self.nsrf):
             for ilay in range(nlay):
                 f.write(self.zeta[isur][ilay].get_file_entry())
 
         # write dataset 6
-        f.write('# Dataset 6\n')
+        f.write("# Dataset 6\n")
         f.write(self.ssz.get_file_entry())
 
         # write dataset 7
-        f.write('# Dataset 7\n')
+        f.write("# Dataset 7\n")
         f.write(self.isource.get_file_entry())
 
         # write dataset 8
         if self.nobs > 0:
-            f.write('# Dataset 8\n')
+            f.write("# Dataset 8\n")
             for i in range(self.nobs):
                 # f.write(self.obsnam[i] + 3 * '%10i' % self.obslrc + '\n')
-                f.write('{} '.format(self.obsnam[i]))
+                f.write("{} ".format(self.obsnam[i]))
                 for v in self.obslrc[i, :]:
-                    f.write('{:10d}'.format(v + 1))
-                f.write('\n')
+                    f.write("{:10d}".format(v + 1))
+                f.write("\n")
 
         # close swi2 file
         f.close()
@@ -483,24 +562,24 @@ class ModflowSwi2(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading swi2 package file...\n')
+            sys.stdout.write("loading swi2 package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # dataset 0 -- header
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
 
         # --read dataset 1
         if model.verbose:
-            sys.stdout.write('  loading swi2 dataset 1\n')
+            sys.stdout.write("  loading swi2 dataset 1\n")
         t = line.strip().split()
         nsrf = int(t[0])
         istrat = int(t[1])
@@ -520,18 +599,18 @@ class ModflowSwi2(Package):
         options = []
         adaptive = False
         for idx in range(6, len(t)):
-            if '#' in t[idx]:
+            if "#" in t[idx]:
                 break
             options.append(t[idx])
-            if 'adaptive' in t[idx].lower():
+            if "adaptive" in t[idx].lower():
                 adaptive = True
 
         # read dataset 2a
         if model.verbose:
-            sys.stdout.write('  loading swi2 dataset 2a\n')
+            sys.stdout.write("  loading swi2 dataset 2a\n")
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         t = line.strip().split()
         nsolver = int(t[0])
@@ -542,28 +621,28 @@ class ModflowSwi2(Package):
         solver2params = {}
         if nsolver == 2:
             if model.verbose:
-                sys.stdout.write('  loading swi2 dataset 2b\n')
+                sys.stdout.write("  loading swi2 dataset 2b\n")
             while True:
                 line = f.readline()
-                if line[0] != '#':
+                if line[0] != "#":
                     break
             t = line.strip().split()
-            solver2params['mxiter'] = int(t[0])
-            solver2params['iter1'] = int(t[1])
-            solver2params['npcond'] = int(t[2])
-            solver2params['zclose'] = float(t[3])
-            solver2params['rclose'] = float(t[4])
-            solver2params['relax'] = float(t[5])
-            solver2params['nbpol'] = int(t[6])
-            solver2params['damp'] = float(t[7])
-            solver2params['dampt'] = float(t[8])
+            solver2params["mxiter"] = int(t[0])
+            solver2params["iter1"] = int(t[1])
+            solver2params["npcond"] = int(t[2])
+            solver2params["zclose"] = float(t[3])
+            solver2params["rclose"] = float(t[4])
+            solver2params["relax"] = float(t[5])
+            solver2params["nbpol"] = int(t[6])
+            solver2params["damp"] = float(t[7])
+            solver2params["dampt"] = float(t[8])
 
         # read dataset 3a
         if model.verbose:
-            sys.stdout.write('  loading swi2 dataset 3a\n')
+            sys.stdout.write("  loading swi2 dataset 3a\n")
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         t = line.strip().split()
         toeslope = float(t[0])
@@ -576,16 +655,16 @@ class ModflowSwi2(Package):
                 beta = float(t[3])
             except:
                 if model.verbose:
-                    print('   explicit alpha and beta in file')
+                    print("   explicit alpha and beta in file")
 
         # read dataset 3b
         nadptmx, nadptmn, adptfct = None, None, None
         if adaptive:
             if model.verbose:
-                sys.stdout.write('  loading swi2 dataset 3b\n')
+                sys.stdout.write("  loading swi2 dataset 3b\n")
             while True:
                 line = f.readline()
-                if line[0] != '#':
+                if line[0] != "#":
                     break
             t = line.strip().split()
             nadptmx = int(t[0])
@@ -594,7 +673,7 @@ class ModflowSwi2(Package):
 
         # read dataset 4
         if model.verbose:
-            print('   loading nu...')
+            print("   loading nu...")
         if istrat == 1:
             nnu = nsrf + 1
         else:
@@ -602,60 +681,69 @@ class ModflowSwi2(Package):
         while True:
             ipos = f.tell()
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 f.seek(ipos)
                 break
-        nu = Util2d.load(f, model, (nnu,), np.float32, 'nu',
-                         ext_unit_dict)
+        nu = Util2d.load(f, model, (nnu,), np.float32, "nu", ext_unit_dict)
 
         # read dataset 5
         if model.verbose:
-            print('   loading initial zeta surfaces...')
+            print("   loading initial zeta surfaces...")
         while True:
             ipos = f.tell()
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 f.seek(ipos)
                 break
         zeta = []
         for n in range(nsrf):
-            ctxt = 'zeta_surf{:02d}'.format(n + 1)
-            zeta.append(Util3d.load(f, model, (nlay, nrow, ncol),
-                                    np.float32, ctxt, ext_unit_dict))
+            ctxt = "zeta_surf{:02d}".format(n + 1)
+            zeta.append(
+                Util3d.load(
+                    f,
+                    model,
+                    (nlay, nrow, ncol),
+                    np.float32,
+                    ctxt,
+                    ext_unit_dict,
+                )
+            )
 
         # read dataset 6
         if model.verbose:
-            print('   loading initial ssz...')
+            print("   loading initial ssz...")
         while True:
             ipos = f.tell()
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 f.seek(ipos)
                 break
-        ssz = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                          'ssz', ext_unit_dict)
+        ssz = Util3d.load(
+            f, model, (nlay, nrow, ncol), np.float32, "ssz", ext_unit_dict
+        )
 
         # read dataset 7
         if model.verbose:
-            print('   loading initial isource...')
+            print("   loading initial isource...")
         while True:
             ipos = f.tell()
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 f.seek(ipos)
                 break
-        isource = Util3d.load(f, model, (nlay, nrow, ncol), np.int32,
-                              'isource', ext_unit_dict)
+        isource = Util3d.load(
+            f, model, (nlay, nrow, ncol), np.int32, "isource", ext_unit_dict
+        )
 
         # read dataset 8
         obsname = []
         obslrc = []
         if nobs > 0:
             if model.verbose:
-                print('   loading observation locations...')
+                print("   loading observation locations...")
             while True:
                 line = f.readline()
-                if line[0] != '#':
+                if line[0] != "#":
                     break
             for i in range(nobs):
                 if i > 0:
@@ -678,38 +766,58 @@ class ModflowSwi2(Package):
         unitnumber = None
         filenames = [None, None, None, None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=ModflowSwi2.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=ModflowSwi2.ftype()
+            )
             if iswizt > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=iswizt)
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=iswizt
+                )
             if ipakcb > 0:
-                iu, filenames[2] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=ipakcb)
+                iu, filenames[2] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=ipakcb
+                )
             if abs(iswiobs) > 0:
-                iu, filenames[3] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(iswiobs))
+                iu, filenames[3] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=abs(iswiobs)
+                )
 
         # create swi2 instance
-        swi2 = ModflowSwi2(model, nsrf=nsrf, istrat=istrat,
-                           iswizt=iswizt, ipakcb=ipakcb,
-                           iswiobs=iswiobs, options=options,
-                           nsolver=nsolver, iprsol=iprsol, mutsol=mutsol,
-                           solver2params=solver2params,
-                           toeslope=toeslope, tipslope=tipslope, alpha=alpha,
-                           beta=beta,
-                           nadptmx=nadptmx, nadptmn=nadptmn, adptfct=adptfct,
-                           nu=nu, zeta=zeta, ssz=ssz, isource=isource,
-                           obsnam=obsname, obslrc=obslrc,
-                           unitnumber=unitnumber, filenames=filenames)
+        swi2 = ModflowSwi2(
+            model,
+            nsrf=nsrf,
+            istrat=istrat,
+            iswizt=iswizt,
+            ipakcb=ipakcb,
+            iswiobs=iswiobs,
+            options=options,
+            nsolver=nsolver,
+            iprsol=iprsol,
+            mutsol=mutsol,
+            solver2params=solver2params,
+            toeslope=toeslope,
+            tipslope=tipslope,
+            alpha=alpha,
+            beta=beta,
+            nadptmx=nadptmx,
+            nadptmn=nadptmn,
+            adptfct=adptfct,
+            nu=nu,
+            zeta=zeta,
+            ssz=ssz,
+            isource=isource,
+            obsnam=obsname,
+            obslrc=obslrc,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
 
         # return swi2 instance
         return swi2
 
     @staticmethod
     def ftype():
-        return 'SWI2'
+        return "SWI2"
 
     @staticmethod
     def defaultunit():

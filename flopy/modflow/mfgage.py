@@ -78,9 +78,17 @@ class ModflowGage(Package):
 
     """
 
-    def __init__(self, model, numgage=0, gage_data=None, files=None,
-                 extension='gage', unitnumber=None,
-                 filenames=None, **kwargs):
+    def __init__(
+        self,
+        model,
+        numgage=0,
+        gage_data=None,
+        files=None,
+        extension="gage",
+        unitnumber=None,
+        filenames=None,
+        **kwargs
+    ):
         """
         Package constructor.
 
@@ -108,23 +116,28 @@ class ModflowGage(Package):
                     files = []
                     for idx in range(numgage):
                         files.append(
-                            '{}.gage{}.go'.format(model.name, idx + 1))
+                            "{}.gage{}.go".format(model.name, idx + 1)
+                        )
                 if isinstance(files, np.ndarray):
                     files = files.flatten().tolist()
                 elif isinstance(files, str):
                     files = [files]
                 elif isinstance(files, int) or isinstance(files, float):
-                    files = ['{}.go'.format(files)]
+                    files = ["{}.go".format(files)]
                 if len(files) < numgage:
-                    err = 'a filename needs to be provided ' + \
-                          'for {} gages '.format(numgage) + \
-                          '- {} filenames were provided'.format(len(files))
+                    err = (
+                        "a filename needs to be provided "
+                        + "for {} gages ".format(numgage)
+                        + "- {} filenames were provided".format(len(files))
+                    )
                     raise Exception(err)
             else:
                 if len(filenames) < numgage + 1:
-                    err = "filenames must have a " + \
-                          "length of {} ".format(numgage + 1) + \
-                          "the length provided is {}".format(len(filenames))
+                    err = (
+                        "filenames must have a "
+                        + "length of {} ".format(numgage + 1)
+                        + "the length provided is {}".format(len(filenames))
+                    )
                     raise Exception(err)
                 else:
                     files = []
@@ -135,8 +148,8 @@ class ModflowGage(Package):
             if isinstance(gage_data, np.ndarray):
                 if not gage_data.dtype == dtype:
                     gage_data = np.core.records.fromarrays(
-                        gage_data.transpose(),
-                        dtype=dtype)
+                        gage_data.transpose(), dtype=dtype
+                    )
             elif isinstance(gage_data, list):
                 d = ModflowGage.get_empty(ncells=numgage)
                 for n in range(len(gage_data)):
@@ -153,39 +166,51 @@ class ModflowGage(Package):
                         iu = int(t[2])
                         outtype = int(t[3])
 
-                    d['gageloc'][n] = gageloc
-                    d['gagerch'][n] = gagerch
-                    d['unit'][n] = iu
-                    d['outtype'][n] = outtype
+                    d["gageloc"][n] = gageloc
+                    d["gagerch"][n] = gagerch
+                    d["unit"][n] = iu
+                    d["outtype"][n] = outtype
                 gage_data = d
             else:
-                err = 'gage_data must be a numpy record array, numpy array' + \
-                      'or a list'
+                err = (
+                    "gage_data must be a numpy record array, numpy array"
+                    + "or a list"
+                )
                 raise Exception(err)
 
             # add gage output files to model
             for n in range(numgage):
-                iu = abs(gage_data['unit'][n])
+                iu = abs(gage_data["unit"][n])
                 fname = files[n]
-                model.add_output_file(iu, fname=fname, binflag=False,
-                                      package=ModflowGage.ftype())
+                model.add_output_file(
+                    iu, fname=fname, binflag=False, package=ModflowGage.ftype()
+                )
 
         # Fill namefile items
         name = [ModflowGage.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
-        self.heading = '# {} package for '.format(self.name[0]) + \
-                       ' {}, '.format(model.version_types[model.version]) + \
-                       'generated by Flopy.'
-        self.url = 'gage.htm'
+        self.heading = (
+            "# {} package for ".format(self.name[0])
+            + " {}, ".format(model.version_types[model.version])
+            + "generated by Flopy."
+        )
+        self.url = "gage.htm"
 
         self.numgage = numgage
         self.files = files
@@ -200,15 +225,21 @@ class ModflowGage(Package):
 
     @staticmethod
     def get_default_dtype():
-        dtype = np.dtype([("gageloc", np.int), ("gagerch", np.int),
-                          ("unit", np.int), ("outtype", np.int)])
+        dtype = np.dtype(
+            [
+                ("gageloc", np.int),
+                ("gagerch", np.int),
+                ("unit", np.int),
+                ("outtype", np.int),
+            ]
+        )
         return dtype
 
     @staticmethod
     def get_empty(ncells=0, aux_names=None, structured=True):
         # get an empty recarray that corresponds to dtype
         dtype = ModflowGage.get_default_dtype()
-        return create_empty_recarray(ncells, dtype, default_value=-1.0E+10)
+        return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
     def ncells(self):
         # Return 0 for the gage package
@@ -224,7 +255,7 @@ class ModflowGage(Package):
         None
 
         """
-        f = open(self.fn_path, 'w')
+        f = open(self.fn_path, "w")
 
         # # dataset 0
         # vn = self.parent.version_types[self.parent.version]
@@ -237,10 +268,10 @@ class ModflowGage(Package):
 
         # dataset 2
         for n in range(self.numgage):
-            gageloc = self.gage_data['gageloc'][n]
-            gagerch = self.gage_data['gagerch'][n]
-            iu = self.gage_data['unit'][n]
-            outtype = self.gage_data['outtype'][n]
+            gageloc = self.gage_data["gageloc"][n]
+            gagerch = self.gage_data["gagerch"][n]
+            iu = self.gage_data["unit"][n]
+            outtype = self.gage_data["outtype"][n]
             t = [gageloc]
             if gageloc < 0:
                 t.append(iu)
@@ -292,17 +323,17 @@ class ModflowGage(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading gage package file...\n')
+            sys.stdout.write("loading gage package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r', errors='replace')
+            f = open(filename, "r", errors="replace")
 
         # dataset 0 -- header
         while True:
             line = f.readline().rstrip()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # read dataset 1
@@ -336,16 +367,17 @@ class ModflowGage(Package):
                     gagerch = int(t[1])
                     iu = int(t[2])
                     outtype = int(t[3])
-                gage_data['gageloc'][n] = gageloc
-                gage_data['gagerch'][n] = gagerch
-                gage_data['unit'][n] = iu
-                gage_data['outtype'][n] = outtype
+                gage_data["gageloc"][n] = gageloc
+                gage_data["gagerch"][n] = gagerch
+                gage_data["unit"][n] = iu
+                gage_data["outtype"][n] = outtype
 
                 for key, value in ext_unit_dict.items():
                     if key == abs(iu):
                         model.add_pop_key_list(abs(iu))
-                        relpth = os.path.relpath(value.filename,
-                                                 model.model_ws)
+                        relpth = os.path.relpath(
+                            value.filename, model.model_ws
+                        )
                         files.append(relpth)
                         break
 
@@ -363,14 +395,18 @@ class ModflowGage(Package):
         for file in files:
             filenames.append(os.path.basename(file))
 
-        gagepak = ModflowGage(model, numgage=numgage,
-                              gage_data=gage_data, filenames=filenames,
-                              unitnumber=unitnumber)
+        gagepak = ModflowGage(
+            model,
+            numgage=numgage,
+            gage_data=gage_data,
+            filenames=filenames,
+            unitnumber=unitnumber,
+        )
         return gagepak
 
     @staticmethod
     def ftype():
-        return 'GAGE'
+        return "GAGE"
 
     @staticmethod
     def defaultunit():

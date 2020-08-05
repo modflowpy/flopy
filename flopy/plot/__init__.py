@@ -20,7 +20,12 @@
     --------
 
     """
-from .plotutil import SwiConcentration, plot_shapefile, shapefile_extents, PlotUtilities
+from .plotutil import (
+    SwiConcentration,
+    plot_shapefile,
+    shapefile_extents,
+    PlotUtilities,
+)
 from .map import ModelMap, PlotMapView
 from .crosssection import ModelCrossSection
 from .plotbase import PlotCrossSection
