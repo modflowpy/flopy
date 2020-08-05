@@ -89,6 +89,23 @@ jobs:
         pip install -r requirements.pip.txt
         pip install nbconvert
 
+    - name: Install xmipy, pymake, and flopy
+      shell: bash
+      run: |
+        pip install xmipy
+        pip install .
+        pip install https://github.com/modflowpy/pymake/zipball/master
+
+    - name: Download executables needed for autotests
+      shell: bash
+      run: |
+        python ./autotest/get_exes.py
+
+    - name: Add executables directory to path
+      shell: bash
+      run: |
+        echo "::add-path::$HOME/.local/bin"
+
     - name: Run ${{ matrix.test-file }} CI
       shell: bash
       run: |
