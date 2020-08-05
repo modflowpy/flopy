@@ -628,7 +628,8 @@ class GridIntersect:
                 if p._ndim == 3:
                     # find k
                     kpos = ModflowGridIndices.find_position_in_array(
-                        self.mfgrid.botm[:, ipos, jpos], p.z)
+                        self.mfgrid.botm[:, ipos, jpos], p.z
+                    )
                     if kpos is not None:
                         nodelist.append((kpos, ipos, jpos))
                         ixshapes.append(p)
