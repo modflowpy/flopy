@@ -55,7 +55,7 @@ jobs:
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
   flopyScriptNotebookCI:
-    name: scripts and Notebooks
+    name: additional tests
     needs: flopy_lint
     runs-on: ubuntu-latest
     strategy:
@@ -80,7 +80,7 @@ jobs:
       run: |
         python --version
 
-    - name: Install Python 3.8 packages (adding nbconvert)
+    - name: Install Python 3.8 packages
       shell: bash
       run: |
         python -m pip install --upgrade pip
@@ -99,7 +99,7 @@ jobs:
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: Download executables needed for autotests
+    - name: Download executables needed for tests
       shell: bash
       run: |
         python ./autotest/get_exes.py
@@ -112,7 +112,7 @@ jobs:
     - name: Run ${{ matrix.test-file }} CI
       shell: bash
       run: |
-        nosetests -v ${{ matrix.test-file }} --with-id --with-timer \
+        coverage run -m nose -v ${{ matrix.test-file }} --with-id --with-timer \
         --with-coverage --cover-package=flopy --cover-xml \
         --cover-xml-file=../coverage.xml -w ./autotest
 
@@ -164,7 +164,7 @@ jobs:
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: Download executables needed for autotests
+    - name: Download executables needed for tests
       shell: bash -l {0}
       run: |
         python ./autotest/get_exes.py
@@ -177,7 +177,7 @@ jobs:
     - name: Run nosetests
       shell: bash -l {0}
       run: |
-        nosetests -v --with-id --with-timer \
+        coverage run -m nose -v --with-id --with-timer \
         --with-coverage --cover-package=flopy --cover-xml-file=coverage.xml \
          -w ./autotest
 
