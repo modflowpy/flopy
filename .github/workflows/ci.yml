@@ -113,20 +113,21 @@ jobs:
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: Download executables
+    - name: Download executables needed for autotests
       shell: bash -l {0}
       run: |
-        nosetests -v get_exes.py --with-id --with-timer -w ./autotest
+        python ./autotest/get_exes.py
 
     - name: Add executables directory to path
       shell: bash
       run: |
         echo "::add-path::$HOME/.local/bin"
 
-    - name: Run nosetests
+    - name: Run nosetests and create coverage xml
       shell: bash -l {0}
       run: |
         nosetests -v --with-id --with-timer --with-coverage -w ./autotest
+        coverage xml
 
     - name: List files in the root directory
       shell: bash
