@@ -624,17 +624,17 @@ class GridIntersect:
             ipos = ModflowGridIndices.find_position_in_array(Ye, ry)
 
             if jpos is not None and ipos is not None:
-                nodelist.append((ipos, jpos))
-                ixshapes.append(p)
-
-            # three dimensional point
-            if p._ndim == 3:
-                # find k
-                kpos = ModflowGridIndices.find_position_in_array(
-                    self.mfgrid.botm[:, ipos, jpos], p.z
-                )
-                if kpos is not None:
-                    nodelist.append((kpos, ipos, jpos))
+                # three dimensional point
+                if p._ndim == 3:
+                    # find k
+                    kpos = ModflowGridIndices.find_position_in_array(
+                        self.mfgrid.botm[:, ipos, jpos], p.z)
+                    if kpos is not None:
+                        nodelist.append((kpos, ipos, jpos))
+                        ixshapes.append(p)
+                else:
+                    nodelist.append((ipos, jpos))
+                    ixshapes.append(p)
 
         # remove duplicates
         tempnodes = []

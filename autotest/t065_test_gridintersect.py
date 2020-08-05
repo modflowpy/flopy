@@ -50,11 +50,11 @@ def get_tri_grid(angrot=0., xyoffset=0., triangle_exe=None):
     return tgr
 
 
-def get_rect_grid(angrot=0., xyoffset=0.):
+def get_rect_grid(angrot=0., xyoffset=0., top=None, botm=None):
     delc = 10 * np.ones(2, dtype=np.float)
     delr = 10 * np.ones(2, dtype=np.float)
     sgr = fgrid.StructuredGrid(
-        delc, delr, top=None, botm=None, xoff=xyoffset, yoff=xyoffset,
+        delc, delr, top=top, botm=botm, xoff=xyoffset, yoff=xyoffset,
         angrot=angrot)
     return sgr
 
@@ -96,6 +96,48 @@ def plot_ix_point_result(rec, ax):
 
 
 # %% test point structured
+
+
+def test_rect_grid_3d_point_outside():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape(2, 2, 2)
+    gr = get_rect_grid(top=np.ones(4), botm=botm)
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect_point(Point(25., 25., .5))
+    assert len(result) == 0
+    return result
+
+
+def test_rect_grid_3d_point_inside():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    botm = np.concatenate([np.ones(4), .5 * np.ones(4), np.zeros(4)]).reshape(3, 2, 2)
+    gr = get_rect_grid(top=np.ones(4), botm=botm)
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect_point(Point(2., 2., .2))
+    assert result.cellids[0] == (1, 1, 0)
+    return result
+
+
+def test_rect_grid_3d_point_above():
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    botm = np.concatenate([np.ones(4), np.zeros(4)]).reshape(2, 2, 2)
+    gr = get_rect_grid(top=np.ones(4), botm=botm)
+    ix = GridIntersect(gr, method="structured")
+    result = ix.intersect_point(Point(2., 2., 2))
+    assert len(result) == 0
+    return result
 
 
 def test_rect_grid_point_outside():
