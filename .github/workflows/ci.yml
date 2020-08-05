@@ -7,7 +7,7 @@ on:
 jobs:
 
   flopy_lint:
-    name: flopy linting
+    name: linting
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -55,7 +55,7 @@ jobs:
         pylint --jobs=2 --errors-only --exit-zero ./flopy
 
   flopyScriptNotebookCI:
-    name: Run flopy script and Notebook CI
+    name: scripts and Notebooks
     needs: flopy_lint
     runs-on: ubuntu-latest
     strategy:
@@ -87,7 +87,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.pip.txt
-        pip install nbconvert
+
+    - name: Install additional Python 3.8 packages
+    - if: matrix.test-file == 'autotest_notebooks.py'
+      shell: bash
+      run: |
+        pip install nbconvert jupyter
 
     - name: Install xmipy, pymake, and flopy
       shell: bash
@@ -120,10 +125,11 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12
-
+      with:
+        file: ./coverage.xml
 
   flopyCI:
-    name: Run flopy CI on different python versions and different OSs
+    name: autotests
     needs: flopy_lint
     runs-on: ${{ matrix.os }}
     strategy:
@@ -184,3 +190,5 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12
+      with:
+        file: ./coverage.xml
