@@ -8,14 +8,3 @@ requests
 appdirs
 numpy
 matplotlib
-pandas
-scipy
-affine
-netcdf4
-pyshp
-pyproj
-fiona
-descartes
-shapely
-bmipy
-xmipy

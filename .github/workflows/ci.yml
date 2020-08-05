@@ -67,40 +67,37 @@ jobs:
     - name: Checkout flopy repo
       uses: actions/checkout@v2
 
-    # Standard python fails on windows without GDAL installation. Using
-    # standard python here since only running Notebooks and scripts on linux.
-    # Use standard bash shell with standard python
-    - name: Setup Python 3.8
-      uses: actions/setup-python@v2
+    # Standard python fails on windows without GDAL installation
+    # Using custom bash shell ("shell: bash -l {0}") with Miniconda
+    - name: Setup Miniconda
+      uses: goanpeca/setup-miniconda@v1.6.0
       with:
         python-version: 3.8
+        activate-environment: flopy
+        auto-update-conda: true
+        environment-file: environment.yml
 
-    - name: Print python version
-      shell: bash
+    - name: Determine python environment
+      shell: bash -l {0}
       run: |
-        python --version
-
-    - name: Install Python 3.8 packages
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.pip.txt
+        conda info
+        conda list
 
     - name: Install additional Python 3.8 packages
       if: matrix.test-file == 'autotest_notebooks.py'
-      shell: bash
+      shell: bash -l {0}
       run: |
-        pip install nbconvert jupyter
+        conda install nbconvert jupyter
 
     - name: Install xmipy, pymake, and flopy
-      shell: bash
+      shell: bash -l {0}
       run: |
         pip install xmipy
         pip install .
         pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Download executables needed for tests
-      shell: bash
+      shell: bash -l {0}
       run: |
         python ./autotest/get_exes.py
 
@@ -110,7 +107,7 @@ jobs:
         echo "::add-path::$HOME/.local/bin"
 
     - name: Run ${{ matrix.test-file }} CI
-      shell: bash
+      shell: bash -l {0}
       run: |
         coverage run -m nose -v ${{ matrix.test-file }} --with-id --with-timer \
         --with-coverage --cover-package=flopy --cover-xml \
