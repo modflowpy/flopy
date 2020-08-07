@@ -1,7 +1,7 @@
 import sys, inspect
 import numpy as np
 from copy import deepcopy
-from collections import Iterable
+from collections.abc import Iterable
 from ..mfbase import MFDataException, FlopyException
 from .mfstructure import DatumType
 from ...utils.datautil import PyListUtil, DatumUtil
