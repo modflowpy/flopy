@@ -227,7 +227,7 @@ class GridIntersect:
         elif isinstance(self.mfgrid._cell2d, list):
             for icell in range(len(self.mfgrid._cell2d)):
                 points = []
-                for iv in self.mfgrid._cell2d[icell][-3:]:
+                for iv in self.mfgrid._cell2d[icell][4:]:
                     points.append(
                         (
                             self.mfgrid._vertices[iv][1],

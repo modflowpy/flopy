@@ -59,6 +59,27 @@ def get_rect_grid(angrot=0., xyoffset=0., top=None, botm=None):
     return sgr
 
 
+def get_rect_vertex_grid(angrot=0., xyoffset=0.):
+    cell2d = [[0, 5.0, 5.0, 4, 0, 1, 4, 3],
+              [1, 15.0, 5.0, 4, 1, 2, 5, 4],
+              [2, 5.0, 15.0, 4, 3, 4, 7, 6],
+              [3, 15.0, 15.0, 4, 4, 5, 8, 7]]
+    vertices = [[0, 0.0, 0.0],
+                [1, 10.0, 0.0],
+                [2, 20.0, 0.0],
+                [3, 0.0, 10.0],
+                [4, 10.0, 10.0],
+                [5, 20.0, 10.0],
+                [6, 0.0, 20.0],
+                [7, 10.0, 20.0],
+                [8, 20.0, 20.0]]
+    tgr = fgrid.VertexGrid(vertices, cell2d,
+                           botm=np.atleast_2d(np.zeros(len(cell2d))),
+                           top=np.ones(len(cell2d)), xoff=xyoffset,
+                           yoff=xyoffset, angrot=angrot)
+    return tgr
+
+
 def plot_structured_grid(sgr):
     _, ax = plt.subplots(1, 1, figsize=(8, 8))
     sgr.plot(ax=ax)
@@ -251,6 +272,29 @@ def test_rect_grid_point_on_inner_boundary_shapely(rtree=True):
     result = ix.intersect_point(Point(10., 10.))
     assert len(result) == 1
     assert np.all(result.cellids[0] == (0, 0))
+    return result
+
+
+def test_rect_vertex_grid_point_in_one_cell_shapely(rtree=True):
+    # avoid test fail when shapely not available
+    try:
+        import shapely
+    except:
+        return
+    gr = get_rect_vertex_grid()
+    ix = GridIntersect(gr, method='vertex', rtree=rtree)
+    result = ix.intersect_point(Point(4., 4.))
+    assert len(result) == 1
+    assert result.cellids[0] == 0
+    result = ix.intersect_point(Point(4., 6.))
+    assert len(result) == 1
+    assert result.cellids[0] == 0
+    result = ix.intersect_point(Point(6., 6.))
+    assert len(result) == 1
+    assert result.cellids[0] == 0
+    result = ix.intersect_point(Point(6., 4.))
+    assert len(result) == 1
+    assert result.cellids[0] == 0
     return result
 
 
