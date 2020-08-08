@@ -66,7 +66,7 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
-    # gu.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
+    gu.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, 'rf1')
     xmin = 8 * delr
@@ -77,7 +77,7 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
-    # gu.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
+    gu.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, 'rf2')
     xmin = 9 * delr
@@ -88,7 +88,7 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
-    # gu.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
+    gu.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
 
     # inactivate parts of mfusg layer 2 to test vertical-pass-through option
     xmin = 0 * delr
@@ -163,6 +163,7 @@ def test_gridgen():
         assert len(ja0[(ja0 > disu_vp.nodelay[0]) & \
                        (ja0 <= sum(disu_vp.nodelay[:2]))]
                    ) == 0, msg
+        #ms_u.disu.write_file()
         
         # test mfusg without vertical pass-through
         gu.vertical_pass_through = False
