@@ -665,18 +665,19 @@ class Gridgen(object):
         nper : int
             Number of model stress periods (default is 1).
         perlen : float or array of floats (nper)
-            A single value or array of the stress period lengths (default is 1).
+            A single value or array of the stress period lengths
+            (default is 1).
         nstp : int or array of ints (nper)
             Number of time steps in each stress period (default is 1).
         tsmult : float or array of floats (nper)
             Time step multiplier (default is 1.0).
         steady : boolean or array of boolean (nper)
-            True or False indicating whether or not stress period is steady state
-            (default is True).
+            True or False indicating whether or not stress period is
+            steady state (default is True).
         itmuni : int
             Time units, default is days (4)
         lenuni : int
-            Length units, default is meters (2)        
+            Length units, default is meters (2)
 
         Returns
         -------
