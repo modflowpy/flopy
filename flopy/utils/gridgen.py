@@ -121,6 +121,10 @@ class Gridgen(object):
     surface_interpolation : str
         Default gridgen method for interpolating elevations.  Valid options
         include 'replicate' (default) and 'interpolate'
+    vertical_pass_through : bool
+        If true, Gridgen's GRID_TO_USGDATA command will connect layers
+        where intermediate layers are inactive.
+        (default is False)
 
     Notes
     -----
@@ -135,6 +139,7 @@ class Gridgen(object):
         model_ws=".",
         exe_name="gridgen",
         surface_interpolation="replicate",
+        vertical_pass_through=False,
     ):
         self.dis = dis
         if isinstance(dis, ModflowGwfdis):
@@ -169,6 +174,11 @@ class Gridgen(object):
         self.surface_interpolation = [
             surface_interpolation for k in range(self.nlay + 1)
         ]
+
+        # Set export options
+        self.vertical_pass_through = "False"
+        if vertical_pass_through:
+            self.vertical_pass_through = "True"
 
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
@@ -243,9 +253,11 @@ class Gridgen(object):
                 self._asciigrid_dict[isurf] = nm
 
             elif isinstance(elev, str):
-                if not os.path.isfile(os.path.join(self.model_ws,elev)):
-                    raise Exception('Error.  elev is not a valid file: '
-                                    '{}'.format(os.path.join(self.model_ws,elev)))
+                if not os.path.isfile(os.path.join(self.model_ws, elev)):
+                    raise Exception(
+                        "Error.  elev is not a valid file: "
+                        "{}".format(os.path.join(self.model_ws, elev))
+                    )
                 self._asciigrid_dict[isurf] = elev
             else:
                 raise Exception(
@@ -435,16 +447,12 @@ class Gridgen(object):
         ymax = max(vts[0][1], vts[1][1], vts[2][1], vts[3][1])
         return ((xmin + xmax) * 0.5, (ymin + ymax) * 0.5)
 
-    def export(self, vertical_pass_through=False, verbose=False):
+    def export(self, verbose=False):
         """
         Export the quadtree grid to shapefiles, usgdata, and vtk
 
         Parameters
         ----------
-        vertical_pass_through : bool
-            If true, Gridgen's GRID_TO_USGDATA command will connect layers
-            where intermediate layers are inactive.
-            (default is False)
         verbose : bool
             If true, print the results of the gridgen command to the terminal
             (default is False)
@@ -454,11 +462,7 @@ class Gridgen(object):
         None
 
         """
-        # Set export options
-        self.vertical_pass_through = 'False'
-        if vertical_pass_through:
-            self.vertical_pass_through = 'True'
-        
+
         # Create the export definition file
         fname = os.path.join(self.model_ws, "_gridgen_export.dfn")
         f = open(fname, "w")
@@ -639,8 +643,17 @@ class Gridgen(object):
         node_ra["node"] -= 1
         return node_ra
 
-    def get_disu(self, model, nper=1, perlen=1, nstp=1, tsmult=1, steady=True,
-                 itmuni=4, lenuni=2):
+    def get_disu(
+        self,
+        model,
+        nper=1,
+        perlen=1,
+        nstp=1,
+        tsmult=1,
+        steady=True,
+        itmuni=4,
+        lenuni=2,
+    ):
         """
         Create a MODFLOW-USG DISU flopy object.
 
@@ -669,7 +682,7 @@ class Gridgen(object):
         -------
         disu : Flopy ModflowDisU object.
         """
-        
+
         # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
         fname = os.path.join(self.model_ws, "qtg.nod")
         f = open(fname, "r")
@@ -1820,7 +1833,7 @@ class Gridgen(object):
         s += "  SMOOTHING = full\n"
 
         for k in range(self.nlay):
-            if self.surface_interpolation[k] == 'ASCIIGRID':
+            if self.surface_interpolation[k] == "ASCIIGRID":
                 grd = self._asciigrid_dict[k]
             else:
                 grd = "basename"
@@ -1829,7 +1842,7 @@ class Gridgen(object):
             )
 
         for k in range(self.nlay):
-            if self.surface_interpolation[k + 1] == 'ASCIIGRID':
+            if self.surface_interpolation[k + 1] == "ASCIIGRID":
                 grd = self._asciigrid_dict[k + 1]
             else:
                 grd = "basename"
@@ -1842,35 +1855,37 @@ class Gridgen(object):
         return s
 
     def _grid_export_blocks(self):
-        s = 'BEGIN GRID_TO_SHAPEFILE grid_to_shapefile_poly\n'
-        s += '  GRID = quadtreegrid\n'
-        s += '  SHAPEFILE = qtgrid\n'
-        s += '  FEATURE_TYPE = polygon\n'
-        s += 'END GRID_TO_SHAPEFILE\n'
-        s += '\n'
-        s += 'BEGIN GRID_TO_SHAPEFILE grid_to_shapefile_point\n'
-        s += '  GRID = quadtreegrid\n'
-        s += '  SHAPEFILE = qtgrid_pt\n'
-        s += '  FEATURE_TYPE = point\n'
-        s += 'END GRID_TO_SHAPEFILE\n'
-        s += '\n'
-        s += 'BEGIN GRID_TO_USGDATA grid_to_usgdata\n'
-        s += '  GRID = quadtreegrid\n'
-        s += '  USG_DATA_PREFIX = qtg\n'
-        s += '  VERTICAL_PASS_THROUGH = {0}\n'.format(self.vertical_pass_through)
-        s += 'END GRID_TO_USGDATA\n'
-        s += '\n'
-        s += 'BEGIN GRID_TO_VTKFILE grid_to_vtk\n'
-        s += '  GRID = quadtreegrid\n'
-        s += '  VTKFILE = qtg\n'
-        s += '  SHARE_VERTEX = False\n'
-        s += 'END GRID_TO_VTKFILE\n'
-        s += '\n'
-        s += 'BEGIN GRID_TO_VTKFILE grid_to_vtk_sv\n'
-        s += '  GRID = quadtreegrid\n'
-        s += '  VTKFILE = qtg_sv\n'
-        s += '  SHARE_VERTEX = True\n'
-        s += 'END GRID_TO_VTKFILE\n'
+        s = "BEGIN GRID_TO_SHAPEFILE grid_to_shapefile_poly\n"
+        s += "  GRID = quadtreegrid\n"
+        s += "  SHAPEFILE = qtgrid\n"
+        s += "  FEATURE_TYPE = polygon\n"
+        s += "END GRID_TO_SHAPEFILE\n"
+        s += "\n"
+        s += "BEGIN GRID_TO_SHAPEFILE grid_to_shapefile_point\n"
+        s += "  GRID = quadtreegrid\n"
+        s += "  SHAPEFILE = qtgrid_pt\n"
+        s += "  FEATURE_TYPE = point\n"
+        s += "END GRID_TO_SHAPEFILE\n"
+        s += "\n"
+        s += "BEGIN GRID_TO_USGDATA grid_to_usgdata\n"
+        s += "  GRID = quadtreegrid\n"
+        s += "  USG_DATA_PREFIX = qtg\n"
+        s += "  VERTICAL_PASS_THROUGH = {0}\n".format(
+            self.vertical_pass_through
+        )
+        s += "END GRID_TO_USGDATA\n"
+        s += "\n"
+        s += "BEGIN GRID_TO_VTKFILE grid_to_vtk\n"
+        s += "  GRID = quadtreegrid\n"
+        s += "  VTKFILE = qtg\n"
+        s += "  SHARE_VERTEX = False\n"
+        s += "END GRID_TO_VTKFILE\n"
+        s += "\n"
+        s += "BEGIN GRID_TO_VTKFILE grid_to_vtk_sv\n"
+        s += "  GRID = quadtreegrid\n"
+        s += "  VTKFILE = qtg_sv\n"
+        s += "  SHARE_VERTEX = True\n"
+        s += "END GRID_TO_VTKFILE\n"
         return s
 
     def _mkvertdict(self):

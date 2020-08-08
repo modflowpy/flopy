@@ -45,9 +45,17 @@ def test_gridgen():
                                     delr=delr,
                                     delc=delc, top=top, botm=botm)
 
+    ms_u = flopy.modflow.Modflow(modelname = 'mymfusgmodel', model_ws = cpth,
+                                 version = 'mfusg')
+    dis_usg = flopy.modflow.ModflowDis(ms_u, nlay=nlay, nrow=nrow, ncol=ncol,
+                                    delr=delr,
+                                    delc=delc, top=top, botm=botm)
+
     gridgen_ws = cpth
     g = Gridgen(dis5, model_ws=gridgen_ws, exe_name=exe_name)
     g6 = Gridgen(dis6, model_ws=gridgen_ws, exe_name=exe_name)
+    gu = Gridgen(dis_usg, model_ws=gridgen_ws, exe_name=exe_name,
+                 vertical_pass_through=True)
 
     rf0shp = os.path.join(gridgen_ws, 'rf0')
     xmin = 7 * delr
@@ -58,6 +66,7 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
+    # gu.add_refinement_features(rfpoly, 'polygon', 1, range(nlay))
 
     rf1shp = os.path.join(gridgen_ws, 'rf1')
     xmin = 8 * delr
@@ -68,6 +77,7 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
+    # gu.add_refinement_features(rfpoly, 'polygon', 2, range(nlay))
 
     rf2shp = os.path.join(gridgen_ws, 'rf2')
     xmin = 9 * delr
@@ -78,6 +88,19 @@ def test_gridgen():
                 (xmin, ymin)]]]
     g.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
     g6.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
+    # gu.add_refinement_features(rfpoly, 'polygon', 3, range(nlay))
+
+    # inactivate parts of mfusg layer 2 to test vertical-pass-through option
+    xmin = 0 * delr
+    xmax = 18 * delr
+    ymin = 0 * delc
+    ymax = 18 * delc
+    adpoly2 = [[[(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax),
+                (xmin, ymin)]]]
+    gu.add_active_domain(adpoly2, layers = [1])
+    adpoly1_3 = [[[(0., 0.), (Lx, 0.), (Lx, Ly), (0., Ly),
+                (0., 0.)]]]    
+    gu.add_active_domain(adpoly1_3, layers = [0,2])
 
     # if gridgen executable is available then do the main part of the test
     if run:
@@ -125,6 +148,31 @@ def test_gridgen():
         g6.to_disv6(fname)
         assert os.path.isfile(fname), \
             'MF6 disv file not created: {}'.format(fname)
+
+        # test mfusg with vertical pass-through (True above at instantiation)
+        gu.build()
+        disu_vp = gu.get_disu(ms_u)
+        #  -check that node 1 (layer 1) is connected to layer 3 but not layer 2:
+        ja0 = disu_vp.ja[: disu_vp.iac[0]]
+        msg = ("MFUSG node 1 (layer 1) is not connected to layer 3 but should "
+               "not be (with vertical pass through activated).")
+        assert max(ja0) > sum(disu_vp.nodelay[:2]), msg
+        #  -check that node 1 (layer 1) is not connected to any layer 2 nodes
+        msg = ("MFUSG node 1 (layer 1) is connected to layer 2 but should not "
+               "be (with vertical pass through activated).")
+        assert len(ja0[(ja0 > disu_vp.nodelay[0]) & \
+                       (ja0 <= sum(disu_vp.nodelay[:2]))]
+                   ) == 0, msg
+        
+        # test mfusg without vertical pass-through
+        gu.vertical_pass_through = False
+        gu.build()
+        disu_vp = gu.get_disu(ms_u)
+        #  -check that node 1 (layer 1) is connected to layer 1 only:
+        ja0 = disu_vp.ja[: disu_vp.iac[0]]
+        msg = ("MFUSG node 1 (layer 1) is connected to layer 2 or 3 but "
+               "should not be (without vertical pass through activated).")
+        assert max(ja0) <= disu_vp.nodelay[0], msg
 
     return
 
