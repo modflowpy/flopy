@@ -5,7 +5,7 @@
 # - PlotCrossSection.plot_vector()
 
 # More precisely:
-# - two models are created: one for mf005 and one for mf6
+# - two models are created: one for mf2005 and one for mf6
 # - the two models are virtually identical; in fact, the options are such that
 #   the calculated heads are indeed exactly the same (which is, by the way,
 #   quite remarkable!)
@@ -20,7 +20,7 @@ import flopy.utils.binaryfile as bf
 # model names, file names and locations
 modelname_mf2005 = 't070_mf2005'
 modelname_mf6 = 't070_mf6'
-postproc_test_ws = os.path.join('.', 'temp', 't070')
+postproc_test_ws = os.path.join('.', 'temp', 't072')
 modelws_mf2005 = os.path.join(postproc_test_ws, modelname_mf2005)
 modelws_mf6 = os.path.join(postproc_test_ws, modelname_mf6)
 cbcfile_mf2005 = os.path.join(modelws_mf2005, modelname_mf2005 + '.cbc')

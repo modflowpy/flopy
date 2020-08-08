@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Polygon:
-    type = 'Polygon'
+    type = "Polygon"
     shapeType = 5  # pyshp
 
     def __init__(self, exterior, interiors=None):
@@ -49,8 +49,11 @@ class Polygon:
         z information is only stored if it was entered.
         """
         self.exterior = tuple(map(tuple, exterior))
-        self.interiors = tuple() if interiors is None else (map(tuple, i) for i
-                                                            in interiors)
+        self.interiors = (
+            tuple()
+            if interiors is None
+            else (map(tuple, i) for i in interiors)
+        )
 
     def __eq__(self, other):
         if not isinstance(other, Polygon):
@@ -79,9 +82,12 @@ class Polygon:
 
     @property
     def geojson(self):
-        return {'coordinates': tuple(
-            [self.exterior] + [i for i in self.interiors]),
-            'type': self.type}
+        return {
+            "coordinates": tuple(
+                [self.exterior] + [i for i in self.interiors]
+            ),
+            "type": self.type,
+        }
 
     @property
     def pyshp_parts(self):
@@ -117,7 +123,8 @@ class Polygon:
             from descartes import PolygonPatch
         except ImportError:
             print(
-                'This feature requires descartes.\nTry "pip install descartes"')
+                'This feature requires descartes.\nTry "pip install descartes"'
+            )
         return PolygonPatch(self.geojson, **kwargs)
 
     def plot(self, ax=None, **kwargs):
@@ -132,7 +139,7 @@ class Polygon:
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print('This feature requires matplotlib.')
+            print("This feature requires matplotlib.")
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -144,11 +151,11 @@ class Polygon:
             ax.set_ylim(ymin, ymax)
             plt.show()
         except:
-            print('could not plot polygon feature')
+            print("could not plot polygon feature")
 
 
 class LineString:
-    type = 'LineString'
+    type = "LineString"
     shapeType = 3
     has_z = False
 
@@ -222,8 +229,7 @@ class LineString:
 
     @property
     def geojson(self):
-        return {'coordinates': tuple(self.coords),
-                'type': self.type}
+        return {"coordinates": tuple(self.coords), "type": self.type}
 
     @property
     def pyshp_parts(self):
@@ -233,7 +239,7 @@ class LineString:
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print('This feature requires matplotlib.')
+            print("This feature requires matplotlib.")
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -246,7 +252,7 @@ class LineString:
 
 
 class Point:
-    type = 'Point'
+    type = "Point"
     shapeType = 1
     has_z = False
 
@@ -330,8 +336,7 @@ class Point:
 
     @property
     def geojson(self):
-        return {'coordinates': tuple(self.coords),
-                'type': self.type}
+        return {"coordinates": tuple(self.coords), "type": self.type}
 
     @property
     def pyshp_parts(self):
@@ -341,7 +346,7 @@ class Point:
         try:
             import matplotlib.pyplot as plt
         except ImportError:
-            print('This feature requires matplotlib.')
+            print("This feature requires matplotlib.")
         if ax is None:
             fig, ax = plt.subplots()
         else:
@@ -363,18 +368,23 @@ def rotate(x, y, xoff, yoff, angrot_radians):
     if isinstance(y, list):
         y = np.array(y)
 
-    xrot = xoff + np.cos(angrot_radians) * \
-           (x - xoff) - np.sin(angrot_radians) * \
-           (y - yoff)
-    yrot = yoff + np.sin(angrot_radians) * \
-           (x - xoff) + np.cos(angrot_radians) * \
-           (y - yoff)
+    xrot = (
+        xoff
+        + np.cos(angrot_radians) * (x - xoff)
+        - np.sin(angrot_radians) * (y - yoff)
+    )
+    yrot = (
+        yoff
+        + np.sin(angrot_radians) * (x - xoff)
+        + np.cos(angrot_radians) * (y - yoff)
+    )
 
     return xrot, yrot
 
 
-def transform(x, y, xoff, yoff, angrot_radians,
-              length_multiplier=1., inverse=False):
+def transform(
+    x, y, xoff, yoff, angrot_radians, length_multiplier=1.0, inverse=False
+):
     """
     Given x and y array-like values calculate the translation about an
     arbitrary origin and then return the rotated coordinates.
@@ -429,9 +439,7 @@ def shape(pyshp_shpobj):
     >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
 
     """
-    types = {5: Polygon,
-             3: LineString,
-             1: Point}
+    types = {5: Polygon, 3: LineString, 1: Point}
     flopy_geometype = types[pyshp_shpobj.shapeType]
     return flopy_geometype(pyshp_shpobj.points)
 
@@ -452,13 +460,13 @@ def get_polygon_area(verts):
 
     """
     nverts = verts.shape[0]
-    a = 0.
+    a = 0.0
     for iv in range(nverts - 1):
         x = verts[iv, 0]
         y = verts[iv, 1]
         xp1 = verts[iv + 1, 0]
         yp1 = verts[iv + 1, 1]
-        a += (x * yp1 - xp1 * y)
+        a += x * yp1 - xp1 * y
     a = abs(a * 0.5)
     return a
 
@@ -479,8 +487,8 @@ def get_polygon_centroid(verts):
 
     """
     nverts = verts.shape[0]
-    cx = 0.
-    cy = 0.
+    cx = 0.0
+    cy = 0.0
     for i in range(nverts - 1):
         x = verts[i, 0]
         y = verts[i, 1]
@@ -489,8 +497,8 @@ def get_polygon_centroid(verts):
         cx += (x + xp1) * (x * yp1 - xp1 * y)
         cy += (y + yp1) * (x * yp1 - xp1 * y)
     a = get_polygon_area(verts)
-    cx = cx * 1. / 6. / a
-    cy = cy * 1. / 6. / a
+    cx = cx * 1.0 / 6.0 / a
+    cy = cy * 1.0 / 6.0 / a
     return cx, cy
 
 

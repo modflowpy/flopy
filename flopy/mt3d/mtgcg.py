@@ -75,11 +75,23 @@ class Mt3dGcg(Package):
     >>> gcg = flopy.mt3d.Mt3dGcg(m)
 
     """
+
     unitnumber = 35
 
-    def __init__(self, model, mxiter=1, iter1=50, isolve=3, ncrs=0,
-                 accl=1, cclose=1e-5, iprgcg=0, extension='gcg',
-                 unitnumber=None, filenames=None):
+    def __init__(
+        self,
+        model,
+        mxiter=1,
+        iter1=50,
+        isolve=3,
+        ncrs=0,
+        accl=1,
+        cclose=1e-5,
+        iprgcg=0,
+        extension="gcg",
+        unitnumber=None,
+        filenames=None,
+    ):
 
         if unitnumber is None:
             unitnumber = Mt3dGcg.defaultunit()
@@ -95,14 +107,21 @@ class Mt3dGcg(Package):
         # Fill namefile items
         name = [Mt3dGcg.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         self.mxiter = mxiter
         self.iter1 = iter1
@@ -124,10 +143,13 @@ class Mt3dGcg(Package):
 
         """
         # Open file for writing
-        f_gcg = open(self.fn_path, 'w')
-        f_gcg.write('{} {} {} {}\n'.format(self.mxiter, self.iter1,
-                                           self.isolve, self.ncrs))
-        f_gcg.write('{} {} {}\n'.format(self.accl, self.cclose, self.iprgcg))
+        f_gcg = open(self.fn_path, "w")
+        f_gcg.write(
+            "{} {} {} {}\n".format(
+                self.mxiter, self.iter1, self.isolve, self.ncrs
+            )
+        )
+        f_gcg.write("{} {} {}\n".format(self.accl, self.cclose, self.iprgcg))
         f_gcg.close()
         return
 
@@ -165,46 +187,46 @@ class Mt3dGcg(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading gcg package file...\n')
+            sys.stdout.write("loading gcg package file...\n")
 
         # Open file, if necessary
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Dataset 0 -- comment line
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # Item F1: MIXELM, PERCEL, MXPART, NADVFD - line already read above
         if model.verbose:
-            print('   loading MXITER, ITER1, ISOLVE, NCRS...')
+            print("   loading MXITER, ITER1, ISOLVE, NCRS...")
         t = line.strip().split()
         mxiter = int(t[0])
         iter1 = int(t[1])
         isolve = int(t[2])
         ncrs = int(t[3])
         if model.verbose:
-            print('   MXITER {}'.format(mxiter))
-            print('   ITER1 {}'.format(iter1))
-            print('   ISOLVE {}'.format(isolve))
-            print('   NCRS {}'.format(ncrs))
+            print("   MXITER {}".format(mxiter))
+            print("   ITER1 {}".format(iter1))
+            print("   ISOLVE {}".format(isolve))
+            print("   NCRS {}".format(ncrs))
 
         # Item F2: ACCL, CCLOSE, IPRGCG
         if model.verbose:
-            print('   loading ACCL, CCLOSE, IPRGCG...')
+            print("   loading ACCL, CCLOSE, IPRGCG...")
         line = f.readline()
         t = line.strip().split()
         accl = float(t[0])
         cclose = float(t[1])
         iprgcg = int(t[2])
         if model.verbose:
-            print('   ACCL {}'.format(accl))
-            print('   CCLOSE {}'.format(cclose))
-            print('   IPRGCG {}'.format(iprgcg))
+            print("   ACCL {}".format(accl))
+            print("   CCLOSE {}".format(cclose))
+            print("   IPRGCG {}".format(iprgcg))
 
         if openfile:
             f.close()
@@ -213,19 +235,28 @@ class Mt3dGcg(Package):
         unitnumber = None
         filenames = [None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=Mt3dGcg.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=Mt3dGcg.ftype()
+            )
 
         # Construct and return gcg package
-        gcg = Mt3dGcg(model, mxiter=mxiter, iter1=iter1, isolve=isolve,
-                      ncrs=ncrs, accl=accl, cclose=cclose, iprgcg=iprgcg,
-                      unitnumber=unitnumber, filenames=filenames)
+        gcg = Mt3dGcg(
+            model,
+            mxiter=mxiter,
+            iter1=iter1,
+            isolve=isolve,
+            ncrs=ncrs,
+            accl=accl,
+            cclose=cclose,
+            iprgcg=iprgcg,
+            unitnumber=unitnumber,
+            filenames=filenames,
+        )
         return gcg
 
     @staticmethod
     def ftype():
-        return 'GCG'
+        return "GCG"
 
     @staticmethod
     def defaultunit():

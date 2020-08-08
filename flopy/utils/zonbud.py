@@ -44,8 +44,16 @@ class ZoneBudget(object):
     >>> zb_mgd = zb * 7.48052 / 1000000
     """
 
-    def __init__(self, cbc_file, z, kstpkper=None, totim=None, aliases=None,
-                 verbose=False, **kwargs):
+    def __init__(
+        self,
+        cbc_file,
+        z,
+        kstpkper=None,
+        totim=None,
+        aliases=None,
+        verbose=False,
+        **kwargs
+    ):
 
         if isinstance(cbc_file, CellBudgetFile):
             self.cbc = cbc_file
@@ -53,35 +61,40 @@ class ZoneBudget(object):
             self.cbc = CellBudgetFile(cbc_file)
         else:
             raise Exception(
-                'Cannot load cell budget file: {}.'.format(cbc_file))
+                "Cannot load cell budget file: {}.".format(cbc_file)
+            )
 
         if isinstance(z, np.ndarray):
-            assert np.issubdtype(z.dtype,
-                                 np.integer), 'Zones dtype must be integer'
+            assert np.issubdtype(
+                z.dtype, np.integer
+            ), "Zones dtype must be integer"
         else:
-            e = 'Please pass zones as a numpy ndarray of (positive)' \
-                ' integers. {}'.format(z.dtype)
+            e = (
+                "Please pass zones as a numpy ndarray of (positive)"
+                " integers. {}".format(z.dtype)
+            )
             raise Exception(e)
 
         # Check for negative zone values
         if np.any(z < 0):
-            raise Exception('Negative zone value(s) found:',
-                            np.unique(z[z < 0]))
+            raise Exception(
+                "Negative zone value(s) found:", np.unique(z[z < 0])
+            )
 
         self.dis = None
         self.sr = None
-        if 'model' in kwargs.keys():
-            self.model = kwargs.pop('model')
+        if "model" in kwargs.keys():
+            self.model = kwargs.pop("model")
             self.sr = self.model.sr
             self.dis = self.model.dis
-        if 'dis' in kwargs.keys():
-            self.dis = kwargs.pop('dis')
+        if "dis" in kwargs.keys():
+            self.dis = kwargs.pop("dis")
             self.sr = self.dis.parent.sr
-        if 'sr' in kwargs.keys():
-            self.sr = kwargs.pop('sr')
+        if "sr" in kwargs.keys():
+            self.sr = kwargs.pop("sr")
         if len(kwargs.keys()) > 0:
-            args = ','.join(kwargs.keys())
-            raise Exception('LayerFile error: unrecognized kwargs: ' + args)
+            args = ",".join(kwargs.keys())
+            raise Exception("LayerFile error: unrecognized kwargs: " + args)
 
         # Check the shape of the cbc budget file arrays
         self.cbc_shape = self.cbc.get_data(idx=0, full3D=True)[0].shape
@@ -95,8 +108,10 @@ class ZoneBudget(object):
             if isinstance(kstpkper, tuple):
                 kstpkper = [kstpkper]
             for kk in kstpkper:
-                s = 'The specified time step/stress period ' \
-                    'does not exist {}'.format(kk)
+                s = (
+                    "The specified time step/stress period "
+                    "does not exist {}".format(kk)
+                )
                 assert kk in self.cbc.get_kstpkper(), s
             self.kstpkper = kstpkper
         elif totim is not None:
@@ -105,8 +120,10 @@ class ZoneBudget(object):
             elif isinstance(totim, int):
                 totim = [float(totim)]
             for t in totim:
-                s = 'The specified simulation time ' \
-                    'does not exist {}'.format(t)
+                s = (
+                    "The specified simulation time "
+                    "does not exist {}".format(t)
+                )
                 assert t in self.cbc.get_times(), s
             self.totim = totim
         else:
@@ -118,11 +135,13 @@ class ZoneBudget(object):
         self.int_type = np.int32
 
         # Check dimensions of input zone array
-        s = 'Row/col dimensions of zone array {}' \
-            ' do not match model row/col dimensions {}'.format(z.shape,
-                                                               self.cbc_shape)
-        assert z.shape[-2] == self.nrow and \
-               z.shape[-1] == self.ncol, s
+        s = (
+            "Row/col dimensions of zone array {}"
+            " do not match model row/col dimensions {}".format(
+                z.shape, self.cbc_shape
+            )
+        )
+        assert z.shape[-2] == self.nrow and z.shape[-1] == self.ncol, s
 
         if z.shape == self.cbc_shape:
             izone = z.copy()
@@ -133,18 +152,20 @@ class ZoneBudget(object):
             izone = np.zeros(self.cbc_shape, self.int_type)
             izone[:] = z[0, :, :]
         else:
-            e = 'Shape of the zone array is not recognized: {}'.format(
-                z.shape)
+            e = "Shape of the zone array is not recognized: {}".format(z.shape)
             raise Exception(e)
 
         self.izone = izone
         self.allzones = np.unique(izone)
-        self._zonenamedict = OrderedDict([(z, 'ZONE_{}'.format(z))
-                                          for z in self.allzones])
+        self._zonenamedict = OrderedDict(
+            [(z, "ZONE_{}".format(z)) for z in self.allzones]
+        )
 
         if aliases is not None:
-            s = 'Input aliases not recognized. Please pass a dictionary ' \
-                'with key,value pairs of zone/alias.'
+            s = (
+                "Input aliases not recognized. Please pass a dictionary "
+                "with key,value pairs of zone/alias."
+            )
             assert isinstance(aliases, dict), s
             # Replace the relevant field names (ignore zone 0)
             seen = []
@@ -152,48 +173,60 @@ class ZoneBudget(object):
                 if z != 0 and z in self._zonenamedict.keys():
                     if z in seen:
                         raise Exception(
-                            'Zones may not have more than 1 alias.')
-                    self._zonenamedict[z] = '_'.join(a.split())
+                            "Zones may not have more than 1 alias."
+                        )
+                    self._zonenamedict[z] = "_".join(a.split())
                     seen.append(z)
 
         # self._iflow_recnames = self._get_internal_flow_record_names()
 
         # All record names in the cell-by-cell budget binary file
-        self.record_names = [n.strip() for n in
-                             self.cbc.get_unique_record_names(decode=True)]
+        self.record_names = [
+            n.strip() for n in self.cbc.get_unique_record_names(decode=True)
+        ]
 
         # Get imeth for each record in the CellBudgetFile record list
         self.imeth = {}
         for record in self.cbc.recordarray:
-            self.imeth[record['text'].strip().decode("utf-8")] = record[
-                'imeth']
+            self.imeth[record["text"].strip().decode("utf-8")] = record[
+                "imeth"
+            ]
 
         # INTERNAL FLOW TERMS ARE USED TO CALCULATE FLOW BETWEEN ZONES.
         # CONSTANT-HEAD TERMS ARE USED TO IDENTIFY WHERE CONSTANT-HEAD CELLS
         # ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF FLOW.
         # SWIADDTO--- terms are used by the SWI2 groundwater flow process.
-        internal_flow_terms = ['CONSTANT HEAD', 'FLOW RIGHT FACE',
-                               'FLOW FRONT FACE', 'FLOW LOWER FACE',
-                               'SWIADDTOCH', 'SWIADDTOFRF', 'SWIADDTOFFF',
-                               'SWIADDTOFLF']
+        internal_flow_terms = [
+            "CONSTANT HEAD",
+            "FLOW RIGHT FACE",
+            "FLOW FRONT FACE",
+            "FLOW LOWER FACE",
+            "SWIADDTOCH",
+            "SWIADDTOFRF",
+            "SWIADDTOFFF",
+            "SWIADDTOFLF",
+        ]
 
         # Source/sink/storage term record names
         # These are all of the terms that are not related to constant
         # head cells or face flow terms
-        self.ssst_record_names = [n for n in self.record_names
-                                  if n not in internal_flow_terms]
+        self.ssst_record_names = [
+            n for n in self.record_names if n not in internal_flow_terms
+        ]
 
         # Initialize budget recordarray
         array_list = []
         if self.kstpkper is not None:
             for kk in self.kstpkper:
-                recordarray = self._initialize_budget_recordarray(kstpkper=kk,
-                                                                  totim=None)
+                recordarray = self._initialize_budget_recordarray(
+                    kstpkper=kk, totim=None
+                )
                 array_list.append(recordarray)
         elif self.totim is not None:
             for t in self.totim:
                 recordarray = self._initialize_budget_recordarray(
-                    kstpkper=None, totim=t)
+                    kstpkper=None, totim=t
+                )
                 array_list.append(recordarray)
         self._budget = np.concatenate(array_list, axis=0)
 
@@ -201,15 +234,18 @@ class ZoneBudget(object):
         if self.kstpkper is not None:
             for kk in self.kstpkper:
                 if verbose:
-                    s = 'Computing the budget for' \
-                        ' time step {} in stress period {}'.format(kk[0] + 1,
-                                                                   kk[1] + 1)
+                    s = (
+                        "Computing the budget for"
+                        " time step {} in stress period {}".format(
+                            kk[0] + 1, kk[1] + 1
+                        )
+                    )
                     print(s)
                 self._compute_budget(kstpkper=kk)
         elif self.totim is not None:
             for t in self.totim:
                 if verbose:
-                    s = 'Computing the budget for time {}'.format(t)
+                    s = "Computing the budget for time {}".format(t)
                     print(s)
                 self._compute_budget(totim=t)
 
@@ -247,19 +283,19 @@ class ZoneBudget(object):
 
         """
         if not stripped:
-            return np.unique(self._budget['name'])
+            return np.unique(self._budget["name"])
         else:
             seen = []
             for recname in self.get_record_names():
-                if recname in ['IN-OUT', 'TOTAL_IN', 'TOTAL_OUT']:
+                if recname in ["IN-OUT", "TOTAL_IN", "TOTAL_OUT"]:
                     continue
-                if recname.endswith('_IN'):
+                if recname.endswith("_IN"):
                     recname = recname[:-3]
-                elif recname.endswith('_OUT'):
+                elif recname.endswith("_OUT"):
                     recname = recname[:-4]
                 if recname not in seen:
                     seen.append(recname)
-            seen.extend(['IN-OUT', 'TOTAL'])
+            seen.extend(["IN-OUT", "TOTAL"])
             return np.array(seen)
 
     def get_budget(self, names=None, zones=None, net=False):
@@ -296,19 +332,25 @@ class ZoneBudget(object):
             zones = [zones]
         elif isinstance(zones, int):
             zones = [zones]
-        select_fields = ['totim', 'time_step', 'stress_period',
-                         'name'] + list(self._zonenamedict.values())
+        select_fields = ["totim", "time_step", "stress_period", "name"] + list(
+            self._zonenamedict.values()
+        )
         select_records = np.where(
-            (self._budget['name'] == self._budget['name']))
+            (self._budget["name"] == self._budget["name"])
+        )
         if zones is not None:
             for idx, z in enumerate(zones):
                 if isinstance(z, int):
                     zones[idx] = self._zonenamedict[z]
-            select_fields = ['totim', 'time_step', 'stress_period',
-                             'name'] + zones
+            select_fields = [
+                "totim",
+                "time_step",
+                "stress_period",
+                "name",
+            ] + zones
         if names is not None:
             names = self._clean_budget_names(names)
-            select_records = np.in1d(self._budget['name'], names)
+            select_records = np.in1d(self._budget["name"], names)
         if net:
             if names is None:
                 names = self._clean_budget_names(self.get_record_names())
@@ -316,12 +358,12 @@ class ZoneBudget(object):
             seen = []
             net_names = []
             for name in names:
-                iname = '_'.join(name.split('_')[1:])
+                iname = "_".join(name.split("_")[1:])
                 if iname not in seen:
                     seen.append(iname)
                 else:
                     net_names.append(iname)
-            select_records = np.in1d(net_budget['name'], net_names)
+            select_records = np.in1d(net_budget["name"], net_names)
             return net_budget[select_fields][select_records]
         else:
             return self._budget[select_fields][select_records]
@@ -344,18 +386,27 @@ class ZoneBudget(object):
         # Needs updating to handle the new budget list structure. Write out
         # budgets for all kstpkper if kstpkper is None or pass list of
         # kstpkper/totim to save particular budgets.
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             # Write header
-            f.write(','.join(self._budget.dtype.names) + '\n')
+            f.write(",".join(self._budget.dtype.names) + "\n")
             # Write rows
             for rowidx in range(self._budget.shape[0]):
-                s = ','.join(
-                    [str(i) for i in list(self._budget[:][rowidx])]) + '\n'
+                s = (
+                    ",".join([str(i) for i in list(self._budget[:][rowidx])])
+                    + "\n"
+                )
                 f.write(s)
         return
 
-    def get_dataframes(self, start_datetime=None, timeunit='D',
-                       index_key='totim', names=None, zones=None, net=False):
+    def get_dataframes(
+        self,
+        start_datetime=None,
+        timeunit="D",
+        index_key="totim",
+        names=None,
+        zones=None,
+        net=False,
+    ):
         """
         Get pandas dataframes.
 
@@ -395,40 +446,45 @@ class ZoneBudget(object):
             msg = "ZoneBudget.get_dataframes() error import pandas: " + str(e)
             raise ImportError(msg)
 
-        valid_index_keys = ['totim', 'kstpkper']
+        valid_index_keys = ["totim", "kstpkper"]
         s = 'index_key "{}" is not valid.'.format(index_key)
         assert index_key in valid_index_keys, s
 
-        valid_timeunit = ['S', 'M', 'H', 'D', 'Y']
+        valid_timeunit = ["S", "M", "H", "D", "Y"]
 
-        if timeunit.upper() == 'SECONDS':
-            timeunit = 'S'
-        elif timeunit.upper() == 'MINUTES':
-            timeunit = 'M'
-        elif timeunit.upper() == 'HOURS':
-            timeunit = 'H'
-        elif timeunit.upper() == 'DAYS':
-            timeunit = 'D'
-        elif timeunit.upper() == 'YEARS':
-            timeunit = 'Y'
+        if timeunit.upper() == "SECONDS":
+            timeunit = "S"
+        elif timeunit.upper() == "MINUTES":
+            timeunit = "M"
+        elif timeunit.upper() == "HOURS":
+            timeunit = "H"
+        elif timeunit.upper() == "DAYS":
+            timeunit = "D"
+        elif timeunit.upper() == "YEARS":
+            timeunit = "Y"
 
-        errmsg = 'Specified time units ({}) not recognized. ' \
-                 'Please use one of '.format(timeunit)
-        assert timeunit in valid_timeunit, errmsg + ', '.join(
-            valid_timeunit) + '.'
+        errmsg = (
+            "Specified time units ({}) not recognized. "
+            "Please use one of ".format(timeunit)
+        )
+        assert timeunit in valid_timeunit, (
+            errmsg + ", ".join(valid_timeunit) + "."
+        )
 
         df = pd.DataFrame().from_records(self.get_budget(names, zones, net))
         if start_datetime is not None:
-            totim = totim_to_datetime(df.totim,
-                                      start=pd.to_datetime(start_datetime),
-                                      timeunit=timeunit)
-            df['datetime'] = totim
-            index_cols = ['datetime', 'name']
+            totim = totim_to_datetime(
+                df.totim,
+                start=pd.to_datetime(start_datetime),
+                timeunit=timeunit,
+            )
+            df["datetime"] = totim
+            index_cols = ["datetime", "name"]
         else:
-            if index_key == 'totim':
-                index_cols = ['totim', 'name']
-            elif index_key == 'kstpkper':
-                index_cols = ['time_step', 'stress_period', 'name']
+            if index_key == "totim":
+                index_cols = ["totim", "name"]
+            elif index_key == "kstpkper":
+                index_cols = ["time_step", "stress_period", "name"]
         df = df.set_index(index_cols)  # .sort_index(level=0)
         if zones is not None:
             keep_cols = zones
@@ -450,7 +506,7 @@ class ZoneBudget(object):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
-        ignore_attrs = ['cbc']
+        ignore_attrs = ["cbc"]
         for k, v in self.__dict__.items():
             if k not in ignore_attrs:
                 setattr(result, k, copy.deepcopy(v, memo))
@@ -483,7 +539,7 @@ class ZoneBudget(object):
         ich = np.zeros(self.cbc_shape, self.int_type)
         swiich = np.zeros(self.cbc_shape, self.int_type)
 
-        if 'CONSTANT HEAD' in self.record_names:
+        if "CONSTANT HEAD" in self.record_names:
             """
             C-----CONSTANT-HEAD FLOW -- DON'T ACCUMULATE THE CELL-BY-CELL VALUES FOR
             C-----CONSTANT-HEAD FLOW BECAUSE THEY MAY INCLUDE PARTIALLY CANCELING
@@ -491,25 +547,30 @@ class ZoneBudget(object):
             C-----HEAD CELLS ARE AND THEN USE FACE FLOWS TO DETERMINE THE AMOUNT OF
             C-----FLOW.  STORE CONSTANT-HEAD LOCATIONS IN ICH ARRAY.
             """
-            chd = self.cbc.get_data(text='CONSTANT HEAD', full3D=True,
-                                    kstpkper=kstpkper, totim=totim)[0]
-            ich[np.ma.where(chd != 0.)] = 1
-        if 'FLOW RIGHT FACE' in self.record_names:
-            self._accumulate_flow_frf('FLOW RIGHT FACE', ich, kstpkper, totim)
-        if 'FLOW FRONT FACE' in self.record_names:
-            self._accumulate_flow_fff('FLOW FRONT FACE', ich, kstpkper, totim)
-        if 'FLOW LOWER FACE' in self.record_names:
-            self._accumulate_flow_flf('FLOW LOWER FACE', ich, kstpkper, totim)
-        if 'SWIADDTOCH' in self.record_names:
-            swichd = self.cbc.get_data(text='SWIADDTOCH', full3D=True,
-                                       kstpkper=kstpkper, totim=totim)[0]
+            chd = self.cbc.get_data(
+                text="CONSTANT HEAD",
+                full3D=True,
+                kstpkper=kstpkper,
+                totim=totim,
+            )[0]
+            ich[np.ma.where(chd != 0.0)] = 1
+        if "FLOW RIGHT FACE" in self.record_names:
+            self._accumulate_flow_frf("FLOW RIGHT FACE", ich, kstpkper, totim)
+        if "FLOW FRONT FACE" in self.record_names:
+            self._accumulate_flow_fff("FLOW FRONT FACE", ich, kstpkper, totim)
+        if "FLOW LOWER FACE" in self.record_names:
+            self._accumulate_flow_flf("FLOW LOWER FACE", ich, kstpkper, totim)
+        if "SWIADDTOCH" in self.record_names:
+            swichd = self.cbc.get_data(
+                text="SWIADDTOCH", full3D=True, kstpkper=kstpkper, totim=totim
+            )[0]
             swiich[swichd != 0] = 1
-        if 'SWIADDTOFRF' in self.record_names:
-            self._accumulate_flow_frf('SWIADDTOFRF', swiich, kstpkper, totim)
-        if 'SWIADDTOFFF' in self.record_names:
-            self._accumulate_flow_fff('SWIADDTOFFF', swiich, kstpkper, totim)
-        if 'SWIADDTOFLF' in self.record_names:
-            self._accumulate_flow_flf('SWIADDTOFLF', swiich, kstpkper, totim)
+        if "SWIADDTOFRF" in self.record_names:
+            self._accumulate_flow_frf("SWIADDTOFRF", swiich, kstpkper, totim)
+        if "SWIADDTOFFF" in self.record_names:
+            self._accumulate_flow_fff("SWIADDTOFFF", swiich, kstpkper, totim)
+        if "SWIADDTOFLF" in self.record_names:
+            self._accumulate_flow_flf("SWIADDTOFLF", swiich, kstpkper, totim)
 
         # NOT AN INTERNAL FLOW TERM, SO MUST BE A SOURCE TERM OR STORAGE
         # ACCUMULATE THE FLOW BY ZONE
@@ -539,8 +600,9 @@ class ZoneBudget(object):
     #     iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
     #     return iflow_recnames
 
-    def _add_empty_record(self, recordarray, recname, kstpkper=None,
-                          totim=None):
+    def _add_empty_record(
+        self, recordarray, recname, kstpkper=None, totim=None
+    ):
         """
         Build an empty records based on the specified flow direction and
         record name for the given list of zones.
@@ -563,7 +625,7 @@ class ZoneBudget(object):
             if len(self.cbc_times) > 0:
                 totim = self.cbc_times[self.cbc_kstpkper.index(kstpkper)]
             else:
-                totim = 0.
+                totim = 0.0
         elif totim is not None:
             if len(self.cbc_times) > 0:
                 kstpkper = self.cbc_kstpkper[self.cbc_times.index(totim)]
@@ -571,7 +633,7 @@ class ZoneBudget(object):
                 kstpkper = (0, 0)
 
         row = [totim, kstpkper[0], kstpkper[1], recname]
-        row += [0. for _ in self._zonenamedict.values()]
+        row += [0.0 for _ in self._zonenamedict.values()]
         recs = np.array(tuple(row), dtype=recordarray.dtype)
         recordarray = np.append(recordarray, recs)
         return recordarray
@@ -594,70 +656,82 @@ class ZoneBudget(object):
         """
 
         # Create empty array for the budget terms.
-        dtype_list = [('totim', '<f4'), ('time_step', '<i4'),
-                      ('stress_period', '<i4'), ('name', (str, 50))]
-        dtype_list += [(n, self.float_type) for n in
-                       self._zonenamedict.values()]
+        dtype_list = [
+            ("totim", "<f4"),
+            ("time_step", "<i4"),
+            ("stress_period", "<i4"),
+            ("name", (str, 50)),
+        ]
+        dtype_list += [
+            (n, self.float_type) for n in self._zonenamedict.values()
+        ]
         dtype = np.dtype(dtype_list)
         recordarray = np.array([], dtype=dtype)
 
         # Add "from" records
-        if 'STORAGE' in self.record_names:
-            recordarray = self._add_empty_record(recordarray, 'FROM_STORAGE',
-                                                 kstpkper, totim)
-        if 'CONSTANT HEAD' in self.record_names:
-            recordarray = self._add_empty_record(recordarray,
-                                                 'FROM_CONSTANT_HEAD',
-                                                 kstpkper, totim)
+        if "STORAGE" in self.record_names:
+            recordarray = self._add_empty_record(
+                recordarray, "FROM_STORAGE", kstpkper, totim
+            )
+        if "CONSTANT HEAD" in self.record_names:
+            recordarray = self._add_empty_record(
+                recordarray, "FROM_CONSTANT_HEAD", kstpkper, totim
+            )
         for recname in self.ssst_record_names:
-            if recname != 'STORAGE':
-                recordarray = self._add_empty_record(recordarray,
-                                                     'FROM_' + '_'.join(
-                                                         recname.split()),
-                                                     kstpkper, totim)
+            if recname != "STORAGE":
+                recordarray = self._add_empty_record(
+                    recordarray,
+                    "FROM_" + "_".join(recname.split()),
+                    kstpkper,
+                    totim,
+                )
 
         for z, n in self._zonenamedict.items():
             if z == 0 and 0 not in self.allzones:
                 continue
             else:
-                recordarray = self._add_empty_record(recordarray,
-                                                     'FROM_' + '_'.join(
-                                                         n.split()),
-                                                     kstpkper, totim)
-        recordarray = self._add_empty_record(recordarray, 'TOTAL_IN',
-                                             kstpkper, totim)
+                recordarray = self._add_empty_record(
+                    recordarray, "FROM_" + "_".join(n.split()), kstpkper, totim
+                )
+        recordarray = self._add_empty_record(
+            recordarray, "TOTAL_IN", kstpkper, totim
+        )
 
         # Add "out" records
-        if 'STORAGE' in self.record_names:
-            recordarray = self._add_empty_record(recordarray, 'TO_STORAGE',
-                                                 kstpkper, totim)
-        if 'CONSTANT HEAD' in self.record_names:
-            recordarray = self._add_empty_record(recordarray,
-                                                 'TO_CONSTANT_HEAD',
-                                                 kstpkper, totim)
+        if "STORAGE" in self.record_names:
+            recordarray = self._add_empty_record(
+                recordarray, "TO_STORAGE", kstpkper, totim
+            )
+        if "CONSTANT HEAD" in self.record_names:
+            recordarray = self._add_empty_record(
+                recordarray, "TO_CONSTANT_HEAD", kstpkper, totim
+            )
         for recname in self.ssst_record_names:
-            if recname != 'STORAGE':
-                recordarray = self._add_empty_record(recordarray,
-                                                     'TO_' + '_'.join(
-                                                         recname.split()),
-                                                     kstpkper, totim)
+            if recname != "STORAGE":
+                recordarray = self._add_empty_record(
+                    recordarray,
+                    "TO_" + "_".join(recname.split()),
+                    kstpkper,
+                    totim,
+                )
 
         for z, n in self._zonenamedict.items():
             if z == 0 and 0 not in self.allzones:
                 continue
             else:
-                recordarray = self._add_empty_record(recordarray,
-                                                     'TO_' + '_'.join(
-                                                         n.split()), kstpkper,
-                                                     totim)
-        recordarray = self._add_empty_record(recordarray, 'TOTAL_OUT',
-                                             kstpkper, totim)
+                recordarray = self._add_empty_record(
+                    recordarray, "TO_" + "_".join(n.split()), kstpkper, totim
+                )
+        recordarray = self._add_empty_record(
+            recordarray, "TOTAL_OUT", kstpkper, totim
+        )
 
-        recordarray = self._add_empty_record(recordarray, 'IN-OUT', kstpkper,
-                                             totim)
-        recordarray = self._add_empty_record(recordarray,
-                                             'PERCENT_DISCREPANCY', kstpkper,
-                                             totim)
+        recordarray = self._add_empty_record(
+            recordarray, "IN-OUT", kstpkper, totim
+        )
+        recordarray = self._add_empty_record(
+            recordarray, "PERCENT_DISCREPANCY", kstpkper, totim
+        )
         return recordarray
 
     @staticmethod
@@ -680,8 +754,9 @@ class ZoneBudget(object):
         f = f[np.logical_not(e)]
         return fz, tz, f
 
-    def _update_budget_fromfaceflow(self, fz, tz, f,
-                                    kstpkper=None, totim=None):
+    def _update_budget_fromfaceflow(
+        self, fz, tz, f, kstpkper=None, totim=None
+    ):
         """
 
         Parameters
@@ -707,21 +782,23 @@ class ZoneBudget(object):
         idx = tz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = ['FROM_' + self._zonenamedict[z] for z in fzi]
+        rownames = ["FROM_" + self._zonenamedict[z] for z in fzi]
         colnames = [self._zonenamedict[z] for z in tzi]
         fluxes = f[idx]
-        self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
-                                        totim)
+        self._update_budget_recordarray(
+            rownames, colnames, fluxes, kstpkper, totim
+        )
 
         # Outflows
         idx = fz != 0
         fzi = fz[idx]
         tzi = tz[idx]
-        rownames = ['TO_' + self._zonenamedict[z] for z in tzi]
+        rownames = ["TO_" + self._zonenamedict[z] for z in tzi]
         colnames = [self._zonenamedict[z] for z in fzi]
         fluxes = f[idx]
-        self._update_budget_recordarray(rownames, colnames, fluxes, kstpkper,
-                                        totim)
+        self._update_budget_recordarray(
+            rownames, colnames, fluxes, kstpkper, totim
+        )
         return
 
     def _update_budget_fromssst(self, fz, tz, f, kstpkper=None, totim=None):
@@ -744,8 +821,9 @@ class ZoneBudget(object):
         self._update_budget_recordarray(fz, tz, f, kstpkper, totim)
         return
 
-    def _update_budget_recordarray(self, rownames, colnames, fluxes,
-                                   kstpkper=None, totim=None):
+    def _update_budget_recordarray(
+        self, rownames, colnames, fluxes, kstpkper=None, totim=None
+    ):
         """
         Update the budget record array with the flux for the specified
         flow direction (in/out), record name, and column.
@@ -768,14 +846,17 @@ class ZoneBudget(object):
             if kstpkper is not None:
                 for rn, cn, flux in zip(rownames, colnames, fluxes):
                     rowidx = np.where(
-                        (self._budget['time_step'] == kstpkper[0]) &
-                        (self._budget['stress_period'] == kstpkper[1]) &
-                        (self._budget['name'] == rn))
+                        (self._budget["time_step"] == kstpkper[0])
+                        & (self._budget["stress_period"] == kstpkper[1])
+                        & (self._budget["name"] == rn)
+                    )
                     self._budget[cn][rowidx] += flux
             elif totim is not None:
                 for rn, cn, flux in zip(rownames, colnames, fluxes):
-                    rowidx = np.where((self._budget['totim'] == totim) &
-                                      (self._budget['name'] == rn))
+                    rowidx = np.where(
+                        (self._budget["totim"] == totim)
+                        & (self._budget["name"] == rn)
+                    )
                     self._budget[cn][rowidx] += flux
 
         except Exception as e:
@@ -799,9 +880,9 @@ class ZoneBudget(object):
         """
         try:
             if self.ncol >= 2:
-                data = \
-                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                      totim=totim)[0]
+                data = self.cbc.get_data(
+                    text=recname, kstpkper=kstpkper, totim=totim
+                )[0]
 
                 # "FLOW RIGHT FACE"  COMPUTE FLOW BETWEEN ZONES ACROSS COLUMNS.
                 # COMPUTE FLOW ONLY BETWEEN A ZONE AND A HIGHER ZONE -- FLOW FROM
@@ -809,7 +890,8 @@ class ZoneBudget(object):
                 # 1ST, CALCULATE FLOW BETWEEN NODE J,I,K AND J-1,I,K
 
                 k, i, j = np.where(
-                    self.izone[:, :, 1:] > self.izone[:, :, :-1])
+                    self.izone[:, :, 1:] > self.izone[:, :, :-1]
+                )
 
                 # Adjust column values to account for the starting position of "nz"
                 j += 1
@@ -829,28 +911,29 @@ class ZoneBudget(object):
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzl[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nzl[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # Get indices where flow face values are negative (flow into higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nzl[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nzl[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # FLOW BETWEEN NODE J,I,K AND J+1,I,K
                 k, i, j = np.where(
-                    self.izone[:, :, :-1] > self.izone[:, :, 1:])
+                    self.izone[:, :, :-1] > self.izone[:, :, 1:]
+                )
 
                 # Define the zone from which flow is coming
                 nz = self.izone[k, i, j]
@@ -867,24 +950,24 @@ class ZoneBudget(object):
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nzr[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nzr[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # Get indices where flow face values are negative (flow into higher zone)
                 # Don't include CH to CH flow (can occur if CHTOCH option is used)
                 # Create an iterable tuple of (from zone, to zone, flux)
                 # Then group tuple by (from_zone, to_zone) and sum the flux values
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzr[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nzr[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
                 k, i, j = np.where(ich == 1)
@@ -894,51 +977,54 @@ class ZoneBudget(object):
                 nz = self.izone[k, i, j]
                 q = data[k, i, jl]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzl[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzl[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzl[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jl] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzl[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi[tzi != 0]]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 k, i, j = np.where(ich == 1)
-                k, i, j = k[j < self.ncol - 1], i[j < self.ncol - 1], j[
-                    j < self.ncol - 1]
+                k, i, j = (
+                    k[j < self.ncol - 1],
+                    i[j < self.ncol - 1],
+                    j[j < self.ncol - 1],
+                )
                 nz = self.izone[k, i, j]
                 jr = j + 1
                 nzr = self.izone[k, i, jr]
                 q = data[k, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzr[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzr[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzr[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, i, jr] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzr[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
         except Exception as e:
             print(e)
@@ -961,57 +1047,59 @@ class ZoneBudget(object):
         """
         try:
             if self.nrow >= 2:
-                data = \
-                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                      totim=totim)[0]
+                data = self.cbc.get_data(
+                    text=recname, kstpkper=kstpkper, totim=totim
+                )[0]
 
                 # "FLOW FRONT FACE"
                 # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I-1,K
                 k, i, j = np.where(
-                    self.izone[:, 1:, :] < self.izone[:, :-1, :])
+                    self.izone[:, 1:, :] < self.izone[:, :-1, :]
+                )
                 i += 1
                 ia = i - 1
                 nza = self.izone[k, ia, j]
                 nz = self.izone[k, i, j]
                 q = data[k, ia, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nza[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nza[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I+1,K.
                 k, i, j = np.where(
-                    self.izone[:, :-1, :] < self.izone[:, 1:, :])
+                    self.izone[:, :-1, :] < self.izone[:, 1:, :]
+                )
                 nz = self.izone[k, i, j]
                 ib = i + 1
                 nzb = self.izone[k, ib, j]
                 q = data[k, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nzb[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nzb[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
                 k, i, j = np.where(ich == 1)
@@ -1021,51 +1109,54 @@ class ZoneBudget(object):
                 nz = self.izone[k, i, j]
                 q = data[k, ia, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ia, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 k, i, j = np.where(ich == 1)
-                k, i, j = k[i < self.nrow - 1], i[i < self.nrow - 1], j[
-                    i < self.nrow - 1]
+                k, i, j = (
+                    k[i < self.nrow - 1],
+                    i[i < self.nrow - 1],
+                    j[i < self.nrow - 1],
+                )
                 nz = self.izone[k, i, j]
                 ib = i + 1
                 nzb = self.izone[k, ib, j]
                 q = data[k, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[k, ib, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
         except Exception as e:
             print(e)
@@ -1088,57 +1179,59 @@ class ZoneBudget(object):
         """
         try:
             if self.nlay >= 2:
-                data = \
-                    self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                      totim=totim)[0]
+                data = self.cbc.get_data(
+                    text=recname, kstpkper=kstpkper, totim=totim
+                )[0]
 
                 # "FLOW LOWER FACE"
                 # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K-1
                 k, i, j = np.where(
-                    self.izone[1:, :, :] < self.izone[:-1, :, :])
+                    self.izone[1:, :, :] < self.izone[:-1, :, :]
+                )
                 k += 1
                 ka = k - 1
                 nza = self.izone[ka, i, j]
                 nz = self.izone[k, i, j]
                 q = data[ka, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nza[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nza[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nza[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # CALCULATE FLOW BETWEEN NODE J,I,K AND J,I,K+1
                 k, i, j = np.where(
-                    self.izone[:-1, :, :] < self.izone[1:, :, :])
+                    self.izone[:-1, :, :] < self.izone[1:, :, :]
+                )
                 nz = self.izone[k, i, j]
                 kb = k + 1
                 nzb = self.izone[kb, i, j]
                 q = data[k, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nz[idx],
-                                               nzb[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nz[idx], nzb[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, fi = sum_flux_tuples(nzb[idx],
-                                               nz[idx],
-                                               q[idx])
-                self._update_budget_fromfaceflow(fzi, tzi, np.abs(fi),
-                                                 kstpkper, totim)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1))
+                )
+                fzi, tzi, fi = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                self._update_budget_fromfaceflow(
+                    fzi, tzi, np.abs(fi), kstpkper, totim
+                )
 
                 # CALCULATE FLOW TO CONSTANT-HEAD CELLS IN THIS DIRECTION
                 k, i, j = np.where(ich == 1)
@@ -1148,51 +1241,54 @@ class ZoneBudget(object):
                 nz = self.izone[k, i, j]
                 q = data[ka, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nza[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[ka, i, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nza[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 k, i, j = np.where(ich == 1)
-                k, i, j = k[k < self.nlay - 1], i[k < self.nlay - 1], j[
-                    k < self.nlay - 1]
+                k, i, j = (
+                    k[k < self.nlay - 1],
+                    i[k < self.nlay - 1],
+                    j[k < self.nlay - 1],
+                )
                 nz = self.izone[k, i, j]
                 kb = k + 1
                 nzb = self.izone[kb, i, j]
                 q = data[k, i, j]
                 idx = np.where(
-                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['FROM_CONSTANT_HEAD'] * len(tzi)
+                    (q > 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                fz = ["FROM_CONSTANT_HEAD"] * len(tzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
                 idx = np.where(
-                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1)))
-                fzi, tzi, f = sum_flux_tuples(nzb[idx],
-                                              nz[idx],
-                                              q[idx])
-                fz = ['TO_CONSTANT_HEAD'] * len(fzi)
+                    (q < 0) & ((ich[k, i, j] != 1) | (ich[kb, i, j] != 1))
+                )
+                fzi, tzi, f = sum_flux_tuples(nzb[idx], nz[idx], q[idx])
+                fz = ["TO_CONSTANT_HEAD"] * len(fzi)
                 tz = [self._zonenamedict[z] for z in tzi]
-                self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper,
-                                             totim)
+                self._update_budget_fromssst(
+                    fz, tz, np.abs(f), kstpkper, totim
+                )
 
         except Exception as e:
             print(e)
@@ -1206,8 +1302,7 @@ class ZoneBudget(object):
 
         imeth = self.imeth[recname]
 
-        data = self.cbc.get_data(text=recname, kstpkper=kstpkper,
-                                 totim=totim)
+        data = self.cbc.get_data(text=recname, kstpkper=kstpkper, totim=totim)
         if len(data) == 0:
             # Empty data, can occur during the first time step of a transient
             # model when storage terms are zero and not in the cell-budget
@@ -1218,11 +1313,13 @@ class ZoneBudget(object):
 
         if imeth == 2 or imeth == 5:
             # LIST
-            qin = np.ma.zeros((self.nlay * self.nrow * self.ncol),
-                              self.float_type)
-            qout = np.ma.zeros((self.nlay * self.nrow * self.ncol),
-                               self.float_type)
-            for [node, q] in zip(data['node'], data['q']):
+            qin = np.ma.zeros(
+                (self.nlay * self.nrow * self.ncol), self.float_type
+            )
+            qout = np.ma.zeros(
+                (self.nlay * self.nrow * self.ncol), self.float_type
+            )
+            for [node, q] in zip(data["node"], data["q"]):
                 idx = node - 1
                 if q > 0:
                     qin.data[idx] += q
@@ -1257,8 +1354,8 @@ class ZoneBudget(object):
         else:
             # Should not happen
             raise Exception(
-                'Unrecognized "imeth" for {} record: {}'.format(recname,
-                                                                imeth))
+                'Unrecognized "imeth" for {} record: {}'.format(recname, imeth)
+            )
 
         # Inflows
         fz = []
@@ -1268,8 +1365,8 @@ class ZoneBudget(object):
             if z != 0:
                 flux = qin[(self.izone == z)].sum()
                 if type(flux) == np.ma.core.MaskedConstant:
-                    flux = 0.
-                fz.append('FROM_' + '_'.join(recname.split()))
+                    flux = 0.0
+                fz.append("FROM_" + "_".join(recname.split()))
                 tz.append(self._zonenamedict[z])
                 f.append(flux)
         fz = np.array(fz)
@@ -1285,8 +1382,8 @@ class ZoneBudget(object):
             if z != 0:
                 flux = qout[(self.izone == z)].sum()
                 if type(flux) == np.ma.core.MaskedConstant:
-                    flux = 0.
-                fz.append('TO_' + '_'.join(recname.split()))
+                    flux = 0.0
+                fz.append("TO_" + "_".join(recname.split()))
                 tz.append(self._zonenamedict[z])
                 f.append(flux)
         fz = np.array(fz)
@@ -1299,104 +1396,120 @@ class ZoneBudget(object):
     def _compute_mass_balance(self, kstpkper, totim):
         # Returns a record array with total inflow, total outflow,
         # and percent error summed by column.
-        skipcols = ['time_step', 'stress_period', 'totim', 'name']
+        skipcols = ["time_step", "stress_period", "totim", "name"]
 
         # Compute inflows
         recnames = self.get_record_names()
-        innames = [n for n in recnames if n.startswith('FROM_')]
-        outnames = [n for n in recnames if n.startswith('TO_')]
+        innames = [n for n in recnames if n.startswith("FROM_")]
+        outnames = [n for n in recnames if n.startswith("TO_")]
         if kstpkper is not None:
-            rowidx = np.where((self._budget['time_step'] == kstpkper[0]) &
-                              (self._budget['stress_period'] == kstpkper[1]) &
-                              np.in1d(self._budget['name'], innames))
+            rowidx = np.where(
+                (self._budget["time_step"] == kstpkper[0])
+                & (self._budget["stress_period"] == kstpkper[1])
+                & np.in1d(self._budget["name"], innames)
+            )
         elif totim is not None:
-            rowidx = np.where((self._budget['totim'] == totim) &
-                              np.in1d(self._budget['name'], innames))
+            rowidx = np.where(
+                (self._budget["totim"] == totim)
+                & np.in1d(self._budget["name"], innames)
+            )
         a = _numpyvoid2numeric(
-            self._budget[list(self._zonenamedict.values())][rowidx])
+            self._budget[list(self._zonenamedict.values())][rowidx]
+        )
         intot = np.array(a.sum(axis=0))
         tz = np.array(
-            list([n for n in self._budget.dtype.names if n not in skipcols]))
-        fz = np.array(['TOTAL_IN'] * len(tz))
+            list([n for n in self._budget.dtype.names if n not in skipcols])
+        )
+        fz = np.array(["TOTAL_IN"] * len(tz))
         self._update_budget_fromssst(fz, tz, intot, kstpkper, totim)
 
         # Compute outflows
         if kstpkper is not None:
-            rowidx = np.where((self._budget['time_step'] == kstpkper[0]) &
-                              (self._budget['stress_period'] == kstpkper[1]) &
-                              np.in1d(self._budget['name'], outnames))
+            rowidx = np.where(
+                (self._budget["time_step"] == kstpkper[0])
+                & (self._budget["stress_period"] == kstpkper[1])
+                & np.in1d(self._budget["name"], outnames)
+            )
         elif totim is not None:
-            rowidx = np.where((self._budget['totim'] == totim) &
-                              np.in1d(self._budget['name'], outnames))
+            rowidx = np.where(
+                (self._budget["totim"] == totim)
+                & np.in1d(self._budget["name"], outnames)
+            )
         a = _numpyvoid2numeric(
-            self._budget[list(self._zonenamedict.values())][rowidx])
+            self._budget[list(self._zonenamedict.values())][rowidx]
+        )
         outot = np.array(a.sum(axis=0))
         tz = np.array(
-            list([n for n in self._budget.dtype.names if n not in skipcols]))
-        fz = np.array(['TOTAL_OUT'] * len(tz))
+            list([n for n in self._budget.dtype.names if n not in skipcols])
+        )
+        fz = np.array(["TOTAL_OUT"] * len(tz))
         self._update_budget_fromssst(fz, tz, outot, kstpkper, totim)
 
         # Compute IN-OUT
         tz = np.array(
-            list([n for n in self._budget.dtype.names if n not in skipcols]))
+            list([n for n in self._budget.dtype.names if n not in skipcols])
+        )
         f = intot - outot
-        fz = np.array(['IN-OUT'] * len(tz))
+        fz = np.array(["IN-OUT"] * len(tz))
         self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
         # Compute percent discrepancy
         tz = np.array(
-            list([n for n in self._budget.dtype.names if n not in skipcols]))
-        fz = np.array(['PERCENT_DISCREPANCY'] * len(tz))
+            list([n for n in self._budget.dtype.names if n not in skipcols])
+        )
+        fz = np.array(["PERCENT_DISCREPANCY"] * len(tz))
         in_minus_out = intot - outot
         in_plus_out = intot + outot
-        f = 100 * in_minus_out / (in_plus_out / 2.)
+        f = 100 * in_minus_out / (in_plus_out / 2.0)
         self._update_budget_fromssst(fz, tz, np.abs(f), kstpkper, totim)
 
         return
 
     def _clean_budget_names(self, names):
         newnames = []
-        mbnames = ['TOTAL_IN', 'TOTAL_OUT',
-                   'IN-OUT', 'PERCENT_DISCREPANCY']
+        mbnames = ["TOTAL_IN", "TOTAL_OUT", "IN-OUT", "PERCENT_DISCREPANCY"]
         for name in names:
             if name in mbnames:
                 newnames.append(name)
-            elif not name.startswith('FROM_') and not name.startswith('TO_'):
-                newname_in = 'FROM_' + name.upper()
-                newname_out = 'TO_' + name.upper()
-                if newname_in in self._budget['name']:
+            elif not name.startswith("FROM_") and not name.startswith("TO_"):
+                newname_in = "FROM_" + name.upper()
+                newname_out = "TO_" + name.upper()
+                if newname_in in self._budget["name"]:
                     newnames.append(newname_in)
-                if newname_out in self._budget['name']:
+                if newname_out in self._budget["name"]:
                     newnames.append(newname_out)
             else:
-                if name in self._budget['name']:
+                if name in self._budget["name"]:
                     newnames.append(name)
         return newnames
 
     def _compute_net_budget(self):
         recnames = self.get_record_names()
-        innames = [n for n in recnames if n.startswith('FROM_')]
-        outnames = [n for n in recnames if n.startswith('TO_')]
-        select_fields = ['totim', 'time_step', 'stress_period',
-                         'name'] + list(self._zonenamedict.values())
-        select_records_in = np.in1d(self._budget['name'], innames)
-        select_records_out = np.in1d(self._budget['name'], outnames)
+        innames = [n for n in recnames if n.startswith("FROM_")]
+        outnames = [n for n in recnames if n.startswith("TO_")]
+        select_fields = ["totim", "time_step", "stress_period", "name"] + list(
+            self._zonenamedict.values()
+        )
+        select_records_in = np.in1d(self._budget["name"], innames)
+        select_records_out = np.in1d(self._budget["name"], outnames)
         in_budget = self._budget[select_fields][select_records_in]
         out_budget = self._budget[select_fields][select_records_out]
         net_budget = in_budget.copy()
-        for f in [n for n in self._zonenamedict.values() if
-                  n in select_fields]:
+        for f in [
+            n for n in self._zonenamedict.values() if n in select_fields
+        ]:
             net_budget[f] = np.array([r for r in in_budget[f]]) - np.array(
-                [r for r in out_budget[f]])
-        newnames = ['_'.join(n.split('_')[1:]) for n in net_budget['name']]
-        net_budget['name'] = newnames
+                [r for r in out_budget[f]]
+            )
+        newnames = ["_".join(n.split("_")[1:]) for n in net_budget["name"]]
+        net_budget["name"] = newnames
         return net_budget
 
     def __mul__(self, other):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) * other
-        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        idx = np.in1d(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
@@ -1406,7 +1519,7 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
-        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        idx = np.in1d(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
@@ -1416,7 +1529,7 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) / float(other)
-        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        idx = np.in1d(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
@@ -1426,7 +1539,7 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) + other
-        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        idx = np.in1d(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
@@ -1436,7 +1549,7 @@ class ZoneBudget(object):
         newbud = self._budget.copy()
         for f in self._zonenamedict.values():
             newbud[f] = np.array([r for r in newbud[f]]) - other
-        idx = np.in1d(self._budget['name'], 'PERCENT_DISCREPANCY')
+        idx = np.in1d(self._budget["name"], "PERCENT_DISCREPANCY")
         newbud[:][idx] = self._budget[:][idx]
         newobj = self.copy()
         newobj._budget = newbud
@@ -1496,15 +1609,18 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
         X = b.copy()
     elif len(X.shape) < 2 or len(X.shape) > 3:
         raise Exception(
-            'Shape of the input array is not recognized: {}'.format(X.shape))
+            "Shape of the input array is not recognized: {}".format(X.shape)
+        )
     if np.ma.is_masked(X):
         X = np.ma.filled(X, 0)
 
     nlay, nrow, ncol = X.shape
 
     if fmtin is not None:
-        assert fmtin < ncol, 'The specified width is greater than the ' \
-                             'number of columns in the array.'
+        assert fmtin < ncol, (
+            "The specified width is greater than the "
+            "number of columns in the array."
+        )
     else:
         fmtin = ncol
 
@@ -1512,17 +1628,18 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
     if iprn is None or iprn <= iprnmin:
         iprn = iprnmin + 1
 
-    formatter_str = '{{:>{iprn}}}'.format(iprn=iprn)
+    formatter_str = "{{:>{iprn}}}".format(iprn=iprn)
     formatter = formatter_str.format
 
-    with open(fname, 'w') as f:
-        header = '{nlay} {nrow} {ncol}\n'.format(nlay=nlay,
-                                                 nrow=nrow,
-                                                 ncol=ncol)
+    with open(fname, "w") as f:
+        header = "{nlay} {nrow} {ncol}\n".format(
+            nlay=nlay, nrow=nrow, ncol=ncol
+        )
         f.write(header)
         for lay in range(nlay):
-            record_2 = 'INTERNAL\t({fmtin}I{iprn})\n'.format(fmtin=fmtin,
-                                                             iprn=iprn)
+            record_2 = "INTERNAL\t({fmtin}I{iprn})\n".format(
+                fmtin=fmtin, iprn=iprn
+            )
             f.write(record_2)
             if fmtin < ncol:
                 for row in range(nrow):
@@ -1531,8 +1648,10 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
                     end = start + fmtin
                     vals = rowvals[start:end]
                     while len(vals) > 0:
-                        s = ''.join(
-                            [formatter(int(val)) for val in vals]) + '\n'
+                        s = (
+                            "".join([formatter(int(val)) for val in vals])
+                            + "\n"
+                        )
                         f.write(s)
                         start = end
                         end = start + fmtin
@@ -1542,7 +1661,8 @@ def write_zbarray(fname, X, fmtin=None, iprn=None):
                 for row in range(nrow):
                     vals = X[lay, row, :].ravel()
                     f.write(
-                        ''.join([formatter(int(val)) for val in vals]) + '\n')
+                        "".join([formatter(int(val)) for val in vals]) + "\n"
+                    )
     return
 
 
@@ -1561,7 +1681,7 @@ def read_zbarray(fname):
     zones : numpy ndarray
         An integer array of the zones.
     """
-    with open(fname, 'r') as f:
+    with open(fname, "r") as f:
         lines = f.readlines()
 
     # Initialize layer
@@ -1581,7 +1701,7 @@ def read_zbarray(fname):
     datalen = nrow * ncol
 
     # List of valid values for LOCAT
-    locats = ['CONSTANT', 'INTERNAL', 'EXTERNAL']
+    locats = ["CONSTANT", "INTERNAL", "EXTERNAL"]
 
     # ITERATE OVER THE ROWS
     for line in lines:
@@ -1596,44 +1716,46 @@ def read_zbarray(fname):
             vals = []
             locat = rowitems[0].upper()
 
-            if locat == 'CONSTANT':
+            if locat == "CONSTANT":
                 iconst = int(rowitems[1])
             else:
-                fmt = rowitems[1].strip('()')
-                fmtin, iprn = [int(v) for v in fmt.split('I')]
+                fmt = rowitems[1].strip("()")
+                fmtin, iprn = [int(v) for v in fmt.split("I")]
 
         # ZONE DATA
         else:
-            if locat == 'CONSTANT':
+            if locat == "CONSTANT":
                 vals = np.ones((nrow, ncol), dtype=np.int32) * iconst
                 lay += 1
-            elif locat == 'INTERNAL':
+            elif locat == "INTERNAL":
                 # READ ZONES
                 rowvals = [int(v) for v in rowitems]
-                s = 'Too many values encountered on this line.'
+                s = "Too many values encountered on this line."
                 assert len(rowvals) <= fmtin, s
                 vals.extend(rowvals)
 
-            elif locat == 'EXTERNAL':
+            elif locat == "EXTERNAL":
                 # READ EXTERNAL FILE
                 fname = rowitems[0]
                 if not os.path.isfile(fname):
                     errmsg = 'Could not find external file "{}"'.format(fname)
                     raise Exception(errmsg)
-                with open(fname, 'r') as ext_f:
+                with open(fname, "r") as ext_f:
                     ext_flines = ext_f.readlines()
                 for ext_frow in ext_flines:
                     ext_frowitems = ext_frow.strip().split()
                     rowvals = [int(v) for v in ext_frowitems]
                     vals.extend(rowvals)
                 if len(vals) != datalen:
-                    errmsg = 'The number of values read from external ' \
-                             'file "{}" does not match the expected ' \
-                             'number.'.format(len(vals))
+                    errmsg = (
+                        "The number of values read from external "
+                        'file "{}" does not match the expected '
+                        "number.".format(len(vals))
+                    )
                     raise Exception(errmsg)
             else:
                 # Should not get here
-                raise Exception('Locat not recognized: {}'.format(locat))
+                raise Exception("Locat not recognized: {}".format(locat))
 
                 # IGNORE COMPOSITE ZONES
 
@@ -1644,10 +1766,11 @@ def read_zbarray(fname):
                 lay += 1
             totlen += len(rowitems)
         i += 1
-    s = 'The number of values read ({:,.0f})' \
-        ' does not match the number expected' \
-        ' ({:,.0f})'.format(totlen,
-                            nlay * nrow * ncol)
+    s = (
+        "The number of values read ({:,.0f})"
+        " does not match the number expected"
+        " ({:,.0f})".format(totlen, nlay * nrow * ncol)
+    )
     assert totlen == nlay * nrow * ncol, s
     return zones
 
@@ -1794,11 +1917,13 @@ class ZoneBudgetOutput(object):
 
         """
         zones = ", ".join([str(i) for i in self.zones])
-        l = ["ZoneBudgetOutput Class",
-             "----------------------\n",
-             "Number of zones: {}".format(len(self.zones)),
-             "Unique zones: {}".format(zones),
-             "Number of buget records: {}".format(len(self.dataframe))]
+        l = [
+            "ZoneBudgetOutput Class",
+            "----------------------\n",
+            "Number of zones: {}".format(len(self.zones)),
+            "Unique zones: {}".format(zones),
+            "Number of buget records: {}".format(len(self.dataframe)),
+        ]
 
         return "\n".join(l)
 
@@ -1860,8 +1985,9 @@ class ZoneBudgetOutput(object):
         elif self._otype == 3:
             self._read_file3()
         else:
-            raise AssertionError("Invalid otype supplied: {}"
-                                 .format(self._otype))
+            raise AssertionError(
+                "Invalid otype supplied: {}".format(self._otype)
+            )
 
     def _read_file1(self):
         """
@@ -1895,20 +2021,20 @@ class ZoneBudgetOutput(object):
                     kper = int(t[12]) - 1
                     if "zone" not in data_in:
                         data_in["zone"] = [zone]
-                        data_in['kstp'] = [kstp]
-                        data_in['kper'] = [kper]
+                        data_in["kstp"] = [kstp]
+                        data_in["kper"] = [kper]
                     else:
-                        data_in['zone'].append(zone)
-                        data_in['kstp'].append(kstp)
-                        data_in['kper'].append(kper)
+                        data_in["zone"].append(zone)
+                        data_in["kstp"].append(kstp)
+                        data_in["kper"].append(kper)
 
                     if self._steady[kper]:
                         try:
-                            data_in['storage'].append(0.)
-                            data_out['storage'].append(0.)
+                            data_in["storage"].append(0.0)
+                            data_out["storage"].append(0.0)
                         except KeyError:
-                            data_in['storage'] = [0.]
-                            data_out['storage'] = [0.]
+                            data_in["storage"] = [0.0]
+                            data_out["storage"] = [0.0]
 
                 elif line in ("", " "):
                     empty += 1
@@ -1998,8 +2124,8 @@ class ZoneBudgetOutput(object):
                     kstp = int(t[1]) - 1
                     kper = int(t[3]) - 1
                     if "kstp" not in data_in:
-                        data_in['kstp'] = []
-                        data_in['kper'] = []
+                        data_in["kstp"] = []
+                        data_in["kper"] = []
                         data_in["zone"] = []
 
                     zone_header = True
@@ -2007,20 +2133,21 @@ class ZoneBudgetOutput(object):
 
                 elif zone_header:
                     t = line.split(",")
-                    zones = [int(i.split()[-1]) for i in t[1:]
-                             if i not in ('',)]
+                    zones = [
+                        int(i.split()[-1]) for i in t[1:] if i not in ("",)
+                    ]
 
                     for zone in zones:
-                        data_in['kstp'].append(kstp)
-                        data_in['kper'].append(kper)
-                        data_in['zone'].append(zone)
+                        data_in["kstp"].append(kstp)
+                        data_in["kper"].append(kper)
+                        data_in["zone"].append(zone)
                         if self._steady[kper]:
                             try:
-                                data_in['storage'].append(0.)
-                                data_out['storage'].append(0.)
+                                data_in["storage"].append(0.0)
+                                data_out["storage"].append(0.0)
                             except KeyError:
-                                data_in['storage'] = [0.]
-                                data_out['storage'] = [0.]
+                                data_in["storage"] = [0.0]
+                                data_out["storage"] = [0.0]
 
                     zone_header = False
                     read_in = True
@@ -2035,10 +2162,10 @@ class ZoneBudgetOutput(object):
                         read_out = True
 
                     else:
-                        if 'zone' in t[0]:
+                        if "zone" in t[0]:
                             label = " ".join(t[0].split()[1:])
 
-                        elif 'total' in t[0]:
+                        elif "total" in t[0]:
                             label = "total"
 
                         else:
@@ -2048,7 +2175,7 @@ class ZoneBudgetOutput(object):
                             data_in[label] = []
 
                         for val in t[1:]:
-                            if val in ('',):
+                            if val in ("",):
                                 continue
 
                             data_in[label].append(float(val))
@@ -2063,10 +2190,10 @@ class ZoneBudgetOutput(object):
                         pass
 
                     else:
-                        if 'zone' in t[0]:
+                        if "zone" in t[0]:
                             label = " ".join(t[0].split()[1:])
 
-                        elif 'total' in t[0]:
+                        elif "total" in t[0]:
                             label = "total"
 
                         else:
@@ -2076,7 +2203,7 @@ class ZoneBudgetOutput(object):
                             data_out[label] = []
 
                         for val in t[1:]:
-                            if val in ('',):
+                            if val in ("",):
                                 continue
 
                             data_out[label].append(float(val))
@@ -2106,16 +2233,16 @@ class ZoneBudgetOutput(object):
             read_in = True
             read_out = False
             # read the header
-            header = foo.readline().lower().strip().split(',')
+            header = foo.readline().lower().strip().split(",")
             header = [i.strip() for i in header]
 
             array = np.genfromtxt(foo, delimiter=",").T
 
         for ix, label in enumerate(header):
-            if label in ('totim', 'in-out', 'percent error'):
+            if label in ("totim", "in-out", "percent error"):
                 continue
 
-            elif label == 'percent error':
+            elif label == "percent error":
                 continue
 
             elif label == "step":
@@ -2136,8 +2263,8 @@ class ZoneBudgetOutput(object):
                     read_in = False
                 label = " ".join(label.split()[1:])
 
-            elif 'total' in label:
-                label = 'total'
+            elif "total" in label:
+                label = "total"
 
             elif label.split("-")[-1] == "in":
                 label = "-".join(label.split("-")[:-1])
@@ -2154,7 +2281,7 @@ class ZoneBudgetOutput(object):
 
             if read_in:
 
-                if label in ('kstp', 'kper'):
+                if label in ("kstp", "kper"):
                     data_in[label] = np.asarray(array[ix], dtype=int) - 1
 
                 elif label == "zone":
@@ -2163,7 +2290,7 @@ class ZoneBudgetOutput(object):
                 else:
                     data_in[label] = array[ix]
 
-                if label == 'total':
+                if label == "total":
                     read_in = False
                     read_out = True
 
@@ -2201,15 +2328,17 @@ class ZoneBudgetOutput(object):
 
                 data[key] = arrayin - arrayout
 
-        kstp = data['kstp']
-        kper = data['kper']
-        tslen = np.array([self._tslen[(stp, kper[ix])]
-                          for ix, stp in enumerate(kstp)])
-        totim = np.array([self._totim[(stp, kper[ix])]
-                          for ix, stp in enumerate(kstp)])
+        kstp = data["kstp"]
+        kper = data["kper"]
+        tslen = np.array(
+            [self._tslen[(stp, kper[ix])] for ix, stp in enumerate(kstp)]
+        )
+        totim = np.array(
+            [self._totim[(stp, kper[ix])] for ix, stp in enumerate(kstp)]
+        )
 
         data["tslen"] = tslen
-        data['totim'] = totim
+        data["totim"] = totim
 
         return data
 
@@ -2253,8 +2382,10 @@ class ZoneBudgetOutput(object):
 
         if isinstance(f, str):
             if not f.endswith(".nc"):
-                raise AssertionError("File extension must end with .nc to "
-                                     "export a netcdf file")
+                raise AssertionError(
+                    "File extension must end with .nc to "
+                    "export a netcdf file"
+                )
 
         zbncfobj = self.dataframe_to_netcdf_fmt(self.dataframe)
         oudic = {"zbud": zbncfobj}
@@ -2289,7 +2420,7 @@ class ZoneBudgetOutput(object):
         if extrapolate_kper:
             volumetric_data.pop("tslen")
             volumetric_data.pop("kstp")
-            volumetric_data['perlen'] = []
+            volumetric_data["perlen"] = []
 
             perlen = []
             for per in range(nper):
@@ -2348,7 +2479,7 @@ class ZoneBudgetOutput(object):
                 if key in ("zone", "kstp", "kper", "tslen"):
                     volumetric_data[key] = value
                 else:
-                    volumetric_data[key] = value * self._data['tslen']
+                    volumetric_data[key] = value * self._data["tslen"]
 
         return self.__pd.DataFrame.from_dict(volumetric_data)
 
@@ -2380,17 +2511,17 @@ class ZoneBudgetOutput(object):
 
         data = {}
         for col in df.columns:
-            if col in ('totim', 'zone', 'kper', 'perlen'):
+            if col in ("totim", "zone", "kper", "perlen"):
                 pass
             else:
                 data[col] = np.zeros((totim.size, zones.size), dtype=float)
 
         for i, time in enumerate(totim):
-            tdf = df.loc[df.totim.isin([time, ])]
-            tdf = tdf.sort_values(by=['zone'])
+            tdf = df.loc[df.totim.isin([time,])]
+            tdf = tdf.sort_values(by=["zone"])
 
             for col in df.columns:
-                if col in ('totim', 'zone', 'kper', 'perlen'):
+                if col in ("totim", "zone", "kper", "perlen"):
                     pass
                 else:
                     data[col][i, :] = tdf[col].values

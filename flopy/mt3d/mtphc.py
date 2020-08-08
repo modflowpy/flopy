@@ -5,12 +5,31 @@ class Mt3dPhc(Package):
     """
     PHC package class for PHT3D
     """
+
     unitnumber = 38
 
-    def __init__(self, model, os=2, temp=25, asbin=0, eps_aqu=0, eps_ph=0,
-                 scr_output=1, cb_offset=0, smse=['pH', 'pe'], mine=[], ie=[],
-                 surf=[], mobkin=[], minkin=[], surfkin=[], imobkin=[],
-                 extension='phc', unitnumber=None, filenames=None):
+    def __init__(
+        self,
+        model,
+        os=2,
+        temp=25,
+        asbin=0,
+        eps_aqu=0,
+        eps_ph=0,
+        scr_output=1,
+        cb_offset=0,
+        smse=["pH", "pe"],
+        mine=[],
+        ie=[],
+        surf=[],
+        mobkin=[],
+        minkin=[],
+        surfkin=[],
+        imobkin=[],
+        extension="phc",
+        unitnumber=None,
+        filenames=None,
+    ):
 
         if unitnumber is None:
             unitnumber = Mt3dPhc.defaultunit()
@@ -26,14 +45,21 @@ class Mt3dPhc(Package):
         # Fill namefile items
         name = [Mt3dPhc.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         self.os = os
         self.temp = temp
@@ -63,7 +89,7 @@ class Mt3dPhc(Package):
         return
 
     def __repr__(self):
-        return 'PHC package class for PHT3D'
+        return "PHC package class for PHT3D"
 
     def write_file(self):
         """
@@ -75,31 +101,41 @@ class Mt3dPhc(Package):
 
         """
         # Open file for writing
-        f_phc = open(self.fn_path, 'w')
-        f_phc.write('%3d%10f%3d%10f%10f%3d\n' % (self.os, self.temp,
-                                                 self.asbin, self.eps_aqu,
-                                                 self.eps_ph, self.scr_output))
-        f_phc.write('%10f\n' % (self.cb_offset))
-        f_phc.write('%3d\n' % (self.nsmse))
-        f_phc.write('%3d\n' % (self.nmine))
-        f_phc.write('%3d\n' % (self.nie))
-        f_phc.write('%3d\n' % (self.nsurf))
-        f_phc.write('%3d%3d%3d%3d\n' % (self.nmobkin, self.nminkin,
-                                        self.nsurfkin, self.nimobkin))
+        f_phc = open(self.fn_path, "w")
+        f_phc.write(
+            "%3d%10f%3d%10f%10f%3d\n"
+            % (
+                self.os,
+                self.temp,
+                self.asbin,
+                self.eps_aqu,
+                self.eps_ph,
+                self.scr_output,
+            )
+        )
+        f_phc.write("%10f\n" % (self.cb_offset))
+        f_phc.write("%3d\n" % (self.nsmse))
+        f_phc.write("%3d\n" % (self.nmine))
+        f_phc.write("%3d\n" % (self.nie))
+        f_phc.write("%3d\n" % (self.nsurf))
+        f_phc.write(
+            "%3d%3d%3d%3d\n"
+            % (self.nmobkin, self.nminkin, self.nsurfkin, self.nimobkin)
+        )
         for s in self.smse:
-            f_phc.write('%s\n' % (s))
+            f_phc.write("%s\n" % (s))
         i = 0
         for m in self.minkin:
-            f_phc.write('%s %d\n' % (m, len(self.minkin_parms[i])))
+            f_phc.write("%s %d\n" % (m, len(self.minkin_parms[i])))
             for n in self.minkin_parms[i]:
-                f_phc.write('\t%10f\n' % (n))
+                f_phc.write("\t%10f\n" % (n))
             i = i + 1
         f_phc.close()
         return
 
     @staticmethod
     def ftype():
-        return 'PHC'
+        return "PHC"
 
     @staticmethod
     def defaultunit():

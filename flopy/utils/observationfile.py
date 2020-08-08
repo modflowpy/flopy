@@ -18,7 +18,7 @@ class ObsFiles(FlopyBinaryData):
             List contains unique simulation times (totim) in binary file.
 
         """
-        return self.data['totim'].reshape(self.get_ntimes()).tolist()
+        return self.data["totim"].reshape(self.get_ntimes()).tolist()
 
     def get_ntimes(self):
         """
@@ -30,7 +30,7 @@ class ObsFiles(FlopyBinaryData):
             The number of simulation times (totim) in binary file.
 
         """
-        return self.data['totim'].shape[0]
+        return self.data["totim"].shape[0]
 
     def get_nobs(self):
         """
@@ -99,7 +99,7 @@ class ObsFiles(FlopyBinaryData):
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
-            idx = np.where(self.data['totim'] == totim)[0][0]
+            idx = np.where(self.data["totim"] == totim)[0][0]
             i0 = idx
             i1 = idx + 1
         elif idx is not None:
@@ -117,12 +117,18 @@ class ObsFiles(FlopyBinaryData):
                     if not isinstance(obsname, list):
                         obsname = [obsname]
         if obsname is not None:
-            obsname.insert(0, 'totim')
+            obsname.insert(0, "totim")
             r = get_selection(self.data, obsname)[i0:i1]
         return r
 
-    def get_dataframe(self, start_datetime='1-1-1970',
-                      idx=None, obsname=None, totim=None, timeunit='D'):
+    def get_dataframe(
+        self,
+        start_datetime="1-1-1970",
+        idx=None,
+        obsname=None,
+        totim=None,
+        timeunit="D",
+    ):
         """
         Get pandas dataframe with the incremental and cumulative water budget
         items in the hydmod file.
@@ -177,7 +183,7 @@ class ObsFiles(FlopyBinaryData):
         i0 = 0
         i1 = self.data.shape[0]
         if totim is not None:
-            idx = np.where(self.data['totim'] == totim)[0][0]
+            idx = np.where(self.data["totim"] == totim)[0][0]
             i0 = idx
             i1 = idx + 1
         elif idx is not None:
@@ -197,13 +203,13 @@ class ObsFiles(FlopyBinaryData):
         if obsname is None:
             return None
 
-        obsname.insert(0, 'totim')
+        obsname.insert(0, "totim")
 
         dti = self.get_times()[i0:i1]
         if start_datetime is not None:
-            dti = totim_to_datetime(dti,
-                                    start=pd.to_datetime(start_datetime),
-                                    timeunit=timeunit)
+            dti = totim_to_datetime(
+                dti, start=pd.to_datetime(start_datetime), timeunit=timeunit
+            )
 
         df = pd.DataFrame(self.data[i0:i1], index=dti, columns=obsname)
         return df
@@ -233,7 +239,8 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-            'Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden.')
+            "Abstract method _build_dtype called in BinaryFiles.  This method needs to be overridden."
+        )
 
     def _build_index(self):
         """
@@ -241,7 +248,8 @@ class ObsFiles(FlopyBinaryData):
         to the position in the formatted file.
         """
         raise Exception(
-            'Abstract method _build_index called in BinaryFiles.  This method needs to be overridden.')
+            "Abstract method _build_index called in BinaryFiles.  This method needs to be overridden."
+        )
 
 
 class Mf6Obs(ObsFiles):
@@ -274,13 +282,13 @@ class Mf6Obs(ObsFiles):
         self.verbose = verbose
         if isBinary:
             # --open binary head file
-            self.file = open(filename, 'rb')
+            self.file = open(filename, "rb")
 
             # read control line
             cline = self.read_text(nchar=100)
-            precision = 'single'
-            if 'double' in cline[5:11].lower():
-                precision = 'double'
+            precision = "single"
+            if "double" in cline[5:11].lower():
+                precision = "double"
             self.set_float(precision)
             lenobsname = int(cline[11:])
 
@@ -308,12 +316,12 @@ class Mf6Obs(ObsFiles):
             self._read_data()
         else:
             # --open binary head file
-            self.file = open(filename, 'r')
+            self.file = open(filename, "r")
 
             # read header line
             line = self.file.readline()
-            t = line.rstrip().split(',')
-            self.set_float('double')
+            t = line.rstrip().split(",")
+            self.set_float("double")
 
             # get number of observations
             self.nobs = len(t) - 1
@@ -331,14 +339,15 @@ class Mf6Obs(ObsFiles):
             self._build_index()
 
             # read ascii data
-            self.data = np.loadtxt(self.file, dtype=self.dtype, delimiter=',',
-                                   ndmin=1)
+            self.data = np.loadtxt(
+                self.file, dtype=self.dtype, delimiter=",", ndmin=1
+            )
         return
 
     def _build_dtype(self):
 
         # create dtype
-        dtype = [('totim', self.floattype)]
+        dtype = [("totim", self.floattype)]
         for site in self.obsnames:
             if not isinstance(site, str):
                 site_name = site.decode().strip()
@@ -381,19 +390,19 @@ class HydmodObs(ObsFiles):
         # initialize class information
         self.verbose = verbose
         # --open binary head file
-        self.file = open(filename, 'rb')
+        self.file = open(filename, "rb")
         # NHYDTOT,ITMUNI
         self.nobs = self.read_integer()
-        precision = 'single'
+        precision = "single"
         if self.nobs < 0:
             self.nobs = abs(self.nobs)
-            precision = 'double'
+            precision = "double"
         self.set_float(precision)
 
         # continue reading the file
         self.itmuni = self.read_integer()
         self.v = np.empty(self.nobs, dtype=np.float)
-        self.v.fill(1.0E+32)
+        self.v.fill(1.0e32)
         ctime = self.read_text(nchar=4)
         self.hydlbl_len = int(hydlbl_len)
         # read HYDLBL
@@ -415,7 +424,7 @@ class HydmodObs(ObsFiles):
     def _build_dtype(self):
 
         # create dtype
-        dtype = [('totim', self.floattype)]
+        dtype = [("totim", self.floattype)]
         for site in self.hydlbl:
             if not isinstance(site, str):
                 site_name = site.decode().strip()
@@ -463,7 +472,7 @@ class SwrObs(ObsFiles):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
+    def __init__(self, filename, precision="double", verbose=False):
         """
         Class constructor.
 
@@ -473,7 +482,7 @@ class SwrObs(ObsFiles):
         # initialize class information
         self.verbose = verbose
         # open binary head file
-        self.file = open(filename, 'rb')
+        self.file = open(filename, "rb")
 
         # NOBS
         self.nobs = self.read_integer()
@@ -497,7 +506,7 @@ class SwrObs(ObsFiles):
         self._read_data()
 
     def _build_dtype(self):
-        vdata = [('totim', self.floattype)]
+        vdata = [("totim", self.floattype)]
         for name in self.obs:
             vdata.append((str(name), self.floattype))
         self.dtype = np.dtype(vdata)
@@ -529,9 +538,9 @@ def get_selection(data, names):
     for name in names:
         if name not in data.dtype.names:
             ierr += 1
-            print('Error: {} is not a valid column name'.format(name))
+            print("Error: {} is not a valid column name".format(name))
     if ierr > 0:
-        raise Exception('Error: {} names did not match'.format(ierr))
+        raise Exception("Error: {} names did not match".format(ierr))
 
     # Valid list of names so make a selection
     dtype2 = np.dtype({name: data.dtype.fields[name] for name in names})

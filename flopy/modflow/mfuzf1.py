@@ -317,52 +317,87 @@ class ModflowUzf1(Package):
     >>> uzf = flopy.modflow.ModflowUzf1(ml, ...)
 
     """
-    _options = OrderedDict([('specifythtr',
-                             OptionBlock.simple_flag),
-                            ('specifythti',
-                             OptionBlock.simple_flag),
-                            ('nosurfleak',
-                             OptionBlock.simple_flag),
-                            ('specifysurfk',
-                             OptionBlock.simple_flag),
-                            ('rejectsurfk',
-                             OptionBlock.simple_flag),
-                            ("seepsurfk",
-                             OptionBlock.simple_flag),
-                            ("capillaryuzet",
-                             OptionBlock.simple_flag),
-                            ("etsquare",
-                             {OptionBlock.dtype: np.bool_,
-                              OptionBlock.nested: True,
-                              OptionBlock.n_nested: 1,
-                              OptionBlock.vars:
-                                  {"smoothfact":
-                                       OptionBlock.simple_float}}),
-                            ("netflux",
-                             {OptionBlock.dtype: np.bool_,
-                              OptionBlock.nested: True,
-                              OptionBlock.n_nested: 2,
-                              OptionBlock.vars:
-                                  OrderedDict([("unitrech",
-                                                OptionBlock.simple_int),
-                                               ("unitdis",
-                                                OptionBlock.simple_int)])}),
-                            ("savefinf", OptionBlock.simple_flag)])
 
-    def __init__(self, model,
-                 nuztop=1, iuzfopt=0, irunflg=0, ietflg=0, ipakcb=None,
-                 iuzfcb2=None, ntrail2=10, nsets=20,
-                 surfdep=1.0,
-                 iuzfbnd=1, irunbnd=0, vks=1.0E-6, eps=3.5, thts=0.35,
-                 thtr=0.15, thti=0.20,
-                 specifythtr=False, specifythti=False, nosurfleak=False,
-                 finf=1.0E-8, pet=5.0E-8, extdp=15.0, extwc=0.1,
-                 air_entry=0.0, hroot=0.0, rootact=0.0,
-                 nwt_11_fmt=False,
-                 specifysurfk=False, rejectsurfk=False, seepsurfk=False,
-                 etsquare=None, netflux=None, capillaryuzet=False, nuzgag=None,
-                 uzgag=None, extension='uzf', unitnumber=None,
-                 filenames=None, options=None, surfk=0.1):
+    _options = OrderedDict(
+        [
+            ("specifythtr", OptionBlock.simple_flag),
+            ("specifythti", OptionBlock.simple_flag),
+            ("nosurfleak", OptionBlock.simple_flag),
+            ("specifysurfk", OptionBlock.simple_flag),
+            ("rejectsurfk", OptionBlock.simple_flag),
+            ("seepsurfk", OptionBlock.simple_flag),
+            ("capillaryuzet", OptionBlock.simple_flag),
+            (
+                "etsquare",
+                {
+                    OptionBlock.dtype: np.bool_,
+                    OptionBlock.nested: True,
+                    OptionBlock.n_nested: 1,
+                    OptionBlock.vars: {"smoothfact": OptionBlock.simple_float},
+                },
+            ),
+            (
+                "netflux",
+                {
+                    OptionBlock.dtype: np.bool_,
+                    OptionBlock.nested: True,
+                    OptionBlock.n_nested: 2,
+                    OptionBlock.vars: OrderedDict(
+                        [
+                            ("unitrech", OptionBlock.simple_int),
+                            ("unitdis", OptionBlock.simple_int),
+                        ]
+                    ),
+                },
+            ),
+            ("savefinf", OptionBlock.simple_flag),
+        ]
+    )
+
+    def __init__(
+        self,
+        model,
+        nuztop=1,
+        iuzfopt=0,
+        irunflg=0,
+        ietflg=0,
+        ipakcb=None,
+        iuzfcb2=None,
+        ntrail2=10,
+        nsets=20,
+        surfdep=1.0,
+        iuzfbnd=1,
+        irunbnd=0,
+        vks=1.0e-6,
+        eps=3.5,
+        thts=0.35,
+        thtr=0.15,
+        thti=0.20,
+        specifythtr=False,
+        specifythti=False,
+        nosurfleak=False,
+        finf=1.0e-8,
+        pet=5.0e-8,
+        extdp=15.0,
+        extwc=0.1,
+        air_entry=0.0,
+        hroot=0.0,
+        rootact=0.0,
+        nwt_11_fmt=False,
+        specifysurfk=False,
+        rejectsurfk=False,
+        seepsurfk=False,
+        etsquare=None,
+        netflux=None,
+        capillaryuzet=False,
+        nuzgag=None,
+        uzgag=None,
+        extension="uzf",
+        unitnumber=None,
+        filenames=None,
+        options=None,
+        surfk=0.1,
+    ):
 
         # set default unit number of one is not specified
         if unitnumber is None:
@@ -384,16 +419,20 @@ class ModflowUzf1(Package):
         # update external file information with cbc output, if necessary
         if ipakcb is not None:
             fname = filenames[1]
-            model.add_output_file(abs(ipakcb), fname=fname,
-                                  package=ModflowUzf1.ftype())
+            model.add_output_file(
+                abs(ipakcb), fname=fname, package=ModflowUzf1.ftype()
+            )
         else:
             ipakcb = 0
 
         if iuzfcb2 is not None:
             fname = filenames[2]
-            model.add_output_file(abs(iuzfcb2), fname=fname,
-                                  extension='uzfcb2.bin',
-                                  package=ModflowUzf1.ftype())
+            model.add_output_file(
+                abs(iuzfcb2),
+                fname=fname,
+                extension="uzfcb2.bin",
+                package=ModflowUzf1.ftype(),
+            )
         else:
             iuzfcb2 = 0
 
@@ -411,11 +450,14 @@ class ModflowUzf1(Package):
             for key, value in uzgag.items():
                 fname = filenames[ipos]
                 iu = abs(key)
-                uzgagext = 'uzf{}.out'.format(iu)
-                model.add_output_file(iu, fname=fname,
-                                      binflag=False,
-                                      extension=uzgagext,
-                                      package=ModflowUzf1.ftype())
+                uzgagext = "uzf{}.out".format(iu)
+                model.add_output_file(
+                    iu,
+                    fname=fname,
+                    binflag=False,
+                    extension=uzgagext,
+                    package=ModflowUzf1.ftype(),
+                )
                 ipos += 1
                 # handle case where iftunit is listed in the values
                 # (otherwise, iftunit will be written instead of iuzopt)
@@ -427,38 +469,56 @@ class ModflowUzf1(Package):
         # Fill namefile items
         name = [ModflowUzf1.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
-        if self.parent.get_package('RCH') != None or \
-                self.parent.get_package('EVT') != None:
-            msg = 'WARNING!\n The RCH and EVT packages should not be ' + \
-                  'active when the UZF1 package is active!'
+        if (
+            self.parent.get_package("RCH") != None
+            or self.parent.get_package("EVT") != None
+        ):
+            msg = (
+                "WARNING!\n The RCH and EVT packages should not be "
+                + "active when the UZF1 package is active!"
+            )
             print(msg)
-        if self.parent.version == 'mf2000':
-            msg = 'WARNING!\nThe UZF1 package is only compatible ' + \
-                  'with MODFLOW-2005 and MODFLOW-NWT!'
+        if self.parent.version == "mf2000":
+            msg = (
+                "WARNING!\nThe UZF1 package is only compatible "
+                + "with MODFLOW-2005 and MODFLOW-NWT!"
+            )
             print(msg)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
 
-        self.heading = '# {} package for '.format(self.name[0]) + \
-                       ' {}, '.format(model.version_types[model.version]) + \
-                       'generated by Flopy.'
-        self.url = 'uzf_unsaturated_zone_flow_pack.htm'
+        self.heading = (
+            "# {} package for ".format(self.name[0])
+            + " {}, ".format(model.version_types[model.version])
+            + "generated by Flopy."
+        )
+        self.url = "uzf_unsaturated_zone_flow_pack.htm"
 
         # Data Set 1a
         if nwt_11_fmt:
-            warnings.warn("nwt_11_fmt has been deprecated,"
-                          " and will be removed in the next release"
-                          " please provide a flopy.utils.OptionBlock object"
-                          " to the options argument", DeprecationWarning)
+            warnings.warn(
+                "nwt_11_fmt has been deprecated,"
+                " and will be removed in the next release"
+                " please provide a flopy.utils.OptionBlock object"
+                " to the options argument",
+                DeprecationWarning,
+            )
         self.nwt_11_fmt = nwt_11_fmt
         self.specifythtr = bool(specifythtr)
         self.specifythti = bool(specifythti)
@@ -473,8 +533,10 @@ class ModflowUzf1(Package):
             try:
                 float(etsquare)
             except:
-                msg = 'etsquare must be specified by entering a real ' + \
-                      'number for smoothfact.'
+                msg = (
+                    "etsquare must be specified by entering a real "
+                    + "number for smoothfact."
+                )
                 print(msg)
             self.etsquare = True
             self.smoothfact = etsquare
@@ -482,17 +544,22 @@ class ModflowUzf1(Package):
         self.unitrech = None
         self.unitdis = None
         if netflux is not None:
-            e = 'netflux must be a length=2 sequence of unitrech, unitdis'
+            e = "netflux must be a length=2 sequence of unitrech, unitdis"
             assert len(netflux) == 2, e
             self.netflux = True
             self.unitrech, self.unitdis = netflux
 
         if options is None:
             if (
-            specifythti, specifythtr, nosurfleak, specifysurfk, rejectsurfk,
-            seepsurfk, self.etsquare, self.netflux) != (False, False, False,
-                                                        False, False, False,
-                                                        False, False):
+                specifythti,
+                specifythtr,
+                nosurfleak,
+                specifysurfk,
+                rejectsurfk,
+                seepsurfk,
+                self.etsquare,
+                self.netflux,
+            ) != (False, False, False, False, False, False, False, False):
                 options = OptionBlock("", ModflowUzf1, block=False)
 
         self.options = options
@@ -514,43 +581,49 @@ class ModflowUzf1(Package):
 
         # Data Set 2
         # IUZFBND (NCOL, NROW) -- U2DINT
-        self.iuzfbnd = Util2d(model, (nrow, ncol), np.int32, iuzfbnd,
-                              name='iuzfbnd')
+        self.iuzfbnd = Util2d(
+            model, (nrow, ncol), np.int32, iuzfbnd, name="iuzfbnd"
+        )
 
         # If IRUNFLG > 0: Read item 3
         # Data Set 3
         # [IRUNBND (NCOL, NROW)] -- U2DINT
         if irunflg > 0:
-            self.irunbnd = Util2d(model, (nrow, ncol), np.int32, irunbnd,
-                                  name='irunbnd')
+            self.irunbnd = Util2d(
+                model, (nrow, ncol), np.int32, irunbnd, name="irunbnd"
+            )
 
         # IF the absolute value of IUZFOPT = 1: Read item 4.
         # Data Set 4
         # [VKS (NCOL, NROW)] -- U2DREL
         if abs(iuzfopt) in [0, 1]:
-            self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name='vks')
+            self.vks = Util2d(model, (nrow, ncol), np.float32, vks, name="vks")
 
         if seepsurfk or specifysurfk:
-            self.surfk = Util2d(model, (nrow, ncol), np.float32, surfk,
-                                name='surfk')
+            self.surfk = Util2d(
+                model, (nrow, ncol), np.float32, surfk, name="surfk"
+            )
 
         if iuzfopt > 0:
             # Data Set 5
             # EPS (NCOL, NROW) -- U2DREL
-            self.eps = Util2d(model, (nrow, ncol), np.float32, eps, name='eps')
+            self.eps = Util2d(model, (nrow, ncol), np.float32, eps, name="eps")
             # Data Set 6a
             # THTS (NCOL, NROW) -- U2DREL
-            self.thts = Util2d(model, (nrow, ncol), np.float32, thts,
-                               name='thts')
+            self.thts = Util2d(
+                model, (nrow, ncol), np.float32, thts, name="thts"
+            )
             # Data Set 6b
             # THTS (NCOL, NROW) -- U2DREL
             if self.specifythtr > 0:
-                self.thtr = Util2d(model, (nrow, ncol), np.float32, thtr,
-                                   name='thtr')
+                self.thtr = Util2d(
+                    model, (nrow, ncol), np.float32, thtr, name="thtr"
+                )
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            self.thti = Util2d(model, (nrow, ncol), np.float32, thti,
-                               name='thti')
+            self.thti = Util2d(
+                model, (nrow, ncol), np.float32, thti, name="thti"
+            )
 
         # Data Set 8
         # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
@@ -561,31 +634,40 @@ class ModflowUzf1(Package):
         # Data Set 10
         # [FINF (NCOL, NROW)] – U2DREL
 
-        self.finf = Transient2d(model, (nrow, ncol), np.float32,
-                                finf, name='finf')
+        self.finf = Transient2d(
+            model, (nrow, ncol), np.float32, finf, name="finf"
+        )
         if ietflg > 0:
-            self.pet = Transient2d(model, (nrow, ncol), np.float32,
-                                   pet, name='pet')
-            self.extdp = Transient2d(model, (nrow, ncol), np.float32,
-                                     extdp, name='extdp')
-            self.extwc = Transient2d(model, (nrow, ncol), np.float32,
-                                     extwc, name='extwc')
+            self.pet = Transient2d(
+                model, (nrow, ncol), np.float32, pet, name="pet"
+            )
+            self.extdp = Transient2d(
+                model, (nrow, ncol), np.float32, extdp, name="extdp"
+            )
+            self.extwc = Transient2d(
+                model, (nrow, ncol), np.float32, extwc, name="extwc"
+            )
 
         if capillaryuzet and "nwt" in model.version:
-            self.air_entry = Transient2d(model, (nrow, ncol), np.float32,
-                                         air_entry, name="air_entry")
-            self.hroot = Transient2d(model, (nrow, ncol), np.float32,
-                                      hroot, name='hroot')
-            self.rootact = Transient2d(model, (nrow, ncol), np.float32,
-                                       rootact, name='rootact')
+            self.air_entry = Transient2d(
+                model, (nrow, ncol), np.float32, air_entry, name="air_entry"
+            )
+            self.hroot = Transient2d(
+                model, (nrow, ncol), np.float32, hroot, name="hroot"
+            )
+            self.rootact = Transient2d(
+                model, (nrow, ncol), np.float32, rootact, name="rootact"
+            )
 
         self.parent.add_package(self)
 
     def __setattr__(self, key, value):
         if key == "uzgag":
-            msg = 'Uzgag must be set by the constructor' + \
-                  'modifying this attribute requires creating a ' + \
-                  'new ModflowUzf1 instance'
+            msg = (
+                "Uzgag must be set by the constructor"
+                + "modifying this attribute requires creating a "
+                + "new ModflowUzf1 instance"
+            )
             print(msg)
         else:
             super(ModflowUzf1, self).__setattr__(key, value)
@@ -618,34 +700,40 @@ class ModflowUzf1(Package):
         # Returns the  maximum number of cells that have recharge
         # (developed for MT3DMS SSM package)
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
-        return (nrow * ncol)
+        return nrow * ncol
 
     def _write_1a(self, f_uzf):
 
         # the nwt_11_fmt code is slated for removal (deprecated!)
         if not self.nwt_11_fmt:
-            specify_temp = ''
+            specify_temp = ""
             if self.specifythtr > 0:
-                specify_temp += 'SPECIFYTHTR '
+                specify_temp += "SPECIFYTHTR "
             if self.specifythti > 0:
-                specify_temp += 'SPECIFYTHTI '
+                specify_temp += "SPECIFYTHTI "
             if self.nosurfleak > 0:
-                specify_temp += 'NOSURFLEAK'
+                specify_temp += "NOSURFLEAK"
             if (self.specifythtr + self.specifythti + self.nosurfleak) > 0:
-                f_uzf.write('{}\n'.format(specify_temp))
+                f_uzf.write("{}\n".format(specify_temp))
             del specify_temp
         else:
-            txt = 'options\n'
-            for var in ['specifythtr', 'specifythti', 'nosurfleak',
-                        'specifysurfk', 'rejectsurfk', 'seepsurfk']:
+            txt = "options\n"
+            for var in [
+                "specifythtr",
+                "specifythti",
+                "nosurfleak",
+                "specifysurfk",
+                "rejectsurfk",
+                "seepsurfk",
+            ]:
                 value = self.__dict__[var]
                 if int(value) > 0:
-                    txt += '{}\n'.format(var)
+                    txt += "{}\n".format(var)
             if self.etsquare:
-                txt += 'etsquare {}\n'.format(self.smoothfact)
+                txt += "etsquare {}\n".format(self.smoothfact)
             if self.netflux:
-                txt += 'netflux {} {}\n'.format(self.unitrech, self.unitdis)
-            txt += 'end\n'
+                txt += "netflux {} {}\n".format(self.unitrech, self.unitdis)
+            txt += "end\n"
             f_uzf.write(txt)
 
     def write_file(self, f=None):
@@ -665,12 +753,14 @@ class ModflowUzf1(Package):
             else:
                 f_uzf = f
         else:
-            f_uzf = open(self.fn_path, 'w')
-        f_uzf.write('{}\n'.format(self.heading))
+            f_uzf = open(self.fn_path, "w")
+        f_uzf.write("{}\n".format(self.heading))
 
         # Dataset 1a
-        if isinstance(self.options,
-                      OptionBlock) and self.parent.version == "mfnwt":
+        if (
+            isinstance(self.options, OptionBlock)
+            and self.parent.version == "mfnwt"
+        ):
             self.options.update_from_package(self)
             self.options.write_options(f_uzf)
 
@@ -679,22 +769,37 @@ class ModflowUzf1(Package):
 
         # Dataset 1b
         if self.iuzfopt > 0:
-            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES'
+            comment = " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NTRAIL NSETS NUZGAGES"
             f_uzf.write(
-                '{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:10d}{8:10d}{9:15.6E}{10:100s}\n'. \
-                    format(self.nuztop, self.iuzfopt, self.irunflg,
-                           self.ietflg,
-                           self.ipakcb, self.iuzfcb2, \
-                           self.ntrail2, self.nsets, self.nuzgag, self.surfdep,
-                           comment))
+                "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:10d}{8:10d}{9:15.6E}{10:100s}\n".format(
+                    self.nuztop,
+                    self.iuzfopt,
+                    self.irunflg,
+                    self.ietflg,
+                    self.ipakcb,
+                    self.iuzfcb2,
+                    self.ntrail2,
+                    self.nsets,
+                    self.nuzgag,
+                    self.surfdep,
+                    comment,
+                )
+            )
         else:
-            comment = ' #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NUZGAGES'
+            comment = " #NUZTOP IUZFOPT IRUNFLG IETFLG ipakcb IUZFCB2 NUZGAGES"
             f_uzf.write(
-                '{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:15.6E}{8:100s}\n'. \
-                    format(self.nuztop, self.iuzfopt, self.irunflg,
-                           self.ietflg,
-                           self.ipakcb, self.iuzfcb2, \
-                           self.nuzgag, self.surfdep, comment))
+                "{0:10d}{1:10d}{2:10d}{3:10d}{4:10d}{5:10d}{6:10d}{7:15.6E}{8:100s}\n".format(
+                    self.nuztop,
+                    self.iuzfopt,
+                    self.irunflg,
+                    self.ietflg,
+                    self.ipakcb,
+                    self.iuzfcb2,
+                    self.nuzgag,
+                    self.surfdep,
+                    comment,
+                )
+            )
         f_uzf.write(self.iuzfbnd.get_file_entry())
         if self.irunflg > 0:
             f_uzf.write(self.irunbnd.get_file_entry())
@@ -721,8 +826,10 @@ class ModflowUzf1(Package):
                 f_uzf.write(self.thtr.get_file_entry())
             # Data Set 7
             # [THTI (NCOL, NROW)] -- U2DREL
-            if not self.parent.get_package('DIS').steady[
-                0] or self.specifythti > 0.0:
+            if (
+                not self.parent.get_package("DIS").steady[0]
+                or self.specifythti > 0.0
+            ):
                 f_uzf.write(self.thti.get_file_entry())
         # If NUZGAG>0: Item 8 is repeated NUZGAG times
         # Data Set 8
@@ -732,35 +839,35 @@ class ModflowUzf1(Package):
                 if iftunit > 0:
                     values[0] += 1
                     values[1] += 1
-                    comment = ' #IUZROW IUZCOL IFTUNIT IUZOPT'
+                    comment = " #IUZROW IUZCOL IFTUNIT IUZOPT"
                     values.insert(2, iftunit)
                     for v in values:
-                        f_uzf.write('{:10d}'.format(v))
-                    f_uzf.write('{}\n'.format(comment))
+                        f_uzf.write("{:10d}".format(v))
+                    f_uzf.write("{}\n".format(comment))
                 else:
-                    comment = ' #IFTUNIT'
-                    f_uzf.write('{:10d}'.format(iftunit))
-                    f_uzf.write('{}\n'.format(comment))
+                    comment = " #IFTUNIT"
+                    f_uzf.write("{:10d}".format(iftunit))
+                    f_uzf.write("{}\n".format(comment))
 
         def write_transient(name):
             invar, var = self.__dict__[name].get_kper_entry(n)
 
-            comment = ' #{} for stress period '.format(name) + str(n + 1)
-            f_uzf.write('{0:10d}{1:20s}\n'.format(invar, comment))
-            if (invar >= 0):
+            comment = " #{} for stress period ".format(name) + str(n + 1)
+            f_uzf.write("{0:10d}{1:20s}\n".format(invar, comment))
+            if invar >= 0:
                 f_uzf.write(var)
 
         for n in range(nper):
-            write_transient('finf')
+            write_transient("finf")
             if self.ietflg > 0:
-                write_transient('pet')
-                write_transient('extdp')
+                write_transient("pet")
+                write_transient("extdp")
                 if self.iuzfopt > 0:
-                    write_transient('extwc')
-            if self.capillaryuzet and 'nwt' in self.parent.version:
-                write_transient('air_entry')
-                write_transient('hroot')
-                write_transient('rootact')
+                    write_transient("extwc")
+            if self.capillaryuzet and "nwt" in self.parent.version:
+                write_transient("air_entry")
+                write_transient("hroot")
+                write_transient("rootact")
 
         f_uzf.close()
 
@@ -797,17 +904,17 @@ class ModflowUzf1(Package):
 
         """
         if model.verbose:
-            sys.stdout.write('loading uzf package file...\n')
+            sys.stdout.write("loading uzf package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # dataset 0 -- header
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
         # determine problem dimensions
         nrow, ncol, nlay, nper = model.get_nrow_ncol_nlay_nper()
@@ -823,18 +930,27 @@ class ModflowUzf1(Package):
         rejectsurfk = False
         seepsurfk = False
         options = None
-        if model.version == 'mfnwt' and 'options' in line.lower():
+        if model.version == "mfnwt" and "options" in line.lower():
             options = OptionBlock.load_options(f, ModflowUzf1)
             line = f.readline()
 
         else:
-            query = ("specifythtr", "specifythti", "nosurfleak",
-                     "specifysurfk", "rejectsurfk", "seepsurfk",
-                     "etsquare", "netflux", "savefinf")
+            query = (
+                "specifythtr",
+                "specifythti",
+                "nosurfleak",
+                "specifysurfk",
+                "rejectsurfk",
+                "seepsurfk",
+                "etsquare",
+                "netflux",
+                "savefinf",
+            )
             for i in query:
                 if i in line.lower():
-                    options = OptionBlock(line.lower().strip(),
-                                          ModflowUzf1, block=False)
+                    options = OptionBlock(
+                        line.lower().strip(), ModflowUzf1, block=False
+                    )
                     line = f.readline()
                     break
 
@@ -853,54 +969,71 @@ class ModflowUzf1(Package):
                 netflux = [options.unitrech, options.unitdis]
 
         # dataset 1b
-        nuztop, iuzfopt, irunflg, ietflg, ipakcb, iuzfcb2, \
-        ntrail2, nsets2, nuzgag, surfdep = _parse1(line)
+        (
+            nuztop,
+            iuzfopt,
+            irunflg,
+            ietflg,
+            ipakcb,
+            iuzfcb2,
+            ntrail2,
+            nsets2,
+            nuzgag,
+            surfdep,
+        ) = _parse1(line)
 
-        arrays = {'finf': {},
-                  # datasets 10, 12, 14, 16 are lists of util2d arrays
-                  'pet': {}, 'extdp': {}, 'extwc': {},
-                  'air_entry': {}, 'hroot': {}, 'rootact': {}}
+        arrays = {
+            "finf": {},
+            # datasets 10, 12, 14, 16 are lists of util2d arrays
+            "pet": {},
+            "extdp": {},
+            "extwc": {},
+            "air_entry": {},
+            "hroot": {},
+            "rootact": {},
+        }
 
         def load_util2d(name, dtype, per=None):
-            print('   loading {} array...'.format(name))
+            print("   loading {} array...".format(name))
             if per is not None:
-                arrays[name][per] = \
-                    Util2d.load(f, model, (nrow, ncol), dtype, name,
-                                ext_unit_dict)
+                arrays[name][per] = Util2d.load(
+                    f, model, (nrow, ncol), dtype, name, ext_unit_dict
+                )
             else:
-                arrays[name] = Util2d.load(f, model, (nrow, ncol), dtype, name,
-                                           ext_unit_dict)
+                arrays[name] = Util2d.load(
+                    f, model, (nrow, ncol), dtype, name, ext_unit_dict
+                )
 
         # dataset 2
-        load_util2d('iuzfbnd', np.int32)
+        load_util2d("iuzfbnd", np.int32)
 
         # dataset 3
         if irunflg > 0:
-            load_util2d('irunbnd', np.int32)
+            load_util2d("irunbnd", np.int32)
 
         # dataset 4
         if iuzfopt in [0, 1]:
-            load_util2d('vks', np.float32)
+            load_util2d("vks", np.float32)
 
         # dataset 4b
         if seepsurfk or specifysurfk:
-            load_util2d('surfk', np.float32)
+            load_util2d("surfk", np.float32)
 
         if iuzfopt > 0:
             # dataset 5
-            load_util2d('eps', np.float32)
+            load_util2d("eps", np.float32)
 
             # dataset 6
-            load_util2d('thts', np.float32)
+            load_util2d("thts", np.float32)
 
             if specifythtr:
                 # dataset 6b (residual water content)
-                load_util2d('thtr', np.float32)
+                load_util2d("thtr", np.float32)
 
             if specifythti or np.all(~model.dis.steady.array):
                 # dataset 7 (initial water content;
                 #            only read if not steady-state)
-                load_util2d('thti', np.float32)
+                load_util2d("thti", np.float32)
 
         # dataset 8
         uzgag = {}
@@ -915,13 +1048,13 @@ class ModflowUzf1(Package):
 
         # dataset 9
         for per in range(nper):
-            print('stress period {}:'.format(per + 1))
+            print("stress period {}:".format(per + 1))
             line = line_parse(f.readline())
             nuzf1 = pop_item(line, int)
 
             # dataset 10
             if nuzf1 >= 0:
-                load_util2d('finf', np.float32, per=per)
+                load_util2d("finf", np.float32, per=per)
 
             if ietflg > 0:
                 # dataset 11
@@ -929,19 +1062,19 @@ class ModflowUzf1(Package):
                 nuzf2 = pop_item(line, int)
                 if nuzf2 >= 0:
                     # dataset 12
-                    load_util2d('pet', np.float32, per=per)
+                    load_util2d("pet", np.float32, per=per)
                 # dataset 13
                 line = line_parse(f.readline())
                 nuzf3 = pop_item(line, int)
                 if nuzf3 >= 0:
                     # dataset 14
-                    load_util2d('extdp', np.float32, per=per)
+                    load_util2d("extdp", np.float32, per=per)
                 # dataset 15
                 line = line_parse(f.readline())
                 nuzf4 = pop_item(line, int)
                 if nuzf4 >= 0:
                     # dataset 16
-                    load_util2d('extwc', np.float32, per=per)
+                    load_util2d("extwc", np.float32, per=per)
 
                 if capillaryuzet:
                     # dataset 17
@@ -949,21 +1082,21 @@ class ModflowUzf1(Package):
                     nuzf5 = pop_item(line, int)
                     if nuzf5 > 0:
                         # dataset 18
-                        load_util2d('air_entry', np.float32, per=per)
+                        load_util2d("air_entry", np.float32, per=per)
 
                     # dataset 19
                     line = line_parse(f.readline())
                     nuzf6 = pop_item(line, int)
                     if nuzf6 > 0:
                         # dataset 20
-                        load_util2d('hroot', np.float32, per=per)
+                        load_util2d("hroot", np.float32, per=per)
 
                     # dataset21
                     line = line_parse(f.readline())
                     nuzf7 = pop_item(line, int)
                     if nuzf7 > 0:
                         # dataset 22
-                        load_util2d('rootact', np.float32, per=per)
+                        load_util2d("rootact", np.float32, per=per)
 
         # close the file
         f.close()
@@ -972,46 +1105,60 @@ class ModflowUzf1(Package):
         unitnumber = None
         filenames = [None for x in range(3 + nuzgag)]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=ModflowUzf1.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=ModflowUzf1.ftype()
+            )
             if abs(ipakcb) > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(ipakcb))
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=abs(ipakcb)
+                )
                 model.add_pop_key_list(ipakcb)
             if abs(iuzfcb2) > 0:
-                iu, filenames[2] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=abs(iuzfcb2))
+                iu, filenames[2] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=abs(iuzfcb2)
+                )
                 model.add_pop_key_list(abs(iuzfcb2))
 
             ipos = 3
             if nuzgag > 0:
                 for key, value in uzgag.items():
-                    iu, filenames[ipos] = \
-                        model.get_ext_dict_attr(ext_unit_dict,
-                                                unit=abs(key))
+                    iu, filenames[ipos] = model.get_ext_dict_attr(
+                        ext_unit_dict, unit=abs(key)
+                    )
                     model.add_pop_key_list(abs(iu))
                     ipos += 1
 
         # create uzf object
-        return ModflowUzf1(model,
-                           nuztop=nuztop, iuzfopt=iuzfopt, irunflg=irunflg,
-                           ietflg=ietflg,
-                           ipakcb=ipakcb, iuzfcb2=iuzfcb2,
-                           ntrail2=ntrail2, nsets=nsets2,
-                           surfdep=surfdep, uzgag=uzgag,
-                           specifythtr=specifythtr, specifythti=specifythti,
-                           nosurfleak=nosurfleak, etsquare=etsquare,
-                           netflux=netflux, seepsurfk=seepsurfk,
-                           specifysurfk=specifysurfk,
-                           rejectsurfk=rejectsurfk,
-                           capillaryuzet=capillaryuzet,
-                           unitnumber=unitnumber,
-                           filenames=filenames, options=options, **arrays)
+        return ModflowUzf1(
+            model,
+            nuztop=nuztop,
+            iuzfopt=iuzfopt,
+            irunflg=irunflg,
+            ietflg=ietflg,
+            ipakcb=ipakcb,
+            iuzfcb2=iuzfcb2,
+            ntrail2=ntrail2,
+            nsets=nsets2,
+            surfdep=surfdep,
+            uzgag=uzgag,
+            specifythtr=specifythtr,
+            specifythti=specifythti,
+            nosurfleak=nosurfleak,
+            etsquare=etsquare,
+            netflux=netflux,
+            seepsurfk=seepsurfk,
+            specifysurfk=specifysurfk,
+            rejectsurfk=rejectsurfk,
+            capillaryuzet=capillaryuzet,
+            unitnumber=unitnumber,
+            filenames=filenames,
+            options=options,
+            **arrays
+        )
 
     @staticmethod
     def ftype():
-        return 'UZF'
+        return "UZF"
 
     @staticmethod
     def defaultunit():
@@ -1021,9 +1168,9 @@ class ModflowUzf1(Package):
 def _parse1a(line):
     line = line_parse(line)
     line = [s.lower() if isinstance(s, str) else s for s in line]
-    specifythtr = True if 'specifythtr' in line else False
-    specifythti = True if 'specifythti' in line else False
-    nosurfleak = True if 'nosurfleak' in line else False
+    specifythtr = True if "specifythtr" in line else False
+    specifythti = True if "specifythti" in line else False
+    nosurfleak = True if "nosurfleak" in line else False
     return specifythtr, specifythti, nosurfleak
 
 
@@ -1042,7 +1189,18 @@ def _parse1(line):
         nsets2 = pop_item(line, int)
     nuzgag = pop_item(line, int)
     surfdep = pop_item(line, float)
-    return nuztop, iuzfopt, irunflg, ietflag, ipakcb, iuzfcb2, ntrail2, nsets2, nuzgag, surfdep
+    return (
+        nuztop,
+        iuzfopt,
+        irunflg,
+        ietflag,
+        ipakcb,
+        iuzfcb2,
+        ntrail2,
+        nsets2,
+        nuzgag,
+        surfdep,
+    )
 
 
 def _parse8(line):
@@ -1050,8 +1208,9 @@ def _parse8(line):
     iuzcol = None
     iuzopt = 0
     line = line_parse(line)
-    if((len(line) > 1 and not int(line[0]) < 0) or
-       (len(line) > 1 and line[1].isdigit())):
+    if (len(line) > 1 and not int(line[0]) < 0) or (
+        len(line) > 1 and line[1].isdigit()
+    ):
         iuzrow = pop_item(line, int) - 1
         iuzcol = pop_item(line, int) - 1
         iftunit = pop_item(line, int)
