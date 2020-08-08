@@ -11,7 +11,7 @@ except:
     pd = False
 
 
-def _fmt_string(array, float_format='{}'):
+def _fmt_string(array, float_format="{}"):
     """
     makes a formatting string for a rec-array;
     given a desired float_format.
@@ -27,22 +27,25 @@ def _fmt_string(array, float_format='{}'):
     fmt_string : str
         formatting string for writing output
     """
-    fmt_string = ''
+    fmt_string = ""
     for field in array.dtype.descr:
         vtype = field[1][1].lower()
-        if vtype == 'i':
-            fmt_string += '{:.0f} '
-        elif vtype == 'f':
-            fmt_string += '{} '.format(float_format)
-        elif vtype == 'o':
-            fmt_string += '{} '
-        elif vtype == 's':
-            raise Exception("MfList error: 'str' type found in dtype." + \
-                            " This gives unpredictable results when " + \
-                            "recarray to file - change to 'object' type")
+        if vtype == "i":
+            fmt_string += "{:.0f} "
+        elif vtype == "f":
+            fmt_string += "{} ".format(float_format)
+        elif vtype == "o":
+            fmt_string += "{} "
+        elif vtype == "s":
+            raise Exception(
+                "MfList error: 'str' type found in dtype."
+                + " This gives unpredictable results when "
+                + "recarray to file - change to 'object' type"
+            )
         else:
-            raise Exception("MfList.fmt_string error: unknown vtype " + \
-                            "in dtype:" + vtype)
+            raise Exception(
+                "MfList.fmt_string error: unknown vtype " + "in dtype:" + vtype
+            )
     return fmt_string
 
 
@@ -60,10 +63,10 @@ def line_strip(line):
     -------
         str : line with comments removed and commas replaced
     """
-    for comment_flag in [';', '#', '!!']:
+    for comment_flag in [";", "#", "!!"]:
         line = line.split(comment_flag)[0]
     line = line.strip()
-    return line.replace(',', ' ')
+    return line.replace(",", " ")
 
 
 def multi_line_strip(fobj):
@@ -173,31 +176,33 @@ def write_fixed_var(v, length=10, ipos=None, free=False, comment=None):
         elif isinstance(ipos, int):
             ipos = [ipos]
         if len(ipos) < ncol:
-            err = 'user provided ipos length ({})'.format(len(ipos)) + \
-                  'should be greater than or equal ' + \
-                  'to the length of v ({})'.format(ncol)
+            err = (
+                "user provided ipos length ({})".format(len(ipos))
+                + "should be greater than or equal "
+                + "to the length of v ({})".format(ncol)
+            )
             raise Exception(err)
-    out = ''
+    out = ""
     for n in range(ncol):
         if free:
-            write_fmt = '{} '
+            write_fmt = "{} "
         else:
             if isinstance(v[n], (float, np.float, np.float32, np.float64)):
                 width = ipos[n] - 6
-                vmin, vmax = 10**-width, 10**width
+                vmin, vmax = 10 ** -width, 10 ** width
                 if abs(v[n]) < vmin or abs(v[n]) > vmax:
-                    ctype = 'g'
+                    ctype = "g"
                 else:
-                    ctype = '.{}f'.format(width)
+                    ctype = ".{}f".format(width)
             elif isinstance(v[n], (int, np.int, np.int32, np.int64)):
-                ctype = 'd'
+                ctype = "d"
             else:
-                ctype = ''
-            write_fmt = '{{:>{}{}}}'.format(ipos[n],ctype)
+                ctype = ""
+            write_fmt = "{{:>{}{}}}".format(ipos[n], ctype)
         out += write_fmt.format(v[n])
     if comment is not None:
-        out += '  # {}'.format(comment)
-    out += '\n'
+        out += "  # {}".format(comment)
+    out += "\n"
     return out
 
 
@@ -277,6 +282,7 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     from . import CellBudgetFile as CBF
     from .util_list import MfList
     from ..modflow import Modflow, ModflowWel
+
     cbf = CBF(cbc_file, precision=precision, verbose=verbose)
 
     # create a empty numpy array of shape (time,layer,row,col)
@@ -315,8 +321,9 @@ def flux_to_wel(cbc_file, text, precision="single", model=None, verbose=False):
     return wel
 
 
-def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
-            **kwargs):
+def loadtxt(
+    file, delimiter=" ", dtype=None, skiprows=0, use_pandas=True, **kwargs
+):
     """
     Use pandas if it is available to load a text file
     (significantly faster than n.loadtxt or genfromtxt see
@@ -346,9 +353,9 @@ def loadtxt(file, delimiter=' ', dtype=None, skiprows=0, use_pandas=True,
     if use_pandas:
         if pd:
             if delimiter.isspace():
-                kwargs['delim_whitespace'] = True
-            if isinstance(dtype, np.dtype) and 'names' not in kwargs:
-                kwargs['names'] = dtype.names
+                kwargs["delim_whitespace"] = True
+            if isinstance(dtype, np.dtype) and "names" not in kwargs:
+                kwargs["names"] = dtype.names
 
     # if use_pandas and pd then use pandas
     if use_pandas and pd:
@@ -364,6 +371,7 @@ def get_url_text(url, error_msg=None):
     Get text from a url.
     """
     from urllib.request import urlopen
+
     try:
         urlobj = urlopen(url)
         text = urlobj.read().decode()
@@ -406,18 +414,18 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
 
     # initialize variables
     line = f.readline()
-    sfac = 1.
+    sfac = 1.0
     binary = False
     ncol = len(ra.dtype.names)
     line_list = line.strip().split()
     close_the_file = False
     file_handle = f
-    mode = 'r'
+    mode = "r"
 
     # check for external
-    if line.strip().lower().startswith('external'):
+    if line.strip().lower().startswith("external"):
         inunit = int(line_list[1])
-        errmsg = 'Could not find a file for unit {}'.format(inunit)
+        errmsg = "Could not find a file for unit {}".format(inunit)
         if ext_unit_dict is not None:
             if inunit in ext_unit_dict:
                 namdata = ext_unit_dict[inunit]
@@ -426,29 +434,32 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
                 raise IOError(errmsg)
         else:
             raise IOError(errmsg)
-        if namdata.filetype == 'DATA(BINARY)':
+        if namdata.filetype == "DATA(BINARY)":
             binary = True
         if not binary:
             line = file_handle.readline()
 
     # or check for open/close
-    elif line.strip().lower().startswith('open/close'):
+    elif line.strip().lower().startswith("open/close"):
         raw = line.strip().split()
         fname = raw[1]
-        if '/' in fname:
-            raw = fname.split('/')
-        elif '\\' in fname:
-            raw = fname.split('\\')
+        if "/" in fname:
+            raw = fname.split("/")
+        elif "\\" in fname:
+            raw = fname.split("\\")
         else:
             raw = [fname]
         fname = os.path.join(*raw)
         oc_filename = os.path.join(model.model_ws, fname)
-        msg = 'Package.load() error: open/close filename ' + \
-              oc_filename + ' not found'
+        msg = (
+            "Package.load() error: open/close filename "
+            + oc_filename
+            + " not found"
+        )
         assert os.path.exists(oc_filename), msg
-        if '(binary)' in line.lower():
+        if "(binary)" in line.lower():
             binary = True
-            mode = 'rb'
+            mode = "rb"
         file_handle = open(oc_filename, mode)
         close_the_file = True
         if not binary:
@@ -457,7 +468,7 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # check for scaling factor
     if not binary:
         line_list = line.strip().split()
-        if line.strip().lower().startswith('sfac'):
+        if line.strip().lower().startswith("sfac"):
             sfac = float(line_list[1])
             line = file_handle.readline()
 
@@ -498,8 +509,8 @@ def ulstrd(f, nlist, ra, model, sfac_columns, ext_unit_dict):
     # scale the data and check
     for column_name in sfac_columns:
         ra[column_name] *= sfac
-        if 'auxsfac' in ra.dtype.names:
-            ra[column_name] *= ra['auxsfac']
+        if "auxsfac" in ra.dtype.names:
+            ra[column_name] *= ra["auxsfac"]
 
     if close_the_file:
         file_handle.close()

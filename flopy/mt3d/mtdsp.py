@@ -102,9 +102,19 @@ class Mt3dDsp(Package):
 
     """
 
-    def __init__(self, model, al=0.01, trpt=0.1, trpv=0.01, dmcoef=1e-9,
-                 extension='dsp', multiDiff=False, unitnumber=None,
-                 filenames=None, **kwargs):
+    def __init__(
+        self,
+        model,
+        al=0.01,
+        trpt=0.1,
+        trpv=0.01,
+        dmcoef=1e-9,
+        extension="dsp",
+        multiDiff=False,
+        unitnumber=None,
+        filenames=None,
+        **kwargs
+    ):
 
         if unitnumber is None:
             unitnumber = Mt3dDsp.defaultunit()
@@ -120,14 +130,21 @@ class Mt3dDsp(Package):
         # Fill namefile items
         name = [Mt3dDsp.ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         nrow = model.nrow
         ncol = model.ncol
@@ -135,15 +152,33 @@ class Mt3dDsp(Package):
         ncomp = model.ncomp
         mcomp = model.mcomp
         self.multiDiff = multiDiff
-        self.al = Util3d(model, (nlay, nrow, ncol), np.float32, al, name='al',
-                         locat=self.unit_number[0],
-                         array_free_format=False)
-        self.trpt = Util2d(model, (nlay,), np.float32, trpt, name='trpt',
-                           locat=self.unit_number[0],
-                           array_free_format=False)
-        self.trpv = Util2d(model, (nlay,), np.float32, trpv, name='trpv',
-                           locat=self.unit_number[0],
-                           array_free_format=False)
+        self.al = Util3d(
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            al,
+            name="al",
+            locat=self.unit_number[0],
+            array_free_format=False,
+        )
+        self.trpt = Util2d(
+            model,
+            (nlay,),
+            np.float32,
+            trpt,
+            name="trpt",
+            locat=self.unit_number[0],
+            array_free_format=False,
+        )
+        self.trpv = Util2d(
+            model,
+            (nlay,),
+            np.float32,
+            trpv,
+            name="trpv",
+            locat=self.unit_number[0],
+            array_free_format=False,
+        )
 
         # Multi-species and multi-diffusion, hence the complexity
         self.dmcoef = []
@@ -154,9 +189,15 @@ class Mt3dDsp(Package):
             shape = (nlay, nrow, ncol)
             utype = Util3d
             nmcomp = mcomp
-        u2or3 = utype(model, shape, np.float32, dmcoef,
-                      name='dmcoef1', locat=self.unit_number[0],
-                      array_free_format=False)
+        u2or3 = utype(
+            model,
+            shape,
+            np.float32,
+            dmcoef,
+            name="dmcoef1",
+            locat=self.unit_number[0],
+            array_free_format=False,
+        )
         self.dmcoef.append(u2or3)
         for icomp in range(2, nmcomp + 1):
             name = "dmcoef" + str(icomp)
@@ -164,17 +205,28 @@ class Mt3dDsp(Package):
             if name in list(kwargs.keys()):
                 val = kwargs.pop(name)
             else:
-                print("DSP: setting dmcoef for component " +
-                      str(icomp) + " to zero, kwarg name " +
-                      name)
-            u2or3 = utype(model, shape, np.float32, val,
-                          name=name, locat=self.unit_number[0],
-                          array_free_format=False)
+                print(
+                    "DSP: setting dmcoef for component "
+                    + str(icomp)
+                    + " to zero, kwarg name "
+                    + name
+                )
+            u2or3 = utype(
+                model,
+                shape,
+                np.float32,
+                val,
+                name=name,
+                locat=self.unit_number[0],
+                array_free_format=False,
+            )
             self.dmcoef.append(u2or3)
 
         if len(list(kwargs.keys())) > 0:
-            raise Exception("DSP error: unrecognized kwargs: " +
-                            ' '.join(list(kwargs.keys())))
+            raise Exception(
+                "DSP error: unrecognized kwargs: "
+                + " ".join(list(kwargs.keys()))
+            )
         self.parent.add_package(self)
         return
 
@@ -193,11 +245,11 @@ class Mt3dDsp(Package):
         nlay = self.parent.nlay
 
         # Open file for writing
-        f_dsp = open(self.fn_path, 'w')
+        f_dsp = open(self.fn_path, "w")
 
         # Write multidiffusion keyword
         if self.multiDiff:
-            f_dsp.write('$ MultiDiffusion\n')
+            f_dsp.write("$ MultiDiffusion\n")
 
         # Write arrays
         f_dsp.write(self.al.get_file_entry())
@@ -253,7 +305,7 @@ class Mt3dDsp(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading dsp package file...\n')
+            sys.stdout.write("loading dsp package file...\n")
 
         # Set dimensions if necessary
         if nlay is None:
@@ -264,20 +316,20 @@ class Mt3dDsp(Package):
             ncol = model.ncol
 
         # Open file, if necessary
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Dataset 0 -- comment line
         imsd = 0
         while True:
             line = f.readline()
-            if line.strip() == '':
+            if line.strip() == "":
                 continue
-            elif line[0] == '#':
+            elif line[0] == "#":
                 continue
-            elif line[0] == '$':
+            elif line[0] == "$":
                 imsd = 1
                 break
             else:
@@ -288,7 +340,7 @@ class Mt3dDsp(Package):
         if imsd == 1:
             keywords = line[1:].strip().split()
             for k in keywords:
-                if k.lower() == 'multidiffusion':
+                if k.lower() == "multidiffusion":
                     multiDiff = True
         else:
             # go back to beginning of file
@@ -296,40 +348,81 @@ class Mt3dDsp(Package):
 
         # Read arrays
         if model.verbose:
-            print('   loading AL...')
-        al = Util3d.load(f, model, (nlay, nrow, ncol), np.float32, 'al',
-                         ext_unit_dict, array_format="mt3d")
+            print("   loading AL...")
+        al = Util3d.load(
+            f,
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            "al",
+            ext_unit_dict,
+            array_format="mt3d",
+        )
 
         if model.verbose:
-            print('   loading TRPT...')
-        trpt = Util2d.load(f, model, (nlay,), np.float32, 'trpt',
-                           ext_unit_dict, array_format="mt3d",
-                           array_free_format=False)
+            print("   loading TRPT...")
+        trpt = Util2d.load(
+            f,
+            model,
+            (nlay,),
+            np.float32,
+            "trpt",
+            ext_unit_dict,
+            array_format="mt3d",
+            array_free_format=False,
+        )
 
         if model.verbose:
-            print('   loading TRPV...')
-        trpv = Util2d.load(f, model, (nlay,), np.float32, 'trpv',
-                           ext_unit_dict, array_format="mt3d",
-                           array_free_format=False)
+            print("   loading TRPV...")
+        trpv = Util2d.load(
+            f,
+            model,
+            (nlay,),
+            np.float32,
+            "trpv",
+            ext_unit_dict,
+            array_format="mt3d",
+            array_free_format=False,
+        )
 
         if model.verbose:
-            print('   loading DMCOEFF...')
+            print("   loading DMCOEFF...")
         kwargs = {}
         dmcoef = []
         if multiDiff:
-            dmcoef = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                 'dmcoef1', ext_unit_dict, array_format="mt3d")
+            dmcoef = Util3d.load(
+                f,
+                model,
+                (nlay, nrow, ncol),
+                np.float32,
+                "dmcoef1",
+                ext_unit_dict,
+                array_format="mt3d",
+            )
             if model.mcomp > 1:
                 for icomp in range(2, model.mcomp + 1):
                     name = "dmcoef" + str(icomp)
-                    u3d = Util3d.load(f, model, (nlay, nrow, ncol), np.float32,
-                                      name, ext_unit_dict, array_format="mt3d")
+                    u3d = Util3d.load(
+                        f,
+                        model,
+                        (nlay, nrow, ncol),
+                        np.float32,
+                        name,
+                        ext_unit_dict,
+                        array_format="mt3d",
+                    )
                     kwargs[name] = u3d
 
-
         else:
-            dmcoef = Util2d.load(f, model, (nlay,), np.float32,
-                                 'dmcoef1', ext_unit_dict, array_format="mt3d")
+            dmcoef = Util2d.load(
+                f,
+                model,
+                (nlay,),
+                np.float32,
+                "dmcoef1",
+                ext_unit_dict,
+                array_format="mt3d",
+            )
             # if model.mcomp > 1:
             #     for icomp in range(2, model.mcomp + 1):
             #         name = "dmcoef" + str(icomp + 1)
@@ -344,18 +437,26 @@ class Mt3dDsp(Package):
         unitnumber = None
         filenames = [None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=Mt3dDsp.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=Mt3dDsp.ftype()
+            )
 
-        dsp = Mt3dDsp(model, al=al, trpt=trpt, trpv=trpv, dmcoef=dmcoef,
-                      multiDiff=multiDiff, unitnumber=unitnumber,
-                      filenames=filenames, **kwargs)
+        dsp = Mt3dDsp(
+            model,
+            al=al,
+            trpt=trpt,
+            trpv=trpv,
+            dmcoef=dmcoef,
+            multiDiff=multiDiff,
+            unitnumber=unitnumber,
+            filenames=filenames,
+            **kwargs
+        )
         return dsp
 
     @staticmethod
     def ftype():
-        return 'DSP'
+        return "DSP"
 
     @staticmethod
     def defaultunit():

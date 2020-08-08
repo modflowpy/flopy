@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class SfrFile():
+class SfrFile:
     """
     Read SFR package results from text file (ISTCB2 > 0)
 
@@ -37,11 +37,13 @@ class SfrFile():
     """
 
     # non-float dtypes (default is float)
-    dtypes = {"layer": int,
-              "row": int,
-              "column": int,
-              "segment": int,
-              "reach": int}
+    dtypes = {
+        "layer": int,
+        "row": int,
+        "column": int,
+        "segment": int,
+        "reach": int,
+    }
 
     def __init__(self, filename, geometries=None, verbose=False):
         """
@@ -49,9 +51,10 @@ class SfrFile():
         """
         try:
             import pandas as pd
+
             self.pd = pd
         except ImportError:
-            print('This method requires pandas')
+            print("This method requires pandas")
             self.pd = None
             return
 
@@ -63,11 +66,11 @@ class SfrFile():
         has_elevation = False
         with open(self.filename) as f:
             for i, line in enumerate(f):
-                if 'GRADIENT' in line:
+                if "GRADIENT" in line:
                     has_gradient = True
-                if 'CHNG. UNSAT.' in line:
+                if "CHNG. UNSAT." in line:
                     has_delUzstor = True
-                if 'ELEVATION' in line:
+                if "ELEVATION" in line:
                     has_elevation = True
                 items = line.strip().split()
                 if len(items) > 0 and items[0].isdigit():
@@ -77,22 +80,38 @@ class SfrFile():
                     break
         if not evaluated_format:
             raise ValueError(
-                'could not evaluate format of {!r} for SfrFile'
-                .format(self.filename))
+                "could not evaluate format of {!r} for SfrFile".format(
+                    self.filename
+                )
+            )
         # all outputs start with the same 15 columns
         self.names = [
-            'layer', 'row', 'column', 'segment', 'reach',
-            'Qin', 'Qaquifer', 'Qout', 'Qovr', 'Qprecip', 'Qet',
-            'stage', 'depth', 'width', 'Cond']
+            "layer",
+            "row",
+            "column",
+            "segment",
+            "reach",
+            "Qin",
+            "Qaquifer",
+            "Qout",
+            "Qovr",
+            "Qprecip",
+            "Qet",
+            "stage",
+            "depth",
+            "width",
+            "Cond",
+        ]
         if has_gradient and has_delUzstor:
             raise ValueError(
-                "column 16 should be either 'gradient' or 'Qwt', not both")
+                "column 16 should be either 'gradient' or 'Qwt', not both"
+            )
         elif has_gradient:
-            self.names.append('gradient')
+            self.names.append("gradient")
         elif has_delUzstor:
-            self.names += ['Qwt', 'delUzstor']
+            self.names += ["Qwt", "delUzstor"]
             if self.ncol == 18:
-                self.names.append('gw_head')
+                self.names.append("gw_head")
         if has_elevation:
             self.names.append("strtop")
         self.times = self.get_times()
@@ -112,7 +131,7 @@ class SfrFile():
         kstpkper = []
         with open(self.filename) as input:
             for line in input:
-                if 'STEP' in line:
+                if "STEP" in line:
                     line = line.strip().split()
                     kper, kstp = int(line[3]) - 1, int(line[5]) - 1
                     kstpkper.append((kstp, kper))
@@ -152,13 +171,18 @@ class SfrFile():
 
         """
 
-        df = self.pd.read_csv(self.filename, delim_whitespace=True,
-                              header=None, names=self.names,
-                              error_bad_lines=False,
-                              skiprows=self.sr, low_memory=False)
+        df = self.pd.read_csv(
+            self.filename,
+            delim_whitespace=True,
+            header=None,
+            names=self.names,
+            error_bad_lines=False,
+            skiprows=self.sr,
+            low_memory=False,
+        )
 
         # drop text between stress periods; convert to numeric
-        df['layer'] = self.pd.to_numeric(df.layer, errors='coerce')
+        df["layer"] = self.pd.to_numeric(df.layer, errors="coerce")
         df.dropna(axis=0, inplace=True)
 
         # convert to proper dtypes
@@ -175,14 +199,14 @@ class SfrFile():
             if per:
                 kstpkper = times.pop(0)
             dftimes.append(kstpkper)
-        df['kstpkper'] = dftimes
-        df['k'] = df['layer'] - 1
-        df['i'] = df['row'] - 1
-        df['j'] = df['column'] - 1
+        df["kstpkper"] = dftimes
+        df["k"] = df["layer"] - 1
+        df["i"] = df["row"] - 1
+        df["j"] = df["column"] - 1
 
         if self.geoms is not None:
             geoms = self.geoms * self.nstrm
-            df['geometry'] = geoms
+            df["geometry"] = geoms
         self._df = df
         return df
 
@@ -201,7 +225,8 @@ class SfrFile():
 
         """
         return self.df.loc[
-            (self.df.segment == segment) & (self.df.reach == reach)].copy()
+            (self.df.segment == segment) & (self.df.reach == reach)
+        ].copy()
 
     def get_results(self, segment, reach):
         """
@@ -232,5 +257,5 @@ class SfrFile():
                 if len(srresults) > 0:
                     results = results.append(srresults)
                 else:
-                    print('No results for segment {}, reach {}!'.format(s, r))
+                    print("No results for segment {}, reach {}!".format(s, r))
         return results

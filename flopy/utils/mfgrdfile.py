@@ -16,7 +16,7 @@ from flopy.utils.reference import SpatialReferenceUnstructured
 from flopy.utils.reference import SpatialReference
 import warnings
 
-warnings.simplefilter('always', PendingDeprecationWarning)
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 
 class MfGrdFile(FlopyBinaryData):
@@ -53,7 +53,7 @@ class MfGrdFile(FlopyBinaryData):
     >>> gobj = flopy.utils.MfGrdFile('test.dis.grb')
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
+    def __init__(self, filename, precision="double", verbose=False):
         """
         Class constructor.
 
@@ -71,10 +71,10 @@ class MfGrdFile(FlopyBinaryData):
         self._recordkeys = []
 
         if self.verbose:
-            print('\nProcessing binary grid file: {}'.format(filename))
+            print("\nProcessing binary grid file: {}".format(filename))
 
         # open the grb file
-        self.file = open(filename, 'rb')
+        self.file = open(filename, "rb")
 
         # grid type
         line = self.read_text(self._initial_len).strip()
@@ -102,11 +102,11 @@ class MfGrdFile(FlopyBinaryData):
             t = line.split()
             key = t[0]
             dt = t[1]
-            if dt == 'INTEGER':
+            if dt == "INTEGER":
                 dtype = np.int32
-            elif dt == 'SINGLE':
+            elif dt == "SINGLE":
                 dtype = np.float32
-            elif dt == 'DOUBLE':
+            elif dt == "DOUBLE":
                 dtype = np.float64
             else:
                 dtype = None
@@ -119,21 +119,23 @@ class MfGrdFile(FlopyBinaryData):
             self._recorddict[key] = (dtype, nd, shp)
             self._recordkeys.append(key)
             if self.verbose:
-                s = ''
+                s = ""
                 if nd > 0:
                     s = shp
-                msg = '  File contains data for {} '.format(key) + \
-                      'with shape {}'.format(s)
+                msg = "  File contains data for {} ".format(
+                    key
+                ) + "with shape {}".format(s)
                 print(msg)
 
         if self.verbose:
-            msg = 'Attempting to read {} '.format(self._ntxt) + \
-                  'records from {}'.format(filename)
+            msg = "Attempting to read {} ".format(
+                self._ntxt
+            ) + "records from {}".format(filename)
             print(msg)
 
         for key in self._recordkeys:
             if self.verbose:
-                msg = '  Reading {}'.format(key)
+                msg = "  Reading {}".format(key)
                 print(msg)
             dt, nd, shp = self._recorddict[key]
             # read array data
@@ -154,11 +156,12 @@ class MfGrdFile(FlopyBinaryData):
 
         if self.verbose:
             if nd == 0:
-                msg = '  {} = {}'.format(key, v)
+                msg = "  {} = {}".format(key, v)
                 print(msg)
             else:
-                msg = '  {}: '.format(key) + \
-                      'min = {} max = {}'.format(v.min(), v.max())
+                msg = "  {}: ".format(key) + "min = {} max = {}".format(
+                    v.min(), v.max()
+                )
                 print(msg)
 
         # set the model grid
@@ -206,38 +209,63 @@ class MfGrdFile(FlopyBinaryData):
             angrot = self._datadict["ANGROT"]
 
         try:
-            top, botm = self._datadict['TOP'], self._datadict['BOTM']
+            top, botm = self._datadict["TOP"], self._datadict["BOTM"]
 
-            if self._grid == 'DISV':
+            if self._grid == "DISV":
                 nlay, ncpl = self._datadict["NLAY"], self._datadict["NCPL"]
                 vertices, cell2d = self._build_vertices_cell2d()
                 top = np.ravel(top)
                 botm.shape = (nlay, ncpl)
-                mg = VertexGrid(vertices, cell2d, top, botm, idomain,
-                                xoff=xorigin, yoff=yorigin, angrot=angrot)
+                mg = VertexGrid(
+                    vertices,
+                    cell2d,
+                    top,
+                    botm,
+                    idomain,
+                    xoff=xorigin,
+                    yoff=yorigin,
+                    angrot=angrot,
+                )
 
-            elif self._grid == 'DIS':
-                nlay, nrow, ncol = self._datadict["NLAY"], self._datadict[
-                    "NROW"], self._datadict["NCOL"]
-                delr, delc = self._datadict['DELR'], self._datadict['DELC']
+            elif self._grid == "DIS":
+                nlay, nrow, ncol = (
+                    self._datadict["NLAY"],
+                    self._datadict["NROW"],
+                    self._datadict["NCOL"],
+                )
+                delr, delc = self._datadict["DELR"], self._datadict["DELC"]
 
                 top.shape = (nrow, ncol)
                 botm.shape = (nlay, nrow, ncol)
-                mg = StructuredGrid(delc, delr, top, botm, xoff=xorigin,
-                                    yoff=yorigin, angrot=angrot)
+                mg = StructuredGrid(
+                    delc,
+                    delr,
+                    top,
+                    botm,
+                    xoff=xorigin,
+                    yoff=yorigin,
+                    angrot=angrot,
+                )
             else:
                 iverts, verts = self.get_verts()
                 vertc = self.get_centroids()
                 xc = vertc[:, 0]
                 yc = vertc[:, 1]
-                mg = UnstructuredGrid(verts, iverts, xc, yc, top, botm,
-                                      idomain,
-                                      xoff=xorigin, yoff=yorigin,
-                                      angrot=angrot)
+                mg = UnstructuredGrid(
+                    verts,
+                    iverts,
+                    xc,
+                    yc,
+                    top,
+                    botm,
+                    idomain,
+                    xoff=xorigin,
+                    yoff=yorigin,
+                    angrot=angrot,
+                )
 
         except:
-            print('could not set model grid for {}'.format(
-                self.file.name))
+            print("could not set model grid for {}".format(self.file.name))
 
         return mg
 
@@ -259,17 +287,18 @@ class MfGrdFile(FlopyBinaryData):
 
         """
         try:
-            if self._grid in ['DISV', 'DISU']:
-                x = self._datadict['CELLX']
-                y = self._datadict['CELLY']
-            elif self._grid == 'DIS':
-                nlay = self._datadict['NLAY']
+            if self._grid in ["DISV", "DISU"]:
+                x = self._datadict["CELLX"]
+                y = self._datadict["CELLY"]
+            elif self._grid == "DIS":
+                nlay = self._datadict["NLAY"]
                 x = np.tile(self.mg.xcellcenters.flatten(), nlay)
                 y = np.tile(self.mg.ycellcenters.flatten(), nlay)
             return np.column_stack((x, y))
         except:
-            msg = 'could not return centroids' + \
-                  ' for {}'.format(self.file.name)
+            msg = "could not return centroids" + " for {}".format(
+                self.file.name
+            )
             raise KeyError(msg)
 
     def _build_vertices_cell2d(self):
@@ -286,8 +315,10 @@ class MfGrdFile(FlopyBinaryData):
         vertc = self.get_centroids()
 
         vertices = [[ix] + list(i) for ix, i in enumerate(verts)]
-        cell2d = [[ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
-                  for ix, i in enumerate(iverts)]
+        cell2d = [
+            [ix] + list(vertc[ix]) + [len(i) - 1] + i[:-1]
+            for ix, i in enumerate(iverts)
+        ]
         return vertices, cell2d
 
     def get_verts(self):
@@ -309,46 +340,49 @@ class MfGrdFile(FlopyBinaryData):
         >>> iverts, verts = gobj.get_verts()
 
         """
-        if self._grid == 'DISV':
+        if self._grid == "DISV":
             try:
                 iverts = []
-                iavert = self._datadict['IAVERT']
-                javert = self._datadict['JAVERT']
-                shpvert = self._recorddict['VERTICES'][2]
-                for ivert in range(self._datadict['NCPL']):
+                iavert = self._datadict["IAVERT"]
+                javert = self._datadict["JAVERT"]
+                shpvert = self._recorddict["VERTICES"][2]
+                for ivert in range(self._datadict["NCPL"]):
                     i0 = iavert[ivert] - 1
                     i1 = iavert[ivert + 1] - 1
                     iverts.append((javert[i0:i1] - 1).tolist())
                 if self.verbose:
-                    msg = 'returning vertices for {}'.format(self.file.name)
+                    msg = "returning vertices for {}".format(self.file.name)
                     print(msg)
-                return iverts, self._datadict['VERTICES'].reshape(shpvert)
+                return iverts, self._datadict["VERTICES"].reshape(shpvert)
             except:
-                msg = 'could not return vertices for ' + \
-                      '{}'.format(self.file.name)
+                msg = "could not return vertices for " + "{}".format(
+                    self.file.name
+                )
                 raise KeyError(msg)
-        elif self._grid == 'DISU':
+        elif self._grid == "DISU":
             try:
                 iverts = []
-                iavert = self._datadict['IAVERT']
-                javert = self._datadict['JAVERT']
-                shpvert = self._recorddict['VERTICES'][2]
-                for ivert in range(self._datadict['NODES']):
+                iavert = self._datadict["IAVERT"]
+                javert = self._datadict["JAVERT"]
+                shpvert = self._recorddict["VERTICES"][2]
+                for ivert in range(self._datadict["NODES"]):
                     i0 = iavert[ivert] - 1
                     i1 = iavert[ivert + 1] - 1
                     iverts.append((javert[i0:i1] - 1).tolist())
                 if self.verbose:
-                    msg = 'returning vertices for {}'.format(self.file.name)
+                    msg = "returning vertices for {}".format(self.file.name)
                     print(msg)
-                return iverts, self._datadict['VERTICES'].reshape(shpvert)
+                return iverts, self._datadict["VERTICES"].reshape(shpvert)
             except:
-                msg = 'could not return vertices for {}'.format(self.file.name)
+                msg = "could not return vertices for {}".format(self.file.name)
                 raise KeyError(msg)
-        elif self._grid == 'DIS':
+        elif self._grid == "DIS":
             try:
-                nlay, nrow, ncol = self._datadict['NLAY'], \
-                                   self._datadict['NROW'], \
-                                   self._datadict['NCOL']
+                nlay, nrow, ncol = (
+                    self._datadict["NLAY"],
+                    self._datadict["NROW"],
+                    self._datadict["NCOL"],
+                )
                 iv = 0
                 verts = []
                 iverts = []
@@ -365,7 +399,7 @@ class MfGrdFile(FlopyBinaryData):
                 verts = np.array(verts)
                 return iverts, verts
             except:
-                msg = 'could not return vertices for {}'.format(self.file.name)
+                msg = "could not return vertices for {}".format(self.file.name)
                 raise KeyError(msg)
         return
 
@@ -379,29 +413,40 @@ class MfGrdFile(FlopyBinaryData):
         """
         sr = None
         try:
-            if self._grid == 'DISV' or self._grid == 'DISU':
+            if self._grid == "DISV" or self._grid == "DISU":
                 try:
                     iverts, verts = self.get_verts()
                     vertc = self.get_centroids()
                     xc = vertc[:, 0]
                     yc = vertc[:, 1]
-                    sr = SpatialReferenceUnstructured(xc, yc, verts, iverts,
-                                                      [xc.shape[0]])
+                    sr = SpatialReferenceUnstructured(
+                        xc, yc, verts, iverts, [xc.shape[0]]
+                    )
                 except:
-                    msg = 'could not set spatial reference for ' + \
-                          '{} discretization '.format(self._grid) + \
-                          'defined in {}'.format(self.file.name)
+                    msg = (
+                        "could not set spatial reference for "
+                        + "{} discretization ".format(self._grid)
+                        + "defined in {}".format(self.file.name)
+                    )
                     print(msg)
-            elif self._grid == 'DIS':
-                delr, delc = self._datadict['DELR'], self._datadict['DELC']
-                xorigin, yorigin, rot = self._datadict['XORIGIN'], \
-                                        self._datadict['YORIGIN'], \
-                                        self._datadict['ANGROT']
-                sr = SpatialReference(delr=delr, delc=delc,
-                                      xll=xorigin, yll=yorigin, rotation=rot)
+            elif self._grid == "DIS":
+                delr, delc = self._datadict["DELR"], self._datadict["DELC"]
+                xorigin, yorigin, rot = (
+                    self._datadict["XORIGIN"],
+                    self._datadict["YORIGIN"],
+                    self._datadict["ANGROT"],
+                )
+                sr = SpatialReference(
+                    delr=delr,
+                    delc=delc,
+                    xll=xorigin,
+                    yll=yorigin,
+                    rotation=rot,
+                )
         except:
-            print('could not set spatial reference for {}'.format(
-                self.file.name))
+            print(
+                "could not set spatial reference for {}".format(self.file.name)
+            )
 
         return sr
 
@@ -418,8 +463,10 @@ class MfGrdFile(FlopyBinaryData):
         >>> sr = gobj.get_spatialreference()
         """
 
-        err_msg = "get_spatialreference will be depreciated " \
-                  "get_modelgrid() is replacing it "
+        err_msg = (
+            "get_spatialreference will be depreciated "
+            "get_modelgrid() is replacing it "
+        )
         warnings.warn(err_msg, PendingDeprecationWarning)
 
         return self._set_spatialreference()

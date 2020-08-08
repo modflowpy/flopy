@@ -28,12 +28,12 @@ class FlopyBinaryData(object):
 
     def set_float(self, precision):
         self.precision = precision
-        if precision.lower() == 'double':
+        if precision.lower() == "double":
             self.real = np.float64
-            self.floattype = 'f8'
+            self.floattype = "f8"
         else:
             self.real = np.float32
-            self.floattype = 'f4'
+            self.floattype = "f4"
         self.realbyte = self.real(1).nbytes
         return
 
@@ -60,7 +60,7 @@ class FlopyBinaryData(object):
         return np.fromfile(self.file, dtype, count)
 
 
-def totim_to_datetime(totim, start='1-1-1970', timeunit='D'):
+def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
     """
 
     Parameters
@@ -80,22 +80,24 @@ def totim_to_datetime(totim, start='1-1-1970', timeunit='D'):
 
     """
     key = None
-    fact = 1.
-    if timeunit.upper() == 'S':
-        key = 'seconds'
-    elif timeunit.upper() == 'M':
-        key = 'minutes'
-    elif timeunit.upper() == 'H':
-        key = 'hours'
-    elif timeunit.upper() == 'D':
-        key = 'days'
-    elif timeunit.upper() == 'Y':
-        key = 'days'
+    fact = 1.0
+    if timeunit.upper() == "S":
+        key = "seconds"
+    elif timeunit.upper() == "M":
+        key = "minutes"
+    elif timeunit.upper() == "H":
+        key = "hours"
+    elif timeunit.upper() == "D":
+        key = "days"
+    elif timeunit.upper() == "Y":
+        key = "days"
         fact = 365.25
     else:
-        err = "'S'econds, 'M'inutes, 'H'ours, 'D'ays, 'Y'ears are the " + \
-              "only timeunit values that can be passed to totim_" + \
-              "to_datetime() function"
+        err = (
+            "'S'econds, 'M'inutes, 'H'ours, 'D'ays, 'Y'ears are the "
+            + "only timeunit values that can be passed to totim_"
+            + "to_datetime() function"
+        )
         raise Exception(err)
     out = []
     kwargs = {}

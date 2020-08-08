@@ -1,4 +1,4 @@
-class ModelTime():
+class ModelTime:
     """
     Class for MODFLOW simulation time
 
@@ -9,8 +9,14 @@ class ModelTime():
     temporal_reference : TemporalReference
         contains start time and time units information
     """
-    def __init__(self, period_data=None, time_units='days',
-                 start_datetime=None, steady_state=None):
+
+    def __init__(
+        self,
+        period_data=None,
+        time_units="days",
+        start_datetime=None,
+        steady_state=None,
+    ):
         self._period_data = period_data
         self._time_units = time_units
         self._start_datetime = start_datetime
@@ -26,19 +32,19 @@ class ModelTime():
 
     @property
     def perlen(self):
-        return self._period_data['perlen']
+        return self._period_data["perlen"]
 
     @property
     def nper(self):
-        return len(self._period_data['perlen'])
+        return len(self._period_data["perlen"])
 
     @property
     def nstp(self):
-        return self._period_data['nstp']
+        return self._period_data["nstp"]
 
     @property
     def tsmult(self):
-        return self._period_data['tsmult']
+        return self._period_data["tsmult"]
 
     @property
     def steady_state(self):

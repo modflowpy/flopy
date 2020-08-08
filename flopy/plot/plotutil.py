@@ -22,10 +22,18 @@ try:
 except ImportError:
     plt = None
 
-bc_color_dict = {'default': 'black', 'WEL': 'red', 'DRN': 'yellow',
-                 'RIV': 'teal', 'GHB': 'cyan', 'CHD': 'navy',
-                 'STR': 'purple', 'SFR': 'teal', 'UZF': 'peru',
-                 'LAK': 'royalblue'}
+bc_color_dict = {
+    "default": "black",
+    "WEL": "red",
+    "DRN": "yellow",
+    "RIV": "teal",
+    "GHB": "cyan",
+    "CHD": "navy",
+    "STR": "purple",
+    "SFR": "teal",
+    "UZF": "peru",
+    "LAK": "royalblue",
+}
 
 
 class PlotException(Exception):
@@ -40,8 +48,7 @@ class PlotUtilities(object):
     """
 
     @staticmethod
-    def _plot_simulation_helper(simulation, model_list,
-                                SelPackList, **kwargs):
+    def _plot_simulation_helper(simulation, model_list, SelPackList, **kwargs):
         """
         Plot 2-D, 3-D, transient 2-D, and stress period list (MfList)
         model input data from a model instance
@@ -78,19 +85,24 @@ class PlotUtilities(object):
             Empty list is returned if filename_base is not None. Otherwise
             a list of matplotlib.pyplot.axis are returned.
         """
-        defaults = {"kper": 0, "mflay": None, "filename_base": None,
-                    "file_extension": "png", "key": None}
+        defaults = {
+            "kper": 0,
+            "mflay": None,
+            "filename_base": None,
+            "file_extension": "png",
+            "key": None,
+        }
 
         for key in defaults:
             if key in kwargs:
-                if key == 'file_extension':
+                if key == "file_extension":
                     defaults[key] = kwargs[key].replace(".", "")
                 else:
                     defaults[key] = kwargs[key]
 
                 kwargs.pop(key)
 
-        filename_base = defaults['filename_base']
+        filename_base = defaults["filename_base"]
 
         if model_list is None:
             model_list = simulation.model_names
@@ -110,14 +122,15 @@ class PlotUtilities(object):
             caxs = PlotUtilities._plot_model_helper(
                 model,
                 SelPackList=SelPackList,
-                kper=defaults['kper'],
-                mflay=defaults['mflay'],
+                kper=defaults["kper"],
+                mflay=defaults["mflay"],
                 filename_base=model_filename_base,
-                file_extension=defaults['file_extension'],
-                key=defaults['key'],
+                file_extension=defaults["file_extension"],
+                key=defaults["key"],
                 initial_fig=ifig,
                 model_name=model_name,
-                **kwargs)
+                **kwargs
+            )
 
             if isinstance(caxs, list):
                 for c in caxs:
@@ -166,13 +179,19 @@ class PlotUtilities(object):
             a list of matplotlib.pyplot.axis are returned.
         """
         # valid keyword arguments
-        defaults = {"kper": 0, "mflay": None, "filename_base": None,
-                    "file_extension": "png", "key": None, "model_name": "",
-                    "initial_fig": 0}
+        defaults = {
+            "kper": 0,
+            "mflay": None,
+            "filename_base": None,
+            "file_extension": "png",
+            "key": None,
+            "model_name": "",
+            "initial_fig": 0,
+        }
 
         for key in defaults:
             if key in kwargs:
-                if key == 'file_extension':
+                if key == "file_extension":
                     defaults[key] = kwargs[key].replace(".", "")
                 else:
                     defaults[key] = kwargs[key]
@@ -180,18 +199,19 @@ class PlotUtilities(object):
                 kwargs.pop(key)
 
         axes = []
-        ifig = defaults['initial_fig']
+        ifig = defaults["initial_fig"]
         if SelPackList is None:
             for p in model.packagelist:
                 caxs = PlotUtilities._plot_package_helper(
                     p,
                     initial_fig=ifig,
-                    filename_base=defaults['filename_base'],
-                    file_extension=defaults['file_extension'],
-                    kper=defaults['kper'],
-                    mflay=defaults['mflay'],
-                    key=defaults['key'],
-                    model_name=defaults['model_name'])
+                    filename_base=defaults["filename_base"],
+                    file_extension=defaults["file_extension"],
+                    kper=defaults["kper"],
+                    mflay=defaults["mflay"],
+                    key=defaults["key"],
+                    model_name=defaults["model_name"],
+                )
                 # unroll nested lists of axes into a single list of axes
                 if isinstance(caxs, list):
                     for c in caxs:
@@ -206,16 +226,17 @@ class PlotUtilities(object):
                 for p in model.packagelist:
                     if pon in p.name:
                         if model.verbose:
-                            print('   Plotting Package: ', p.name[0])
+                            print("   Plotting Package: ", p.name[0])
                         caxs = PlotUtilities._plot_package_helper(
                             p,
                             initial_fig=ifig,
-                            filename_base=defaults['filename_base'],
-                            file_extension=defaults['file_extension'],
-                            kper=defaults['kper'],
-                            mflay=defaults['mflay'],
-                            key=defaults['key'],
-                            model_name=defaults['model_name'])
+                            filename_base=defaults["filename_base"],
+                            file_extension=defaults["file_extension"],
+                            kper=defaults["kper"],
+                            mflay=defaults["mflay"],
+                            key=defaults["key"],
+                            model_name=defaults["model_name"],
+                        )
 
                         # unroll nested lists of axes into a single list of axes
                         if isinstance(caxs, list):
@@ -227,7 +248,7 @@ class PlotUtilities(object):
                         ifig = len(axes) + 1
                         break
         if model.verbose:
-            print(' ')
+            print(" ")
         return axes
 
     @staticmethod
@@ -265,10 +286,15 @@ class PlotUtilities(object):
             a list of matplotlib.pyplot.axis are returned.
 
         """
-        defaults = {"kper": 0, 'filename_base': None,
-                    "file_extension": "png", 'mflay': None,
-                    "key": None, "initial_fig": 0,
-                    "model_name": ""}
+        defaults = {
+            "kper": 0,
+            "filename_base": None,
+            "file_extension": "png",
+            "mflay": None,
+            "key": None,
+            "initial_fig": 0,
+            "model_name": "",
+        }
 
         for key in defaults:
             if key in kwargs:
@@ -284,7 +310,7 @@ class PlotUtilities(object):
         model_name = defaults.pop("model_name")
 
         inc = package.parent.modelgrid.nlay
-        if defaults['mflay'] is not None:
+        if defaults["mflay"] is not None:
             inc = 1
 
         axes = []
@@ -297,113 +323,175 @@ class PlotUtilities(object):
                     if isinstance(v, Util3d):
                         if package.parent.verbose:
                             print(
-                                'plotting {} package Util3d instance: {}'.format(
-                                    package.name[0], item))
-                        fignum = list(range(defaults['initial_fig'],
-                                            defaults['initial_fig'] + inc))
-                        defaults['initial_fig'] = fignum[-1] + 1
+                                "plotting {} package Util3d instance: {}".format(
+                                    package.name[0], item
+                                )
+                            )
+                        fignum = list(
+                            range(
+                                defaults["initial_fig"],
+                                defaults["initial_fig"] + inc,
+                            )
+                        )
+                        defaults["initial_fig"] = fignum[-1] + 1
                         caxs.append(
                             PlotUtilities._plot_util3d_helper(
                                 v,
-                                filename_base=defaults['filename_base'],
-                                file_extension=defaults['file_extension'],
-                                mflay=defaults['mflay'],
-                                fignum=fignum, model_name=model_name,
-                                colorbar=True))
+                                filename_base=defaults["filename_base"],
+                                file_extension=defaults["file_extension"],
+                                mflay=defaults["mflay"],
+                                fignum=fignum,
+                                model_name=model_name,
+                                colorbar=True,
+                            )
+                        )
 
             elif isinstance(value, DataInterface):
-                if value.data_type == DataType.transientlist:  # isinstance(value, (MfList, MFTransientList)):
+                if (
+                    value.data_type == DataType.transientlist
+                ):  # isinstance(value, (MfList, MFTransientList)):
                     if package.parent.verbose:
-                        print('plotting {} package MfList instance: {}'.format(
-                            package.name[0], item))
-                    if defaults['key'] is None:
+                        print(
+                            "plotting {} package MfList instance: {}".format(
+                                package.name[0], item
+                            )
+                        )
+                    if defaults["key"] is None:
                         names = [
-                            '{} {} location stress period {} layer {}'.format(
-                                model_name, package.name[0],
-                                defaults['kper'] + 1, k + 1)
-                            for k in range(package.parent.modelgrid.nlay)]
+                            "{} {} location stress period {} layer {}".format(
+                                model_name,
+                                package.name[0],
+                                defaults["kper"] + 1,
+                                k + 1,
+                            )
+                            for k in range(package.parent.modelgrid.nlay)
+                        ]
                         colorbar = False
                     else:
                         names = [
-                            '{} {} {} data stress period {} layer {}'.format(
-                                model_name, package.name[0], defaults['key'],
-                                defaults['kper'] + 1, k + 1)
-                            for k in range(package.parent.modelgrid.nlay)]
+                            "{} {} {} data stress period {} layer {}".format(
+                                model_name,
+                                package.name[0],
+                                defaults["key"],
+                                defaults["kper"] + 1,
+                                k + 1,
+                            )
+                            for k in range(package.parent.modelgrid.nlay)
+                        ]
                         colorbar = True
 
-                    fignum = list(range(defaults['initial_fig'],
-                                        defaults['initial_fig'] + inc))
-                    defaults['initial_fig'] = fignum[-1] + 1
+                    fignum = list(
+                        range(
+                            defaults["initial_fig"],
+                            defaults["initial_fig"] + inc,
+                        )
+                    )
+                    defaults["initial_fig"] = fignum[-1] + 1
                     # need to keep this as value.plot() because of mf6 datatype issues
-                    ax = value.plot(defaults['key'],
-                                    names,
-                                    defaults['kper'],
-                                    filename_base=defaults['filename_base'],
-                                    file_extension=defaults['file_extension'],
-                                    mflay=defaults['mflay'],
-                                    fignum=fignum, colorbar=colorbar,
-                                    **kwargs)
+                    ax = value.plot(
+                        defaults["key"],
+                        names,
+                        defaults["kper"],
+                        filename_base=defaults["filename_base"],
+                        file_extension=defaults["file_extension"],
+                        mflay=defaults["mflay"],
+                        fignum=fignum,
+                        colorbar=colorbar,
+                        **kwargs
+                    )
 
                     if ax is not None:
                         caxs.append(ax)
 
-                elif value.data_type == DataType.array3d:  # isinstance(value, Util3d):
+                elif (
+                    value.data_type == DataType.array3d
+                ):  # isinstance(value, Util3d):
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
-                                'plotting {} package Util3d instance: {}'.format(
-                                    package.name[0], item))
+                                "plotting {} package Util3d instance: {}".format(
+                                    package.name[0], item
+                                )
+                            )
                         # fignum = list(range(ifig, ifig + inc))
-                        fignum = list(range(defaults['initial_fig'],
-                                            defaults['initial_fig'] +
-                                            value.array.shape[0]))
-                        defaults['initial_fig'] = fignum[-1] + 1
+                        fignum = list(
+                            range(
+                                defaults["initial_fig"],
+                                defaults["initial_fig"] + value.array.shape[0],
+                            )
+                        )
+                        defaults["initial_fig"] = fignum[-1] + 1
 
-                        caxs.append(PlotUtilities._plot_util3d_helper(
-                            value,
-                            filename_base=defaults['filename_base'],
-                            file_extension=defaults['file_extension'],
-                            mflay=defaults['mflay'],
-                            fignum=fignum,
-                            model_name=model_name,
-                            colorbar=True))
+                        caxs.append(
+                            PlotUtilities._plot_util3d_helper(
+                                value,
+                                filename_base=defaults["filename_base"],
+                                file_extension=defaults["file_extension"],
+                                mflay=defaults["mflay"],
+                                fignum=fignum,
+                                model_name=model_name,
+                                colorbar=True,
+                            )
+                        )
 
-                elif value.data_type == DataType.array2d:  # isinstance(value, Util2d):
+                elif (
+                    value.data_type == DataType.array2d
+                ):  # isinstance(value, Util2d):
                     if value.array is not None:
                         if len(value.array.shape) == 2:  # is this necessary?
                             if package.parent.verbose:
                                 print(
-                                    'plotting {} package Util2d instance: {}'.format(
-                                        package.name[0], item))
-                            fignum = list(range(defaults['initial_fig'],
-                                                defaults['initial_fig'] + 1))
-                            defaults['initial_fig'] = fignum[-1] + 1
+                                    "plotting {} package Util2d instance: {}".format(
+                                        package.name[0], item
+                                    )
+                                )
+                            fignum = list(
+                                range(
+                                    defaults["initial_fig"],
+                                    defaults["initial_fig"] + 1,
+                                )
+                            )
+                            defaults["initial_fig"] = fignum[-1] + 1
 
-                            caxs.append(PlotUtilities._plot_util2d_helper(
-                                value,
-                                filename_base=defaults['filename_base'],
-                                file_extension=defaults['file_extension'],
-                                fignum=fignum,
-                                model_name=model_name,
-                                colorbar=True))
+                            caxs.append(
+                                PlotUtilities._plot_util2d_helper(
+                                    value,
+                                    filename_base=defaults["filename_base"],
+                                    file_extension=defaults["file_extension"],
+                                    fignum=fignum,
+                                    model_name=model_name,
+                                    colorbar=True,
+                                )
+                            )
 
-                elif value.data_type == DataType.transient2d:  # isinstance(value, Transient2d):
+                elif (
+                    value.data_type == DataType.transient2d
+                ):  # isinstance(value, Transient2d):
                     if value.array is not None:
                         if package.parent.verbose:
                             print(
-                                'plotting {} package Transient2d instance: {}'.format(
-                                    package.name[0], item))
-                        fignum = list(range(defaults['initial_fig'],
-                                            defaults['initial_fig'] + inc))
-                        defaults['initial_fig'] = fignum[-1] + 1
+                                "plotting {} package Transient2d instance: {}".format(
+                                    package.name[0], item
+                                )
+                            )
+                        fignum = list(
+                            range(
+                                defaults["initial_fig"],
+                                defaults["initial_fig"] + inc,
+                            )
+                        )
+                        defaults["initial_fig"] = fignum[-1] + 1
 
-                        caxs.append(PlotUtilities._plot_transient2d_helper(
-                            value,
-                            filename_base=defaults['filename_base'],
-                            file_extension=defaults['file_extension'],
-                            kper=defaults['kper'],
-                            fignum=fignum,
-                            colorbar=True))
+                        caxs.append(
+                            PlotUtilities._plot_transient2d_helper(
+                                value,
+                                filename_base=defaults["filename_base"],
+                                file_extension=defaults["file_extension"],
+                                kper=defaults["kper"],
+                                fignum=fignum,
+                                colorbar=True,
+                            )
+                        )
 
                 else:
                     pass
@@ -425,9 +513,16 @@ class PlotUtilities(object):
         return axes
 
     @staticmethod
-    def _plot_mflist_helper(mflist, key=None, names=None, kper=0,
-                            filename_base=None, file_extension=None,
-                            mflay=None, **kwargs):
+    def _plot_mflist_helper(
+        mflist,
+        key=None,
+        names=None,
+        kper=0,
+        filename_base=None,
+        file_extension=None,
+        mflay=None,
+        **kwargs
+    ):
         """
         Plot stress period boundary condition (MfList) data for a specified
         stress period
@@ -489,11 +584,11 @@ class PlotUtilities(object):
         if file_extension is not None:
             fext = file_extension
         else:
-            fext = 'png'
+            fext = "png"
 
         model_name = ""
         if "model_name" in kwargs:
-            model_name = kwargs.pop('model_name') + " "
+            model_name = kwargs.pop("model_name") + " "
 
         filenames = None
         if filename_base is not None:
@@ -507,52 +602,74 @@ class PlotUtilities(object):
                 i1 = mflist.model.modelgrid.nlay
             # build filenames
             package_name = mflist.package.name[0].upper()
-            filenames = ['{}_{}_StressPeriod{}_Layer{}.{}'.format(
-                filename_base, package_name,
-                kper + 1, k + 1, fext)
-                for k in range(i0, i1)]
+            filenames = [
+                "{}_{}_StressPeriod{}_Layer{}.{}".format(
+                    filename_base, package_name, kper + 1, k + 1, fext
+                )
+                for k in range(i0, i1)
+            ]
 
         if names is None:
             if key is None:
-                names = ['{}{} location stress period: {} layer: {}'.format(
-                    model_name, mflist.package.name[0], kper + 1, k + 1)
-                    for k in range(mflist.model.modelgrid.nlay)]
+                names = [
+                    "{}{} location stress period: {} layer: {}".format(
+                        model_name, mflist.package.name[0], kper + 1, k + 1
+                    )
+                    for k in range(mflist.model.modelgrid.nlay)
+                ]
             else:
-                names = ['{}{} {} stress period: {} layer: {}'.format(
-                    model_name, mflist.package.name[0],
-                    key, kper + 1, k + 1)
-                    for k in range(mflist.model.modelgrid.nlay)]
+                names = [
+                    "{}{} {} stress period: {} layer: {}".format(
+                        model_name,
+                        mflist.package.name[0],
+                        key,
+                        kper + 1,
+                        k + 1,
+                    )
+                    for k in range(mflist.model.modelgrid.nlay)
+                ]
 
         if key is None:
-            axes = PlotUtilities._plot_bc_helper(mflist.package,
-                                                 kper,
-                                                 names=names,
-                                                 filenames=filenames,
-                                                 mflay=mflay, **kwargs)
+            axes = PlotUtilities._plot_bc_helper(
+                mflist.package,
+                kper,
+                names=names,
+                filenames=filenames,
+                mflay=mflay,
+                **kwargs
+            )
         else:
             arr_dict = mflist.to_array(kper, mask=True)
 
             try:
                 arr = arr_dict[key]
             except:
-                err_msg = 'Cannot find key to plot\n'
-                err_msg += '  Provided key={}\n  Available keys='.format(key)
+                err_msg = "Cannot find key to plot\n"
+                err_msg += "  Provided key={}\n  Available keys=".format(key)
                 for name, arr in arr_dict.items():
-                    err_msg += '{}, '.format(name)
-                err_msg += '\n'
+                    err_msg += "{}, ".format(name)
+                err_msg += "\n"
                 raise PlotException(err_msg)
 
-            axes = PlotUtilities._plot_array_helper(arr,
-                                                    model=mflist.model,
-                                                    names=names,
-                                                    filenames=filenames,
-                                                    mflay=mflay,
-                                                    **kwargs)
+            axes = PlotUtilities._plot_array_helper(
+                arr,
+                model=mflist.model,
+                names=names,
+                filenames=filenames,
+                mflay=mflay,
+                **kwargs
+            )
         return axes
 
     @staticmethod
-    def _plot_util2d_helper(util2d, title=None, filename_base=None,
-                            file_extension=None, fignum=None, **kwargs):
+    def _plot_util2d_helper(
+        util2d,
+        title=None,
+        filename_base=None,
+        file_extension=None,
+        fignum=None,
+        **kwargs
+    ):
         """
         Plot 2-D model input data
 
@@ -615,25 +732,31 @@ class PlotUtilities(object):
         if file_extension is not None:
             fext = file_extension
         else:
-            fext = 'png'
+            fext = "png"
 
         filename = None
         if filename_base is not None:
-            filename = '{}_{}.{}'.format(filename_base,
-                                         util2d.name, fext)
+            filename = "{}_{}.{}".format(filename_base, util2d.name, fext)
 
-        axes = PlotUtilities._plot_array_helper(util2d.array,
-                                                util2d.model,
-                                                names=title,
-                                                filenames=filename,
-                                                fignum=fignum,
-                                                **kwargs)
+        axes = PlotUtilities._plot_array_helper(
+            util2d.array,
+            util2d.model,
+            names=title,
+            filenames=filename,
+            fignum=fignum,
+            **kwargs
+        )
         return axes
 
     @staticmethod
-    def _plot_util3d_helper(util3d, filename_base=None,
-                            file_extension=None, mflay=None,
-                            fignum=None, **kwargs):
+    def _plot_util3d_helper(
+        util3d,
+        filename_base=None,
+        file_extension=None,
+        mflay=None,
+        fignum=None,
+        **kwargs
+    ):
         """
         Plot 3-D model input data
 
@@ -688,12 +811,12 @@ class PlotUtilities(object):
         """
         model_name = ""
         if "model_name" in kwargs:
-            model_name = kwargs.pop('model_name')
+            model_name = kwargs.pop("model_name")
 
         if file_extension is not None:
             fext = file_extension
         else:
-            fext = 'png'
+            fext = "png"
 
         # flopy6 adaption
         array = util3d.array
@@ -701,9 +824,10 @@ class PlotUtilities(object):
         if isinstance(name, str):
             name = [name] * array.shape[0]
 
-        names = ['{}{} layer {}'.format(model_name,
-                                        name[k], k + 1) for k in
-                 range(array.shape[0])]
+        names = [
+            "{}{} layer {}".format(model_name, name[k], k + 1)
+            for k in range(array.shape[0])
+        ]
 
         filenames = None
         if filename_base is not None:
@@ -716,24 +840,31 @@ class PlotUtilities(object):
                 i0 = 0
                 i1 = array.shape[0]
             # build filenames, use local "name" variable (flopy6 adaptation)
-            filenames = ['{}_{}_Layer{}.{}'.format(
-                filename_base, name[k],
-                k + 1, fext)
-                for k in range(i0, i1)]
+            filenames = [
+                "{}_{}_Layer{}.{}".format(filename_base, name[k], k + 1, fext)
+                for k in range(i0, i1)
+            ]
 
-        axes = PlotUtilities._plot_array_helper(array,
-                                                util3d.model,
-                                                names=names,
-                                                filenames=filenames,
-                                                mflay=mflay,
-                                                fignum=fignum,
-                                                **kwargs)
+        axes = PlotUtilities._plot_array_helper(
+            array,
+            util3d.model,
+            names=names,
+            filenames=filenames,
+            mflay=mflay,
+            fignum=fignum,
+            **kwargs
+        )
         return axes
 
     @staticmethod
-    def _plot_transient2d_helper(transient2d, filename_base=None,
-                                 file_extension=None, kper=0,
-                                 fignum=None, **kwargs):
+    def _plot_transient2d_helper(
+        transient2d,
+        filename_base=None,
+        file_extension=None,
+        kper=0,
+        fignum=None,
+        **kwargs
+    ):
         """
         Plot transient 2-D model input data
 
@@ -792,7 +923,7 @@ class PlotUtilities(object):
         if file_extension is not None:
             fext = file_extension
         else:
-            fext = 'png'
+            fext = "png"
 
         if isinstance(kper, int):
             k0 = kper
@@ -817,32 +948,36 @@ class PlotUtilities(object):
         else:
             fignum = list(range(k0, k1))
 
-        if 'mflay' in kwargs:
-            kwargs.pop('mflay')
+        if "mflay" in kwargs:
+            kwargs.pop("mflay")
 
         axes = []
         for idx, kper in enumerate(range(k0, k1)):
-            title = '{} stress period {:d}'.format(
-                transient2d.name.replace('_', '').upper(),
-                kper + 1)
+            title = "{} stress period {:d}".format(
+                transient2d.name.replace("_", "").upper(), kper + 1
+            )
 
             if filename_base is not None:
-                filename = filename_base + '_{:05d}.{}'.format(kper + 1, fext)
+                filename = filename_base + "_{:05d}.{}".format(kper + 1, fext)
             else:
                 filename = None
 
-            axes.append(PlotUtilities._plot_array_helper(
-                transient2d.array[kper],
-                transient2d.model,
-                names=title,
-                filenames=filename,
-                fignum=fignum[idx],
-                **kwargs))
+            axes.append(
+                PlotUtilities._plot_array_helper(
+                    transient2d.array[kper],
+                    transient2d.model,
+                    names=title,
+                    filenames=filename,
+                    fignum=fignum[idx],
+                    **kwargs
+                )
+            )
         return axes
 
     @staticmethod
-    def _plot_scalar_helper(scalar, filename_base=None,
-                            file_extension=None, **kwargs):
+    def _plot_scalar_helper(
+        scalar, filename_base=None, file_extension=None, **kwargs
+    ):
         """
         Helper method to plot scalar objects
 
@@ -865,29 +1000,39 @@ class PlotUtilities(object):
         if file_extension is not None:
             fext = file_extension
         else:
-            fext = 'png'
+            fext = "png"
 
-        if 'mflay' in kwargs:
-            kwargs.pop('mflay')
+        if "mflay" in kwargs:
+            kwargs.pop("mflay")
 
-        title = '{}'.format(scalar.name.replace('_', '').upper())
+        title = "{}".format(scalar.name.replace("_", "").upper())
 
         if filename_base is not None:
-            filename = filename_base + '.{}'.format(fext)
+            filename = filename_base + ".{}".format(fext)
         else:
             filename = None
 
-        axes = PlotUtilities._plot_array_helper(scalar.array,
-                                                scalar.model,
-                                                names=title,
-                                                filenames=filename,
-                                                **kwargs)
+        axes = PlotUtilities._plot_array_helper(
+            scalar.array,
+            scalar.model,
+            names=title,
+            filenames=filename,
+            **kwargs
+        )
         return axes
 
     @staticmethod
-    def _plot_array_helper(plotarray, model=None, modelgrid=None, axes=None,
-                           names=None, filenames=None, fignum=None,
-                           mflay=None, **kwargs):
+    def _plot_array_helper(
+        plotarray,
+        model=None,
+        modelgrid=None,
+        axes=None,
+        names=None,
+        filenames=None,
+        fignum=None,
+        mflay=None,
+        **kwargs
+    ):
         """
         Helper method to plot array objects
 
@@ -919,18 +1064,29 @@ class PlotUtilities(object):
         """
         from .map import PlotMapView
 
-        defaults = {'figsize': None, 'masked_values': None,
-                    'pcolor': True, 'inactive': True,
-                    'contour': False, 'clabel': False,
-                    'colorbar': False, 'grid': False,
-                    'levels': None, 'colors': "black",
-                    'dpi': None, 'fmt': "%1.3f", 'modelgrid': None}
+        defaults = {
+            "figsize": None,
+            "masked_values": None,
+            "pcolor": True,
+            "inactive": True,
+            "contour": False,
+            "clabel": False,
+            "colorbar": False,
+            "grid": False,
+            "levels": None,
+            "colors": "black",
+            "dpi": None,
+            "fmt": "%1.3f",
+            "modelgrid": None,
+        }
 
         # check that matplotlib is installed
         if plt is None:
-            err_msg = 'Could not import matplotlib. ' \
-                      'Must install matplotlib ' + \
-                      ' in order to plot LayerFile data.'
+            err_msg = (
+                "Could not import matplotlib. "
+                "Must install matplotlib "
+                + " in order to plot LayerFile data."
+            )
             raise PlotException(err_msg)
 
         for key in defaults:
@@ -944,19 +1100,19 @@ class PlotUtilities(object):
             grid_type = model.modelgrid.grid_type
             hnoflo = model.hnoflo
             hdry = model.hdry
-            if defaults['masked_values'] is None:
+            if defaults["masked_values"] is None:
                 t = []
                 if hnoflo is not None:
                     t.append(hnoflo)
                 if hdry is not None:
                     t.append(hdry)
                 if t:
-                    defaults['masked_values'] = t
+                    defaults["masked_values"] = t
             else:
                 if hnoflo is not None:
-                    defaults['masked_values'].append(hnoflo)
+                    defaults["masked_values"].append(hnoflo)
                 if hdry is not None:
-                    defaults['masked_values'].append(hdry)
+                    defaults["masked_values"].append(hdry)
 
         elif modelgrid is not None:
             grid_type = modelgrid.grid_type
@@ -978,8 +1134,9 @@ class PlotUtilities(object):
 
         # reshape 2d arrays to 3d for convenience
         if len(plotarray.shape) == 2 and grid_type == "structured":
-            plotarray = plotarray.reshape((1, plotarray.shape[0],
-                                           plotarray.shape[1]))
+            plotarray = plotarray.reshape(
+                (1, plotarray.shape[0], plotarray.shape[1])
+            )
 
         # setup plotting routines
         # consider refactoring maxlay to nlay
@@ -988,38 +1145,45 @@ class PlotUtilities(object):
         names = PlotUtilities._set_names(names, maxlay)
         filenames = PlotUtilities._set_names(filenames, maxlay)
         fignum = PlotUtilities._set_fignum(fignum, maxlay, i0, i1)
-        axes = PlotUtilities._set_axes(axes, mflay, maxlay, i0, i1,
-                                       defaults, names, fignum)
+        axes = PlotUtilities._set_axes(
+            axes, mflay, maxlay, i0, i1, defaults, names, fignum
+        )
 
         for idx, k in enumerate(range(i0, i1)):
             fig = plt.figure(num=fignum[idx])
-            pmv = PlotMapView(ax=axes[idx], model=model,
-                              modelgrid=modelgrid, layer=k)
-            if defaults['pcolor']:
-                cm = pmv.plot_array(plotarray[k],
-                                    masked_values=defaults['masked_values'],
-                                    ax=axes[idx], **kwargs)
+            pmv = PlotMapView(
+                ax=axes[idx], model=model, modelgrid=modelgrid, layer=k
+            )
+            if defaults["pcolor"]:
+                cm = pmv.plot_array(
+                    plotarray[k],
+                    masked_values=defaults["masked_values"],
+                    ax=axes[idx],
+                    **kwargs
+                )
 
-                if defaults['colorbar']:
-                    label = ''
-                    if not isinstance(defaults['colorbar'], bool):
-                        label = str(defaults['colorbar'])
+                if defaults["colorbar"]:
+                    label = ""
+                    if not isinstance(defaults["colorbar"], bool):
+                        label = str(defaults["colorbar"])
                     plt.colorbar(cm, ax=axes[idx], shrink=0.5, label=label)
 
-            if defaults['contour']:
-                cl = pmv.contour_array(plotarray[k],
-                                       masked_values=defaults['masked_values'],
-                                       ax=axes[idx],
-                                       colors=defaults['colors'],
-                                       levels=defaults['levels'],
-                                       **kwargs)
-                if defaults['clabel']:
-                    axes[idx].clabel(cl, fmt=defaults['fmt'], **kwargs)
+            if defaults["contour"]:
+                cl = pmv.contour_array(
+                    plotarray[k],
+                    masked_values=defaults["masked_values"],
+                    ax=axes[idx],
+                    colors=defaults["colors"],
+                    levels=defaults["levels"],
+                    **kwargs
+                )
+                if defaults["clabel"]:
+                    axes[idx].clabel(cl, fmt=defaults["fmt"], **kwargs)
 
-            if defaults['grid']:
+            if defaults["grid"]:
                 pmv.plot_grid(ax=axes[idx])
 
-            if defaults['inactive']:
+            if defaults["inactive"]:
                 if ib is not None:
                     pmv.plot_inactive(ibound=ib, ax=axes[idx])
 
@@ -1029,19 +1193,27 @@ class PlotUtilities(object):
         if filenames is not None:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
-                fig.savefig(filenames[idx], dpi=defaults['dpi'])
-                print('    created...{}'.format(
-                    os.path.basename(filenames[idx])))
+                fig.savefig(filenames[idx], dpi=defaults["dpi"])
+                print(
+                    "    created...{}".format(os.path.basename(filenames[idx]))
+                )
             # there will be nothing to return when done
             axes = None
-            plt.close('all')
+            plt.close("all")
 
         return axes
 
     @staticmethod
-    def _plot_bc_helper(package, kper,
-                        axes=None, names=None, filenames=None, fignum=None,
-                        mflay=None, **kwargs):
+    def _plot_bc_helper(
+        package,
+        kper,
+        axes=None,
+        names=None,
+        filenames=None,
+        fignum=None,
+        mflay=None,
+        **kwargs
+    ):
         """
         Helper method to plot bc objects from flopy packages
 
@@ -1072,13 +1244,19 @@ class PlotUtilities(object):
         from .map import PlotMapView
 
         if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to plot boundary condition data.'
+            s = (
+                "Could not import matplotlib.  Must install matplotlib "
+                + " in order to plot boundary condition data."
+            )
             raise PlotException(s)
 
-        defaults = {'figsize': None, "inactive": True,
-                    'grid': False, "dpi": None,
-                    "masked_values": None}
+        defaults = {
+            "figsize": None,
+            "inactive": True,
+            "grid": False,
+            "dpi": None,
+            "masked_values": None,
+        }
 
         # parse kwargs
         for key in defaults:
@@ -1104,19 +1282,25 @@ class PlotUtilities(object):
         names = PlotUtilities._set_names(names, nlay)
         filenames = PlotUtilities._set_names(filenames, i1 - i0)
         fignum = PlotUtilities._set_fignum(fignum, i1 - i0, i0, i1)
-        axes = PlotUtilities._set_axes(axes, mflay, nlay, i0, i1,
-                                       defaults, names, fignum)
+        axes = PlotUtilities._set_axes(
+            axes, mflay, nlay, i0, i1, defaults, names, fignum
+        )
 
         for idx, k in enumerate(range(i0, i1)):
             pmv = PlotMapView(ax=axes[idx], model=model, layer=k)
             fig = plt.figure(num=fignum[idx])
-            pmv.plot_bc(ftype=ftype, package=package, kper=kper, ax=axes[idx],
-                        color=color)
+            pmv.plot_bc(
+                ftype=ftype,
+                package=package,
+                kper=kper,
+                ax=axes[idx],
+                color=color,
+            )
 
-            if defaults['grid']:
+            if defaults["grid"]:
                 pmv.plot_grid(ax=axes[idx])
 
-            if defaults['inactive']:
+            if defaults["inactive"]:
                 if model.modelgrid is not None:
                     ib = model.modelgrid.idomain
                     if ib is not None:
@@ -1128,13 +1312,14 @@ class PlotUtilities(object):
         if filenames is not None:
             for idx, k in enumerate(range(i0, i1)):
                 fig = plt.figure(num=fignum[idx])
-                fig.savefig(filenames[idx], dpi=defaults['dpi'])
+                fig.savefig(filenames[idx], dpi=defaults["dpi"])
                 plt.close(fignum[idx])
-                print('    created...{}'.format(
-                    os.path.basename(filenames[idx])))
+                print(
+                    "    created...{}".format(os.path.basename(filenames[idx]))
+                )
             # there will be nothing to return when done
             axes = None
-            plt.close('all')
+            plt.close("all")
 
         return axes
 
@@ -1192,8 +1377,10 @@ class PlotUtilities(object):
         if names is not None:
             if not isinstance(names, list):
                 if maxlay > 1:
-                    names = ["{} layer {}".format(names, i + 1)
-                             for i in range(maxlay)]
+                    names = [
+                        "{} layer {}".format(names, i + 1)
+                        for i in range(maxlay)
+                    ]
                 else:
                     names = [names]
             assert len(names) == maxlay
@@ -1246,8 +1433,7 @@ class PlotUtilities(object):
         return fignum
 
     @staticmethod
-    def _set_axes(axes, mflay, maxlay, i0, i1,
-                  defaults, names, fignum):
+    def _set_axes(axes, mflay, maxlay, i0, i1, defaults, names, fignum):
         """
         Method to prepare axes objects for plotting
 
@@ -1281,16 +1467,15 @@ class PlotUtilities(object):
             # prepare some axis objects for use
             axes = []
             for idx, k in enumerate(range(i0, i1)):
-                plt.figure(figsize=defaults['figsize'],
-                           num=fignum[idx])
-                ax = plt.subplot(1, 1, 1, aspect='equal')
+                plt.figure(figsize=defaults["figsize"], num=fignum[idx])
+                ax = plt.subplot(1, 1, 1, aspect="equal")
                 if names is not None:
                     title = names[k]
                 else:
                     klay = k
                     if mflay is not None:
                         klay = int(mflay)
-                    title = '{} Layer {}'.format('data', klay + 1)
+                    title = "{} Layer {}".format("data", klay + 1)
                 ax.set_title(title)
                 axes.append(ax)
 
@@ -1358,7 +1543,7 @@ class PlotUtilities(object):
             s = sat_thk_conf[k, :]
 
             for mv in mask_values:
-                idx = (head[k, :] == mv)
+                idx = head[k, :] == mv
                 dh[idx] = s[idx]
 
             if k == 0:
@@ -1409,9 +1594,12 @@ class PlotUtilities(object):
 
         """
         import warnings
-        warnings.warn('centered_specific_discharge() has been deprecated. Use '
-                      'postprocessing.get_specific_discharge() instead.',
-                      DeprecationWarning)
+
+        warnings.warn(
+            "centered_specific_discharge() has been deprecated. Use "
+            "postprocessing.get_specific_discharge() instead.",
+            DeprecationWarning,
+        )
 
         qx = None
         qy = None
@@ -1424,12 +1612,15 @@ class PlotUtilities(object):
 
             for k in range(nlay):
                 for j in range(ncol - 1):
-                    area = delc[:] * 0.5 * (
-                            sat_thk[k, :, j] + sat_thk[k, :, j + 1])
-                    idx = area > 0.
+                    area = (
+                        delc[:]
+                        * 0.5
+                        * (sat_thk[k, :, j] + sat_thk[k, :, j + 1])
+                    )
+                    idx = area > 0.0
                     qx[k, idx, j] = Qx[k, idx, j] / area[idx]
 
-            qx[:, :, 1:] = 0.5 * (qx[:, :, 0:ncol - 1] + qx[:, :, 1:ncol])
+            qx[:, :, 1:] = 0.5 * (qx[:, :, 0 : ncol - 1] + qx[:, :, 1:ncol])
             qx[:, :, 0] = 0.5 * qx[:, :, 0]
 
         if Qy is not None:
@@ -1439,12 +1630,15 @@ class PlotUtilities(object):
 
             for k in range(nlay):
                 for i in range(nrow - 1):
-                    area = delr[:] * 0.5 * (
-                            sat_thk[k, i, :] + sat_thk[k, i + 1, :])
-                    idx = area > 0.
+                    area = (
+                        delr[:]
+                        * 0.5
+                        * (sat_thk[k, i, :] + sat_thk[k, i + 1, :])
+                    )
+                    idx = area > 0.0
                     qy[k, i, idx] = Qy[k, i, idx] / area[idx]
 
-            qy[:, 1:, :] = 0.5 * (qy[:, 0:nrow - 1, :] + qy[:, 1:nrow, :])
+            qy[:, 1:, :] = 0.5 * (qy[:, 0 : nrow - 1, :] + qy[:, 1:nrow, :])
             qy[:, 0, :] = 0.5 * qy[:, 0, :]
             qy = -qy
 
@@ -1455,7 +1649,7 @@ class PlotUtilities(object):
             area = dr * dc
             for k in range(nlay):
                 qz[k, :, :] = Qz[k, :, :] / area[:, :]
-            qz[1:, :, :] = 0.5 * (qz[0:nlay - 1, :, :] + qz[1:nlay, :, :])
+            qz[1:, :, :] = 0.5 * (qz[0 : nlay - 1, :, :] + qz[1:nlay, :, :])
             qz[0, :, :] = 0.5 * qz[0, :, :]
             qz = -qz
 
@@ -1567,9 +1761,12 @@ class UnstructuredPlotUtilities(object):
             for ix, cell in enumerate(cells):
                 xc = x[cell]
                 yc = y[cell]
-                verts = [(xt, yt) for xt, yt in
-                         zip(xc[cell_vertex_ix[ix]],
-                             yc[cell_vertex_ix[ix]])]
+                verts = [
+                    (xt, yt)
+                    for xt, yt in zip(
+                        xc[cell_vertex_ix[ix]], yc[cell_vertex_ix[ix]]
+                    )
+                ]
 
                 if cell in vdict:
                     for i in verts:
@@ -1581,8 +1778,12 @@ class UnstructuredPlotUtilities(object):
                             continue
                         elif i in vdict[cell]:
                             continue
-                        elif np.isnan(i[0]) or np.isinf(i[0]) \
-                                or np.isinf(i[1]) or np.isnan(i[1]):
+                        elif (
+                            np.isnan(i[0])
+                            or np.isinf(i[0])
+                            or np.isinf(i[1])
+                            or np.isnan(i[1])
+                        ):
                             continue
                         else:
                             vdict[cell].append(i)
@@ -1597,8 +1798,12 @@ class UnstructuredPlotUtilities(object):
                             continue
                         elif i in t:
                             continue
-                        elif np.isnan(i[0]) or np.isinf(i[0]) \
-                                or np.isinf(i[1]) or np.isnan(i[1]):
+                        elif (
+                            np.isnan(i[0])
+                            or np.isinf(i[0])
+                            or np.isinf(i[1])
+                            or np.isnan(i[1])
+                        ):
                             continue
                         else:
                             t.append(i)
@@ -1685,7 +1890,7 @@ class UnstructuredPlotUtilities(object):
         return verts
 
 
-class SwiConcentration():
+class SwiConcentration:
     """
     The binary_header class is a class to create headers for MODFLOW
     binary files
@@ -1707,20 +1912,21 @@ class SwiConcentration():
                 self.__nsrf = self.nu.shape - 2
         else:
             try:
-                dis = model.get_package('DIS')
+                dis = model.get_package("DIS")
             except:
-                sys.stdout.write('Error: DIS package not available.\n')
-            self.__botm = np.zeros((dis.nlay + 1, dis.nrow, dis.ncol),
-                                   np.float)
+                sys.stdout.write("Error: DIS package not available.\n")
+            self.__botm = np.zeros(
+                (dis.nlay + 1, dis.nrow, dis.ncol), np.float
+            )
             self.__botm[0, :, :] = dis.top.array
             self.__botm[1:, :, :] = dis.botm.array
             try:
-                swi = model.get_package('SWI2')
+                swi = model.get_package("SWI2")
                 self.__nu = swi.nu.array
                 self.__istrat = swi.istrat
                 self.__nsrf = swi.nsrf
             except (AttributeError, ValueError):
-                sys.stdout.write('Error: SWI2 package not available...\n')
+                sys.stdout.write("Error: SWI2 package not available...\n")
         self.__nlay = self.__botm.shape[0] - 1
         self.__nrow = self.__botm[0, :, :].shape[0]
         self.__ncol = self.__botm[0, :, :].shape[1]
@@ -1758,14 +1964,15 @@ class SwiConcentration():
         pct = {}
         for isrf in range(self.__nsrf):
             z = zeta[isrf]
-            pct[isrf] = (self.__botm[:-1, :, :] - z[:, :, :]) / self.__b[:, :,
-                                                                :]
+            pct[isrf] = (self.__botm[:-1, :, :] - z[:, :, :]) / self.__b[
+                :, :, :
+            ]
         for isrf in range(self.__nsrf):
             p = pct[isrf]
             if self.__istrat == 1:
                 conc[:, :, :] += self.__nu[isrf] * p[:, :, :]
                 if isrf + 1 == self.__nsrf:
-                    conc[:, :, :] += self.__nu[isrf + 1] * (1. - p[:, :, :])
+                    conc[:, :, :] += self.__nu[isrf + 1] * (1.0 - p[:, :, :])
             # TODO linear option
         if layer is None:
             return conc
@@ -1796,13 +2003,13 @@ def shapefile_extents(shp):
 
     """
     if shapefile is None:
-        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
         raise PlotException(s)
 
     sf = shapefile.Reader(shp)
     shapes = sf.shapes()
     nshp = len(shapes)
-    xmin, xmax, ymin, ymax = 1.e20, -1.e20, 1.e20, -1.e20
+    xmin, xmax, ymin, ymax = 1.0e20, -1.0e20, 1.0e20, -1.0e20
 
     for n in range(nshp):
         for p in shapes[n].points:
@@ -1838,7 +2045,7 @@ def shapefile_get_vertices(shp):
 
     """
     if shapefile is None:
-        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
         raise PlotException(s)
 
     sf = shapefile.Reader(shp)
@@ -1864,11 +2071,11 @@ def shapefile_get_vertices(shp):
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
             for pij in range(len(prt)):
-                vertices.append(pts[par[pij]:par[pij + 1]])
+                vertices.append(pts[par[pij] : par[pij + 1]])
     return vertices
 
 
-def shapefile_to_patch_collection(shp, radius=500., idx=None):
+def shapefile_to_patch_collection(shp, radius=500.0, idx=None):
     """
     Create a patch collection from the shapes in a shapefile
 
@@ -1889,11 +2096,13 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
 
     """
     if shapefile is None:
-        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
         raise PlotException(s)
     if plt is None:
-        err_msg = "matplotlib must be installed to " + \
-                  "use shapefile_to_patch_collection()"
+        err_msg = (
+            "matplotlib must be installed to "
+            + "use shapefile_to_patch_collection()"
+        )
         raise ImportError(err_msg)
     else:
         from matplotlib.patches import Polygon, Circle, Path, PathPatch
@@ -1927,14 +2136,23 @@ def shapefile_to_patch_collection(shp, radius=500., idx=None):
             prt = shapes[n].parts
             par = list(prt) + [pts.shape[0]]
             for pij in range(len(prt)):
-                ptchs.append(Polygon(pts[par[pij]:par[pij + 1]]))
+                ptchs.append(Polygon(pts[par[pij] : par[pij + 1]]))
     pc = PatchCollection(ptchs)
     return pc
 
 
-def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
-                   edgecolor='scaled', facecolor='scaled',
-                   a=None, masked_values=None, idx=None, **kwargs):
+def plot_shapefile(
+    shp,
+    ax=None,
+    radius=500.0,
+    cmap="Dark2",
+    edgecolor="scaled",
+    facecolor="scaled",
+    a=None,
+    masked_values=None,
+    idx=None,
+    **kwargs
+):
     """
     Generic function for plotting a shapefile.
 
@@ -1973,16 +2191,16 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     """
 
     if shapefile is None:
-        s = 'Could not import shapefile.  Must install pyshp in order to plot shapefiles.'
+        s = "Could not import shapefile.  Must install pyshp in order to plot shapefiles."
         raise PlotException(s)
 
-    if 'vmin' in kwargs:
-        vmin = kwargs.pop('vmin')
+    if "vmin" in kwargs:
+        vmin = kwargs.pop("vmin")
     else:
         vmin = None
 
-    if 'vmax' in kwargs:
-        vmax = kwargs.pop('vmax')
+    if "vmax" in kwargs:
+        vmax = kwargs.pop("vmax")
     else:
         vmax = None
 
@@ -1993,12 +2211,12 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
     pc.set(**kwargs)
     if a is None:
         nshp = len(pc.get_paths())
-        cccol = cm(1. * np.arange(nshp) / nshp)
-        if facecolor == 'scaled':
+        cccol = cm(1.0 * np.arange(nshp) / nshp)
+        if facecolor == "scaled":
             pc.set_facecolor(cccol)
         else:
             pc.set_facecolor(facecolor)
-        if edgecolor == 'scaled':
+        if edgecolor == "scaled":
             pc.set_edgecolor(cccol)
         else:
             pc.set_edgecolor(edgecolor)
@@ -2007,8 +2225,8 @@ def plot_shapefile(shp, ax=None, radius=500., cmap='Dark2',
         if masked_values is not None:
             for mval in masked_values:
                 a = np.ma.masked_equal(a, mval)
-        if edgecolor == 'scaled':
-            pc.set_edgecolor('none')
+        if edgecolor == "scaled":
+            pc.set_edgecolor("none")
         else:
             pc.set_edgecolor(edgecolor)
         pc.set_array(a)
@@ -2031,8 +2249,10 @@ def cvfd_to_patch_collection(verts, iverts):
 
     """
     if plt is None:
-        err_msg = "matplotlib must be installed to " + \
-                  "use cvfd_to_patch_collection()"
+        err_msg = (
+            "matplotlib must be installed to "
+            + "use cvfd_to_patch_collection()"
+        )
         raise ImportError(err_msg)
     else:
         from matplotlib.patches import Polygon
@@ -2052,9 +2272,18 @@ def cvfd_to_patch_collection(verts, iverts):
     return pc
 
 
-def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
-              edgecolor='scaled', facecolor='scaled', a=None,
-              masked_values=None, **kwargs):
+def plot_cvfd(
+    verts,
+    iverts,
+    ax=None,
+    layer=0,
+    cmap="Dark2",
+    edgecolor="scaled",
+    facecolor="scaled",
+    a=None,
+    masked_values=None,
+    **kwargs
+):
     """
     Generic function for plotting a control volume finite difference grid of
     information.
@@ -2096,19 +2325,19 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
         err_msg = "matplotlib must be installed to use plot_cvfd()"
         raise ImportError(err_msg)
 
-    if 'vmin' in kwargs:
-        vmin = kwargs.pop('vmin')
+    if "vmin" in kwargs:
+        vmin = kwargs.pop("vmin")
     else:
         vmin = None
 
-    if 'vmax' in kwargs:
-        vmax = kwargs.pop('vmax')
+    if "vmax" in kwargs:
+        vmax = kwargs.pop("vmax")
     else:
         vmax = None
 
-    if 'ncpl' in kwargs:
+    if "ncpl" in kwargs:
         nlay = layer + 1
-        ncpl = kwargs.pop('ncpl')
+        ncpl = kwargs.pop("ncpl")
         if isinstance(ncpl, int):
             i = int(ncpl)
             ncpl = np.ones((nlay), dtype=np.int) * i
@@ -2153,12 +2382,12 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
     # set colors
     if a is None:
         nshp = len(pc.get_paths())
-        cccol = cm(1. * np.arange(nshp) / nshp)
-        if facecolor == 'scaled':
+        cccol = cm(1.0 * np.arange(nshp) / nshp)
+        if facecolor == "scaled":
             pc.set_facecolor(cccol)
         else:
             pc.set_facecolor(facecolor)
-        if edgecolor == 'scaled':
+        if edgecolor == "scaled":
             pc.set_edgecolor(cccol)
         else:
             pc.set_edgecolor(edgecolor)
@@ -2171,8 +2400,8 @@ def plot_cvfd(verts, iverts, ax=None, layer=0, cmap='Dark2',
         # add NaN values to mask
         a = np.ma.masked_where(np.isnan(a), a)
 
-        if edgecolor == 'scaled':
-            pc.set_edgecolor('none')
+        if edgecolor == "scaled":
+            pc.set_edgecolor("none")
         else:
             pc.set_edgecolor(edgecolor)
         pc.set_array(a[i0:i1])
@@ -2284,7 +2513,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
     # build list of points along current line
     pts = []
     npts = len(ptsin)
-    dlen = 0.
+    dlen = 0.0
     for idx in range(1, npts):
         x0 = ptsin[idx - 1][0]
         x1 = ptsin[idx][0]
@@ -2292,7 +2521,7 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
         y1 = ptsin[idx][1]
         a = x1 - x0
         b = y1 - y0
-        c = math.sqrt(math.pow(a, 2.) + math.pow(b, 2.))
+        c = math.sqrt(math.pow(a, 2.0) + math.pow(b, 2.0))
         # find cells with (x0, y0) and (x1, y1)
         irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
         irow1, jcol1 = findrowcolumn((x1, y1), xedge, yedge)
@@ -2301,18 +2530,18 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
         incx = abs(small_value * a / c)
         iy = 0
         incy = -abs(small_value * b / c)
-        if a == 0.:
-            incx = 0.
+        if a == 0.0:
+            incx = 0.0
         # go to the right
-        elif a > 0.:
+        elif a > 0.0:
             jx = 1
-            incx *= -1.
-        if b == 0.:
-            incy = 0.
+            incx *= -1.0
+        if b == 0.0:
+            incy = 0.0
         # go down
-        elif b < 0.:
+        elif b < 0.0:
             iy = 1
-            incy *= -1.
+            incy *= -1.0
         # process data
         if irow0 >= 0 and jcol0 >= 0:
             iadd = True
@@ -2324,28 +2553,28 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
         while True:
             icnt += 1
             dx = xedge[jcol0 + jx] - x0
-            dlx = 0.
-            if a != 0.:
+            dlx = 0.0
+            if a != 0.0:
                 dlx = c * dx / a
             dy = yedge[irow0 + iy] - y0
-            dly = 0.
-            if b != 0.:
+            dly = 0.0
+            if b != 0.0:
                 dly = c * dy / b
-            if dlx != 0. and dly != 0.:
+            if dlx != 0.0 and dly != 0.0:
                 if abs(dlx) < abs(dly):
                     dy = dx * b / a
                 else:
                     dx = dy * a / b
             xt = x0 + dx + incx
             yt = y0 + dy + incy
-            dl = math.sqrt(math.pow((xt - x0), 2.) + math.pow((yt - y0), 2.))
+            dl = math.sqrt(math.pow((xt - x0), 2.0) + math.pow((yt - y0), 2.0))
             dlen += dl
             if not returnvertices:
                 pts.append((xt, yt, dlen))
             x0, y0 = xt, yt
-            xt = x0 - 2. * incx
-            yt = y0 - 2. * incy
-            dl = math.sqrt(math.pow((xt - x0), 2.) + math.pow((yt - y0), 2.))
+            xt = x0 - 2.0 * incx
+            yt = y0 - 2.0 * incy
+            dl = math.sqrt(math.pow((xt - x0), 2.0) + math.pow((yt - y0), 2.0))
             dlen += dl
             x0, y0 = xt, yt
             irow0, jcol0 = findrowcolumn((x0, y0), xedge, yedge)
@@ -2354,12 +2583,14 @@ def line_intersect_grid(ptsin, xedge, yedge, returnvertices=False):
                     pts.append((xt, yt, dlen))
             elif irow1 < 0 or jcol1 < 0:
                 dl = math.sqrt(
-                    math.pow((x1 - x0), 2.) + math.pow((y1 - y0), 2.))
+                    math.pow((x1 - x0), 2.0) + math.pow((y1 - y0), 2.0)
+                )
                 dlen += dl
                 break
             if irow0 == irow1 and jcol0 == jcol1:
                 dl = math.sqrt(
-                    math.pow((x1 - x0), 2.) + math.pow((y1 - y0), 2.))
+                    math.pow((x1 - x0), 2.0) + math.pow((y1 - y0), 2.0)
+                )
                 dlen += dl
                 pts.append((x1, y1, dlen))
                 break
@@ -2449,15 +2680,18 @@ def _set_coord_info(mg, xul, yul, xll, yll, rotation):
     mg : fp.discretization.Grid object
     """
     import warnings
+
     if xul is not None and yul is not None:
-        warnings.warn('xul/yul have been deprecated. Use xll/yll instead.',
-                      DeprecationWarning)
+        warnings.warn(
+            "xul/yul have been deprecated. Use xll/yll instead.",
+            DeprecationWarning,
+        )
         if rotation is not None:
             mg._angrot = rotation
 
-        mg.set_coord_info(xoff=mg._xul_to_xll(xul),
-                          yoff=mg._yul_to_yll(yul),
-                          angrot=rotation)
+        mg.set_coord_info(
+            xoff=mg._xul_to_xll(xul), yoff=mg._yul_to_yll(yul), angrot=rotation
+        )
     elif xll is not None and xll is not None:
         mg.set_coord_info(xoff=xll, yoff=yll, angrot=rotation)
 
@@ -2486,37 +2720,45 @@ def _depreciated_dis_handler(modelgrid, dis):
     # creates a new modelgrid instance with the dis information
     from ..discretization import StructuredGrid, VertexGrid, UnstructuredGrid
     import warnings
-    warnings.warn('the dis parameter has been depreciated.',
-                  PendingDeprecationWarning)
+
+    warnings.warn(
+        "the dis parameter has been depreciated.", PendingDeprecationWarning
+    )
     if modelgrid.grid_type == "vertex":
-        modelgrid = VertexGrid(modelgrid.vertices,
-                               modelgrid.cell2d,
-                               dis.top.array,
-                               dis.botm.array,
-                               idomain=modelgrid.idomain,
-                               xoff=modelgrid.xoffset,
-                               yoff=modelgrid.yoffset,
-                               angrot=modelgrid.angrot)
+        modelgrid = VertexGrid(
+            modelgrid.vertices,
+            modelgrid.cell2d,
+            dis.top.array,
+            dis.botm.array,
+            idomain=modelgrid.idomain,
+            xoff=modelgrid.xoffset,
+            yoff=modelgrid.yoffset,
+            angrot=modelgrid.angrot,
+        )
     if modelgrid.grid_type == "unstructured":
-        modelgrid = UnstructuredGrid(modelgrid._vertices,
-                                     modelgrid._iverts,
-                                     modelgrid._xc,
-                                     modelgrid._yc,
-                                     dis.top.array,
-                                     dis.botm.array,
-                                     idomain=modelgrid.idomain,
-                                     xoff=modelgrid.xoffset,
-                                     yoff=modelgrid.yoffset,
-                                     angrot=modelgrid.angrot)
+        modelgrid = UnstructuredGrid(
+            modelgrid._vertices,
+            modelgrid._iverts,
+            modelgrid._xc,
+            modelgrid._yc,
+            dis.top.array,
+            dis.botm.array,
+            idomain=modelgrid.idomain,
+            xoff=modelgrid.xoffset,
+            yoff=modelgrid.yoffset,
+            angrot=modelgrid.angrot,
+        )
     else:
-        modelgrid = StructuredGrid(delc=dis.delc.array,
-                                   delr=dis.delr.array,
-                                   top=dis.top.array,
-                                   botm=dis.botm.array,
-                                   idomain=modelgrid.idomain,
-                                   xoff=modelgrid.xoffset,
-                                   yoff=modelgrid.yoffset,
-                                   angrot=modelgrid.angrot)
+        modelgrid = StructuredGrid(
+            delc=dis.delc.array,
+            delr=dis.delr.array,
+            top=dis.top.array,
+            botm=dis.botm.array,
+            idomain=modelgrid.idomain,
+            xoff=modelgrid.xoffset,
+            yoff=modelgrid.yoffset,
+            angrot=modelgrid.angrot,
+        )
     return modelgrid
 
 
@@ -2532,23 +2774,24 @@ def advanced_package_bc_helper(pkg, modelgrid, kper):
     Returns
     -------
     """
-    if pkg.package_type in ('sfr', 'uzf'):
-        if pkg.parent.version == 'mf6':
+    if pkg.package_type in ("sfr", "uzf"):
+        if pkg.parent.version == "mf6":
             mflist = pkg.packagedata.array
-            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+            idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             iuzfbnd = pkg.iuzfbnd.array
             idx = np.where(iuzfbnd != 0)
             idx = np.append([[0] * idx[-1].size], idx, axis=0)
-    elif pkg.package_type in ('lak', 'maw'):
+    elif pkg.package_type in ("lak", "maw"):
         if pkg.parent.version == "mf6":
             mflist = pkg.connectiondata.array
-            idx = np.array([list(i) for i in mflist['cellid']], dtype=int).T
+            idx = np.array([list(i) for i in mflist["cellid"]], dtype=int).T
         else:
             lakarr = pkg.lakarr.array[kper]
             idx = np.where(lakarr != 0)
             idx = np.array(idx)
     else:
-        raise NotImplementedError("Pkg {} not implemented for bc plotting"
-                                  .format(pkg.package_type))
+        raise NotImplementedError(
+            "Pkg {} not implemented for bc plotting".format(pkg.package_type)
+        )
     return idx

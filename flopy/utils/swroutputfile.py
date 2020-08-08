@@ -43,28 +43,36 @@ class SwrFile(FlopyBinaryData):
 
     """
 
-    def __init__(self, filename, swrtype='stage', precision='double',
-                 verbose=False):
+    def __init__(
+        self, filename, swrtype="stage", precision="double", verbose=False
+    ):
         """
         Class constructor.
 
         """
         super(SwrFile, self).__init__()
         self.set_float(precision=precision)
-        self.header_dtype = np.dtype([('totim', self.floattype),
-                                      ('kswr', 'i4'), ('kstp', 'i4'),
-                                      ('kper', 'i4')])
+        self.header_dtype = np.dtype(
+            [
+                ("totim", self.floattype),
+                ("kswr", "i4"),
+                ("kstp", "i4"),
+                ("kper", "i4"),
+            ]
+        )
         self._recordarray = []
 
-        self.file = open(filename, 'rb')
-        self.types = ('stage', 'budget', 'flow', 'exchange', 'structure')
+        self.file = open(filename, "rb")
+        self.types = ("stage", "budget", "flow", "exchange", "structure")
         if swrtype.lower() in self.types:
             self.type = swrtype.lower()
         else:
-            err = 'SWR type ({}) is not defined. '.format(type) + \
-                  'Available types are:\n'
+            err = (
+                "SWR type ({}) is not defined. ".format(type)
+                + "Available types are:\n"
+            )
             for t in self.types:
-                err = '{}  {}\n'.format(err, t)
+                err = "{}  {}\n".format(err, t)
             raise Exception(err)
 
         # set data dtypes
@@ -75,7 +83,7 @@ class SwrFile(FlopyBinaryData):
 
         # Read the dimension data
         self.flowitems = 0
-        if self.type == 'flow':
+        if self.type == "flow":
             self.flowitems = self.read_integer()
         self.nrecord = self.read_integer()
 
@@ -84,10 +92,10 @@ class SwrFile(FlopyBinaryData):
 
         # read connectivity for velocity data if necessary
         self.conn_dtype = None
-        if self.type == 'flow':
+        if self.type == "flow":
             self.connectivity = self._read_connectivity()
             if self.verbose:
-                print('Connectivity: ')
+                print("Connectivity: ")
                 print(self.connectivity)
 
         # initialize itemlist and nentries for qaq data
@@ -121,7 +129,7 @@ class SwrFile(FlopyBinaryData):
         --------
 
         """
-        if self.type == 'flow':
+        if self.type == "flow":
             return self.connectivity
         else:
             return None
@@ -227,24 +235,27 @@ class SwrFile(FlopyBinaryData):
             kstp1 = kswrkstpkper[1]
             kper1 = kswrkstpkper[2]
 
-            totim1 = self._recordarray[np.where(
-                (self._recordarray['kswr'] == kswr1) &
-                (self._recordarray['kstp'] == kstp1) &
-                (self._recordarray['kper'] == kper1))]["totim"][0]
+            totim1 = self._recordarray[
+                np.where(
+                    (self._recordarray["kswr"] == kswr1)
+                    & (self._recordarray["kstp"] == kstp1)
+                    & (self._recordarray["kper"] == kper1)
+                )
+            ]["totim"][0]
         elif totim is not None:
             totim1 = totim
         elif idx is not None:
-            totim1 = self._recordarray['totim'][idx]
+            totim1 = self._recordarray["totim"][idx]
         else:
             totim1 = self._times[-1]
 
         try:
             ipos = self.recorddict[totim1]
             self.file.seek(ipos)
-            if self.type == 'exchange':
+            if self.type == "exchange":
                 self.nitems, self.itemlist = self.nentries[totim1]
                 r = self._read_qaq()
-            elif self.type == 'structure':
+            elif self.type == "structure":
                 self.nitems, self.itemlist = self.nentries[totim1]
                 r = self._read_structure()
             else:
@@ -252,7 +263,7 @@ class SwrFile(FlopyBinaryData):
 
             # add totim to data record array
             s = np.zeros(r.shape[0], dtype=self.out_dtype)
-            s['totim'] = totim1
+            s["totim"] = totim1
             for name in r.dtype.names:
                 s[name] = r[name]
             return s.view(dtype=self.out_dtype)
@@ -303,25 +314,27 @@ class SwrFile(FlopyBinaryData):
         """
 
         if irec + 1 > self.nrecord:
-            err = 'Error: specified irec ({}) '.format(irec) + \
-                  'exceeds the total number of records ()'.format(self.nrecord)
+            err = "Error: specified irec ({}) ".format(
+                irec
+            ) + "exceeds the total number of records ()".format(self.nrecord)
             raise Exception(err)
 
         gage_record = None
-        if self.type == 'stage' or self.type == 'budget':
+        if self.type == "stage" or self.type == "budget":
             gage_record = self._get_ts(irec=irec)
-        elif self.type == 'flow':
+        elif self.type == "flow":
             gage_record = self._get_ts_qm(irec=irec, iconn=iconn)
-        elif self.type == 'exchange':
+        elif self.type == "exchange":
             gage_record = self._get_ts_qaq(irec=irec, klay=klay)
-        elif self.type == 'structure':
+        elif self.type == "structure":
             gage_record = self._get_ts_structure(irec=irec, istr=istr)
 
         return gage_record
 
     def _read_connectivity(self):
-        self.conn_dtype = np.dtype([('reach', 'i4'),
-                                    ('from', 'i4'), ('to', 'i4')])
+        self.conn_dtype = np.dtype(
+            [("reach", "i4"), ("from", "i4"), ("to", "i4")]
+        )
         conn = np.zeros((self.nrecord, 3), np.int)
         icount = 0
         for nrg in range(self.flowitems):
@@ -334,35 +347,56 @@ class SwrFile(FlopyBinaryData):
         return conn
 
     def _build_dtypes(self):
-        self.vtotim = ('totim', self.floattype)
-        if self.type == 'stage':
-            vtype = [('stage', self.floattype)]
-        elif self.type == 'budget':
-            vtype = [('stage', self.floattype), ('qsflow', self.floattype),
-                     ('qlatflow', self.floattype), ('quzflow', self.floattype),
-                     ('rain', self.floattype), ('evap', self.floattype),
-                     ('qbflow', self.floattype), ('qeflow', self.floattype),
-                     ('qexflow', self.floattype), ('qbcflow', self.floattype),
-                     ('qcrflow', self.floattype), ('dv', self.floattype),
-                     ('inf-out', self.floattype), ('volume', self.floattype)]
-        elif self.type == 'flow':
-            vtype = [('flow', self.floattype),
-                     ('velocity', self.floattype)]
-        elif self.type == 'exchange':
-            vtype = [('layer', 'i4'), ('bottom', 'f8'), ('stage', 'f8'),
-                     ('depth', 'f8'), ('head', 'f8'), ('wetper', 'f8'),
-                     ('cond', 'f8'), ('headdiff', 'f8'), ('exchange', 'f8')]
-        elif self.type == 'structure':
-            vtype = [('usstage', 'f8'), ('dsstage', 'f8'), ('gateelev', 'f8'),
-                     ('opening', 'f8'), ('strflow', 'f8')]
+        self.vtotim = ("totim", self.floattype)
+        if self.type == "stage":
+            vtype = [("stage", self.floattype)]
+        elif self.type == "budget":
+            vtype = [
+                ("stage", self.floattype),
+                ("qsflow", self.floattype),
+                ("qlatflow", self.floattype),
+                ("quzflow", self.floattype),
+                ("rain", self.floattype),
+                ("evap", self.floattype),
+                ("qbflow", self.floattype),
+                ("qeflow", self.floattype),
+                ("qexflow", self.floattype),
+                ("qbcflow", self.floattype),
+                ("qcrflow", self.floattype),
+                ("dv", self.floattype),
+                ("inf-out", self.floattype),
+                ("volume", self.floattype),
+            ]
+        elif self.type == "flow":
+            vtype = [("flow", self.floattype), ("velocity", self.floattype)]
+        elif self.type == "exchange":
+            vtype = [
+                ("layer", "i4"),
+                ("bottom", "f8"),
+                ("stage", "f8"),
+                ("depth", "f8"),
+                ("head", "f8"),
+                ("wetper", "f8"),
+                ("cond", "f8"),
+                ("headdiff", "f8"),
+                ("exchange", "f8"),
+            ]
+        elif self.type == "structure":
+            vtype = [
+                ("usstage", "f8"),
+                ("dsstage", "f8"),
+                ("gateelev", "f8"),
+                ("opening", "f8"),
+                ("strflow", "f8"),
+            ]
         self.dtype = np.dtype(vtype)
         temp = list(vtype)
-        if self.type == 'exchange':
-            temp.insert(0, ('reach', 'i4'))
+        if self.type == "exchange":
+            temp.insert(0, ("reach", "i4"))
             self.qaq_dtype = np.dtype(temp)
-        elif self.type == 'structure':
-            temp.insert(0, ('structure', 'i4'))
-            temp.insert(0, ('reach', 'i4'))
+        elif self.type == "structure":
+            temp.insert(0, ("structure", "i4"))
+            temp.insert(0, ("reach", "i4"))
             self.str_dtype = np.dtype(temp)
         temp.insert(0, self.vtotim)
         self.out_dtype = np.dtype(temp)
@@ -370,7 +404,7 @@ class SwrFile(FlopyBinaryData):
 
     def _read_header(self):
         nitems = 0
-        if self.type == 'exchange' or self.type == 'structure':
+        if self.type == "exchange" or self.type == "structure":
             itemlist = np.zeros(self.nrecord, np.int)
             try:
                 for i in range(self.nrecord):
@@ -379,7 +413,7 @@ class SwrFile(FlopyBinaryData):
                 self.nitems = nitems
             except:
                 if self.verbose:
-                    sys.stdout.write('\nCould not read itemlist')
+                    sys.stdout.write("\nCould not read itemlist")
                 return 0.0, 0.0, 0, 0, 0, False
         try:
             totim = self.read_real()
@@ -387,7 +421,7 @@ class SwrFile(FlopyBinaryData):
             kper = self.read_integer() - 1
             kstp = self.read_integer() - 1
             kswr = self.read_integer() - 1
-            if self.type == 'exchange' or self.type == 'structure':
+            if self.type == "exchange" or self.type == "structure":
                 self.nentries[totim] = (nitems, itemlist)
             return totim, dt, kper, kstp, kswr, True
         except:
@@ -402,7 +436,7 @@ class SwrFile(FlopyBinaryData):
         idx = 0
         for key, value in self.recorddict.items():
             totim = np.array(key)
-            gage_record['totim'][idx] = totim
+            gage_record["totim"][idx] = totim
 
             self.file.seek(value)
             r = self._get_data()
@@ -421,7 +455,7 @@ class SwrFile(FlopyBinaryData):
         idx = 0
         for key, value in self.recorddict.items():
             totim = key
-            gage_record['totim'][idx] = totim
+            gage_record["totim"][idx] = totim
 
             self.file.seek(value)
             r = self._get_data()
@@ -447,7 +481,7 @@ class SwrFile(FlopyBinaryData):
         idx = 0
         for key, value in self.recorddict.items():
             totim = key
-            gage_record['totim'][idx] = totim
+            gage_record["totim"][idx] = totim
 
             self.nitems, self.itemlist = self.nentries[key]
 
@@ -457,8 +491,8 @@ class SwrFile(FlopyBinaryData):
             # find correct entry for record and layer
             ilen = np.shape(r)[0]
             for i in range(ilen):
-                ir = r['reach'][i]
-                il = r['layer'][i]
+                ir = r["reach"][i]
+                il = r["layer"][i]
                 if ir == irec and il == klay:
                     for name in r.dtype.names:
                         gage_record[name][idx] = r[name][i]
@@ -476,7 +510,7 @@ class SwrFile(FlopyBinaryData):
         idx = 0
         for key, value in self.recorddict.items():
             totim = key
-            gage_record['totim'][idx] = totim
+            gage_record["totim"][idx] = totim
 
             self.nitems, self.itemlist = self.nentries[key]
 
@@ -486,8 +520,8 @@ class SwrFile(FlopyBinaryData):
             # find correct entry for record and structure number
             ilen = np.shape(r)[0]
             for i in range(ilen):
-                ir = r['reach'][i]
-                il = r['structure'][i]
+                ir = r["reach"][i]
+                il = r["structure"][i]
                 if ir == irec and il == istr:
                     for name in r.dtype.names:
                         gage_record[name][idx] = r[name][i]
@@ -497,9 +531,9 @@ class SwrFile(FlopyBinaryData):
         return gage_record.view(dtype=self.out_dtype)
 
     def _get_data(self):
-        if self.type == 'exchange':
+        if self.type == "exchange":
             return self._read_qaq()
-        elif self.type == 'structure':
+        elif self.type == "structure":
             return self._read_structure()
         else:
             return self.read_record(count=self.nrecord)
@@ -508,7 +542,7 @@ class SwrFile(FlopyBinaryData):
 
         # read qaq data using standard record reader
         bd = self.read_record(count=self.nitems)
-        bd['layer'] -= 1
+        bd["layer"] -= 1
 
         # add reach number to qaq data
         r = np.zeros(self.nitems, dtype=self.qaq_dtype)
@@ -524,7 +558,7 @@ class SwrFile(FlopyBinaryData):
                 idx += 1
 
         # add reach to array returned
-        r['reach'] = reaches.copy()
+        r["reach"] = reaches.copy()
 
         # add read data to array returned
         for idx, k in enumerate(self.dtype.names):
@@ -551,8 +585,8 @@ class SwrFile(FlopyBinaryData):
                 idx += 1
 
         # add reach to array returned
-        r['reach'] = reaches.copy()
-        r['structure'] = struct.copy()
+        r["reach"] = reaches.copy()
+        r["structure"] = struct.copy()
 
         # add read data to array returned
         for idx, k in enumerate(self.dtype.names):
@@ -566,7 +600,7 @@ class SwrFile(FlopyBinaryData):
         """
         self.file.seek(self.datastart)
         if self.verbose:
-            sys.stdout.write('Generating SWR binary data time list\n')
+            sys.stdout.write("Generating SWR binary data time list\n")
         self._ntimes = 0
         self._times = []
         self._kswrkstpkper = []
@@ -578,21 +612,20 @@ class SwrFile(FlopyBinaryData):
             #  that the time list is being created
             idx += 1
             if self.verbose:
-                v = divmod(float(idx), 72.)
+                v = divmod(float(idx), 72.0)
                 if v[1] == 0.0:
-                    sys.stdout.write('.')
+                    sys.stdout.write(".")
             # read header
             totim, dt, kper, kstp, kswr, success = self._read_header()
             if success:
-                if self.type == 'exchange':
-                    bytes = self.nitems * \
-                            (self.integerbyte +
-                             8 * self.realbyte)
-                elif self.type == 'structure':
+                if self.type == "exchange":
+                    bytes = self.nitems * (
+                        self.integerbyte + 8 * self.realbyte
+                    )
+                elif self.type == "structure":
                     bytes = self.nitems * (5 * self.realbyte)
                 else:
-                    bytes = self.nrecord * self.items * \
-                            self.realbyte
+                    bytes = self.nrecord * self.items * self.realbyte
                 ipos = self.file.tell()
                 self.file.seek(bytes, 1)
                 # save data
@@ -604,9 +637,10 @@ class SwrFile(FlopyBinaryData):
                 self._recordarray.append(header)
             else:
                 if self.verbose:
-                    sys.stdout.write('\n')
-                self._recordarray = np.array(self._recordarray,
-                                             dtype=self.header_dtype)
+                    sys.stdout.write("\n")
+                self._recordarray = np.array(
+                    self._recordarray, dtype=self.header_dtype
+                )
                 self._times = np.array(self._times)
                 self._kswrkstpkper = np.array(self._kswrkstpkper)
                 return
@@ -645,9 +679,10 @@ class SwrStage(SwrFile):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
-        super(SwrStage, self).__init__(filename, swrtype='stage',
-                                       precision=precision, verbose=verbose)
+    def __init__(self, filename, precision="double", verbose=False):
+        super(SwrStage, self).__init__(
+            filename, swrtype="stage", precision=precision, verbose=verbose
+        )
         return
 
 
@@ -684,9 +719,10 @@ class SwrBudget(SwrFile):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
-        super(SwrBudget, self).__init__(filename, swrtype='budget',
-                                        precision=precision, verbose=verbose)
+    def __init__(self, filename, precision="double", verbose=False):
+        super(SwrBudget, self).__init__(
+            filename, swrtype="budget", precision=precision, verbose=verbose
+        )
         return
 
 
@@ -723,9 +759,10 @@ class SwrFlow(SwrFile):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
-        super(SwrFlow, self).__init__(filename, swrtype='flow',
-                                      precision=precision, verbose=verbose)
+    def __init__(self, filename, precision="double", verbose=False):
+        super(SwrFlow, self).__init__(
+            filename, swrtype="flow", precision=precision, verbose=verbose
+        )
         return
 
 
@@ -762,9 +799,10 @@ class SwrExchange(SwrFile):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
-        super(SwrExchange, self).__init__(filename, swrtype='exchange',
-                                          precision=precision, verbose=verbose)
+    def __init__(self, filename, precision="double", verbose=False):
+        super(SwrExchange, self).__init__(
+            filename, swrtype="exchange", precision=precision, verbose=verbose
+        )
         return
 
 
@@ -802,8 +840,8 @@ class SwrStructure(SwrFile):
 
     """
 
-    def __init__(self, filename, precision='double', verbose=False):
-        super(SwrStructure, self).__init__(filename, swrtype='structure',
-                                           precision=precision,
-                                           verbose=verbose)
+    def __init__(self, filename, precision="double", verbose=False):
+        super(SwrStructure, self).__init__(
+            filename, swrtype="structure", precision=precision, verbose=verbose
+        )
         return

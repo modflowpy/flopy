@@ -14,12 +14,18 @@ class Header(object):
     The header class is an abstract base class to create headers for MODFLOW files
     """
 
-    def __init__(self, filetype=None, precision='single'):
-        floattype = 'f4'
-        if precision == 'double':
-            floattype = 'f8'
-        self.header_types = ['head', 'drawdown', 'ucn', 'vardis', 'vardisv',
-                             'vardisu']
+    def __init__(self, filetype=None, precision="single"):
+        floattype = "f4"
+        if precision == "double":
+            floattype = "f8"
+        self.header_types = [
+            "head",
+            "drawdown",
+            "ucn",
+            "vardis",
+            "vardisv",
+            "vardisu",
+        ]
         if filetype is None:
             self.header_type = None
         else:
@@ -27,56 +33,96 @@ class Header(object):
                 filetype = filetype.decode()
             self.header_type = filetype.lower()
         if self.header_type in self.header_types:
-            if self.header_type == 'head':
-                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
-                                       ('pertim', floattype),
-                                       ('totim', floattype),
-                                       ('text', 'a16'),
-                                       ('ncol', 'i4'), ('nrow', 'i4'),
-                                       ('ilay', 'i4')])
-            elif self.header_type == 'drawdown':
-                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
-                                       ('pertim', floattype),
-                                       ('totim', floattype),
-                                       ('text', 'a16'),
-                                       ('ncol', 'i4'), ('nrow', 'i4'),
-                                       ('ilay', 'i4')])
-            elif self.header_type == 'ucn':
+            if self.header_type == "head":
                 self.dtype = np.dtype(
-                    [('ntrans', 'i4'), ('kstp', 'i4'), ('kper', 'i4'),
-                     ('totim', floattype), ('text', 'a16'),
-                     ('ncol', 'i4'), ('nrow', 'i4'), ('ilay', 'i4')])
-            elif self.header_type == 'vardis':
-                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
-                                       ('pertim', floattype),
-                                       ('totim', floattype),
-                                       ('text', 'a16'),
-                                       ('ncol', 'i4'), ('nrow', 'i4'),
-                                       ('ilay', 'i4')])
-            elif self.header_type == 'vardisv':
-                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
-                                       ('pertim', floattype),
-                                       ('totim', floattype),
-                                       ('text', 'a16'),
-                                       ('ncpl', 'i4'), ('ilay', 'i4'),
-                                       ('m3', 'i4')])
-            elif self.header_type == 'vardisu':
-                self.dtype = np.dtype([('kstp', 'i4'), ('kper', 'i4'),
-                                       ('pertim', floattype),
-                                       ('totim', floattype),
-                                       ('text', 'a16'),
-                                       ('nodes', 'i4'), ('m2', 'i4'),
-                                       ('m3', 'i4')])
+                    [
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("pertim", floattype),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("ncol", "i4"),
+                        ("nrow", "i4"),
+                        ("ilay", "i4"),
+                    ]
+                )
+            elif self.header_type == "drawdown":
+                self.dtype = np.dtype(
+                    [
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("pertim", floattype),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("ncol", "i4"),
+                        ("nrow", "i4"),
+                        ("ilay", "i4"),
+                    ]
+                )
+            elif self.header_type == "ucn":
+                self.dtype = np.dtype(
+                    [
+                        ("ntrans", "i4"),
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("ncol", "i4"),
+                        ("nrow", "i4"),
+                        ("ilay", "i4"),
+                    ]
+                )
+            elif self.header_type == "vardis":
+                self.dtype = np.dtype(
+                    [
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("pertim", floattype),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("ncol", "i4"),
+                        ("nrow", "i4"),
+                        ("ilay", "i4"),
+                    ]
+                )
+            elif self.header_type == "vardisv":
+                self.dtype = np.dtype(
+                    [
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("pertim", floattype),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("ncpl", "i4"),
+                        ("ilay", "i4"),
+                        ("m3", "i4"),
+                    ]
+                )
+            elif self.header_type == "vardisu":
+                self.dtype = np.dtype(
+                    [
+                        ("kstp", "i4"),
+                        ("kper", "i4"),
+                        ("pertim", floattype),
+                        ("totim", floattype),
+                        ("text", "a16"),
+                        ("nodes", "i4"),
+                        ("m2", "i4"),
+                        ("m3", "i4"),
+                    ]
+                )
 
             self.header = np.ones(1, self.dtype)
         else:
             self.dtype = None
             self.header = None
-            msg = 'Specified {} '.format(self.header_type) + \
-                  'type is not available. Available types are:'
+            msg = (
+                "Specified {} ".format(self.header_type)
+                + "type is not available. Available types are:"
+            )
             print(msg)
             for idx, t in enumerate(self.header_types):
-                print('  {0} {1}'.format(idx + 1, t))
+                print("  {0} {1}".format(idx + 1, t))
         return
 
     def get_dtype(self):
@@ -113,14 +159,14 @@ class LayerFile(object):
         self.filename = filename
         self.precision = precision
         self.verbose = verbose
-        self.file = open(self.filename, 'rb')
+        self.file = open(self.filename, "rb")
         # Get filesize to ensure this is not an empty file
         self.file.seek(0, 2)
         totalbytes = self.file.tell()
         self.file.seek(0, 0)  # reset to beginning
         assert self.file.tell() == 0
         if totalbytes == 0:
-            raise IOError('datafile error: file is empty: ' + str(filename))
+            raise IOError("datafile error: file is empty: " + str(filename))
         self.nrow = 0
         self.ncol = 0
         self.nlay = 0
@@ -129,28 +175,28 @@ class LayerFile(object):
         self.recordarray = []
         self.iposarray = []
 
-        if precision == 'single':
+        if precision == "single":
             self.realtype = np.float32
-        elif precision == 'double':
+        elif precision == "double":
             self.realtype = np.float64
         else:
-            raise Exception('Unknown precision specified: ' + precision)
+            raise Exception("Unknown precision specified: " + precision)
 
         self.model = None
         self.dis = None
         self.mg = None
-        if 'model' in kwargs.keys():
-            self.model = kwargs.pop('model')
+        if "model" in kwargs.keys():
+            self.model = kwargs.pop("model")
             self.mg = self.model.modelgrid
             self.dis = self.model.dis
-        if 'dis' in kwargs.keys():
-            self.dis = kwargs.pop('dis')
+        if "dis" in kwargs.keys():
+            self.dis = kwargs.pop("dis")
             self.mg = self.dis.parent.modelgrid
         if "modelgrid" in kwargs.keys():
-            self.mg = kwargs.pop('modelgrid')
+            self.mg = kwargs.pop("modelgrid")
         if len(kwargs.keys()) > 0:
-            args = ','.join(kwargs.keys())
-            raise Exception('LayerFile error: unrecognized kwargs: ' + args)
+            args = ",".join(kwargs.keys())
+            raise Exception("LayerFile error: unrecognized kwargs: " + args)
 
         # read through the file and build the pointer index
         self._build_index()
@@ -158,14 +204,23 @@ class LayerFile(object):
         # now that we read the data and know nrow and ncol,
         # we can make a generic sr if needed
         if self.mg is None:
-            self.mg = StructuredGrid(delc=np.ones((self.nrow,)),
-                                     delr=np.ones(self.ncol, ),
-                                     xoff=0.0, yoff=0.0,
-                                     angrot=0.0)
+            self.mg = StructuredGrid(
+                delc=np.ones((self.nrow,)),
+                delr=np.ones(self.ncol,),
+                xoff=0.0,
+                yoff=0.0,
+                angrot=0.0,
+            )
         return
 
-    def to_shapefile(self, filename, kstpkper=None, totim=None, mflay=None,
-                     attrib_name='lf_data'):
+    def to_shapefile(
+        self,
+        filename,
+        kstpkper=None,
+        totim=None,
+        mflay=None,
+        attrib_name="lf_data",
+    ):
         """
          Export model output data to a shapefile at a specific location
           in LayerFile instance.
@@ -203,23 +258,34 @@ class LayerFile(object):
          >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
          """
 
-        plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
-                                                totim=totim, mflay=mflay)
-                                  .transpose()).transpose()
+        plotarray = np.atleast_3d(
+            self.get_data(
+                kstpkper=kstpkper, totim=totim, mflay=mflay
+            ).transpose()
+        ).transpose()
         if mflay != None:
             attrib_dict = {
-                attrib_name + '{}'.format(mflay): plotarray[0, :, :]}
+                attrib_name + "{}".format(mflay): plotarray[0, :, :]
+            }
         else:
             attrib_dict = {}
             for k in range(plotarray.shape[0]):
-                name = attrib_name + '{}'.format(k)
+                name = attrib_name + "{}".format(k)
                 attrib_dict[name] = plotarray[k]
 
         from ..export.shapefile_utils import write_grid_shapefile
+
         write_grid_shapefile(filename, self.mg, attrib_dict)
 
-    def plot(self, axes=None, kstpkper=None, totim=None, mflay=None,
-             filename_base=None, **kwargs):
+    def plot(
+        self,
+        axes=None,
+        kstpkper=None,
+        totim=None,
+        mflay=None,
+        filename_base=None,
+        **kwargs
+    ):
         """
         Plot 3-D model output data in a specific location
         in LayerFile instance
@@ -284,15 +350,15 @@ class LayerFile(object):
 
         """
 
-        if 'file_extension' in kwargs:
-            fext = kwargs.pop('file_extension')
-            fext = fext.replace('.', '')
+        if "file_extension" in kwargs:
+            fext = kwargs.pop("file_extension")
+            fext = fext.replace(".", "")
         else:
-            fext = 'png'
+            fext = "png"
 
         masked_values = kwargs.pop("masked_values", [])
         if self.model is not None:
-            if hasattr(self.model, 'bas6') and self.model.bas6 is not None:
+            if hasattr(self.model, "bas6") and self.model.bas6 is not None:
                 masked_values.append(self.model.bas6.hnoflo)
         kwargs["masked_values"] = masked_values
 
@@ -306,31 +372,39 @@ class LayerFile(object):
             else:
                 i0 = 0
                 i1 = self.nlay
-            filenames = ['{}_Layer{}.{}'.format(filename_base, k + 1, fext)
-                         for k in range(i0, i1)]
+            filenames = [
+                "{}_Layer{}.{}".format(filename_base, k + 1, fext)
+                for k in range(i0, i1)
+            ]
 
         # make sure we have a (lay,row,col) shape plotarray
-        plotarray = np.atleast_3d(self.get_data(kstpkper=kstpkper,
-                                                totim=totim, mflay=mflay)
-                                  .transpose()).transpose()
+        plotarray = np.atleast_3d(
+            self.get_data(
+                kstpkper=kstpkper, totim=totim, mflay=mflay
+            ).transpose()
+        ).transpose()
 
         from flopy.plot.plotutil import PlotUtilities
 
-        return PlotUtilities._plot_array_helper(plotarray,
-                                                model=self.model,
-                                                axes=axes,
-                                                filenames=filenames,
-                                                mflay=mflay,
-                                                modelgrid=self.mg,
-                                                **kwargs)
+        return PlotUtilities._plot_array_helper(
+            plotarray,
+            model=self.model,
+            axes=axes,
+            filenames=filenames,
+            mflay=mflay,
+            modelgrid=self.mg,
+            **kwargs
+        )
 
     def _build_index(self):
         """
         Build the recordarray and iposarray, which maps the header information
         to the position in the formatted file.
         """
-        e = 'Abstract method _build_index called in LayerFile.  ' + \
-            'This method needs to be overridden.'
+        e = (
+            "Abstract method _build_index called in LayerFile.  "
+            + "This method needs to be overridden."
+        )
         raise Exception(e)
 
     def list_records(self):
@@ -350,30 +424,31 @@ class LayerFile(object):
 
         """
 
-        if totim >= 0.:
-            keyindices = np.where((self.recordarray['totim'] == totim))[0]
+        if totim >= 0.0:
+            keyindices = np.where((self.recordarray["totim"] == totim))[0]
             if len(keyindices) == 0:
-                msg = 'totim value ({}) not found in file...'.format(totim)
+                msg = "totim value ({}) not found in file...".format(totim)
                 raise Exception(msg)
         else:
-            raise Exception('Data not found...')
+            raise Exception("Data not found...")
 
         # initialize head with nan and then fill it
         idx = keyindices[0]
-        nrow = self.recordarray['nrow'][idx]
-        ncol = self.recordarray['ncol'][idx]
+        nrow = self.recordarray["nrow"][idx]
+        ncol = self.recordarray["ncol"][idx]
         data = np.empty((self.nlay, nrow, ncol), dtype=self.realtype)
         data[:, :, :] = np.nan
         for idx in keyindices:
             ipos = self.iposarray[idx]
-            ilay = self.recordarray['ilay'][idx]
+            ilay = self.recordarray["ilay"][idx]
             if self.verbose:
-                msg = 'Byte position in file: {} for '.format(ipos) + \
-                      'layer {}'.format(ilay)
+                msg = "Byte position in file: {} for ".format(
+                    ipos
+                ) + "layer {}".format(ilay)
                 print(msg)
             self.file.seek(ipos, 0)
-            nrow = self.recordarray['nrow'][idx]
-            ncol = self.recordarray['ncol'][idx]
+            nrow = self.recordarray["nrow"][idx]
+            ncol = self.recordarray["ncol"][idx]
             shp = (nrow, ncol)
             data[ilay - 1] = self._read_data(shp)
         return data
@@ -444,16 +519,18 @@ class LayerFile(object):
             kstp1 = kstpkper[0] + 1
             kper1 = kstpkper[1] + 1
             idx = np.where(
-                (self.recordarray['kstp'] == kstp1) &
-                (self.recordarray['kper'] == kper1))
+                (self.recordarray["kstp"] == kstp1)
+                & (self.recordarray["kper"] == kper1)
+            )
             if idx[0].shape[0] == 0:
-                raise Exception("get_data() error: kstpkper not found:{0}".
-                                format(kstpkper))
+                raise Exception(
+                    "get_data() error: kstpkper not found:{0}".format(kstpkper)
+                )
             totim1 = self.recordarray[idx]["totim"][0]
         elif totim is not None:
             totim1 = totim
         elif idx is not None:
-            totim1 = self.recordarray['totim'][idx]
+            totim1 = self.recordarray["totim"][idx]
         else:
             totim1 = self.times[-1]
 
@@ -506,8 +583,10 @@ class LayerFile(object):
         Read data from file
 
         """
-        e = 'Abstract method _read_data called in LayerFile.  ' + \
-            'This method needs to be overridden.'
+        e = (
+            "Abstract method _read_data called in LayerFile.  "
+            + "This method needs to be overridden."
+        )
         raise Exception(e)
 
     def _build_kijlist(self, idx):
@@ -516,15 +595,18 @@ class LayerFile(object):
         elif isinstance(idx, tuple):
             kijlist = [idx]
         else:
-            raise Exception('Could not build kijlist from ', idx)
+            raise Exception("Could not build kijlist from ", idx)
 
         # Check to make sure that k, i, j are within range, otherwise
         # the seek approach won't work.  Can't use k = -1, for example.
         for k, i, j in kijlist:
             fail = False
-            errmsg = 'Invalid cell index. Cell ' + str(
-                (k, i, j)) + ' not within model grid: ' + \
-                     str((self.nlay, self.nrow, self.ncol))
+            errmsg = (
+                "Invalid cell index. Cell "
+                + str((k, i, j))
+                + " not within model grid: "
+                + str((self.nlay, self.nrow, self.ncol))
+            )
             if k < 0 or k > self.nlay - 1:
                 fail = True
             if i < 0 or i > self.nrow - 1:
@@ -543,8 +625,7 @@ class LayerFile(object):
 
     def _init_result(self, nstation):
         # Initialize result array and put times in first column
-        result = np.empty((len(self.times), nstation + 1),
-                          dtype=self.realtype)
+        result = np.empty((len(self.times), nstation + 1), dtype=self.realtype)
         result[:, :] = np.nan
         result[:, 0] = np.array(self.times)
         return result
