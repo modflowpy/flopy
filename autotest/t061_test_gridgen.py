@@ -155,7 +155,7 @@ def test_gridgen():
         #  -check that node 1 (layer 1) is connected to layer 3 but not layer 2:
         ja0 = disu_vp.ja[: disu_vp.iac[0]]
         msg = ("MFUSG node 1 (layer 1) is not connected to layer 3 but should "
-               "not be (with vertical pass through activated).")
+               "be (with vertical pass through activated).")
         assert max(ja0) > sum(disu_vp.nodelay[:2]), msg
         #  -check that node 1 (layer 1) is not connected to any layer 2 nodes
         msg = ("MFUSG node 1 (layer 1) is connected to layer 2 but should not "
