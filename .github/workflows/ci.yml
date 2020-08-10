@@ -91,7 +91,7 @@ jobs:
         CACHE_NUMBER: 0
       with:
         path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-${{ matrix.python-version }}-{{ matrix.run-type }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.run-type }}$-${{ env.CACHE_NUMBER }}-${{ hashFiles('etc/environment.yml') }}
 
     # Standard python fails on windows without GDAL installation
     # Using custom bash shell ("shell: bash -l {0}") with Miniconda
