@@ -121,6 +121,10 @@ class Gridgen(object):
     surface_interpolation : str
         Default gridgen method for interpolating elevations.  Valid options
         include 'replicate' (default) and 'interpolate'
+    vertical_pass_through : bool
+        If true, Gridgen's GRID_TO_USGDATA command will connect layers
+        where intermediate layers are inactive.
+        (default is False)
 
     Notes
     -----
@@ -135,6 +139,7 @@ class Gridgen(object):
         model_ws=".",
         exe_name="gridgen",
         surface_interpolation="replicate",
+        vertical_pass_through=False,
     ):
         self.dis = dis
         if isinstance(dis, ModflowGwfdis):
@@ -170,6 +175,11 @@ class Gridgen(object):
             surface_interpolation for k in range(self.nlay + 1)
         ]
 
+        # Set export options
+        self.vertical_pass_through = "False"
+        if vertical_pass_through:
+            self.vertical_pass_through = "True"
+
         # Set up a blank _active_domain list with None for each layer
         self._addict = {}
         self._active_domain = []
@@ -202,7 +212,8 @@ class Gridgen(object):
             Array that is used as an asciigrid.  If elev is a string, then
             it is assumed to be the name of the asciigrid.
         elev_extent : list-like
-            list of xmin, xmax, ymin, ymax extents of the elev grid.
+            List of xmin, xmax, ymin, ymax extents of the elev grid.
+            Must be specified for ASCIIGRID; optional otherwise.
 
         Returns
         -------
@@ -242,9 +253,10 @@ class Gridgen(object):
                 self._asciigrid_dict[isurf] = nm
 
             elif isinstance(elev, str):
-                if not os.path.isfile(elev):
+                if not os.path.isfile(os.path.join(self.model_ws, elev)):
                     raise Exception(
-                        "Error.  elev is not a valid file: " "{}".format(elev)
+                        "Error.  elev is not a valid file: "
+                        "{}".format(os.path.join(self.model_ws, elev))
                     )
                 self._asciigrid_dict[isurf] = elev
             else:
@@ -439,11 +451,18 @@ class Gridgen(object):
         """
         Export the quadtree grid to shapefiles, usgdata, and vtk
 
+        Parameters
+        ----------
+        verbose : bool
+            If true, print the results of the gridgen command to the terminal
+            (default is False)
+
         Returns
         -------
         None
 
         """
+
         # Create the export definition file
         fname = os.path.join(self.model_ws, "_gridgen_export.dfn")
         f = open(fname, "w")
@@ -635,6 +654,35 @@ class Gridgen(object):
         itmuni=4,
         lenuni=2,
     ):
+        """
+        Create a MODFLOW-USG DISU flopy object.
+
+        Parameters
+        ----------
+        model : Flopy model object
+            The Flopy model object (of type :class:`flopy.modflow.mf.Modflow`)
+            to which this package will be added.
+        nper : int
+            Number of model stress periods (default is 1).
+        perlen : float or array of floats (nper)
+            A single value or array of the stress period lengths
+            (default is 1).
+        nstp : int or array of ints (nper)
+            Number of time steps in each stress period (default is 1).
+        tsmult : float or array of floats (nper)
+            Time step multiplier (default is 1.0).
+        steady : boolean or array of boolean (nper)
+            True or False indicating whether or not stress period is
+            steady state (default is True).
+        itmuni : int
+            Time units, default is days (4)
+        lenuni : int
+            Length units, default is meters (2)
+
+        Returns
+        -------
+        disu : Flopy ModflowDisU object.
+        """
 
         # nodes, nlay, ivsd, itmuni, lenuni, idsymrd, laycbd
         fname = os.path.join(self.model_ws, "qtg.nod")
@@ -1787,7 +1835,7 @@ class Gridgen(object):
 
         for k in range(self.nlay):
             if self.surface_interpolation[k] == "ASCIIGRID":
-                grd = "_gridgen.lay{}.asc".format(k)
+                grd = self._asciigrid_dict[k]
             else:
                 grd = "basename"
             s += "  TOP LAYER {} = {} {}\n".format(
@@ -1796,7 +1844,7 @@ class Gridgen(object):
 
         for k in range(self.nlay):
             if self.surface_interpolation[k + 1] == "ASCIIGRID":
-                grd = "_gridgen.lay{}.asc".format(k + 1)
+                grd = self._asciigrid_dict[k + 1]
             else:
                 grd = "basename"
             s += "  BOTTOM LAYER {} = {} {}\n".format(
@@ -1823,6 +1871,9 @@ class Gridgen(object):
         s += "BEGIN GRID_TO_USGDATA grid_to_usgdata\n"
         s += "  GRID = quadtreegrid\n"
         s += "  USG_DATA_PREFIX = qtg\n"
+        s += "  VERTICAL_PASS_THROUGH = {0}\n".format(
+            self.vertical_pass_through
+        )
         s += "END GRID_TO_USGDATA\n"
         s += "\n"
         s += "BEGIN GRID_TO_VTKFILE grid_to_vtk\n"
