@@ -77,10 +77,15 @@ jobs:
       uses: goanpeca/setup-miniconda@v1.6.0
       with:
         python-version: 3.8
-        activate-environment: flopy
         auto-update-conda: true
-        environment-file: environment.yml
-
+        auto-activate-base: true
+        activate-environment: flopy
+    
+    - name: Add packages to flopy environment
+      shell: bash -l {0}
+      run: |
+        conda env update -n flopy --file environment.yml
+        
     - name: Determine python environment
       shell: bash -l {0}
       run: |
@@ -148,9 +153,14 @@ jobs:
       uses: goanpeca/setup-miniconda@v1.6.0
       with:
         python-version: ${{ matrix.python-version }}
-        activate-environment: flopy
         auto-update-conda: true
-        environment-file: environment.yml
+        auto-activate-base: true
+        activate-environment: flopy
+    
+    - name: Add packages to flopy environment
+      shell: bash -l {0}
+      run: |
+        conda env update -n flopy --file environment.yml
 
     - name: Determine python environment
       shell: bash -l {0}
