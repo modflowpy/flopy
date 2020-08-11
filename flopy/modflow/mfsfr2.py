@@ -3638,10 +3638,35 @@ def _parse_6bc(line, icalc, nstrm, isfropt, reachinput, per=0):
     return hcond, thickm, elevupdn, width, depth, thts, thti, eps, uhc
 
 
-def find_path(graph, start, end=0, path=()):
+def find_path(graph, start, end=0):
+    """Get a path through the routing network,
+    from a segment to an outlet.
 
+    Parameters
+    ----------
+    graph : dict
+        Dictionary of seg : outseg numbers
+    start : int
+        Starting segment
+    end : int
+        Ending segment (default 0)
+
+    Returns
+    -------
+    path : list
+        List of segment numbers along routing path.
+    """
     graph = graph.copy()
-    path = list(path) + [start]
+    return _find_path(graph, start, end=end)
+
+
+def _find_path(graph, start, end=0, path=None):
+    """Like find_path, but doesn't copy the routing
+    dictionary (graph) so that the recursion works.
+    """
+    if path is None:
+        path = list()
+    path = path + [start]
     if start == end:
         return path
     if start not in graph:
@@ -3650,7 +3675,7 @@ def find_path(graph, start, end=0, path=()):
         graph[start] = [graph[start]]
     for node in graph[start]:
         if node not in path:
-            newpath = find_path(graph, node, end, path)
+            newpath = _find_path(graph, node, end, path)
             if newpath:
                 return newpath
     return None
