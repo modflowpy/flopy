@@ -76,7 +76,7 @@ jobs:
             test-path: autotest_notebooks.py
           - os: ubuntu-latest
             python-version: 3.8
-            run-type: std
+            run-type: script
             test-path: autotest_scripts.py
 
     steps:
