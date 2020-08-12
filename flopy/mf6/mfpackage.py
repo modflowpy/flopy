@@ -137,7 +137,8 @@ class MFBlockHeader(object):
                         return False
             return True
         elif (
-            len(self.data_items) > 0 and len(block_header.variable_strings) > 0
+            len(self.data_items) > 0 and
+            len(block_header.variable_strings) > 0
         ):
             typ_obj = (
                 self.data_items[0].structure.data_item_structures[0].type_obj
@@ -251,7 +252,8 @@ class MFBlock(object):
     Attributes
     ----------
     block_headers : MFBlockHeaderIO
-        block header text (BEGIN/END), header variables, comments in the header
+        block header text (BEGIN/END), header variables, comments in the
+        header
     structure : MFBlockStructure
         structure describing block
     path : tuple
@@ -318,9 +320,8 @@ class MFBlock(object):
         self.blk_trailing_comment_path = path + ("blk_trailing_comment",)
         self.blk_post_comment_path = path + ("blk_post_comment",)
         if self.blk_trailing_comment_path not in simulation_data.mfdata:
-            simulation_data.mfdata[self.blk_trailing_comment_path] = MFComment(
-                "", "", simulation_data, 0
-            )
+            simulation_data.mfdata[self.blk_trailing_comment_path] = \
+                MFComment("", "", simulation_data, 0)
         if self.blk_post_comment_path not in simulation_data.mfdata:
             simulation_data.mfdata[self.blk_post_comment_path] = MFComment(
                 "\n", "", simulation_data, 0
@@ -669,7 +670,8 @@ class MFBlock(object):
                     package=self._container_package._get_pname(),
                     message="Error occurred while verifying"
                     ' data of dataset "{}" in block '
-                    '"{}"'.format(dataset.structure.name, self.structure.name),
+                    '"{}"'.format(dataset.structure.name,
+                                  self.structure.name),
                 )
 
             if has_data is not None and has_data:
@@ -1009,7 +1011,8 @@ class MFBlock(object):
                 line, fd, self.block_headers[-1], initial_comment
             )
 
-            # see if first item's name indicates a reference to another package
+            # see if first item's name indicates a reference to another
+            # package
             package_info_list = self._get_package_info(dataset)
             if package_info_list is not None:
                 for package_info in package_info_list:
@@ -1034,7 +1037,8 @@ class MFBlock(object):
                         package_group = getattr(
                             self._container_package, package_info[0]
                         )
-                        package_group._append_package(pkg, pkg.filename, False)
+                        package_group._append_package(pkg, pkg.filename,
+                                                      False)
 
             return recarrays[0].keyword, ds_result
         else:
@@ -1079,7 +1083,8 @@ class MFBlock(object):
                         package_type, self.path[-2]
                     )
                     package_info_list.append(
-                        (package_type, file_name, file_path, dict_package_name)
+                        (package_type, file_name, file_path,
+                         dict_package_name)
                     )
                     return package_info_list
                 return None
@@ -1208,7 +1213,8 @@ class MFBlock(object):
                             ".".format(dataset.structure.name)
                         )
                     fd.write(
-                        dataset.get_file_entry(ext_file_action=ext_file_action)
+                        dataset.get_file_entry(ext_file_action=
+                                               ext_file_action)
                     )
                 else:
                     if (
@@ -1243,7 +1249,8 @@ class MFBlock(object):
                     ),
                 )
         # write trailing comments
-        self._simulation_data.mfdata[self.blk_trailing_comment_path].write(fd)
+        self._simulation_data.mfdata[self.blk_trailing_comment_path].\
+            write(fd)
 
         if self.external_file_name is not None:
             # switch back writing to package file
@@ -1952,7 +1959,8 @@ class MFPackage(PackageContainer, PackageInterface):
 
         return True
 
-    def _load_blocks(self, fd_input_file, strict=True, max_blocks=sys.maxsize):
+    def _load_blocks(self, fd_input_file, strict=True,
+                     max_blocks=sys.maxsize):
         # init
         self._simulation_data.mfdata[
             self.path + ("pkg_hdr_comments",)
@@ -2217,7 +2225,8 @@ class MFPackage(PackageContainer, PackageInterface):
                 self.simulation_data.verbosity_level.value
                 >= VerbosityLevel.verbose.value
             ):
-                print("      writing block {}...".format(block.structure.name))
+                print("      writing block {}.."
+                      ".".format(block.structure.name))
             # write block
             block.write(fd, ext_file_action=ext_file_action)
             block_num += 1
@@ -2267,12 +2276,12 @@ class MFPackage(PackageContainer, PackageInterface):
 
         **kwargs : dict
             filename_base : str
-                Base file name that will be used to automatically generate file
-                names for output image files. Plots will be exported as image
-                files if file_name_base is not None. (default is None)
+                Base file name that will be used to automatically generate
+                file names for output image files. Plots will be exported as
+                image files if file_name_base is not None. (default is None)
             file_extension : str
-                Valid matplotlib.pyplot file extension for savefig(). Only used
-                if filename_base is not None. (default is 'png')
+                Valid matplotlib.pyplot file extension for savefig(). Only
+                used if filename_base is not None. (default is 'png')
             mflay : int
                 MODFLOW zero-based layer number to return.  If None, then all
                 all layers will be included. (default is None)
@@ -2349,7 +2358,8 @@ class MFChildPackages(object):
                     " {}. Use the initialize method to create a(n) "
                     "{} package before attempting to access its "
                     "properties.".format(
-                        self._pkg_type, self._cpparent.filename, self._pkg_type
+                        self._pkg_type, self._cpparent.filename,
+                        self._pkg_type
                     )
                 )
             package = self._packages[0]

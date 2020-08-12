@@ -128,8 +128,8 @@ class SimulationDict(collections.OrderedDict):
                     data_item_structures = item.structure.data_item_structures
                     for data_item_struct in data_item_structures:
                         if data_item_struct.name == key_leaf:
-                            # found key_leaf as a data item name in the data in
-                            # the dictionary
+                            # found key_leaf as a data item name in the data
+                            # in the dictionary
                             return item, data_item_index
                         if data_item_struct.type != DatumType.keyword:
                             data_item_index += 1
@@ -384,8 +384,8 @@ class MFSimulation(PackageContainer):
         file paths
     get_model : (model_name : string)
               : [MFModel]
-        returns the models in the simulation with a given model name, name file
-        name, or model type
+        returns the models in the simulation with a given model name, name
+        file name, or model type
     add_model : (model : MFModel, sln_group : integer)
         add model to the simulation
     remove_model : (model_name : string)
@@ -552,9 +552,9 @@ class MFSimulation(PackageContainer):
 
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
-        data_str = "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n\n".format(
-            self.name, file_mgt.get_sim_path(), self.exe_name
-        )
+        data_str = "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" \
+                   "\n".format(self.name, file_mgt.get_sim_path(),
+                               self.exe_name)
 
         for package in self._packagelist:
             pk_str = package._get_data_str(formal, False)
@@ -861,7 +861,8 @@ class MFSimulation(PackageContainer):
                         )
                     continue
                 ims_file = mfims.ModflowIms(
-                    instance, filename=solution_info[1], pname=solution_info[2]
+                    instance, filename=solution_info[1],
+                    pname=solution_info[2]
                 )
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print(
@@ -980,7 +981,8 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                gnc_name = "{}-GNC_{}".format(package_abbr, self._gnc_file_num)
+                gnc_name = "{}-GNC_{}".format(package_abbr,
+                                              self._gnc_file_num)
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(
                     self,
                     filename=fname,
@@ -1000,7 +1002,8 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                mvr_name = "{}-MVR_{}".format(package_abbr, self._mvr_file_num)
+                mvr_name = "{}-MVR_{}".format(package_abbr,
+                                              self._mvr_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(
                     self,
                     filename=fname,
@@ -1083,7 +1086,8 @@ class MFSimulation(PackageContainer):
         for file in self._ims_files.values():
             if file is ims_file:
                 in_simulation = True
-            if file.package_name == ims_file.package_name and file != ims_file:
+            if file.package_name == ims_file.package_name and \
+                    file != ims_file:
                 pkg_with_same_name = file
                 if (
                     self.simulation_data.verbosity_level.value
@@ -1113,7 +1117,8 @@ class MFSimulation(PackageContainer):
             # add ims package to simulation
             self._ims_files[ims_file.filename] = ims_file
 
-        # If ims file is being replaced, replace ims filename in solution group
+        # If ims file is being replaced, replace ims filename in
+        # solution group
         if pkg_with_same_name is not None and self._is_in_solution_group(
             pkg_with_same_name.filename, 1
         ):
@@ -1138,11 +1143,14 @@ class MFSimulation(PackageContainer):
                 )
             else:
                 if self.name_file.mxiter.get_data(solution_group_num) is None:
-                    self.name_file.mxiter.add_transient_key(solution_group_num)
+                    self.name_file.mxiter.add_transient_key(
+                        solution_group_num
+                    )
 
                 # associate any models in the model list to this
                 # simulation file
-                version_string = mfstructure.MFStructure().get_version_string()
+                version_string = mfstructure.MFStructure().\
+                    get_version_string()
                 ims_pkg = "ims{}".format(version_string)
                 new_record = [ims_pkg, ims_file.filename]
                 for model in model_list:
@@ -1222,10 +1230,10 @@ class MFSimulation(PackageContainer):
 
         Parameters
             ext_file_action : ExtFileAction
-                defines what to do with external files when the simulation path
-                has changed.  defaults to copy_relative_paths which copies only
-                files with relative paths, leaving files defined by absolute
-                paths fixed.
+                defines what to do with external files when the simulation
+                path has changed.  defaults to copy_relative_paths which
+                copies only files with relative paths, leaving files defined
+                by absolute paths fixed.
             silent : bool
                 writes out the simulation in silent mode (verbosity_level = 0)
 
@@ -1258,7 +1266,8 @@ class MFSimulation(PackageContainer):
                 >= VerbosityLevel.normal.value
             ):
                 print(
-                    "  writing ims package {}...".format(ims_file._get_pname())
+                    "  writing ims package {}.."
+                    ".".format(ims_file._get_pname())
                 )
             ims_file.write(ext_file_action=ext_file_action)
 
@@ -2150,14 +2159,15 @@ class MFSimulation(PackageContainer):
                 all packages will be plotted
             kwargs:
                 filename_base : str
-                    Base file name that will be used to automatically generate file
-                    names for output image files. Plots will be exported as image
-                    files if file_name_base is not None. (default is None)
+                    Base file name that will be used to automatically
+                    generate file names for output image files. Plots will be
+                    exported as image files if file_name_base is not None.
+                    (default is None)
                 file_extension : str
-                    Valid matplotlib.pyplot file extension for savefig(). Only used
-                    if filename_base is not None. (default is 'png')
+                    Valid matplotlib.pyplot file extension for savefig().
+                    Only used if filename_base is not None. (default is 'png')
                 mflay : int
-                    MODFLOW zero-based layer number to return.  If None, then all
+                    MODFLOW zero-based layer number to return.  If None, then
                     all layers will be included. (default is None)
                 kper : int
                     MODFLOW zero-based stress period number to return.
