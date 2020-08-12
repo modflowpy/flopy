@@ -221,6 +221,9 @@ class MFSimulationData(object):
         number of decimal points to write for a floating point number
     float_characters : int
         number of characters a floating point number takes up
+    write_headers: bool
+        when true flopy writes a header to each package file indicating that
+        it was created by flopy
     sci_note_upper_thres : float
         numbers greater than this threshold are written in scientific notation
     sci_note_lower_thres : float
@@ -242,6 +245,7 @@ class MFSimulationData(object):
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
+        self.write_headers = True
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
         self.fast_write = True
@@ -345,6 +349,9 @@ class MFSimulation(PackageContainer):
          the total memory for each simulation component. ALL means print
          information for each variable stored in the memory manager. NONE is
          default if memory_print_option is not specified.
+    write_headers: bool
+        when true flopy writes a header to each package file indicating that
+        it was created by flopy
 
     Attributes
     ----------
@@ -412,11 +419,13 @@ class MFSimulation(PackageContainer):
         continue_=None,
         nocheck=None,
         memory_print_option=None,
+        write_headers=True
     ):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
+        self.simulation_data.write_headers = write_headers
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -604,6 +613,7 @@ class MFSimulation(PackageContainer):
         verbosity_level=1,
         load_only=None,
         verify_data=False,
+        write_headers=True
     ):
         """Load an existing model.
 
@@ -636,6 +646,9 @@ class MFSimulation(PackageContainer):
             example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
         verify_data : bool
             verify data when it is loaded. this can slow down loading
+        write_headers: bool
+            when true flopy writes a header to each package file indicating
+            that it was created by flopy
 
         Returns
         -------
@@ -647,7 +660,8 @@ class MFSimulation(PackageContainer):
 
         """
         # initialize
-        instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level)
+        instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level,
+                       write_headers=write_headers)
         verbosity_level = instance.simulation_data.verbosity_level
         instance.simulation_data.verify_data = verify_data
 

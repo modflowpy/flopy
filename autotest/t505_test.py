@@ -98,7 +98,7 @@ def np001():
 
     # create simulation
     sim = MFSimulation(sim_name=test_ex_name, version='mf6', exe_name=exe_name,
-                       sim_ws=pth)
+                       sim_ws=pth, write_headers=False)
     tdis_rc = [(6.0, 2, 1.0), (6.0, 3, 1.0)]
     tdis_package = ModflowTdis(sim, time_units='DAYS', nper=1,
                                perioddata=[(2.0, 1, 1.0)])
