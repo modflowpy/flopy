@@ -561,6 +561,8 @@ class ModflowUzf1(Package):
                 self.netflux,
             ) != (False, False, False, False, False, False, False, False):
                 options = OptionBlock("", ModflowUzf1, block=False)
+                if "nwt" in self.parent.version:
+                    options.block = True
 
         self.options = options
 
