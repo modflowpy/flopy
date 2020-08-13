@@ -419,7 +419,7 @@ class MFSimulation(PackageContainer):
         continue_=None,
         nocheck=None,
         memory_print_option=None,
-        write_headers=True
+        write_headers=True,
     ):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
@@ -552,9 +552,11 @@ class MFSimulation(PackageContainer):
 
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
-        data_str = "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n" \
-                   "\n".format(self.name, file_mgt.get_sim_path(),
-                               self.exe_name)
+        data_str = (
+            "sim_name = {}\nsim_path = {}\nexe_name = "
+            "{}\n"
+            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
+        )
 
         for package in self._packagelist:
             pk_str = package._get_data_str(formal, False)
@@ -613,7 +615,7 @@ class MFSimulation(PackageContainer):
         verbosity_level=1,
         load_only=None,
         verify_data=False,
-        write_headers=True
+        write_headers=True,
     ):
         """Load an existing model.
 
@@ -660,8 +662,14 @@ class MFSimulation(PackageContainer):
 
         """
         # initialize
-        instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level,
-                       write_headers=write_headers)
+        instance = cls(
+            sim_name,
+            version,
+            exe_name,
+            sim_ws,
+            verbosity_level,
+            write_headers=write_headers,
+        )
         verbosity_level = instance.simulation_data.verbosity_level
         instance.simulation_data.verify_data = verify_data
 
@@ -861,8 +869,7 @@ class MFSimulation(PackageContainer):
                         )
                     continue
                 ims_file = mfims.ModflowIms(
-                    instance, filename=solution_info[1],
-                    pname=solution_info[2]
+                    instance, filename=solution_info[1], pname=solution_info[2]
                 )
                 if verbosity_level.value >= VerbosityLevel.normal.value:
                     print(
@@ -981,8 +988,7 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                gnc_name = "{}-GNC_{}".format(package_abbr,
-                                              self._gnc_file_num)
+                gnc_name = "{}-GNC_{}".format(package_abbr, self._gnc_file_num)
                 ghost_node_file = mfgwfgnc.ModflowGwfgnc(
                     self,
                     filename=fname,
@@ -1002,8 +1008,7 @@ class MFSimulation(PackageContainer):
                 else:
                     package_abbr = "GWF"
                 # build package name and package
-                mvr_name = "{}-MVR_{}".format(package_abbr,
-                                              self._mvr_file_num)
+                mvr_name = "{}-MVR_{}".format(package_abbr, self._mvr_file_num)
                 mover_file = mfgwfmvr.ModflowGwfmvr(
                     self,
                     filename=fname,
@@ -1086,8 +1091,7 @@ class MFSimulation(PackageContainer):
         for file in self._ims_files.values():
             if file is ims_file:
                 in_simulation = True
-            if file.package_name == ims_file.package_name and \
-                    file != ims_file:
+            if file.package_name == ims_file.package_name and file != ims_file:
                 pkg_with_same_name = file
                 if (
                     self.simulation_data.verbosity_level.value
@@ -1143,14 +1147,11 @@ class MFSimulation(PackageContainer):
                 )
             else:
                 if self.name_file.mxiter.get_data(solution_group_num) is None:
-                    self.name_file.mxiter.add_transient_key(
-                        solution_group_num
-                    )
+                    self.name_file.mxiter.add_transient_key(solution_group_num)
 
                 # associate any models in the model list to this
                 # simulation file
-                version_string = mfstructure.MFStructure().\
-                    get_version_string()
+                version_string = mfstructure.MFStructure().get_version_string()
                 ims_pkg = "ims{}".format(version_string)
                 new_record = [ims_pkg, ims_file.filename]
                 for model in model_list:
