@@ -49,7 +49,8 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0, verify_data=True)
+                            verbosity_level=0, verify_data=True,
+                            write_headers=False)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location

@@ -128,8 +128,8 @@ class SimulationDict(collections.OrderedDict):
                     data_item_structures = item.structure.data_item_structures
                     for data_item_struct in data_item_structures:
                         if data_item_struct.name == key_leaf:
-                            # found key_leaf as a data item name in the data in
-                            # the dictionary
+                            # found key_leaf as a data item name in the data
+                            # in the dictionary
                             return item, data_item_index
                         if data_item_struct.type != DatumType.keyword:
                             data_item_index += 1
@@ -221,6 +221,9 @@ class MFSimulationData(object):
         number of decimal points to write for a floating point number
     float_characters : int
         number of characters a floating point number takes up
+    write_headers: bool
+        when true flopy writes a header to each package file indicating that
+        it was created by flopy
     sci_note_upper_thres : float
         numbers greater than this threshold are written in scientific notation
     sci_note_lower_thres : float
@@ -242,6 +245,7 @@ class MFSimulationData(object):
         self.wrap_multidim_arrays = True
         self.float_precision = 8
         self.float_characters = 15
+        self.write_headers = True
         self._sci_note_upper_thres = 100000
         self._sci_note_lower_thres = 0.001
         self.fast_write = True
@@ -345,6 +349,9 @@ class MFSimulation(PackageContainer):
          the total memory for each simulation component. ALL means print
          information for each variable stored in the memory manager. NONE is
          default if memory_print_option is not specified.
+    write_headers: bool
+        when true flopy writes a header to each package file indicating that
+        it was created by flopy
 
     Attributes
     ----------
@@ -377,8 +384,8 @@ class MFSimulation(PackageContainer):
         file paths
     get_model : (model_name : string)
               : [MFModel]
-        returns the models in the simulation with a given model name, name file
-        name, or model type
+        returns the models in the simulation with a given model name, name
+        file name, or model type
     add_model : (model : MFModel, sln_group : integer)
         add model to the simulation
     remove_model : (model_name : string)
@@ -412,11 +419,13 @@ class MFSimulation(PackageContainer):
         continue_=None,
         nocheck=None,
         memory_print_option=None,
+        write_headers=True,
     ):
         super(MFSimulation, self).__init__(MFSimulationData(sim_ws), sim_name)
         self.simulation_data.verbosity_level = self._resolve_verbosity_level(
             verbosity_level
         )
+        self.simulation_data.write_headers = write_headers
         # verify metadata
         fpdata = mfstructure.MFStructure()
         if not fpdata.valid:
@@ -543,8 +552,10 @@ class MFSimulation(PackageContainer):
 
     def _get_data_str(self, formal):
         file_mgt = self.simulation_data.mfpath
-        data_str = "sim_name = {}\nsim_path = {}\nexe_name = " "{}\n\n".format(
-            self.name, file_mgt.get_sim_path(), self.exe_name
+        data_str = (
+            "sim_name = {}\nsim_path = {}\nexe_name = "
+            "{}\n"
+            "\n".format(self.name, file_mgt.get_sim_path(), self.exe_name)
         )
 
         for package in self._packagelist:
@@ -604,6 +615,7 @@ class MFSimulation(PackageContainer):
         verbosity_level=1,
         load_only=None,
         verify_data=False,
+        write_headers=True,
     ):
         """Load an existing model.
 
@@ -636,6 +648,9 @@ class MFSimulation(PackageContainer):
             example list: ['ic', 'maw', 'npf', 'oc', 'ims', 'gwf6-gwf6']
         verify_data : bool
             verify data when it is loaded. this can slow down loading
+        write_headers: bool
+            when true flopy writes a header to each package file indicating
+            that it was created by flopy
 
         Returns
         -------
@@ -647,7 +662,14 @@ class MFSimulation(PackageContainer):
 
         """
         # initialize
-        instance = cls(sim_name, version, exe_name, sim_ws, verbosity_level)
+        instance = cls(
+            sim_name,
+            version,
+            exe_name,
+            sim_ws,
+            verbosity_level,
+            write_headers=write_headers,
+        )
         verbosity_level = instance.simulation_data.verbosity_level
         instance.simulation_data.verify_data = verify_data
 
@@ -1099,7 +1121,8 @@ class MFSimulation(PackageContainer):
             # add ims package to simulation
             self._ims_files[ims_file.filename] = ims_file
 
-        # If ims file is being replaced, replace ims filename in solution group
+        # If ims file is being replaced, replace ims filename in
+        # solution group
         if pkg_with_same_name is not None and self._is_in_solution_group(
             pkg_with_same_name.filename, 1
         ):
@@ -1208,10 +1231,10 @@ class MFSimulation(PackageContainer):
 
         Parameters
             ext_file_action : ExtFileAction
-                defines what to do with external files when the simulation path
-                has changed.  defaults to copy_relative_paths which copies only
-                files with relative paths, leaving files defined by absolute
-                paths fixed.
+                defines what to do with external files when the simulation
+                path has changed.  defaults to copy_relative_paths which
+                copies only files with relative paths, leaving files defined
+                by absolute paths fixed.
             silent : bool
                 writes out the simulation in silent mode (verbosity_level = 0)
 
@@ -1244,7 +1267,8 @@ class MFSimulation(PackageContainer):
                 >= VerbosityLevel.normal.value
             ):
                 print(
-                    "  writing ims package {}...".format(ims_file._get_pname())
+                    "  writing ims package {}.."
+                    ".".format(ims_file._get_pname())
                 )
             ims_file.write(ext_file_action=ext_file_action)
 
@@ -2136,14 +2160,15 @@ class MFSimulation(PackageContainer):
                 all packages will be plotted
             kwargs:
                 filename_base : str
-                    Base file name that will be used to automatically generate file
-                    names for output image files. Plots will be exported as image
-                    files if file_name_base is not None. (default is None)
+                    Base file name that will be used to automatically
+                    generate file names for output image files. Plots will be
+                    exported as image files if file_name_base is not None.
+                    (default is None)
                 file_extension : str
-                    Valid matplotlib.pyplot file extension for savefig(). Only used
-                    if filename_base is not None. (default is 'png')
+                    Valid matplotlib.pyplot file extension for savefig().
+                    Only used if filename_base is not None. (default is 'png')
                 mflay : int
-                    MODFLOW zero-based layer number to return.  If None, then all
+                    MODFLOW zero-based layer number to return.  If None, then
                     all layers will be included. (default is None)
                 kper : int
                     MODFLOW zero-based stress period number to return.

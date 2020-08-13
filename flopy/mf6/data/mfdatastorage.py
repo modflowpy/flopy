@@ -1686,28 +1686,6 @@ class DataStorage(object):
         multiplier = self.get_default_mult()
         print_format = None
         if isinstance(arr_line, list):
-            if len(arr_line) < 2:
-                message = (
-                    'Data array "{}" contains an INTERNAL '
-                    "that is not followed by a multiplier in line "
-                    '"{}".'.format(
-                        self.data_dimensions.structure.name, " ".join(arr_line)
-                    )
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.data_dimensions.structure.get_model(),
-                    self.data_dimensions.structure.get_package(),
-                    self.data_dimensions.structure.path,
-                    "processing internal data header",
-                    self.data_dimensions.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    self._simulation_data.debug,
-                )
             index = 1
             while index < len(arr_line):
                 if isinstance(arr_line[index], str):
@@ -1851,7 +1829,7 @@ class DataStorage(object):
                     except Exception as ex:
                         message = (
                             "Data array {} contains an OPEN/CLOSE "
-                            "with an invalid multiplier following the "
+                            "with an invalid factor following the "
                             '"factor" keyword.'
                             ".".format(data_dim.structure.name)
                         )

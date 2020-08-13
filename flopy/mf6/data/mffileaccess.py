@@ -787,27 +787,6 @@ class MFFileAccessArray(MFFileAccess):
                 )
         # if internal
         elif arr_line[0].upper() == "INTERNAL":
-            if len(arr_line) < 2:
-                message = (
-                    'Data array "{}" contains a INTERNAL that is not '
-                    "followed by a multiplier"
-                    ".".format(self.structure.name)
-                )
-                type_, value_, traceback_ = sys.exc_info()
-                raise MFDataException(
-                    self.structure.get_model(),
-                    self.structure.get_package(),
-                    self._path,
-                    "loading data layer from file",
-                    self.structure.name,
-                    inspect.stack()[0][3],
-                    type_,
-                    value_,
-                    traceback_,
-                    message,
-                    self._simulation_data.debug,
-                )
-
             try:
                 multiplier, print_format = storage.process_internal_line(
                     arr_line
