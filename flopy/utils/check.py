@@ -436,7 +436,8 @@ class check:
         """
         mg = self.model.modelgrid
         if mg.grid_type == "structured":
-            inds = (mg.nlay, mg.nrow, mg.ncol)
+            nlaycbd = mg._StructuredGrid__laycbd.sum() if include_cbd else 0
+            inds = (mg.nlay + nlaycbd, mg.nrow, mg.ncol)
         elif mg.grid_type == "vertex":
             inds = (mg.nlay, mg.ncpl)
         else:
