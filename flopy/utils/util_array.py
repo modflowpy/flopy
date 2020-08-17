@@ -2808,28 +2808,17 @@ class Util2d(DataInterface):
                     + "   [column_length, fmt]\n"
                     + "    e.g., [10, {0:10.2e}]"
                 )
-        if ncol % column_length == 0:
-            linereturnflag = False
-        else:
-            linereturnflag = True
         # write the array to a string
-        s = ""
-        for i in range(nrow):
-            icol = 0
-            for j in range(ncol):
-                try:
-                    s = s + output_fmt.format(data[i, j])
-                except Exception as e:
-                    raise Exception(
-                        "error writing array value"
-                        + "{0} at r,c [{1},{2}]\n{3}".format(
-                            data[i, j], i, j, str(e)
-                        )
-                    )
-                if (j + 1) % column_length == 0.0 and (j != 0 or ncol == 1):
-                    s += "\n"
-            if linereturnflag:
-                s += "\n"
+        len_data = len(data.flatten())
+        str_fmt_data = [
+            output_fmt.format(d) + "\n"
+            if (((i + 1) % column_length == 0.0) and (i != 0 or ncol == 1))
+            or ((i + 1 == ncol) and (ncol != 1))
+            or (i + 1 == len_data)
+            else output_fmt.format(d)
+            for i, d in enumerate(data.flatten())
+        ]
+        s = "".join(str_fmt_data)
         return s
 
     @staticmethod
