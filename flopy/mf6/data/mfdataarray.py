@@ -496,7 +496,7 @@ class MFArray(MFMultiDimVar):
         layer=None,
         binary=False,
         replace_existing_external=True,
-        check_data=True
+        check_data=True,
     ):
         storage = self._get_storage_obj()
         if storage is None:
@@ -574,8 +574,9 @@ class MFArray(MFMultiDimVar):
                     "factor": factor,
                     "binary": binary,
                 }
-                self._set_data(external_data, layer=current_layer,
-                               check_data=False)
+                self._set_data(
+                    external_data, layer=current_layer, check_data=False
+                )
 
             except Exception as ex:
                 type_, value_, traceback_ = sys.exc_info()
@@ -1382,7 +1383,7 @@ class MFTransientArray(MFArray, MFTransient):
         layer=None,
         binary=False,
         replace_existing_external=True,
-        check_data=True
+        check_data=True,
     ):
         sim_time = self._data_dimensions.package_dim.model_dim[
             0
@@ -1403,8 +1404,11 @@ class MFTransientArray(MFArray, MFTransient):
                     fname, ext = os.path.splitext(external_file_path)
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
                     super(MFTransientArray, self).store_as_external_file(
-                        full_name, layer, binary, replace_existing_external,
-                        check_data
+                        full_name,
+                        layer,
+                        binary,
+                        replace_existing_external,
+                        check_data,
                     )
 
     def get_data(self, layer=None, apply_mult=True, **kwargs):

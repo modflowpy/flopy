@@ -1151,7 +1151,8 @@ class MFBlock(object):
             ):
                 dataset.store_as_external_file(
                     "{}_{}.txt".format(base_name, dataset.structure.name),
-                    replace_existing_external=False, check_data=check_data
+                    replace_existing_external=False,
+                    check_data=check_data,
                 )
 
     def _find_repeating_datasets(self):

@@ -270,8 +270,11 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
         self._data_line = None
 
     def store_as_external_file(
-        self, external_file_path, binary=False,
-        replace_existing_external=True, check_data=True
+        self,
+        external_file_path,
+        binary=False,
+        replace_existing_external=True,
+        check_data=True,
     ):
         # only store data externally (do not subpackage info)
         if self.structure.construct_package is None:
@@ -1415,8 +1418,11 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
         return self.get_data()
 
     def store_as_external_file(
-        self, external_file_path, binary=False,
-        replace_existing_external=True, check_data=True
+        self,
+        external_file_path,
+        binary=False,
+        replace_existing_external=True,
+        check_data=True,
     ):
         sim_time = self._data_dimensions.package_dim.model_dim[
             0
@@ -1436,8 +1442,10 @@ class MFTransientList(MFList, mfdata.MFTransient, DataListInterface):
                     fname, ext = os.path.splitext(external_file_path)
                     full_name = "{}_{}{}".format(fname, sp + 1, ext)
                     super(MFTransientList, self).store_as_external_file(
-                        full_name, binary, replace_existing_external,
-                        check_data
+                        full_name,
+                        binary,
+                        replace_existing_external,
+                        check_data,
                     )
 
     def get_data(self, key=None, apply_mult=False, **kwargs):

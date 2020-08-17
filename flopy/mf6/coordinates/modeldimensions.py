@@ -591,9 +591,10 @@ class ModelDimensions(object):
                             if result[0] is not None:
                                 data = result[0].get_data()
                                 if data is None:
-                                    if self.simulation_data.verbosity_level. \
-                                            value >= \
-                                            VerbosityLevel.normal.value:
+                                    if (
+                                        self.simulation_data.verbosity_level.value
+                                        >= VerbosityLevel.normal.value
+                                    ):
                                         print(
                                             "WARNING: Unable to resolve "
                                             "dimension of {} based on shape "
@@ -626,8 +627,10 @@ class ModelDimensions(object):
                                             self.resolve_exp(item, len(data))
                                         )
                             else:
-                                if self.simulation_data.verbosity_level.\
-                                        value >= VerbosityLevel.normal.value:
+                                if (
+                                    self.simulation_data.verbosity_level.value
+                                    >= VerbosityLevel.normal.value
+                                ):
                                     print(
                                         "WARNING: Unable to resolve "
                                         "dimension of {} based on shape "
