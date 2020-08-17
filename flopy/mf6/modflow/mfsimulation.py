@@ -400,8 +400,10 @@ class MFSimulation(PackageContainer):
         the model
     is_valid : () : boolean
         checks the validity of the solution and all of its models and packages
-    set_all_data_external
-        sets the simulation's list and array data to be stored externally
+    set_all_data_external : (check_data : boolean)
+        sets the simulation's list and array data to be stored externally,
+        check_data determines if data error checking is enabled during this
+        process
 
     Examples
     --------
@@ -1206,23 +1208,23 @@ class MFSimulation(PackageContainer):
         for model in self._models.values():
             model.rename_all_packages(name)
 
-    def set_all_data_external(self):
+    def set_all_data_external(self, check_data=True):
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
         # set data external for all packages in all models
         for model in self._models.values():
-            model.set_all_data_external()
+            model.set_all_data_external(check_data)
         # set data external for ims packages
         for package in self._ims_files.values():
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
         # set data external for ghost node packages
         for package in self._ghost_node_files.values():
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
         # set data external for mover packages
         for package in self._mover_files.values():
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
         for package in self._exchange_files.values():
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
 
     def write_simulation(
         self, ext_file_action=ExtFileAction.copy_relative_paths, silent=False

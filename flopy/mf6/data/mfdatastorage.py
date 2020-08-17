@@ -1329,9 +1329,11 @@ class DataStorage(object):
                         False,
                         print_format,
                     )
+
                     ext_file_entry = self._get_file_entry()
                     fd.write(ext_file_entry)
                     fd.close()
+
                 # set as external data
                 self.layer_storage.first_item().internal_data = None
             else:
@@ -2227,19 +2229,19 @@ class DataStorage(object):
                 data_array[index] = data_iter.next()
             return data_array
 
-    def set_tas(self, tas_name, tas_label, current_key):
-        # move to storage
-        package_dim = self.data_dimensions.package_dim
-        tas_names = package_dim.get_tasnames()
-        if (
-            tas_name.lower() not in tas_names
-            and self._simulation_data.verbosity_level.value
-            >= VerbosityLevel.normal.value
-        ):
-            print(
-                "WARNING: Time array series name {} not found in any "
-                "time series file".format(tas_name)
-            )
+    def set_tas(self, tas_name, tas_label, current_key, check_name=True):
+        if check_name:
+            package_dim = self.data_dimensions.package_dim
+            tas_names = package_dim.get_tasnames()
+            if (
+                tas_name.lower() not in tas_names
+                and self._simulation_data.verbosity_level.value
+                >= VerbosityLevel.normal.value
+            ):
+                print(
+                    "WARNING: Time array series name {} not found in any "
+                    "time series file".format(tas_name)
+                )
         # this is a time series array with a valid tas variable
         self.data_structure_type = DataStructureType.scalar
         try:

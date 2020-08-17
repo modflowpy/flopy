@@ -56,8 +56,6 @@ class MFBlockHeader(object):
         writes block header to file object 'fd'
     write_footer : (fd : file object)
         writes block footer to file object 'fd'
-    set_all_data_external
-        sets the block's list and array data to be stored externally
 
     """
 
@@ -278,6 +276,10 @@ class MFBlock(object):
         writes block to a file object
     is_valid : ()
         returns true of the block is valid
+    set_all_data_external : (base_name : string, check_data : boolean)
+        sets the block's list and array data to be stored externally,
+        base_name is external file name's prefix, check_data determines
+        if data error checking is enabled during this process
 
     See Also
     --------
@@ -1137,7 +1139,7 @@ class MFBlock(object):
                     return True
         return False
 
-    def set_all_data_external(self, base_name):
+    def set_all_data_external(self, base_name, check_data=True):
         for key, dataset in self.datasets.items():
             if (
                 isinstance(dataset, mfdataarray.MFArray)
@@ -1150,6 +1152,7 @@ class MFBlock(object):
                 dataset.store_as_external_file(
                     "{}_{}.txt".format(base_name, dataset.structure.name),
                     replace_existing_external=False,
+                    check_data=check_data,
                 )
 
     def _find_repeating_datasets(self):
@@ -1364,8 +1367,6 @@ class MFPackage(PackageContainer, PackageInterface):
         describes the blocks and data contain in this package
     dimensions : PackageDimension
         resolves data dimensions for data within this package
-    set_all_data_external
-        sets the package's list and array data to be stored externally
 
     Methods
     -------
@@ -1384,6 +1385,11 @@ class MFPackage(PackageContainer, PackageInterface):
         Returns the package file's path
     remove
         Removes package from the simulation/model it is currently a part of
+    set_all_data_external : (check_data : boolean)
+        sets the package's list and array data to be stored externally,
+        check_data determines if data error checking is enabled during this
+        process
+
 
     See Also
     --------
@@ -1885,14 +1891,14 @@ class MFPackage(PackageContainer, PackageInterface):
         for package in self._packagelist:
             package.set_model_relative_path(model_ws)
 
-    def set_all_data_external(self):
+    def set_all_data_external(self, check_data=True):
         # set blocks
         for key, block in self.blocks.items():
             file_name = os.path.split(self.filename)[1]
-            block.set_all_data_external(file_name)
+            block.set_all_data_external(file_name, check_data=check_data)
         # set sub-packages
         for package in self._packagelist:
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
 
     def load(self, strict=True):
         # open file
