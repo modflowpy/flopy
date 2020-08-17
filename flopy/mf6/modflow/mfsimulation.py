@@ -1208,7 +1208,7 @@ class MFSimulation(PackageContainer):
         for model in self._models.values():
             model.rename_all_packages(name)
 
-    def set_all_data_external(self, check_data):
+    def set_all_data_external(self, check_data=True):
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
         # set data external for all packages in all models
