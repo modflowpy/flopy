@@ -78,13 +78,16 @@ class MFModel(PackageContainer, ModelInterface):
         package's name, type, or package object to be removed from
         the model
     set_model_relative_path : (path : string)
-        sets the file path to the model folder and updates all model file paths
+        sets the file path to the model folder and updates all model file
+        paths
     is_valid : () : boolean
         checks the validity of the model and all of its packages
     rename_all_packages : (name : string)
         renames all packages in the model
-    set_all_data_external
-        sets the model's list and array data to be stored externally
+    set_all_data_external : (check_data : boolean)
+        sets the model's list and array data to be stored externally,
+        check_data determines if data error checking is enabled during this
+        process
 
     See Also
     --------
@@ -1106,9 +1109,9 @@ class MFModel(PackageContainer, ModelInterface):
                     package.package_type,
                 )
 
-    def set_all_data_external(self):
+    def set_all_data_external(self, check_data=True):
         for package in self.packagelist:
-            package.set_all_data_external()
+            package.set_all_data_external(check_data)
 
     def register_package(
         self,

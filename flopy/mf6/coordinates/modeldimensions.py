@@ -6,7 +6,7 @@ modeldimensions module.  Contains the model dimension information
 
 from .simulationtime import SimulationTime
 from .modelgrid import UnstructuredModelGrid, ModelGrid
-from ..mfbase import StructException, FlopyException
+from ..mfbase import StructException, FlopyException, VerbosityLevel
 from ..data.mfstructure import DatumType
 from ..utils.mfenums import DiscretizationType
 from ...utils.datautil import DatumUtil, NameIter
@@ -591,13 +591,16 @@ class ModelDimensions(object):
                             if result[0] is not None:
                                 data = result[0].get_data()
                                 if data is None:
-                                    print(
-                                        "WARNING: Unable to resolve dimension of "
-                                        "{} based on shape "
-                                        '"{}".'.format(
-                                            data_item_struct.path, item[0]
+                                    if self.simulation_data.verbosity_level. \
+                                            value >= \
+                                            VerbosityLevel.normal.value:
+                                        print(
+                                            "WARNING: Unable to resolve "
+                                            "dimension of {} based on shape "
+                                            '"{}".'.format(
+                                                data_item_struct.path, item[0]
+                                            )
                                         )
-                                    )
                                     shape_dimensions.append(-9999)
                                     consistent_shape = False
                                 elif result[1] is not None:
@@ -623,13 +626,15 @@ class ModelDimensions(object):
                                             self.resolve_exp(item, len(data))
                                         )
                             else:
-                                print(
-                                    "WARNING: Unable to resolve dimension of {} "
-                                    "based on shape "
-                                    '"{}".'.format(
-                                        data_item_struct.path, item[0]
+                                if self.simulation_data.verbosity_level.\
+                                        value >= VerbosityLevel.normal.value:
+                                    print(
+                                        "WARNING: Unable to resolve "
+                                        "dimension of {} based on shape "
+                                        '"{}".'.format(
+                                            data_item_struct.path, item[0]
+                                        )
                                     )
-                                )
                                 shape_dimensions.append(-9999)
                                 consistent_shape = False
         else:
