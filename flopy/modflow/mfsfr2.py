@@ -452,6 +452,8 @@ class ModflowSfr2(Package):
         if options is None:
             if (reachinput, transroute, tabfiles) != (False, False, False):
                 options = OptionBlock("", ModflowSfr2, block=False)
+                if "nwt" in self.parent.version:
+                    options.block = True
 
         self.options = options
 
