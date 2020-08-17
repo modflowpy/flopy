@@ -584,7 +584,7 @@ class PlotMapView(object):
         plotarray = np.zeros(self.mg.shape, dtype=np.int)
         if plotAll and self.mg.grid_type != "unstructured":
             pa = np.zeros(self.mg.shape[1:], dtype=np.int)
-            pa[list(idx[1:])] = 1
+            pa[tuple(idx[1:])] = 1
             for k in range(nlay):
                 plotarray[k] = pa.copy()
         else:
