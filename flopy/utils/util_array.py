@@ -2809,7 +2809,7 @@ class Util2d(DataInterface):
                     + "    e.g., [10, {0:10.2e}]"
                 )
         # write the array to a string
-        len_data = len(data.flatten())
+        len_data = data.size
         str_fmt_data = [
             output_fmt.format(d) + "\n"
             if (((i + 1) % column_length == 0.0) and (i != 0 or ncol == 1))
