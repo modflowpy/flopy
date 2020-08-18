@@ -2816,7 +2816,7 @@ class Util2d(DataInterface):
             or ((i + 1 == ncol) and (ncol != 1))
             or (i + 1 == len_data)
             else output_fmt.format(d)
-            for i, d in enumerate(data.flatten())
+            for i, d in enumerate(data.flat)
         ]
         s = "".join(str_fmt_data)
         return s
