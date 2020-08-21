@@ -730,9 +730,8 @@ class DataStorage(object):
                                         ):
                                             data_line = data_line + (None,)
                                 data_list.append(data_line)
-                            return np.rec.array(
-                                data_list, self._recarray_type_list
-                            )
+                            type_list = self.resolve_typelist(data_list)
+                            return np.rec.array(data_list, type_list)
                         else:
                             return (
                                 self.layer_storage[
@@ -801,6 +800,7 @@ class DataStorage(object):
                 self._simulation_data.debug,
             )
         internal_data = self.layer_storage.first_item().internal_data
+
         if internal_data is None:
             if len(data[0]) != len(self._recarray_type_list):
                 # rebuild type list using existing data as a guide
@@ -1187,6 +1187,10 @@ class DataStorage(object):
 
     def _build_recarray(self, data, key, autofill):
         self.build_type_list(data=data, key=key)
+        if not self.tuple_cellids(data):
+            # fix data so cellid is a single tuple
+            data = self.make_tuple_cellids(data)
+
         if autofill and data is not None:
             # resolve any fields with data types that do not
             # agree with the expected type list
@@ -1236,6 +1240,54 @@ class DataStorage(object):
             self._verify_list(new_data)
         return new_data
 
+    def make_tuple_cellids(self, data):
+        # convert cellids from individual layer, row, column fields into
+        # tuples (layer, row, column)
+        data_dim = self.data_dimensions
+        model_grid = data_dim.get_model_grid()
+        cellid_size = model_grid.get_num_spatial_coordinates()
+
+        new_data = []
+        current_cellid = ()
+        for index, line in enumerate(data):
+            new_line = []
+            for item, is_cellid in zip(line, self.recarray_cellid_list_ex):
+                if is_cellid:
+                    current_cellid += (item,)
+                    if len(current_cellid) == cellid_size:
+                        new_line.append(current_cellid)
+                        current_cellid = ()
+                else:
+                    new_line.append(item)
+            new_data.append(tuple(new_line))
+        return new_data
+
+    def tuple_cellids(self, data):
+        for data_entry, cellid in zip(data[0], self.recarray_cellid_list):
+            if cellid:
+                if isinstance(data_entry, int):
+                    # cellid is stored in separate columns in the recarray
+                    # (eg: one column for layer one column for row and
+                    # one columne for column)
+                    return False
+                else:
+                    # cellid is stored in a single column in the recarray
+                    # as a tuple
+                    return True
+        return True
+
+    def resolve_typelist(self, data):
+        if self.tuple_cellids(data):
+            return self._recarray_type_list
+        else:
+            return self._recarray_type_list_ex
+
+    def resolve_cellidlist(self, data):
+        if self.tuple_cellids(data):
+            return self.recarray_cellid_list
+        else:
+            return self.recarray_cellid_list_ex
+
     def _resolve_multitype_fields(self, data):
         # find any data fields where the data is not a consistent type
         itype_len = len(self._recarray_type_list)
@@ -1281,6 +1333,17 @@ class DataStorage(object):
                 fp = self._simulation_data.mfpath.resolve_path(
                     file_path, model_name
                 )
+                # store data internally first so that a file entry
+                # can be generated
+                self.store_internal(
+                    data,
+                    layer_new,
+                    False,
+                    [multiplier],
+                    None,
+                    False,
+                    print_format,
+                )
                 if binary:
                     file_access = MFFileAccessList(
                         self.data_dimensions.structure,
@@ -1290,7 +1353,7 @@ class DataStorage(object):
                         self._stress_period,
                     )
                     file_access.write_binary_file(
-                        data,
+                        self.layer_storage.first_item().internal_data,
                         fp,
                         self._model_or_sim.modeldiscrit,
                         precision="double",
@@ -1318,18 +1381,6 @@ class DataStorage(object):
                             message,
                             self._simulation_data.debug,
                         )
-                    # store data internally first so that a file entry
-                    # can be generated
-                    self.store_internal(
-                        data,
-                        layer_new,
-                        False,
-                        [multiplier],
-                        None,
-                        False,
-                        print_format,
-                    )
-
                     ext_file_entry = self._get_file_entry()
                     fd.write(ext_file_entry)
                     fd.close()
@@ -2313,10 +2364,14 @@ class DataStorage(object):
         resolve_data_shape=True,
         key=None,
         nseg=None,
+        cellid_expanded=False,
     ):
         if data_set is None:
+            self.jagged_record = False
             self._recarray_type_list = []
+            self._recarray_type_list_ex = []
             self.recarray_cellid_list = []
+            self.recarray_cellid_list_ex = []
             data_set = self.data_dimensions.structure
         initial_keyword = True
         package_dim = self.data_dimensions.package_dim
@@ -2343,50 +2398,42 @@ class DataStorage(object):
                     if aux_var_names is not None:
                         for aux_var_name in aux_var_names[0]:
                             if aux_var_name.lower() != "auxiliary":
-                                self._recarray_type_list.append(
-                                    (aux_var_name, data_type)
+                                self._append_type_lists(
+                                    aux_var_name, data_type, False
                                 )
-                                self.recarray_cellid_list.append(False)
 
                 elif data_item.type == DatumType.record:
                     # record within a record, recurse
                     self.build_type_list(data_item, True, data)
                 elif data_item.type == DatumType.keystring:
-                    self._recarray_type_list.append(
-                        (data_item.name, data_type)
+                    self.jagged_record = True
+                    self._append_type_lists(
+                        data_item.name, data_type, data_item.is_cellid
                     )
-                    self.recarray_cellid_list.append(data_item.is_cellid)
                     # add potential data after keystring to type list
                     ks_data_item = deepcopy(data_item)
                     ks_data_item.type = DatumType.string
                     ks_data_item.name = "{}_data".format(ks_data_item.name)
                     ks_rec_type = ks_data_item.get_rec_type()
-                    self._recarray_type_list.append(
-                        (ks_data_item.name, ks_rec_type)
+                    self._append_type_lists(
+                        ks_data_item.name, ks_rec_type, ks_data_item.is_cellid
                     )
-                    self.recarray_cellid_list.append(ks_data_item.is_cellid)
-                    if index == len(data_set.data_item_structures) - 1:
+                    if (
+                        index == len(data_set.data_item_structures) - 1
+                        and data is not None
+                    ):
                         idx = 1
                         data_line_max_size = self._get_max_data_line_size(data)
-                        while (
-                            data is not None
-                            and len(self._recarray_type_list)
-                            < data_line_max_size
-                        ):
+                        type_list = self.resolve_typelist(data)
+                        while len(type_list) < data_line_max_size:
                             # keystrings at the end of a line can contain items
                             # of variable length. assume everything at the
                             # end of the data line is related to the last
                             # keystring
-                            self._recarray_type_list.append(
-                                (
-                                    "{}_{}".format(ks_data_item.name, idx),
-                                    ks_rec_type,
-                                )
+                            name = "{}_{}".format(ks_data_item.name, idx)
+                            self._append_type_lists(
+                                name, ks_rec_type, ks_data_item.is_cellid
                             )
-                            self.recarray_cellid_list.append(
-                                ks_data_item.is_cellid
-                            )
-
                             idx += 1
 
                 elif (
@@ -2406,11 +2453,9 @@ class DataStorage(object):
                                 data_item.type != DatumType.string
                                 and data_item.type != DatumType.keyword
                             ):
-                                self._recarray_type_list.append(
-                                    ("{}_label".format(data_item.name), object)
-                                )
-                                self.recarray_cellid_list.append(
-                                    data_item.is_cellid
+                                name = "{}_label".format(data_item.name)
+                                self._append_type_lists(
+                                    name, object, data_item.is_cellid
                                 )
                         if (
                             nseg is not None
@@ -2474,6 +2519,7 @@ class DataStorage(object):
                                 # shape is indeterminate 1-d array and no data
                                 # provided to resolve
                                 resolved_shape[0] = 1
+                                self.jagged_record = True
                         if data_item.is_cellid:
                             if (
                                 data_item.shape is not None
@@ -2488,28 +2534,49 @@ class DataStorage(object):
                                 data_item.remove_cellid(resolved_shape, size)
                         for index in range(0, resolved_shape[0]):
                             if resolved_shape[0] > 1:
-                                # type list fields must have unique names
-                                self._recarray_type_list.append(
-                                    (
-                                        "{}_{}".format(data_item.name, index),
-                                        data_type,
-                                    )
-                                )
+                                name = "{}_{}".format(data_item.name, index)
                             else:
-                                self._recarray_type_list.append(
-                                    (data_item.name, data_type)
-                                )
-                            self.recarray_cellid_list.append(
-                                data_item.is_cellid
+                                name = data_item.name
+                            self._append_type_lists(
+                                name, data_type, data_item.is_cellid
                             )
-
-        return self._recarray_type_list
+        if cellid_expanded:
+            return self._recarray_type_list_ex
+        else:
+            return self._recarray_type_list
 
     def get_default_mult(self):
         if self._data_type == DatumType.integer:
             return 1
         else:
             return 1.0
+
+    def _append_type_lists(self, name, data_type, iscellid):
+        # add entry(s) to type lists
+        self._recarray_type_list.append((name, data_type))
+        self.recarray_cellid_list.append(iscellid)
+        if iscellid and self._model_or_sim.model_type is not None:
+            # write each part of the cellid out as a separate entry
+            # to _recarray_list_list_ex
+            model_grid = self.data_dimensions.get_model_grid()
+            cellid_size = model_grid.get_num_spatial_coordinates()
+            # determine header for different grid types
+            if cellid_size == 1:
+                self._recarray_type_list_ex.append((name, int))
+            elif cellid_size == 2:
+                self._recarray_type_list_ex.append(("layer", int))
+                self._recarray_type_list_ex.append(("cell2d_num", int))
+            else:
+                self._recarray_type_list_ex.append(("layer", int))
+                self._recarray_type_list_ex.append(("row", int))
+                self._recarray_type_list_ex.append(("column", int))
+
+            for index in range(0, cellid_size):
+                self.recarray_cellid_list_ex.append(iscellid)
+        else:
+            self._recarray_type_list_ex.append((name, data_type))
+            self.recarray_cellid_list_ex.append(iscellid)
+        return iscellid
 
     @staticmethod
     def _calc_data_size(data, count_to=None, current_length=None):

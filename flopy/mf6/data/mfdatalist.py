@@ -419,7 +419,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data = storage_obj.get_data()
                 # check data for invalid cellids
                 for index, is_cellid in enumerate(
-                    storage_obj.recarray_cellid_list
+                    storage_obj.resolve_cellidlist(data)
                 ):
                     if is_cellid:
                         for record in data:
