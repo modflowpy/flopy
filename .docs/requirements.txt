@@ -1,0 +1,14 @@
+appdirs
+numpy
+matplotlib
+netcdf4
+fiona
+descartes
+pyproj
+pyshp
+pandas
+scipy
+affine
+requests
+https://github.com/modflowpy/pymake/zipball/master
+
