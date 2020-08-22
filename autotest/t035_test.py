@@ -53,7 +53,7 @@ def test_simplelgr_load_and_write():
 
     # fix for intermittent CI failure on windows
     run_test = run
-    if sys.platform.lower() == "win32":
+    if sys.platform.lower() in ("win32",):
         run_test = False
 
     # run the lgr model
@@ -80,7 +80,7 @@ def test_simplelgr_load_and_write():
     lgr.write_input()
 
     # run the lgr model
-    if run:
+    if run_test:
         success, buff = lgr.run_model(silent=False)
         assert success, 'could not run new modflow-lgr model'
 
