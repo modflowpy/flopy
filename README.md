@@ -5,9 +5,12 @@
 ![Build Status](https://github.com/modflowpy/flopy/workflows/flopy%20continuous%20integration/badge.svg)
 [![codecov](https://codecov.io/gh/modflowpy/flopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/modflowpy/flopy)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b23a5edd021b4aa19e947545ab49e577)](https://www.codacy.com/manual/jdhughes-usgs/flopy?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=modflowpy/flopy&amp;utm_campaign=Badge_Grade)
+[![Documentation Status](https://readthedocs.org/projects/flopy/badge/?version=latest)](https://flopy.readthedocs.io/en/latest/?badge=latest)
+
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/installer/conda.svg)](https://conda.anaconda.org/conda-forge)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/flopy/badges/version.svg)](https://anaconda.org/conda-forge/flopy)
 [![PyPI Version](https://img.shields.io/pypi/v/flopy.png)](https://pypi.python.org/pypi/flopy)
+
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/modflowpy/flopy.git/develop)
 
 Introduction
@@ -38,7 +41,7 @@ The release candidate version can also be installed from the git repository usin
 Documentation
 -----------------------------------------------
 
-FloPy code documentation is available at [https://modflowpy.github.io/flopydoc/](https://modflowpy.github.io/flopydoc/)
+FloPy code documentation is available at [https://flopy.readthedocs.io](https://flopy.readthedocs.io)
 
 
 Getting Started
