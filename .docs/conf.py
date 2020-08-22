@@ -57,10 +57,14 @@ for s in scripts:
         print("Errors:\n{}".format(stderr.decode("utf-8")))
 
 # -- copy the output to _static directory -----------------------------------
+ws_dst = "_static"
+if os.path.isdir(ws_dst):
+    shutil.rmtree(ws_dst)
+os.makedirs(ws_dst)
 for fname in os.listdir(ws):
     if fname.endswith(".png"):
         src = os.path.join(ws, fname)
-        dst = os.path.join("_static", fname)
+        dst = os.path.join(ws_dst, fname)
         shutil.copyfile(src, dst)
 
 # -- Create the flopy rst files ---------------------------------------------
