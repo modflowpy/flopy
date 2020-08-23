@@ -1,8 +1,74 @@
 Flopy Code
 ==========
 
-Base Classes
-------------
+MODFLOW 6
+---------
+
+MODFLOW 6 Base Packages
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   ./source/flopy.mf6.mfbase
+   ./source/flopy.mf6.mfmodel
+   ./source/flopy.mf6.mfpackage
+
+MODFLOW 6 Packages
+^^^^^^^^^^^^^^^^^^
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   ./source/flopy.mf6.modflow.mfsimulation
+   ./source/flopy.mf6.modflow.mfgnc
+   ./source/flopy.mf6.modflow.mfgwf
+   ./source/flopy.mf6.modflow.mfgwfchd
+   ./source/flopy.mf6.modflow.mfgwfcsub
+   ./source/flopy.mf6.modflow.mfgwfdis
+   ./source/flopy.mf6.modflow.mfgwfdisu
+   ./source/flopy.mf6.modflow.mfgwfdisv
+   ./source/flopy.mf6.modflow.mfgwfdrn
+   ./source/flopy.mf6.modflow.mfgwfevt
+   ./source/flopy.mf6.modflow.mfgwfevta
+   ./source/flopy.mf6.modflow.mfgwfghb
+   ./source/flopy.mf6.modflow.mfgwfgnc
+   ./source/flopy.mf6.modflow.mfgwfgwf
+   ./source/flopy.mf6.modflow.mfgwfhfb
+   ./source/flopy.mf6.modflow.mfgwfic
+   ./source/flopy.mf6.modflow.mfgwflak
+   ./source/flopy.mf6.modflow.mfgwfmaw
+   ./source/flopy.mf6.modflow.mfgwfmvr
+   ./source/flopy.mf6.modflow.mfgwfnam
+   ./source/flopy.mf6.modflow.mfgwfnpf
+   ./source/flopy.mf6.modflow.mfgwfoc
+   ./source/flopy.mf6.modflow.mfgwfrch
+   ./source/flopy.mf6.modflow.mfgwfrcha
+   ./source/flopy.mf6.modflow.mfgwfriv
+   ./source/flopy.mf6.modflow.mfgwfsfr
+   ./source/flopy.mf6.modflow.mfgwfsto
+   ./source/flopy.mf6.modflow.mfgwfuzf
+   ./source/flopy.mf6.modflow.mfgwfwel
+   ./source/flopy.mf6.modflow.mfims
+   ./source/flopy.mf6.modflow.mfmvr
+   ./source/flopy.mf6.modflow.mfnam
+   ./source/flopy.mf6.modflow.mftdis
+   ./source/flopy.mf6.modflow.mfutlobs
+   ./source/flopy.mf6.modflow.mfutllaktab
+   ./source/flopy.mf6.modflow.mfutltas
+   ./source/flopy.mf6.modflow.mfutlts
+
+
+Previous Versions of MODFLOW
+----------------------------
+
+MODFLOW Base Classes
+^^^^^^^^^^^^^^^^^^^^
+
 Contents:
 
 .. toctree::
@@ -11,8 +77,9 @@ Contents:
    ./source/flopy.mbase
    ./source/flopy.pakbase
 
-Model Classes
--------------
+
+MODFLOW Model Classes
+^^^^^^^^^^^^^^^^^^^^^
 Contents:
 
 .. toctree::
@@ -23,8 +90,9 @@ Contents:
    ./source/flopy.mt3d.mt
    ./source/flopy.seawat.swt
 
+
 MODFLOW Packages
-----------------
+^^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -74,58 +142,9 @@ Contents:
    ./source/flopy.modflow.mfwel
    ./source/flopy.modflow.mfaddoutsidefile
 
-MODFLOW 6 Packages
-------------------
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   ./source/flopy.mf6.mfbase
-   ./source/flopy.mf6.mfmodel
-   ./source/flopy.mf6.mfpackage
-   ./source/flopy.mf6.mfsimulation
-   ./source/flopy.mf6.mfgnc
-   ./source/flopy.mf6.mfgwf
-   ./source/flopy.mf6.mfgwfchd
-   ./source/flopy.mf6.mfgwfcsub
-   ./source/flopy.mf6.mfgwfdis
-   ./source/flopy.mf6.mfgwfdisu
-   ./source/flopy.mf6.mfgwfdisv
-   ./source/flopy.mf6.mfgwfdrn
-   ./source/flopy.mf6.mfgwfevt
-   ./source/flopy.mf6.mfgwfevta
-   ./source/flopy.mf6.mfgwfghb
-   ./source/flopy.mf6.mfgwfgnc
-   ./source/flopy.mf6.mfgwfgwf
-   ./source/flopy.mf6.mfgwfhfb
-   ./source/flopy.mf6.mfgwfic
-   ./source/flopy.mf6.mfgwflak
-   ./source/flopy.mf6.mfgwfmaw
-   ./source/flopy.mf6.mfgwfmvr
-   ./source/flopy.mf6.mfgwfnam
-   ./source/flopy.mf6.mfgwfnpf
-   ./source/flopy.mf6.mfgwfoc
-   ./source/flopy.mf6.mfgwfrch
-   ./source/flopy.mf6.mfgwfrcha
-   ./source/flopy.mf6.mfgwfriv
-   ./source/flopy.mf6.mfgwfsfr
-   ./source/flopy.mf6.mfgwfsto
-   ./source/flopy.mf6.mfgwfuzf
-   ./source/flopy.mf6.mfgwfwel
-   ./source/flopy.mf6.mfims
-   ./source/flopy.mf6.mfmvr
-   ./source/flopy.mf6.mfnam
-   ./source/flopy.mf6.mftdis
-   ./source/flopy.mf6.mfutlobs
-   ./source/flopy.mf6.mfutllaktab
-   ./source/flopy.mf6.mfutltas
-   ./source/flopy.mf6.mfutlts
-
 
 MODFLOW-LGR Packages
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -136,7 +155,7 @@ Contents:
 
 
 MODPATH Packages
-----------------
+^^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -148,13 +167,12 @@ Contents:
    ./source/flopy.modpath.mp7particledata
    ./source/flopy.modpath.mp7particlegroup
    ./source/flopy.modpath.mp7sim
-   ./source/flopy.modpath.mp
    ./source/flopy.modpath.mpbas
    ./source/flopy.modpath.mpsim
 
 
 MT3DMS Packages
----------------
+^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -175,7 +193,7 @@ Contents:
    ./source/flopy.mt3d.mtcts
 
 SEAWAT Packages
----------------
+^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -187,7 +205,7 @@ Contents:
 
 
 MODFLOW-USG Packages
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -199,8 +217,11 @@ Contents:
    ./source/flopy.modflow.mfsms
 
 
+Flopy Utilities
+---------------
+
 Model Utilities (including binary file readers)
------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Contents:
 
@@ -225,10 +246,10 @@ Contents:
    ./source/flopy.utils.observationfile
    ./source/flopy.utils.postprocessing
    ./source/flopy.utils.rasters
-   ./source/flopy.utils.shapefile_utils
    ./source/flopy.utils.swroutputfile
    ./source/flopy.utils.reference
    ./source/flopy.utils.sfroutputfile
+   ./source/flopy.utils.triangle
    ./source/flopy.utils.util_array
    ./source/flopy.utils.utils_def
    ./source/flopy.utils.util_list
@@ -236,7 +257,7 @@ Contents:
 
 
 Plotting Utilities
-------------------
+^^^^^^^^^^^^^^^^^^
 Contents:
 
 .. toctree::
@@ -248,7 +269,7 @@ Contents:
 
 
 Export Utilities
-----------------
+^^^^^^^^^^^^^^^^
 Contents:
 
 .. toctree::
@@ -257,13 +278,12 @@ Contents:
    ./source/flopy.export.metadata
    ./source/flopy.export.netcdf
    ./source/flopy.export.shapefile_utils
-   ./source/flopy.export.triangle
    ./source/flopy.export.utils
    ./source/flopy.export.vtk
 
 
 PEST Utilities
---------------
+^^^^^^^^^^^^^^
 Contents:
 
 .. toctree::
@@ -274,7 +294,7 @@ Contents:
    ./source/flopy.pest.tplarray
 
 Discretization Utilities
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 Contents:
 
 .. toctree::
