@@ -733,11 +733,11 @@ class ListTemplateGenerator(TemplateGenerator):
                 model.simulation_data.debug,
             )
         if aux_vars is not None:
-            if len(aux_vars) > 0 and (
-                isinstance(aux_vars[0], list)
-                or isinstance(aux_vars[0], tuple)
-            ):
-                aux_vars = aux_vars[0]
+            if len(aux_vars) > 0:
+                if isinstance(aux_vars[0], list) or isinstance(
+                    aux_vars[0], tuple
+                ):
+                    aux_vars = aux_vars[0]
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))
         if boundnames:
@@ -768,7 +768,7 @@ class ListTemplateGenerator(TemplateGenerator):
         )
 
         # get data storage
-        data_struct, data_dimensions = self._get_data_dimensions(model)
+        data_struct = self._get_data_dimensions(model)[0]
         data_type = data_struct.get_datatype()
 
         # build recarray
