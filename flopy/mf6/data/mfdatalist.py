@@ -206,7 +206,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 model_grid.num_columns(),
             )
         elif model_grid._grid_type.value == 2:
-            shape = (model_grid.num_layers(), model_grid.num_cells_per_layer())
+            shape = (
+                model_grid.num_layers(),
+                model_grid.num_cells_per_layer(),
+            )
         else:
             shape = (model_grid.num_cells_per_layer(),)
 
@@ -419,7 +422,7 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 data = storage_obj.get_data()
                 # check data for invalid cellids
                 for index, is_cellid in enumerate(
-                    storage_obj.recarray_cellid_list
+                    storage_obj.resolve_cellidlist(data)
                 ):
                     if is_cellid:
                         for record in data:

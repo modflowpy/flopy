@@ -169,7 +169,10 @@ def to_string(
                     'Cellid "{}" contains {} integer(s). Expected a'
                     " cellid containing {} integer(s) for grid type"
                     " {}.".format(
-                        val, len(val), cellid_size, str(model_grid.grid_type())
+                        val,
+                        len(val),
+                        cellid_size,
+                        str(model_grid.grid_type()),
                     )
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -678,20 +681,19 @@ class ListTemplateGenerator(TemplateGenerator):
                 template_data.append(None)
         return tuple(template_data)
 
-    def empty(
+    def dtype(
         self,
         model,
-        maxbound=None,
         aux_vars=None,
         boundnames=False,
         nseg=None,
         timeseries=False,
-        stress_periods=None,
+        cellid_expanded=False,
     ):
-        from ..data import mfdatastorage, mfstructure
+        from ..data import mfdatastorage
 
+        # get data storage
         data_struct, data_dimensions = self._get_data_dimensions(model)
-        data_type = data_struct.get_datatype()
         # build a temporary data storage object
         data_storage = mfdatastorage.DataStorage(
             model.simulation_data,
@@ -703,12 +705,39 @@ class ListTemplateGenerator(TemplateGenerator):
         )
 
         # build type list
-        type_list = data_storage.build_type_list(nseg=nseg)
+        type_list = data_storage.build_type_list(
+            nseg=nseg, cellid_expanded=cellid_expanded
+        )
+        if data_storage.jagged_record:
+            comment = (
+                "Data dimensions can not be determined for  "
+                "{}. Data structure may be jagged or may contain "
+                "a keystring. Data type information is therefore "
+                "dependant on the data and can not be retreived "
+                "prior to the data being loaded"
+                ".".format(data_storage.data_dimensions.structure.name)
+            )
+            type_, value_, traceback_ = sys.exc_info()
+
+            raise MFDataException(
+                data_struct.get_model(),
+                data_struct.get_package(),
+                data_struct.path,
+                "generating array template",
+                data_struct.name,
+                inspect.stack()[0][3],
+                type_,
+                value_,
+                traceback_,
+                comment,
+                model.simulation_data.debug,
+            )
         if aux_vars is not None:
-            if len(aux_vars) > 0 and (
-                isinstance(aux_vars[0], list) or isinstance(aux_vars[0], tuple)
-            ):
-                aux_vars = aux_vars[0]
+            if len(aux_vars) > 0:
+                if isinstance(aux_vars[0], list) or isinstance(
+                    aux_vars[0], tuple
+                ):
+                    aux_vars = aux_vars[0]
             for aux_var in aux_vars:
                 type_list.append((aux_var, object))
         if boundnames:
@@ -718,6 +747,34 @@ class ListTemplateGenerator(TemplateGenerator):
             # fix type list to make all types objects
             for index, d_type in enumerate(type_list):
                 type_list[index] = (d_type[0], object)
+        return type_list
+
+    def empty(
+        self,
+        model,
+        maxbound=None,
+        aux_vars=None,
+        boundnames=False,
+        nseg=None,
+        timeseries=False,
+        stress_periods=None,
+        cellid_expanded=False,
+    ):
+        from ..data import mfstructure
+
+        # get type list
+        type_list = self.dtype(
+            model,
+            aux_vars,
+            boundnames,
+            nseg,
+            timeseries,
+            cellid_expanded,
+        )
+
+        # get data storage
+        data_struct = self._get_data_dimensions(model)[0]
+        data_type = data_struct.get_datatype()
 
         # build recarray
         template_data = self._build_template_data(type_list)
