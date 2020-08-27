@@ -66,7 +66,7 @@ class StructuredSpatialReference(object):
     xul and yul can be explicitly (re)set after SpatialReference
     instantiation, but only before any of the other attributes and methods are
     accessed
-        
+
     """
 
     def __init__(
@@ -259,7 +259,7 @@ class StructuredSpatialReference(object):
 
     def set_spatialreference(self, xul=None, yul=None, rotation=0.0):
         """
-            set spatial reference - can be called from model instance
+        set spatial reference - can be called from model instance
         """
 
         # Set origin and rotation
@@ -405,7 +405,7 @@ class StructuredSpatialReference(object):
 
     def get_grid_lines(self):
         """
-            get the grid lines as a list
+        get the grid lines as a list
         """
         xmin = self.xedge[0]
         xmax = self.xedge[-1]
@@ -487,8 +487,7 @@ class StructuredSpatialReference(object):
         return yedge
 
     def write_gridSpec(self, filename):
-        """ write a PEST-style grid specification file
-        """
+        """write a PEST-style grid specification file"""
         f = open(filename, "w")
         f.write(
             "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0])
@@ -722,9 +721,9 @@ class VertexSpatialReference(object):
 
     def set_spatialreference(self, xadj=0.0, yadj=0.0, rotation=0.0):
         """
-            set spatial reference - can be called from model instance
-            xadj, yadj should be named xadj, yadj since they represent an
-            adjustment factor
+        set spatial reference - can be called from model instance
+        xadj, yadj should be named xadj, yadj since they represent an
+        adjustment factor
         """
 
         # Set origin and rotation

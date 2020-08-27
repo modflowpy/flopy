@@ -15,83 +15,102 @@ import multiprocessing as mp
 import flopy
 
 # global executable name and output precision
-precision = 'double'
-exe_name = 'mf2005dbl'
-if platform.system() == 'Windows':
-    exe_name = 'mf2005dbl_x64.exe'
+precision = "double"
+exe_name = "mf2005dbl"
+if platform.system() == "Windows":
+    exe_name = "mf2005dbl_x64.exe"
 
 
 # functions that do all of the work
 def load_base_model(klay):
 
     # paths
-    base_pth = os.path.join('data', 'uspb', 'flopy')
+    base_pth = os.path.join("data", "uspb", "flopy")
 
-    sys.stdout.write('loading base model\n')
-    ml = flopy.modflow.Modflow.load('DG.nam', version='mf2005', exe_name=exe_name, 
-                                    verbose=True, model_ws=base_pth)
-    
+    sys.stdout.write("loading base model\n")
+    ml = flopy.modflow.Modflow.load(
+        "DG.nam",
+        version="mf2005",
+        exe_name=exe_name,
+        verbose=True,
+        model_ws=base_pth,
+    )
+
     # set a few variables from the model
     nrow, ncol = ml.dis.nrow, ml.dis.ncol
     ibound = ml.bas6.ibound[klay, :, :]
-    
-    return ml, nrow, ncol, ibound
-    
-    
-def get_baseQ(model):
-    sys.stdout.write('\nrunning base model to get base head-dependent flow\n\n')
-    success, report = model.run_model(silent=True, report=True)
-    sys.stdout.write('Base model run: {}\n'.format(report[-3]))
-    
-    # get base model results
-    cbcObj = flopy.utils.CellBudgetFile(os.path.join(model.model_ws, 'DG.cbc'), precision=precision)
-    v1 = cbcObj.get_data(kstpkper=(0, 0), text='DRAINS', full3D=True)[0]
-    v2 = cbcObj.get_data(kstpkper=(0, 0), text='STREAM LEAKAGE', full3D=True)[0]
-    v3 = cbcObj.get_data(kstpkper=(0, 0), text='ET', full3D=True)[0]
-    return v1.sum() + v2.sum() + v3.sum()
-    
-    
-def copy_files(ml, nproc):   
-    # path
-    cf_base = os.path.join('data', 'uspb')
 
-    exclude = ['hds', 'cbc', 'list', 'ddn']
+    return ml, nrow, ncol, ibound
+
+
+def get_baseQ(model):
+    sys.stdout.write(
+        "\nrunning base model to get base head-dependent flow\n\n"
+    )
+    success, report = model.run_model(silent=True, report=True)
+    sys.stdout.write("Base model run: {}\n".format(report[-3]))
+
+    # get base model results
+    cbcObj = flopy.utils.CellBudgetFile(
+        os.path.join(model.model_ws, "DG.cbc"), precision=precision
+    )
+    v1 = cbcObj.get_data(kstpkper=(0, 0), text="DRAINS", full3D=True)[0]
+    v2 = cbcObj.get_data(kstpkper=(0, 0), text="STREAM LEAKAGE", full3D=True)[
+        0
+    ]
+    v3 = cbcObj.get_data(kstpkper=(0, 0), text="ET", full3D=True)[0]
+    return v1.sum() + v2.sum() + v3.sum()
+
+
+def copy_files(ml, nproc):
+    # path
+    cf_base = os.path.join("data", "uspb")
+
+    exclude = ["hds", "cbc", "list", "ddn"]
     cf_pths = []
     for idx in range(nproc):
-        cf_pths.append(os.path.join(cf_base, 'cf{:02d}'.format(idx)))
+        cf_pths.append(os.path.join(cf_base, "cf{:02d}".format(idx)))
         # create base model in each directory
         if idx == 0:
             ml.model_ws = cf_pths[idx]
             # modify the oc file
-            ml.remove_package('OC')
-            stress_period_data = {(1,9): ['save head', 'save budget', 'print budget'],
-                                  (1,10): [],
-                                  (1,19): ['save head', 'save budget', 'print budget'], 
-                                  (1,20): [],
-                                  (1,29): ['save head', 'save budget', 'print budget'], 
-                                  (1,30): [],
-                                  (1,39): ['save head', 'save budget', 'print budget'], 
-                                  (1,40): [],
-                                  (1,49): ['save head', 'save budget', 'print budget'], 
-                                  (1,50): [],
-                                  (1,59): ['save head', 'save budget', 'print budget'], 
-                                  (1,60): [],
-                                  (1,69): ['save head', 'save budget', 'print budget'], 
-                                  (1,70): [],
-                                  (1,79): ['save head', 'save budget', 'print budget'], 
-                                  (1,80): [],
-                                  (1,89): ['save head', 'save budget', 'print budget'], 
-                                  (1,90): [],
-                                  (1,99): ['save head', 'save budget', 'print budget'], 
-                                  (1,100): []}
-            oc = flopy.modflow.ModflowOc(ml, stress_period_data=stress_period_data)
+            ml.remove_package("OC")
+            stress_period_data = {
+                (1, 9): ["save head", "save budget", "print budget"],
+                (1, 10): [],
+                (1, 19): ["save head", "save budget", "print budget"],
+                (1, 20): [],
+                (1, 29): ["save head", "save budget", "print budget"],
+                (1, 30): [],
+                (1, 39): ["save head", "save budget", "print budget"],
+                (1, 40): [],
+                (1, 49): ["save head", "save budget", "print budget"],
+                (1, 50): [],
+                (1, 59): ["save head", "save budget", "print budget"],
+                (1, 60): [],
+                (1, 69): ["save head", "save budget", "print budget"],
+                (1, 70): [],
+                (1, 79): ["save head", "save budget", "print budget"],
+                (1, 80): [],
+                (1, 89): ["save head", "save budget", "print budget"],
+                (1, 90): [],
+                (1, 99): ["save head", "save budget", "print budget"],
+                (1, 100): [],
+            }
+            oc = flopy.modflow.ModflowOc(
+                ml, stress_period_data=stress_period_data
+            )
             # write the input files
             ml.write_input()
         else:
             if not os.path.exists(cf_pths[idx]):
                 os.makedirs(cf_pths[idx])
             filelist = [f for f in os.listdir(cf_pths[0])]
-            sys.stdout.write('copying files from {} to {}\n'.format(cf_pths[0], cf_pths[idx]))
+            sys.stdout.write(
+                "copying files from {} to {}\n".format(
+                    cf_pths[0], cf_pths[idx]
+                )
+            )
             for f in filelist:
                 if os.path.splitext(f)[1].lower() in exclude:
                     continue
@@ -100,46 +119,48 @@ def copy_files(ml, nproc):
                 shutil.copyfile(src, dst)
 
     return ml, cf_pths
-    
+
+
 # functions to run the models in parallel
 def unpack_args(args):
     try:
         f, idx, nmax, k, i, j, Qt, base, hdry = args
     except:
-        sys.stdout.write('could not unpack args\n')
+        sys.stdout.write("could not unpack args\n")
         raise
     try:
         current = mp.current_process()
-        imod = current._identity[0]-1
+        imod = current._identity[0] - 1
     except:
-        sys.stdout.write('could not get current process\n')
+        sys.stdout.write("could not get current process\n")
         raise
     return f(imod, idx, nmax, k, i, j, Qt, base, hdry)
 
+
 def make_well(pth, k, i, j, Qt):
-    fn = os.path.join(pth, 'DG.wel')
-    f = open(fn, 'w')
-    f.write('# Well file for MODFLOW, generated by Flopy.\n')
-    f.write('         1         0\n')
-    f.write('         0         0 # stress period 0\n')
-    f.write('         1         0 # stress period 1\n')
-    f.write('{:10d}{:10d}{:10d}{:10.2f}\n'.format(k+1, i+1, j+1, Qt))
+    fn = os.path.join(pth, "DG.wel")
+    f = open(fn, "w")
+    f.write("# Well file for MODFLOW, generated by Flopy.\n")
+    f.write("         1         0\n")
+    f.write("         0         0 # stress period 0\n")
+    f.write("         1         0 # stress period 1\n")
+    f.write("{:10d}{:10d}{:10d}{:10.2f}\n".format(k + 1, i + 1, j + 1, Qt))
     f.close()
 
+
 def run_model(pth):
-    proc = sp.Popen([exe_name, 'DG.nam'],
-                    stdout=sp.PIPE, cwd=pth)
-    sys.stdout.write('  running {} in {}\n'.format(exe_name, pth))
+    proc = sp.Popen([exe_name, "DG.nam"], stdout=sp.PIPE, cwd=pth)
+    sys.stdout.write("  running {} in {}\n".format(exe_name, pth))
     success = False
     buff = []
-    elt = 'Normal model termination did not occur'
+    elt = "Normal model termination did not occur"
     while True:
         line = proc.stdout.readline()
-        c = line.decode('utf-8')
-        if c != '':
-            if 'normal termination of simulation' in c.lower():
+        c = line.decode("utf-8")
+        if c != "":
+            if "normal termination of simulation" in c.lower():
                 success = True
-            c = c.rstrip('\r\n')
+            c = c.rstrip("\r\n")
             buff.append(c)
         else:
             break
@@ -148,96 +169,136 @@ def run_model(pth):
             elt = buff[-3].strip()
         except:
             pass
-    return ([success, elt])
+    return [success, elt]
+
 
 # function to create well file, run model, and extract results
 def cf_model(imod, ion, nmax, k, i, j, Qt, base, hdry):
-    pth = os.path.join('data', 'uspb', 'cf{:02d}'.format(imod))
-    sys.stdout.write('\nRunning model number: {}\n'.format(imod))
-    sys.stdout.write('  model run: {} of {}\n'.format(ion+1, nmax))
-    sys.stdout.write('  model number {} working directory: {}\n'.format(imod, pth))
+    pth = os.path.join("data", "uspb", "cf{:02d}".format(imod))
+    sys.stdout.write("\nRunning model number: {}\n".format(imod))
+    sys.stdout.write("  model run: {} of {}\n".format(ion + 1, nmax))
+    sys.stdout.write(
+        "  model number {} working directory: {}\n".format(imod, pth)
+    )
     make_well(pth, k, i, j, Qt)
     success, elt = run_model(pth)
-    line = '\nModel run: {} of {} (model number {})\n'.format(ion+1, nmax, imod)
-    line += '  row {} - col {}\n'.format(i+1, j+1)
-    line += '  {}\n'.format(elt)
+    line = "\nModel run: {} of {} (model number {})\n".format(
+        ion + 1, nmax, imod
+    )
+    line += "  row {} - col {}\n".format(i + 1, j + 1)
+    line += "  {}\n".format(elt)
     # get the results
     v = np.zeros((10), dtype=np.float)
     if success:
         try:
-            hedObj = flopy.utils.HeadFile(os.path.join(pth, 'DG.hds'), precision=precision)
-            cbcObj = flopy.utils.CellBudgetFile(os.path.join(pth, 'DG.cbc'), precision=precision)
+            hedObj = flopy.utils.HeadFile(
+                os.path.join(pth, "DG.hds"), precision=precision
+            )
+            cbcObj = flopy.utils.CellBudgetFile(
+                os.path.join(pth, "DG.cbc"), precision=precision
+            )
             kk = hedObj.get_kstpkper()
             h = hedObj.get_ts((k, i, j))
             for idx, kon in enumerate(kk):
                 if h[idx, 1] == hdry:
                     v[idx] = np.nan
                 else:
-                    v1 = cbcObj.get_data(kstpkper=kon, text='DRAINS', full3D=True)[0]
-                    v2 = cbcObj.get_data(kstpkper=kon, text='STREAM LEAKAGE', full3D=True)[0]
-                    v3 = cbcObj.get_data(kstpkper=kon, text='ET', full3D=True)[0]
+                    v1 = cbcObj.get_data(
+                        kstpkper=kon, text="DRAINS", full3D=True
+                    )[0]
+                    v2 = cbcObj.get_data(
+                        kstpkper=kon, text="STREAM LEAKAGE", full3D=True
+                    )[0]
+                    v3 = cbcObj.get_data(kstpkper=kon, text="ET", full3D=True)[
+                        0
+                    ]
                     v[idx] = ((v1.sum() + v2.sum() + v3.sum()) - base) / (-Qt)
         except:
-            line += ' Error: Model run: {} of {} (model number {}) - '.format(ion+1, nmax, imod)
-            line += 'could not process model results.\n'
+            line += " Error: Model run: {} of {} (model number {}) - ".format(
+                ion + 1, nmax, imod
+            )
+            line += "could not process model results.\n"
             v[:] = np.nan
     else:
-        line += ' Error: Model run: {} of {} (model number {}) '.format(ion+1, nmax, imod)
-        line += 'did not execute successfully\n'
+        line += " Error: Model run: {} of {} (model number {}) ".format(
+            ion + 1, nmax, imod
+        )
+        line += "did not execute successfully\n"
         v[:] = np.nan
     sys.stdout.write(line)
     return (v, line)
+
 
 def doit():
     # multi processing information
     nproc = 3
     ncores = mp.cpu_count()
     if nproc > ncores:
-        sys.stdout.write('Requested {} cores but only {} cores are available.\n\n\n'.format(nproc, ncores))
+        sys.stdout.write(
+            "Requested {} cores but only {} cores are available.\n\n\n".format(
+                nproc, ncores
+            )
+        )
     else:
-        sys.stdout.write('Requested {} cores and {} cores are available.\n\n\n'.format(nproc, ncores))
-        
-    #paths
-    res_pth = os.path.join('data', 'uspb', 'results')
-    
-    #model data
+        sys.stdout.write(
+            "Requested {} cores and {} cores are available.\n\n\n".format(
+                nproc, ncores
+            )
+        )
+
+    # paths
+    res_pth = os.path.join("data", "uspb", "results")
+
+    # model data
     klay = 3
-    Qcf = -100.
+    Qcf = -100.0
     nstep = 4
 
     # load base model
     ml, nrow, ncol, ibound = load_base_model(klay)
-    
+
     # run first model created to get base model results
     baseQ = get_baseQ(ml)
-    sys.stdout.write('Base head-dependent flux = {}'.format(baseQ))
-    
+    sys.stdout.write("Base head-dependent flux = {}".format(baseQ))
+
     # modify oc file copy model files
     ml, cf_pths = copy_files(ml, nproc)
-    
+
     # calculate subset of model to run
     nrow2 = nrow // nstep
     ncol2 = ncol // nstep
 
     # open summary file
-    fs = open(os.path.join('data', 'uspb', 'uspb_capture_{}.out'.format(nstep)), 'w', 0)
-    
+    fs = open(
+        os.path.join("data", "uspb", "uspb_capture_{}.out".format(nstep)),
+        "w",
+        0,
+    )
+
     # write some summary information
-    fs.write('Problem size: {} rows and {} columns.\n'.format(nrow, ncol))
-    fs.write('Capture fraction analysis performed every {} rows and columns.\n'.format(nstep))
-    fs.write('Maximum number of analyses: {} rows and {} columns.\n'.format(nrow2, ncol2))
-    
+    fs.write("Problem size: {} rows and {} columns.\n".format(nrow, ncol))
+    fs.write(
+        "Capture fraction analysis performed every {} rows and columns.\n".format(
+            nstep
+        )
+    )
+    fs.write(
+        "Maximum number of analyses: {} rows and {} columns.\n".format(
+            nrow2, ncol2
+        )
+    )
+
     # create array to store capture fraction data (subset of model)
     cf_array = np.empty((10, nrow2, ncol2), dtype=np.float)
     cf_array.fill(np.nan)
-    
+
     # timer for capture fraction analysis
     start = time.time()
-    
+
     # capture fraction analysis
     icnt = 0
     jcnt = 0
-    
+
     # build tuple with list of cells
     cells = []
     cellmap = []
@@ -252,57 +313,67 @@ def doit():
             jcnt += 1
         # increment icnt
         icnt += 1
-    
+
     ## test cg_model function
-    #t = cf_model(models[0], klay, cells[0][0], cells[0][1], Qcf, baseQ)
-    #sys.stdout.write(t)
-    
+    # t = cf_model(models[0], klay, cells[0][0], cells[0][1], Qcf, baseQ)
+    # sys.stdout.write(t)
+
     # create multiprocessing pool
     pool = mp.Pool(processes=nproc)
-    args = [(cf_model, idx, len(cells), klay, i, j, Qcf, baseQ, ml.lpf.hdry) for idx, (i, j) in enumerate(cells)]
-    #sys.stdout.write(args)
+    args = [
+        (cf_model, idx, len(cells), klay, i, j, Qcf, baseQ, ml.lpf.hdry)
+        for idx, (i, j) in enumerate(cells)
+    ]
+    # sys.stdout.write(args)
     output = pool.map(unpack_args, args, nproc)
     pool.close()
     pool.join()
-    
+
     for v in output:
         fs.write(v[1])
-    
+
     for idx, (icnt, jcnt) in enumerate(cellmap):
         # add values to the array
         if icnt < nrow2 and jcnt < ncol2:
             cf_array[:, icnt, jcnt] = output[idx][0].copy()
-    
-    
+
     # end timer for capture fraction analysis
     end = time.time()
     ets = end - start
-    line = '\n' + \
-           'streamflow capture analysis took {} seconds.\n'.format(ets) + \
-           'streamflow capture analysis took {} minutes.\n'.format(ets/60.) + \
-           'streamflow capture analysis took {} hours.\n'.format(ets/3600.)
+    line = (
+        "\n"
+        + "streamflow capture analysis took {} seconds.\n".format(ets)
+        + "streamflow capture analysis took {} minutes.\n".format(ets / 60.0)
+        + "streamflow capture analysis took {} hours.\n".format(ets / 3600.0)
+    )
     fs.write(line)
     sys.stdout.write(line)
-    
-    #close summary file
+
+    # close summary file
     fs.close()
-    
+
     # clean up working directories
     for idx in range(nproc):
         filelist = [f for f in os.listdir(cf_pths[idx])]
         for f in filelist:
             os.remove(os.path.join(cf_pths[idx], f))
-    
+
     # create res_pth (if it doesn't exist) and save data
     if not os.path.exists(res_pth):
         os.makedirs(res_pth)
     for idx in range(10):
-        fn = os.path.join(res_pth, 'USPB_capture_fraction_{:02d}_{:02d}.dat'.format(nstep, idx+1))
-        sys.stdout.write('saving capture fraction data to...{}\n'.format(os.path.basename(fn)))
-        np.savetxt(fn, cf_array[idx, :, :], delimiter=' ')
-    
+        fn = os.path.join(
+            res_pth,
+            "USPB_capture_fraction_{:02d}_{:02d}.dat".format(nstep, idx + 1),
+        )
+        sys.stdout.write(
+            "saving capture fraction data to...{}\n".format(
+                os.path.basename(fn)
+            )
+        )
+        np.savetxt(fn, cf_array[idx, :, :], delimiter=" ")
 
-if __name__ == '__main__':
-    
+
+if __name__ == "__main__":
+
     doit()
-

@@ -436,7 +436,7 @@ class StructuredGrid(Grid):
     @property
     def grid_lines(self):
         """
-            Get the grid lines as a list
+        Get the grid lines as a list
 
         """
         # get edges initially in model coordinates

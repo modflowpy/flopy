@@ -206,7 +206,9 @@ class LayerFile(object):
         if self.mg is None:
             self.mg = StructuredGrid(
                 delc=np.ones((self.nrow,)),
-                delr=np.ones(self.ncol,),
+                delr=np.ones(
+                    self.ncol,
+                ),
                 xoff=0.0,
                 yoff=0.0,
                 angrot=0.0,
@@ -222,41 +224,41 @@ class LayerFile(object):
         attrib_name="lf_data",
     ):
         """
-         Export model output data to a shapefile at a specific location
-          in LayerFile instance.
+        Export model output data to a shapefile at a specific location
+         in LayerFile instance.
 
-         Parameters
-         ----------
-         filename : str
-             Shapefile name to write
-         kstpkper : tuple of ints
-             A tuple containing the time step and stress period (kstp, kper).
-             These are zero-based kstp and kper values.
-         totim : float
-             The simulation time.
-         mflay : integer
-            MODFLOW zero-based layer number to return.  If None, then layer 1
-            will be written
-         attrib_name : str
-             Base name of attribute columns. (default is 'lf_data')
+        Parameters
+        ----------
+        filename : str
+            Shapefile name to write
+        kstpkper : tuple of ints
+            A tuple containing the time step and stress period (kstp, kper).
+            These are zero-based kstp and kper values.
+        totim : float
+            The simulation time.
+        mflay : integer
+           MODFLOW zero-based layer number to return.  If None, then layer 1
+           will be written
+        attrib_name : str
+            Base name of attribute columns. (default is 'lf_data')
 
-         Returns
-         ----------
-         None
+        Returns
+        ----------
+        None
 
-         See Also
-         --------
+        See Also
+        --------
 
-         Notes
-         -----
+        Notes
+        -----
 
-         Examples
-         --------
-         >>> import flopy
-         >>> hdobj = flopy.utils.HeadFile('test.hds')
-         >>> times = hdobj.get_times()
-         >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
-         """
+        Examples
+        --------
+        >>> import flopy
+        >>> hdobj = flopy.utils.HeadFile('test.hds')
+        >>> times = hdobj.get_times()
+        >>> hdobj.to_shapefile('test_heads_sp6.shp', totim=times[-1])
+        """
 
         plotarray = np.atleast_3d(
             self.get_data(

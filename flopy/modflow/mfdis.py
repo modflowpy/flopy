@@ -599,16 +599,16 @@ class ModflowDis(Package):
     def get_layer(self, i, j, elev):
         """Return the layer for an elevation at an i, j location.
 
-            Parameters
-            ----------
-            i : row index (zero-based)
-            j : column index
-            elev : elevation (in same units as model)
+        Parameters
+        ----------
+        i : row index (zero-based)
+        j : column index
+        elev : elevation (in same units as model)
 
-            Returns
-            -------
-            k : zero-based layer index
-            """
+        Returns
+        -------
+        k : zero-based layer index
+        """
         return get_layer(self, i, j, elev)
 
     def gettop(self):

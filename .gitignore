@@ -79,4 +79,10 @@ autotest/.noseids
 *.chk
 *.chk.csv
 
+.docs/.working
+.docs/_build
+.docs/_static
+.docs/_templates
+.docs/source
+.docs/.bin
 

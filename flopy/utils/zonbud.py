@@ -2517,7 +2517,13 @@ class ZoneBudgetOutput(object):
                 data[col] = np.zeros((totim.size, zones.size), dtype=float)
 
         for i, time in enumerate(totim):
-            tdf = df.loc[df.totim.isin([time,])]
+            tdf = df.loc[
+                df.totim.isin(
+                    [
+                        time,
+                    ]
+                )
+            ]
             tdf = tdf.sort_values(by=["zone"])
 
             for col in df.columns:

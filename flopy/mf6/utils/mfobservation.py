@@ -62,7 +62,7 @@ class Observations:
         idx = (int), (slice(start, stop)) integer or slice of data to be
         returned. corresponds to kstp*kper - 1
         totim = (float) model time value to return data from
-        
+
     list_records(): prints a list of all valid record names contained within
     the Obs.out file
     get_times(): (list) returns list of time values contained in Obs.out

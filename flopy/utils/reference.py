@@ -972,8 +972,7 @@ class SpatialReference(object):
         return yedge
 
     def write_gridSpec(self, filename):
-        """ write a PEST-style grid specification file
-        """
+        """write a PEST-style grid specification file"""
         f = open(filename, "w")
         f.write(
             "{0:10d} {1:10d}\n".format(self.delc.shape[0], self.delr.shape[0])

@@ -124,7 +124,7 @@ def test_str_free():
         if pymake is not None:
             fn1 = os.path.join(tpth, 'str.nam')
             fn2 = os.path.join(ws, 'str.nam')
-            success = pymake.autotest.compare_heads(fn1, fn2, verbose=True)
+            success = pymake.compare_heads(fn1, fn2, verbose=True)
             msg = 'fixed and free format input output head files are different'
             assert success, msg
 
