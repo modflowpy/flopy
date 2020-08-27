@@ -206,7 +206,10 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                 model_grid.num_columns(),
             )
         elif model_grid._grid_type.value == 2:
-            shape = (model_grid.num_layers(), model_grid.num_cells_per_layer())
+            shape = (
+                model_grid.num_layers(),
+                model_grid.num_cells_per_layer(),
+            )
         else:
             shape = (model_grid.num_cells_per_layer(),)
 

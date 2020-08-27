@@ -1436,7 +1436,10 @@ class DataStorage(object):
                         self._stress_period,
                     )
                     file_access.write_text_file(
-                        data, fp, data_type, data_size,
+                        data,
+                        fp,
+                        data_type,
+                        data_size,
                     )
                 self.layer_storage[layer_new].factor = multiplier
                 self.layer_storage[layer_new].internal_data = None
@@ -2465,11 +2468,8 @@ class DataStorage(object):
                             model_dim = self.data_dimensions.get_model_dim(
                                 None
                             )
-
-                            expression_array = (
-                                model_dim.build_shape_expression(
-                                    data_item.shape
-                                )
+                            exp_array = model_dim.build_shape_expression(
+                                data_item.shape
                             )
                             if (
                                 isinstance(exp_array, list)

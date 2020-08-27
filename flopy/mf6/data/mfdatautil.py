@@ -764,7 +764,12 @@ class ListTemplateGenerator(TemplateGenerator):
 
         # get type list
         type_list = self.dtype(
-            model, aux_vars, boundnames, nseg, timeseries, cellid_expanded,
+            model,
+            aux_vars,
+            boundnames,
+            nseg,
+            timeseries,
+            cellid_expanded,
         )
 
         # get data storage
