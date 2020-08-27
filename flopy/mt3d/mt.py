@@ -936,8 +936,10 @@ class Mt3dms(BaseModel):
                 msg = "First line in file must be \n{}\nFound {}".format(
                     firstline, line.strip()
                 )
-                msg += "\n{} does not appear to be a valid MT3D OBS file".format(
-                    fname
+                msg += (
+                    "\n{} does not appear to be a valid MT3D OBS file".format(
+                        fname
+                    )
                 )
                 raise Exception(msg)
 

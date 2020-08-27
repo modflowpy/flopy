@@ -140,7 +140,7 @@ class MfList(DataInterface, DataListInterface):
         return export.utils.mflist_export(f, self, **kwargs)
 
     def append(self, other):
-        """ append the recarrays from one MfList to another
+        """append the recarrays from one MfList to another
         Parameters
         ----------
             other: variable: an item that can be cast in to an MfList
@@ -866,7 +866,7 @@ class MfList(DataInterface, DataListInterface):
 
     def get_indices(self):
         """
-            a helper function for plotting - get all unique indices
+        a helper function for plotting - get all unique indices
         """
         names = self.dtype.names
         lnames = []
@@ -1242,7 +1242,7 @@ class MfList(DataInterface, DataListInterface):
 
     @staticmethod
     def masked4D_arrays_to_stress_period_data(dtype, m4ds):
-        """ convert a dictionary of 4-dim masked arrays to
+        """convert a dictionary of 4-dim masked arrays to
             a stress_period_data style dict of recarray
         Parameters
         ----------

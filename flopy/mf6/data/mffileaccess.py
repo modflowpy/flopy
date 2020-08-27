@@ -1652,9 +1652,9 @@ class MFFileAccessList(MFFileAccess):
                                                         )
                                                     )
                                                 break
-                                        data_item_ks = data_item.keystring_dict[
-                                            name_data
-                                        ]
+                                        data_item_ks = (
+                                            data_item.keystring_dict[name_data]
+                                        )
                                         if data_item_ks == 0:
                                             comment = (
                                                 "Could not find "
@@ -1688,9 +1688,9 @@ class MFFileAccessList(MFFileAccess):
                                         if data_item.name in self._temp_dict:
                                             # used cached data item for
                                             # performance
-                                            keyword_data_item = self._temp_dict[
-                                                data_item.name
-                                            ]
+                                            keyword_data_item = (
+                                                self._temp_dict[data_item.name]
+                                            )
                                         else:
                                             keyword_data_item = deepcopy(
                                                 data_item

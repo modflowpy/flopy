@@ -65,7 +65,11 @@ class ModflowBct(Package):
         self.izod = izod
         self.ifod = ifod
         self.icbund = Util3d(
-            model, (nlay, nrow, ncol), np.float32, icbund, "icbund",
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            icbund,
+            "icbund",
         )
         self.porosity = Util3d(
             model, (nlay, nrow, ncol), np.float32, porosity, "porosity"
@@ -77,7 +81,11 @@ class ModflowBct(Package):
         self.dth = Util3d(model, (nlay, nrow, ncol), np.float32, dth, "dth")
         self.dtv = Util3d(model, (nlay, nrow, ncol), np.float32, dth, "dtv")
         self.sconc = Util3d(
-            model, (nlay, nrow, ncol), np.float32, sconc, "sconc",
+            model,
+            (nlay, nrow, ncol),
+            np.float32,
+            sconc,
+            "sconc",
         )
         self.parent.add_package(self)
         return

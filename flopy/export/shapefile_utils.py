@@ -418,8 +418,7 @@ def enforce_10ch_limit(names):
 
 
 def get_pyshp_field_info(dtypename):
-    """Get pyshp dtype information for a given numpy dtype.
-    """
+    """Get pyshp dtype information for a given numpy dtype."""
     fields = {
         "int": ("N", 18, 0),
         "<i": ("N", 18, 0),

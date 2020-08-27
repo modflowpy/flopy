@@ -88,7 +88,7 @@ class PathlineFile:
 
     def _build_index(self):
         """
-           Set position of the start of the pathline data.
+        Set position of the start of the pathline data.
         """
         self.skiprows = 0
         self.file = open(self.fname, "r")
@@ -123,7 +123,7 @@ class PathlineFile:
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 pathline file.
+        Build numpy dtype for the MODPATH 6 pathline file.
         """
         if self.version == 3 or self.version == 5:
             dtype = np.dtype(
@@ -706,7 +706,7 @@ class EndpointFile:
 
     def _build_index(self):
         """
-           Set position of the start of the pathline data.
+        Set position of the start of the pathline data.
         """
         self.skiprows = 0
         self.file = open(self.fname, "r")
@@ -750,7 +750,7 @@ class EndpointFile:
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 endpoint file.
+        Build numpy dtype for the MODPATH 6 endpoint file.
         """
         if self.version == 3 or self.version == 5:
             dtype = self._get_mp35_dtype()
@@ -1252,7 +1252,7 @@ class TimeseriesFile:
 
     def _build_index(self):
         """
-           Set position of the start of the timeseries data.
+        Set position of the start of the timeseries data.
         """
         compact = False
         self.skiprows = 0
@@ -1295,7 +1295,7 @@ class TimeseriesFile:
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 timeseries file.
+        Build numpy dtype for the MODPATH 6 timeseries file.
         """
         if self.version == 3 or self.version == 5:
             if self.compact:

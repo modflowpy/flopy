@@ -3156,11 +3156,13 @@ class check:
 
     def slope(self, minimum_slope=1e-4, maximum_slope=1.0):
         """Checks that streambed slopes are greater than or equal to a specified minimum value.
-            Low slope values can cause "backup" or unrealistic stream stages with icalc options
-            where stage is computed.
-            """
-        headertxt = "Checking for streambed slopes of less than {}...\n".format(
-            minimum_slope
+        Low slope values can cause "backup" or unrealistic stream stages with icalc options
+        where stage is computed.
+        """
+        headertxt = (
+            "Checking for streambed slopes of less than {}...\n".format(
+                minimum_slope
+            )
         )
         txt = ""
         if self.verbose:
@@ -3191,8 +3193,10 @@ class check:
             passed = True
         self._txt_footer(headertxt, txt, "minimum slope", passed)
 
-        headertxt = "Checking for streambed slopes of greater than {}...\n".format(
-            maximum_slope
+        headertxt = (
+            "Checking for streambed slopes of greater than {}...\n".format(
+                maximum_slope
+            )
         )
         txt = ""
         if self.verbose:

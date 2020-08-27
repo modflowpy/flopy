@@ -39,8 +39,10 @@ class acdd:
         self.model = model
         self.model_grid = model.modelgrid
         self.model_time = model.modeltime
-        self.sciencebase_url = "https://www.sciencebase.gov/catalog/item/{}".format(
-            sciencebase_id
+        self.sciencebase_url = (
+            "https://www.sciencebase.gov/catalog/item/{}".format(
+                sciencebase_id
+            )
         )
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
         if self.sb is None:

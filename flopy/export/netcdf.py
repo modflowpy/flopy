@@ -85,14 +85,18 @@ class Logger(object):
                 + "\n"
             )
             if self.echo:
-                print(s,)
+                print(
+                    s,
+                )
             if self.filename:
                 self.f.write(s)
             self.items.pop(phrase)
         else:
             s = str(t) + " starting: " + str(phrase) + "\n"
             if self.echo:
-                print(s,)
+                print(
+                    s,
+                )
             if self.filename:
                 self.f.write(s)
             self.items[phrase] = copy.deepcopy(t)
@@ -109,7 +113,9 @@ class Logger(object):
         """
         s = str(datetime.now()) + " WARNING: " + message + "\n"
         if self.echo:
-            print(s,)
+            print(
+                s,
+            )
         if self.filename:
             self.f.write(s)
         return
@@ -624,8 +630,7 @@ class NetCdf(object):
             self.log("processing variable {0}".format(vname))
 
     def _dt_str(self, dt):
-        """ for datetime to string for year < 1900
-        """
+        """for datetime to string for year < 1900"""
         dt_str = "{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02}Z".format(
             dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second
         )
@@ -655,7 +660,7 @@ class NetCdf(object):
 
     def _initialize_attributes(self):
         """private method to initial the attributes
-           of the NetCdf instance
+        of the NetCdf instance
         """
         assert (
             "nc" not in self.__dict__.keys()
@@ -707,8 +712,8 @@ class NetCdf(object):
         self.nc = None
 
     def initialize_geometry(self):
-        """ initialize the geometric information
-            needed for the netcdf file
+        """initialize the geometric information
+        needed for the netcdf file
         """
         try:
             import pyproj
@@ -1354,7 +1359,7 @@ class NetCdf(object):
         return var
 
     def add_global_attributes(self, attr_dict):
-        """ add global attribute to an initialized file
+        """add global attribute to an initialized file
 
         Parameters
         ----------
