@@ -169,7 +169,10 @@ def to_string(
                     'Cellid "{}" contains {} integer(s). Expected a'
                     " cellid containing {} integer(s) for grid type"
                     " {}.".format(
-                        val, len(val), cellid_size, str(model_grid.grid_type())
+                        val,
+                        len(val),
+                        cellid_size,
+                        str(model_grid.grid_type()),
                     )
                 )
                 type_, value_, traceback_ = sys.exc_info()
@@ -731,7 +734,8 @@ class ListTemplateGenerator(TemplateGenerator):
             )
         if aux_vars is not None:
             if len(aux_vars) > 0 and (
-                isinstance(aux_vars[0], list) or isinstance(aux_vars[0], tuple)
+                isinstance(aux_vars[0], list)
+                or isinstance(aux_vars[0], tuple)
             ):
                 aux_vars = aux_vars[0]
             for aux_var in aux_vars:
