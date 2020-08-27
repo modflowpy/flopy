@@ -2423,8 +2423,10 @@ class DataStorage(object):
                             model_dim = self.data_dimensions.get_model_dim(
                                 None
                             )
-                            expression_array = model_dim.build_shape_expression(
-                                data_item.shape
+                            expression_array = (
+                                model_dim.build_shape_expression(
+                                    data_item.shape
+                                )
                             )
                             if (
                                 isinstance(expression_array, list)

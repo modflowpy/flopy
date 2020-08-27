@@ -241,7 +241,7 @@ class ListBudget(object):
         >>> mf_list = MfListBudget("my_model.list")
         >>> cumulative = mf_list.get_cumulative()
 
-       """
+        """
         if not self._isvalid:
             return None
         if names is None:
@@ -1005,9 +1005,7 @@ class ListBudget(object):
 
 
 class SwtListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
         self.budgetkey = "MASS BUDGET FOR ENTIRE MODEL"
@@ -1015,9 +1013,7 @@ class SwtListBudget(ListBudget):
 
 
 class MfListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
         self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
@@ -1025,9 +1021,7 @@ class MfListBudget(ListBudget):
 
 
 class Mf6ListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
         self.budgetkey = "VOLUME BUDGET FOR ENTIRE MODEL"
@@ -1035,9 +1029,7 @@ class Mf6ListBudget(ListBudget):
 
 
 class MfusgListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
         self.budgetkey = "VOLUMETRIC BUDGET FOR ENTIRE MODEL"
@@ -1045,9 +1037,7 @@ class MfusgListBudget(ListBudget):
 
 
 class SwrListBudget(ListBudget):
-    """
-
-    """
+    """"""
 
     def set_budget_key(self):
         self.budgetkey = "VOLUMETRIC SURFACE WATER BUDGET FOR ENTIRE MODEL"

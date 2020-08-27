@@ -71,7 +71,7 @@ class MFOutputRequester:
     --------
     >>> data = MFOutputRequester(mfdict, path, key)
     >>> data.querybinarydata
-     """
+    """
 
     def __init__(self, mfdict, path, key):
         self.path = path

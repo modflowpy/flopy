@@ -79,9 +79,9 @@ if stderr:
 
 # -- Project information -----------------------------------------------------
 
-project = 'flopy'
-copyright = '2020, Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N.'
-author = 'Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N.'
+project = "flopy"
+copyright = "2020, Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
+author = "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
 
 # The version.
 version = __version__
@@ -110,7 +110,6 @@ extensions = [
     "nbsphinx_link",
     "recommonmark",
 ]
-
 
 
 # Add any paths that contain templates here, relative to this directory.

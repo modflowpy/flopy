@@ -171,7 +171,9 @@ class Modpath7(BaseModel):
                     shape = (nlay, ncpl)
                 elif dis.package_name.lower() == "disu":
                     nodes = dis.nodes.array
-                    shape = tuple(nodes,)
+                    shape = tuple(
+                        nodes,
+                    )
                 else:
                     msg = (
                         "DIS, DISV, or DISU packages must be "

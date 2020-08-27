@@ -931,9 +931,9 @@ class MFList(mfdata.MFMultiDimVar, DataListInterface):
                                     keystr_struct, mfstructure.MFDataStructure
                                 ):
                                     # data items following keystring
-                                    ks_structs = keystr_struct.data_item_structures[
-                                        1:
-                                    ]
+                                    ks_structs = (
+                                        keystr_struct.data_item_structures[1:]
+                                    )
                                 else:
                                     # key string stands alone
                                     ks_structs = [keystr_struct]

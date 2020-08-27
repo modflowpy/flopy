@@ -444,7 +444,7 @@ class StartingLocationsFile(Package):
     @staticmethod
     def get_dtypes():
         """
-           Build numpy dtype for the MODPATH 6 starting locations file.
+        Build numpy dtype for the MODPATH 6 starting locations file.
         """
         dtype = np.dtype(
             [
