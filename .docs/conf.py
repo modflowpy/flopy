@@ -20,52 +20,27 @@ sys.path.insert(0, os.path.abspath(".."))
 from flopy import __version__
 import pymake
 
+# -- determine if running on readthedocs ------------------------------------
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 # -- get the MODFLOW executables --------------------------------------------
-ws = ".bin"
-if os.path.isdir(ws):
-    shutil.rmtree(ws)
-os.makedirs(ws)
-osname = sys.platform.lower()
-if osname == "darwin":
-    platform = "mac"
-else:
-    platform = osname
-pymake.getmfexes(pth=ws, platform=platform, verbose=True)
+if not on_rtd:
+    ws = ".bin"
+    if os.path.isdir(ws):
+        shutil.rmtree(ws)
+    os.makedirs(ws)
+    osname = sys.platform.lower()
+    if osname == "darwin":
+        platform = "mac"
+    else:
+        platform = osname
+    pymake.getmfexes(pth=ws, platform=platform, verbose=True)
 
-# -- copy the example problems ----------------------------------------------
-srcdir = "pysrc"
-ws = ".working"
-if os.path.isdir(ws):
-    shutil.rmtree(ws)
-os.makedirs(ws)
-scripts = []
-for fname in os.listdir(srcdir):
-    if fname.endswith(".py"):
-        scripts.append(fname)
-        src = os.path.join(srcdir, fname)
-        dst = os.path.join(ws, fname)
-        shutil.copyfile(src, dst)
-
-# -- run the example problems -----------------------------------------------
-for s in scripts:
-    args = ("python", s)
-    proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=ws)
-    stdout, stderr = proc.communicate()
-    if stdout:
-        print(stdout.decode("utf-8"))
-    if stderr:
-        print("Errors:\n{}".format(stderr.decode("utf-8")))
-
-# -- copy the output to _static directory -----------------------------------
-ws_dst = "_static"
-if os.path.isdir(ws_dst):
-    shutil.rmtree(ws_dst)
-os.makedirs(ws_dst)
-for fname in os.listdir(ws):
-    if fname.endswith(".png"):
-        src = os.path.join(ws, fname)
-        dst = os.path.join(ws_dst, fname)
-        shutil.copyfile(src, dst)
+# -- convert the tutorial scripts -------------------------------------------
+if not on_rtd:
+    cmd = ("python", "tutorials2ipynb.py")
+    print(" ".join(cmd))
+    os.system(" ".join(cmd))
 
 # -- Create the flopy rst files ---------------------------------------------
 args = ("sphinx-apidoc", "-e", "-o", "source/", "../flopy/")
@@ -78,7 +53,6 @@ if stderr:
 
 
 # -- Project information -----------------------------------------------------
-
 project = "flopy"
 copyright = "2020, Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
 author = "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
@@ -111,6 +85,18 @@ extensions = [
     "recommonmark",
 ]
 
+# nbsphinx_execute_arguments = [
+#     "--InlineBackend.figure_formats={'svg', 'pdf'}",
+#     "--InlineBackend.rc={'figure.dpi': 200}",
+# ]
+
+# Settings for GitHub actions integration
+if on_rtd:
+    extensions.append("rtds_action")
+    rtds_action_github_repo = "modflowpy/flopy"
+    rtds_action_path = "_notebooks"
+    rtds_action_artifact_prefix = "notebooks-for-"
+    rtds_action_github_token = os.environ.get("GITHUB_TOKEN", None)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -183,7 +169,7 @@ html_css_files = [
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = "flopy"
-html_favicon = ".._images/flopylogo.png"
+html_favicon = "_images/flopylogo.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

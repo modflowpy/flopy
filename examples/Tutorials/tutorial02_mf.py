@@ -1,7 +1,48 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.5.1
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
+
+# # MODFLOW Tutorial 2: Unconfined Transient Flow Model
+#
+# In this example, we will convert the tutorial 1 model into an unconfined,
+# transient flow model with time varying boundaries. Instead of using constant
+# heads for the left and right boundaries (by setting ibound to -1), we will use
+# general head boundaries. We will have the model consider the following
+# conditions:
+#
+# * Initial conditions -- head is 10.0 everywhere
+# * Period 1 (1 day) -- steady state with left and right GHB stage = 10.
+# * Period 2 (100 days) -- left GHB with stage = 10., right GHB with stage set
+#   to 0.
+# * Period 3 (100 days) -- pumping well at model center with rate = -500., left
+#   and right GHB = 10., and 0.
+#
+# We will start with selected model commands from the previous tutorial.
+#
+
+# ## Getting Started
+#
+# As shown in the previous MODFLOW tutorial, import flopy.
+
 import numpy as np
 import flopy
 
-# Model domain and grid definition
+# ## Creating the MODFLOW Model
+#
+# ### Define the Model Extent, Grid Resolution, and Characteristics
+#
+# Assign the model information
+
 Lx = 1000.0
 Ly = 1000.0
 ztop = 10.0
@@ -20,18 +61,28 @@ ss = 1.0e-4
 laytyp = 1
 
 # Variables for the BAS package
-# Note that changes from the previous tutorial!
+# Note that changes from the MODFLOW tutorial 1
+
 ibound = np.ones((nlay, nrow, ncol), dtype=np.int32)
 strt = 10.0 * np.ones((nlay, nrow, ncol), dtype=np.float32)
 
-# Time step parameters
+# ### Define the Stress Periods
+#
+# To create a model with multiple stress periods, we need to define nper,
+# perlen, nstp, and steady.  This is done in the following block in a manner
+# that allows us to pass these variable directly to the discretization object:
+
 nper = 3
 perlen = [1, 100, 100]
 nstp = [1, 100, 100]
 steady = [True, False, False]
 
-# Flopy objects
-modelname = "tutorial2"
+# ### Create Time-Invariant Flopy Objects
+#
+# With this information, we can now create the static flopy objects that do
+# not change with time:
+
+modelname = "tutorial2_mf"
 mf = flopy.modflow.Modflow(modelname, exe_name="mf2005")
 dis = flopy.modflow.ModflowDis(
     mf,
@@ -53,7 +104,18 @@ lpf = flopy.modflow.ModflowLpf(
 )
 pcg = flopy.modflow.ModflowPcg(mf)
 
-# Make list for stress period 1
+# ### Transient General-Head Boundary Package
+#
+# At this point, our model is ready to add our transient boundary packages.
+# First, we will create the GHB object, which is of the following type:
+# `flopy.modflow.ModflowGhb()`.
+#
+# The key to creating Flopy transient boundary packages is recognizing that
+# the boundary data is stored in a dictionary with key values equal to the
+# zero-based stress period number and values equal to the boundary conditions
+# for that stress period.  For a GHB the values can be a two-dimensional nested
+# list of `[layer, row, column, stage, conductance]`.
+
 stageleft = 10.0
 stageright = 10.0
 bound_sp1 = []
@@ -85,6 +147,11 @@ stress_period_data = {0: bound_sp1, 1: bound_sp2}
 # Create the flopy ghb object
 ghb = flopy.modflow.ModflowGhb(mf, stress_period_data=stress_period_data)
 
+# ### Transient Well Package
+#
+# Now we can create the well package object, which is of the type,
+# `flopy.modflow.ModflowWel()`.
+
 # Create the well package
 # Remember to use zero-based layer, row, column indices!
 pumping_rate = -500.0
@@ -94,7 +161,11 @@ wel_sp3 = [[0, nrow / 2 - 1, ncol / 2 - 1, pumping_rate]]
 stress_period_data = {0: wel_sp1, 1: wel_sp2, 2: wel_sp3}
 wel = flopy.modflow.ModflowWel(mf, stress_period_data=stress_period_data)
 
-# Output control
+# ### Output Control
+#
+# Here we create the output control package object, which is of the
+# type `flopy.modflow.ModflowOc()`.
+
 stress_period_data = {}
 for kper in range(nper):
     for kstp in range(nstp[kper]):
@@ -109,14 +180,34 @@ oc = flopy.modflow.ModflowOc(
     mf, stress_period_data=stress_period_data, compact=True
 )
 
+# ## Running the Model
+#
+# Run the model with the run_model method, which returns a success flag and
+# the stream of output. With run_model, we have some finer control, that
+# allows us to suppress the output.
+
 # Write the model input files
 mf.write_input()
 
 # Run the model
-success, mfoutput = mf.run_model(silent=False, pause=False)
+success, mfoutput = mf.run_model(silent=True, pause=False)
 if not success:
     raise Exception("MODFLOW did not terminate normally.")
 
+# ## Post-Processing the Results
+#
+# Once again, we can read heads from the MODFLOW binary output file, using
+# the `flopy.utils.binaryfile()` module. Included with the HeadFile object
+# are several methods that we will use here:
+
+# * `get_times()` will return a list of times contained in the binary head file
+# * `get_data()` will return a three-dimensional head array for the specified
+#   time
+# * `get_ts()` will return a time series array `[ntimes, headval]` for the
+#   specified cell
+#
+# Using these methods, we can create head plots and hydrographs from the
+# model results.
 
 # Imports
 import matplotlib.pyplot as plt
@@ -133,11 +224,13 @@ extent = (delr / 2.0, Lx - delr / 2.0, delc / 2.0, Ly - delc / 2.0)
 print("Levels: ", levels)
 print("Extent: ", extent)
 
-# Well point
-wpt = ((float(ncol / 2) - 0.5) * delr, (float(nrow / 2 - 1) + 0.5) * delc)
+# Well point for plotting
 wpt = (450.0, 550.0)
 
+# Create a figure with maps for three times
+
 # Make the plots
+fig = plt.figure(figsize=(5, 15))
 mytimes = [1.0, 101.0, 201.0]
 for iplot, time in enumerate(mytimes):
     print("*****Processing time: ", time)
@@ -152,23 +245,23 @@ for iplot, time in enumerate(mytimes):
     frf = cbb.get_data(text="FLOW RIGHT FACE", totim=time)[0]
     fff = cbb.get_data(text="FLOW FRONT FACE", totim=time)[0]
 
-    # Create the plot
-    # plt.subplot(1, len(mytimes), iplot + 1, aspect='equal')
-    plt.subplot(1, 1, 1, aspect="equal")
-    plt.title("stress period " + str(iplot + 1))
+    # Create a map for this time
+    ax = fig.add_subplot(len(mytimes), 1, iplot + 1, aspect="equal")
+    ax.set_title("stress period " + str(iplot + 1))
 
-    modelmap = flopy.plot.ModelMap(model=mf, layer=0)
-    qm = modelmap.plot_ibound()
-    lc = modelmap.plot_grid()
-    qm = modelmap.plot_bc("GHB", alpha=0.5)
-    cs = modelmap.contour_array(head, levels=levels)
-    plt.clabel(cs, inline=1, fontsize=10, fmt="%1.1f")
-    quiver = modelmap.plot_discharge(frf, fff, head=head)
+    pmv = flopy.plot.PlotMapView(model=mf, layer=0, ax=ax)
+    qm = pmv.plot_ibound()
+    lc = pmv.plot_grid()
+    qm = pmv.plot_bc("GHB", alpha=0.5)
+    if head.min() != head.max():
+        cs = pmv.contour_array(head, levels=levels)
+        plt.clabel(cs, inline=1, fontsize=10, fmt="%1.1f")
+        quiver = pmv.plot_vector(frf, fff)
 
     mfc = "None"
     if (iplot + 1) == len(mytimes):
         mfc = "black"
-    plt.plot(
+    ax.plot(
         wpt[0],
         wpt[1],
         lw=0,
@@ -179,17 +272,17 @@ for iplot, time in enumerate(mytimes):
         markerfacecolor=mfc,
         zorder=9,
     )
-    plt.text(wpt[0] + 25, wpt[1] - 25, "well", size=12, zorder=12)
-    plt.savefig("tutorial2-{}.png".format(iplot))
+    ax.text(wpt[0] + 25, wpt[1] - 25, "well", size=12, zorder=12)
 
+# Create a hydrograph
 
 # Plot the head versus time
 idx = (0, int(nrow / 2) - 1, int(ncol / 2) - 1)
 ts = headobj.get_ts(idx)
-plt.subplot(1, 1, 1)
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(1, 1, 1)
 ttl = "Head at cell ({0},{1},{2})".format(idx[0] + 1, idx[1] + 1, idx[2] + 1)
-plt.title(ttl)
-plt.xlabel("time")
-plt.ylabel("head")
-plt.plot(ts[:, 0], ts[:, 1], "bo-")
-plt.savefig("tutorial2-ts.png")
+ax.set_title(ttl)
+ax.set_xlabel("time")
+ax.set_ylabel("head")
+ax.plot(ts[:, 0], ts[:, 1], "bo-")

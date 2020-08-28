@@ -4,6 +4,7 @@ These are the examples that are distributed with MODFLOW-USG.
 """
 
 import os
+import sys
 import flopy
 import pymake
 
@@ -37,6 +38,10 @@ v = flopy.which(mfnwt_exe)
 run = True
 if v is None:
     run = False
+# fix for intermittent CI failure on windows
+else:
+    if sys.platform.lower() in ("win32", "darwin"):
+        run = False
 
 
 #
