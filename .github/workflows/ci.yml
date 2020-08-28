@@ -185,8 +185,16 @@ jobs:
 
     if: github.repository_owner == 'modflowpy'
     steps:
+      - name: Checkout flopy repo
+        uses: actions/checkout@v2
 
-      - name: Trigger RTDs build
+      - name: Output repo information
+        run: |
+          echo ${{ github.repository_owner }}
+          echo ${{ github.repository }}
+          echo ${{ github.ref }}
+
+      - name: Trigger RTDs build on master and develop branches
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
         uses: dfm/rtds-action@v1.0.0
         with:
