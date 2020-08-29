@@ -78,6 +78,9 @@ jobs:
             python-version: 3.8
             run-type: script
             test-path: autotest_scripts.py
+        exclude:
+          - os: macos-latest
+            python-version: 3.6
 
     steps:
     # check out repo
@@ -96,9 +99,11 @@ jobs:
     # Standard python fails on windows without GDAL installation
     # Using custom bash shell ("shell: bash -l {0}") with Miniconda
     - name: Setup Miniconda
-      uses: goanpeca/setup-miniconda@v1.6.0
+      uses: conda-incubator/setup-miniconda@v1.7.0
       with:
         python-version: ${{ matrix.python-version }}
+        mamba-version: "*"
+        channels: conda-forge,defaults
         auto-update-conda: true
         auto-activate-base: true
         activate-environment: flopy
@@ -108,12 +113,16 @@ jobs:
       if: matrix.run-type == 'nb'
       shell: bash -l {0}
       run: |
-        conda install -n flopy -c conda-forge jupyter nbconvert
+        mamba install --name flopy jupyter nbconvert
 
-    - name: Add packages to flopy environment
+    - name: Add packages to flopy environment using mamba or conda
       shell: bash -l {0}
       run: |
-        conda env update --name flopy --file etc/environment.yml
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          conda env update --name flopy --file etc/environment.yml
+        else
+          mamba env update --name flopy --file etc/environment.yml
+        fi
 
     - name: Install pymake, xmipy, and flopy
       shell: bash -l {0}
