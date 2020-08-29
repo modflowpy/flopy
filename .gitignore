@@ -85,4 +85,6 @@ autotest/.noseids
 .docs/_templates
 .docs/source
 .docs/.bin
+.docs/_temp
+.docs/_notebooks
 
