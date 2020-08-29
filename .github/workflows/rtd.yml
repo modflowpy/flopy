@@ -41,12 +41,12 @@ jobs:
       - name: Add jupyter and jupytext to scripts run
         shell: bash -l {0}
         run: |
-          conda install -n flopy -c conda-forge jupyter jupytext
+          mamba install -n flopy jupyter jupytext
 
       - name: Add packages to flopy environment
         shell: bash -l {0}
         run: |
-          conda env update --name flopy --file etc/environment.yml
+          mamba install -n flopy --file etc/environment.yml
 
       - name: Install pymake, xmipy, and flopy
         shell: bash -l {0}
@@ -74,11 +74,7 @@ jobs:
 
       - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
         if:
-          github.repository_owner == 'modflowpy' &&
-          contains(github.ref, '
-          refs/heads/master
-          refs/heads/develop
-          ')
+          github.repository_owner == 'modflowpy' && github.event_name == 'push'
         uses: actions/upload-artifact@v2
         with:
           name: notebooks-for-${{ github.sha }}
@@ -87,11 +83,7 @@ jobs:
 
       - name: Trigger RTDs build on master and develop branches
         if:
-          github.repository_owner == 'modflowpy' &&
-          contains('
-          refs/heads/master
-          refs/heads/develop
-          ', github.ref)
+          github.repository_owner == 'modflowpy' && github.event_name == 'push'
         uses: dfm/rtds-action@v1.0.0
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
