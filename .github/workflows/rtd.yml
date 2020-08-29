@@ -2,20 +2,19 @@ name: Read the Docs
 
 on:
   push:
-    branches: [master, develop]
+    branches: [ master, develop ]
   pull_request:
-    branches: [develop]
+    branches: [ develop ]
 
 jobs:
 
-  build:
-    name: rtd
+  rtd_build:
+    name: Read the Docs build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
 
     steps:
-      # check out repo
       - name: Checkout flopy repo
         uses: actions/checkout@v2
 
@@ -81,9 +80,16 @@ jobs:
           path: |
             .docs/_notebooks
 
+  # trigger rtd if previous job was successful
+  rtd:
+    name: Read the Docs trigger
+    needs: rtd_build
+    runs-on: ubuntu-latest
+
+    if:
+      github.repository_owner == 'modflowpy' && github.event_name == 'push'
+    steps:
       - name: Trigger RTDs build on master and develop branches
-        if:
-          github.repository_owner == 'modflowpy' && github.event_name == 'push'
         uses: dfm/rtds-action@v1.0.0
         with:
           webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
