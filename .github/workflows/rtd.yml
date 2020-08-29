@@ -41,12 +41,12 @@ jobs:
       - name: Add jupyter and jupytext to scripts run
         shell: bash -l {0}
         run: |
-          mamba install -n flopy jupyter jupytext
+          mamba install --name flopy jupyter jupytext
 
       - name: Add packages to flopy environment
         shell: bash -l {0}
         run: |
-          mamba install -n flopy --file etc/environment.yml
+          mamba env update --name flopy --file etc/environment.yml
 
       - name: Install pymake, xmipy, and flopy
         shell: bash -l {0}
