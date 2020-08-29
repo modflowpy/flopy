@@ -13,15 +13,24 @@
 import os
 import sys
 import shutil
-from subprocess import Popen, PIPE
 
 # add flopy root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
 from flopy import __version__
-import pymake
 
 # -- determine if running on readthedocs ------------------------------------
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
+# -- import pymake if not running on readthedocs ----------------------------
+if on_rtd:
+    pymake = None
+else:
+    import pymake
+
+# -- create source rst files ------------------------------------------------
+cmd = "sphinx-apidoc -e -o source/ ../flopy/"
+print(cmd)
+os.system(cmd)
 
 # -- get the MODFLOW executables --------------------------------------------
 if not on_rtd:
@@ -42,18 +51,8 @@ if not on_rtd:
     print(" ".join(cmd))
     os.system(" ".join(cmd))
 
-# -- Create the flopy rst files ---------------------------------------------
-args = ("sphinx-apidoc", "-e", "-o", "source/", "../flopy/")
-proc = Popen(args, stdout=PIPE, stderr=PIPE, cwd=".")
-stdout, stderr = proc.communicate()
-if stdout:
-    print(stdout.decode("utf-8"))
-if stderr:
-    print("Errors:\n{}".format(stderr.decode("utf-8")))
-
-
 # -- Project information -----------------------------------------------------
-project = "flopy"
+project = "flopy Documentation"
 copyright = "2020, Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
 author = "Bakker, Mark, Post, Vincent, Langevin, C. D., Hughes, J. D., White, J. T., Leaf, A. T., Paulinski, S. R., Larsen, J. D., Toews, M. W., Morway, E. D., Bellino, J. C., Starn, J. J., and Fienen, M. N."
 
@@ -84,11 +83,6 @@ extensions = [
     "nbsphinx_link",
     "recommonmark",
 ]
-
-# nbsphinx_execute_arguments = [
-#     "--InlineBackend.figure_formats={'svg', 'pdf'}",
-#     "--InlineBackend.rc={'figure.dpi': 200}",
-# ]
 
 # Settings for GitHub actions integration
 if on_rtd:
