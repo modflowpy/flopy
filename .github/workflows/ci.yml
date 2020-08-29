@@ -110,22 +110,10 @@ jobs:
       run: |
         conda install -n flopy -c conda-forge jupyter nbconvert
 
-    - name: Add jupyter and jupytext to scripts run
-      if: matrix.run-type == 'script'
-      shell: bash -l {0}
-      run: |
-        conda install -n flopy -c conda-forge jupyter jupytext
-
     - name: Add packages to flopy environment
       shell: bash -l {0}
       run: |
         conda env update --name flopy --file etc/environment.yml
-
-    - name: Determine python environment
-      shell: bash -l {0}
-      run: |
-        conda info
-        conda list
 
     - name: Install pymake, xmipy, and flopy
       shell: bash -l {0}
@@ -151,53 +139,7 @@ jobs:
         --with-coverage --cover-package=flopy --cover-xml \
         --cover-xml-file=../coverage.xml -w ./autotest ${{ matrix.test-path }}
 
-    - name: List files in the root directory
-      shell: bash
-      run: |
-        ls -l
-
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1.0.12
       with:
         file: ./coverage.xml
-
-    - name: Run jupytext on tutorials
-      if: matrix.run-type == 'script'
-      shell: bash -l {0}
-      run: |
-        cd .docs/
-        python tutorials2ipynb.py
-        cd ../
-
-    - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs
-      if: matrix.run-type == 'script' && github.repository_owner == 'modflowpy'
-      uses: actions/upload-artifact@v2
-      with:
-        name: notebooks-for-${{ github.sha }}
-        path: |
-          .docs/_notebooks
-
-  # trigger rtd if previous job was successful
-  rtd:
-    name: ReadtheDocs
-    needs: flopyCI
-    runs-on: ubuntu-latest
-
-    if: github.repository_owner == 'modflowpy'
-    steps:
-      - name: Checkout flopy repo
-        uses: actions/checkout@v2
-
-      - name: Output repo information
-        run: |
-          echo ${{ github.repository_owner }}
-          echo ${{ github.repository }}
-          echo ${{ github.ref }}
-
-      - name: Trigger RTDs build on master and develop branches
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
-        uses: dfm/rtds-action@v1.0.0
-        with:
-          webhook_url: ${{ secrets.RTDS_WEBHOOK_URL }}
-          webhook_token: ${{ secrets.RTDS_WEBHOOK_TOKEN }}
-          commit_ref: ${{ github.ref }}
