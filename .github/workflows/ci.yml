@@ -99,6 +99,8 @@ jobs:
       uses: conda-incubator/setup-miniconda@v1.7.0
       with:
         python-version: ${{ matrix.python-version }}
+        mamba-version: "*"
+        channels: conda-forge,defaults
         auto-update-conda: true
         auto-activate-base: true
         activate-environment: flopy
@@ -108,12 +110,12 @@ jobs:
       if: matrix.run-type == 'nb'
       shell: bash -l {0}
       run: |
-        conda install -n flopy -c conda-forge jupyter nbconvert
+        mamba install --name flopy jupyter nbconvert
 
     - name: Add packages to flopy environment
       shell: bash -l {0}
       run: |
-        conda env update --name flopy --file etc/environment.yml
+        mamba env update --name flopy --file etc/environment.yml
 
     - name: Install pymake, xmipy, and flopy
       shell: bash -l {0}
