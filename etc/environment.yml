@@ -1,4 +1,3 @@
-name: flopy
 channels:
   - conda-forge
 dependencies:
