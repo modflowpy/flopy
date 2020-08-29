@@ -78,6 +78,9 @@ jobs:
             python-version: 3.8
             run-type: script
             test-path: autotest_scripts.py
+        exclude:
+          - os: macos-latest
+            python-version: 3.6
 
     steps:
     # check out repo
