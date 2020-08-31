@@ -286,8 +286,8 @@ class ModflowGage(Package):
         # close the gage file
         f.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -395,7 +395,7 @@ class ModflowGage(Package):
         for file in files:
             filenames.append(os.path.basename(file))
 
-        gagepak = ModflowGage(
+        gagepak = cls(
             model,
             numgage=numgage,
             gage_data=gage_data,

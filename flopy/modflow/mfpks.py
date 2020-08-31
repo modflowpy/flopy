@@ -228,8 +228,8 @@ class ModflowPks(Package):
         f.write("END\n")
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -287,7 +287,7 @@ class ModflowPks(Package):
                 ext_unit_dict, filetype=ModflowPks.ftype()
             )
 
-        pks = ModflowPks(model, unitnumber=unitnumber, filenames=filenames)
+        pks = cls(model, unitnumber=unitnumber, filenames=filenames)
         return pks
 
     @staticmethod

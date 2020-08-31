@@ -318,8 +318,8 @@ class ModflowGmg(Package):
         f_gmg.write("{}\n".format(self.relax))
         f_gmg.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -411,7 +411,7 @@ class ModflowGmg(Package):
                 model.add_pop_key_list(iunitmhc)
 
         # create the gmg object
-        gmg = ModflowGmg(
+        gmg = cls(
             model,
             mxiter=mxiter,
             iiter=iiter,

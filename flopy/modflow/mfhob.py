@@ -308,8 +308,8 @@ class ModflowHob(Package):
 
         return
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -492,7 +492,7 @@ class ModflowHob(Package):
                     model.add_pop_key_list(iuhobsv)
 
         # create hob object instance
-        hob = ModflowHob(
+        hob = cls(
             model,
             iuhobsv=iuhobsv,
             hobdry=hobdry,

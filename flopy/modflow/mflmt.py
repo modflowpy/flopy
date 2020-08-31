@@ -170,8 +170,8 @@ class ModflowLmt(Package):
 
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -257,7 +257,7 @@ class ModflowLmt(Package):
                 ext_unit_dict, filetype=ModflowLmt.ftype()
             )
 
-        lmt = ModflowLmt(
+        lmt = cls(
             model,
             output_file_name=output_file_name,
             output_file_unit=output_file_unit,

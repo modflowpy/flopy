@@ -215,8 +215,8 @@ class ModflowEvt(Package):
                 f_evt.write(ievt)
         f_evt.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -417,7 +417,7 @@ class ModflowEvt(Package):
         args["unitnumber"] = unitnumber
         args["filenames"] = filenames
 
-        evt = ModflowEvt(model, **args)
+        evt = cls(model, **args)
 
         # return evt object
         return evt

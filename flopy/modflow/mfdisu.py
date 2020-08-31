@@ -529,8 +529,8 @@ class ModflowDisU(Package):
     def ncpl(self):
         return self.nodes / self.nlay
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=False):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -798,7 +798,7 @@ class ModflowDisU(Package):
             )
 
         # create dis object instance
-        disu = ModflowDisU(
+        disu = cls(
             model,
             nodes=nodes,
             nlay=nlay,

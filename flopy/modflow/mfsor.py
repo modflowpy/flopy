@@ -152,8 +152,8 @@ class ModflowSor(Package):
         f.write(line)
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -213,7 +213,7 @@ class ModflowSor(Package):
             )
 
         # create sor object
-        sor = ModflowSor(model, unitnumber=unitnumber, filenames=filenames)
+        sor = cls(model, unitnumber=unitnumber, filenames=filenames)
 
         # return sor object
         return sor

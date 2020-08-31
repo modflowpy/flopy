@@ -733,8 +733,8 @@ class ModflowOc(Package):
         # return
         return ihedun, fhead, iddnun, fddn
 
-    @staticmethod
-    def load(f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, nstp=None, nlay=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -1103,7 +1103,7 @@ class ModflowOc(Package):
             model.add_pop_key_list(u)
 
         # create instance of oc class
-        oc = ModflowOc(
+        oc = cls(
             model,
             ihedfm=ihedfm,
             iddnfm=iddnfm,

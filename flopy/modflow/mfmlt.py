@@ -128,8 +128,8 @@ class ModflowMlt(Package):
         """
         pass
 
-    @staticmethod
-    def load(f, model, nrow=None, ncol=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nrow=None, ncol=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -233,7 +233,7 @@ class ModflowMlt(Package):
             )
 
         # create mlt dictionary
-        mlt = ModflowMlt(
+        mlt = cls(
             model,
             mult_dict=mult_dict,
             unitnumber=unitnumber,

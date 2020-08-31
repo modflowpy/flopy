@@ -377,8 +377,8 @@ class ModflowNwt(Package):
 
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -556,7 +556,7 @@ class ModflowNwt(Package):
         kwargs["filenames"] = filenames
 
         # create and return an instance of the nwt class
-        return ModflowNwt(model, **kwargs)
+        return cls(model, **kwargs)
 
     @staticmethod
     def ftype():

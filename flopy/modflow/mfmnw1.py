@@ -209,8 +209,8 @@ class ModflowMnw1(Package):
         else:
             pass
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
             sys.stdout.write("loading mnw1 package file...\n")
@@ -278,7 +278,7 @@ class ModflowMnw1(Package):
         if openfile:
             f.close()
 
-        return ModflowMnw1(
+        return cls(
             model,
             mxmnw=mxmnw,
             ipakcb=ipakcb,

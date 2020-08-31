@@ -219,8 +219,8 @@ class ModflowPcg(Package):
             f.write("\n")
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -343,7 +343,7 @@ class ModflowPcg(Package):
             )
 
         # create instance of pcg class
-        pcg = ModflowPcg(
+        pcg = cls(
             model,
             mxiter=mxiter,
             iter1=iter1,

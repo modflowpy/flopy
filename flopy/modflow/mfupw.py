@@ -355,8 +355,8 @@ class ModflowUpw(Package):
                 f_upw.write(self.laywet[k].get_file_entry())
         f_upw.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -609,7 +609,7 @@ class ModflowUpw(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create upw object
-        upw = ModflowUpw(
+        upw = cls(
             model,
             ipakcb=ipakcb,
             iphdry=iphdry,

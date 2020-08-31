@@ -393,8 +393,8 @@ class ModflowPcgn(Package):
             f.write(line)
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -558,7 +558,7 @@ class ModflowPcgn(Package):
                     ext_unit_dict, unit=ipunit
                 )
 
-        pcgn = ModflowPcgn(
+        pcgn = cls(
             model,
             iter_mo=iter_mo,
             iter_mi=iter_mi,

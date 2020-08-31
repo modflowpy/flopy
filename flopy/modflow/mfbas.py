@@ -286,8 +286,8 @@ class ModflowBas(Package):
         # Close file
         f_bas.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True, **kwargs):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True, **kwargs):
         """
         Load an existing package.
 
@@ -398,7 +398,7 @@ class ModflowBas(Package):
             )
 
         # create bas object and return
-        bas = ModflowBas(
+        bas = cls(
             model,
             ibound=ibound,
             strt=strt,

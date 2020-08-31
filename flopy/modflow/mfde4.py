@@ -227,8 +227,8 @@ class ModflowDe4(Package):
             f.write("\n")
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -313,7 +313,7 @@ class ModflowDe4(Package):
                 ext_unit_dict, filetype=ModflowDe4.ftype()
             )
 
-        de4 = ModflowDe4(
+        de4 = cls(
             model,
             itmx=itmx,
             mxup=mxup,

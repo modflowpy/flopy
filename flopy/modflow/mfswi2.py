@@ -531,8 +531,8 @@ class ModflowSwi2(Package):
         # close swi2 file
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """Load an existing package.
 
         Parameters
@@ -783,7 +783,7 @@ class ModflowSwi2(Package):
                 )
 
         # create swi2 instance
-        swi2 = ModflowSwi2(
+        swi2 = cls(
             model,
             nsrf=nsrf,
             istrat=istrat,

@@ -286,8 +286,8 @@ class ModflowHyd(Package):
         )
         return dtype
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -367,7 +367,7 @@ class ModflowHyd(Package):
                 model.add_pop_key_list(ihydun)
 
         # create hyd instance
-        hyd = ModflowHyd(
+        hyd = cls(
             model,
             nhyd=nhyd,
             ihydun=ihydun,

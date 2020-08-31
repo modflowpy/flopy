@@ -873,8 +873,8 @@ class ModflowUzf1(Package):
 
         f_uzf.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=False):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=False):
         """
         Load an existing package.
 
@@ -1131,7 +1131,7 @@ class ModflowUzf1(Package):
                     ipos += 1
 
         # create uzf object
-        return ModflowUzf1(
+        return cls(
             model,
             nuztop=nuztop,
             iuzfopt=iuzfopt,

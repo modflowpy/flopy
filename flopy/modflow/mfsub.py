@@ -586,8 +586,8 @@ class ModflowSub(Package):
         # close sub file
         f.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -929,7 +929,7 @@ class ModflowSub(Package):
                     ipos += 1
 
         # create sub instance
-        sub = ModflowSub(
+        sub = cls(
             model,
             ipakcb=ipakcb,
             isuboc=isuboc,

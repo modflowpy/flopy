@@ -380,8 +380,8 @@ class ModflowFlwob(Package):
 
         return
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -537,7 +537,7 @@ class ModflowFlwob(Package):
                 model.add_pop_key_list(iufbobsv)
 
         # create ModflowFlwob object instance
-        flwob = ModflowFlwob(
+        flwob = cls(
             model,
             iufbobsv=iufbobsv,
             tomultfb=tomultfb,

@@ -1324,8 +1324,8 @@ class ModflowMnw2(Package):
             msg = "get_default_spd_dtype: unstructured model not supported"
             raise NotImplementedError(msg)
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
         """
 
         Parameters
@@ -1464,7 +1464,7 @@ class ModflowMnw2(Package):
                         filenames[1] = os.path.basename(value.filename)
                         model.add_pop_key_list(key)
 
-        return ModflowMnw2(
+        return cls(
             model,
             mnwmax=mnwmax,
             nodtot=nodtot,

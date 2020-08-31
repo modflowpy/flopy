@@ -639,8 +639,8 @@ class ModflowLak(Package):
         # close the lak file
         f.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -908,7 +908,7 @@ class ModflowLak(Package):
                     )
                     ipos += 1
 
-        lakpak = ModflowLak(
+        lakpak = cls(
             model,
             options=options,
             nlakes=nlakes,

@@ -437,8 +437,8 @@ class ModflowLpf(Package):
         f.close()
         return
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
@@ -723,7 +723,7 @@ class ModflowLpf(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create instance of lpf class
-        lpf = ModflowLpf(
+        lpf = cls(
             model,
             ipakcb=ipakcb,
             laytyp=laytyp,

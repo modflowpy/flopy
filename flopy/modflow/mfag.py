@@ -685,8 +685,8 @@ class ModflowAg(Package):
 
         return np.dtype(dtype)
 
-    @staticmethod
-    def load(f, model, nper=0, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=0, ext_unit_dict=None):
         """
         Method to load the AG package from file
 
@@ -891,7 +891,7 @@ class ModflowAg(Package):
                         "Something went wrong at: {}".format(line)
                     )
 
-        return ModflowAg(
+        return cls(
             model,
             options=options,
             time_series=time_series,

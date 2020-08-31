@@ -420,8 +420,8 @@ class ModflowFhb(Package):
 
         f.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -756,7 +756,7 @@ class ModflowFhb(Package):
         nfhbx1 = 0
         nfhbx2 = 0
 
-        fhb = ModflowFhb(
+        fhb = cls(
             model,
             nbdtim=nbdtim,
             nflw=nflw,

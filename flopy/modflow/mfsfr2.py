@@ -834,8 +834,8 @@ class ModflowSfr2(Package):
             ]
         )
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
             sys.stdout.write("loading sfr2 package file...\n")
@@ -1070,7 +1070,7 @@ class ModflowSfr2(Package):
                         filenames[2] = os.path.basename(value.filename)
                         model.add_pop_key_list(key)
 
-        return ModflowSfr2(
+        return cls(
             model,
             nstrm=nstrm,
             nss=nss,

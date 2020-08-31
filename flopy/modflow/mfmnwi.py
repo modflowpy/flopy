@@ -202,8 +202,8 @@ class ModflowMnwi(Package):
 
         self.parent.add_package(self)
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
 
         if model.verbose:
             sys.stdout.write("loading mnw2 package file...\n")
@@ -281,7 +281,7 @@ class ModflowMnwi(Package):
                 )
                 idx += 1
 
-        return ModflowMnwi(
+        return cls(
             model,
             wel1flag=wel1flag,
             qsumflag=qsumflag,

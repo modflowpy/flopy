@@ -681,8 +681,8 @@ class ModflowStr(Package):
         # close the str file
         f_str.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -994,7 +994,7 @@ class ModflowStr(Package):
                     ext_unit_dict, unit=abs(istcb2)
                 )
 
-        strpak = ModflowStr(
+        strpak = cls(
             model,
             mxacts=mxacts,
             nss=nss,

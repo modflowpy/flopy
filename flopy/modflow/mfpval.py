@@ -139,8 +139,8 @@ class ModflowPval(Package):
         else:
             return None
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 
@@ -218,7 +218,7 @@ class ModflowPval(Package):
                 ext_unit_dict, filetype=ModflowPval.ftype()
             )
 
-        pval = ModflowPval(
+        pval = cls(
             model,
             pval_dict=pval_dict,
             unitnumber=unitnumber,
