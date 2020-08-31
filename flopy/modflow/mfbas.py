@@ -398,7 +398,7 @@ class ModflowBas(Package):
             )
 
         # create bas object and return
-        bas = ModflowBas(
+        bas = cls(
             model,
             ibound=ibound,
             strt=strt,

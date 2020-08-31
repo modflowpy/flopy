@@ -1464,7 +1464,7 @@ class ModflowMnw2(Package):
                         filenames[1] = os.path.basename(value.filename)
                         model.add_pop_key_list(key)
 
-        return ModflowMnw2(
+        return cls(
             model,
             mnwmax=mnwmax,
             nodtot=nodtot,

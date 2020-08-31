@@ -891,7 +891,7 @@ class ModflowAg(Package):
                         "Something went wrong at: {}".format(line)
                     )
 
-        return ModflowAg(
+        return cls(
             model,
             options=options,
             time_series=time_series,

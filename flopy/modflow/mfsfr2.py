@@ -1070,7 +1070,7 @@ class ModflowSfr2(Package):
                         filenames[2] = os.path.basename(value.filename)
                         model.add_pop_key_list(key)
 
-        return ModflowSfr2(
+        return cls(
             model,
             nstrm=nstrm,
             nss=nss,

@@ -1131,7 +1131,7 @@ class ModflowUzf1(Package):
                     ipos += 1
 
         # create uzf object
-        return ModflowUzf1(
+        return cls(
             model,
             nuztop=nuztop,
             iuzfopt=iuzfopt,

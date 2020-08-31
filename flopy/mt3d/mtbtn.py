@@ -1242,7 +1242,7 @@ class Mt3dBtn(Package):
                 ext_unit_dict, filetype=Mt3dBtn.ftype()
             )
 
-        btn = Mt3dBtn(
+        return cls(
             model,
             MFStyleArr=MFStyleArr,
             DRYCell=DRYCell,
@@ -1293,7 +1293,6 @@ class Mt3dBtn(Package):
             filenames=filenames,
             **kwargs
         )
-        return btn
 
     @staticmethod
     def ftype():

@@ -307,7 +307,7 @@ class ModflowGhb(Package):
         return Package.load(
             f,
             model,
-            ModflowGhb,
+            cls,
             nper=nper,
             check=check,
             ext_unit_dict=ext_unit_dict,

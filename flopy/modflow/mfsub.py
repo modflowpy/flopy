@@ -928,8 +928,8 @@ class ModflowSub(Package):
                         model.add_pop_key_list(unit)
                     ipos += 1
 
-        # create sub instance
-        sub = ModflowSub(
+        # return sub instance
+        return cls(
             model,
             ipakcb=ipakcb,
             isuboc=isuboc,
@@ -961,8 +961,6 @@ class ModflowSub(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        # return sub instance
-        return sub
 
     @staticmethod
     def ftype():

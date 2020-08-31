@@ -747,7 +747,7 @@ class Modflow(BaseModel):
             os.path.join(model_ws, f)
         )
 
-        ml = Modflow(
+        ml = cls(
             modelname,
             version=version,
             exe_name=exe_name,

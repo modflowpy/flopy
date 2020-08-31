@@ -410,8 +410,7 @@ class ModflowGmg(Package):
                 )
                 model.add_pop_key_list(iunitmhc)
 
-        # create the gmg object
-        gmg = ModflowGmg(
+        return cls(
             model,
             mxiter=mxiter,
             iiter=iiter,
@@ -429,7 +428,6 @@ class ModflowGmg(Package):
             chglimit=chglimit,
             unitnumber=unitnumber,
         )
-        return gmg
 
     @staticmethod
     def ftype():

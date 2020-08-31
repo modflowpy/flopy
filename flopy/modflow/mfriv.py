@@ -389,7 +389,7 @@ class ModflowRiv(Package):
         return Package.load(
             f,
             model,
-            ModflowRiv,
+            cls,
             nper=nper,
             check=check,
             ext_unit_dict=ext_unit_dict,

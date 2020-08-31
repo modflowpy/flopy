@@ -278,7 +278,7 @@ class ModflowMnw1(Package):
         if openfile:
             f.close()
 
-        return ModflowMnw1(
+        return cls(
             model,
             mxmnw=mxmnw,
             ipakcb=ipakcb,

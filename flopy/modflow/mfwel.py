@@ -427,7 +427,7 @@ class ModflowWel(Package):
         return Package.load(
             f,
             model,
-            ModflowWel,
+            cls,
             nper=nper,
             check=check,
             ext_unit_dict=ext_unit_dict,

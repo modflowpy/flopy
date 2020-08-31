@@ -281,7 +281,7 @@ class ModflowMnwi(Package):
                 )
                 idx += 1
 
-        return ModflowMnwi(
+        return cls(
             model,
             wel1flag=wel1flag,
             qsumflag=qsumflag,

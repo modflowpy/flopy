@@ -314,7 +314,7 @@ class ModflowDrt(Package):
         return Package.load(
             f,
             model,
-            ModflowDrt,
+            cls,
             nper=nper,
             check=check,
             ext_unit_dict=ext_unit_dict,

@@ -410,7 +410,7 @@ class OptionBlock(object):
             else:
                 if openfile:
                     options.close()
-                return OptionBlock(options_line=option_line, package=package)
+                return cls(options_line=option_line, package=package)
 
 
 class OptionUtil(object):

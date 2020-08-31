@@ -417,7 +417,7 @@ class Mt3dAdv(Package):
             )
 
         # Construct and return adv package
-        adv = Mt3dAdv(
+        return cls(
             model,
             mixelm=mixelm,
             percel=percel,
@@ -437,7 +437,6 @@ class Mt3dAdv(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return adv
 
     @staticmethod
     def ftype():

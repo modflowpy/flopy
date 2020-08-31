@@ -529,7 +529,7 @@ class ModflowBcf(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create instance of bcf object
-        bcf = ModflowBcf(
+        bcf = cls(
             model,
             ipakcb=ipakcb,
             intercellt=intercellt,

@@ -802,7 +802,7 @@ class Mt3dSft(Package):
                 model.add_pop_key_list(abs(ioutobs))
 
         # Construct and return SFT package
-        sft = Mt3dSft(
+        return cls(
             model,
             nsfinit=nsfinit,
             mxsfbc=mxsfbc,
@@ -824,7 +824,6 @@ class Mt3dSft(Package):
             filenames=filenames,
             **kwargs
         )
-        return sft
 
     @staticmethod
     def ftype():

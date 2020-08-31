@@ -342,8 +342,7 @@ class ModflowPcg(Package):
                 ext_unit_dict, filetype=ModflowPcg.ftype()
             )
 
-        # create instance of pcg class
-        pcg = ModflowPcg(
+        return cls(
             model,
             mxiter=mxiter,
             iter1=iter1,
@@ -360,7 +359,6 @@ class ModflowPcg(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return pcg
 
     @staticmethod
     def ftype():

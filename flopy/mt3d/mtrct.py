@@ -799,7 +799,7 @@ class Mt3dRct(Package):
             )
 
         # Construct and return rct package
-        rct = Mt3dRct(
+        return cls(
             model,
             isothm=isothm,
             ireact=ireact,
@@ -815,7 +815,6 @@ class Mt3dRct(Package):
             filenames=filenames,
             **kwargs
         )
-        return rct
 
     @staticmethod
     def ftype():

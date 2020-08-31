@@ -994,7 +994,7 @@ class ModflowStr(Package):
                     ext_unit_dict, unit=abs(istcb2)
                 )
 
-        strpak = ModflowStr(
+        return cls(
             model,
             mxacts=mxacts,
             nss=nss,
@@ -1012,7 +1012,6 @@ class ModflowStr(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return strpak
 
     @staticmethod
     def ftype():

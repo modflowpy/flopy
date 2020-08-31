@@ -313,7 +313,7 @@ class ModflowDe4(Package):
                 ext_unit_dict, filetype=ModflowDe4.ftype()
             )
 
-        de4 = ModflowDe4(
+        de4 = cls(
             model,
             itmx=itmx,
             mxup=mxup,

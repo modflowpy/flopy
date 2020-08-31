@@ -558,7 +558,7 @@ class ModflowPcgn(Package):
                     ext_unit_dict, unit=ipunit
                 )
 
-        pcgn = ModflowPcgn(
+        return cls(
             model,
             iter_mo=iter_mo,
             iter_mi=iter_mi,
@@ -581,7 +581,6 @@ class ModflowPcgn(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return pcgn
 
     @staticmethod
     def ftype():

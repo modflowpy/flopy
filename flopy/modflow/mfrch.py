@@ -527,7 +527,7 @@ class ModflowRch(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create recharge package instance
-        rch = ModflowRch(
+        rch = cls(
             model,
             nrchop=nrchop,
             ipakcb=ipakcb,

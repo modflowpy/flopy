@@ -908,7 +908,7 @@ class ModflowLak(Package):
                     )
                     ipos += 1
 
-        lakpak = ModflowLak(
+        return cls(
             model,
             options=options,
             nlakes=nlakes,
@@ -928,7 +928,6 @@ class ModflowLak(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return lakpak
 
     @staticmethod
     def ftype():

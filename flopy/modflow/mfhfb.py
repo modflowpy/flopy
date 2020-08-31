@@ -412,7 +412,7 @@ class ModflowHfb(Package):
                 ext_unit_dict, filetype=ModflowHfb.ftype()
             )
 
-        hfb = ModflowHfb(
+        return cls(
             model,
             nphfb=0,
             mxfb=0,
@@ -423,7 +423,6 @@ class ModflowHfb(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return hfb
 
     @staticmethod
     def ftype():

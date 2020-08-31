@@ -257,7 +257,7 @@ class ModflowLmt(Package):
                 ext_unit_dict, filetype=ModflowLmt.ftype()
             )
 
-        lmt = ModflowLmt(
+        return cls(
             model,
             output_file_name=output_file_name,
             output_file_unit=output_file_unit,
@@ -267,7 +267,6 @@ class ModflowLmt(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return lmt
 
     @staticmethod
     def ftype():

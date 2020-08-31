@@ -491,8 +491,7 @@ class ModflowHob(Package):
                     )
                     model.add_pop_key_list(iuhobsv)
 
-        # create hob object instance
-        hob = ModflowHob(
+        return cls(
             model,
             iuhobsv=iuhobsv,
             hobdry=hobdry,
@@ -501,8 +500,6 @@ class ModflowHob(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        return hob
 
     @staticmethod
     def ftype():

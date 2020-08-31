@@ -779,7 +779,7 @@ class Mt3dUzt(Package):
                 model.add_pop_key_list(icbcuz)
 
         # Construct and return uzt package
-        uzt = Mt3dUzt(
+        return cls(
             model,
             icbcuz=icbcuz,
             iet=iet,
@@ -791,7 +791,6 @@ class Mt3dUzt(Package):
             filenames=filenames,
             **kwargs
         )
-        return uzt
 
     @staticmethod
     def ftype():

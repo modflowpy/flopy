@@ -782,8 +782,8 @@ class ModflowSwi2(Package):
                     ext_unit_dict, unit=abs(iswiobs)
                 )
 
-        # create swi2 instance
-        swi2 = ModflowSwi2(
+        # return swi2 instance
+        return cls(
             model,
             nsrf=nsrf,
             istrat=istrat,
@@ -811,9 +811,6 @@ class ModflowSwi2(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        # return swi2 instance
-        return swi2
 
     @staticmethod
     def ftype():

@@ -212,11 +212,8 @@ class ModflowSor(Package):
                 ext_unit_dict, filetype=ModflowSor.ftype()
             )
 
-        # create sor object
-        sor = ModflowSor(model, unitnumber=unitnumber, filenames=filenames)
-
         # return sor object
-        return sor
+        return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
     def ftype():
