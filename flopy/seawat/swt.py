@@ -432,8 +432,9 @@ class Seawat(BaseModel):
         f_nam.close()
         return
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         version="seawat",
         exe_name="swtv4",

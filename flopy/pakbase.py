@@ -849,8 +849,8 @@ class Package(PackageInterface):
         print("IMPLEMENTATION ERROR: write_file must be overloaded")
         return
 
-    @staticmethod
-    def load(f, model, pak_type, ext_unit_dict=None, **kwargs):
+    @classmethod
+    def load(cls, f, model, pak_type, ext_unit_dict=None, **kwargs):
         """
         Default load method for standard boundary packages.
 

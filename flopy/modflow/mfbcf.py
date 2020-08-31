@@ -320,8 +320,8 @@ class ModflowBcf(Package):
                 f_bcf.write(self.wetdry[k].get_file_entry())
         f_bcf.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 

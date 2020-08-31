@@ -363,8 +363,8 @@ class SpatialReference(object):
         xmin, xmax, ymin, ymax = self.get_extent()
         return xmin, ymin, xmax, ymax
 
-    @staticmethod
-    def load(namefile=None, reffile="usgs.model.reference"):
+    @classmethod
+    def load(cls, namefile=None, reffile="usgs.model.reference"):
         """
         Attempts to load spatial reference information from
         the following files (in order):

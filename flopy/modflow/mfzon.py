@@ -131,8 +131,8 @@ class ModflowZon(Package):
         """
         return
 
-    @staticmethod
-    def load(f, model, nrow=None, ncol=None, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nrow=None, ncol=None, ext_unit_dict=None):
         """
         Load an existing package.
 

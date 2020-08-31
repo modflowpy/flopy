@@ -670,8 +670,9 @@ class Modflow(BaseModel):
         else:
             return hdObj, ddObj, bdObj
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         version="mf2005",
         exe_name="mf2005.exe",

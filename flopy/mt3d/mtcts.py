@@ -158,8 +158,9 @@ class Mt3dCts(Package):
 
         # Set package specific parameters
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         model,
         nlay=None,

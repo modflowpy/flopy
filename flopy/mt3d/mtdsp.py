@@ -262,8 +262,10 @@ class Mt3dDsp(Package):
         f_dsp.close()
         return
 
-    @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None):
+    @classmethod
+    def load(
+        cls, f, model, nlay=None, nrow=None, ncol=None, ext_unit_dict=None
+    ):
         """
         Load an existing package.
 

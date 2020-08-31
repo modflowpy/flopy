@@ -287,8 +287,8 @@ class ModflowDrn(Package):
     def get_sfac_columns():
         return ["cond"]
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 

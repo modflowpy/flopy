@@ -571,8 +571,9 @@ class Mt3dms(BaseModel):
     def load_results(self, **kwargs):
         return
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         version="mt3dms",
         exe_name="mt3dms.exe",
