@@ -232,15 +232,12 @@ class ModflowMlt(Package):
                 ext_unit_dict, filetype=ModflowMlt.ftype()
             )
 
-        # create mlt dictionary
-        mlt = ModflowMlt(
+        return cls(
             model,
             mult_dict=mult_dict,
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        return mlt
 
     @staticmethod
     def mult_function(mult_dict, line):

@@ -629,7 +629,7 @@ class ModflowSms(Package):
                 ext_unit_dict, filetype=ModflowSms.ftype()
             )
 
-        sms = ModflowSms(
+        return cls(
             model,
             hclose=hclose,
             hiclose=hiclose,
@@ -664,7 +664,6 @@ class ModflowSms(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return sms
 
     @staticmethod
     def ftype():

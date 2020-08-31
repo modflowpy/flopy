@@ -184,11 +184,8 @@ class ModflowSwr1(Package):
                 ext_unit_dict, filetype=ModflowSwr1.ftype()
             )
 
-        # create swr1 object instance
-        swr1 = ModflowSwr1(model, unitnumber=unitnumber, filenames=filenames)
-
         # return swr object
-        return swr1
+        return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
     def ftype():

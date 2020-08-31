@@ -609,7 +609,7 @@ class ModflowUpw(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create upw object
-        upw = ModflowUpw(
+        upw = cls(
             model,
             ipakcb=ipakcb,
             iphdry=iphdry,

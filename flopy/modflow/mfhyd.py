@@ -366,8 +366,8 @@ class ModflowHyd(Package):
                 )
                 model.add_pop_key_list(ihydun)
 
-        # create hyd instance
-        hyd = ModflowHyd(
+        # return hyd instance
+        return cls(
             model,
             nhyd=nhyd,
             ihydun=ihydun,
@@ -376,9 +376,6 @@ class ModflowHyd(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        # return hyd instance
-        return hyd
 
     @staticmethod
     def ftype():

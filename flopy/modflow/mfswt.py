@@ -931,8 +931,8 @@ class ModflowSwt(Package):
                         model.add_pop_key_list(unit)
                     ipos += 1
 
-        # create sub-wt instance
-        swt = ModflowSwt(
+        # return sut-wt instance
+        return cls(
             model,
             ipakcb=ipakcb,
             iswtoc=iswtoc,
@@ -969,9 +969,6 @@ class ModflowSwt(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        # return sut-wt instance
-        return swt
 
     @staticmethod
     def ftype():

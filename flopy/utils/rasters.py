@@ -783,7 +783,7 @@ class Raster(object):
         bands = dataset.indexes
         meta = dataset.meta
 
-        return Raster(
+        return cls(
             array,
             bands,
             meta["crs"],

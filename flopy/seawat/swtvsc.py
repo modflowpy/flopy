@@ -508,7 +508,7 @@ class SeawatVsc(Package):
             )
 
         # Construct and return vsc package
-        vsc = SeawatVsc(
+        return cls(
             model,
             mt3dmuflg=mt3dmuflg,
             viscmin=viscmin,
@@ -526,7 +526,6 @@ class SeawatVsc(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return vsc
 
     @staticmethod
     def ftype():

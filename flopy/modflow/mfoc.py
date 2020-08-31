@@ -1104,8 +1104,7 @@ class ModflowOc(Package):
         for u in unitnumber:
             model.add_pop_key_list(u)
 
-        # create instance of oc class
-        oc = ModflowOc(
+        return cls(
             model,
             ihedfm=ihedfm,
             iddnfm=iddnfm,
@@ -1117,8 +1116,6 @@ class ModflowOc(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-
-        return oc
 
     @staticmethod
     def ftype():

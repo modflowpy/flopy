@@ -756,7 +756,7 @@ class ModflowFhb(Package):
         nfhbx1 = 0
         nfhbx2 = 0
 
-        fhb = ModflowFhb(
+        fhb = cls(
             model,
             nbdtim=nbdtim,
             nflw=nflw,

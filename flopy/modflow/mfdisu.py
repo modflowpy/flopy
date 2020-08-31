@@ -798,7 +798,7 @@ class ModflowDisU(Package):
             )
 
         # create dis object instance
-        disu = ModflowDisU(
+        disu = cls(
             model,
             nodes=nodes,
             nlay=nlay,

@@ -649,7 +649,7 @@ class Mt3dms(BaseModel):
                     modelname, 50 * "-"
                 )
             )
-        mt = Mt3dms(
+        mt = cls(
             modelname=modelname,
             namefile_ext=modelname_extension,
             version=version,

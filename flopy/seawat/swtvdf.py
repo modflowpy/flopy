@@ -540,7 +540,7 @@ class SeawatVdf(Package):
             )
 
         # Construct and return vdf package
-        vdf = SeawatVdf(
+        return cls(
             model,
             mt3drhoflg=mt3drhoflg,
             mfnadvfd=mfnadvfd,
@@ -562,7 +562,6 @@ class SeawatVdf(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return vdf
 
     @staticmethod
     def ftype():

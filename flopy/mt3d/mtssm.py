@@ -817,7 +817,7 @@ class Mt3dSsm(Package):
             )
 
         # Construct and return ssm package
-        ssm = Mt3dSsm(
+        return cls(
             model,
             crch=crch,
             cevt=cevt,
@@ -827,7 +827,6 @@ class Mt3dSsm(Package):
             filenames=filenames,
             **kwargs
         )
-        return ssm
 
     @staticmethod
     def ftype():

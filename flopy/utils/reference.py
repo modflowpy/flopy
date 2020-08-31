@@ -618,7 +618,7 @@ class SpatialReference(object):
         except:
             print("   could not remove start_datetime")
 
-        return SpatialReference(**attribs)
+        return cls(**attribs)
 
     @classmethod
     def from_gridspec(cls, gridspec_file, lenuni=0):

@@ -417,7 +417,7 @@ class ModflowEvt(Package):
         args["unitnumber"] = unitnumber
         args["filenames"] = filenames
 
-        evt = ModflowEvt(model, **args)
+        evt = cls(model, **args)
 
         # return evt object
         return evt

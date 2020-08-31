@@ -271,7 +271,7 @@ class ModflowSip(Package):
                 ext_unit_dict, filetype=ModflowSip.ftype()
             )
 
-        sip = ModflowSip(
+        return cls(
             model,
             mxiter=mxiter,
             nparm=nparm,
@@ -283,7 +283,6 @@ class ModflowSip(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return sip
 
     @staticmethod
     def ftype():

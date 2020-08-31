@@ -193,8 +193,8 @@ class ModflowPar(object):
 
         return
 
-    @classmethod
-    def load(cls, f, npar, verbose=False):
+    @staticmethod
+    def load(f, npar, verbose=False):
         """
         Load property parameters from an existing package.
 

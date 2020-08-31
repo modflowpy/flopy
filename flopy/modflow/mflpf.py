@@ -723,7 +723,7 @@ class ModflowLpf(Package):
                 model.add_pop_key_list(ipakcb)
 
         # create instance of lpf class
-        lpf = ModflowLpf(
+        lpf = cls(
             model,
             ipakcb=ipakcb,
             laytyp=laytyp,

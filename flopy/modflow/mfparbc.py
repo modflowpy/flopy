@@ -118,9 +118,7 @@ class ModflowParBc(object):
                     pinst,
                 ]
 
-        # print bc_parms
-        bcpar = ModflowParBc(bc_parms)
-        return bcpar
+        return cls(bc_parms)
 
     @staticmethod
     def loadarray(f, npar, verbose=False):

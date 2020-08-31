@@ -968,8 +968,7 @@ class Util3d(DataInterface):
                 array_format=array_format,
             )
             u2ds.append(u2d)
-        u3d = Util3d(model, shape, dtype, u2ds, name)
-        return u3d
+        return cls(model, shape, dtype, u2ds, name)
 
     def __mul__(self, other):
         if np.isscalar(other):
@@ -3028,7 +3027,7 @@ class Util2d(DataInterface):
         )
 
         if cr_dict["type"] == "constant":
-            u2d = Util2d(
+            u2d = cls(
                 model,
                 shape,
                 dtype,
@@ -3066,7 +3065,7 @@ class Util2d(DataInterface):
                     shape, f, dtype, bintype="Head"
                 )
             f.close()
-            u2d = Util2d(
+            u2d = cls(
                 model,
                 shape,
                 dtype,
@@ -3080,7 +3079,7 @@ class Util2d(DataInterface):
 
         elif cr_dict["type"] == "internal":
             data = Util2d.load_txt(shape, f_handle, dtype, cr_dict["fmtin"])
-            u2d = Util2d(
+            u2d = cls(
                 model,
                 shape,
                 dtype,
@@ -3113,7 +3112,7 @@ class Util2d(DataInterface):
                 header_data, data = Util2d.load_bin(
                     shape, ext_unit.filehandle, dtype, bintype="Head"
                 )
-            u2d = Util2d(
+            u2d = cls(
                 model,
                 shape,
                 dtype,
@@ -3129,7 +3128,7 @@ class Util2d(DataInterface):
             model.pop_key_list.append(cr_dict["nunit"])
         elif cr_dict["type"] == "block":
             data = Util2d.load_block(shape, f_handle, dtype)
-            u2d = Util2d(
+            u2d = cls(
                 model,
                 shape,
                 dtype,

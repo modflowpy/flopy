@@ -395,14 +395,13 @@ class ModflowGage(Package):
         for file in files:
             filenames.append(os.path.basename(file))
 
-        gagepak = ModflowGage(
+        return cls(
             model,
             numgage=numgage,
             gage_data=gage_data,
             filenames=filenames,
             unitnumber=unitnumber,
         )
-        return gagepak
 
     @staticmethod
     def ftype():

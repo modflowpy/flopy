@@ -240,7 +240,7 @@ class Mt3dGcg(Package):
             )
 
         # Construct and return gcg package
-        gcg = Mt3dGcg(
+        return cls(
             model,
             mxiter=mxiter,
             iter1=iter1,
@@ -252,7 +252,6 @@ class Mt3dGcg(Package):
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return gcg
 
     @staticmethod
     def ftype():

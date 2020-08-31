@@ -556,7 +556,7 @@ class ModflowNwt(Package):
         kwargs["filenames"] = filenames
 
         # create and return an instance of the nwt class
-        return ModflowNwt(model, **kwargs)
+        return cls(model, **kwargs)
 
     @staticmethod
     def ftype():

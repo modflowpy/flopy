@@ -537,7 +537,7 @@ class ModflowFlwob(Package):
                 model.add_pop_key_list(iufbobsv)
 
         # create ModflowFlwob object instance
-        flwob = ModflowFlwob(
+        flwob = cls(
             model,
             iufbobsv=iufbobsv,
             tomultfb=tomultfb,

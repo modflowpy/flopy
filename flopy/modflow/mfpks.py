@@ -287,8 +287,7 @@ class ModflowPks(Package):
                 ext_unit_dict, filetype=ModflowPks.ftype()
             )
 
-        pks = ModflowPks(model, unitnumber=unitnumber, filenames=filenames)
-        return pks
+        return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
     def ftype():

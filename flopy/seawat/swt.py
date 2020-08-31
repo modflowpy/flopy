@@ -489,7 +489,7 @@ class Seawat(BaseModel):
             modelname = f
 
         # create instance of a seawat model and load modflow and mt3dms models
-        ms = Seawat(
+        ms = cls(
             modelname=modelname,
             namefile_ext="nam",
             modflowmodel=None,

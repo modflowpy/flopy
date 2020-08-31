@@ -224,13 +224,12 @@ class ModflowZon(Package):
                 ext_unit_dict, filetype=ModflowZon.ftype()
             )
 
-        zon = ModflowZon(
+        return cls(
             model,
             zone_dict=zone_dict,
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return zon
 
     @staticmethod
     def ftype():

@@ -443,7 +443,7 @@ class Mt3dDsp(Package):
                 ext_unit_dict, filetype=Mt3dDsp.ftype()
             )
 
-        dsp = Mt3dDsp(
+        return cls(
             model,
             al=al,
             trpt=trpt,
@@ -454,7 +454,6 @@ class Mt3dDsp(Package):
             filenames=filenames,
             **kwargs
         )
-        return dsp
 
     @staticmethod
     def ftype():

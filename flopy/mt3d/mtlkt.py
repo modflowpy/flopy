@@ -512,7 +512,7 @@ class Mt3dLkt(Package):
                 model.add_pop_key_list(icbclk)
 
         # Construct and return LKT package
-        lkt = Mt3dLkt(
+        return cls(
             model,
             nlkinit=nlkinit,
             mxlkbc=mxlkbc,
@@ -524,7 +524,6 @@ class Mt3dLkt(Package):
             filenames=filenames,
             **kwargs
         )
-        return lkt
 
     @staticmethod
     def get_default_dtype(ncomp=1):

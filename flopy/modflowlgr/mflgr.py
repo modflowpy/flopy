@@ -694,7 +694,8 @@ class ModflowLgr(BaseModel):
         if openfile:
             f.close()
 
-        lgr = ModflowLgr(
+        # return model object
+        return cls(
             version=version,
             exe_name=exe_name,
             modelname=modelname,
@@ -706,6 +707,3 @@ class ModflowLgr(BaseModel):
             children=children,
             children_data=children_data,
         )
-
-        # return model object
-        return lgr

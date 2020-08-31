@@ -218,13 +218,12 @@ class ModflowPval(Package):
                 ext_unit_dict, filetype=ModflowPval.ftype()
             )
 
-        pval = ModflowPval(
+        return cls(
             model,
             pval_dict=pval_dict,
             unitnumber=unitnumber,
             filenames=filenames,
         )
-        return pval
 
     @staticmethod
     def ftype():
