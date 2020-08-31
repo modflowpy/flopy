@@ -41,8 +41,8 @@ class ModflowParBc(object):
                 return self.bc_parms[key]
         return None
 
-    @staticmethod
-    def load(f, npar, dt, model, ext_unit_dict=None, verbose=False):
+    @classmethod
+    def load(cls, f, npar, dt, model, ext_unit_dict=None, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV, etc.).

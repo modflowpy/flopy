@@ -933,8 +933,9 @@ class Util3d(DataInterface):
             )
         return u2ds
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f_handle,
         model,
         shape,
@@ -2980,8 +2981,9 @@ class Util2d(DataInterface):
                 "Util2d:unsupported type in util_array: " + str(type(value))
             )
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f_handle,
         model,
         shape,

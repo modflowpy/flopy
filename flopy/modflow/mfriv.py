@@ -345,8 +345,8 @@ class ModflowRiv(Package):
         except Exception as e:
             raise Exception("mfriv error adding record to list: " + str(e))
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 

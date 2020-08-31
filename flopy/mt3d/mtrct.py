@@ -487,8 +487,9 @@ class Mt3dRct(Package):
         f_rct.close()
         return
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         model,
         nlay=None,

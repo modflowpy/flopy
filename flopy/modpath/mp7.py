@@ -419,8 +419,9 @@ class Modpath7(BaseModel):
             f.write("{:10s} {}\n".format("BUDGET", self.budgetfilename))
         f.close()
 
-    @staticmethod
+    @classmethod
     def create_mp7(
+        cls,
         modelname="modpath7test",
         trackdir="forward",
         flowmodel=None,

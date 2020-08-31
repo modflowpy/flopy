@@ -756,8 +756,8 @@ class Raster(object):
             for band, arr in self.__arr_dict.items():
                 foo.write(arr, band)
 
-    @staticmethod
-    def load(raster):
+    @classmethod
+    def load(cls, raster):
         """
         Static method to load a raster file
         into the raster object

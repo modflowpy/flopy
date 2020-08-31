@@ -366,8 +366,8 @@ class ModflowRch(Package):
                     f_rch.write(file_entry_irch)
         f_rch.close()
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 

@@ -308,8 +308,8 @@ class ModflowHob(Package):
 
         return
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 

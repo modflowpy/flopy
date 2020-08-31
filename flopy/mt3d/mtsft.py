@@ -468,9 +468,9 @@ class Mt3dSft(Package):
         f.close()
         return
 
-    @staticmethod
+    @classmethod
     def load(
-        f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None
+        cls, f, model, nsfinit=None, nper=None, ncomp=None, ext_unit_dict=None
     ):
         """
         Load an existing package.

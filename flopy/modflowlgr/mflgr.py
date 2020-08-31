@@ -470,8 +470,9 @@ class ModflowLgr(BaseModel):
                 npth = os.path.join(new_pth, rpth)
             child.change_model_ws(new_pth=npth, reset_external=reset_external)
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         version="mflgr",
         exe_name="mflgr.exe",

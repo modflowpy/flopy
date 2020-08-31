@@ -1324,8 +1324,8 @@ class ModflowMnw2(Package):
             msg = "get_default_spd_dtype: unstructured model not supported"
             raise NotImplementedError(msg)
 
-    @staticmethod
-    def load(f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, nper=None, gwt=False, nsol=1, ext_unit_dict=None):
         """
 
         Parameters

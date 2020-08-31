@@ -333,8 +333,8 @@ class OptionBlock(object):
                 f.write(self.single_line_options)
                 f.write("\n")
 
-    @staticmethod
-    def load_options(options, package):
+    @classmethod
+    def load_options(cls, options, package):
         """
         Loader for the options class. Reads in an options
         block and uses context from option util dictionaries

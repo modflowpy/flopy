@@ -520,8 +520,9 @@ class Mt3dSsm(Package):
         f_ssm.close()
         return
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         model,
         nlay=None,

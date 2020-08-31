@@ -297,8 +297,10 @@ class Mt3dLkt(Package):
         f_lkt.close()
         return
 
-    @staticmethod
-    def load(f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None):
+    @classmethod
+    def load(
+        cls, f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None
+    ):
         """
         Load an existing package.
 

@@ -253,8 +253,8 @@ class ModflowHfb(Package):
     def get_sfac_columns():
         return ["hydchr"]
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None):
         """
         Load an existing package.
 

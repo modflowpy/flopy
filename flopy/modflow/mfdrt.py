@@ -273,8 +273,8 @@ class ModflowDrt(Package):
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
-    @staticmethod
-    def load(f, model, nper=None, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, nper=None, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 

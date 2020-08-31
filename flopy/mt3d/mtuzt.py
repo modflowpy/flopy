@@ -436,8 +436,9 @@ class Mt3dUzt(Package):
         f_uzt.close()
         return
 
-    @staticmethod
+    @classmethod
     def load(
+        cls,
         f,
         model,
         nlay=None,

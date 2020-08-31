@@ -355,8 +355,8 @@ class ModflowUpw(Package):
                 f_upw.write(self.laywet[k].get_file_entry())
         f_upw.close()
 
-    @staticmethod
-    def load(f, model, ext_unit_dict=None, check=True):
+    @classmethod
+    def load(cls, f, model, ext_unit_dict=None, check=True):
         """
         Load an existing package.
 
