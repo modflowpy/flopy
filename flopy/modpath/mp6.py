@@ -2,7 +2,6 @@ import numpy as np
 from ..mbase import BaseModel
 from ..pakbase import Package
 from .mp6sim import Modpath6Sim
-from .mp6bas import Modpath6Bas
 import os
 
 
