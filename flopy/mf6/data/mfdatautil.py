@@ -297,10 +297,12 @@ class MFComment(object):
         text to add
     """
 
-    def add_text(self, additional_text):
+    def add_text(self, additional_text, new_line=False):
         if additional_text:
             if isinstance(self.text, list):
                 self.text.append(additional_text)
+            elif new_line:
+                self.text = "{}{}".format(self.text, additional_text)
             else:
                 self.text = "{} {}".format(self.text, additional_text)
 
@@ -376,12 +378,12 @@ class MFComment(object):
     def is_empty(self, include_whitespace=True):
         if include_whitespace:
             if self.text():
-                return True
-            return False
+                return False
+            return True
         else:
             if self.text.strip():
-                return True
-            return False
+                return False
+            return True
 
     """
     Check text to see if it is valid comment text
