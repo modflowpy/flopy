@@ -12,7 +12,6 @@
 #
 import os
 import sys
-import shutil
 
 # add flopy root directory to the python path
 sys.path.insert(0, os.path.abspath(".."))
@@ -21,33 +20,19 @@ from flopy import __version__
 # -- determine if running on readthedocs ------------------------------------
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
-# -- import pymake if not running on readthedocs ----------------------------
-if on_rtd:
-    pymake = None
-else:
-    import pymake
-
 # -- create source rst files ------------------------------------------------
 cmd = "sphinx-apidoc -e -o source/ ../flopy/"
 print(cmd)
 os.system(cmd)
 
-# -- get the MODFLOW executables --------------------------------------------
-if not on_rtd:
-    ws = ".bin"
-    if os.path.isdir(ws):
-        shutil.rmtree(ws)
-    os.makedirs(ws)
-    osname = sys.platform.lower()
-    if osname == "darwin":
-        platform = "mac"
-    else:
-        platform = osname
-    pymake.getmfexes(pth=ws, platform=platform, verbose=True)
+# -- programatically create rst files ---------------------------------------
+cmd = ("python", "create_rstfiles.py")
+print(" ".join(cmd))
+os.system(" ".join(cmd))
 
 # -- convert the tutorial scripts -------------------------------------------
 if not on_rtd:
-    cmd = ("python", "tutorials2ipynb.py")
+    cmd = ("python", "create_tutorials.py")
     print(" ".join(cmd))
     os.system(" ".join(cmd))
 
@@ -108,7 +93,7 @@ source_encoding = "utf-8"
 master_doc = "index"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-add_function_parentheses = False
+add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).

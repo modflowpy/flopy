@@ -25,7 +25,7 @@ updates = {
 plt.rcParams.update(updates)
 
 
-def run():
+def run(silent=False):
     workspace = "swiex5"
     if not os.path.isdir(workspace):
         os.mkdir(workspace)
@@ -223,7 +223,7 @@ def run():
         swi = flopy.modflow.ModflowSwi2(
             ml,
             iswizt=55,
-            npln=1,
+            nsrf=1,
             istrat=1,
             toeslope=0.025,
             tipslope=0.025,
@@ -240,7 +240,7 @@ def run():
         )
         # --write the modflow files
         ml.write_input()
-        m = ml.run_model(silent=False)
+        m = ml.run_model(silent=silent)
 
     # --read model zeta
     get_stp = [364, 729, 1094, 1459, 364, 729, 1094, 1459]
@@ -418,7 +418,7 @@ def run():
         m.write_input()
 
         # Run SEAWAT
-        m = m.run_model(silent=False)
+        m = m.run_model(silent=silent)
 
     # plot the results
     # read seawat model data
@@ -463,12 +463,12 @@ def run():
     cfig = ["A", "B", "C", "D", "E", "F", "G", "H"]
     inc = 1.0e-3
 
-    xsf = plt.figure(figsize=(fwid, fhgt), facecolor="w")
+    xsf, axes = plt.subplots(4, 2, figsize=(fwid, fhgt), facecolor="w")
     xsf.subplots_adjust(
         wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop
     )
     # withdrawal and recovery titles
-    ax = xsf.add_subplot(4, 2, 1)
+    ax = axes.flatten()[0]
     ax.text(
         0.0,
         1.03,
@@ -478,7 +478,7 @@ def run():
         ha="left",
         size="8",
     )
-    ax = xsf.add_subplot(4, 2, 2)
+    ax = axes.flatten()[1]
     ax.text(
         0.0,
         1.03,
@@ -489,7 +489,7 @@ def run():
         size="8",
     )
     # dummy items for legend
-    ax = xsf.add_subplot(4, 2, 1)
+    ax = axes.flatten()[2]
     ax.plot(
         [-1, -1],
         [-1, -1],
@@ -542,12 +542,12 @@ def run():
                     zs[icol] = zt
         if itime < ndecay:
             ic = itime
-            isp = ic * 2 + 1
-            ax = xsf.add_subplot(4, 2, isp)
+            isp = ic * 2
+            ax = axes.flatten()[isp]
         else:
             ic = itime - ndecay
-            isp = (ic * 2) + 2
-            ax = xsf.add_subplot(4, 2, isp)
+            isp = (ic * 2) + 1
+            ax = axes.flatten()[isp]
         # figure title
         ax.text(
             -0.15,
@@ -595,21 +595,21 @@ def run():
             ax.set_ylabel("Elevation, in meters")
 
     # x labels
-    ax = xsf.add_subplot(4, 2, 7)
+    ax = axes.flatten()[6]
     ax.set_xlabel("Horizontal distance, in meters")
-    ax = xsf.add_subplot(4, 2, 8)
+    ax = axes.flatten()[7]
     ax.set_xlabel("Horizontal distance, in meters")
 
     # simulation time titles
     for itime in range(0, nswi_times):
         if itime < ndecay:
             ic = itime
-            isp = ic * 2 + 1
-            ax = xsf.add_subplot(4, 2, isp)
+            isp = ic * 2
+            ax = axes.flatten()[isp]
         else:
             ic = itime - ndecay
-            isp = (ic * 2) + 2
-            ax = xsf.add_subplot(4, 2, isp)
+            isp = (ic * 2) + 1
+            ax = axes.flatten()[isp]
         iyr = itime + 1
         if iyr > 1:
             ctxt = "{} years".format(iyr)
@@ -633,4 +633,4 @@ def run():
 
 
 if __name__ == "__main__":
-    success = run()
+    success = run(silent=False)

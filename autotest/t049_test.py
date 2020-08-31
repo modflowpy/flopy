@@ -54,12 +54,12 @@ def test_modpath():
 
     # create the forward modpath file
     mpnam = 'freybergmp'
-    mp = flopy.modpath.Modpath(mpnam, exe_name=mpth_exe, modflowmodel=m,
-                               model_ws=lpth)
-    mpbas = flopy.modpath.ModpathBas(mp, hnoflo=m.bas6.hnoflo,
-                                     hdry=m.lpf.hdry,
-                                     ibound=m.bas6.ibound.array, prsity=0.2,
-                                     prsityCB=0.2)
+    mp = flopy.modpath.Modpath6(mpnam, exe_name=mpth_exe, modflowmodel=m,
+                                model_ws=lpth)
+    mpbas = flopy.modpath.Modpath6Bas(mp, hnoflo=m.bas6.hnoflo,
+                                      hdry=m.lpf.hdry,
+                                      ibound=m.bas6.ibound.array, prsity=0.2,
+                                      prsityCB=0.2)
     sim = mp.create_mpsim(trackdir='forward', simtype='endpoint',
                           packages='RCH')
 
@@ -75,12 +75,12 @@ def test_modpath():
                         'did not terminate successfully'
 
     mpnam = 'freybergmpp'
-    mpp = flopy.modpath.Modpath(mpnam, exe_name=mpth_exe,
-                                modflowmodel=m, model_ws=lpth)
-    mpbas = flopy.modpath.ModpathBas(mpp, hnoflo=m.bas6.hnoflo,
-                                     hdry=m.lpf.hdry,
-                                     ibound=m.bas6.ibound.array, prsity=0.2,
-                                     prsityCB=0.2)
+    mpp = flopy.modpath.Modpath6(mpnam, exe_name=mpth_exe,
+                                 modflowmodel=m, model_ws=lpth)
+    mpbas = flopy.modpath.Modpath6Bas(mpp, hnoflo=m.bas6.hnoflo,
+                                      hdry=m.lpf.hdry,
+                                      ibound=m.bas6.ibound.array, prsity=0.2,
+                                      prsityCB=0.2)
     sim = mpp.create_mpsim(trackdir='backward', simtype='pathline',
                            packages='WEL')
 
