@@ -2,7 +2,7 @@ Tutorials
 =========
 
 MODFLOW 6 Tutorials
------------------
+-------------------
 
 Contents:
 
@@ -10,6 +10,7 @@ Contents:
    :maxdepth: 2
 
    _notebooks/tutorial01_mf6
+
 
 MODFLOW Tutorials
 -----------------
@@ -22,8 +23,9 @@ Contents:
    _notebooks/tutorial01_mf
    _notebooks/tutorial02_mf
 
+
 SEAWAT Tutorials
------------------
+----------------
 
 Contents:
 
@@ -31,3 +33,5 @@ Contents:
    :maxdepth: 2
 
    _notebooks/tutorial01_seawat
+
+

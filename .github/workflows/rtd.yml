@@ -68,7 +68,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd .docs/
-          python tutorials2ipynb.py
+          python create_tutorials.py
           cd ../
 
       - name: Upload completed jupyter notebooks as an artifact for ReadtheDocs

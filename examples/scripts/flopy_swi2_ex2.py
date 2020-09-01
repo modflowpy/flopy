@@ -360,12 +360,12 @@ def run():
     ftop = 0.925
 
     print("creating  cross-section figure...")
-    xsf = plt.figure(figsize=(fwid, fhgt), facecolor="w")
+    xsf, axes = plt.subplots(3, 1, figsize=(fwid, fhgt), facecolor="w")
     xsf.subplots_adjust(
         wspace=0.25, hspace=0.25, left=flft, right=frgt, bottom=fbot, top=ftop
     )
     # plot initial conditions
-    ax = xsf.add_subplot(3, 1, 1)
+    ax = axes[0]
     ax.text(
         -0.075,
         1.05,
@@ -386,7 +386,7 @@ def run():
     ax.text(250, -20, "fresh", va="center", ha="center")
     ax.set_ylabel("Elevation, in meters")
     # plot stratified swi2 and seawat results
-    ax = xsf.add_subplot(3, 1, 2)
+    ax = axes[1]
     ax.text(
         -0.075,
         1.05,
@@ -428,7 +428,7 @@ def run():
     ax.set_yticks(np.arange(-40, 1, 10))
     ax.set_ylabel("Elevation, in meters")
     # plot vd model
-    ax = xsf.add_subplot(3, 1, 3)
+    ax = axes[2]
     ax.text(
         -0.075,
         1.05,

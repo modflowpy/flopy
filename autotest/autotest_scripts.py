@@ -5,10 +5,14 @@ import sys
 import shutil
 from subprocess import Popen, PIPE
 
+# exclude files that take time on locanachine
 exclude = ['flopy_swi2_ex2.py', 'flopy_swi2_ex5.py']
-for arg in sys.argv:
-    if arg.lower() == '--all':
-        exclude = []
+if 'CI' in os.environ:
+    exclude = []
+else:
+    for arg in sys.argv:
+        if arg.lower() == '--all':
+            exclude = []
 
 sdir = os.path.join('..', 'examples', 'scripts')
 tdir = os.path.join("..", "examples", "Tutorials")
@@ -31,24 +35,28 @@ for testdir in testdirs:
     sys.path.append(testdir)
 
 
-def copy_scripts(src_dir, dst_dir):
-    files = [f for f in sorted(os.listdir(src_dir)) if f.endswith('.py')]
-
-    # exclude unwanted files
-    for e in exclude:
-        if e in files:
-            files.remove(e)
+def copy_scripts(src_dir, dst_dir, include_subdir=False):
+    if include_subdir:
+        files = []
+        for dirpath, _, filenames in os.walk(src_dir):
+            files += [os.path.join(dirpath, filename) for filename in
+                      sorted(filenames) if
+                      filename.endswith(".py") and filename not in exclude]
+    else:
+        files = [os.path.join(src_dir, f) for f in sorted(os.listdir(src_dir))
+                 if f.endswith('.py') and f not in exclude]
 
     # copy files
-    for file_name in files:
-        src = os.path.join(src_dir, file_name)
-        dst = os.path.join(dst_dir, file_name)
+    for src in files:
+        filename = os.path.basename(src)
+        filedir = os.path.dirname(src)
+        dst = os.path.join(dst_dir, os.path.basename(src))
 
         # copy script
-        print('copying {} from {} to {}'.format(file_name, src_dir, testdir))
+        print('copying {} from {} to {}'.format(filename, filedir, testdir))
         shutil.copyfile(src, dst)
 
-    return files
+    return [os.path.basename(filepath) for filepath in files]
 
 
 def import_from(mod, name):
@@ -101,19 +109,19 @@ def test_scripts():
 
 def test_tutorial_scripts():
     # get list of scripts to run
-    files = copy_scripts(tdir, testdirs[1])
+    files = copy_scripts(tdir, testdirs[1], include_subdir=True)
 
     for fn in files:
         yield run_tutorial_scripts, fn, testdirs[1]
 
 
 if __name__ == '__main__':
-    # # get list of scripts to run
-    # files = copy_scripts(sdir, testdirs[0])
-    # for fn in files:
-    #     run_scripts(fn, testdirs[0])
+    # get list of scripts to run
+    files = copy_scripts(sdir, testdirs[0])
+    for fn in files:
+        run_scripts(fn, testdirs[0])
 
     # get list of tutorial scripts to run
-    files = copy_scripts(tdir, testdirs[1])
+    files = copy_scripts(tdir, testdirs[1], include_subdir=True)
     for fn in files:
         run_tutorial_scripts(fn, testdirs[1])
