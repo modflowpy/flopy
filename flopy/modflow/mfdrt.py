@@ -120,7 +120,7 @@ class ModflowDrt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowDrt.defaultunit()
+            unitnumber = ModflowDrt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -135,7 +135,7 @@ class ModflowDrt(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowDrt.ftype()
+                ipakcb, fname=fname, package=ModflowDrt._ftype()
             )
         else:
             ipakcb = 0
@@ -150,7 +150,7 @@ class ModflowDrt(Package):
         if not found:
             options.append("RETURNFLOW")
 
-        name = [ModflowDrt.ftype()]
+        name = [ModflowDrt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -219,9 +219,16 @@ class ModflowDrt(Package):
             )
         return dtype
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have drains (developed for MT3DMS SSM package)
-        # print 'Function must be implemented properly for drt package'
+    def _ncells(self):
+        """Maximum number of cells that have drains with return flows
+        (developed for MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of drt cells
+
+        """
         return self.stress_period_data.mxact
 
     def write_file(self, check=True):
@@ -321,9 +328,9 @@ class ModflowDrt(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "DRT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 21

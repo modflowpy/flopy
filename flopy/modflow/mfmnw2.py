@@ -1018,7 +1018,7 @@ class ModflowMnw2(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowMnw2.defaultunit()
+            unitnumber = ModflowMnw2._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -1033,13 +1033,13 @@ class ModflowMnw2(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowMnw2.ftype()
+                ipakcb, fname=fname, package=ModflowMnw2._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowMnw2.ftype()]
+        name = [ModflowMnw2._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -1455,7 +1455,7 @@ class ModflowMnw2(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowMnw2.ftype():
+                if value.filetype == ModflowMnw2._ftype():
                     unitnumber = key
                     filenames[0] = os.path.basename(value.filename)
 
@@ -1877,11 +1877,11 @@ class ModflowMnw2(Package):
         f_mnw.close()
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "MNW2"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 34
 
 

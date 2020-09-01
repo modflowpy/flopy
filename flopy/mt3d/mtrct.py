@@ -181,9 +181,9 @@ class Mt3dRct(Package):
         """
 
         if unitnumber is None:
-            unitnumber = Mt3dRct.defaultunit()
+            unitnumber = Mt3dRct._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dRct.reservedunit()
+            unitnumber = Mt3dRct._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -192,7 +192,7 @@ class Mt3dRct(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dRct.ftype()]
+        name = [Mt3dRct._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -795,7 +795,7 @@ class Mt3dRct(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dRct.ftype()
+                ext_unit_dict, filetype=Mt3dRct._ftype()
             )
 
         # Construct and return rct package
@@ -817,13 +817,13 @@ class Mt3dRct(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "RCT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 36
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 8

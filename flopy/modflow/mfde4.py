@@ -135,7 +135,7 @@ class ModflowDe4(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowDe4.defaultunit()
+            unitnumber = ModflowDe4._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -144,7 +144,7 @@ class ModflowDe4(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowDe4.ftype()]
+        name = [ModflowDe4._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -310,7 +310,7 @@ class ModflowDe4(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowDe4.ftype()
+                ext_unit_dict, filetype=ModflowDe4._ftype()
             )
 
         de4 = cls(
@@ -330,9 +330,9 @@ class ModflowDe4(Package):
         return de4
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "DE4"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 28

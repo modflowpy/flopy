@@ -149,9 +149,9 @@ class Mt3dUzt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dUzt.defaultunit()
+            unitnumber = Mt3dUzt._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dUzt.reservedunit()
+            unitnumber = Mt3dUzt._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -171,13 +171,13 @@ class Mt3dUzt(Package):
                 fname=fname,
                 extension=extension,
                 binflag=False,
-                package=Mt3dUzt.ftype(),
+                package=Mt3dUzt._ftype(),
             )
         else:
             icbcuz = 0
 
         # Fill namefile items
-        name = [Mt3dUzt.ftype()]
+        name = [Mt3dUzt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -770,7 +770,7 @@ class Mt3dUzt(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dUzt.ftype()
+                ext_unit_dict, filetype=Mt3dUzt._ftype()
             )
             if icbcuz > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -793,13 +793,13 @@ class Mt3dUzt(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "UZT2"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 7
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 7

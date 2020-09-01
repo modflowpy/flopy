@@ -229,7 +229,7 @@ class ModflowSwi2(Package):
         """Package constructor."""
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSwi2.defaultunit()
+            unitnumber = ModflowSwi2._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -248,7 +248,7 @@ class ModflowSwi2(Package):
                 iswizt,
                 fname=fname,
                 extension="zta",
-                package=ModflowSwi2.ftype(),
+                package=ModflowSwi2._ftype(),
             )
         else:
             iswizt = 0
@@ -258,7 +258,7 @@ class ModflowSwi2(Package):
         if ipakcb is not None:
             fname = filenames[2]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSwi2.ftype()
+                ipakcb, fname=fname, package=ModflowSwi2._ftype()
             )
         else:
             ipakcb = 0
@@ -313,13 +313,13 @@ class ModflowSwi2(Package):
                 fname=fname,
                 binflag=binflag,
                 extension=ext,
-                package=ModflowSwi2.ftype(),
+                package=ModflowSwi2._ftype(),
             )
         else:
             iswiobs = 0
 
         # Fill namefile items
-        name = [ModflowSwi2.ftype()]
+        name = [ModflowSwi2._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -767,7 +767,7 @@ class ModflowSwi2(Package):
         filenames = [None, None, None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSwi2.ftype()
+                ext_unit_dict, filetype=ModflowSwi2._ftype()
             )
             if iswizt > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -813,9 +813,9 @@ class ModflowSwi2(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SWI2"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 29

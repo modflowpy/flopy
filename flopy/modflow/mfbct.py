@@ -40,12 +40,12 @@ class ModflowBct(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowBct.defaultunit()
+            unitnumber = ModflowBct._defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and unit
         # number
         Package.__init__(
-            self, model, extension, ModflowBct.ftype(), unitnumber
+            self, model, extension, ModflowBct._ftype(), unitnumber
         )
 
         self.url = "bct.htm"
@@ -168,9 +168,9 @@ class ModflowBct(Package):
         return
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "BCT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 35

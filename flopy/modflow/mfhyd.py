@@ -129,7 +129,7 @@ class ModflowHyd(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowHyd.defaultunit()
+            unitnumber = ModflowHyd._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -150,11 +150,11 @@ class ModflowHyd(Package):
             ihydun,
             fname=fname,
             extension="hyd.bin",
-            package=ModflowHyd.ftype(),
+            package=ModflowHyd._ftype(),
         )
 
         # Fill namefile items
-        name = [ModflowHyd.ftype()]
+        name = [ModflowHyd._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -358,7 +358,7 @@ class ModflowHyd(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowHyd.ftype()
+                ext_unit_dict, filetype=ModflowHyd._ftype()
             )
             if ihydun > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -378,9 +378,9 @@ class ModflowHyd(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "HYD"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 36

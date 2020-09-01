@@ -102,7 +102,7 @@ class ModflowSip(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSip.defaultunit()
+            unitnumber = ModflowSip._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -111,7 +111,7 @@ class ModflowSip(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowSip.ftype()]
+        name = [ModflowSip._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -268,7 +268,7 @@ class ModflowSip(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSip.ftype()
+                ext_unit_dict, filetype=ModflowSip._ftype()
             )
 
         return cls(
@@ -285,9 +285,9 @@ class ModflowSip(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SIP"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 25

@@ -369,7 +369,7 @@ class ModflowSwt(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSwt.defaultunit()
+            unitnumber = ModflowSwt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -385,7 +385,7 @@ class ModflowSwt(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSwt.ftype()
+                ipakcb, fname=fname, package=ModflowSwt._ftype()
             )
         else:
             ipakcb = 0
@@ -417,12 +417,12 @@ class ModflowSwt(Package):
                     iu = ids16[k]
                 fname = filenames[idx + 2]
                 model.add_output_file(
-                    iu, fname=fname, extension=ext, package=ModflowSwt.ftype()
+                    iu, fname=fname, extension=ext, package=ModflowSwt._ftype()
                 )
                 idx += 1
 
         extensions = [extension]
-        name = [ModflowSwt.ftype()]
+        name = [ModflowSwt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -913,7 +913,7 @@ class ModflowSwt(Package):
         filenames = [None for x in range(15)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSwt.ftype()
+                ext_unit_dict, filetype=ModflowSwt._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -971,9 +971,9 @@ class ModflowSwt(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SWT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 35

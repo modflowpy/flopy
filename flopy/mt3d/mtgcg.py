@@ -94,9 +94,9 @@ class Mt3dGcg(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dGcg.defaultunit()
+            unitnumber = Mt3dGcg._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dGcg.reservedunit()
+            unitnumber = Mt3dGcg._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -105,7 +105,7 @@ class Mt3dGcg(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dGcg.ftype()]
+        name = [Mt3dGcg._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -236,7 +236,7 @@ class Mt3dGcg(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dGcg.ftype()
+                ext_unit_dict, filetype=Mt3dGcg._ftype()
             )
 
         # Construct and return gcg package
@@ -254,13 +254,13 @@ class Mt3dGcg(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "GCG"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 35
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 9

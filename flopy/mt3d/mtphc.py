@@ -32,9 +32,9 @@ class Mt3dPhc(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dPhc.defaultunit()
+            unitnumber = Mt3dPhc._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dPhc.reservedunit()
+            unitnumber = Mt3dPhc._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -43,7 +43,7 @@ class Mt3dPhc(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dPhc.ftype()]
+        name = [Mt3dPhc._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -134,13 +134,13 @@ class Mt3dPhc(Package):
         return
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PHC"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 38
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 38

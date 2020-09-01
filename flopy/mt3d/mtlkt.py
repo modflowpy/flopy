@@ -122,9 +122,9 @@ class Mt3dLkt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dLkt.reservedunit()
+            unitnumber = Mt3dLkt._reservedunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dLkt.reservedunit()
+            unitnumber = Mt3dLkt._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -154,13 +154,13 @@ class Mt3dLkt(Package):
                 fname=fname,
                 extension=None,
                 binflag=False,
-                package=Mt3dLkt.ftype(),
+                package=Mt3dLkt._ftype(),
             )
         else:
             icbclk = 0
 
         # Fill namefile items
-        name = [Mt3dLkt.ftype()]
+        name = [Mt3dLkt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -503,7 +503,7 @@ class Mt3dLkt(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dLkt.ftype()
+                ext_unit_dict, filetype=Mt3dLkt._ftype()
             )
             if icbclk > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -544,13 +544,13 @@ class Mt3dLkt(Package):
         return dtype
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "LKT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 45
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 18

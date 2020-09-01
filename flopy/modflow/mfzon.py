@@ -75,7 +75,7 @@ class ModflowZon(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowZon.defaultunit()
+            unitnumber = ModflowZon._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -84,7 +84,7 @@ class ModflowZon(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowZon.ftype()]
+        name = [ModflowZon._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -221,7 +221,7 @@ class ModflowZon(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowZon.ftype()
+                ext_unit_dict, filetype=ModflowZon._ftype()
             )
 
         return cls(
@@ -232,9 +232,9 @@ class ModflowZon(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "ZONE"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 1001

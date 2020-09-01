@@ -117,9 +117,9 @@ class Mt3dDsp(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dDsp.defaultunit()
+            unitnumber = Mt3dDsp._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dDsp.reservedunit()
+            unitnumber = Mt3dDsp._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -128,7 +128,7 @@ class Mt3dDsp(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dDsp.ftype()]
+        name = [Mt3dDsp._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -294,7 +294,7 @@ class Mt3dDsp(Package):
 
         Returns
         -------
-        adv :  Mt3dDsp object
+        dsk :  Mt3dDsp object
             Mt3dDsp object.
 
         Examples
@@ -440,7 +440,7 @@ class Mt3dDsp(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dDsp.ftype()
+                ext_unit_dict, filetype=Mt3dDsp._ftype()
             )
 
         return cls(
@@ -456,13 +456,13 @@ class Mt3dDsp(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "DSP"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 33
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 3

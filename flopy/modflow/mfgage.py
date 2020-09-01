@@ -95,7 +95,7 @@ class ModflowGage(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowGage.defaultunit()
+            unitnumber = ModflowGage._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -183,11 +183,14 @@ class ModflowGage(Package):
                 iu = abs(gage_data["unit"][n])
                 fname = files[n]
                 model.add_output_file(
-                    iu, fname=fname, binflag=False, package=ModflowGage.ftype()
+                    iu,
+                    fname=fname,
+                    binflag=False,
+                    package=ModflowGage._ftype(),
                 )
 
         # Fill namefile items
-        name = [ModflowGage.ftype()]
+        name = [ModflowGage._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -241,9 +244,16 @@ class ModflowGage(Package):
         dtype = ModflowGage.get_default_dtype()
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
-    def ncells(self):
-        # Return 0 for the gage package
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have gages (developed for MT3DMS
+        SSM package). Return zero because gage is not added to SSM package.
+
+        Returns
+        -------
+        ncells: int
+            0
+
+        """
         return 0
 
     def write_file(self):
@@ -389,7 +399,7 @@ class ModflowGage(Package):
         filenames = []
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowGage.ftype():
+                if value.filetype == ModflowGage._ftype():
                     unitnumber = key
                     filenames.append(os.path.basename(value.filename))
         for file in files:
@@ -404,9 +414,9 @@ class ModflowGage(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "GAGE"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 120

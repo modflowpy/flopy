@@ -196,6 +196,14 @@ class ModflowLgr(BaseModel):
 
     @property
     def ngrids(self):
+        """Get the number of grids in the LGR model
+
+        Returns
+        -------
+        ngrid : int
+            number of grids (parent and children)
+
+        """
         try:
             return 1 + self.children
         except:

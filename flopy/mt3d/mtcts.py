@@ -321,13 +321,13 @@ class Mt3dCts(Package):
         # dtype = dtype
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "CTS"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 5
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 5

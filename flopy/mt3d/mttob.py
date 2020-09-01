@@ -20,9 +20,9 @@ class Mt3dTob(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dTob.defaultunit()
+            unitnumber = Mt3dTob._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dTob.reservedunit()
+            unitnumber = Mt3dTob._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -31,7 +31,7 @@ class Mt3dTob(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dTob.ftype()]
+        name = [Mt3dTob._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -120,13 +120,13 @@ class Mt3dTob(Package):
         return
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "TOB"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 37
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 12

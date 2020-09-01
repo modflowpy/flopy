@@ -250,7 +250,7 @@ class ModflowStr(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowStr.defaultunit()
+            unitnumber = ModflowStr._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -266,7 +266,7 @@ class ModflowStr(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowStr.ftype()
+                ipakcb, fname=fname, package=ModflowStr._ftype()
             )
         else:
             ipakcb = 0
@@ -274,7 +274,7 @@ class ModflowStr(Package):
         if istcb2 is not None:
             fname = filenames[2]
             model.add_output_file(
-                istcb2, fname=fname, package=ModflowStr.ftype()
+                istcb2, fname=fname, package=ModflowStr._ftype()
             )
         else:
             ipakcb = 0
@@ -286,7 +286,7 @@ class ModflowStr(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowStr.ftype()]
+        name = [ModflowStr._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -557,9 +557,16 @@ class ModflowStr(Package):
         )
         return dtype, dtype2
 
-    def ncells(self):
-        # Return the  maximum number of cells that have a stream
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have streams (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of str cells
+
+        """
         return self.mxacts
 
     def write_file(self):
@@ -983,7 +990,7 @@ class ModflowStr(Package):
         filenames = [None, None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowStr.ftype()
+                ext_unit_dict, filetype=ModflowStr._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -1014,9 +1021,9 @@ class ModflowStr(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "STR"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 118

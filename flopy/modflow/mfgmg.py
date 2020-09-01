@@ -213,7 +213,7 @@ class ModflowGmg(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowGmg.defaultunit()
+            unitnumber = ModflowGmg._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -232,13 +232,13 @@ class ModflowGmg(Package):
                 fname=fname,
                 extension="gmg.out",
                 binflag=False,
-                package=ModflowGmg.ftype(),
+                package=ModflowGmg._ftype(),
             )
         else:
             iunitmhc = 0
 
         # Fill namefile items
-        name = [ModflowGmg.ftype()]
+        name = [ModflowGmg._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -402,7 +402,7 @@ class ModflowGmg(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowGmg.ftype()
+                ext_unit_dict, filetype=ModflowGmg._ftype()
             )
             if iunitmhc > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -430,9 +430,9 @@ class ModflowGmg(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "GMG"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 27

@@ -202,14 +202,14 @@ class ModflowAg(Package):
 
         # setup the package parent class
         if unitnumber is None:
-            unitnumber = ModflowAg.defaultunit()
+            unitnumber = ModflowAg._defaultunit()
 
         if filenames is None:
             filenames = [None]
         elif isinstance(filenames, str):
             filenames = [filenames]
 
-        name = [ModflowAg.ftype()]
+        name = [ModflowAg._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -903,11 +903,11 @@ class ModflowAg(Package):
         )
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 69
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "AG"
 
     @property

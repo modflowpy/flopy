@@ -159,7 +159,7 @@ class ModflowFhb(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowFhb.defaultunit()
+            unitnumber = ModflowFhb._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -174,13 +174,13 @@ class ModflowFhb(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowFhb.ftype()
+                ipakcb, fname=fname, package=ModflowFhb._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowFhb.ftype()]
+        name = [ModflowFhb._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -337,9 +337,16 @@ class ModflowFhb(Package):
             dtype.append((name, np.float32))
         return np.dtype(dtype)
 
-    def ncells(self):
-        # Return the  maximum number of cells that have a fhb flow or
-        # head boundary. (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have fhb (developed for MT3DMS
+        SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of fhb cells
+
+        """
         return self.nflw + self.nhed
 
     def write_file(self):
@@ -467,7 +474,7 @@ class ModflowFhb(Package):
         iufhb = None
         if ext_unit_dict is not None:
             iufhb, fname = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowFhb.ftype()
+                ext_unit_dict, filetype=ModflowFhb._ftype()
             )
 
         # Dataset 0 -- header
@@ -744,7 +751,7 @@ class ModflowFhb(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowFhb.ftype()
+                ext_unit_dict, filetype=ModflowFhb._ftype()
             )
         if ipakcb > 0:
             iu, filenames[1] = model.get_ext_dict_attr(
@@ -780,9 +787,9 @@ class ModflowFhb(Package):
         return fhb
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "FHB"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 40

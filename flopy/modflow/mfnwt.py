@@ -245,7 +245,7 @@ class ModflowNwt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowNwt.defaultunit()
+            unitnumber = ModflowNwt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -254,7 +254,7 @@ class ModflowNwt(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowNwt.ftype()]
+        name = [ModflowNwt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -550,7 +550,7 @@ class ModflowNwt(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowNwt.ftype()
+                ext_unit_dict, filetype=ModflowNwt._ftype()
             )
         kwargs["unitnumber"] = unitnumber
         kwargs["filenames"] = filenames
@@ -559,9 +559,9 @@ class ModflowNwt(Package):
         return cls(model, **kwargs)
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "NWT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 32

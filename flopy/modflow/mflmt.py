@@ -89,7 +89,7 @@ class ModflowLmt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowLmt.defaultunit()
+            unitnumber = ModflowLmt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -98,7 +98,7 @@ class ModflowLmt(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowLmt.ftype()]
+        name = [ModflowLmt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -254,7 +254,7 @@ class ModflowLmt(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowLmt.ftype()
+                ext_unit_dict, filetype=ModflowLmt._ftype()
             )
 
         return cls(
@@ -269,9 +269,9 @@ class ModflowLmt(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "LMT6"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 30

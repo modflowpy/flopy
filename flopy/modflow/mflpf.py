@@ -216,7 +216,7 @@ class ModflowLpf(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowLpf.defaultunit()
+            unitnumber = ModflowLpf._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -231,13 +231,13 @@ class ModflowLpf(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowLpf.ftype()
+                ipakcb, fname=fname, package=ModflowLpf._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowLpf.ftype()]
+        name = [ModflowLpf._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -714,7 +714,7 @@ class ModflowLpf(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowLpf.ftype()
+                ext_unit_dict, filetype=ModflowLpf._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -759,9 +759,9 @@ class ModflowLpf(Package):
         return lpf
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "LPF"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 15

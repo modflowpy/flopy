@@ -149,7 +149,7 @@ class ModflowDis(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowDis.defaultunit()
+            unitnumber = ModflowDis._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -158,7 +158,7 @@ class ModflowDis(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowDis.ftype()]
+        name = [ModflowDis._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -1024,7 +1024,7 @@ class ModflowDis(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowDis.ftype()
+                ext_unit_dict, filetype=ModflowDis._ftype()
             )
 
         # create dis object instance
@@ -1063,11 +1063,11 @@ class ModflowDis(Package):
         return dis
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "DIS"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 11
 
 

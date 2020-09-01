@@ -163,7 +163,7 @@ class ModflowOc(Package):
 
         """
         if unitnumber is None:
-            unitnumber = ModflowOc.defaultunit()
+            unitnumber = ModflowOc._defaultunit()
         elif isinstance(unitnumber, list):
             if len(unitnumber) < 5:
                 for idx in range(len(unitnumber), 6):
@@ -296,7 +296,7 @@ class ModflowOc(Package):
                 iu, fname=fname, extension=extension[4], binflag=binflag
             )
 
-        name = [ModflowOc.ftype()]
+        name = [ModflowOc._ftype()]
         extra = [""]
         extension = [extension[0]]
         unitnumber = unitnumber[0]
@@ -1066,7 +1066,7 @@ class ModflowOc(Package):
         unitnumber = [14, 0, 0, 0, 0]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowOc.ftype():
+                if value.filetype == ModflowOc._ftype():
                     unitnumber[0] = key
                     fname = os.path.basename(value.filename)
         else:
@@ -1118,9 +1118,9 @@ class ModflowOc(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "OC"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return [14, 0, 0, 0, 0]

@@ -367,7 +367,7 @@ class ModflowSfr2(Package):
         """
         # set default unit number of one is not specified
         if unit_number is None:
-            unit_number = ModflowSfr2.defaultunit()
+            unit_number = ModflowSfr2._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -383,7 +383,7 @@ class ModflowSfr2(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSfr2.ftype()
+                ipakcb, fname=fname, package=ModflowSfr2._ftype()
             )
         else:
             ipakcb = 0
@@ -403,13 +403,13 @@ class ModflowSfr2(Package):
                     abs(istcb2),
                     fname=fname,
                     binflag=binflag,
-                    package=ModflowSfr2.ftype(),
+                    package=ModflowSfr2._ftype(),
                 )
         else:
             istcb2 = 0
 
         # Fill namefile items
-        name = [ModflowSfr2.ftype()]
+        name = [ModflowSfr2._ftype()]
         units = [unit_number]
         extra = [""]
 
@@ -1056,7 +1056,7 @@ class ModflowSfr2(Package):
         filenames = [None, None, None]
         if ext_unit_dict is not None:
             for key, value in ext_unit_dict.items():
-                if value.filetype == ModflowSfr2.ftype():
+                if value.filetype == ModflowSfr2._ftype():
                     unitnumber = key
                     filenames[0] = os.path.basename(value.filename)
 
@@ -2243,11 +2243,11 @@ class ModflowSfr2(Package):
         recarray2shp(ra, geoms, f, **kwargs)
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SFR"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 17
 
 

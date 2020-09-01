@@ -188,9 +188,9 @@ class Mt3dAdv(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dAdv.defaultunit()
+            unitnumber = Mt3dAdv._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dAdv.reservedunit()
+            unitnumber = Mt3dAdv._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -199,7 +199,7 @@ class Mt3dAdv(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dAdv.ftype()]
+        name = [Mt3dAdv._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -413,7 +413,7 @@ class Mt3dAdv(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dAdv.ftype()
+                ext_unit_dict, filetype=Mt3dAdv._ftype()
             )
 
         # Construct and return adv package
@@ -439,13 +439,13 @@ class Mt3dAdv(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "ADV"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 32
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 2

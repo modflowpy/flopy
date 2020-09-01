@@ -118,7 +118,7 @@ class ModflowPcg(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowPcg.defaultunit()
+            unitnumber = ModflowPcg._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -127,7 +127,7 @@ class ModflowPcg(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowPcg.ftype()]
+        name = [ModflowPcg._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -339,7 +339,7 @@ class ModflowPcg(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowPcg.ftype()
+                ext_unit_dict, filetype=ModflowPcg._ftype()
             )
 
         return cls(
@@ -361,9 +361,9 @@ class ModflowPcg(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PCG"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 27

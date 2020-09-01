@@ -64,7 +64,7 @@ class ModflowSwr1(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSwr1.defaultunit()
+            unitnumber = ModflowSwr1._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -73,7 +73,7 @@ class ModflowSwr1(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowSwr1.ftype()]
+        name = [ModflowSwr1._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -181,16 +181,16 @@ class ModflowSwr1(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSwr1.ftype()
+                ext_unit_dict, filetype=ModflowSwr1._ftype()
             )
 
         # return swr object
         return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SWR"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 36

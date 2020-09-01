@@ -232,9 +232,9 @@ class Mt3dBtn(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dBtn.defaultunit()
+            unitnumber = Mt3dBtn._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dBtn.reservedunit()
+            unitnumber = Mt3dBtn._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -243,7 +243,7 @@ class Mt3dBtn(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dBtn.ftype()]
+        name = [Mt3dBtn._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -1239,7 +1239,7 @@ class Mt3dBtn(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dBtn.ftype()
+                ext_unit_dict, filetype=Mt3dBtn._ftype()
             )
 
         return cls(
@@ -1295,13 +1295,13 @@ class Mt3dBtn(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "BTN"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 31
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 1

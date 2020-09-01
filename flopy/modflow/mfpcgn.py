@@ -206,7 +206,7 @@ class ModflowPcgn(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowPcgn.defaultunit()
+            unitnumber = ModflowPcgn._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -226,7 +226,7 @@ class ModflowPcgn(Package):
                 fname=fname,
                 extension="pcgni",
                 binflag=False,
-                package=ModflowPcgn.ftype(),
+                package=ModflowPcgn._ftype(),
             )
         else:
             unit_pc = 0
@@ -239,7 +239,7 @@ class ModflowPcgn(Package):
                 fname=fname,
                 extension="pcgnt",
                 binflag=False,
-                package=ModflowPcgn.ftype(),
+                package=ModflowPcgn._ftype(),
             )
         else:
             unit_ts = 0
@@ -253,12 +253,12 @@ class ModflowPcgn(Package):
                     fname=fname,
                     extension="pcgno",
                     binflag=False,
-                    package=ModflowPcgn.ftype(),
+                    package=ModflowPcgn._ftype(),
                 )
         else:
             ipunit = -1
 
-        name = [ModflowPcgn.ftype()]
+        name = [ModflowPcgn._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -543,7 +543,7 @@ class ModflowPcgn(Package):
         filenames = [None, None, None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowPcgn.ftype()
+                ext_unit_dict, filetype=ModflowPcgn._ftype()
             )
             if unit_pc > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -583,9 +583,9 @@ class ModflowPcgn(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PCGN"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 27
