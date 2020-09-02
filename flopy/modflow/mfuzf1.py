@@ -629,7 +629,7 @@ class ModflowUzf1(Package):
 
         # Data Set 8
         # {IFTUNIT: [IUZROW, IUZCOL, IUZOPT]}
-        self.uzgag = uzgag
+        self._uzgag = uzgag
 
         # Dataset 9, 11, 13 and 15 will be written automatically in the
         # write_file function
@@ -699,7 +699,7 @@ class ModflowUzf1(Package):
             Dictionary containing uzf gage data for each gage
 
         """
-        return self.uzgag
+        return self._uzgag
 
     def _2list(self, arg):
         # input as a 3D array
