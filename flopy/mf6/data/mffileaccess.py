@@ -1502,6 +1502,7 @@ class MFFileAccessList(MFFileAccess):
         else:
             # read variables
             var_index = 0
+            repeat_count = 0
             data = ""
             for data_item_index, data_item in enumerate(
                 data_set.data_item_structures
@@ -1552,10 +1553,20 @@ class MFFileAccessList(MFFileAccess):
                                 # comment mark found and expecting optional
                                 # data_item, we are done
                                 break
-                            if (
-                                data_index >= arr_line_len
-                                and data_item.optional
-                            ):
+                            if data_index >= arr_line_len:
+                                if data_item.optional:
+                                    break
+                                else:
+                                    unknown_repeats = (
+                                        storage.resolve_shape_list(
+                                            data_item,
+                                            repeat_count,
+                                            current_key,
+                                            data_line,
+                                        )[1]
+                                    )
+                                    if unknown_repeats:
+                                        break
                                 break
                             more_data_expected = True
                             unknown_repeats = False

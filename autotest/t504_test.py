@@ -255,7 +255,7 @@ def test005_advgw_tidal():
 
     # add a stress period beyond nper
     spd = ghb.stress_period_data.get_data()
-    spd[20] = copy.deepcopy(spd[9])
+    spd[20] = copy.deepcopy(spd[0])
     ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation
