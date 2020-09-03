@@ -72,7 +72,7 @@ class ModflowMlt(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowMlt.defaultunit()
+            unitnumber = ModflowMlt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -81,7 +81,7 @@ class ModflowMlt(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowMlt.ftype()]
+        name = [ModflowMlt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -229,7 +229,7 @@ class ModflowMlt(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowMlt.ftype()
+                ext_unit_dict, filetype=ModflowMlt._ftype()
             )
 
         return cls(
@@ -278,9 +278,9 @@ class ModflowMlt(Package):
         return multarray
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "MULT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 1002

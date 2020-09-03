@@ -258,7 +258,8 @@ class VertexGrid(Grid):
         Method to get a set of cell vertices for a single cell
             used in the Shapefile export utilities
         :param cellid: (int) cellid number
-        :return: list of x,y cell vertices
+        Returns
+        ------- list of x,y cell vertices
         """
         self._copy_cache = False
         cell_verts = list(zip(self.xvertices[cellid], self.yvertices[cellid]))

@@ -71,7 +71,7 @@ class ModflowMnwi(Package):
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowMnwi.defaultunit()
+            unitnumber = ModflowMnwi._defaultunit()
 
         # determine the number of unique unit numbers in dataset 3
         unique_units = []
@@ -100,7 +100,7 @@ class ModflowMnwi(Package):
                 fname=fname,
                 extension="wel1",
                 binflag=False,
-                package=ModflowMnwi.ftype(),
+                package=ModflowMnwi._ftype(),
             )
         else:
             wel1flag = 0
@@ -113,7 +113,7 @@ class ModflowMnwi(Package):
                 fname=fname,
                 extension="qsum",
                 binflag=False,
-                package=ModflowMnwi.ftype(),
+                package=ModflowMnwi._ftype(),
             )
         else:
             qsumflag = 0
@@ -126,7 +126,7 @@ class ModflowMnwi(Package):
                 fname=fname,
                 extension="bynd",
                 binflag=False,
-                package=ModflowMnwi.ftype(),
+                package=ModflowMnwi._ftype(),
             )
         else:
             byndflag = 0
@@ -139,11 +139,11 @@ class ModflowMnwi(Package):
                 fname=fname,
                 extension="{:04d}.mnwobs".format(iu),
                 binflag=False,
-                package=ModflowMnwi.ftype(),
+                package=ModflowMnwi._ftype(),
             )
             idx += 1
 
-        name = [ModflowMnwi.ftype()]
+        name = [ModflowMnwi._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -260,7 +260,7 @@ class ModflowMnwi(Package):
         filenames = [None for x in range(nfn)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowMnwi.ftype()
+                ext_unit_dict, filetype=ModflowMnwi._ftype()
             )
             if wel1flag > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -389,9 +389,9 @@ class ModflowMnwi(Package):
         f.close()
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "MNWI"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 58

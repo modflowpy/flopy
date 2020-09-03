@@ -72,7 +72,7 @@ class ModflowPval(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowPval.defaultunit()
+            unitnumber = ModflowPval._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -81,7 +81,7 @@ class ModflowPval(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowPval.ftype()]
+        name = [ModflowPval._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -215,7 +215,7 @@ class ModflowPval(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowPval.ftype()
+                ext_unit_dict, filetype=ModflowPval._ftype()
             )
 
         return cls(
@@ -226,9 +226,9 @@ class ModflowPval(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PVAL"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 1005

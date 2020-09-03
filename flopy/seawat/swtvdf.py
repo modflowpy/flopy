@@ -209,7 +209,7 @@ class SeawatVdf(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = SeawatVdf.defaultunit()
+            unitnumber = SeawatVdf._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -218,7 +218,7 @@ class SeawatVdf(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [SeawatVdf.ftype()]
+        name = [SeawatVdf._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -536,7 +536,7 @@ class SeawatVdf(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=SeawatVdf.ftype()
+                ext_unit_dict, filetype=SeawatVdf._ftype()
             )
 
         # Construct and return vdf package
@@ -564,9 +564,9 @@ class SeawatVdf(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "VDF"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 37

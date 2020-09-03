@@ -124,7 +124,7 @@ class ModflowGhb(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowGhb.defaultunit()
+            unitnumber = ModflowGhb._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -139,13 +139,13 @@ class ModflowGhb(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowGhb.ftype()
+                ipakcb, fname=fname, package=ModflowGhb._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowGhb.ftype()]
+        name = [ModflowGhb._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -187,10 +187,15 @@ class ModflowGhb(Package):
             )
         self.stress_period_data = MfList(self, stress_period_data)
 
-    def ncells(self):
-        """
-        Returns the  maximum number of cells that have a ghb cell
-        (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have general head boundaries
+        (developed for MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of ghb cells
+
         """
         return self.stress_period_data.mxact
 
@@ -260,7 +265,7 @@ class ModflowGhb(Package):
         return dtype
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["cond"]
 
     @classmethod
@@ -314,9 +319,9 @@ class ModflowGhb(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "GHB"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 23

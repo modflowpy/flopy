@@ -169,9 +169,9 @@ class Mt3dSsm(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = Mt3dSsm.defaultunit()
+            unitnumber = Mt3dSsm._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dSsm.reservedunit()
+            unitnumber = Mt3dSsm._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -180,7 +180,7 @@ class Mt3dSsm(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dSsm.ftype()]
+        name = [Mt3dSsm._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -273,7 +273,7 @@ class Mt3dSsm(Package):
                 if (p.label == "BAS6") and (p.instance != None):
                     self.mxss += (p.instance.ibound.array < 0).sum()
                 elif p.instance != None:
-                    self.mxss += p.instance.ncells()
+                    self.mxss += p.instance._ncells()
         else:
             self.mxss = mxss
 
@@ -813,7 +813,7 @@ class Mt3dSsm(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dSsm.ftype()
+                ext_unit_dict, filetype=Mt3dSsm._ftype()
             )
 
         # Construct and return ssm package
@@ -829,13 +829,13 @@ class Mt3dSsm(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SSM"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 34
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 4

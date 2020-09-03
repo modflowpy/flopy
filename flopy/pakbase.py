@@ -675,7 +675,7 @@ class Package(PackageInterface):
         return np.dtype(newdtypes)
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         """
         This should be overriden for individual packages that support an
         sfac multiplier for individual list columns
@@ -997,7 +997,7 @@ class Package(PackageInterface):
             partype = ["shead", "ehead"]
 
         # get the list columns that should be scaled with sfac
-        sfac_columns = pak_type.get_sfac_columns()
+        sfac_columns = pak_type._get_sfac_columns()
 
         # read parameter data
         if nppak > 0:
@@ -1138,7 +1138,7 @@ class Package(PackageInterface):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=pak_type.ftype()
+                ext_unit_dict, filetype=pak_type._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(

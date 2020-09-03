@@ -115,7 +115,7 @@ class ModflowBcf(Package):
     ):
 
         if unitnumber is None:
-            unitnumber = ModflowBcf.defaultunit()
+            unitnumber = ModflowBcf._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -130,13 +130,13 @@ class ModflowBcf(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowBcf.ftype()
+                ipakcb, fname=fname, package=ModflowBcf._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowBcf.ftype()]
+        name = [ModflowBcf._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -520,7 +520,7 @@ class ModflowBcf(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowBcf.ftype()
+                ext_unit_dict, filetype=ModflowBcf._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -554,9 +554,9 @@ class ModflowBcf(Package):
         return bcf
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "BCF6"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 15

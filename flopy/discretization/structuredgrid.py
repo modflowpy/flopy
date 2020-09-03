@@ -778,7 +778,8 @@ class StructuredGrid(Grid):
             used in the Shapefile export utilities
         :param i: (int) cell row number
         :param j: (int) cell column number
-        :return: list of x,y cell vertices
+        Returns
+        ------- list of x,y cell vertices
         """
         self._copy_cache = False
         cell_verts = [

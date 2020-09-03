@@ -19,12 +19,12 @@ class ModflowPbc(Package):
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowPbc.defaultunit()
+            unitnumber = ModflowPbc._defaultunit()
 
         # Call ancestor's init to set self.parent, extension, name and
         # unit number
         Package.__init__(
-            self, model, extension, ModflowPbc.ftype(), unitnumber
+            self, model, extension, ModflowPbc._ftype(), unitnumber
         )
         self.heading = (
             "# {} package for ".format(self.name[0])
@@ -74,9 +74,16 @@ class ModflowPbc(Package):
         self.np = 0
         self.parent.add_package(self)
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have recharge
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have pbc boundaries (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of pbc cells
+
+        """
         return self.mxactp
 
     def write_file(self):
@@ -117,9 +124,9 @@ class ModflowPbc(Package):
         f_pbc.close()
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PBC"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 30

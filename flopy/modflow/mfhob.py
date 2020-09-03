@@ -100,7 +100,7 @@ class ModflowHob(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowHob.defaultunit()
+            unitnumber = ModflowHob._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -123,13 +123,13 @@ class ModflowHob(Package):
                 fname=fname,
                 extension="hob.out",
                 binflag=False,
-                package=ModflowHob.ftype(),
+                package=ModflowHob._ftype(),
             )
         else:
             iuhobsv = 0
 
         # Fill namefile items
-        name = [ModflowHob.ftype()]
+        name = [ModflowHob._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -482,7 +482,7 @@ class ModflowHob(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowHob.ftype()
+                ext_unit_dict, filetype=ModflowHob._ftype()
             )
             if iuhobsv is not None:
                 if iuhobsv > 0:
@@ -502,11 +502,11 @@ class ModflowHob(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "HOB"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 39
 
 

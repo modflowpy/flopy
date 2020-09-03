@@ -252,7 +252,7 @@ class ZoneBudget(object):
         return
 
     def get_model_shape(self):
-        """
+        """Get model shape
 
         Returns
         -------
@@ -582,23 +582,6 @@ class ZoneBudget(object):
         self._compute_mass_balance(kstpkper, totim)
 
         return
-
-    # def _get_internal_flow_record_names(self):
-    #     """
-    #     Get internal flow record names
-    #
-    #     Returns
-    #     -------
-    #     iflow_recnames : np.recarray
-    #         recarray of internal flow terms
-    #
-    #     """
-    #     iflow_recnames = OrderedDict()
-    #     for z, a in iter(self._zonenamedict.items()):
-    #         iflow_recnames[z] = '{}'.format(a)
-    #     dtype = np.dtype([('zone', '<i4'), ('name', (str, 50))])
-    #     iflow_recnames = np.array(list(iflow_recnames.items()), dtype=dtype)
-    #     return iflow_recnames
 
     def _add_empty_record(
         self, recordarray, recname, kstpkper=None, totim=None
@@ -1794,26 +1777,35 @@ def sum_flux_tuples(fromzones, tozones, fluxes):
 
 
 def sort_tuple(tup, n=2):
-    """
-    Sort a tuple by the first n values
-    :param tup:
-    :param n:
-    :return:
+    """Sort a tuple by the first n values
+
+    tup: tuple
+        input tuple
+    n : int
+        values to sort tuple by (default is 2)
+
+    Returns
+    -------
+    tup : tuple
+        tuple sorted by the first n values
+
     """
     return tuple(sorted(tup, key=lambda t: t[:n]))
 
 
 def get_totim_modflow6(tdis):
-    """
-    Create a totim array from the tdis file in modflow 6
+    """Create a totim array from the tdis file in modflow 6
 
     Parameters
     ----------
     tdis : ModflowTdis object
+        MODDFLOW 6 TDIS object
 
     Returns
     -------
-        totim : np.ndarray
+    totim : np.ndarray
+        total time vector for simulation
+
 
     """
     recarray = tdis.perioddata.array

@@ -86,7 +86,7 @@ class ModflowSor(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSor.defaultunit()
+            unitnumber = ModflowSor._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -95,7 +95,7 @@ class ModflowSor(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowSor.ftype()]
+        name = [ModflowSor._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -209,16 +209,16 @@ class ModflowSor(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSor.ftype()
+                ext_unit_dict, filetype=ModflowSor._ftype()
             )
 
         # return sor object
         return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SOR"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 26

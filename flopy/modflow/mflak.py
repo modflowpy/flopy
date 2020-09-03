@@ -287,7 +287,7 @@ class ModflowLak(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowLak.defaultunit()
+            unitnumber = ModflowLak._defaultunit()
 
         # set filenames
         tabdata = False
@@ -310,7 +310,7 @@ class ModflowLak(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowLak.ftype()
+                ipakcb, fname=fname, package=ModflowLak._ftype()
             )
         else:
             ipakcb = 0
@@ -347,7 +347,7 @@ class ModflowLak(Package):
                 model.add_external(fname, iu)
 
         # Fill namefile items
-        name = [ModflowLak.ftype()]
+        name = [ModflowLak._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -495,9 +495,16 @@ class ModflowLak(Package):
 
         return
 
-    def ncells(self):
-        # Return the  maximum number of cells that have a stream
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that can have lakes (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of lak cells
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return nlay * nrow * ncol
 
@@ -892,7 +899,7 @@ class ModflowLak(Package):
         filenames = [None for x in range(n)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowLak.ftype()
+                ext_unit_dict, filetype=ModflowLak._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -930,9 +937,9 @@ class ModflowLak(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "LAK"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 119

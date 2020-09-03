@@ -122,7 +122,7 @@ class ModflowDrn(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowDrn.defaultunit()
+            unitnumber = ModflowDrn._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -137,7 +137,7 @@ class ModflowDrn(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowDrn.ftype()
+                ipakcb, fname=fname, package=ModflowDrn._ftype()
             )
         else:
             ipakcb = 0
@@ -152,7 +152,7 @@ class ModflowDrn(Package):
         if self.is_drt:
             name = ["DRT"]
         else:
-            name = [ModflowDrn.ftype()]
+            name = [ModflowDrn._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -224,9 +224,16 @@ class ModflowDrn(Package):
             )
         return dtype
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have drains (developed for MT3DMS SSM package)
-        # print 'Function must be implemented properly for drn package'
+    def _ncells(self):
+        """Maximum number of cells that have drains (developed for MT3DMS
+        SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of drain cells
+
+        """
         return self.stress_period_data.mxact
 
     def write_file(self, check=True):
@@ -284,7 +291,7 @@ class ModflowDrn(Package):
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["cond"]
 
     @classmethod
@@ -335,9 +342,9 @@ class ModflowDrn(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "DRN"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 21

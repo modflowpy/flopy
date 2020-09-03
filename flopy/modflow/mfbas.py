@@ -82,11 +82,11 @@ class ModflowBas(Package):
     """
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "BAS6"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 13
 
     def __init__(
@@ -109,7 +109,7 @@ class ModflowBas(Package):
         """
 
         if unitnumber is None:
-            unitnumber = ModflowBas.defaultunit()
+            unitnumber = ModflowBas._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -118,7 +118,7 @@ class ModflowBas(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowBas.ftype()]
+        name = [ModflowBas._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -394,7 +394,7 @@ class ModflowBas(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowBas.ftype()
+                ext_unit_dict, filetype=ModflowBas._ftype()
             )
 
         # create bas object and return

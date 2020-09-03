@@ -155,7 +155,7 @@ class SeawatVsc(Package):
             )
 
         if unitnumber is None:
-            unitnumber = SeawatVsc.defaultunit()
+            unitnumber = SeawatVsc._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -164,7 +164,7 @@ class SeawatVsc(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [SeawatVsc.ftype()]
+        name = [SeawatVsc._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -504,7 +504,7 @@ class SeawatVsc(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=SeawatVsc.ftype()
+                ext_unit_dict, filetype=SeawatVsc._ftype()
             )
 
         # Construct and return vsc package
@@ -528,9 +528,9 @@ class SeawatVsc(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "VSC"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 38

@@ -115,7 +115,7 @@ class ModflowChd(Package):
 
         # set default unit number if one is not specified
         if unitnumber is None:
-            unitnumber = ModflowChd.defaultunit()
+            unitnumber = ModflowChd._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -124,7 +124,7 @@ class ModflowChd(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowChd.ftype()]
+        name = [ModflowChd._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -163,8 +163,16 @@ class ModflowChd(Package):
         self.options = options
         self.parent.add_package(self)
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have recharge (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have constant heads (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of chd cells
+
+        """
         return self.stress_period_data.mxact
 
     def write_file(self):
@@ -222,7 +230,7 @@ class ModflowChd(Package):
         return dtype
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["shead", "ehead"]
 
     @classmethod
@@ -274,9 +282,9 @@ class ModflowChd(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "CHD"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 24

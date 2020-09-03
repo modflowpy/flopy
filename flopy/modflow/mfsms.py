@@ -275,7 +275,7 @@ class ModflowSms(Package):
     ):
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSms.defaultunit()
+            unitnumber = ModflowSms._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -284,7 +284,7 @@ class ModflowSms(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowSms.ftype()]
+        name = [ModflowSms._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -626,7 +626,7 @@ class ModflowSms(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSms.ftype()
+                ext_unit_dict, filetype=ModflowSms._ftype()
             )
 
         return cls(
@@ -666,9 +666,9 @@ class ModflowSms(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SMS"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 32

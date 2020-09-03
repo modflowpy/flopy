@@ -401,7 +401,7 @@ class ModflowUzf1(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowUzf1.defaultunit()
+            unitnumber = ModflowUzf1._defaultunit()
 
         # set filenames
         nlen = 3
@@ -420,7 +420,7 @@ class ModflowUzf1(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                abs(ipakcb), fname=fname, package=ModflowUzf1.ftype()
+                abs(ipakcb), fname=fname, package=ModflowUzf1._ftype()
             )
         else:
             ipakcb = 0
@@ -431,7 +431,7 @@ class ModflowUzf1(Package):
                 abs(iuzfcb2),
                 fname=fname,
                 extension="uzfcb2.bin",
-                package=ModflowUzf1.ftype(),
+                package=ModflowUzf1._ftype(),
             )
         else:
             iuzfcb2 = 0
@@ -456,7 +456,7 @@ class ModflowUzf1(Package):
                     fname=fname,
                     binflag=False,
                     extension=uzgagext,
-                    package=ModflowUzf1.ftype(),
+                    package=ModflowUzf1._ftype(),
                 )
                 ipos += 1
                 # handle case where iftunit is listed in the values
@@ -467,7 +467,7 @@ class ModflowUzf1(Package):
                     uzgag[-np.abs(key)] = []
 
         # Fill namefile items
-        name = [ModflowUzf1.ftype()]
+        name = [ModflowUzf1._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -676,6 +676,14 @@ class ModflowUzf1(Package):
 
     @property
     def nuzgag(self):
+        """Number of uzf gages
+
+        Returns
+        -------
+        nuzgag : int
+            Number of uzf gages
+
+        """
         if self.uzgag is None:
             return 0
         else:
@@ -683,6 +691,14 @@ class ModflowUzf1(Package):
 
     @property
     def uzgag(self):
+        """Get the uzf gage data
+
+        Returns
+        -------
+        uzgag : dict
+            Dictionary containing uzf gage data for each gage
+
+        """
         return self._uzgag
 
     def _2list(self, arg):
@@ -698,9 +714,16 @@ class ModflowUzf1(Package):
             lst = arg
         return lst
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have recharge
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have uzf (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of uzf cells
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return nrow * ncol
 
@@ -1108,7 +1131,7 @@ class ModflowUzf1(Package):
         filenames = [None for x in range(3 + nuzgag)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowUzf1.ftype()
+                ext_unit_dict, filetype=ModflowUzf1._ftype()
             )
             if abs(ipakcb) > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -1159,11 +1182,11 @@ class ModflowUzf1(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "UZF"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 19
 
 

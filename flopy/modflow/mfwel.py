@@ -158,7 +158,7 @@ class ModflowWel(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowWel.defaultunit()
+            unitnumber = ModflowWel._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -173,13 +173,13 @@ class ModflowWel(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowWel.ftype()
+                ipakcb, fname=fname, package=ModflowWel._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowWel.ftype()]
+        name = [ModflowWel._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -269,17 +269,38 @@ class ModflowWel(Package):
 
     @property
     def phiramp_unit(self):
+        """Get phiramp unit
+
+        Returns
+        -------
+        iunitramp: int
+            unit number of phiramp file
+
+        """
         err = "phiramp_unit will be replaced " "with iunitramp for consistency"
         warnings.warn(err, DeprecationWarning)
         return self.iunitramp
 
     @phiramp_unit.setter
     def phiramp_unit(self, phiramp_unit):
+        """Set phiramp unit
+
+        Returns
+        -------
+
+        """
         self.iunitramp = phiramp_unit
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have a well
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have wells (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of wel cells
+
+        """
         return self.stress_period_data.mxact
 
     def write_file(self, f=None):
@@ -382,7 +403,7 @@ class ModflowWel(Package):
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["flux"]
 
     @classmethod
@@ -434,9 +455,9 @@ class ModflowWel(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "WEL"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 20

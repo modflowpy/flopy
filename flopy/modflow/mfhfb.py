@@ -116,7 +116,7 @@ class ModflowHfb(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowHfb.defaultunit()
+            unitnumber = ModflowHfb._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -125,7 +125,7 @@ class ModflowHfb(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowHfb.ftype()]
+        name = [ModflowHfb._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -181,10 +181,14 @@ class ModflowHfb(Package):
 
         self.parent.add_package(self)
 
-    def ncells(self):
-        """
-        Returns the maximum number of cell pairs that have horizontal
-        flow barriers (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cell pairs that have horizontal flow barriers
+         (developed for MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of hfb cells
 
         """
         return self.nhfbnp
@@ -250,7 +254,7 @@ class ModflowHfb(Package):
         return dtype
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["hydchr"]
 
     @classmethod
@@ -409,7 +413,7 @@ class ModflowHfb(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowHfb.ftype()
+                ext_unit_dict, filetype=ModflowHfb._ftype()
             )
 
         return cls(
@@ -425,9 +429,9 @@ class ModflowHfb(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "HFB6"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 29

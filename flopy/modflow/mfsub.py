@@ -255,7 +255,7 @@ class ModflowSub(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowSub.defaultunit()
+            unitnumber = ModflowSub._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -271,7 +271,7 @@ class ModflowSub(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowSub.ftype()
+                ipakcb, fname=fname, package=ModflowSub._ftype()
             )
         else:
             ipakcb = 0
@@ -282,7 +282,7 @@ class ModflowSub(Package):
                 idsave,
                 fname=fname,
                 extension="rst",
-                package=ModflowSub.ftype(),
+                package=ModflowSub._ftype(),
             )
         else:
             idsave = 0
@@ -310,12 +310,12 @@ class ModflowSub(Package):
                     iu = ids15[k]
                 fname = filenames[idx + 3]
                 model.add_output_file(
-                    iu, fname=fname, extension=ext, package=ModflowSub.ftype()
+                    iu, fname=fname, extension=ext, package=ModflowSub._ftype()
                 )
                 idx += 1
 
         extensions = [extension]
-        name = [ModflowSub.ftype()]
+        name = [ModflowSub._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -905,7 +905,7 @@ class ModflowSub(Package):
         filenames = [None for x in range(9)]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowSub.ftype()
+                ext_unit_dict, filetype=ModflowSub._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -963,9 +963,9 @@ class ModflowSub(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SUB"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 32

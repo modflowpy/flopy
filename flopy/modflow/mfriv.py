@@ -131,7 +131,7 @@ class ModflowRiv(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowRiv.defaultunit()
+            unitnumber = ModflowRiv._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -146,13 +146,13 @@ class ModflowRiv(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowRiv.ftype()
+                ipakcb, fname=fname, package=ModflowRiv._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowRiv.ftype()]
+        name = [ModflowRiv._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -298,12 +298,19 @@ class ModflowRiv(Package):
         return dtype
 
     @staticmethod
-    def get_sfac_columns():
+    def _get_sfac_columns():
         return ["cond"]
 
-    def ncells(self):
-        # Return the  maximum number of cells that have river
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have rivers (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of riv cells
+
+        """
         return self.stress_period_data.mxact
 
     def write_file(self, check=True):
@@ -396,9 +403,9 @@ class ModflowRiv(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "RIV"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 18

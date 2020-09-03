@@ -110,7 +110,7 @@ class ModflowPks(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowPks.defaultunit()
+            unitnumber = ModflowPks._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -119,7 +119,7 @@ class ModflowPks(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [ModflowPks.ftype()]
+        name = [ModflowPks._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -284,15 +284,15 @@ class ModflowPks(Package):
         filenames = [None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowPks.ftype()
+                ext_unit_dict, filetype=ModflowPks._ftype()
             )
 
         return cls(model, unitnumber=unitnumber, filenames=filenames)
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "PKS"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 27

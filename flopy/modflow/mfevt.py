@@ -101,7 +101,7 @@ class ModflowEvt(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowEvt.defaultunit()
+            unitnumber = ModflowEvt._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -116,13 +116,13 @@ class ModflowEvt(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowEvt.ftype()
+                ipakcb, fname=fname, package=ModflowEvt._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowEvt.ftype()]
+        name = [ModflowEvt._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -170,9 +170,16 @@ class ModflowEvt(Package):
         self.np = 0
         self.parent.add_package(self)
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have
-        # evapotranspiration (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have evapotranspiration (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of evt cells
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return nrow * ncol
 
@@ -405,7 +412,7 @@ class ModflowEvt(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowEvt.ftype()
+                ext_unit_dict, filetype=ModflowEvt._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -423,9 +430,9 @@ class ModflowEvt(Package):
         return evt
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "EVT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 22

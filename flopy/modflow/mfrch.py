@@ -106,7 +106,7 @@ class ModflowRch(Package):
         """
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = ModflowRch.defaultunit()
+            unitnumber = ModflowRch._defaultunit()
 
         # set filenames
         if filenames is None:
@@ -121,13 +121,13 @@ class ModflowRch(Package):
         if ipakcb is not None:
             fname = filenames[1]
             model.add_output_file(
-                ipakcb, fname=fname, package=ModflowRch.ftype()
+                ipakcb, fname=fname, package=ModflowRch._ftype()
             )
         else:
             ipakcb = 0
 
         # Fill namefile items
-        name = [ModflowRch.ftype()]
+        name = [ModflowRch._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -300,9 +300,16 @@ class ModflowRch(Package):
         chk.summarize()
         return chk
 
-    def ncells(self):
-        # Returns the  maximum number of cells that have recharge
-        # (developed for MT3DMS SSM package)
+    def _ncells(self):
+        """Maximum number of cells that have recharge (developed for
+        MT3DMS SSM package).
+
+        Returns
+        -------
+        ncells: int
+            maximum number of rch cells
+
+        """
         nrow, ncol, nlay, nper = self.parent.nrow_ncol_nlay_nper
         return nrow * ncol
 
@@ -518,7 +525,7 @@ class ModflowRch(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=ModflowRch.ftype()
+                ext_unit_dict, filetype=ModflowRch._ftype()
             )
             if ipakcb > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -545,9 +552,9 @@ class ModflowRch(Package):
         return rch
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "RCH"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 19

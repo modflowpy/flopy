@@ -210,9 +210,9 @@ class Mt3dSft(Package):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dSft.defaultunit()
+            unitnumber = Mt3dSft._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dSft.reservedunit()
+            unitnumber = Mt3dSft._reservedunit()
 
         # set filenames
         if filenames is None:  # if filename not passed
@@ -242,13 +242,13 @@ class Mt3dSft(Package):
                 fname=fname,
                 extension=None,
                 binflag=False,
-                package=Mt3dSft.ftype(),
+                package=Mt3dSft._ftype(),
             )
         else:
             ioutobs = 0
 
         # Fill namefile items
-        name = [Mt3dSft.ftype()]
+        name = [Mt3dSft._ftype()]
         units = [unitnumber]
         extra = [""]
 
@@ -793,7 +793,7 @@ class Mt3dSft(Package):
         filenames = [None, None]
         if ext_unit_dict is not None:
             unitnumber, filenames[0] = model.get_ext_dict_attr(
-                ext_unit_dict, filetype=Mt3dSft.ftype()
+                ext_unit_dict, filetype=Mt3dSft._ftype()
             )
             if abs(ioutobs) > 0:
                 iu, filenames[1] = model.get_ext_dict_attr(
@@ -826,13 +826,13 @@ class Mt3dSft(Package):
         )
 
     @staticmethod
-    def ftype():
+    def _ftype():
         return "SFT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 19
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 19
