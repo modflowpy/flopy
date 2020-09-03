@@ -84,15 +84,21 @@ class MFBlockHeader(object):
         # build block comment paths
         self.blk_trailing_comment_path = ("blk_trailing_comment",)
         self.blk_post_comment_path = ("blk_post_comment",)
+        if isinstance(path, list):
+            path = tuple(path)
         if path is not None:
-            self.blk_trailing_comment_path = path + (name,
-                                                     "blk_trailing_comment",)
-            self.blk_post_comment_path = path + (name, "blk_post_comment",)
+            self.blk_trailing_comment_path = path + (
+                name,
+                "blk_trailing_comment",
+            )
+            self.blk_post_comment_path = path + (
+                name,
+                "blk_post_comment",
+            )
             if self.blk_trailing_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[
-                    self.blk_trailing_comment_path] = MFComment(
-                    "", "", simulation_data, 0
-                )
+                    self.blk_trailing_comment_path
+                ] = MFComment("", "", simulation_data, 0)
             if self.blk_post_comment_path not in simulation_data.mfdata:
                 simulation_data.mfdata[self.blk_post_comment_path] = MFComment(
                     "\n", "", simulation_data, 0
@@ -143,6 +149,11 @@ class MFBlockHeader(object):
 
     def add_data_item(self, new_data, data):
         self.data_items.append(new_data)
+        while isinstance(data, list):
+            if len(data) > 0:
+                data = data[0]
+            else:
+                data = None
         if not isinstance(data, tuple):
             data = (data,)
         self.blk_trailing_comment_path += data
@@ -769,9 +780,7 @@ class MFBlock(object):
         line = fd_block.readline()
         datautil.PyListUtil.reset_delimiter_used()
         arr_line = datautil.PyListUtil.split_data_line(line)
-        post_data_comments = MFComment(
-            "", "", self._simulation_data, 0
-        )
+        post_data_comments = MFComment("", "", self._simulation_data, 0)
         while MFComment.is_comment(line, True):
             initial_comment.add_text(line)
             line = fd_block.readline()
@@ -1267,10 +1276,9 @@ class MFBlock(object):
                     ),
                 )
         # write trailing comments
-        if block_header.blk_trailing_comment_path in \
-                self._simulation_data.mfdata:
-            self._simulation_data.mfdata[
-                block_header.blk_trailing_comment_path].write(fd)
+        pth = block_header.blk_trailing_comment_path
+        if pth in self._simulation_data.mfdata:
+            self._simulation_data.mfdata[pth].write(fd)
 
         if self.external_file_name is not None:
             # switch back writing to package file
@@ -1281,8 +1289,9 @@ class MFBlock(object):
         block_header.write_footer(fd)
 
         # write post block comments
-        self._simulation_data.mfdata[
-            block_header.blk_post_comment_path].write(fd)
+        pth = block_header.blk_post_comment_path
+        if pth in self._simulation_data.mfdata:
+            self._simulation_data.mfdata[pth].write(fd)
 
         # write extra line if comments are off
         if not self._simulation_data.comments_on:
@@ -1722,8 +1731,11 @@ class MFPackage(PackageContainer, PackageInterface):
             )
         elif len(arr_clean_line) == 2:
             return MFBlockHeader(
-                arr_clean_line[1], header_variable_strs, header_comment,
-                self._simulation_data, path
+                arr_clean_line[1],
+                header_variable_strs,
+                header_comment,
+                self._simulation_data,
+                path,
             )
         else:
             # process text after block name
@@ -1739,8 +1751,11 @@ class MFPackage(PackageContainer, PackageInterface):
                 else:
                     header_variable_strs.append(entry)
             return MFBlockHeader(
-                arr_clean_line[1], header_variable_strs, header_comment,
-                self._simulation_data, path
+                arr_clean_line[1],
+                header_variable_strs,
+                header_comment,
+                self._simulation_data,
+                path,
             )
 
     def _update_size_defs(self):
@@ -2099,10 +2114,14 @@ class MFPackage(PackageContainer, PackageInterface):
                             skip_block = True
                     bhs = cur_block.structure.block_header_structure
                     bhval = block_header_info.variable_strings
-                    if len(bhs) > 0 and len(bhval) > 0 and \
-                            bhs[0].name == 'iper':
+                    if (
+                        len(bhs) > 0
+                        and len(bhval) > 0
+                        and bhs[0].name == "iper"
+                    ):
                         nper = self._simulation_data.mfdata[
-                            ("tdis", "dimensions", "nper")].get_data()
+                            ("tdis", "dimensions", "nper")
+                        ].get_data()
                         bhval_int = datautil.DatumUtil.is_int(bhval[0])
                         if not bhval_int or int(bhval[0]) > nper:
                             # skip block when block stress period is greater
@@ -2130,9 +2149,8 @@ class MFPackage(PackageContainer, PackageInterface):
 
                         # write post block comment comment
                         self._simulation_data.mfdata[
-                            cur_block.block_headers[-1]. \
-                                blk_post_comment_path] \
-                            = self.post_block_comments
+                            cur_block.block_headers[-1].blk_post_comment_path
+                        ] = self.post_block_comments
 
                         blocks_read += 1
                         if blocks_read >= max_blocks:
@@ -2140,20 +2158,22 @@ class MFPackage(PackageContainer, PackageInterface):
                     else:
                         # treat skipped block as if it is all comments
                         arr_line = datautil.PyListUtil.split_data_line(
-                            clean_line)
+                            clean_line
+                        )
                         self.post_block_comments.add_text(
-                            "{}".format(line), True)
+                            "{}".format(line), True
+                        )
                         while arr_line and (
-                                len(line) <= 2 or
-                                arr_line[0][:3].upper() != "END"
+                            len(line) <= 2 or arr_line[0][:3].upper() != "END"
                         ):
                             line = fd_input_file.readline()
                             arr_line = datautil.PyListUtil.split_data_line(
                                 line.strip()
                             )
                             if arr_line:
-                                self.post_block_comments\
-                                    .add_text("{}".format(line), True)
+                                self.post_block_comments.add_text(
+                                    "{}".format(line), True
+                                )
                         self._simulation_data.mfdata[
                             cur_block.block_headers[-1].blk_post_comment_path
                         ] = self.post_block_comments
