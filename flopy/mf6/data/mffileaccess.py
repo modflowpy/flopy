@@ -1502,6 +1502,7 @@ class MFFileAccessList(MFFileAccess):
         else:
             # read variables
             var_index = 0
+            repeat_count = 0
             data = ""
             for data_item_index, data_item in enumerate(
                 data_set.data_item_structures
