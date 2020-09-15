@@ -39,67 +39,83 @@ class acdd:
         self.model = model
         self.model_grid = model.modelgrid
         self.model_time = model.modeltime
-        self.sciencebase_url = 'https://www.sciencebase.gov/catalog/item/{}'.format(
-            sciencebase_id)
+        self.sciencebase_url = (
+            "https://www.sciencebase.gov/catalog/item/{}".format(
+                sciencebase_id
+            )
+        )
         self.sb = self.get_sciencebase_metadata(sciencebase_id)
         if self.sb is None:
             return
 
         # stuff Jeremy mentioned
-        self.abstract = self.sb['summary']
-        self.authors = [c['name'] for c in self.sb['contacts']
-                        if 'Originator' in c['type']]
+        self.abstract = self.sb["summary"]
+        self.authors = [
+            c["name"] for c in self.sb["contacts"] if "Originator" in c["type"]
+        ]
         # report image?
 
         # keys that are the same in sbjson and acdd;
         # or additional attributes to carry over
-        for k in ['title', 'summary', 'id', 'citation']:
+        for k in ["title", "summary", "id", "citation"]:
             self.__dict__[k] = self.sb.get(k, None)
 
         # highly recommended global attributes
         # http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
-        self.keywords = [t['name'] for t in self.sb['tags']]
+        self.keywords = [t["name"] for t in self.sb["tags"]]
 
         # recommended global attributes
-        self.naming_authority = 'ScienceBase'  # org. that provides the id
+        self.naming_authority = "ScienceBase"  # org. that provides the id
         # self.history = None # This is a character array with a line for each invocation of a program that has modified the dataset.
         # Well-behaved generic netCDF applications should append a line containing:
         # date, time of day, user name, program name and command arguments.
-        self.source = model.model_ws  # The method of production of the original data.
+        self.source = (
+            model.model_ws
+        )  # The method of production of the original data.
         # If it was model-generated, source should name the model and its version.
         # self.processing_level = None # 	A textual description of the processing (or quality control) level of the data.
         # self.comment = None #	Miscellaneous information about the data, not captured elsewhere.
         # This attribute is defined in the CF Conventions.
-        self.acknowledgement = self._get_xml_attribute('datacred')
+        self.acknowledgement = self._get_xml_attribute("datacred")
         # self.license = None #
         # self.standard_name_vocabulary = None
-        self.date_created = self.sb['provenance']['linkProcess'].get(
-            'dateCreated')
-        self.creator_name = self.creator.get('name')
-        self.creator_email = self.creator.get('email')
+        self.date_created = self.sb["provenance"]["linkProcess"].get(
+            "dateCreated"
+        )
+        self.creator_name = self.creator.get("name")
+        self.creator_email = self.creator.get("email")
         # self.creator_url = self.sb['webLinks'][0].get('uri')
-        self.creator_institution = self.creator['organization'].get(
-            'displayText')
-        self.institution = self.creator_institution  # also in CF convention for global attributes
-        self.project = self.sb['title']
-        self.publisher_name = [d.get('name') for d in self.sb['contacts'] if
-                               'publisher' in d.get('type').lower()][0]
-        self.publisher_email = self.sb['provenance']['linkProcess'].get(
-            'processedBy')
-        self.publisher_url = 'https://www2.usgs.gov/water/'  # self.sb['provenance']['linkProcess'].get('linkReference')
-        self.geospatial_bounds_crs = 'EPSG:4326'
-        self.geospatial_lat_min = self.bounds.get('minY')
-        self.geospatial_lat_max = self.bounds.get('maxY')
-        self.geospatial_lon_min = self.bounds.get('minX')
-        self.geospatial_lon_max = self.bounds.get('maxX')
+        self.creator_institution = self.creator["organization"].get(
+            "displayText"
+        )
+        self.institution = (
+            self.creator_institution
+        )  # also in CF convention for global attributes
+        self.project = self.sb["title"]
+        self.publisher_name = [
+            d.get("name")
+            for d in self.sb["contacts"]
+            if "publisher" in d.get("type").lower()
+        ][0]
+        self.publisher_email = self.sb["provenance"]["linkProcess"].get(
+            "processedBy"
+        )
+        self.publisher_url = "https://www2.usgs.gov/water/"  # self.sb['provenance']['linkProcess'].get('linkReference')
+        self.geospatial_bounds_crs = "EPSG:4326"
+        self.geospatial_lat_min = self.bounds.get("minY")
+        self.geospatial_lat_max = self.bounds.get("maxY")
+        self.geospatial_lon_min = self.bounds.get("minX")
+        self.geospatial_lon_max = self.bounds.get("maxX")
         self.geospatial_vertical_min = self.model_grid.botm.min()
         self.geospatial_vertical_max = self.model_grid.top.max()
-        self.geospatial_vertical_positive = 'up'  # assumed to always be up for GW models
-        self.time_coverage_start = self.time_coverage.get('start')
-        self.time_coverage_end = self.time_coverage.get('end')
-        self.time_coverage_duration = self.time_coverage.get('duration')
+        self.geospatial_vertical_positive = (
+            "up"  # assumed to always be up for GW models
+        )
+        self.time_coverage_start = self.time_coverage.get("start")
+        self.time_coverage_end = self.time_coverage.get("end")
+        self.time_coverage_duration = self.time_coverage.get("duration")
         # because the start/end date formats aren't consistent between models
-        self.time_coverage_resolution = self.time_coverage.get('resolution')
+        self.time_coverage_resolution = self.time_coverage.get("resolution")
 
         self.metadata_link = self.sciencebase_url
 
@@ -111,23 +127,26 @@ class acdd:
 
     @property
     def bounds(self):
-        return self.sb['spatial']['boundingBox']
+        return self.sb["spatial"]["boundingBox"]
 
     @property
     def creator(self):
-        return [d for d in self.sb['contacts'] if
-                'point of contact' in d['type'].lower()][0]
+        return [
+            d
+            for d in self.sb["contacts"]
+            if "point of contact" in d["type"].lower()
+        ][0]
 
     @property
     def creator_url(self):
-        urlname = '-'.join(self.creator.get('name').replace('.', '').split())
-        url = 'https://www.usgs.gov/staff-profiles/' + urlname.lower()
+        urlname = "-".join(self.creator.get("name").replace(".", "").split())
+        url = "https://www.usgs.gov/staff-profiles/" + urlname.lower()
         # check if it exists
         txt = get_url_text(url)
         if txt is not None:
             return url
         else:
-            return 'unknown'
+            return "unknown"
 
     @property
     def geospatial_bounds(self):
@@ -135,11 +154,13 @@ class acdd:
         Describes the data's 2D or 3D geospatial extent in OGC's Well-Known
         Text (WKT) Geometry format
         """
-        fmt = '(({0} {2}, {0} {3}, {1} {3}, {1} {2}, {0} {2}))'
-        bounds = 'POLYGON ' + fmt.format(self.geospatial_lon_min,
-                                         self.geospatial_lon_max,
-                                         self.geospatial_lat_min,
-                                         self.geospatial_lat_max)
+        fmt = "(({0} {2}, {0} {3}, {1} {3}, {1} {2}, {0} {2}))"
+        bounds = "POLYGON " + fmt.format(
+            self.geospatial_lon_min,
+            self.geospatial_lon_max,
+            self.geospatial_lat_min,
+            self.geospatial_lat_max,
+        )
         return bounds
 
     @property
@@ -148,7 +169,7 @@ class acdd:
         The vertical coordinate reference system (CRS) for the Z axis of
         the point coordinates in the geospatial_bounds attribute.
         """
-        epsg = {'NGVD29': 'EPSG:5702', 'NAVD88': 'EPSG:5703'}
+        epsg = {"NGVD29": "EPSG:5702", "NAVD88": "EPSG:5703"}
         return epsg.get(self.vertical_datum)
 
     @property
@@ -160,8 +181,11 @@ class acdd:
 
         """
         r = [self.citation]
-        links = [d.get('uri') for d in self.sb['webLinks']
-                 if 'link' in d.get('type').lower()]
+        links = [
+            d.get("uri")
+            for d in self.sb["webLinks"]
+            if "link" in d.get("type").lower()
+        ]
         return r + links
 
     @property
@@ -172,20 +196,21 @@ class acdd:
         -------
 
         """
-        l = self.sb['dates']
+        l = self.sb["dates"]
         tc = {}
-        for t in ['start', 'end']:
-            tc[t] = [d.get('dateString') for d in l
-                     if t in d['type'].lower()][0]
+        for t in ["start", "end"]:
+            tc[t] = [d.get("dateString") for d in l if t in d["type"].lower()][
+                0
+            ]
         if not np.all(self.model_time.steady_state) and pd:
             # replace with times from model reference
-            tc['start'] = self.model_time.start_datetime
+            tc["start"] = self.model_time.start_datetime
             strt = pd.Timestamp(self.model_time.start_datetime)
             mlen = self.model_time.perlen.sum()
             tunits = self.model_time.time_units
-            tc['duration'] = '{} {}'.format(mlen, tunits)
-            end = strt + pd.Timedelta(mlen, unit='d')
-            tc['end'] = str(end)
+            tc["duration"] = "{} {}".format(mlen, tunits)
+            end = strt + pd.Timedelta(mlen, unit="d")
+            tc["end"] = str(end)
         return tc
 
     @property
@@ -193,12 +218,12 @@ class acdd:
         """
         Try to parse the vertical datum from the xml info
         """
-        altdatum = self._get_xml_attribute('altdatum')
+        altdatum = self._get_xml_attribute("altdatum")
         if altdatum is not None:
-            if '88' in altdatum:
-                return 'NAVD88'
-            elif '29' in altdatum:
-                return 'NGVD29'
+            if "88" in altdatum:
+                return "NAVD88"
+            elif "29" in altdatum:
+                return "NGVD29"
         else:
             return None
 
@@ -214,7 +239,7 @@ class acdd:
 
     @property
     def xmlfile(self):
-        return self.sb['identifiers'][0].get('key')
+        return self.sb["identifiers"][0].get("key")
 
     def get_sciencebase_metadata(self, id):
         """
@@ -233,12 +258,13 @@ class acdd:
         metadata : dict
             Dictionary of metadata
         """
-        urlbase = 'https://www.sciencebase.gov/catalog/item/{}?format=json'
+        urlbase = "https://www.sciencebase.gov/catalog/item/{}?format=json"
         url = urlbase.format(id)
 
         import json
         from flopy.utils.flopy_io import get_url_text
-        msg = 'Need an internet connection to get metadata from ScienceBase.'
+
+        msg = "Need an internet connection to get metadata from ScienceBase."
         text = get_url_text(url, error_msg=msg)
         if text is not None:
             return json.loads(text)
@@ -266,6 +292,6 @@ class acdd:
             raise ImportError("DefusedXML must be installed to query metadata")
 
         url = self.xmlfile
-        msg = 'Need an internet connection to get metadata from ScienceBase.'
+        msg = "Need an internet connection to get metadata from ScienceBase."
         text = get_url_text(url, error_msg=msg)
         return ET.fromstring(text)

@@ -41,8 +41,8 @@ class ModflowParBc(object):
                 return self.bc_parms[key]
         return None
 
-    @staticmethod
-    def load(f, npar, dt, model, ext_unit_dict=None, verbose=False):
+    @classmethod
+    def load(cls, f, npar, dt, model, ext_unit_dict=None, verbose=False):
         """
         Load bc property parameters from an existing bc package
         that uses list data (e.g. WEL, RIV, etc.).
@@ -89,7 +89,7 @@ class ModflowParBc(object):
                 numinst = 1
                 timeVarying = False
                 if len(t) > 4:
-                    if 'instances' in t[4].lower():
+                    if "instances" in t[4].lower():
                         numinst = np.int(t[5])
                         timeVarying = True
                 pinst = {}
@@ -100,21 +100,25 @@ class ModflowParBc(object):
                         t = line_strip(line).split()
                         instnam = t[0].lower()
                     else:
-                        instnam = 'static'
+                        instnam = "static"
 
                     ra = np.zeros(nlst, dtype=dt)
-                    #todo: if sfac is used for parameter definition, then
+                    # todo: if sfac is used for parameter definition, then
                     # the empty list on the next line needs to be the package
                     # get_sfac_columns
                     bcinst = ulstrd(f, nlst, ra, model, [], ext_unit_dict)
                     pinst[instnam] = bcinst
-                bc_parms[parnam] = [{'partyp': partyp, 'parval': parval,
-                                     'nlst': nlst, 'timevarying': timeVarying},
-                                    pinst]
+                bc_parms[parnam] = [
+                    {
+                        "partyp": partyp,
+                        "parval": parval,
+                        "nlst": nlst,
+                        "timevarying": timeVarying,
+                    },
+                    pinst,
+                ]
 
-        # print bc_parms
-        bcpar = ModflowParBc(bc_parms)
-        return bcpar
+        return cls(bc_parms)
 
     @staticmethod
     def loadarray(f, npar, verbose=False):
@@ -156,7 +160,7 @@ class ModflowParBc(object):
                 numinst = 1
                 timeVarying = False
                 if len(t) > 4:
-                    if 'instances' in t[4].lower():
+                    if "instances" in t[4].lower():
                         numinst = np.int(t[5])
                         timeVarying = True
                 pinst = {}
@@ -167,14 +171,14 @@ class ModflowParBc(object):
                         t = line.strip().split()
                         instnam = t[0].lower()
                     else:
-                        instnam = 'static'
+                        instnam = "static"
                     bcinst = []
 
                     for nc in range(nclu):
                         line = f.readline()
                         t = line.strip().split()
                         bnd = [t[0], t[1]]
-                        if t[1].lower() == 'all':
+                        if t[1].lower() == "all":
                             bnd.append([])
                         else:
                             iz = []
@@ -189,9 +193,14 @@ class ModflowParBc(object):
                         bcinst.append(bnd)
                     pinst[instnam] = bcinst
                 bc_parms[parnam] = [
-                    {'partyp': partyp, 'parval': parval, 'nclu': nclu,
-                     'timevarying': timeVarying},
-                    pinst]
+                    {
+                        "partyp": partyp,
+                        "parval": parval,
+                        "nclu": nclu,
+                        "timevarying": timeVarying,
+                    },
+                    pinst,
+                ]
 
         # print bc_parms
         bcpar = ModflowParBc(bc_parms)
@@ -239,20 +248,20 @@ class ModflowParBc(object):
             pdict, idict = pak_parms.bc_parms[key]
             inst_data = idict[value]
             if model.mfpar.pval is None:
-                pv = np.float(pdict['parval'])
+                pv = np.float(pdict["parval"])
             else:
                 try:
                     pv = np.float(model.mfpar.pval.pval_dict[key.lower()])
                 except:
-                    pv = np.float(pdict['parval'])
+                    pv = np.float(pdict["parval"])
             for [mltarr, zonarr, izones] in inst_data:
                 model.parameter_load = True
                 # print mltarr, zonarr, izones
-                if mltarr.lower() == 'none':
+                if mltarr.lower() == "none":
                     mult = np.ones(shape, dtype=dtype)
                 else:
                     mult = model.mfpar.mult.mult_dict[mltarr.lower()][:, :]
-                if zonarr.lower() == 'all':
+                if zonarr.lower() == "all":
                     t = pv * mult
                 else:
                     mult_save = np.copy(mult)

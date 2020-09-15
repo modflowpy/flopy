@@ -49,7 +49,8 @@ def test001a_tharmonic():
 
     # load simulation
     sim = MFSimulation.load(model_name, 'mf6', exe_name, pth,
-                            verbosity_level=0, verify_data=True)
+                            verbosity_level=0, verify_data=True,
+                            write_headers=False)
     sim.simulation_data.mfpath.set_sim_path(run_folder)
 
     # write simulation to new location
@@ -254,7 +255,7 @@ def test005_advgw_tidal():
 
     # add a stress period beyond nper
     spd = ghb.stress_period_data.get_data()
-    spd[20] = copy.deepcopy(spd[9])
+    spd[20] = copy.deepcopy(spd[0])
     ghb.stress_period_data.set_data(spd)
 
     # make temp folder to save simulation

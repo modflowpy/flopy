@@ -18,7 +18,7 @@ from ..utils.flopy_io import loadtxt
 from ..utils.recarray_utils import ra_slice
 
 
-class PathlineFile():
+class PathlineFile:
     """
     PathlineFile Class.
 
@@ -37,9 +37,18 @@ class PathlineFile():
     >>> p1 = pthobj.get_data(partid=1)
 
     """
-    kijnames = ['k', 'i', 'j', 'node',
-                'particleid', 'particlegroup', 'linesegmentindex',
-                'particleidloc', 'sequencenumber']
+
+    kijnames = [
+        "k",
+        "i",
+        "j",
+        "node",
+        "particleid",
+        "particlegroup",
+        "linesegmentindex",
+        "particleidloc",
+        "sequencenumber",
+    ]
 
     def __init__(self, filename, verbose=False):
         """
@@ -60,8 +69,9 @@ class PathlineFile():
             self.dtype, self._data = self._get_mp7data()
         else:
             self.dtype = self._get_dtypes()
-            self._data = loadtxt(self.file, dtype=self.dtype,
-                                 skiprows=self.skiprows)
+            self._data = loadtxt(
+                self.file, dtype=self.dtype, skiprows=self.skiprows
+            )
 
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
@@ -70,7 +80,7 @@ class PathlineFile():
                 self._data[n] -= 1
 
         # set number of particle ids
-        self.nid = np.unique(self._data['particleid'])
+        self.nid = np.unique(self._data["particleid"])
 
         # close the input file
         self.file.close()
@@ -78,32 +88,33 @@ class PathlineFile():
 
     def _build_index(self):
         """
-           Set position of the start of the pathline data.
+        Set position of the start of the pathline data.
         """
         self.skiprows = 0
-        self.file = open(self.fname, 'r')
+        self.file = open(self.fname, "r")
         while True:
             line = self.file.readline()
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if 'MODPATH_PATHLINE_FILE 6' in line.upper():
+                if "MODPATH_PATHLINE_FILE 6" in line.upper():
                     self.version = 6
-                elif 'MODPATH_PATHLINE_FILE         7' in line.upper():
+                elif "MODPATH_PATHLINE_FILE         7" in line.upper():
                     self.version = 7
-                elif 'MODPATH 5.0' in line.upper():
+                elif "MODPATH 5.0" in line.upper():
                     self.version = 5
-                elif 'MODPATH Version 3.00' in line.upper():
+                elif "MODPATH Version 3.00" in line.upper():
                     self.version = 3
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = '{} is not a valid pathline file'.format(
-                        self.fname)
+                    errmsg = "{} is not a valid pathline file".format(
+                        self.fname
+                    )
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
-                if 'end header' in line.lower():
+                if "end header" in line.lower():
                     break
             elif self.version == 3 or self.version == 5:
                 break
@@ -112,61 +123,100 @@ class PathlineFile():
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 pathline file.
+        Build numpy dtype for the MODPATH 6 pathline file.
         """
         if self.version == 3 or self.version == 5:
-            dtype = np.dtype([("particleid", np.int32),
-                              ("x", np.float32),
-                              ("y", np.float32),
-                              ("zloc", np.float32),
-                              ("z", np.float32),
-                              ("time", np.float32),
-                              ("j", np.int32),
-                              ("i", np.int32),
-                              ("k", np.int32),
-                              ("cumulativetimestep", np.int32)])
+            dtype = np.dtype(
+                [
+                    ("particleid", np.int32),
+                    ("x", np.float32),
+                    ("y", np.float32),
+                    ("zloc", np.float32),
+                    ("z", np.float32),
+                    ("time", np.float32),
+                    ("j", np.int32),
+                    ("i", np.int32),
+                    ("k", np.int32),
+                    ("cumulativetimestep", np.int32),
+                ]
+            )
         elif self.version == 6:
-            dtype = np.dtype([("particleid", np.int32),
-                              ("particlegroup", np.int32),
-                              ("timepointindex", np.int32),
-                              ("cumulativetimestep", np.int32),
-                              ("time", np.float32), ("x", np.float32),
-                              ("y", np.float32), ("z", np.float32),
-                              ("k", np.int32), ("i", np.int32),
-                              ("j", np.int32),
-                              ("grid", np.int32), ("xloc", np.float32),
-                              ("yloc", np.float32), ("zloc", np.float32),
-                              ("linesegmentindex", np.int32)])
+            dtype = np.dtype(
+                [
+                    ("particleid", np.int32),
+                    ("particlegroup", np.int32),
+                    ("timepointindex", np.int32),
+                    ("cumulativetimestep", np.int32),
+                    ("time", np.float32),
+                    ("x", np.float32),
+                    ("y", np.float32),
+                    ("z", np.float32),
+                    ("k", np.int32),
+                    ("i", np.int32),
+                    ("j", np.int32),
+                    ("grid", np.int32),
+                    ("xloc", np.float32),
+                    ("yloc", np.float32),
+                    ("zloc", np.float32),
+                    ("linesegmentindex", np.int32),
+                ]
+            )
         elif self.version == 7:
-            msg = '_get_dtypes() should not be called for ' + \
-                  'MODPATH 7 pathline files'
+            msg = (
+                "_get_dtypes() should not be called for "
+                + "MODPATH 7 pathline files"
+            )
             raise TypeError(msg)
         return dtype
 
     def _get_outdtype(self):
-        outdtype = np.dtype([("x", np.float32), ("y", np.float32),
-                             ("z", np.float32),
-                             ("time", np.float32), ("k", np.int32),
-                             ("particleid", np.int32)])
+        outdtype = np.dtype(
+            [
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("time", np.float32),
+                ("k", np.int32),
+                ("particleid", np.int32),
+            ]
+        )
         return outdtype
 
     def _get_mp7data(self):
-        dtyper = np.dtype([("node", np.int32), ("x", np.float32),
-                           ("y", np.float32), ("z", np.float32),
-                           ("time", np.float32), ("xloc", np.float32),
-                           ("yloc", np.float32), ("zloc", np.float32),
-                           ("k", np.int32),
-                           ("stressperiod", np.int32), ("timestep", np.int32)])
-        dtype = np.dtype([("particleid", np.int32),
-                          ("particlegroup", np.int32),
-                          ("sequencenumber", np.int32),
-                          ("particleidloc", np.int32),
-                          ("time", np.float32), ("x", np.float32),
-                          ("y", np.float32), ("z", np.float32),
-                          ("k", np.int32), ("node", np.int32),
-                          ("xloc", np.float32), ("yloc", np.float32),
-                          ("zloc", np.float32),
-                          ("stressperiod", np.int32), ("timestep", np.int32)])
+        dtyper = np.dtype(
+            [
+                ("node", np.int32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("time", np.float32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("k", np.int32),
+                ("stressperiod", np.int32),
+                ("timestep", np.int32),
+            ]
+        )
+        dtype = np.dtype(
+            [
+                ("particleid", np.int32),
+                ("particlegroup", np.int32),
+                ("sequencenumber", np.int32),
+                ("particleidloc", np.int32),
+                ("time", np.float32),
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("k", np.int32),
+                ("node", np.int32),
+                ("xloc", np.float32),
+                ("yloc", np.float32),
+                ("zloc", np.float32),
+                ("stressperiod", np.int32),
+                ("timestep", np.int32),
+            ]
+        )
         idx = 0
         part_dict = collections.OrderedDict()
         ndata = 0
@@ -187,8 +237,9 @@ class PathlineFile():
             sequencenumber, group, particleid, pathlinecount = t[0:4]
             ndata += pathlinecount
             # read in the particle data
-            d = np.loadtxt(itertools.islice(self.file, 0, pathlinecount),
-                           dtype=dtyper)
+            d = np.loadtxt(
+                itertools.islice(self.file, 0, pathlinecount), dtype=dtyper
+            )
             key = (idx, sequencenumber, group, particleid, pathlinecount)
             part_dict[key] = d.copy()
             idx += 1
@@ -204,12 +255,12 @@ class PathlineFile():
             # fill constant items for particle
             # particleid is not necessarily unique for all pathlines - use
             # sequencenumber which is unique
-            data['particleid'][ipos0:ipos1] = sequencenumber
+            data["particleid"][ipos0:ipos1] = sequencenumber
             # set particlegroup and sequence number
-            data['particlegroup'][ipos0:ipos1] = group
-            data['sequencenumber'][ipos0:ipos1] = sequencenumber
+            data["particlegroup"][ipos0:ipos1] = group
+            data["sequencenumber"][ipos0:ipos1] = sequencenumber
             # save particleidloc to particleid
-            data['particleidloc'][ipos0:ipos1] = particleid
+            data["particleidloc"][ipos0:ipos1] = particleid
             # fill particle data
             for name in value.dtype.names:
                 data[name][ipos0:ipos1] = value[name]
@@ -227,7 +278,7 @@ class PathlineFile():
             Maximum pathline number.
 
         """
-        return self._data['particleid'].max()
+        return self._data["particleid"].max()
 
     def get_maxtime(self):
         """
@@ -239,7 +290,7 @@ class PathlineFile():
             Maximum pathline time.
 
         """
-        return self._data['time'].max()
+        return self._data["time"].max()
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -282,17 +333,20 @@ class PathlineFile():
         # idx = self._data['particleid'] == partid
         if totim is not None:
             if ge:
-                idx = (self._data['time'] >= totim) & \
-                      (self._data['particleid'] == partid)
+                idx = (self._data["time"] >= totim) & (
+                    self._data["particleid"] == partid
+                )
             else:
-                idx = (self._data['time'] <= totim) & \
-                      (self._data['particleid'] == partid)
+                idx = (self._data["time"] <= totim) & (
+                    self._data["particleid"] == partid
+                )
         else:
-            idx = self._data['particleid'] == partid
+            idx = self._data["particleid"] == partid
         self._ta = self._data[idx]
-        names = ['x', 'y', 'z', 'time', 'k', 'particleid']
-        return np.rec.fromarrays((self._ta[name] for name in names),
-                                 dtype=self.outdtype)
+        names = ["x", "y", "z", "time", "k", "particleid"]
+        return np.rec.fromarrays(
+            (self._ta[name] for name in names), dtype=self.outdtype
+        )
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -333,8 +387,10 @@ class PathlineFile():
         # plist = []
         # for partid in self.nid:
         #     plist.append(self.get_data(partid=partid, totim=totim, ge=ge))
-        return [self.get_data(partid=partid, totim=totim, ge=ge)
-                for partid in self.nid]
+        return [
+            self.get_data(partid=partid, totim=totim, ge=ge)
+            for partid in self.nid
+        ]
 
     def get_destination_pathline_data(self, dest_cells, to_recarray=False):
         """
@@ -374,14 +430,16 @@ class PathlineFile():
         # convert dest_cells to same dtype for comparison
         if self.version < 7:
             try:
-                raslice = ra[['k', 'i', 'j']]
+                raslice = ra[["k", "i", "j"]]
             except:
-                msg = "could not extract 'k', 'i', and 'j' keys " + \
-                      "from pathline data"
+                msg = (
+                    "could not extract 'k', 'i', and 'j' keys "
+                    + "from pathline data"
+                )
                 raise KeyError(msg)
         else:
             try:
-                raslice = ra[['node']]
+                raslice = ra[["node"]]
             except:
                 msg = "could not extract 'node' key from pathline data"
                 raise KeyError(msg)
@@ -400,26 +458,31 @@ class PathlineFile():
 
         if to_recarray:
             # use particle ids to get the rest of the paths
-            inds = np.in1d(ra['particleid'], epdest.particleid)
+            inds = np.in1d(ra["particleid"], epdest.particleid)
             pthldes = ra[inds].copy()
-            pthldes.sort(order=['particleid', 'time'])
+            pthldes.sort(order=["particleid", "time"])
             pthldes = pthldes.view(np.recarray)
         else:
 
             # get list of unique particleids in selection
-            partids = np.unique(epdest['particleid'])
+            partids = np.unique(epdest["particleid"])
 
             # build list of unique particleids in selection
             pthldes = [self.get_data(partid) for partid in partids]
 
         return pthldes
 
-    def write_shapefile(self, pathline_data=None,
-                        one_per_particle=True,
-                        direction='ending',
-                        shpname='endpoints.shp',
-                        mg=None, epsg=None, sr=None,
-                        **kwargs):
+    def write_shapefile(
+        self,
+        pathline_data=None,
+        one_per_particle=True,
+        direction="ending",
+        shpname="endpoints.shp",
+        mg=None,
+        epsg=None,
+        sr=None,
+        **kwargs
+    ):
         """
         Write pathlines to a shapefile
 
@@ -468,18 +531,26 @@ class PathlineFile():
                 pth = s.view(np.recarray)
 
         pth = pth.copy()
-        pth.sort(order=['particleid', 'time'])
+        pth.sort(order=["particleid", "time"])
 
-        if isinstance(mg, SpatialReference) or isinstance(sr,
-                                                          SpatialReference):
+        if isinstance(mg, SpatialReference) or isinstance(
+            sr, SpatialReference
+        ):
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.", DeprecationWarning)
+                "Use the Grid class instead.",
+                DeprecationWarning,
+            )
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(xoff=sr.xll, yoff=sr.yll, angrot=sr.rotation,
-                              epsg=sr.epsg, proj4=sr.proj4_str)
+            mg.set_coord_info(
+                xoff=sr.xll,
+                yoff=sr.yll,
+                angrot=sr.rotation,
+                epsg=sr.epsg,
+                proj4=sr.proj4_str,
+            )
 
         if epsg is None:
             epsg = mg.epsg
@@ -490,11 +561,11 @@ class PathlineFile():
         # create dtype with select attributes in pth
         names = pth.dtype.names
         dtype = []
-        atts = ['particleid', 'particlegroup', 'time', 'k', 'i', 'j', 'node']
+        atts = ["particleid", "particlegroup", "time", "k", "i", "j", "node"]
         for att in atts:
             if att in names:
                 t = np.int32
-                if att == 'time':
+                if att == "time":
                     t = np.float32
                 dtype.append((att, t))
         dtype = np.dtype(dtype)
@@ -506,30 +577,31 @@ class PathlineFile():
         if one_per_particle:
 
             loc_inds = 0
-            if direction == 'ending':
+            if direction == "ending":
                 loc_inds = -1
 
             pthdata = []
             for pid in particles:
                 ra = pth[pth.particleid == pid]
 
-                x, y = geometry.transform(ra.x, ra.y, mg.xoffset,
-                                          mg.yoffset, mg.angrot_radians)
+                x, y = geometry.transform(
+                    ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
+                )
                 z = ra.z
                 geoms.append(LineString(list(zip(x, y, z))))
 
                 t = [pid]
-                if 'particlegroup' in names:
+                if "particlegroup" in names:
                     t.append(ra.particlegroup[0])
                 t.append(ra.time.max())
-                if 'node' in names:
+                if "node" in names:
                     t.append(ra.node[loc_inds])
                 else:
-                    if 'k' in names:
+                    if "k" in names:
                         t.append(ra.k[loc_inds])
-                    if 'i' in names:
+                    if "i" in names:
                         t.append(ra.i[loc_inds])
-                    if 'j' in names:
+                    if "j" in names:
                         t.append(ra.j[loc_inds])
                 pthdata.append(tuple(t))
 
@@ -543,14 +615,18 @@ class PathlineFile():
             for pid in particles:
                 ra = pth[pth.particleid == pid]
                 if isinstance(mg, StructuredGrid):
-                    x, y = geometry.transform(ra.x, ra.y, mg.xoffset,
-                                              mg.yoffset, mg.angrot_radians)
+                    x, y = geometry.transform(
+                        ra.x, ra.y, mg.xoffset, mg.yoffset, mg.angrot_radians
+                    )
                 else:
                     x, y = mg.transform(ra.x, ra.y)
                 z = ra.z
-                geoms += [LineString([(x[i - 1], y[i - 1], z[i - 1]),
-                                      (x[i], y[i], z[i])])
-                          for i in np.arange(1, (len(ra)))]
+                geoms += [
+                    LineString(
+                        [(x[i - 1], y[i - 1], z[i - 1]), (x[i], y[i], z[i])]
+                    )
+                    for i in np.arange(1, (len(ra)))
+                ]
                 # pthdata = np.append(pthdata, ra[1:]).view(np.recarray)
                 pthdata += ra[1:].tolist()
             pthdata = np.array(pthdata, dtype=dtype).view(np.recarray)
@@ -563,7 +639,7 @@ class PathlineFile():
         recarray2shp(pthdata, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
-class EndpointFile():
+class EndpointFile:
     """
     EndpointFile Class.
 
@@ -583,9 +659,22 @@ class EndpointFile():
 
 
     """
-    kijnames = ['k0', 'i0', 'j0', 'node0', 'k', 'i', 'j', 'node',
-                'particleid', 'particlegroup', 'particleidloc',
-                'zone0', 'zone']
+
+    kijnames = [
+        "k0",
+        "i0",
+        "j0",
+        "node0",
+        "k",
+        "i",
+        "j",
+        "node",
+        "particleid",
+        "particlegroup",
+        "particleidloc",
+        "zone0",
+        "zone",
+    ]
 
     def __init__(self, filename, verbose=False):
         """
@@ -596,8 +685,9 @@ class EndpointFile():
         self.verbose = verbose
         self._build_index()
         self.dtype = self._get_dtypes()
-        self._data = loadtxt(self.file, dtype=self.dtype,
-                             skiprows=self.skiprows)
+        self._data = loadtxt(
+            self.file, dtype=self.dtype, skiprows=self.skiprows
+        )
         # add particleid if required
         self._add_particleid()
 
@@ -608,7 +698,7 @@ class EndpointFile():
                 self._data[n] -= 1
 
         # set number of particle ids
-        self.nid = np.unique(self._data['particleid']).shape[0]
+        self.nid = np.unique(self._data["particleid"]).shape[0]
 
         # close the input file
         self.file.close()
@@ -616,29 +706,30 @@ class EndpointFile():
 
     def _build_index(self):
         """
-           Set position of the start of the pathline data.
+        Set position of the start of the pathline data.
         """
         self.skiprows = 0
-        self.file = open(self.fname, 'r')
+        self.file = open(self.fname, "r")
         idx = 0
         while True:
             line = self.file.readline()
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if 'MODPATH_ENDPOINT_FILE 6' in line.upper():
+                if "MODPATH_ENDPOINT_FILE 6" in line.upper():
                     self.version = 6
-                elif 'MODPATH_ENDPOINT_FILE         7' in line.upper():
+                elif "MODPATH_ENDPOINT_FILE         7" in line.upper():
                     self.version = 7
-                elif 'MODPATH 5.0' in line.upper():
+                elif "MODPATH 5.0" in line.upper():
                     self.version = 5
-                elif 'MODPATH Version 3.00' in line.upper():
+                elif "MODPATH Version 3.00" in line.upper():
                     self.version = 3
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = '{} is not a valid endpoint file'.format(
-                        self.fname)
+                    errmsg = "{} is not a valid endpoint file".format(
+                        self.fname
+                    )
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
@@ -648,18 +739,18 @@ class EndpointFile():
                     if int(t[0]) == 2:
                         self.direction = -1
                 idx += 1
-                if 'end header' in line.lower():
+                if "end header" in line.lower():
                     break
             else:
                 break
         self.file.seek(0)
 
         if self.verbose:
-            print('MODPATH version {} endpoint file'.format(self.version))
+            print("MODPATH version {} endpoint file".format(self.version))
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 endpoint file.
+        Build numpy dtype for the MODPATH 6 endpoint file.
         """
         if self.version == 3 or self.version == 5:
             dtype = self._get_mp35_dtype()
@@ -670,62 +761,95 @@ class EndpointFile():
         return dtype
 
     def _get_mp35_dtype(self, add_id=False):
-        dtype = [('zone', np.int32), ('j', np.int32),
-                 ('i', np.int32), ('k', np.int32),
-                 ('x', np.float32), ('y', np.float32),
-                 ('z', np.float32), ('zloc', np.float32),
-                 ('time', np.float32),
-                 ('x0', np.float32), ('y0', np.float32),
-                 ('zloc0', np.float32),
-                 ('j0', np.int32), ('i0', np.int32),
-                 ('k0', np.int32),
-                 ('zone0', np.int32),
-                 ("cumulativetimestep", np.int32),
-                 ("ipcode", np.int32),
-                 ('time0', np.float32)]
+        dtype = [
+            ("zone", np.int32),
+            ("j", np.int32),
+            ("i", np.int32),
+            ("k", np.int32),
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("zloc", np.float32),
+            ("time", np.float32),
+            ("x0", np.float32),
+            ("y0", np.float32),
+            ("zloc0", np.float32),
+            ("j0", np.int32),
+            ("i0", np.int32),
+            ("k0", np.int32),
+            ("zone0", np.int32),
+            ("cumulativetimestep", np.int32),
+            ("ipcode", np.int32),
+            ("time0", np.float32),
+        ]
         if add_id:
             dtype.insert(0, ("particleid", np.int32))
         return np.dtype(dtype)
 
     def _get_mp6_dtype(self):
-        dtype = [('particleid', np.int32),
-                 ('particlegroup', np.int32),
-                 ('status', np.int32),
-                 ('time0', np.float32),
-                 ('time', np.float32),
-                 ('initialgrid', np.int32),
-                 ('k0', np.int32), ('i0', np.int32),
-                 ('j0', np.int32), ('cellface0', np.int32),
-                 ('zone0', np.int32), ('xloc0', np.float32),
-                 ('yloc0', np.float32), ('zloc0', np.float32),
-                 ('x0', np.float32), ('y0', np.float32),
-                 ('z0', np.float32),
-                 ('finalgrid', np.int32), ('k', np.int32),
-                 ('i', np.int32), ('j', np.int32),
-                 ('cellface', np.int32),
-                 ('zone', np.int32), ('xloc', np.float32),
-                 ('yloc', np.float32), ('zloc', np.float32),
-                 ('x', np.float32), ('y', np.float32),
-                 ('z', np.float32), ('label', '|S40')]
+        dtype = [
+            ("particleid", np.int32),
+            ("particlegroup", np.int32),
+            ("status", np.int32),
+            ("time0", np.float32),
+            ("time", np.float32),
+            ("initialgrid", np.int32),
+            ("k0", np.int32),
+            ("i0", np.int32),
+            ("j0", np.int32),
+            ("cellface0", np.int32),
+            ("zone0", np.int32),
+            ("xloc0", np.float32),
+            ("yloc0", np.float32),
+            ("zloc0", np.float32),
+            ("x0", np.float32),
+            ("y0", np.float32),
+            ("z0", np.float32),
+            ("finalgrid", np.int32),
+            ("k", np.int32),
+            ("i", np.int32),
+            ("j", np.int32),
+            ("cellface", np.int32),
+            ("zone", np.int32),
+            ("xloc", np.float32),
+            ("yloc", np.float32),
+            ("zloc", np.float32),
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("label", "|S40"),
+        ]
         return np.dtype(dtype)
 
     def _get_mp7_dtype(self):
-        dtype = [('particleid', np.int32),
-                 ('particlegroup', np.int32),
-                 ('particleidloc', np.int32),
-                 ('status', np.int32),
-                 ('time0', np.float32),
-                 ('time', np.float32),
-                 ('node0', np.int32), ('k0', np.int32),
-                 ('xloc0', np.float32), ('yloc0', np.float32),
-                 ('zloc0', np.float32), ('x0', np.float32),
-                 ('y0', np.float32), ('z0', np.float32),
-                 ('zone0', np.int32), ('initialcellface', np.int32),
-                 ('node', np.int32), ('k', np.int32),
-                 ('xloc', np.float32), ('yloc', np.float32),
-                 ('zloc', np.float32), ('x', np.float32),
-                 ('y', np.float32), ('z', np.float32),
-                 ('zone', np.int32), ('cellface', np.int32)]
+        dtype = [
+            ("particleid", np.int32),
+            ("particlegroup", np.int32),
+            ("particleidloc", np.int32),
+            ("status", np.int32),
+            ("time0", np.float32),
+            ("time", np.float32),
+            ("node0", np.int32),
+            ("k0", np.int32),
+            ("xloc0", np.float32),
+            ("yloc0", np.float32),
+            ("zloc0", np.float32),
+            ("x0", np.float32),
+            ("y0", np.float32),
+            ("z0", np.float32),
+            ("zone0", np.int32),
+            ("initialcellface", np.int32),
+            ("node", np.int32),
+            ("k", np.int32),
+            ("xloc", np.float32),
+            ("yloc", np.float32),
+            ("zloc", np.float32),
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("zone", np.int32),
+            ("cellface", np.int32),
+        ]
         return np.dtype(dtype)
 
     def _add_particleid(self):
@@ -738,21 +862,22 @@ class EndpointFile():
 
             # determine numpy version
             npv = np.__version__
-            v = [int(s) for s in npv.split('.')]
+            v = [int(s) for s in npv.split(".")]
             if self.verbose:
-                print('numpy version {}'.format(npv))
+                print("numpy version {}".format(npv))
 
             # for numpy version 1.14 and higher
             if v[0] > 1 or (v[0] == 1 and v[1] > 13):
-                self._data = append_fields(self._data, 'particleid', pids)
+                self._data = append_fields(self._data, "particleid", pids)
             # numpy versions prior to 1.14
             else:
                 if self.verbose:
                     print(self._data.dtype)
 
                 # convert pids to structured array
-                pids = np.array(pids,
-                                dtype=np.dtype([('particleid', np.int32)]))
+                pids = np.array(
+                    pids, dtype=np.dtype([("particleid", np.int32)])
+                )
 
                 # create new dtype
                 dtype = self._get_mp35_dtype(add_id=True)
@@ -762,25 +887,29 @@ class EndpointFile():
                 # create new array with new dtype and fill with available data
                 data = np.zeros(shaped, dtype=dtype)
                 if self.verbose:
-                    print('new data shape {}'.format(data.shape))
-                    print('\nFilling new structured data array')
+                    print("new data shape {}".format(data.shape))
+                    print("\nFilling new structured data array")
 
                 # add particle id to new array
                 if self.verbose:
-                    msg = 'writing particleid (pids) to new ' + \
-                          'structured data array'
+                    msg = (
+                        "writing particleid (pids) to new "
+                        + "structured data array"
+                    )
                     print(msg)
-                data['particleid'] = pids['particleid']
+                data["particleid"] = pids["particleid"]
 
                 # add remaining data to the new array
                 if self.verbose:
-                    msg = 'writing remaining data to new ' + \
-                          'structured data array'
+                    msg = (
+                        "writing remaining data to new "
+                        + "structured data array"
+                    )
                     print(msg)
                 for name in self._data.dtype.names:
                     data[name] = self._data[name]
                 if self.verbose:
-                    print('replacing data with copy of new data array')
+                    print("replacing data with copy of new data array")
                 self._data = data.copy()
         return
 
@@ -794,7 +923,7 @@ class EndpointFile():
             Maximum endpoint particle id.
 
         """
-        return np.unique(self._data['particleid']).max()
+        return np.unique(self._data["particleid"]).max()
 
     def get_maxtime(self):
         """
@@ -806,7 +935,7 @@ class EndpointFile():
             Maximum endpoint time.
 
         """
-        return self._data['time'].max()
+        return self._data["time"].max()
 
     def get_maxtraveltime(self):
         """
@@ -818,7 +947,7 @@ class EndpointFile():
             Maximum endpoint travel time.
 
         """
-        return (self._data['time'] - self._data['time0']).max()
+        return (self._data["time"] - self._data["time0"]).max()
 
     def get_data(self, partid=0):
         """
@@ -851,7 +980,7 @@ class EndpointFile():
         >>> e1 = endobj.get_data(partid=1)
 
         """
-        idx = self._data['particleid'] == partid
+        idx = self._data["particleid"] == partid
         ra = self._data[idx]
         return ra
 
@@ -919,25 +1048,32 @@ class EndpointFile():
         # convert dest_cells to same dtype for comparison
         if self.version < 7:
             if source:
-                keys = ['k0', 'i0', 'j0']
+                keys = ["k0", "i0", "j0"]
             else:
-                keys = ['k', 'i', 'j']
+                keys = ["k", "i", "j"]
             try:
                 raslice = ra_slice(ra, keys)
             except:
-                msg = "could not extract" + "'" + "', '".join(keys) + "'" + \
-                      "from endpoint data."
+                msg = (
+                    "could not extract"
+                    + "'"
+                    + "', '".join(keys)
+                    + "'"
+                    + "from endpoint data."
+                )
                 raise KeyError(msg)
         else:
             if source:
-                keys = ['node0']
+                keys = ["node0"]
             else:
-                keys = ['node']
+                keys = ["node"]
             try:
                 raslice = ra_slice(ra, keys)
             except:
-                msg = "could not extract '{}' ".format(keys[0]) + \
-                      "key from endpoint data"
+                msg = (
+                    "could not extract '{}' ".format(keys[0])
+                    + "key from endpoint data"
+                )
                 raise KeyError(msg)
             if isinstance(dest_cells, (list, tuple)):
                 allint = all(isinstance(el, int) for el in dest_cells)
@@ -957,10 +1093,16 @@ class EndpointFile():
         epdest = ra[inds].copy().view(np.recarray)
         return epdest
 
-    def write_shapefile(self, endpoint_data=None,
-                        shpname='endpoints.shp',
-                        direction='ending', mg=None, epsg=None, sr=None,
-                        **kwargs):
+    def write_shapefile(
+        self,
+        endpoint_data=None,
+        shpname="endpoints.shp",
+        direction="ending",
+        mg=None,
+        epsg=None,
+        sr=None,
+        **kwargs
+    ):
         """
         Write particle starting / ending locations to shapefile.
 
@@ -990,31 +1132,45 @@ class EndpointFile():
         if epd is None:
             epd = self.get_alldata()
 
-        if direction.lower() == 'ending':
-            xcol, ycol, zcol = 'x', 'y', 'z'
-        elif direction.lower() == 'starting':
-            xcol, ycol, zcol = 'x0', 'y0', 'z0'
+        if direction.lower() == "ending":
+            xcol, ycol, zcol = "x", "y", "z"
+        elif direction.lower() == "starting":
+            xcol, ycol, zcol = "x0", "y0", "z0"
         else:
-            errmsg = 'flopy.map.plot_endpoint direction must be "ending" ' + \
-                     'or "starting".'
+            errmsg = (
+                'flopy.map.plot_endpoint direction must be "ending" '
+                + 'or "starting".'
+            )
             raise Exception(errmsg)
-        if isinstance(mg, SpatialReference) or isinstance(sr,
-                                                          SpatialReference):
+        if isinstance(mg, SpatialReference) or isinstance(
+            sr, SpatialReference
+        ):
             warnings.warn(
                 "Deprecation warning: SpatialReference is deprecated."
-                "Use the Grid class instead.", DeprecationWarning)
+                "Use the Grid class instead.",
+                DeprecationWarning,
+            )
             if isinstance(mg, SpatialReference):
                 sr = mg
             mg = StructuredGrid(sr.delc, sr.delr)
-            mg.set_coord_info(xoff=sr.xll, yoff=sr.yll, angrot=sr.rotation,
-                              epsg=sr.epsg, proj4=sr.proj4_str)
+            mg.set_coord_info(
+                xoff=sr.xll,
+                yoff=sr.yll,
+                angrot=sr.rotation,
+                epsg=sr.epsg,
+                proj4=sr.proj4_str,
+            )
         if epsg is None:
             epsg = mg.epsg
 
         if isinstance(mg, StructuredGrid):
-            x, y = geometry.transform(epd[xcol], epd[ycol],
-                                      xoff=mg.xoffset, yoff=mg.yoffset,
-                                      angrot_radians=mg.angrot_radians)
+            x, y = geometry.transform(
+                epd[xcol],
+                epd[ycol],
+                xoff=mg.xoffset,
+                yoff=mg.yoffset,
+                angrot_radians=mg.angrot_radians,
+            )
         else:
             x, y = mg.get_coords(epd[xcol], epd[ycol])
         z = epd[zcol]
@@ -1027,7 +1183,7 @@ class EndpointFile():
         recarray2shp(epd, geoms, shpname=shpname, epsg=epsg, **kwargs)
 
 
-class TimeseriesFile():
+class TimeseriesFile:
     """
     TimeseriesFile Class.
 
@@ -1045,9 +1201,19 @@ class TimeseriesFile():
     >>> tsobj = flopy.utils.TimeseriesFile('model.timeseries')
     >>> ts1 = tsobj.get_data(partid=1)
     """
-    kijnames = ['k', 'i', 'j', 'node',
-                'particleid', 'particlegroup', 'particleidloc',
-                'timestep', 'timestepindex', 'timepointindex']
+
+    kijnames = [
+        "k",
+        "i",
+        "j",
+        "node",
+        "particleid",
+        "particlegroup",
+        "particleidloc",
+        "timestep",
+        "timestepindex",
+        "timepointindex",
+    ]
 
     def __init__(self, filename, verbose=False):
         """
@@ -1067,8 +1233,9 @@ class TimeseriesFile():
         self.dtype = self._get_dtypes()
 
         # read data
-        self._data = loadtxt(self.file, dtype=self.dtype,
-                             skiprows=self.skiprows)
+        self._data = loadtxt(
+            self.file, dtype=self.dtype, skiprows=self.skiprows
+        )
 
         # convert layer, row, and column indices; particle id and group; and
         #  line segment indices to zero-based
@@ -1077,7 +1244,7 @@ class TimeseriesFile():
                 self._data[n] -= 1
 
         # set number of particle ids
-        self.nid = np.unique(self._data['particleid'])
+        self.nid = np.unique(self._data["particleid"])
 
         # close the input file
         self.file.close()
@@ -1085,35 +1252,37 @@ class TimeseriesFile():
 
     def _build_index(self):
         """
-           Set position of the start of the timeseries data.
+        Set position of the start of the timeseries data.
         """
         compact = False
         self.skiprows = 0
-        self.file = open(self.fname, 'r')
+        self.file = open(self.fname, "r")
         while True:
             line = self.file.readline()
             if isinstance(line, bytes):
                 line = line.decode()
             if self.skiprows < 1:
-                if 'MODPATH_TIMESERIES_FILE 6' in line.upper():
+                if "MODPATH_TIMESERIES_FILE 6" in line.upper():
                     self.version = 6
-                elif 'MODPATH_TIMESERIES_FILE         7' in line.upper():
+                elif "MODPATH_TIMESERIES_FILE         7" in line.upper():
                     self.version = 7
-                elif 'MODPATH 5.0' in line.upper():
+                elif "MODPATH 5.0" in line.upper():
                     self.version = 5
-                    if 'COMPACT' in line.upper():
+                    if "COMPACT" in line.upper():
                         compact = True
-                elif 'MODPATH Version 3.00' in line.upper():
+                elif "MODPATH Version 3.00" in line.upper():
                     self.version = 3
                 else:
                     self.version = None
                 if self.version is None:
-                    errmsg = '{} '.format(self.fname) + \
-                             'is not a valid timeseries file'
+                    errmsg = (
+                        "{} ".format(self.fname)
+                        + "is not a valid timeseries file"
+                    )
                     raise Exception(errmsg)
             self.skiprows += 1
             if self.version == 6 or self.version == 7:
-                if 'end header' in line.lower():
+                if "end header" in line.lower():
                     break
             elif self.version == 3 or self.version == 5:
                 break
@@ -1126,65 +1295,91 @@ class TimeseriesFile():
 
     def _get_dtypes(self):
         """
-           Build numpy dtype for the MODPATH 6 timeseries file.
+        Build numpy dtype for the MODPATH 6 timeseries file.
         """
         if self.version == 3 or self.version == 5:
             if self.compact:
-                dtype = np.dtype([('timestepindex', np.int32),
-                                  ('particleid', np.int32),
-                                  ('node', np.int32),
-                                  ('x', np.float32),
-                                  ('y', np.float32),
-                                  ('z', np.float32),
-                                  ('zloc', np.float32),
-                                  ('time', np.float32),
-                                  ('timestep', np.int32)])
+                dtype = np.dtype(
+                    [
+                        ("timestepindex", np.int32),
+                        ("particleid", np.int32),
+                        ("node", np.int32),
+                        ("x", np.float32),
+                        ("y", np.float32),
+                        ("z", np.float32),
+                        ("zloc", np.float32),
+                        ("time", np.float32),
+                        ("timestep", np.int32),
+                    ]
+                )
             else:
-                dtype = np.dtype([('timestepindex', np.int32),
-                                  ('particleid', np.int32),
-                                  ('j', np.int32),
-                                  ('i', np.int32),
-                                  ('k', np.int32),
-                                  ('x', np.float32),
-                                  ('y', np.float32),
-                                  ('z', np.float32),
-                                  ('zloc', np.float32),
-                                  ('time', np.float32),
-                                  ('timestep', np.int32)])
+                dtype = np.dtype(
+                    [
+                        ("timestepindex", np.int32),
+                        ("particleid", np.int32),
+                        ("j", np.int32),
+                        ("i", np.int32),
+                        ("k", np.int32),
+                        ("x", np.float32),
+                        ("y", np.float32),
+                        ("z", np.float32),
+                        ("zloc", np.float32),
+                        ("time", np.float32),
+                        ("timestep", np.int32),
+                    ]
+                )
         elif self.version == 6:
-            dtype = np.dtype([('timepointindex', np.int32),
-                              ('timestep', np.int32),
-                              ('time', np.float32),
-                              ('particleid', np.int32),
-                              ('particlegroup', np.int32),
-                              ('x', np.float32), ('y', np.float32),
-                              ('z', np.float32),
-                              ('grid', np.int32),
-                              ('k', np.int32),
-                              ('i', np.int32),
-                              ('j', np.int32),
-                              ('xloc', np.float32), ('yloc', np.float32),
-                              ('zloc', np.float32)])
+            dtype = np.dtype(
+                [
+                    ("timepointindex", np.int32),
+                    ("timestep", np.int32),
+                    ("time", np.float32),
+                    ("particleid", np.int32),
+                    ("particlegroup", np.int32),
+                    ("x", np.float32),
+                    ("y", np.float32),
+                    ("z", np.float32),
+                    ("grid", np.int32),
+                    ("k", np.int32),
+                    ("i", np.int32),
+                    ("j", np.int32),
+                    ("xloc", np.float32),
+                    ("yloc", np.float32),
+                    ("zloc", np.float32),
+                ]
+            )
         elif self.version == 7:
-            dtype = np.dtype([('timepointindex', np.int32),
-                              ('timestep', np.int32),
-                              ('time', np.float32),
-                              ('particleid', np.int32),
-                              ('particlegroup', np.int32),
-                              ('particleidloc', np.int32),
-                              ('node', np.int32),
-                              ('xloc', np.float32), ('yloc', np.float32),
-                              ('zloc', np.float32),
-                              ('x', np.float32), ('y', np.float32),
-                              ('z', np.float32),
-                              ('k', np.int32)])
+            dtype = np.dtype(
+                [
+                    ("timepointindex", np.int32),
+                    ("timestep", np.int32),
+                    ("time", np.float32),
+                    ("particleid", np.int32),
+                    ("particlegroup", np.int32),
+                    ("particleidloc", np.int32),
+                    ("node", np.int32),
+                    ("xloc", np.float32),
+                    ("yloc", np.float32),
+                    ("zloc", np.float32),
+                    ("x", np.float32),
+                    ("y", np.float32),
+                    ("z", np.float32),
+                    ("k", np.int32),
+                ]
+            )
         return dtype
 
     def _get_outdtype(self):
-        outdtype = np.dtype([('x', np.float32), ('y', np.float32),
-                             ('z', np.float32),
-                             ('time', np.float32), ('k', np.int32),
-                             ('particleid', np.int32)])
+        outdtype = np.dtype(
+            [
+                ("x", np.float32),
+                ("y", np.float32),
+                ("z", np.float32),
+                ("time", np.float32),
+                ("k", np.int32),
+                ("particleid", np.int32),
+            ]
+        )
         return outdtype
 
     def get_maxid(self):
@@ -1197,7 +1392,7 @@ class TimeseriesFile():
             Maximum pathline number.
 
         """
-        return self._data['particleid'].max()
+        return self._data["particleid"].max()
 
     def get_maxtime(self):
         """
@@ -1209,7 +1404,7 @@ class TimeseriesFile():
             Maximum pathline time.
 
         """
-        return self._data['time'].max()
+        return self._data["time"].max()
 
     def get_data(self, partid=0, totim=None, ge=True):
         """
@@ -1252,17 +1447,20 @@ class TimeseriesFile():
         """
         if totim is not None:
             if ge:
-                idx = (self._data['time'] >= totim) & \
-                      (self._data['particleid'] == partid)
+                idx = (self._data["time"] >= totim) & (
+                    self._data["particleid"] == partid
+                )
             else:
-                idx = (self._data['time'] <= totim) & \
-                      (self._data['particleid'] == partid)
+                idx = (self._data["time"] <= totim) & (
+                    self._data["particleid"] == partid
+                )
         else:
-            idx = self._data['particleid'] == partid
+            idx = self._data["particleid"] == partid
         self._ta = self._data[idx]
-        names = ['x', 'y', 'z', 'time', 'k', 'particleid']
-        return np.rec.fromarrays((self._ta[name] for name in names),
-                                 dtype=self.outdtype)
+        names = ["x", "y", "z", "time", "k", "particleid"]
+        return np.rec.fromarrays(
+            (self._ta[name] for name in names), dtype=self.outdtype
+        )
 
     def get_alldata(self, totim=None, ge=True):
         """
@@ -1301,8 +1499,10 @@ class TimeseriesFile():
         >>> ts = tsobj.get_alldata()
 
         """
-        return [self.get_data(partid=partid, totim=totim, ge=ge)
-                for partid in self.nid]
+        return [
+            self.get_data(partid=partid, totim=totim, ge=ge)
+            for partid in self.nid
+        ]
 
     def get_destination_timeseries_data(self, dest_cells):
         """
@@ -1336,14 +1536,16 @@ class TimeseriesFile():
         # convert dest_cells to same dtype for comparison
         if self.version < 7:
             try:
-                raslice = ra[['k', 'i', 'j']]
+                raslice = ra[["k", "i", "j"]]
             except:
-                msg = "could not extract 'k', 'i', and 'j' keys " + \
-                      "from timeseries data"
+                msg = (
+                    "could not extract 'k', 'i', and 'j' keys "
+                    + "from timeseries data"
+                )
                 raise KeyError(msg)
         else:
             try:
-                raslice = ra[['node']]
+                raslice = ra[["node"]]
             except:
                 msg = "could not extract 'node' key from timeseries data"
                 raise KeyError(msg)
@@ -1361,7 +1563,7 @@ class TimeseriesFile():
         epdest = ra[inds].copy().view(np.recarray)
 
         # use particle ids to get the rest of the timeseries
-        inds = np.in1d(ra['particleid'], epdest.particleid)
+        inds = np.in1d(ra["particleid"], epdest.particleid)
         tsdes = ra[inds].copy()
-        tsdes.sort(order=['particleid', 'time'])
+        tsdes.sort(order=["particleid", "time"])
         return tsdes.view(np.recarray)

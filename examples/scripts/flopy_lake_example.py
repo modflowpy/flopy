@@ -7,20 +7,20 @@ import flopy
 
 
 def run():
-    workspace = os.path.join('lake')
+    workspace = os.path.join("lake")
     # make sure workspace directory exists
     if not os.path.exists(workspace):
         os.makedirs(workspace)
 
-    fext = 'png'
+    fext = "png"
     narg = len(sys.argv)
     iarg = 0
     if narg > 1:
         while iarg < narg - 1:
             iarg += 1
             basearg = sys.argv[iarg].lower()
-            if basearg == '--pdf':
-                fext = 'pdf'
+            if basearg == "--pdf":
+                fext = "pdf"
 
     # save the starting path
     cwdpth = os.getcwd()
@@ -33,7 +33,7 @@ def run():
     # of the model and the parameters of the model: the number of layers `Nlay`, the number of rows
     # and columns `N`, lengths of the sides of the model `L`, aquifer thickness `H`, hydraulic
     # conductivity `Kh`
-    name = 'lake_example'
+    name = "lake_example"
     h1 = 100
     h2 = 90
     Nlay = 10
@@ -46,8 +46,9 @@ def run():
     # whatever you want). The modelname will be the name given to all MODFLOW files (input and output).
     # The exe_name should be the full path to your MODFLOW executable. The version is either 'mf2k'
     # for MODFLOW2000 or 'mf2005'for MODFLOW2005.
-    ml = flopy.modflow.Modflow(modelname=name, exe_name='mf2005',
-                               version='mf2005')
+    ml = flopy.modflow.Modflow(
+        modelname=name, exe_name="mf2005", version="mf2005"
+    )
 
     # Define the discretization of the model. All layers are given equal thickness. The `bot` array
     # is build from the `Hlay` values to indicate top and bottom of each layer, and `delrow` and
@@ -55,8 +56,17 @@ def run():
     # the Discretization file is built.
     bot = np.linspace(-H / Nlay, -H, Nlay)
     delrow = delcol = L / (N - 1)
-    dis = flopy.modflow.ModflowDis(ml, nlay=Nlay, nrow=N, ncol=N, delr=delrow,
-                                   delc=delcol, top=0.0, botm=bot, laycbd=0)
+    dis = flopy.modflow.ModflowDis(
+        ml,
+        nlay=Nlay,
+        nrow=N,
+        ncol=N,
+        delr=delrow,
+        delc=delcol,
+        top=0.0,
+        botm=bot,
+        laycbd=0,
+    )
 
     # Next we specify the boundary conditions and starting heads with the Basic package. The `ibound`
     # array will be `1` in all cells in all layers, except for along the boundary and in the cell at
@@ -77,14 +87,14 @@ def run():
 
     # create external ibound array and starting head files
     files = []
-    hfile = '{}_strt.ref'.format(name)
+    hfile = "{}_strt.ref".format(name)
     np.savetxt(hfile, start)
     hfiles = []
     for kdx in range(Nlay):
-        file = '{}_ib{:02d}.ref'.format(name, kdx + 1)
+        file = "{}_ib{:02d}.ref".format(name, kdx + 1)
         files.append(file)
         hfiles.append(hfile)
-        np.savetxt(file, ibound[kdx, :, :], fmt='%5d')
+        np.savetxt(file, ibound[kdx, :, :], fmt="%5d")
 
     bas = flopy.modflow.ModflowBas(ml, ibound=files, strt=hfiles)
 
@@ -108,39 +118,39 @@ def run():
     # specifying, in this case, the step number and period number for which we want to retrieve data.
     # A three-dimensional array is returned of size `nlay, nrow, ncol`. Matplotlib contouring functions
     # are used to make contours of the layers or a cross-section.
-    hds = flopy.utils.HeadFile(os.path.join(workspace, name + '.hds'))
+    hds = flopy.utils.HeadFile(os.path.join(workspace, name + ".hds"))
     h = hds.get_data(kstpkper=(0, 0))
     x = y = np.linspace(0, L, N)
     c = plt.contour(x, y, h[0], np.arange(90, 100.1, 0.2))
-    plt.clabel(c, fmt='%2.1f')
-    plt.axis('scaled')
+    plt.clabel(c, fmt="%2.1f")
+    plt.axis("scaled")
 
-    outfig = os.path.join(workspace, 'lake1.{0}'.format(fext))
+    outfig = os.path.join(workspace, "lake1.{0}".format(fext))
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
-    print('created...', outfig)
+    print("created...", outfig)
 
     x = y = np.linspace(0, L, N)
     c = plt.contour(x, y, h[-1], np.arange(90, 100.1, 0.2))
-    plt.clabel(c, fmt='%1.1f')
-    plt.axis('scaled')
+    plt.clabel(c, fmt="%1.1f")
+    plt.axis("scaled")
 
-    outfig = os.path.join(workspace, 'lake2.{0}'.format(fext))
+    outfig = os.path.join(workspace, "lake2.{0}".format(fext))
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
-    print('created...', outfig)
+    print("created...", outfig)
 
     z = np.linspace(-H / Nlay / 2, -H + H / Nlay / 2, Nlay)
-    c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, .2))
-    plt.axis('scaled')
+    c = plt.contour(x, z, h[:, 50, :], np.arange(90, 100.1, 0.2))
+    plt.axis("scaled")
 
-    outfig = os.path.join(workspace, 'lake3.{0}'.format(fext))
+    outfig = os.path.join(workspace, "lake3.{0}".format(fext))
     fig = plt.gcf()
     fig.savefig(outfig, dpi=300)
-    print('created...', outfig)
+    print("created...", outfig)
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run()

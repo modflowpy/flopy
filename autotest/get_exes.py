@@ -4,12 +4,12 @@ import sys
 import shutil
 
 try:
-    import pymake
+    from pymake import getmfexes
 except:
-    print('pymake is not installed...will not build executables')
+    print('pymake is not installed...will not download executables')
     pymake = None
 
-os.environ["TRAVIS"] = "1"
+os.environ["CI"] = "1"
 
 # path where downloaded executables will be extracted
 exe_pth = 'exe_download'
@@ -18,21 +18,22 @@ if not os.path.isdir(exe_pth):
     os.makedirs(exe_pth)
 
 # determine if running on Travis
-is_travis = 'TRAVIS' in os.environ
+is_CI = 'CI' in os.environ
 
 bindir = '.'
 dotlocal = False
-if is_travis:
+if is_CI:
     dotlocal = True
 
 if not dotlocal:
     for idx, arg in enumerate(sys.argv):
-        if '--travis' in arg.lower():
+        if '--ci' in arg.lower():
             dotlocal = True
             break
 if dotlocal:
     bindir = os.path.join(os.path.expanduser('~'), '.local', 'bin')
     bindir = os.path.abspath(bindir)
+    print("bindir: {}".format(bindir))
     if not os.path.isdir(bindir):
         os.makedirs(bindir)
 
@@ -53,7 +54,7 @@ def list_exes():
 
 
 def test_download_and_unzip():
-    pymake.getmfexes(exe_pth)
+    getmfexes(exe_pth)
 
     # move the exes from exe_pth to bindir
     files = os.listdir(exe_pth)
@@ -63,7 +64,7 @@ def test_download_and_unzip():
         src = os.path.join(exe_pth, file)
         dst = os.path.join(bindir, file)
         print('moving {} -> {}'.format(src, dst))
-        os.replace(src, dst)
+        shutil.move(src, dst)
 
 
 def test_cleanup():

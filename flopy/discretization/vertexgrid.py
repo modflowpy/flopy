@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     from matplotlib.path import Path
 except ImportError:
@@ -32,12 +33,37 @@ class VertexGrid(Grid):
         returns vertices for a single cell at cellid.
     """
 
-    def __init__(self, vertices=None, cell2d=None, top=None,
-                 botm=None, idomain=None, lenuni=None, epsg=None, proj4=None,
-                 prj=None, xoff=0.0, yoff=0.0, angrot=0.0,
-                 nlay=None, ncpl=None, cell1d=None):
-        super(VertexGrid, self).__init__('vertex', top, botm, idomain, lenuni,
-                                         epsg, proj4, prj, xoff, yoff, angrot)
+    def __init__(
+        self,
+        vertices=None,
+        cell2d=None,
+        top=None,
+        botm=None,
+        idomain=None,
+        lenuni=None,
+        epsg=None,
+        proj4=None,
+        prj=None,
+        xoff=0.0,
+        yoff=0.0,
+        angrot=0.0,
+        nlay=None,
+        ncpl=None,
+        cell1d=None,
+    ):
+        super(VertexGrid, self).__init__(
+            "vertex",
+            top,
+            botm,
+            idomain,
+            lenuni,
+            epsg,
+            proj4,
+            prj,
+            xoff,
+            yoff,
+            angrot,
+        )
         self._vertices = vertices
         self._cell1d = cell1d
         self._cell2d = cell2d
@@ -53,16 +79,19 @@ class VertexGrid(Grid):
 
     @property
     def is_valid(self):
-        if self._vertices is not None and (self._cell2d is not None or
-                self._cell1d is not None):
+        if self._vertices is not None and (
+            self._cell2d is not None or self._cell1d is not None
+        ):
             return True
         return False
 
     @property
     def is_complete(self):
-        if self._vertices is not None and (self._cell2d is not None or
-                self._cell1d is not None) and \
-                super(VertexGrid, self).is_complete:
+        if (
+            self._vertices is not None
+            and (self._cell2d is not None or self._cell1d is not None)
+            and super(VertexGrid, self).is_complete
+        ):
             return True
         return False
 
@@ -83,7 +112,7 @@ class VertexGrid(Grid):
             return len(self._botm[0])
         else:
             return self._ncpl
-    
+
     @property
     def nnodes(self):
         return self.nlay * self.ncpl
@@ -98,10 +127,12 @@ class VertexGrid(Grid):
         xvertices = np.hstack(self.xvertices)
         yvertices = np.hstack(self.yvertices)
         self._copy_cache = True
-        return (np.min(xvertices),
-                np.max(xvertices),
-                np.min(yvertices),
-                np.max(yvertices))
+        return (
+            np.min(xvertices),
+            np.max(xvertices),
+            np.min(yvertices),
+            np.max(yvertices),
+        )
 
     @property
     def grid_lines(self):
@@ -119,8 +150,12 @@ class VertexGrid(Grid):
         lines = []
         for ncell, verts in enumerate(xgrid):
             for ix, vert in enumerate(verts):
-                lines.append([(xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
-                              (xgrid[ncell][ix], ygrid[ncell][ix])])
+                lines.append(
+                    [
+                        (xgrid[ncell][ix - 1], ygrid[ncell][ix - 1]),
+                        (xgrid[ncell][ix], ygrid[ncell][ix]),
+                    ]
+                )
         self._copy_cache = True
         return lines
 
@@ -129,9 +164,11 @@ class VertexGrid(Grid):
         """
         Method to get cell centers and set to grid
         """
-        cache_index = 'cellcenters'
-        if cache_index not in self._cache_dict or \
-                self._cache_dict[cache_index].out_of_date:
+        cache_index = "cellcenters"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
             self._build_grid_geometry_info()
         if self._copy_cache:
             return self._cache_dict[cache_index].data
@@ -146,9 +183,11 @@ class VertexGrid(Grid):
         Returns:
             list of size sum(nvertices per cell)
         """
-        cache_index = 'xyzgrid'
-        if cache_index not in self._cache_dict or \
-                self._cache_dict[cache_index].out_of_date:
+        cache_index = "xyzgrid"
+        if (
+            cache_index not in self._cache_dict
+            or self._cache_dict[cache_index].out_of_date
+        ):
             self._build_grid_geometry_info()
         if self._copy_cache:
             return self._cache_dict[cache_index].data
@@ -158,10 +197,10 @@ class VertexGrid(Grid):
     def intersect(self, x, y, local=False, forgive=False):
         """
         Get the CELL2D number of a point with coordinates x and y
-        
+
         When the point is on the edge of two cells, the cell with the lowest
         CELL2D number is returned.
-        
+
         Parameters
         ----------
         x : float
@@ -173,28 +212,34 @@ class VertexGrid(Grid):
         forgive: bool (optional)
             Forgive x,y arguments that fall outside the model grid and
             return NaNs instead (defaults to False - will throw exception)
-    
+
         Returns
         -------
         icell2d : int
             The CELL2D number
-        
+
         """
         if Path is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use VertexGrid.intersect() method'
+            s = (
+                "Could not import matplotlib.  Must install matplotlib "
+                + " in order to use VertexGrid.intersect() method"
+            )
             raise ImportError(s)
 
         if local:
             # transform x and y to real-world coordinates
-            x, y = super(VertexGrid, self).get_coords(x,y)
+            x, y = super(VertexGrid, self).get_coords(x, y)
         xv, yv, zv = self.xyzvertices
         for icell2d in range(self.ncpl):
             xa = np.array(xv[icell2d])
             ya = np.array(yv[icell2d])
             # x and y at least have to be within the bounding box of the cell
-            if np.any(x <= xa) and np.any(x >= xa) and \
-                    np.any(y <= ya) and np.any(y >= ya):
+            if (
+                np.any(x <= xa)
+                and np.any(x >= xa)
+                and np.any(y <= ya)
+                and np.any(y >= ya)
+            ):
                 path = Path(np.stack((xa, ya)).transpose())
                 # use a small radius, so that the edge of the cell is included
                 if is_clockwise(xa, ya):
@@ -206,18 +251,18 @@ class VertexGrid(Grid):
         if forgive:
             icell2d = np.nan
             return icell2d
-        raise Exception('x, y point given is outside of the model area')
+        raise Exception("x, y point given is outside of the model area")
 
     def get_cell_vertices(self, cellid):
         """
         Method to get a set of cell vertices for a single cell
             used in the Shapefile export utilities
         :param cellid: (int) cellid number
-        :return: list of x,y cell vertices
+        Returns
+        ------- list of x,y cell vertices
         """
         self._copy_cache = False
-        cell_verts = list(zip(self.xvertices[cellid],
-                              self.yvertices[cellid]))
+        cell_verts = list(zip(self.xvertices[cellid], self.yvertices[cellid]))
         self._copy_cache = True
         return cell_verts
 
@@ -241,8 +286,8 @@ class VertexGrid(Grid):
         return mm.plot_grid(**kwargs)
 
     def _build_grid_geometry_info(self):
-        cache_index_cc = 'cellcenters'
-        cache_index_vert = 'xyzgrid'
+        cache_index_cc = "cellcenters"
+        cache_index_vert = "xyzgrid"
 
         xcenters = []
         ycenters = []
@@ -252,8 +297,7 @@ class VertexGrid(Grid):
         if self._cell1d is not None:
             zcenters = []
             zvertices = []
-            vertexdict = {v[0]: [v[1], v[2], v[3]]
-                          for v in self._vertices}
+            vertexdict = {v[0]: [v[1], v[2], v[3]] for v in self._vertices}
             for cell1d in self._cell1d:
                 cell1d = tuple(cell1d)
                 xcenters.append(cell1d[1])
@@ -277,8 +321,7 @@ class VertexGrid(Grid):
                 zvertices.append(zcellvert)
 
         else:
-            vertexdict = {v[0]: [v[1], v[2]]
-                          for v in self._vertices}
+            vertexdict = {v[0]: [v[1], v[2]] for v in self._vertices}
             # build xy vertex and cell center info
             for cell2d in self._cell2d:
                 cell2d = tuple(cell2d)
@@ -308,20 +351,20 @@ class VertexGrid(Grid):
             yvertxform = []
             # vertices are a list within a list
             for xcellvertices, ycellvertices in zip(xvertices, yvertices):
-                xcellvertices, \
-                ycellvertices = self.get_coords(xcellvertices,
-                                                ycellvertices)
+                xcellvertices, ycellvertices = self.get_coords(
+                    xcellvertices, ycellvertices
+                )
                 xvertxform.append(xcellvertices)
                 yvertxform.append(ycellvertices)
             xvertices = xvertxform
             yvertices = yvertxform
 
-        self._cache_dict[cache_index_cc] = CachedData([xcenters,
-                                                       ycenters,
-                                                       zcenters])
-        self._cache_dict[cache_index_vert] = CachedData([xvertices,
-                                                         yvertices,
-                                                         zvertices])
+        self._cache_dict[cache_index_cc] = CachedData(
+            [xcenters, ycenters, zcenters]
+        )
+        self._cache_dict[cache_index_vert] = CachedData(
+            [xvertices, yvertices, zvertices]
+        )
 
 
 if __name__ == "__main__":
@@ -338,9 +381,17 @@ if __name__ == "__main__":
 
     dis = ml.dis
 
-    t = VertexGrid(dis.vertices.array, dis.cell2d.array, top=dis.top.array,
-                   botm=dis.botm.array, idomain=dis.idomain.array,
-                   epsg=26715, xoff=0, yoff=0, angrot=45)
+    t = VertexGrid(
+        dis.vertices.array,
+        dis.cell2d.array,
+        top=dis.top.array,
+        botm=dis.botm.array,
+        idomain=dis.idomain.array,
+        epsg=26715,
+        xoff=0,
+        yoff=0,
+        angrot=45,
+    )
 
     sr_x = t.xvertices
     sr_y = t.yvertices

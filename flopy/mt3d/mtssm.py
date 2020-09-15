@@ -5,17 +5,17 @@ from ..pakbase import Package
 from ..utils import Util2d, MfList, Transient2d
 
 # Note: Order matters as first 6 need logical flag on line 1 of SSM file
-SsmLabels = ['WEL', 'DRN', 'RCH', 'EVT', 'RIV', 'GHB', 'BAS6', 'CHD', 'PBC']
+SsmLabels = ["WEL", "DRN", "RCH", "EVT", "RIV", "GHB", "BAS6", "CHD", "PBC"]
 
 
 class SsmPackage(object):
-    def __init__(self, label='', instance=None, needTFstr=False):
+    def __init__(self, label="", instance=None, needTFstr=False):
         self.label = label
         self.instance = instance
         self.needTFstr = needTFstr
-        self.TFstr = ' F'
+        self.TFstr = " F"
         if self.instance is not None:
-            self.TFstr = ' T'
+            self.TFstr = " T"
 
 
 class Mt3dSsm(Package):
@@ -154,15 +154,24 @@ class Mt3dSsm(Package):
 
     """
 
-    def __init__(self, model, crch=None, cevt=None, mxss=None,
-                 stress_period_data=None, dtype=None,
-                 extension='ssm', unitnumber=None, filenames=None,
-                 **kwargs):
+    def __init__(
+        self,
+        model,
+        crch=None,
+        cevt=None,
+        mxss=None,
+        stress_period_data=None,
+        dtype=None,
+        extension="ssm",
+        unitnumber=None,
+        filenames=None,
+        **kwargs
+    ):
 
         if unitnumber is None:
-            unitnumber = Mt3dSsm.defaultunit()
+            unitnumber = Mt3dSsm._defaultunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dSsm.reservedunit()
+            unitnumber = Mt3dSsm._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -171,23 +180,33 @@ class Mt3dSsm(Package):
             filenames = [filenames]
 
         # Fill namefile items
-        name = [Mt3dSsm.ftype()]
+        name = [Mt3dSsm._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
-        deprecated_kwargs = ['criv', 'cghb', 'cibd', 'cchd', 'cpbc', 'cwel']
+        deprecated_kwargs = ["criv", "cghb", "cibd", "cchd", "cpbc", "cwel"]
         for key in kwargs:
-            if (key in deprecated_kwargs):
-                warnings.warn("Deprecation Warning: Keyword argument '" + key +
-                              "' no longer supported. Use " +
-                              "'stress_period_data' instead.")
+            if key in deprecated_kwargs:
+                warnings.warn(
+                    "Deprecation Warning: Keyword argument '"
+                    + key
+                    + "' no longer supported. Use "
+                    + "'stress_period_data' instead."
+                )
 
         # Set dimensions
         mf = self.parent.mf
@@ -204,7 +223,8 @@ class Mt3dSsm(Package):
                 mfpack = mf.get_package(label)
                 ssmpack = SsmPackage(label, mfpack, (i < 6))
                 self.__SsmPackages.append(
-                    ssmpack)  # First 6 need T/F flag in file line 1
+                    ssmpack
+                )  # First 6 need T/F flag in file line 1
 
         if dtype is not None:
             self.dtype = dtype
@@ -214,14 +234,19 @@ class Mt3dSsm(Package):
         if stress_period_data is None:
             self.stress_period_data = None
         else:
-            self.stress_period_data = MfList(self, model=model,
-                                             data=stress_period_data,
-                                             list_free_format=False)
+            self.stress_period_data = MfList(
+                self,
+                model=model,
+                data=stress_period_data,
+                list_free_format=False,
+            )
 
         if mxss is None and mf is None:
-            warnings.warn('SSM Package: mxss is None and modflowmodel is ' +
-                          'None.  Cannot calculate max number of sources ' +
-                          'and sinks.  Estimating from stress_period_data. ')
+            warnings.warn(
+                "SSM Package: mxss is None and modflowmodel is "
+                + "None.  Cannot calculate max number of sources "
+                + "and sinks.  Estimating from stress_period_data. "
+            )
 
         if mxss is None:
             # Need to calculate max number of sources and sinks
@@ -234,19 +259,21 @@ class Mt3dSsm(Package):
                 for i in range(nper):
                     if i in self.stress_period_data.data:
                         mxss_kper += np.sum(
-                            self.stress_period_data.data[i].itype == -1)
+                            self.stress_period_data.data[i].itype == -1
+                        )
                         mxss_kper += np.sum(
-                            self.stress_period_data.data[i].itype == -15)
+                            self.stress_period_data.data[i].itype == -15
+                        )
                     self.mxss = max(self.mxss, mxss_kper)
 
             if isinstance(self.parent.btn.icbund, np.ndarray):
                 self.mxss += (self.parent.btn.icbund < 0).sum()
 
             for p in self.__SsmPackages:
-                if ((p.label == 'BAS6') and (p.instance != None)):
+                if (p.label == "BAS6") and (p.instance != None):
                     self.mxss += (p.instance.ibound.array < 0).sum()
                 elif p.instance != None:
-                    self.mxss += p.instance.ncells()
+                    self.mxss += p.instance._ncells()
         else:
             self.mxss = mxss
 
@@ -258,15 +285,20 @@ class Mt3dSsm(Package):
                 crch = 0.0
         except:
             if model.verbose:
-                print('   explicit crcg in file')
+                print("   explicit crcg in file")
 
         if crch is not None:
 
             self.crch = []
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              crch, name='crch1',
-                              locat=self.unit_number[0],
-                              array_free_format=False)
+            t2d = Transient2d(
+                model,
+                (nrow, ncol),
+                np.float32,
+                crch,
+                name="crch1",
+                locat=self.unit_number[0],
+                array_free_format=False,
+            )
             self.crch.append(t2d)
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
@@ -275,13 +307,21 @@ class Mt3dSsm(Package):
                     if name in list(kwargs.keys()):
                         val = kwargs.pop(name)
                     else:
-                        print("SSM: setting crch for component " + \
-                              str(icomp) + " to zero. kwarg name " + \
-                              name)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      val, name=name,
-                                      locat=self.unit_number[0],
-                                      array_free_format=False)
+                        print(
+                            "SSM: setting crch for component "
+                            + str(icomp)
+                            + " to zero. kwarg name "
+                            + name
+                        )
+                    t2d = Transient2d(
+                        model,
+                        (nrow, ncol),
+                        np.float32,
+                        val,
+                        name=name,
+                        locat=self.unit_number[0],
+                        array_free_format=False,
+                    )
                     self.crch.append(t2d)
         # else:
         #     try:
@@ -300,20 +340,27 @@ class Mt3dSsm(Package):
         self.cevt = None
         try:
             if cevt is None and (
-                    model.mf.evt is not None or model.mf.ets is not None):
+                model.mf.evt is not None or model.mf.ets is not None
+            ):
                 print(
-                    "found 'ets'/'evt' in modflow model, resetting cevt to 0.0")
+                    "found 'ets'/'evt' in modflow model, resetting cevt to 0.0"
+                )
                 cevt = 0.0
         except:
             if model.verbose:
-                print('   explicit cevt in file')
+                print("   explicit cevt in file")
 
         if cevt is not None:
             self.cevt = []
-            t2d = Transient2d(model, (nrow, ncol), np.float32,
-                              cevt, name='cevt1',
-                              locat=self.unit_number[0],
-                              array_free_format=False)
+            t2d = Transient2d(
+                model,
+                (nrow, ncol),
+                np.float32,
+                cevt,
+                name="cevt1",
+                locat=self.unit_number[0],
+                array_free_format=False,
+            )
             self.cevt.append(t2d)
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
@@ -323,13 +370,21 @@ class Mt3dSsm(Package):
                         val = kwargs[name]
                         kwargs.pop(name)
                     else:
-                        print("SSM: setting cevt for component " + \
-                              str(icomp) + " to zero, kwarg name " + \
-                              name)
-                    t2d = Transient2d(model, (nrow, ncol), np.float32,
-                                      val, name=name,
-                                      locat=self.unit_number[0],
-                                      array_free_format=False)
+                        print(
+                            "SSM: setting cevt for component "
+                            + str(icomp)
+                            + " to zero, kwarg name "
+                            + name
+                        )
+                    t2d = Transient2d(
+                        model,
+                        (nrow, ncol),
+                        np.float32,
+                        val,
+                        name=name,
+                        locat=self.unit_number[0],
+                        array_free_format=False,
+                    )
                     self.cevt.append(t2d)
 
         # else:
@@ -347,8 +402,10 @@ class Mt3dSsm(Package):
         #         self.cevt = None
 
         if len(list(kwargs.keys())) > 0:
-            raise Exception("SSM error: unrecognized kwargs: " +
-                            ' '.join(list(kwargs.keys())))
+            raise Exception(
+                "SSM error: unrecognized kwargs: "
+                + " ".join(list(kwargs.keys()))
+            )
 
         # Add self to parent and return
         self.parent.add_package(self)
@@ -382,8 +439,13 @@ class Mt3dSsm(Package):
         Construct a dtype for the recarray containing the list of sources
         and sinks
         """
-        type_list = [("k", np.int), ("i", np.int), ("j", np.int),
-                     ("css", np.float32), ("itype", np.int)]
+        type_list = [
+            ("k", np.int),
+            ("i", np.int),
+            ("j", np.int),
+            ("css", np.float32),
+            ("itype", np.int),
+        ]
         if ncomp > 1:
             for comp in range(1, ncomp + 1):
                 comp_name = "cssm({0:02d})".format(comp)
@@ -401,20 +463,20 @@ class Mt3dSsm(Package):
 
         """
         # Open file for writing
-        f_ssm = open(self.fn_path, 'w')
+        f_ssm = open(self.fn_path, "w")
         for p in self.__SsmPackages:
             if p.needTFstr:
                 f_ssm.write(p.TFstr)
 
-        f_ssm.write(' F F F F F F F F F F\n')
+        f_ssm.write(" F F F F F F F F F F\n")
 
-        f_ssm.write('{:10d}\n'.format(self.mxss))
+        f_ssm.write("{:10d}\n".format(self.mxss))
 
         # Loop through each stress period and write ssm information
         nper = self.parent.nper
         for kper in range(nper):
             if f_ssm.closed == True:
-                f_ssm = open(f_ssm.name, 'a')
+                f_ssm = open(f_ssm.name, "a")
 
             # Distributed sources and sinks (Recharge and Evapotranspiration)
             if self.crch is not None:
@@ -426,7 +488,7 @@ class Mt3dSsm(Package):
                     incrch = max(incrch, incrchicomp)
                     if incrch == 1:
                         break
-                f_ssm.write('{:10d}\n'.format(incrch))
+                f_ssm.write("{:10d}\n".format(incrch))
                 if incrch == 1:
                     for t2d in self.crch:
                         u2d = t2d[kper]
@@ -442,7 +504,7 @@ class Mt3dSsm(Package):
                     incevt = max(incevt, incevticomp)
                     if incevt == 1:
                         break
-                f_ssm.write('{:10d}\n'.format(incevt))
+                f_ssm.write("{:10d}\n".format(incevt))
                 if incevt == 1:
                     for t2d in self.cevt:
                         u2d = t2d[kper]
@@ -453,14 +515,23 @@ class Mt3dSsm(Package):
             if self.stress_period_data is not None:
                 self.stress_period_data.write_transient(f_ssm, single_per=kper)
             else:
-                f_ssm.write('{}\n'.format(0))
+                f_ssm.write("{}\n".format(0))
 
         f_ssm.close()
         return
 
-    @staticmethod
-    def load(f, model, nlay=None, nrow=None, ncol=None, nper=None,
-             ncomp=None, ext_unit_dict=None):
+    @classmethod
+    def load(
+        cls,
+        f,
+        model,
+        nlay=None,
+        nrow=None,
+        ncol=None,
+        nper=None,
+        ncomp=None,
+        ext_unit_dict=None,
+    ):
         """
         Load an existing package.
 
@@ -493,13 +564,13 @@ class Mt3dSsm(Package):
         """
 
         if model.verbose:
-            sys.stdout.write('loading ssm package file...\n')
+            sys.stdout.write("loading ssm package file...\n")
 
         # Open file, if necessary
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Set modflow model and dimensions if necessary
         mf = model.mf
@@ -520,13 +591,14 @@ class Mt3dSsm(Package):
         # Dataset 0 -- comment line
         while True:
             line = f.readline()
-            if line[0] != '#':
+            if line[0] != "#":
                 break
 
         # Item D1: Dummy input line - line already read above
         if model.verbose:
             print(
-                '   loading FWEL, FDRN, FRCH, FEVT, FRIV, FGHB, (FNEW(n), n=1,4)...')
+                "   loading FWEL, FDRN, FRCH, FEVT, FRIV, FGHB, (FNEW(n), n=1,4)..."
+            )
         fwel = line[0:2]
         fdrn = line[2:4]
         frch = line[4:6]
@@ -536,45 +608,45 @@ class Mt3dSsm(Package):
         if len(line) >= 14:
             fnew1 = line[12:14]
         else:
-            fnew1 = 'F'
+            fnew1 = "F"
         if len(line) >= 16:
             fnew2 = line[14:16]
         else:
-            fnew2 = 'F'
+            fnew2 = "F"
         if len(line) >= 18:
             fnew3 = line[16:18]
         else:
-            fnew3 = 'F'
+            fnew3 = "F"
         if len(line) >= 20:
             fnew4 = line[18:20]
         else:
-            fnew4 = 'F'
+            fnew4 = "F"
         if model.verbose:
-            print('   FWEL {}'.format(fwel))
-            print('   FDRN {}'.format(fdrn))
-            print('   FRCH {}'.format(frch))
-            print('   FEVT {}'.format(fevt))
-            print('   FRIV {}'.format(friv))
-            print('   FGHB {}'.format(fghb))
-            print('   FNEW1 {}'.format(fnew1))
-            print('   FNEW2 {}'.format(fnew2))
-            print('   FNEW3 {}'.format(fnew3))
-            print('   FNEW4 {}'.format(fnew4))
+            print("   FWEL {}".format(fwel))
+            print("   FDRN {}".format(fdrn))
+            print("   FRCH {}".format(frch))
+            print("   FEVT {}".format(fevt))
+            print("   FRIV {}".format(friv))
+            print("   FGHB {}".format(fghb))
+            print("   FNEW1 {}".format(fnew1))
+            print("   FNEW2 {}".format(fnew2))
+            print("   FNEW3 {}".format(fnew3))
+            print("   FNEW4 {}".format(fnew4))
 
         # Override the logical settings at top of ssm file using the
         # modflowmodel, if it is attached to parent
         if mf is not None:
-            rchpack = mf.get_package('RCH')
+            rchpack = mf.get_package("RCH")
             if rchpack is not None:
-                frch = 't'
-            evtpack = mf.get_package('EVT')
+                frch = "t"
+            evtpack = mf.get_package("EVT")
             if evtpack is not None:
-                fevt = 't'
+                fevt = "t"
 
         # Item D2: MXSS, ISSGOUT
         mxss = None
         if model.verbose:
-            print('   loading MXSS, ISSGOUT...')
+            print("   loading MXSS, ISSGOUT...")
         line = f.readline()
         mxss = int(line[0:10])
         try:
@@ -582,30 +654,30 @@ class Mt3dSsm(Package):
         except:
             issgout = 0
         if model.verbose:
-            print('   MXSS {}'.format(mxss))
-            print('   ISSGOUT {}'.format(issgout))
+            print("   MXSS {}".format(mxss))
+            print("   ISSGOUT {}".format(issgout))
 
         # kwargs needed to construct crch2, crch3, etc. for multispecies
         kwargs = {}
 
         crch = None
-        if 't' in frch.lower():
-            t2d = 0.
+        if "t" in frch.lower():
+            t2d = 0.0
             crch = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "crch" + str(icomp)
-                    t2d = 0.
+                    t2d = 0.0
                     kwargs[name] = {0: t2d}
 
         cevt = None
-        if 't' in fevt.lower():
-            t2d = 0.
+        if "t" in fevt.lower():
+            t2d = 0.0
             cevt = {0: t2d}
             if ncomp > 1:
                 for icomp in range(2, ncomp + 1):
                     name = "cevt" + str(icomp)
-                    t2d = 0.
+                    t2d = 0.0
                     kwargs[name] = {0: t2d}
 
         stress_period_data = {}
@@ -617,70 +689,98 @@ class Mt3dSsm(Package):
 
             # Item D3: INCRCH
             incrch = -1
-            if 't' in frch.lower():
+            if "t" in frch.lower():
                 if model.verbose:
-                    print('   loading INCRCH...')
+                    print("   loading INCRCH...")
                 line = f.readline()
                 incrch = int(line[0:10])
 
             # Item D4: CRCH
             if incrch >= 0:
                 if model.verbose:
-                    print('   loading CRCH...')
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'crch',
-                                ext_unit_dict, array_format="mt3d")
+                    print("   loading CRCH...")
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "crch",
+                    ext_unit_dict,
+                    array_format="mt3d",
+                )
                 crch[iper] = t
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
                         name = "crch" + str(icomp)
                         if model.verbose:
-                            print('   loading {}...'.format(name))
-                        t = Util2d.load(f, model, (nrow, ncol),
-                                        np.float32, name, ext_unit_dict,
-                                        array_format="mt3d")
+                            print("   loading {}...".format(name))
+                        t = Util2d.load(
+                            f,
+                            model,
+                            (nrow, ncol),
+                            np.float32,
+                            name,
+                            ext_unit_dict,
+                            array_format="mt3d",
+                        )
                         crchicomp = kwargs[name]
                         crchicomp[iper] = t
 
             # Item D5: INCEVT
             incevt = -1
-            if 't' in fevt.lower():
+            if "t" in fevt.lower():
                 if model.verbose:
-                    print('   loading INCEVT...')
+                    print("   loading INCEVT...")
                 line = f.readline()
                 incevt = int(line[0:10])
 
             # Item D6: CEVT
             if incevt >= 0:
                 if model.verbose:
-                    print('   loading CEVT...')
-                t = Util2d.load(f, model, (nrow, ncol), np.float32, 'cevt',
-                                ext_unit_dict, array_format="mt3d")
+                    print("   loading CEVT...")
+                t = Util2d.load(
+                    f,
+                    model,
+                    (nrow, ncol),
+                    np.float32,
+                    "cevt",
+                    ext_unit_dict,
+                    array_format="mt3d",
+                )
                 cevt[iper] = t
                 # Load each multispecies array
                 if ncomp > 1:
                     for icomp in range(2, ncomp + 1):
                         name = "cevt" + str(icomp)
                         if model.verbose:
-                            print('   loading {}...'.format(name))
-                        t = Util2d.load(f, model, (nrow, ncol),
-                                        np.float32, name, ext_unit_dict,
-                                        array_format="mt3d")
+                            print("   loading {}...".format(name))
+                        t = Util2d.load(
+                            f,
+                            model,
+                            (nrow, ncol),
+                            np.float32,
+                            name,
+                            ext_unit_dict,
+                            array_format="mt3d",
+                        )
                         cevticomp = kwargs[name]
                         cevticomp[iper] = t
 
             # Item D7: NSS
             if model.verbose:
-                print('   loading NSS...')
+                print("   loading NSS...")
             line = f.readline()
             nss = int(line[0:10])
             if model.verbose:
-                print('   NSS {}'.format(nss))
+                print("   NSS {}".format(nss))
 
             # Item D8: KSS, ISS, JSS, CSS, ITYPE, (CSSMS(n),n=1,NCOMP)
             if model.verbose:
-                print('   loading KSS, ISS, JSS, CSS, ITYPE, '
-                      '(CSSMS(n),n=1,NCOMP)...')
+                print(
+                    "   loading KSS, ISS, JSS, CSS, ITYPE, "
+                    "(CSSMS(n),n=1,NCOMP)..."
+                )
             if nss > 0:
                 current = np.empty((nss), dtype=dtype)
                 for ibnd in range(nss):
@@ -695,16 +795,15 @@ class Mt3dSsm(Package):
                         tt = line[istop:].strip().split()
                         for ivar in range(ncssms):
                             t.append(tt[ivar])
-                    current[ibnd] = tuple(t[:len(current.dtype.names)])
+                    current[ibnd] = tuple(t[: len(current.dtype.names)])
                 # convert indices to zero-based
-                current['k'] -= 1
-                current['i'] -= 1
-                current['j'] -= 1
+                current["k"] -= 1
+                current["i"] -= 1
+                current["j"] -= 1
                 current = current.view(np.recarray)
                 stress_period_data[iper] = current
             elif nss == 0:
                 stress_period_data[iper] = nss
-
 
         if openfile:
             f.close()
@@ -713,24 +812,30 @@ class Mt3dSsm(Package):
         unitnumber = None
         filenames = [None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=Mt3dSsm.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=Mt3dSsm._ftype()
+            )
 
         # Construct and return ssm package
-        ssm = Mt3dSsm(model, crch=crch, cevt=cevt, mxss=mxss,
-                      stress_period_data=stress_period_data,
-                      unitnumber=unitnumber, filenames=filenames, **kwargs)
-        return ssm
+        return cls(
+            model,
+            crch=crch,
+            cevt=cevt,
+            mxss=mxss,
+            stress_period_data=stress_period_data,
+            unitnumber=unitnumber,
+            filenames=filenames,
+            **kwargs
+        )
 
     @staticmethod
-    def ftype():
-        return 'SSM'
+    def _ftype():
+        return "SSM"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 34
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 4

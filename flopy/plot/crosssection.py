@@ -7,7 +7,8 @@ except:
 from flopy.plot import plotutil
 from flopy.utils import geometry
 import warnings
-warnings.simplefilter('always', PendingDeprecationWarning)
+
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 
 class _CrossSection(object):
@@ -30,14 +31,18 @@ class _CrossSection(object):
         as the distance along the cross section line.
 
     """
-    def __init__(self, ax=None, model=None, modelgrid=None,
-                 geographic_coords=False):
+
+    def __init__(
+        self, ax=None, model=None, modelgrid=None, geographic_coords=False
+    ):
 
         self.ax = ax
         self.geographic_coords = geographic_coords
         if plt is None:
-            s = 'Could not import matplotlib.  Must install matplotlib ' + \
-                ' in order to use ModelCrossSection method'
+            s = (
+                "Could not import matplotlib.  Must install matplotlib "
+                + " in order to use ModelCrossSection method"
+            )
             raise ImportError(s)
 
         self.model = model
@@ -89,24 +94,33 @@ class _StructuredCrossSection(_CrossSection):
 
     """
 
-    def __init__(self, ax=None, model=None, modelgrid=None,
-                 line=None, extent=None, geographic_coords=False):
-        super(_StructuredCrossSection, self).__init__(ax=ax, model=model,
-                                                      modelgrid=modelgrid,
-                                                      geographic_coords=
-                                                      geographic_coords)
+    def __init__(
+        self,
+        ax=None,
+        model=None,
+        modelgrid=None,
+        line=None,
+        extent=None,
+        geographic_coords=False,
+    ):
+        super(_StructuredCrossSection, self).__init__(
+            ax=ax,
+            model=model,
+            modelgrid=modelgrid,
+            geographic_coords=geographic_coords,
+        )
 
         if line is None:
-            s = 'line must be specified.'
+            s = "line must be specified."
             raise Exception(s)
 
         linekeys = [linekeys.lower() for linekeys in list(line.keys())]
 
         if len(linekeys) != 1:
-            s = 'only row, column, or line can be specified in line dictionary.\n'
-            s += 'keys specified: '
+            s = "only row, column, or line can be specified in line dictionary.\n"
+            s += "keys specified: "
             for k in linekeys:
-                s += '{} '.format(k)
+                s += "{} ".format(k)
             raise AssertionError(s)
 
         if ax is None:
@@ -115,33 +129,36 @@ class _StructuredCrossSection(_CrossSection):
             self.ax = ax
 
         onkey = list(line.keys())[0]
-        eps = 1.e-4
+        eps = 1.0e-4
         xedge, yedge = self.mg.xyedges
         self.__geographic_xpts = None
 
         # un-translate model grid into model coordinates
-        self.xcellcenters, self.ycellcenters = \
-            geometry.transform(self.mg.xcellcenters,
-                               self.mg.ycellcenters,
-                               self.mg.xoffset, self.mg.yoffset,
-                               self.mg.angrot_radians, inverse=True)
+        self.xcellcenters, self.ycellcenters = geometry.transform(
+            self.mg.xcellcenters,
+            self.mg.ycellcenters,
+            self.mg.xoffset,
+            self.mg.yoffset,
+            self.mg.angrot_radians,
+            inverse=True,
+        )
 
-        if 'row' in linekeys:
-            self.direction = 'x'
+        if "row" in linekeys:
+            self.direction = "x"
             ycenter = self.ycellcenters.T[0]
-            pts = [(xedge[0] + eps,
-                    ycenter[int(line[onkey])] - eps),
-                   (xedge[-1] - eps,
-                    ycenter[int(line[onkey])] + eps)]
-        elif 'column' in linekeys:
-            self.direction = 'y'
+            pts = [
+                (xedge[0] + eps, ycenter[int(line[onkey])] - eps),
+                (xedge[-1] - eps, ycenter[int(line[onkey])] + eps),
+            ]
+        elif "column" in linekeys:
+            self.direction = "y"
             xcenter = self.xcellcenters[0, :]
-            pts = [(xcenter[int(line[onkey])] + eps,
-                    yedge[0] - eps),
-                   (xcenter[int(line[onkey])] - eps,
-                    yedge[-1] + eps)]
+            pts = [
+                (xcenter[int(line[onkey])] + eps, yedge[0] - eps),
+                (xcenter[int(line[onkey])] - eps, yedge[-1] + eps),
+            ]
         else:
-            self.direction = 'xy'
+            self.direction = "xy"
             verts = line[onkey]
             xp = []
             yp = []
@@ -158,12 +175,13 @@ class _StructuredCrossSection(_CrossSection):
         self.pts = np.array(pts)
 
         # get points along the line
-        self.xpts = plotutil.line_intersect_grid(self.pts, self.mg.xyedges[0],
-                                                 self.mg.xyedges[1])
+        self.xpts = plotutil.line_intersect_grid(
+            self.pts, self.mg.xyedges[0], self.mg.xyedges[1]
+        )
         if len(self.xpts) < 2:
-            s = 'cross-section cannot be created\n.'
-            s += '   less than 2 points intersect the model grid\n'
-            s += '   {} points intersect the grid.'.format(len(self.xpts))
+            s = "cross-section cannot be created\n."
+            s += "   less than 2 points intersect the model grid\n"
+            s += "   {} points intersect the grid.".format(len(self.xpts))
             raise Exception(s)
 
         # set horizontal distance
@@ -174,8 +192,9 @@ class _StructuredCrossSection(_CrossSection):
 
         self.idomain = self.mg.idomain
         if self.mg.idomain is None:
-            self.idomain = np.ones((self.mg.nlay, self.mg.nrow,
-                                    self.mg.ncol), dtype=int)
+            self.idomain = np.ones(
+                (self.mg.nlay, self.mg.nrow, self.mg.ncol), dtype=int
+            )
 
         self.ncb = 0
         self.laycbd = []
@@ -210,17 +229,23 @@ class _StructuredCrossSection(_CrossSection):
 
         zpts = []
         for k in range(self.layer0, self.layer1):
-            zpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
-                                                   self.mg.xyedges[1],
-                                                   self.elev[k, :, :]))
+            zpts.append(
+                plotutil.cell_value_points(
+                    self.xpts,
+                    self.mg.xyedges[0],
+                    self.mg.xyedges[1],
+                    self.elev[k, :, :],
+                )
+            )
         self.zpts = np.array(zpts)
 
         xcentergrid, zcentergrid = self.get_centergrids(self.xpts, self.zpts)
         self.xcentergrid = xcentergrid
         self.zcentergrid = zcentergrid
 
-        geo_xcentergrid, _ = self.get_centergrids(self.geographic_xpts,
-                                                  self.zpts)
+        geo_xcentergrid, _ = self.get_centergrids(
+            self.geographic_xpts, self.zpts
+        )
         self.geographic_xcentergrid = geo_xcentergrid
 
         # Create cross-section extent
@@ -246,10 +271,13 @@ class _StructuredCrossSection(_CrossSection):
         """
         if self.__geographic_xpts is None:
             xypts = self.xpts.T
-            xypts = geometry.transform(xypts[0], xypts[1],
-                                       self.mg.xoffset,
-                                       self.mg.yoffset,
-                                       self.mg.angrot_radians)
+            xypts = geometry.transform(
+                xypts[0],
+                xypts[1],
+                self.mg.xoffset,
+                self.mg.yoffset,
+                self.mg.angrot_radians,
+            )
 
             if self.direction == "xy":
                 xdist = np.max(xypts[0]) - np.min(xypts[0])
@@ -338,22 +366,24 @@ class _StructuredCrossSection(_CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
         xedge, yedge = self.mg.xyedges
         vpts = []
         for k in range(self.mg.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge, a[k, :, :]))
+            vpts.append(
+                plotutil.cell_value_points(self.xpts, xedge, yedge, a[k, :, :])
+            )
             if len(self.laycbd) > 0:
                 if self.laycbd[k] > 0:
                     ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
                     ta[:, :] = -1e9
-                    vpts.append(plotutil.cell_value_points(self.xpts,
-                                                           xedge, yedge, ta))
+                    vpts.append(
+                        plotutil.cell_value_points(self.xpts, xedge, yedge, ta)
+                    )
         vpts = np.array(vpts)
         if masked_values is not None:
             for mval in masked_values:
@@ -390,8 +420,8 @@ class _StructuredCrossSection(_CrossSection):
         plot : list containing matplotlib.plot objects
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
@@ -400,18 +430,21 @@ class _StructuredCrossSection(_CrossSection):
         vpts = []
         if len(plotarray.shape) == 2:
             nlay = 1
-            plotarray = np.reshape(plotarray,
-                                   (1, plotarray.shape[0], plotarray.shape[1]))
+            plotarray = np.reshape(
+                plotarray, (1, plotarray.shape[0], plotarray.shape[1])
+            )
         elif len(plotarray.shape) == 3:
             nlay = plotarray.shape[0]
         else:
-            raise Exception('plot_array array must be a 2D or 3D array')
+            raise Exception("plot_array array must be a 2D or 3D array")
 
         xedge, yedge = self.mg.xyedges
         for k in range(nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge,
-                                                   plotarray[k, :, :]))
+            vpts.append(
+                plotutil.cell_value_points(
+                    self.xpts, xedge, yedge, plotarray[k, :, :]
+                )
+            )
         vpts = np.array(vpts)
 
         if masked_values is not None:
@@ -429,8 +462,14 @@ class _StructuredCrossSection(_CrossSection):
 
         return plot
 
-    def plot_fill_between(self, a, colors=('blue', 'red'),
-                          masked_values=None, head=None, **kwargs):
+    def plot_fill_between(
+        self,
+        a,
+        colors=("blue", "red"),
+        masked_values=None,
+        head=None,
+        **kwargs
+    ):
         """
         Plot a three-dimensional array as lines.
 
@@ -454,8 +493,8 @@ class _StructuredCrossSection(_CrossSection):
         plot : list containing matplotlib.fillbetween objects
 
         """
-        if 'ax' in kwargs:
-            ax = kwargs.pop('ax')
+        if "ax" in kwargs:
+            ax = kwargs.pop("ax")
         else:
             ax = self.ax
 
@@ -464,16 +503,26 @@ class _StructuredCrossSection(_CrossSection):
         vpts = []
         for k in range(self.mg.nlay):
             # print('k', k, self.laycbd[k])
-            vpts.append(plotutil.cell_value_points(self.xpts, self.mg.xyedges[0],
-                                                   self.mg.xyedges[1],
-                                                   plotarray[k, :, :]))
+            vpts.append(
+                plotutil.cell_value_points(
+                    self.xpts,
+                    self.mg.xyedges[0],
+                    self.mg.xyedges[1],
+                    plotarray[k, :, :],
+                )
+            )
             if len(self.laycbd) > 0:
                 if self.laycbd[k] > 0:
                     ta = np.empty((self.mg.nrow, self.mg.ncol), dtype=np.float)
                     ta[:, :] = self.mg.botm.array[k, :, :]
-                    vpts.append(plotutil.cell_value_points(self.xpts,
-                                                           self.mg.xyedges[0],
-                                                           self.mg.xyedges[1], ta))
+                    vpts.append(
+                        plotutil.cell_value_points(
+                            self.xpts,
+                            self.mg.xyedges[0],
+                            self.mg.xyedges[1],
+                            ta,
+                        )
+                    )
 
         vpts = np.ma.array(vpts, mask=False)
 
@@ -517,13 +566,15 @@ class _StructuredCrossSection(_CrossSection):
                 d = self.geographic_xpts.T[-1]
             else:
                 d = self.d
-            plot.append(ax.fill_between(d, y1=y1, y2=y2,
-                                        color=colors[0], **kwargs))
+            plot.append(
+                ax.fill_between(d, y1=y1, y2=y2, color=colors[0], **kwargs)
+            )
             y1 = y2
             y2 = self.zpts[k + 1, :]
             y2[idxmk] = np.nan
-            plot.append(ax.fill_between(d, y1=y1, y2=y2,
-                                        color=colors[1], **kwargs))
+            plot.append(
+                ax.fill_between(d, y1=y1, y2=y2, color=colors[1], **kwargs)
+            )
         return plot
 
     def contour_array(self, a, masked_values=None, head=None, **kwargs):
@@ -553,9 +604,11 @@ class _StructuredCrossSection(_CrossSection):
         vpts = []
         xedge, yedge = self.mg.xyedges
         for k in range(self.mg.nlay):
-            vpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge,
-                                                   plotarray[k, :, :]))
+            vpts.append(
+                plotutil.cell_value_points(
+                    self.xpts, xedge, yedge, plotarray[k, :, :]
+                )
+            )
         vpts = np.array(vpts)
         vpts = vpts[:, ::2]
         if self.mg.nlay == 1:
@@ -574,27 +627,38 @@ class _StructuredCrossSection(_CrossSection):
             xcentergrid = self.geographic_xcentergrid
         else:
             xcentergrid = self.xcentergrid
-        contour_set = self.ax.contour(xcentergrid, zcentergrid,
-                                      vpts, **kwargs)
+        contour_set = self.ax.contour(xcentergrid, zcentergrid, vpts, **kwargs)
         return contour_set
 
     def plot_inactive(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_ibound(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_grid(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_bc(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_specific_discharge(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def plot_discharge(self):
-        raise NotImplementedError("Function must be called in PlotCrossSection")
+        raise NotImplementedError(
+            "Function must be called in PlotCrossSection"
+        )
 
     def get_grid_patch_collection(self, zpts, plotarray, **kwargs):
         """
@@ -616,16 +680,23 @@ class _StructuredCrossSection(_CrossSection):
         patches : matplotlib.collections.PatchCollection
 
         """
-        from matplotlib.patches import Polygon
-        from matplotlib.collections import PatchCollection
+        if plt is None:
+            err_msg = (
+                "matplotlib must be installed to "
+                + "use get_grid_patch_collection()"
+            )
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.patches import Polygon
+            from matplotlib.collections import PatchCollection
         rectcol = []
 
-        if 'vmin' in kwargs:
-            vmin = kwargs.pop('vmin')
+        if "vmin" in kwargs:
+            vmin = kwargs.pop("vmin")
         else:
             vmin = None
-        if 'vmax' in kwargs:
-            vmax = kwargs.pop('vmax')
+        if "vmax" in kwargs:
+            vmax = kwargs.pop("vmax")
         else:
             vmax = None
 
@@ -637,15 +708,18 @@ class _StructuredCrossSection(_CrossSection):
         for k in range(zpts.shape[0] - 1):
             for idx in range(0, len(xpts) - 1, 2):
                 try:
-                    ll = ((xpts[idx][2], zpts[k + 1, idx]))
+                    ll = (xpts[idx][2], zpts[k + 1, idx])
                     try:
                         dx = xpts[idx + 2][2] - xpts[idx][2]
                     except:
                         dx = xpts[idx + 1][2] - xpts[idx][2]
                     dz = zpts[k, idx] - zpts[k + 1, idx]
-                    pts = (ll,
-                           (ll[0], ll[1] + dz), (ll[0] + dx, ll[1] + dz),
-                           (ll[0] + dx, ll[1]))  # , ll)
+                    pts = (
+                        ll,
+                        (ll[0], ll[1] + dz),
+                        (ll[0] + dx, ll[1] + dz),
+                        (ll[0] + dx, ll[1]),
+                    )  # , ll)
                     if np.isnan(plotarray[k, idx]):
                         continue
                     if plotarray[k, idx] is np.ma.masked:
@@ -676,11 +750,18 @@ class _StructuredCrossSection(_CrossSection):
         -------
         linecollection : matplotlib.collections.LineCollection
         """
-        from matplotlib.collections import LineCollection
+        if plt is None:
+            err_msg = (
+                "matplotlib must be installed to "
+                + "use get_grid_line_collection()"
+            )
+            raise ImportError(err_msg)
+        else:
+            from matplotlib.collections import LineCollection
 
         color = "grey"
         if "color" in kwargs:
-            color = kwargs.pop('color')
+            color = kwargs.pop("color")
 
         linecol = []
         if self.geographic_coords:
@@ -690,7 +771,7 @@ class _StructuredCrossSection(_CrossSection):
         for k in range(self.zpts.shape[0] - 1):
             for idx in range(0, len(xpts) - 1, 2):
                 try:
-                    ll = ((xpts[idx][2], self.zpts[k + 1, idx]))
+                    ll = (xpts[idx][2], self.zpts[k + 1, idx])
                     try:
                         dx = xpts[idx + 2][2] - xpts[idx][2]
                     except (IndexError, ValueError):
@@ -699,11 +780,13 @@ class _StructuredCrossSection(_CrossSection):
                     # horizontal lines
                     linecol.append(((ll), (ll[0] + dx, ll[1])))
                     linecol.append(
-                        ((ll[0], ll[1] + dz), (ll[0] + dx, ll[1] + dz)))
+                        ((ll[0], ll[1] + dz), (ll[0] + dx, ll[1] + dz))
+                    )
                     # vertical lines
                     linecol.append(((ll), (ll[0], ll[1] + dz)))
                     linecol.append(
-                        ((ll[0] + dx, ll[1]), (ll[0] + dx, ll[1] + dz)))
+                        ((ll[0] + dx, ll[1]), (ll[0] + dx, ll[1] + dz))
+                    )
                 except (IndexError, AttributeError, ValueError):
                     pass
 
@@ -733,8 +816,7 @@ class _StructuredCrossSection(_CrossSection):
                 v = vs[k, :, :]
                 idx = v < e
                 e[idx] = v[idx]
-            zpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge, e))
+            zpts.append(plotutil.cell_value_points(self.xpts, xedge, yedge, e))
         return np.array(zpts)
 
     def set_zcentergrid(self, vs):
@@ -759,8 +841,7 @@ class _StructuredCrossSection(_CrossSection):
                 e = vs[k, :, :]
             else:
                 e = self.elev[k, :, :]
-            vpts.append(plotutil.cell_value_points(self.xpts, xedge,
-                                                   yedge, e))
+            vpts.append(plotutil.cell_value_points(self.xpts, xedge, yedge, e))
         vpts = np.array(vpts)
 
         zcentergrid = []
@@ -779,7 +860,7 @@ class _StructuredCrossSection(_CrossSection):
                     zcentergrid.append(zp)
         else:
             for k in range(0, self.zpts.shape[0] - 1):
-                if not self.active[k]==1:
+                if not self.active[k] == 1:
                     continue
                 nz += 1
                 nx = 0
@@ -848,36 +929,48 @@ class ModelCrossSection(object):
         then these will be calculated based on grid, coordinates, and rotation.
 
     """
-    def __new__(cls, ax=None, model=None, dis=None, line=None,
-                xul=None, yul=None, rotation=None, extent=None):
+
+    def __new__(
+        cls,
+        ax=None,
+        model=None,
+        dis=None,
+        line=None,
+        xul=None,
+        yul=None,
+        rotation=None,
+        extent=None,
+    ):
 
         from flopy.plot.plotbase import DeprecatedCrossSection
         from flopy.discretization import StructuredGrid
 
-        err_msg = "ModelCrossSection will be replaced by " +\
-            "PlotCrossSection(), Calling PlotCrossSection()"
+        err_msg = (
+            "ModelCrossSection will be replaced by "
+            + "PlotCrossSection(), Calling PlotCrossSection()"
+        )
         warnings.warn(err_msg, PendingDeprecationWarning)
 
         modelgrid = None
         if model is not None:
             if (xul, yul, rotation) != (None, None, None):
-                modelgrid = plotutil._set_coord_info(model.modelgrid,
-                                                     xul, yul, None, None,
-                                                     rotation)
+                modelgrid = plotutil._set_coord_info(
+                    model.modelgrid, xul, yul, None, None, rotation
+                )
 
         elif dis is not None:
-            modelgrid = StructuredGrid(delr=dis.delr.array,
-                                       delc=dis.delc.array,
-                                       top=dis.top.array,
-                                       botm=dis.botm.array)
+            modelgrid = StructuredGrid(
+                delr=dis.delr.array,
+                delc=dis.delc.array,
+                top=dis.top.array,
+                botm=dis.botm.array,
+            )
 
         if (xul, yul, rotation) != (None, None, None):
-            modelgrid = plotutil._set_coord_info(modelgrid,
-                                          xul, yul, None, None,
-                                          rotation)
+            modelgrid = plotutil._set_coord_info(
+                modelgrid, xul, yul, None, None, rotation
+            )
 
-
-        return DeprecatedCrossSection(ax=ax, model=model,
-                                      modelgrid=modelgrid,
-                                      line=line, extent=extent)
-
+        return DeprecatedCrossSection(
+            ax=ax, model=model, modelgrid=modelgrid, line=line, extent=extent
+        )

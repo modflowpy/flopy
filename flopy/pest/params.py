@@ -40,8 +40,17 @@ class Params(object):
     transform : Parameter transformation type.
     """
 
-    def __init__(self, mfpackage, partype, parname,
-                 startvalue, lbound, ubound, span, transform='log'):
+    def __init__(
+        self,
+        mfpackage,
+        partype,
+        parname,
+        startvalue,
+        lbound,
+        ubound,
+        span,
+        transform="log",
+    ):
         self.name = parname
         self.type = partype
         self.mfpackage = mfpackage
@@ -53,8 +62,9 @@ class Params(object):
         return
 
 
-def zonearray2params(mfpackage, partype, parzones, lbound, ubound,
-                     parvals, transform, zonearray):
+def zonearray2params(
+    mfpackage, partype, parzones, lbound, ubound, parvals, transform, zonearray
+):
     """
     Helper function to create a list of flopy parameters from a zone array
     and list of parameter zone numbers.
@@ -65,10 +75,18 @@ def zonearray2params(mfpackage, partype, parzones, lbound, ubound,
     plist = []
     for i, iz in enumerate(parzones):
         span = {}
-        span['idx'] = np.where(zonearray == iz)
-        parname = partype + '_' + str(iz)
+        span["idx"] = np.where(zonearray == iz)
+        parname = partype + "_" + str(iz)
         startvalue = parvals[i]
-        p = Params(mfpackage, partype, parname, startvalue, lbound,
-                   ubound, span, transform)
+        p = Params(
+            mfpackage,
+            partype,
+            parname,
+            startvalue,
+            lbound,
+            ubound,
+            span,
+            transform,
+        )
         plist.append(p)
     return plist

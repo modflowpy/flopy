@@ -4,7 +4,7 @@ import numpy as np
 from ..pakbase import Package
 from ..utils import Util2d, MfList
 
-__author__ = 'emorway'
+__author__ = "emorway"
 
 
 class Mt3dLkt(Package):
@@ -103,16 +103,28 @@ class Mt3dLkt(Package):
 
     """
 
-    def __init__(self, model, nlkinit=0, mxlkbc=0, icbclk=None, ietlak=0,
-                 coldlak=0.0, lk_stress_period_data=None, dtype=None,
-                 extension='lkt', unitnumber=None, filenames=None, iprn=-1,
-                 **kwargs):
+    def __init__(
+        self,
+        model,
+        nlkinit=0,
+        mxlkbc=0,
+        icbclk=None,
+        ietlak=0,
+        coldlak=0.0,
+        lk_stress_period_data=None,
+        dtype=None,
+        extension="lkt",
+        unitnumber=None,
+        filenames=None,
+        iprn=-1,
+        **kwargs
+    ):
 
         # set default unit number of one is not specified
         if unitnumber is None:
-            unitnumber = Mt3dLkt.reservedunit()
+            unitnumber = Mt3dLkt._reservedunit()
         elif unitnumber == 0:
-            unitnumber = Mt3dLkt.reservedunit()
+            unitnumber = Mt3dLkt._reservedunit()
 
         # set filenames
         if filenames is None:
@@ -127,31 +139,44 @@ class Mt3dLkt(Package):
                     filenames.append(None)
 
         if icbclk is not None:
-            ext = 'lkcobs.out'
+            ext = "lkcobs.out"
             if filenames[1] is not None:
-                if len(filenames[1].split('.',
-                                          1)) > 1:  # already has extension
-                    fname = '{}.{}'.format(*filenames[1].split('.', 1))
+                if (
+                    len(filenames[1].split(".", 1)) > 1
+                ):  # already has extension
+                    fname = "{}.{}".format(*filenames[1].split(".", 1))
                 else:
-                    fname = '{}.{}'.format(filenames[1], ext)
+                    fname = "{}.{}".format(filenames[1], ext)
             else:
-                fname = '{}.{}'.format(model.name, ext)
-            model.add_output_file(icbclk, fname=fname, extension=None,
-                                  binflag=False, package=Mt3dLkt.ftype())
+                fname = "{}.{}".format(model.name, ext)
+            model.add_output_file(
+                icbclk,
+                fname=fname,
+                extension=None,
+                binflag=False,
+                package=Mt3dLkt._ftype(),
+            )
         else:
             icbclk = 0
 
         # Fill namefile items
-        name = [Mt3dLkt.ftype()]
+        name = [Mt3dLkt._ftype()]
         units = [unitnumber]
-        extra = ['']
+        extra = [""]
 
         # set package name
         fname = [filenames[0]]
 
         # Call ancestor's init to set self.parent, extension, name and unit number
-        Package.__init__(self, model, extension=extension, name=name,
-                         unit_number=units, extra=extra, filenames=fname)
+        Package.__init__(
+            self,
+            model,
+            extension=extension,
+            name=name,
+            unit_number=units,
+            extra=extra,
+            filenames=fname,
+        )
 
         # Set dimensions
         nrow = model.nrow
@@ -167,9 +192,16 @@ class Mt3dLkt(Package):
 
         # Set initial lake concentrations
         self.coldlak = []
-        u2d = Util2d(self.parent, (nlkinit,), np.float32, coldlak,
-                     name='coldlak', locat=self.unit_number[0],
-                     array_free_format=False, iprn=iprn)
+        u2d = Util2d(
+            self.parent,
+            (nlkinit,),
+            np.float32,
+            coldlak,
+            name="coldlak",
+            locat=self.unit_number[0],
+            array_free_format=False,
+            iprn=iprn,
+        )
         self.coldlak.append(u2d)
 
         # next, handle multi-species when appropriate
@@ -181,12 +213,20 @@ class Mt3dLkt(Package):
                         val = kwargs.pop(name)
                     else:
                         print(
-                            "LKT: setting {0} for component {1} to zero, kwarg name {2}".
-                            format(base_name, icomp, name))
+                            "LKT: setting {0} for component {1} to zero, kwarg name {2}".format(
+                                base_name, icomp, name
+                            )
+                        )
                         val = 0.0
-                    u2d = Util2d(model, (nlkinit,), np.float32, val,
-                                 name=name, locat=self.unit_number[0],
-                                 array_free_format=model.free_format)
+                    u2d = Util2d(
+                        model,
+                        (nlkinit,),
+                        np.float32,
+                        val,
+                        name=name,
+                        locat=self.unit_number[0],
+                        array_free_format=model.free_format,
+                    )
                     self.coldlak.append(u2d)
 
         # Set transient data
@@ -198,13 +238,16 @@ class Mt3dLkt(Package):
         if lk_stress_period_data is None:
             self.lk_stress_period_data = None
         else:
-            self.lk_stress_period_data = MfList(self, model=model,
-                                                data=lk_stress_period_data)
+            self.lk_stress_period_data = MfList(
+                self, model=model, data=lk_stress_period_data
+            )
 
         # Check to make sure that all kwargs have been consumed
         if len(list(kwargs.keys())) > 0:
-            raise Exception("LKT error: unrecognized kwargs: " +
-                            ' '.join(list(kwargs.keys())))
+            raise Exception(
+                "LKT error: unrecognized kwargs: "
+                + " ".join(list(kwargs.keys()))
+            )
 
         self.parent.add_package(self)
         return
@@ -220,13 +263,15 @@ class Mt3dLkt(Package):
         """
 
         # Open file for writing
-        f_lkt = open(self.fn_path, 'w')
+        f_lkt = open(self.fn_path, "w")
 
         # Item 1
-        f_lkt.write('{0:10d}{1:10d}{2:10}{3:10}          '
-                    .format(self.nlkinit, self.mxlkbc, self.icbclk,
-                            self.ietlak) +
-                    '# NLKINIT, MXLKBC, ICBCLK, IETLAK\n')
+        f_lkt.write(
+            "{0:10d}{1:10d}{2:10}{3:10}          ".format(
+                self.nlkinit, self.mxlkbc, self.icbclk, self.ietlak
+            )
+            + "# NLKINIT, MXLKBC, ICBCLK, IETLAK\n"
+        )
 
         # Item 2
         for s in range(len(self.coldlak)):
@@ -237,22 +282,25 @@ class Mt3dLkt(Package):
         nper = self.parent.nper
         for kper in range(nper):
             if f_lkt.closed == True:
-                f_lkt = open(f_lkt.name, 'a')
+                f_lkt = open(f_lkt.name, "a")
 
             # List of concentrations associated with fluxes in/out of lake
             # (Evap, precip, specified runoff into the lake, specified
             # withdrawal directly from the lake
             if self.lk_stress_period_data is not None:
-                self.lk_stress_period_data.write_transient(f_lkt,
-                                                           single_per=kper)
+                self.lk_stress_period_data.write_transient(
+                    f_lkt, single_per=kper
+                )
             else:
-                f_lkt.write('{}\n'.format(0))
+                f_lkt.write("{}\n".format(0))
 
         f_lkt.close()
         return
 
-    @staticmethod
-    def load(f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None):
+    @classmethod
+    def load(
+        cls, f, model, nlak=None, nper=None, ncomp=None, ext_unit_dict=None
+    ):
         """
         Load an existing package.
 
@@ -293,12 +341,12 @@ class Mt3dLkt(Package):
 
         """
         if model.verbose:
-            sys.stdout.write('loading lkt package file...\n')
+            sys.stdout.write("loading lkt package file...\n")
 
-        openfile = not hasattr(f, 'read')
+        openfile = not hasattr(f, "read")
         if openfile:
             filename = f
-            f = open(filename, 'r')
+            f = open(filename, "r")
 
         # Set default nlay values
         nlay = None
@@ -319,11 +367,11 @@ class Mt3dLkt(Package):
 
         # Item 1 (NLKINIT,MXLKBC,ICBCLK,IETLAK)
         line = f.readline()
-        if line[0] == '#':
-            raise ValueError('LKT package does not support comment lines')
+        if line[0] == "#":
+            raise ValueError("LKT package does not support comment lines")
 
         if model.verbose:
-            print('   loading nlkinit,mxlkbc,icbclk,ietlak   ')
+            print("   loading nlkinit,mxlkbc,icbclk,ietlak   ")
         vals = line.strip().split()
 
         nlkinit = int(vals[0])
@@ -332,39 +380,58 @@ class Mt3dLkt(Package):
         ietlak = int(vals[3])
 
         if model.verbose:
-            print('   NLKINIT {}'.format(nlkinit))
-            print('   MXLKBC {}'.format(mxlkbc))
-            print('   ICBCLK {}'.format(icbclk))
-            print('   IETLAK {}'.format(ietlak))
+            print("   NLKINIT {}".format(nlkinit))
+            print("   MXLKBC {}".format(mxlkbc))
+            print("   ICBCLK {}".format(icbclk))
+            print("   IETLAK {}".format(ietlak))
             if ietlak == 0:
                 print(
-                    '   Mass does not exit the model via simulated lake evaporation   ')
+                    "   Mass does not exit the model via simulated lake evaporation   "
+                )
             else:
                 print(
-                    '   Mass exits the lake via simulated lake evaporation   ')
+                    "   Mass exits the lake via simulated lake evaporation   "
+                )
 
         # Item 2 (COLDLAK - Initial concentration in this instance)
         if model.verbose:
-            print('   loading initial concentration (COLDLAK)  ')
+            print("   loading initial concentration (COLDLAK)  ")
             if model.free_format:
-                print('   Using MODFLOW style array reader utilities to ' \
-                      'read COLDLAK')
-            elif model.array_format == 'mt3d':
-                print('   Using historic MT3DMS array reader utilities to ' \
-                      'read COLDLAK')
+                print(
+                    "   Using MODFLOW style array reader utilities to "
+                    "read COLDLAK"
+                )
+            elif model.array_format == "mt3d":
+                print(
+                    "   Using historic MT3DMS array reader utilities to "
+                    "read COLDLAK"
+                )
 
         kwargs = {}
-        coldlak = Util2d.load(f, model, (nlkinit,), np.float32, 'coldlak1',
-                              ext_unit_dict, array_format=model.array_format)
+        coldlak = Util2d.load(
+            f,
+            model,
+            (nlkinit,),
+            np.float32,
+            "coldlak1",
+            ext_unit_dict,
+            array_format=model.array_format,
+        )
 
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
                 name = "coldlak" + str(icomp)
                 if model.verbose:
-                    print('   loading {}...'.format(name))
-                u2d = Util2d.load(f, model, (nlkinit,), np.float32,
-                                  name, ext_unit_dict,
-                                  array_format=model.array_format)
+                    print("   loading {}...".format(name))
+                u2d = Util2d.load(
+                    f,
+                    model,
+                    (nlkinit,),
+                    np.float32,
+                    name,
+                    ext_unit_dict,
+                    array_format=model.array_format,
+                )
                 kwargs[name] = u2d
 
         # dtype
@@ -375,8 +442,11 @@ class Mt3dLkt(Package):
 
         for iper in range(nper):
             if model.verbose:
-                print('   loading lkt boundary condition data for kper {0:5d}'
-                      .format(iper + 1))
+                print(
+                    "   loading lkt boundary condition data for kper {0:5d}".format(
+                        iper + 1
+                    )
+                )
 
             # Item 3: NTMP: An integer value corresponding to the number of
             #         specified lake boundary conditions to follow.
@@ -387,13 +457,16 @@ class Mt3dLkt(Package):
             vals = line.strip().split()
             ntmp = int(vals[0])
             if model.verbose:
-                print("   {0:5d}".format(
-                    ntmp) + " lkt boundary conditions specified ")
+                print(
+                    "   {0:5d}".format(ntmp)
+                    + " lkt boundary conditions specified "
+                )
                 if (iper == 0) and (ntmp < 0):
-                    print('   ntmp < 0 not allowed for first stress period   ')
+                    print("   ntmp < 0 not allowed for first stress period   ")
                 if (iper > 0) and (ntmp < 0):
                     print(
-                        '   use lkt boundary conditions specified in last stress period   ')
+                        "   use lkt boundary conditions specified in last stress period   "
+                    )
 
             # Item 4: Read ntmp boundary conditions
             if ntmp > 0:
@@ -408,14 +481,16 @@ class Mt3dLkt(Package):
                     if cbclk > 0:
                         for ilkvar in range(cbclk):
                             t.append(m_arr[ilkvar + 2])
-                    current_lk[ilkbnd] = tuple(t[:len(current_lk.dtype.names)])
+                    current_lk[ilkbnd] = tuple(
+                        t[: len(current_lk.dtype.names)]
+                    )
                 # Convert ILKBC (node) index to zero-based
-                current_lk['node'] -= 1
+                current_lk["node"] -= 1
                 current_lk = current_lk.view(np.recarray)
                 lk_stress_period_data[iper] = current_lk
             else:
                 if model.verbose:
-                    print('   No transient boundary conditions specified')
+                    print("   No transient boundary conditions specified")
                 pass
 
         if openfile:
@@ -427,20 +502,28 @@ class Mt3dLkt(Package):
         unitnumber = None
         filenames = [None, None]
         if ext_unit_dict is not None:
-            unitnumber, filenames[0] = \
-                model.get_ext_dict_attr(ext_unit_dict,
-                                        filetype=Mt3dLkt.ftype())
+            unitnumber, filenames[0] = model.get_ext_dict_attr(
+                ext_unit_dict, filetype=Mt3dLkt._ftype()
+            )
             if icbclk > 0:
-                iu, filenames[1] = \
-                    model.get_ext_dict_attr(ext_unit_dict, unit=icbclk)
+                iu, filenames[1] = model.get_ext_dict_attr(
+                    ext_unit_dict, unit=icbclk
+                )
                 model.add_pop_key_list(icbclk)
 
         # Construct and return LKT package
-        lkt = Mt3dLkt(model, nlkinit=nlkinit, mxlkbc=mxlkbc, icbclk=icbclk,
-                      ietlak=ietlak, coldlak=coldlak,
-                      lk_stress_period_data=lk_stress_period_data,
-                      unitnumber=unitnumber, filenames=filenames, **kwargs)
-        return lkt
+        return cls(
+            model,
+            nlkinit=nlkinit,
+            mxlkbc=mxlkbc,
+            icbclk=icbclk,
+            ietlak=ietlak,
+            coldlak=coldlak,
+            lk_stress_period_data=lk_stress_period_data,
+            unitnumber=unitnumber,
+            filenames=filenames,
+            **kwargs
+        )
 
     @staticmethod
     def get_default_dtype(ncomp=1):
@@ -448,8 +531,11 @@ class Mt3dLkt(Package):
         Construct a dtype for the recarray containing the list of boundary
         conditions interacting with the lake (i.e., pumps, specified runoff...)
         """
-        type_list = [("node", np.int), ("ilkbctyp", np.int), \
-                     ("cbclk0", np.float32)]
+        type_list = [
+            ("node", np.int),
+            ("ilkbctyp", np.int),
+            ("cbclk0", np.float32),
+        ]
         if ncomp > 1:
             for icomp in range(2, ncomp + 1):
                 comp_name = "cbclk({0:02d})".format(icomp)
@@ -458,13 +544,13 @@ class Mt3dLkt(Package):
         return dtype
 
     @staticmethod
-    def ftype():
-        return 'LKT'
+    def _ftype():
+        return "LKT"
 
     @staticmethod
-    def defaultunit():
+    def _defaultunit():
         return 45
 
     @staticmethod
-    def reservedunit():
+    def _reservedunit():
         return 18

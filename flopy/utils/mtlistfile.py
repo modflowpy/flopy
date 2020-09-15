@@ -43,17 +43,18 @@ class MtListBudget(object):
 
         # Assign the budgetkey, which should have been overridden
         self.gw_budget_key = ">>>for component no."
-        line = 'STREAM MASS BUDGETS AT END OF TRANSPORT STEP'
+        line = "STREAM MASS BUDGETS AT END OF TRANSPORT STEP"
         self.sw_budget_key = line.lower()
-        line = 'TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION'
+        line = "TOTAL ELAPSED TIME SINCE BEGINNING OF SIMULATION"
         self.time_key = line.lower()
-        line = 'TRANSPORT TIME STEP'
+        line = "TRANSPORT TIME STEP"
         self.tkstp_key = line.lower()
 
         return
 
-    def parse(self, forgive=True, diff=True, start_datetime=None,
-              time_unit='d'):
+    def parse(
+        self, forgive=True, diff=True, start_datetime=None, time_unit="d"
+    ):
         """
         Main entry point for parsing the list file.
 
@@ -80,7 +81,7 @@ class MtListBudget(object):
         try:
             import pandas as pd
         except:
-            msg = 'MtListBudget.parse: pandas not available'
+            msg = "MtListBudget.parse: pandas not available"
             raise ImportError(msg)
 
         self.gw_data = {}
@@ -99,7 +100,9 @@ class MtListBudget(object):
                             warnings.warn(
                                 "error parsing GW mass budget "
                                 "starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)))
+                                    self.lcount, str(e)
+                                )
+                            )
                             break
                     else:
                         self._parse_gw(f, line)
@@ -111,7 +114,9 @@ class MtListBudget(object):
                             warnings.warn(
                                 "error parsing SW mass budget"
                                 " starting on line {0}: {1} ".format(
-                                    self.lcount, str(e)))
+                                    self.lcount, str(e)
+                                )
+                            )
                             break
                     else:
                         self._parse_sw(f, line)
@@ -123,7 +128,7 @@ class MtListBudget(object):
 
         # trim the lists so that they are all the same length
         # in case of a read fail
-        min_len = 1e+10
+        min_len = 1e10
         for i, lst in self.gw_data.items():
             min_len = min(min_len, len(lst))
         for i, lst in self.gw_data.items():
@@ -142,8 +147,9 @@ class MtListBudget(object):
             df_gw = self._diff(df_gw)
 
         if start_datetime is not None:
-            dts = pd.to_datetime(start_datetime) +\
-                  pd.to_timedelta(df_gw.totim, unit=time_unit)
+            dts = pd.to_datetime(start_datetime) + pd.to_timedelta(
+                df_gw.totim, unit=time_unit
+            )
             df_gw.index = dts
         else:
             df_gw.index = df_gw.totim
@@ -151,7 +157,7 @@ class MtListBudget(object):
         if len(self.sw_data) > 0:
             # trim the lists so that they are all the same length
             # in case of a read fail
-            min_len = 1e+10
+            min_len = 1e10
             for i, lst in self.sw_data.items():
                 min_len = min(min_len, len(lst))
             min_len = min(min_len, df_gw.shape[0])
@@ -171,7 +177,8 @@ class MtListBudget(object):
                 df_sw = self._diff(df_sw)
             if start_datetime is not None:
                 dts = pd.to_datetime(start_datetime) + pd.to_timedelta(
-                    df_sw.pop("totim"), unit=time_unit)
+                    df_sw.pop("totim"), unit=time_unit
+                )
                 df_sw.index = dts
             else:
                 df_sw.index = df_sw.pop("totim")
@@ -185,22 +192,27 @@ class MtListBudget(object):
         try:
             import pandas as pd
         except:
-            msg = 'MtListBudget._diff: pandas not available'
+            msg = "MtListBudget._diff: pandas not available"
             raise ImportError(msg)
 
-        out_cols = [c for c in df.columns
-                    if "_out" in c and not c.startswith("net_")]
-        in_cols = [c for c in df.columns
-                   if "_in" in c and not c.startswith("net_")]
-        add_cols = [c for c in df.columns
-                    if c not in out_cols + in_cols + ["totim"]]
-        out_base = [c.replace("_out_", '_') for c in out_cols]
-        in_base = [c.replace("_in_", '_') for c in in_cols]
-        map_names = {"stream_accumulation": "stream_depletion",
-                     "stream_outflow": "inflow_to_stream",
-                     "stream_to_gw": "gw_to_stream",
-                     "mass_loss": "mass_gain",
-                     "evaporation": "precipitation"}
+        out_cols = [
+            c for c in df.columns if "_out" in c and not c.startswith("net_")
+        ]
+        in_cols = [
+            c for c in df.columns if "_in" in c and not c.startswith("net_")
+        ]
+        add_cols = [
+            c for c in df.columns if c not in out_cols + in_cols + ["totim"]
+        ]
+        out_base = [c.replace("_out_", "_") for c in out_cols]
+        in_base = [c.replace("_in_", "_") for c in in_cols]
+        map_names = {
+            "stream_accumulation": "stream_depletion",
+            "stream_outflow": "inflow_to_stream",
+            "stream_to_gw": "gw_to_stream",
+            "mass_loss": "mass_gain",
+            "evaporation": "precipitation",
+        }
         out_base_mapped = []
         for base in out_base:
             if np.any([key in base for key in map_names.keys()]):
@@ -229,15 +241,15 @@ class MtListBudget(object):
                 idata = 0.0
             new[col] = idata - odata
 
-        new_df = pd.concat([pd.DataFrame(new, index=df.index),
-                            df.loc[:, add_cols]], axis=1)
+        new_df = pd.concat(
+            [pd.DataFrame(new, index=df.index), df.loc[:, add_cols]], axis=1
+        )
         return new_df
-
 
     def _readline(self, f):
         line = f.readline().lower()
         self.lcount += 1
-        if line == '':
+        if line == "":
             return None
         return line
 
@@ -249,12 +261,16 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception(
-                    "EOF while reading from component header to totim")
+                    "EOF while reading from component header to totim"
+                )
         try:
             totim = float(line.split()[-2])
         except Exception as e:
-            raise Exception("error parsing totim on line {0}: {1}".
-                            format(self.lcount, str(e)))
+            raise Exception(
+                "error parsing totim on line {0}: {1}".format(
+                    self.lcount, str(e)
+                )
+            )
 
         for _ in range(3):
             line = self._readline(f)
@@ -264,16 +280,20 @@ class MtListBudget(object):
             kper = int(line[-6:-1])
             kstp = int(line[-26:-21])
             tkstp_str = line[-42:-37]
-            if tkstp_str == '*****':
+            if tkstp_str == "*****":
                 tkstp = self.tkstp_overflow
             else:
                 tkstp = int(tkstp_str)
         except Exception as e:
-            raise Exception("error parsing time step info on line {0}: {1}".
-                            format(self.lcount, str(e)))
-        for lab, val in zip(["totim", "kper", "kstp", "tkstp"],
-                            [totim, kper, kstp, tkstp]):
-            lab += '_{0}'.format(comp)
+            raise Exception(
+                "error parsing time step info on line {0}: {1}".format(
+                    self.lcount, str(e)
+                )
+            )
+        for lab, val in zip(
+            ["totim", "kper", "kstp", "tkstp"], [totim, kper, kstp, tkstp]
+        ):
+            lab += "_{0}".format(comp)
             if lab not in self.gw_data.keys():
                 self.gw_data[lab] = []
             self.gw_data[lab].append(val)
@@ -286,18 +306,21 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading budget")
-            elif '-----' in line:
+            elif "-----" in line:
                 self.imm = False
                 break_next = True
                 continue
-            elif '....immobile' in line:
+            elif "....immobile" in line:
                 self.imm = True
                 continue
             try:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
-                raise Exception("error parsing GW items on line {0}: {1}".
-                                format(self.lcount, str(e)))
+                raise Exception(
+                    "error parsing GW items on line {0}: {1}".format(
+                        self.lcount, str(e)
+                    )
+                )
             self._add_to_gw_data(item, ival, oval, comp)
             if break_next:
                 break
@@ -307,9 +330,9 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading budget")
-            elif '-----' in line:
+            elif "-----" in line:
                 break
-            elif line.strip() == '':
+            elif line.strip() == "":
                 blank_count += 1
                 # two consecutive blank line is end of block
                 # sadly this is not always the case
@@ -322,15 +345,18 @@ class MtListBudget(object):
             try:
                 item, ival, oval = self._parse_gw_line(line)
             except Exception as e:
-                raise Exception("error parsing GW items "
-                                "on line {0}: {1}".format(self.lcount, str(e)))
+                raise Exception(
+                    "error parsing GW items "
+                    "on line {0}: {1}".format(self.lcount, str(e))
+                )
             self._add_to_gw_data(item, ival, oval, comp)
-            if 'discrepancy' in item:
+            if "discrepancy" in item:
                 # can't rely on blank lines following block
                 break
+
     def _parse_gw_line(self, line):
-        raw = line.lower().split(':')
-        item = raw[0].strip().strip(r'[\|]').replace(' ', '_')
+        raw = line.lower().split(":")
+        item = raw[0].strip().strip(r"[\|]").replace(" ", "_")
         idx_ival = 0
         idx_oval = 1
         if self.imm:
@@ -349,7 +375,7 @@ class MtListBudget(object):
     def _add_to_gw_data(self, item, ival, oval, comp):
         item += "_{0}".format(comp)
         if oval is None:
-            lab_val = zip([""], [ival], [''])
+            lab_val = zip([""], [ival], [""])
         else:
             lab_val = zip(["_in", "_out"], [ival, oval], ["_cum", "_cum"])
         for lab, val, suf in lab_val:
@@ -364,15 +390,18 @@ class MtListBudget(object):
             kper = int(line[-24:-19])
             kstp = int(line[-44:-39])
             tkstp_str = line[-60:-55]
-            if tkstp_str == '*****':
+            if tkstp_str == "*****":
                 tkstp = self.tkstp_overflow
             else:
                 tkstp = int(tkstp_str)
         except Exception as e:
-            raise Exception("error parsing time step info on line {0}: {1}".
-                            format(self.lcount, str(e)))
+            raise Exception(
+                "error parsing time step info on line {0}: {1}".format(
+                    self.lcount, str(e)
+                )
+            )
         for lab, val in zip(["kper", "kstp", "tkstp"], [kper, kstp, tkstp]):
-            lab += '_{0}'.format(comp)
+            lab += "_{0}".format(comp)
             if lab not in self.sw_data.keys():
                 self.sw_data[lab] = []
             self.sw_data[lab].append(val)
@@ -386,16 +415,17 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading 'in' SW budget")
-            elif '------' in line:
+            elif "------" in line:
                 break_next = True  # make sure we read total in
                 continue
             try:
                 item, cval, fval = self._parse_sw_line(line)
             except Exception as e:
-                msg = "error parsing 'in' SW items on line {}: " + '{}'.format(
-                    self.lcount, str(e))
+                msg = "error parsing 'in' SW items on line {}: " + "{}".format(
+                    self.lcount, str(e)
+                )
                 raise Exception(msg)
-            self._add_to_sw_data('in', item, cval, fval, comp)
+            self._add_to_sw_data("in", item, cval, fval, comp)
             if break_next:
                 break
         # read net in-out and percent discrep for cumulative and flux for sw
@@ -407,7 +437,7 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception()
-            elif '------' in line:
+            elif "------" in line:
                 break_next = True  # make sure we read total out
                 continue
             try:
@@ -415,8 +445,10 @@ class MtListBudget(object):
             except Exception as e:
                 raise Exception(
                     "error parsing 'out' SW items on line {0}: {1}".format(
-                        self.lcount, str(e)))
-            self._add_to_sw_data('out', item, cval, fval, comp)
+                        self.lcount, str(e)
+                    )
+                )
+            self._add_to_sw_data("out", item, cval, fval, comp)
             if break_next:
                 break
         # read extras (in-out and percent discrep.)
@@ -425,7 +457,7 @@ class MtListBudget(object):
             line = self._readline(f)
             if line is None:
                 raise Exception("EOF while reading 'out' SW budget")
-            elif line.strip() == '':
+            elif line.strip() == "":
                 blank_count += 1
                 if blank_count == 2:
                     break  # two consecutive blank line is end of block
@@ -438,14 +470,16 @@ class MtListBudget(object):
             except Exception as e:
                 raise Exception(
                     "error parsing 'out' SW items on line {0}: {1}".format(
-                        self.lcount, str(e)))
-            self._add_to_sw_data('net', item, cval, fval, comp)
+                        self.lcount, str(e)
+                    )
+                )
+            self._add_to_sw_data("net", item, cval, fval, comp)
         # out_tots = self._parse_sw_line(line)
 
     def _parse_sw_line(self, line):
         # print(line)
-        raw = line.strip().split('=')
-        citem = raw[0].strip().strip(r'[\|]').replace(" ", "_")
+        raw = line.strip().split("=")
+        citem = raw[0].strip().strip(r"[\|]").replace(" ", "_")
         cval = float(raw[1].split()[0])
         if len(raw) < 3:  # deal with flow error if written
             fval = None
@@ -457,13 +491,13 @@ class MtListBudget(object):
         return citem, cval, fval
 
     def _add_to_sw_data(self, inout, item, cval, fval, comp):
-        item += '_{0}'.format(comp)
-        if inout.lower() in set(['in', 'out']):
-            item += '_{0}'.format(inout)
+        item += "_{0}".format(comp)
+        if inout.lower() in set(["in", "out"]):
+            item += "_{0}".format(inout)
         if fval is None:
             lab_val = zip([""], [cval])
         else:
-            lab_val = zip(['_cum', '_flx'], [cval, fval])
+            lab_val = zip(["_cum", "_flx"], [cval, fval])
         for lab, val in lab_val:
             iitem = item + lab
             if iitem not in self.sw_data.keys():

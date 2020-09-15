@@ -13,7 +13,7 @@ from flopy.discretization import StructuredGrid
 from flopy.utils.modpathfile import EndpointFile, PathlineFile
 from flopy.utils.recarray_utils import ra_slice
 from flopy.utils.reference import SpatialReference
-from flopy.modpath.mpsim import StartingLocationsFile
+from flopy.modpath.mp6sim import StartingLocationsFile
 
 mffiles = glob.glob('../examples/data/mp6/EXAMPLE*')
 path = os.path.join('temp', 't031')
@@ -29,16 +29,16 @@ def test_mpsim():
     m = flopy.modflow.Modflow.load('EXAMPLE.nam', model_ws=model_ws)
     m.get_package_list()
 
-    mp = flopy.modpath.Modpath(modelname='ex6',
-                               exe_name='mp6',
-                               modflowmodel=m,
-                               model_ws=path,
-                               dis_file=m.name + '.dis',
-                               head_file=m.name + '.hed',
-                               budget_file=m.name + '.bud')
+    mp = flopy.modpath.Modpath6(modelname='ex6',
+                                exe_name='mp6',
+                                modflowmodel=m,
+                                model_ws=path,
+                                dis_file=m.name + '.dis',
+                                head_file=m.name + '.hed',
+                                budget_file=m.name + '.bud')
 
-    mpb = flopy.modpath.ModpathBas(mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp,
-                                   ibound=1, prsity=0.1)
+    mpb = flopy.modpath.Modpath6Bas(mp, hdry=m.lpf.hdry, laytyp=m.lpf.laytyp,
+                                    ibound=1, prsity=0.1)
 
     sim = mp.create_mpsim(trackdir='forward', simtype='endpoint',
                           packages='RCH')
@@ -70,7 +70,7 @@ def test_mpsim():
                           packages='MNW2')
     mp.write_input()
 
-    sim = flopy.modpath.ModpathSim(model=mp)
+    sim = flopy.modpath.Modpath6Sim(model=mp)
     # starting locations file
     stl = StartingLocationsFile(model=mp)
     stldata = StartingLocationsFile.get_empty_starting_locations_data(npt=2)
