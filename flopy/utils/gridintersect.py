@@ -892,7 +892,7 @@ class GridIntersect:
         ixshapes.append(intersect)
         length = intersect.length
         lengths.append(length)
-        if intersect.geom_type == "MultiLineString":
+        if hasattr(intersect, "geoms"):
             x, y = [], []
             for igeom in intersect.geoms:
                 x.append(igeom.xy[0])
