@@ -738,12 +738,13 @@ class GridIntersect:
                             ix, self.mfgrid.angrot, origin=(0.0, 0.0)
                         )
                         ix_realworld = translate(
-                            ix_realworld, self.mfgrid.xoffset, self.mfgrid.yoffset
+                            ix_realworld,
+                            self.mfgrid.xoffset, self.mfgrid.yoffset
                         )
                         ixs_realworld.append(ix_realworld)
                 else:
                     v_realworld = v
-                    ix_realworld = ix
+                    ixs_realworld = ixs
                 vertices += v_realworld
                 ixshapes += ixs_realworld
         else:  # linestring is fully within grid
