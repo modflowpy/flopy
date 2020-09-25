@@ -1308,10 +1308,9 @@ class GridIntersect:
             # transform shell coordinates
             shell_pts = []
             for pt in shell:
-                pt = np.array(pt)
                 rx, ry = transform(
-                    pt[:, 0],
-                    pt[:, 1],
+                    [pt[0]],
+                    [pt[1]],
                     self.mfgrid.xoffset,
                     self.mfgrid.yoffset,
                     self.mfgrid.angrot_radians,
@@ -1323,17 +1322,14 @@ class GridIntersect:
             if holes:
                 holes_pts = []
                 for pt in holes:
-                    pt = np.array(pt)
                     rx, ry = transform(
-                        pt[:, 0],
-                        pt[:, 1],
+                        [pt[0]],
+                        [pt[1]],
                         self.mfgrid.xoffset,
                         self.mfgrid.yoffset,
                         self.mfgrid.angrot_radians,
                         inverse=False,
                     )
-                    holes_pts.append((rx, ry))
-                geoms.append(holes_pts)
             # append (shells, holes) to transformed coordinates list
             geom_list.append(tuple(geoms))
         return geom_list
