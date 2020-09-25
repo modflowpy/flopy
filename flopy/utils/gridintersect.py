@@ -739,7 +739,8 @@ class GridIntersect:
                         )
                         ix_realworld = translate(
                             ix_realworld,
-                            self.mfgrid.xoffset, self.mfgrid.yoffset
+                            self.mfgrid.xoffset,
+                            self.mfgrid.yoffset,
                         )
                         ixs_realworld.append(ix_realworld)
                 else:
@@ -1229,16 +1230,12 @@ class GridIntersect:
                         v_realworld = []
                         if intersect.geom_type.startswith("Multi"):
                             for ipoly in intersect:
-                                v_realworld += (
-                                    self._transform_geo_interface_polygon(
-                                        ipoly
-                                    )
+                                v_realworld += self._transform_geo_interface_polygon(
+                                    ipoly
                                 )
                         else:
-                            v_realworld += (
-                                self._transform_geo_interface_polygon(
-                                    intersect
-                                )
+                            v_realworld += self._transform_geo_interface_polygon(
+                                intersect
                             )
                         intersect_realworld = rotate(
                             intersect, self.mfgrid.angrot, origin=(0.0, 0.0)
