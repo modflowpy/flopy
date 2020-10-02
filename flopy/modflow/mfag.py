@@ -935,10 +935,6 @@ def _read_block_21_25_or_29(fobj, nrec, recarray, block):
     """
     t = []
 
-    hrus = False
-    if "hru_id0" in recarray.dtype.names and "segid" in recarray.dtype.names:
-        hrus = True
-
     for _ in range(nrec):
         t1 = []
         ll = multi_line_strip(fobj).split()
@@ -968,12 +964,9 @@ def _read_block_21_25_or_29(fobj, nrec, recarray, block):
                 if len(ll) == 2:
                     ll += [1e-10]
 
-            if hrus or block == 29:
                 tmp = multi_line_strip(fobj).split()[:3]
-                if block == 29:
-                    tmp[0] = int(tmp[0])
-                else:
-                    tmp[0] = int(tmp[0]) - 1
+                tmp[0] = int(tmp[0])
+
             else:
                 tmp = multi_line_strip(fobj).split()[:4]
                 tmp[0:2] = [int(tmp[0]) - 1, int(tmp[1]) - 1]
