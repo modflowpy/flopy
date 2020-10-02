@@ -337,7 +337,7 @@ def gridlist_to_verts(gridlist):
     icell = 0
     for sg in gridlist:
         ilays, irows, icols = np.where(sg.idomain > 0)
-        for k, i, j in zip(ilays, irows, icols):
+        for _, i, j in zip(ilays, irows, icols):
             v = sg.get_cell_vertices(i, j)
             vertdict[icell] = v + [v[0]]
             icell += 1
