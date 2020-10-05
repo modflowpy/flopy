@@ -4,7 +4,240 @@ Container objects for working with geometric information
 import numpy as np
 
 
-class Polygon:
+class Shape(object):
+    """
+    Parent class for handling geo interfacing, do not instantiate directly
+
+    Parameters:
+    ----------
+    type : str
+        shapetype string
+    coordinates : list or tuple
+        list of tuple of point or linestring coordinates
+    exterior : list or tuple
+        2d list of polygon coordinates
+    interiors : list or tuple
+        2d or 3d list of polygon interiors
+
+    """
+    def __init__(self, type, coordinates=None, exterior=None, interiors=None):
+        self.__type = type
+
+        if type == "Polygon":
+            self.exterior = tuple(map(tuple, exterior))
+            self.interiors = (
+                tuple()
+                if interiors is None
+                else (tuple(map(tuple, i)) for i in interiors)
+            )
+
+        elif type == "LineString":
+            self.coords = list(map(tuple, coordinates))
+            if len(self.coords[0]) == 3:
+                self.has_z = True
+
+        elif type == "Point":
+            while len(coordinates) == 1:
+                coordinates = coordinates[0]
+
+            self.coords = coordinates
+            if len(coordinates) == 3:
+                self.has_z = True
+        else:
+            err = "Supported shape types are Polygon, LineString, " \
+                  "and Point: Supplied shape type {}".format(type)
+            raise TypeError(err)
+
+    @property
+    def __geo_interface__(self):
+        """
+
+        Returns
+        -------
+
+        """
+        geo_interface = {}
+
+        if self.__type == "Polygon":
+            geo_interface = {"coordinates": tuple([self.exterior] +
+                                                  [i for i in self.interiors]),
+                             "type": self.__type}
+
+        elif self.__type == "LineString":
+            geo_interface = {"coordinates": tuple(self.coords),
+                             "type": self.__type}
+
+        elif self.__type == "Point":
+            geo_interface = {"coordinates": tuple(self.coords),
+                             "type": self.__type}
+
+        return geo_interface
+
+    @property
+    def geojson(self):
+        return self.__geo_interface__
+
+    @staticmethod
+    def from_geojson(geo_interface):
+        """
+        Method to load from geojson
+
+        Parameters
+        ----------
+        geo_interface : geojson, dict
+            geojson compliant representation of a linestring
+
+        Returns
+        -------
+            Polygon, LineString, or Point
+        """
+        if geo_interface["type"] in ("Polygon", "MultiPolygon"):
+            coord_list = geo_interface["coordinates"]
+            if geo_interface["type"] == "Polygon":
+                coord_list = [coord_list]
+
+            geoms = []
+            for coords in coord_list:
+                exteriors = coords[0]
+                interiors = None
+                if len(coords) > 1:
+                    interiors = coords[1:]
+
+                geoms.append(Polygon(exteriors, interiors))
+
+            if len(geoms) == 1:
+                shape = geoms[0]
+            else:
+                shape = MultiPolygon(geoms)
+
+        elif geo_interface['type'] == "LineString":
+            shape = LineString(geo_interface['coordinates'])
+
+        elif geo_interface['type'] == "MultiLineString":
+            geoms = [LineString(coords) for coords
+                     in geo_interface['coordinates']]
+            shape = MultiLineString(geoms)
+
+        elif geo_interface['type'] == "Point":
+            shape = Point(geo_interface["point"])
+
+        elif geo_interface['type'] == "MultiPoint":
+            geoms = [Point(coords) for coords in geo_interface['coordinates']]
+            shape = MultiPoint(geoms)
+
+        else:
+            err = "Supported shape types are Polygon, LineString, and " \
+                  "Point: Supplied shape type {}".format(geo_interface['type'])
+            raise TypeError(err)
+
+        return shape
+
+
+class Collection(list):
+    """
+
+    """
+    def __init__(self, geometries=[]):
+        super(Collection, self).__init__(geometries)
+
+    def __repr__(self):
+        return 'Shapes: {}'.format(list(self))
+
+    @property
+    def __geo_interface__(self):
+        return {'type': 'GeometryCollection',
+                'geometries': [g.__geo_interface__ for g in self]}
+
+    @property
+    def bounds(self):
+        """
+
+        Returns
+        -------
+
+        """
+        bbox = [geom.bounds for geom in self]
+        xmin, ymin = np.min(bbox, axis=0)[0:2]
+        xmax, ymax = np.max(bbox, axis=0)[2:]
+
+        return xmin, ymin, xmax, ymax
+
+    def plot(self, ax=None, **kwargs):
+        """
+
+        Parameters
+        ----------
+        ax
+        kwargs
+
+        Returns
+        -------
+
+        """
+        for g in self:
+            ax = g.plot(ax=ax, **kwargs)
+
+        xmin, ymin, xmax, ymax = self.bounds
+        ax.set_ylim([ymin - 0.005, ymax + 0.005])
+        ax.set_xlim([xmin - 0.005, xmax + 0.005])
+        return ax
+
+
+class MultiPolygon(Collection):
+
+    def __init__(self, polygons=[]):
+        for p in polygons:
+            if not isinstance(p, Polygon):
+                raise TypeError("Only Polygon instances are supported")
+            super(MultiPolygon, self).__init__(polygons)
+
+    def __repr__(self):
+        return 'MultiPolygon: {}'.format(list(self))
+
+    @property
+    def __geo_interface__(self):
+        return {'type': 'MultiPolygon',
+                'coordinates': [g.__geo_interface__['coordinates']
+                                for g in self]}
+
+
+class MultiLineString(Collection):
+
+    def __init__(self, linestrings=[]):
+        for l in linestrings:
+            if not isinstance(l, LineString):
+                raise TypeError("Only LineString instances are supported")
+            super(MultiLineString, self).__init__(linestrings)
+
+    def __repr__(self):
+        return 'LineString: {}'.format(list(self))
+
+    @property
+    def __geo_interface__(self):
+        return {'type': 'LineString',
+                'coordinates': [g.__geo_interface__['coordinates']
+                                for g in self]}
+
+
+class MultiPoint(Collection):
+
+    def __init__(self, points=[]):
+        for p in points:
+            if not isinstance(p, Point):
+                raise TypeError("Only Polygon instances are supported")
+            super(MultiPoint, self).__init__(points)
+
+    def __repr__(self):
+        return 'MultiPoint: {}'.format(list(self))
+
+    @property
+    def __geo_interface__(self):
+        return {'type': 'MultiPoint',
+                'coordinates': [g.__geo_interface__['coordinates']
+                                for g in self]}
+
+
+class Polygon(Shape):
     type = "Polygon"
     shapeType = 5  # pyshp
 
@@ -48,12 +281,8 @@ class Polygon:
         Multi-polygons not yet supported.
         z information is only stored if it was entered.
         """
-        self.exterior = tuple(map(tuple, exterior))
-        self.interiors = (
-            tuple()
-            if interiors is None
-            else (map(tuple, i) for i in interiors)
-        )
+        super(Polygon, self).__init__(self.type, coordinates=None,
+                                      exterior=exterior, interiors=interiors)
 
     def __eq__(self, other):
         if not isinstance(other, Polygon):
@@ -79,15 +308,6 @@ class Polygon:
         xmin = np.min(self._exterior_x)
         xmax = np.max(self._exterior_x)
         return xmin, ymin, xmax, ymax
-
-    @property
-    def geojson(self):
-        return {
-            "coordinates": tuple(
-                [self.exterior] + [i for i in self.interiors]
-            ),
-            "type": self.type,
-        }
 
     @property
     def pyshp_parts(self):
@@ -140,21 +360,22 @@ class Polygon:
             import matplotlib.pyplot as plt
         except ImportError:
             print("This feature requires matplotlib.")
+
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.figure
+            ax = plt.gca()
+
         try:
             ax.add_patch(self.get_patch(**kwargs))
             xmin, ymin, xmax, ymax = self.bounds
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)
-            plt.show()
         except:
             print("could not plot polygon feature")
 
+        return ax
 
-class LineString:
+
+class LineString(Shape):
     type = "LineString"
     shapeType = 3
     has_z = False
@@ -192,9 +413,7 @@ class LineString:
         z information is only stored if it was entered.
 
         """
-        self.coords = list(map(tuple, coordinates))
-        if len(self.coords[0]) == 3:
-            self.has_z = True
+        super(LineString, self).__init__(self.type, coordinates)
 
     def __eq__(self, other):
         if not isinstance(other, LineString):
@@ -228,10 +447,6 @@ class LineString:
         return xmin, ymin, xmax, ymax
 
     @property
-    def geojson(self):
-        return {"coordinates": tuple(self.coords), "type": self.type}
-
-    @property
     def pyshp_parts(self):
         return [self.coords]
 
@@ -240,18 +455,19 @@ class LineString:
             import matplotlib.pyplot as plt
         except ImportError:
             print("This feature requires matplotlib.")
+
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.figure
-        plt.plot(self.x, self.y, **kwargs)
+            ax = plt.gca()
+
+        ax.plot(self.x, self.y, **kwargs)
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        # plt.show()
+
+        return ax
 
 
-class Point:
+class Point(Shape):
     type = "Point"
     shapeType = 1
     has_z = False
@@ -296,12 +512,7 @@ class Point:
         -----
         z information is only stored if it was entered.
         """
-        while len(coordinates) == 1:
-            coordinates = coordinates[0]
-
-        self.coords = coordinates
-        if len(coordinates) == 3:
-            self.has_z = True
+        super(Point, self).__init__(self.type, coordinates)
 
     def __eq__(self, other):
         if not isinstance(other, Point):
@@ -335,10 +546,6 @@ class Point:
         return xmin, ymin, xmax, ymax
 
     @property
-    def geojson(self):
-        return {"coordinates": tuple(self.coords), "type": self.type}
-
-    @property
     def pyshp_parts(self):
         return self.coords
 
@@ -347,14 +554,16 @@ class Point:
             import matplotlib.pyplot as plt
         except ImportError:
             print("This feature requires matplotlib.")
+
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.figure
-        plt.scatter(self.x, self.y, **kwargs)
+            ax = plt.gca()
+
+        ax.scatter(self.x, self.y, **kwargs)
         xmin, ymin, xmax, ymax = self.bounds
         ax.set_xlim(xmin - 1, xmax + 1)  # singular bounds otherwise
         ax.set_ylim(ymin - 1, ymax + 1)
+
+        return ax
 
 
 def rotate(x, y, xoff, yoff, angrot_radians):
@@ -444,14 +653,19 @@ def shape(pyshp_shpobj):
     return flopy_geometype(pyshp_shpobj.points)
 
 
-def get_polygon_area(verts):
+def get_polygon_area(geom):
     """
     Calculate the area of a closed polygon
 
     Parameters
     ----------
-    verts : numpy.ndarray
-        polygon vertices
+    geom : geospatial representation of polygon
+        accepted types:
+
+        vertices np.array([(x, y),....])
+        geojson.Polygon
+        shapely.Polygon
+        shapefile.Shape
 
     Returns
     -------
@@ -459,6 +673,14 @@ def get_polygon_area(verts):
         area of polygon centroid
 
     """
+    from .geospatial_utils import GeoSpatialUtil
+
+    if isinstance(geom, (list, tuple, np.ndarray)):
+        geom = [geom]
+
+    geom = GeoSpatialUtil(geom, shapetype="Polygon")
+    verts = np.array(geom.points[0])
+
     nverts = verts.shape[0]
     a = 0.0
     for iv in range(nverts - 1):
@@ -471,14 +693,19 @@ def get_polygon_area(verts):
     return a
 
 
-def get_polygon_centroid(verts):
+def get_polygon_centroid(geom):
     """
     Calculate the centroid of a closed polygon
 
     Parameters
     ----------
-    verts : numpy.ndarray
-        polygon vertices
+    geom : geospatial representation of polygon
+        accepted types:
+
+        vertices np.array([(x, y),....])
+        geojson.Polygon
+        shapely.Polygon
+        shapefile.Shape
 
     Returns
     -------
@@ -486,6 +713,14 @@ def get_polygon_centroid(verts):
         (x, y) of polygon centroid
 
     """
+    from .geospatial_utils import GeoSpatialUtil
+
+    if isinstance(geom, (list, tuple, np.ndarray)):
+        geom = [geom]
+
+    geom = GeoSpatialUtil(geom, shapetype="Polygon")
+    verts = np.array(geom.points[0])
+
     nverts = verts.shape[0]
     cx = 0.0
     cy = 0.0
@@ -502,16 +737,20 @@ def get_polygon_centroid(verts):
     return cx, cy
 
 
-def is_clockwise(x, y):
+def is_clockwise(*geom):
     """
     Determine if a ring is defined clockwise
 
     Parameters
     ----------
-    x : numpy ndarray
-        The x-coordinates of the ring
-    y : numpy ndarray
-        The y-coordinate of the ring
+    *geom : geospatial representation of polygon
+        accepted types:
+
+        vertices [(x, y),....]
+        geojson.Polygon
+        shapely.Polygon
+        shapefile.Shape
+        x and y vertices: [x1, x2, x3], [y1, y2, y3]
 
     Returns
     -------
@@ -519,6 +758,14 @@ def is_clockwise(x, y):
         True when the ring is defined clockwise, False otherwise
 
     """
+    from .geospatial_utils import GeoSpatialUtil
+
+    if len(geom) == 2:
+        x, y = geom
+    else:
+        geom = GeoSpatialUtil(geom, shapetype="Polygon")
+        x, y = np.array(geom.points[0]).T
+
     if not (x[0] == x[-1]) and (y[0] == y[-1]):
         # close the ring if needed
         x = np.append(x, x[-1])

@@ -234,17 +234,21 @@ class Raster(object):
         y = np.linspace(y1, y0, ylen)
         self.__xcenters, self.__ycenters = np.meshgrid(x, y)
 
-    def sample_point(self, x, y, band):
+    def sample_point(self, *point, band=1):
         """
         Method to get nearest raster value at a user provided
         point
 
         Parameters
         ----------
-        x : float
-            x coordinate
-        y : float
-            y coordinate
+        *point : point geometry representation
+            accepted data types:
+            x, y values : ex. sample_point(1, 3, band=1)
+            tuple of x, y: ex sample_point((1, 3), band=1)
+            shapely.geometry.Point
+            geojson.Point
+            flopy.geometry.Point
+
         band : int
             raster band to re-sample
 
@@ -252,6 +256,15 @@ class Raster(object):
         -------
             value : float
         """
+        from .geospatial_utils import GeoSpatialUtil
+
+        if isinstance(point[0], (tuple, list, np.ndarray)):
+            point = point[0]
+
+        geom = GeoSpatialUtil(point, shapetype='Point')
+
+        x, y = geom.points
+
         # 1: get grid.
         rxc = self.xcenters
         ryc = self.ycenters
@@ -282,14 +295,14 @@ class Raster(object):
 
         Parameters
         ----------
-        polygon : (shapely.geometry.Polygon or GeoJSON-like dict)
-            The values should be a GeoJSON-like dict or object
-            implements the Python geo interface protocal.
+        polygon : list, geojson, shapely.geometry, shapefile.Shape
+            sample_polygon method accepts any of these geometries:
 
-            Alternatively if the user supplies the vectors
-            of a polygon in the format [(x0, y0), ..., (xn, yn)]
-            a single shapely polygon will be created for
-            cropping the data
+            a list of (x, y) points, ex. [(x1, y1), ...]
+            geojson Polygon object
+            shapely Polygon object
+            shapefile Polygon shape
+            flopy Polygon shape
 
         band : int
             raster band to re-sample
@@ -399,14 +412,14 @@ class Raster(object):
 
         Parameters
         ----------
-        polygon : (shapely.geometry.Polygon or GeoJSON-like dict)
-            The values should be a GeoJSON-like dict or object
-            implements the Python geo interface protocal.
+        polygon : list, geojson, shapely.geometry, shapefile.Shape
+            crop method accepts any of these geometries:
 
-            Alternatively if the user supplies the vectors
-            of a polygon in the format [(x0, y0), ..., (xn, yn)]
-            a single shapely polygon will be created for
-            cropping the data
+            a list of (x, y) points, ex. [(x1, y1), ...]
+            geojson Polygon object
+            shapely Polygon object
+            shapefile Polygon shape
+            flopy Polygon shape
 
         invert : bool
             Default value is False. If invert is True then the
@@ -519,14 +532,14 @@ class Raster(object):
 
         Parameters
         ----------
-        polygon : (shapely.geometry.Polygon or GeoJSON-like dict)
-            The values should be a GeoJSON-like dict or object
-            implements the Python geo interface protocal.
+        polygon : list, geojson, shapely.geometry, shapefile.Shape
+            _sample_rio_dataset method accepts any of these geometries:
 
-            Alternatively if the user supplies the vectors
-            of a polygon in the format [(x0, y0), ..., (xn, yn)]
-            a single shapely polygon will be created for
-            cropping the data
+            a list of (x, y) points, ex. [(x1, y1), ...]
+            geojson Polygon object
+            shapely Polygon object
+            shapefile Polygon shape
+            flopy Polygon shape
 
         invert : bool
             Default value is False. If invert is True then the
@@ -546,20 +559,13 @@ class Raster(object):
         else:
             from rasterio.mask import mask
 
-        if shapely is None:
-            msg = (
-                "Raster()._sample_rio_dataset(): error "
-                + 'importing shapely - try "pip install shapely"'
-            )
-            raise ImportError(msg)
-        else:
-            from shapely import geometry
+        from .geospatial_utils import GeoSpatialUtil
 
-        if isinstance(polygon, list) or isinstance(polygon, np.ndarray):
-            shapes = [geometry.Polygon([[x, y] for x, y in polygon])]
+        if isinstance(polygon, (list, tuple, np.ndarray)):
+            polygon = [polygon]
 
-        else:
-            shapes = [polygon]
+        geom = GeoSpatialUtil(polygon, shapetype='Polygon')
+        shapes = [geom]
 
         rstr_crp, rstr_crp_affine = mask(
             self._dataset, shapes, crop=True, invert=invert
@@ -586,14 +592,14 @@ class Raster(object):
 
         Parameters
         ----------
-        polygon : (shapely.geometry.Polygon or GeoJSON-like dict)
-            The values should be a GeoJSON-like dict or object
-            implements the Python geo interface protocal.
+        polygon : list, geojson, shapely.geometry, shapefile.Shape
+            _intersection method accepts any of these geometries:
 
-            Alternatively if the user supplies the vectors
-            of a polygon in the format [(x0, y0), ..., (xn, yn)]
-            a single shapely polygon will be created for
-            cropping the data
+            a list of (x, y) points, ex. [(x1, y1), ...]
+            geojson Polygon object
+            shapely Polygon object
+            shapefile Polygon shape
+            flopy Polygon shape
 
         invert : bool
             Default value is False. If invert is True then the
@@ -604,36 +610,14 @@ class Raster(object):
             mask : np.ndarray (dtype = bool)
 
         """
-        if shapely is None:
-            msg = (
-                "Raster()._intersection(): error "
-                + 'importing shapely try "pip install shapely"'
-            )
-            raise ImportError(msg)
-        else:
-            from shapely import geometry
+        from .geospatial_utils import GeoSpatialUtil
 
-        # step 1: check the data type in shapes
-        if isinstance(polygon, geometry.Polygon):
-            polygon = list(polygon.exterior.coords)
+        if isinstance(polygon, (list, tuple, np.ndarray)):
+            polygon = [polygon]
 
-        elif isinstance(polygon, dict):
-            # geojson, get coordinates=
-            if polygon["geometry"]["type"].lower() == "polygon":
-                polygon = [
-                    [x, y] for x, y in polygon["geometry"]["coordinates"]
-                ]
+        geom = GeoSpatialUtil(polygon, shapetype="Polygon")
 
-            else:
-                raise TypeError("Shape type must be a polygon")
-
-        elif isinstance(polygon, np.ndarray):
-            # numpy array, change to a list
-            polygon = list(polygon)
-
-        else:
-            # this is a list of coordinates
-            pass
+        polygon = geom.points[0]
 
         # step 2: create a grid of centoids
         xc = self.xcenters
@@ -756,8 +740,8 @@ class Raster(object):
             for band, arr in self.__arr_dict.items():
                 foo.write(arr, band)
 
-    @classmethod
-    def load(cls, raster):
+    @staticmethod
+    def load(raster):
         """
         Static method to load a raster file
         into the raster object
@@ -783,7 +767,7 @@ class Raster(object):
         bands = dataset.indexes
         meta = dataset.meta
 
-        return cls(
+        return Raster(
             array,
             bands,
             meta["crs"],
