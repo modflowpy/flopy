@@ -119,7 +119,7 @@ class Shape(object):
             shape = MultiLineString(geoms)
 
         elif geo_interface['type'] == "Point":
-            shape = Point(geo_interface["point"])
+            shape = Point(geo_interface["coordinates"])
 
         elif geo_interface['type'] == "MultiPoint":
             geoms = [Point(coords) for coords in geo_interface['coordinates']]
@@ -623,7 +623,8 @@ def transform(
 
     return xrot, yrot
 
-
+'''
+# todo: remove this method and replace with geospatial_util methods
 def shape(pyshp_shpobj):
     """
     Convert a pyshp geometry object to a flopy geometry object.
@@ -651,6 +652,7 @@ def shape(pyshp_shpobj):
     types = {5: Polygon, 3: LineString, 1: Point}
     flopy_geometype = types[pyshp_shpobj.shapeType]
     return flopy_geometype(pyshp_shpobj.points)
+'''
 
 
 def get_polygon_area(geom):

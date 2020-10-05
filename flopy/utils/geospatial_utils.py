@@ -195,12 +195,19 @@ class GeoSpatialCollection(object):
                 self.__collection.append(GeoSpatialUtil(shape))
 
         elif isinstance(obj, (np.ndarray, list, tuple)):
-            if shapetype is None:
-                err = "a list of shapetypes must be provided"
-                raise AssertionError(err)
+            if isinstance(obj[0], (Shape, Collection)):
+                for shape in obj:
+                    self.__collection.append(GeoSpatialUtil(shape))
 
-            for ix, geom in enumerate(obj):
-                self.__collection.append(GeoSpatialUtil(geom, shapetype[ix]))
+            else:
+                if shapetype is None:
+                    err = "a list of shapetypes must be provided"
+                    raise AssertionError(err)
+
+                for ix, geom in enumerate(obj):
+                    self.__collection.append(
+                        GeoSpatialUtil(geom, shapetype[ix])
+                    )
 
         if geojson is not None:
             if isinstance(obj, (geojson.GeometryCollection,

@@ -462,14 +462,14 @@ def shp2recarray(shpname):
             "io.to_shapefile(): error "
             + "importing shapefile - try pip install pyshp"
         )
-    from ..utils.geometry import shape
+    from ..utils.geospatial_utils import GeoSpatialUtil
 
     sfobj = sf.Reader(shpname)
     dtype = [
         (str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]
     ]
 
-    geoms = [shape(s) for s in sfobj.iterShapes()]
+    geoms = [GeoSpatialUtil(s).flopy_geometry for s in sfobj.iterShapes()]
     records = [
         tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
     ]
@@ -490,14 +490,17 @@ def recarray2shp(
 ):
     """
     Write a numpy record array to a shapefile, using a corresponding
-    list of geometries.
+    list of geometries. Method supports list of flopy geometry objects,
+    flopy Collection object, shapely Collection object, and geojson
+    Geometry Collection objects
 
     Parameters
     ----------
     recarray : np.recarray
         Numpy record array with attribute information that will go in the
         shapefile
-    geoms : list of flopy.utils.geometry objects
+    geoms : list of flopy.utils.geometry, shapely geometry collection,
+            flopy geometry collection, or geojson geometry collection
         The number of geometries in geoms must equal the number of records in
         recarray.
     shpname : str
@@ -516,6 +519,7 @@ def recarray2shp(
     subsequent use. See flopy.reference for more details.
 
     """
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     if len(recarray) != len(geoms):
         raise IndexError(
@@ -526,6 +530,9 @@ def recarray2shp(
         raise Exception("Recarray is empty")
 
     geomtype = None
+
+    geoms = GeoSpatialCollection(geoms).flopy_geometry
+
     for g in geoms:
         try:
             geomtype = g.shapeType
