@@ -623,8 +623,7 @@ def transform(
 
     return xrot, yrot
 
-'''
-# todo: remove this method and replace with geospatial_util methods
+
 def shape(pyshp_shpobj):
     """
     Convert a pyshp geometry object to a flopy geometry object.
@@ -649,10 +648,12 @@ def shape(pyshp_shpobj):
     >>> flopy_geom = shape(list(sfobj.iterShapes())[0])
 
     """
-    types = {5: Polygon, 3: LineString, 1: Point}
-    flopy_geometype = types[pyshp_shpobj.shapeType]
-    return flopy_geometype(pyshp_shpobj.points)
-'''
+    import warnings
+    warnings.warn("Method will be Deprecated, calling GeoSpatialUtil",
+                  DeprecationWarning)
+
+    from .geospatial_utils import GeoSpatialUtil
+    return GeoSpatialUtil(pyshp_shpobj).flopy_geometry
 
 
 def get_polygon_area(geom):
