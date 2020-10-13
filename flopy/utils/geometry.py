@@ -30,6 +30,7 @@ class Shape(object):
                 if interiors is None
                 else (tuple(map(tuple, i)) for i in interiors)
             )
+            self.interiors = tuple(self.interiors)
 
         elif type == "LineString":
             self.coords = list(map(tuple, coordinates))
@@ -214,7 +215,7 @@ class MultiLineString(Collection):
 
     @property
     def __geo_interface__(self):
-        return {'type': 'LineString',
+        return {'type': 'MultiLineString',
                 'coordinates': [g.__geo_interface__['coordinates']
                                 for g in self]}
 

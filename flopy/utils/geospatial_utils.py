@@ -226,6 +226,15 @@ class GeoSpatialCollection(object):
                 for geom in list(obj):
                     self.__collection.append(GeoSpatialUtil(geom))
 
+    def __iter__(self):
+        """
+
+        Returns
+        -------
+
+        """
+        yield from self.__collection
+
     @property
     def shapetype(self):
         """
@@ -315,7 +324,8 @@ if __name__ == "__main__":
 
     import os
     ws = r"C:\Users\jlarsen\Desktop\DataCollector"
-    tests = ["polygon_test.shp", "hole_test.shp", "multipolygon_test.shp"]
+    tests = ["polygon_test.shp", "hole_test.shp", "multipolygon_test.shp",
+             "point_test.shp", "multipoint_test.shp", "linestring_test.shp"]
 
     for t in tests:
         test = os.path.join(ws, 'data', t)
@@ -338,6 +348,7 @@ if __name__ == "__main__":
 
         with shapefile.Reader(test) as r:
             for shape in r.shapes():
+                print(shape.__geo_interface__)
                 gu = GeoSpatialUtil(shape)
                 feat = gu.geojson
                 sh_feat = gu.shapely
