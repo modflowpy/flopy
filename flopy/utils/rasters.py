@@ -15,11 +15,6 @@ try:
 except ImportError:
     scipy = None
 
-try:
-    import shapely
-except ImportError:
-    shapely = None
-
 
 class Raster(object):
     """

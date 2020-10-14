@@ -358,7 +358,6 @@ class Gridgen(object):
         self.nodes = 0
         self.nja = 0
 
-        # todo: update the features to shapefile method for GeoSpatialCollection...
         # Create shapefile or set shapefile to feature
         rfname = "rf{}".format(len(self._rfdict))
         if isinstance(features, list):

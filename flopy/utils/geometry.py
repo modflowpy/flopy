@@ -20,10 +20,11 @@ class Shape(object):
         2d or 3d list of polygon interiors
 
     """
-    def __init__(self, type, coordinates=None, exterior=None, interiors=None):
-        self.__type = type
+    def __init__(self, shapetype, coordinates=None,
+                 exterior=None, interiors=None):
+        self.__type = shapetype
 
-        if type == "Polygon":
+        if shapetype == "Polygon":
             self.exterior = tuple(map(tuple, exterior))
             self.interiors = (
                 tuple()
@@ -32,12 +33,12 @@ class Shape(object):
             )
             self.interiors = tuple(self.interiors)
 
-        elif type == "LineString":
+        elif shapetype == "LineString":
             self.coords = list(map(tuple, coordinates))
             if len(self.coords[0]) == 3:
                 self.has_z = True
 
-        elif type == "Point":
+        elif shapetype == "Point":
             while len(coordinates) == 1:
                 coordinates = coordinates[0]
 
@@ -46,7 +47,7 @@ class Shape(object):
                 self.has_z = True
         else:
             err = "Supported shape types are Polygon, LineString, " \
-                  "and Point: Supplied shape type {}".format(type)
+                  "and Point: Supplied shape type {}".format(shapetype)
             raise TypeError(err)
 
     @property
@@ -149,7 +150,7 @@ class Collection(list):
         list of flopy.util.geometry objects
 
     """
-    def __init__(self, geometries=[]):
+    def __init__(self, geometries=()):
         super(Collection, self).__init__(geometries)
 
     def __repr__(self):
@@ -208,7 +209,7 @@ class MultiPolygon(Collection):
     polygons : list
         list of flopy.utils.geometry.Polygon objects
     """
-    def __init__(self, polygons=[]):
+    def __init__(self, polygons=()):
         for p in polygons:
             if not isinstance(p, Polygon):
                 raise TypeError("Only Polygon instances are supported")
@@ -234,7 +235,7 @@ class MultiLineString(Collection):
     polygons : list
         list of flopy.utils.geometry.LineString objects
     """
-    def __init__(self, linestrings=[]):
+    def __init__(self, linestrings=()):
         for l in linestrings:
             if not isinstance(l, LineString):
                 raise TypeError("Only LineString instances are supported")
@@ -260,7 +261,7 @@ class MultiPoint(Collection):
     polygons : list
         list of flopy.utils.geometry.Point objects
     """
-    def __init__(self, points=[]):
+    def __init__(self, points=()):
         for p in points:
             if not isinstance(p, Point):
                 raise TypeError("Only Point instances are supported")
