@@ -67,6 +67,7 @@ class Triangle(object):
             geojson Polygon object
             shapely Polygon object
             shapefile Polygon shape
+            flopy.utils.geometry.Polygon object
 
         Returns
         -------

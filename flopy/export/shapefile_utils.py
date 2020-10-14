@@ -462,14 +462,14 @@ def shp2recarray(shpname):
             "io.to_shapefile(): error "
             + "importing shapefile - try pip install pyshp"
         )
-    from ..utils.geospatial_utils import GeoSpatialUtil
+    from ..utils.geospatial_utils import GeoSpatialCollection
 
     sfobj = sf.Reader(shpname)
     dtype = [
         (str(f[0]), get_pyshp_field_dtypes(f[1])) for f in sfobj.fields[1:]
     ]
 
-    geoms = [GeoSpatialUtil(s).flopy_geometry for s in sfobj.iterShapes()]
+    geoms = GeoSpatialCollection(sfobj).flopy_geometry
     records = [
         tuple(r) + (geoms[i],) for i, r in enumerate(sfobj.iterRecords())
     ]
@@ -500,7 +500,8 @@ def recarray2shp(
         Numpy record array with attribute information that will go in the
         shapefile
     geoms : list of flopy.utils.geometry, shapely geometry collection,
-            flopy geometry collection, or geojson geometry collection
+            flopy geometry collection, shapefile.Shapes,
+            list of shapefile.Shape objects, or geojson geometry collection
         The number of geometries in geoms must equal the number of records in
         recarray.
     shpname : str

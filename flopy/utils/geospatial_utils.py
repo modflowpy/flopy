@@ -57,8 +57,8 @@ class GeoSpatialUtil(object):
 
         elif isinstance(obj, (Shape, Collection)):
             geo_interface = obj.__geo_interface__
-            if geo_interface['type'] == "Shapes":
-                raise TypeError("Mixed Shape collections not supported")
+            if geo_interface['type'] == "GeometryCollection":
+                raise TypeError("GeometryCollections are not supported")
 
             self.__geo_interface = geo_interface
 
@@ -165,6 +165,28 @@ class GeoSpatialUtil(object):
 
 class GeoSpatialCollection(object):
     """
+    The GeoSpatialCollection class allows a user to convert between
+    Collection objects from common geospatial libraries.
+
+    Parameters
+    ----------
+    obj : collection object
+        obj can accept the following types
+
+        str : shapefile name
+        shapefile.Reader object
+        list of [shapefile.Shape, shapefile.Shape,]
+        shapefile.Shapes object
+        flopy.utils.geometry.Collection object
+        list of [flopy.utils.geometry, ...] objects
+        geojson.GeometryCollection object
+        geojson.FeatureCollection object
+        shapely.GeometryCollection object
+        list of [[vertices], ...]
+
+    shapetype : list
+        optional list of shapetypes that is required when vertices are
+        supplied to the class as the obj parameter
 
     """
     def __init__(self, obj, shapetype=None):
@@ -195,7 +217,7 @@ class GeoSpatialCollection(object):
                 self.__collection.append(GeoSpatialUtil(shape))
 
         elif isinstance(obj, (np.ndarray, list, tuple)):
-            if isinstance(obj[0], (Shape, Collection)):
+            if isinstance(obj[0], (Shape, Collection, shapefile.Shape)):
                 for shape in obj:
                     self.__collection.append(GeoSpatialUtil(shape))
 
@@ -203,6 +225,9 @@ class GeoSpatialCollection(object):
                 if shapetype is None:
                     err = "a list of shapetypes must be provided"
                     raise AssertionError(err)
+
+                elif isinstance(shapetype, str):
+                    shapetype = [shapetype] * len(obj)
 
                 for ix, geom in enumerate(obj):
                     self.__collection.append(
@@ -228,20 +253,23 @@ class GeoSpatialCollection(object):
 
     def __iter__(self):
         """
+        Iterator method that allows the user to get a list of GeoSpatialUtil
+        objects from the GeoSpatialCollection object
 
         Returns
         -------
-
+            GeoSpatialUtil
         """
         yield from self.__collection
 
     @property
     def shapetype(self):
         """
+        Returns a list of shapetypes to the user
 
         Returns
         -------
-
+            list of str
         """
         if self.__shapetype is None:
             self.__shapetype = [i.shapetype for i in self.__collection]
@@ -250,10 +278,11 @@ class GeoSpatialCollection(object):
     @property
     def points(self):
         """
+        Property returns a multidimensional list of vertices
 
         Returns
         -------
-
+            list of vertices
         """
         if self._points is None:
             self._points = [i.points for i in self.__collection]
@@ -262,10 +291,12 @@ class GeoSpatialCollection(object):
     @property
     def shapely(self):
         """
+        Property that returns a shapely.geometry.collection.GeometryCollection
+        object to the user
 
         Returns
         -------
-
+            shapely.geometry.collection.GeometryCollection object
         """
         if shapely is not None:
             if self._shapely is None:
@@ -278,10 +309,11 @@ class GeoSpatialCollection(object):
     @property
     def geojson(self):
         """
+        Property that returns a geojson.GeometryCollection object to the user
 
         Returns
         -------
-
+            geojson.GeometryCollection
         """
         if geojson is not None:
             if self._geojson is None:
@@ -293,10 +325,11 @@ class GeoSpatialCollection(object):
     @property
     def shape(self):
         """
+        Property that returns a shapefile.Shapes object
 
         Returns
         -------
-
+            shapefile.Shapes object
         """
         if self._shape is None:
             self._shape = shapefile.Shapes()
@@ -307,57 +340,14 @@ class GeoSpatialCollection(object):
     @property
     def flopy_geometry(self):
         """
+        Property that returns a flopy.util.geometry.Collection object
 
         Returns
         -------
-
+            flopy.util.geometry.Collectionnos object
         """
         if self._flopy_geometry is None:
             self._flopy_geometry = Collection(
                 [i.flopy_geometry for i in self.__collection]
             )
         return self._flopy_geometry
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    import os
-    ws = r"C:\Users\jlarsen\Desktop\DataCollector"
-    tests = ["polygon_test.shp", "hole_test.shp", "multipolygon_test.shp",
-             "point_test.shp", "multipoint_test.shp", "linestring_test.shp"]
-
-    for t in tests:
-        test = os.path.join(ws, 'data', t)
-
-        with shapefile.Reader(test) as rr:
-            gc = GeoSpatialCollection(rr)
-            pt_col = gc.points
-            sh_col = gc.shapely
-            geo_col = gc.geojson
-            shp_col = gc.shape
-            fp_col = gc.flopy_geometry
-            sh_type = gc.shapetype
-
-            gc2 = GeoSpatialCollection(fp_col)
-            pt_col = gc2.points
-            sh_col = gc2.shapely
-            geo_col = gc2.geojson
-            shp_col = gc2.shape
-            fp_col = gc2.flopy_geometry
-
-        with shapefile.Reader(test) as r:
-            for shape in r.shapes():
-                print(shape.__geo_interface__)
-                gu = GeoSpatialUtil(shape)
-                feat = gu.geojson
-                sh_feat = gu.shapely
-                shpe = gu.shape
-                pnt = gu.points
-                fpshp = gu.flopy_geometry
-
-                gu2 = GeoSpatialUtil(sh_feat)
-                feat = gu2.geojson
-                sh_feat = gu2.shapely
-                shpe = gu2.shape
-                pnt = gu2.points
