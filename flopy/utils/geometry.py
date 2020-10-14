@@ -52,10 +52,11 @@ class Shape(object):
     @property
     def __geo_interface__(self):
         """
+        Creates the geojson standard representation of a shape
 
         Returns
         -------
-
+            dict
         """
         geo_interface = {}
 
@@ -136,6 +137,16 @@ class Shape(object):
 
 class Collection(list):
     """
+    The collection object is container for a group of flopy geometries
+
+    This class acts as a base class for MultiPoint, MultiLineString, and
+    MultiPolygon classes. This class can also accept a mix of geometries
+    and act as a stand alone container.
+
+    Parameters
+    ----------
+    geometries : list
+        list of flopy.util.geometry objects
 
     """
     def __init__(self, geometries=[]):
@@ -152,10 +163,11 @@ class Collection(list):
     @property
     def bounds(self):
         """
+        Method to calculate the bounding box of the collection
 
         Returns
         -------
-
+            tuple (xmin, ymin, xmax, ymax)
         """
         bbox = [geom.bounds for geom in self]
         xmin, ymin = np.min(bbox, axis=0)[0:2]
@@ -165,15 +177,17 @@ class Collection(list):
 
     def plot(self, ax=None, **kwargs):
         """
+        Plotting method for collection
 
         Parameters
         ----------
-        ax
-        kwargs
+        ax : matplotlib.axes object
+        kwargs : keyword arguments
+            matplotlib keyword arguments
 
         Returns
         -------
-
+            matplotlib.axes object
         """
         for g in self:
             ax = g.plot(ax=ax, **kwargs)
@@ -185,7 +199,15 @@ class Collection(list):
 
 
 class MultiPolygon(Collection):
+    """
+    Container for housing and describing multipolygon geometries (e.g. to be
+        read or written to shapefiles or other geographic data formats)
 
+    Parameters:
+    ----------
+    polygons : list
+        list of flopy.utils.geometry.Polygon objects
+    """
     def __init__(self, polygons=[]):
         for p in polygons:
             if not isinstance(p, Polygon):
@@ -203,7 +225,15 @@ class MultiPolygon(Collection):
 
 
 class MultiLineString(Collection):
+    """
+    Container for housing and describing multilinestring geometries (e.g. to be
+        read or written to shapefiles or other geographic data formats)
 
+    Parameters:
+    ----------
+    polygons : list
+        list of flopy.utils.geometry.LineString objects
+    """
     def __init__(self, linestrings=[]):
         for l in linestrings:
             if not isinstance(l, LineString):
@@ -221,11 +251,19 @@ class MultiLineString(Collection):
 
 
 class MultiPoint(Collection):
+    """
+    Container for housing and describing multipoint geometries (e.g. to be
+        read or written to shapefiles or other geographic data formats)
 
+    Parameters:
+    ----------
+    polygons : list
+        list of flopy.utils.geometry.Point objects
+    """
     def __init__(self, points=[]):
         for p in points:
             if not isinstance(p, Point):
-                raise TypeError("Only Polygon instances are supported")
+                raise TypeError("Only Point instances are supported")
             super(MultiPoint, self).__init__(points)
 
     def __repr__(self):

@@ -37,6 +37,18 @@ class GeoSpatialUtil(object):
     Geospatial utils are a unifying method to provide conversion between
     commonly used geospatial input types
 
+    Parameters
+    ----------
+    obj : geospatial object
+        obj can accept any of the following objects:
+            shapefile.Shape object
+            flopy.utils.geometry objects
+            list of vertices
+            geojson geometry objects
+            shapely.geometry objects
+
+    shapetype : str
+        shapetype is required when a list of vertices is supplied for obj
 
     """
     def __init__(self, obj, shapetype=None):
@@ -91,15 +103,23 @@ class GeoSpatialUtil(object):
 
     @property
     def __geo_interface__(self):
+        """
+        Geojson standard representation of a geometry
+
+        Returns
+        -------
+            dict
+        """
         return self.__geo_interface
 
     @property
     def shapetype(self):
         """
+        Shapetype string for a geometry
 
         Returns
         -------
-
+            str
         """
         if self.__shapetype is None:
             self.__shapetype = self.__geo_interface['type']
@@ -108,10 +128,11 @@ class GeoSpatialUtil(object):
     @property
     def points(self):
         """
+        Returns a list of vertices to the user
 
         Returns
         -------
-
+            list
         """
         if self._points is None:
             self._points = self.__geo_interface['coordinates']
@@ -120,10 +141,11 @@ class GeoSpatialUtil(object):
     @property
     def shapely(self):
         """
+        Returns a shapely.geometry object to the user
 
         Returns
         -------
-
+            shapely.geometry.<shape>
         """
         if shapely is not None:
             if self._shapely is None:
@@ -132,6 +154,13 @@ class GeoSpatialUtil(object):
 
     @property
     def geojson(self):
+        """
+        Returns a geojson object to the user
+
+        Returns
+        -------
+            geojson.<shape>
+        """
         if geojson is not None:
             if self._geojson is None:
                 cls = geojson_classes[self.__geo_interface['type'].lower()]
@@ -141,10 +170,11 @@ class GeoSpatialUtil(object):
     @property
     def shape(self):
         """
+        Returns a shapefile.Shape object to the user
 
         Returns
         -------
-
+            shapefile.shape
         """
         if self._shape is None:
             self._shape = shapefile.Shape._from_geojson(self.__geo_interface)
@@ -153,10 +183,11 @@ class GeoSpatialUtil(object):
     @property
     def flopy_geometry(self):
         """
+        Returns a flopy geometry object to the user
 
         Returns
         -------
-
+            flopy.utils.geometry.<Shape>
         """
         if self._flopy_geometry is None:
             self._flopy_geometry = Shape.from_geojson(self.__geo_interface)
