@@ -74,8 +74,7 @@ class Triangle(object):
         None
 
         """
-        if isinstance(polygon, (list, tuple,
-                                np.ndarray)):
+        if isinstance(polygon, (list, tuple, np.ndarray)):
             polygon = [polygon]
 
         geom = GeoSpatialUtil(polygon, shapetype="Polygon")

@@ -256,7 +256,7 @@ class Raster(object):
         if isinstance(point[0], (tuple, list, np.ndarray)):
             point = point[0]
 
-        geom = GeoSpatialUtil(point, shapetype='Point')
+        geom = GeoSpatialUtil(point, shapetype="Point")
 
         x, y = geom.points
 
@@ -559,7 +559,7 @@ class Raster(object):
         if isinstance(polygon, (list, tuple, np.ndarray)):
             polygon = [polygon]
 
-        geom = GeoSpatialUtil(polygon, shapetype='Polygon')
+        geom = GeoSpatialUtil(polygon, shapetype="Polygon")
         shapes = [geom]
 
         rstr_crp, rstr_crp_affine = mask(

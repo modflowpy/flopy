@@ -71,25 +71,25 @@ def features_to_shapefile(features, featuretype, filename):
     if featuretype.lower() not in ["point", "line", "linestring", "polygon"]:
         raise Exception("Unrecognized feature type: {}".format(featuretype))
 
-    if featuretype.lower() in ("line", 'linestring'):
+    if featuretype.lower() in ("line", "linestring"):
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
-            wr.line(line.__geo_interface__['coordinates'])
+            wr.line(line.__geo_interface__["coordinates"])
             wr.record(i)
 
     elif featuretype.lower() == "point":
         wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
-            wr.point(*point.__geo_interface__['coordinates'])
+            wr.point(*point.__geo_interface__["coordinates"])
             wr.record(i)
 
     elif featuretype.lower() == "polygon":
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
-            wr.poly(polygon.__geo_interface__['coordinates'])
+            wr.poly(polygon.__geo_interface__["coordinates"])
             wr.record(i)
 
     wr.close()

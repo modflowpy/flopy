@@ -1,7 +1,13 @@
 try:
     import shapely
-    from shapely.geometry import MultiPolygon, Polygon, Point, \
-        MultiPoint, LineString, MultiLineString
+    from shapely.geometry import (
+        MultiPolygon,
+        Polygon,
+        Point,
+        MultiPoint,
+        LineString,
+        MultiLineString,
+    )
 except ImportError:
     shapely = None
 
@@ -17,19 +23,23 @@ from flopy.utils.geometry import Shape, Collection
 
 geojson_classes = {}
 if geojson is not None:
-    geojson_classes = {'polygon': geojson.Polygon,
-                       'multipolygon': geojson.MultiPolygon,
-                       'point': geojson.Point,
-                       'multipoint': geojson.MultiPoint,
-                       'linestring': geojson.LineString,
-                       'multilinestring': geojson.MultiLineString}
+    geojson_classes = {
+        "polygon": geojson.Polygon,
+        "multipolygon": geojson.MultiPolygon,
+        "point": geojson.Point,
+        "multipoint": geojson.MultiPoint,
+        "linestring": geojson.LineString,
+        "multilinestring": geojson.MultiLineString,
+    }
 
-shape_types = {'multipolygon': "MultiPolygon",
-               'polygon': "Polygon",
-               "point": "Point",
-               "multipoint": "MultiPoint",
-               "linestring": "LineString",
-               "multilinestring": "MultiLineString"}
+shape_types = {
+    "multipolygon": "MultiPolygon",
+    "polygon": "Polygon",
+    "point": "Point",
+    "multipoint": "MultiPoint",
+    "linestring": "LineString",
+    "multilinestring": "MultiLineString",
+}
 
 
 class GeoSpatialUtil(object):
@@ -51,6 +61,7 @@ class GeoSpatialUtil(object):
         shapetype is required when a list of vertices is supplied for obj
 
     """
+
     def __init__(self, obj, shapetype=None):
         self.__obj = obj
         self.__geo_interface = {}
@@ -69,36 +80,58 @@ class GeoSpatialUtil(object):
 
         elif isinstance(obj, (Shape, Collection)):
             geo_interface = obj.__geo_interface__
-            if geo_interface['type'] == "GeometryCollection":
+            if geo_interface["type"] == "GeometryCollection":
                 raise TypeError("GeometryCollections are not supported")
 
             self.__geo_interface = geo_interface
 
         elif isinstance(obj, (np.ndarray, list, tuple)):
             if shapetype is None or shapetype not in shape_types:
-                err = "shapetype must be one of the following: " + \
-                      " , ".join(geojson_classes.keys())
+                err = "shapetype must be one of the following: " + " , ".join(
+                    geojson_classes.keys()
+                )
                 raise AssertionError(err)
 
-            self.__geo_interface = {'type': shape_types[shapetype],
-                                    "coordinates": list(obj)}
+            self.__geo_interface = {
+                "type": shape_types[shapetype],
+                "coordinates": list(obj),
+            }
 
         if geojson is not None:
             if isinstance(obj, geojson.Feature):
-                self.__geo_interface = \
-                    {"type": obj.geometry.type,
-                     "coordinates": obj.geometry.coordinates}
+                self.__geo_interface = {
+                    "type": obj.geometry.type,
+                    "coordinates": obj.geometry.coordinates,
+                }
 
-            elif isinstance(obj, (geojson.Point, geojson.MultiPoint,
-                                  geojson.Polygon, geojson.MultiPolygon,
-                                  geojson.LineString,
-                                  geojson.MultiLineString)):
-                self.__geo_interface = {"type": obj.type,
-                                        "coordinates": obj.coordinates}
+            elif isinstance(
+                obj,
+                (
+                    geojson.Point,
+                    geojson.MultiPoint,
+                    geojson.Polygon,
+                    geojson.MultiPolygon,
+                    geojson.LineString,
+                    geojson.MultiLineString,
+                ),
+            ):
+                self.__geo_interface = {
+                    "type": obj.type,
+                    "coordinates": obj.coordinates,
+                }
 
         if shapely is not None:
-            if isinstance(obj, (Point, MultiPoint, Polygon,
-                                MultiPolygon, LineString, MultiLineString)):
+            if isinstance(
+                obj,
+                (
+                    Point,
+                    MultiPoint,
+                    Polygon,
+                    MultiPolygon,
+                    LineString,
+                    MultiLineString,
+                ),
+            ):
                 self.__geo_interface = obj.__geo_interface__
 
     @property
@@ -122,7 +155,7 @@ class GeoSpatialUtil(object):
             str
         """
         if self.__shapetype is None:
-            self.__shapetype = self.__geo_interface['type']
+            self.__shapetype = self.__geo_interface["type"]
         return self.__shapetype
 
     @property
@@ -135,7 +168,7 @@ class GeoSpatialUtil(object):
             list
         """
         if self._points is None:
-            self._points = self.__geo_interface['coordinates']
+            self._points = self.__geo_interface["coordinates"]
         return self._points
 
     @property
@@ -163,8 +196,8 @@ class GeoSpatialUtil(object):
         """
         if geojson is not None:
             if self._geojson is None:
-                cls = geojson_classes[self.__geo_interface['type'].lower()]
-                self._geojson = cls(self.__geo_interface['coordinates'])
+                cls = geojson_classes[self.__geo_interface["type"].lower()]
+                self._geojson = cls(self.__geo_interface["coordinates"])
             return self._geojson
 
     @property
@@ -220,6 +253,7 @@ class GeoSpatialCollection(object):
         supplied to the class as the obj parameter
 
     """
+
     def __init__(self, obj, shapetype=None):
         self.__obj = obj
         self.__collection = []
@@ -266,19 +300,29 @@ class GeoSpatialCollection(object):
                     )
 
         if geojson is not None:
-            if isinstance(obj, (geojson.GeometryCollection,
-                                geojson.FeatureCollection,
-                                geojson.MultiLineString,
-                                geojson.MultiPoint,
-                                geojson.MultiPolygon)):
+            if isinstance(
+                obj,
+                (
+                    geojson.GeometryCollection,
+                    geojson.FeatureCollection,
+                    geojson.MultiLineString,
+                    geojson.MultiPoint,
+                    geojson.MultiPolygon,
+                ),
+            ):
                 for geom in obj.geometries:
                     self.__collection.append(GeoSpatialUtil(geom))
 
         if shapely is not None:
-            if isinstance(obj, (shapely.geometry.collection.GeometryCollection,
-                                MultiPoint,
-                                MultiLineString,
-                                MultiPolygon)):
+            if isinstance(
+                obj,
+                (
+                    shapely.geometry.collection.GeometryCollection,
+                    MultiPoint,
+                    MultiLineString,
+                    MultiPolygon,
+                ),
+            ):
                 for geom in list(obj):
                     self.__collection.append(GeoSpatialUtil(geom))
 

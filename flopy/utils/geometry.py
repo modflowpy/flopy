@@ -20,8 +20,10 @@ class Shape(object):
         2d or 3d list of polygon interiors
 
     """
-    def __init__(self, shapetype, coordinates=None,
-                 exterior=None, interiors=None):
+
+    def __init__(
+        self, shapetype, coordinates=None, exterior=None, interiors=None
+    ):
         self.__type = shapetype
 
         if shapetype == "Polygon":
@@ -46,8 +48,10 @@ class Shape(object):
             if len(coordinates) == 3:
                 self.has_z = True
         else:
-            err = "Supported shape types are Polygon, LineString, " \
-                  "and Point: Supplied shape type {}".format(shapetype)
+            err = (
+                "Supported shape types are Polygon, LineString, "
+                "and Point: Supplied shape type {}".format(shapetype)
+            )
             raise TypeError(err)
 
     @property
@@ -62,17 +66,24 @@ class Shape(object):
         geo_interface = {}
 
         if self.__type == "Polygon":
-            geo_interface = {"coordinates": tuple([self.exterior] +
-                                                  [i for i in self.interiors]),
-                             "type": self.__type}
+            geo_interface = {
+                "coordinates": tuple(
+                    [self.exterior] + [i for i in self.interiors]
+                ),
+                "type": self.__type,
+            }
 
         elif self.__type == "LineString":
-            geo_interface = {"coordinates": tuple(self.coords),
-                             "type": self.__type}
+            geo_interface = {
+                "coordinates": tuple(self.coords),
+                "type": self.__type,
+            }
 
         elif self.__type == "Point":
-            geo_interface = {"coordinates": tuple(self.coords),
-                             "type": self.__type}
+            geo_interface = {
+                "coordinates": tuple(self.coords),
+                "type": self.__type,
+            }
 
         return geo_interface
 
@@ -113,24 +124,27 @@ class Shape(object):
             else:
                 shape = MultiPolygon(geoms)
 
-        elif geo_interface['type'] == "LineString":
-            shape = LineString(geo_interface['coordinates'])
+        elif geo_interface["type"] == "LineString":
+            shape = LineString(geo_interface["coordinates"])
 
-        elif geo_interface['type'] == "MultiLineString":
-            geoms = [LineString(coords) for coords
-                     in geo_interface['coordinates']]
+        elif geo_interface["type"] == "MultiLineString":
+            geoms = [
+                LineString(coords) for coords in geo_interface["coordinates"]
+            ]
             shape = MultiLineString(geoms)
 
-        elif geo_interface['type'] == "Point":
+        elif geo_interface["type"] == "Point":
             shape = Point(geo_interface["coordinates"])
 
-        elif geo_interface['type'] == "MultiPoint":
-            geoms = [Point(coords) for coords in geo_interface['coordinates']]
+        elif geo_interface["type"] == "MultiPoint":
+            geoms = [Point(coords) for coords in geo_interface["coordinates"]]
             shape = MultiPoint(geoms)
 
         else:
-            err = "Supported shape types are Polygon, LineString, and " \
-                  "Point: Supplied shape type {}".format(geo_interface['type'])
+            err = (
+                "Supported shape types are Polygon, LineString, and "
+                "Point: Supplied shape type {}".format(geo_interface["type"])
+            )
             raise TypeError(err)
 
         return shape
@@ -150,16 +164,19 @@ class Collection(list):
         list of flopy.util.geometry objects
 
     """
+
     def __init__(self, geometries=()):
         super(Collection, self).__init__(geometries)
 
     def __repr__(self):
-        return 'Shapes: {}'.format(list(self))
+        return "Shapes: {}".format(list(self))
 
     @property
     def __geo_interface__(self):
-        return {'type': 'GeometryCollection',
-                'geometries': [g.__geo_interface__ for g in self]}
+        return {
+            "type": "GeometryCollection",
+            "geometries": [g.__geo_interface__ for g in self],
+        }
 
     @property
     def bounds(self):
@@ -209,6 +226,7 @@ class MultiPolygon(Collection):
     polygons : list
         list of flopy.utils.geometry.Polygon objects
     """
+
     def __init__(self, polygons=()):
         for p in polygons:
             if not isinstance(p, Polygon):
@@ -216,13 +234,14 @@ class MultiPolygon(Collection):
             super(MultiPolygon, self).__init__(polygons)
 
     def __repr__(self):
-        return 'MultiPolygon: {}'.format(list(self))
+        return "MultiPolygon: {}".format(list(self))
 
     @property
     def __geo_interface__(self):
-        return {'type': 'MultiPolygon',
-                'coordinates': [g.__geo_interface__['coordinates']
-                                for g in self]}
+        return {
+            "type": "MultiPolygon",
+            "coordinates": [g.__geo_interface__["coordinates"] for g in self],
+        }
 
 
 class MultiLineString(Collection):
@@ -235,6 +254,7 @@ class MultiLineString(Collection):
     polygons : list
         list of flopy.utils.geometry.LineString objects
     """
+
     def __init__(self, linestrings=()):
         for l in linestrings:
             if not isinstance(l, LineString):
@@ -242,13 +262,14 @@ class MultiLineString(Collection):
             super(MultiLineString, self).__init__(linestrings)
 
     def __repr__(self):
-        return 'LineString: {}'.format(list(self))
+        return "LineString: {}".format(list(self))
 
     @property
     def __geo_interface__(self):
-        return {'type': 'MultiLineString',
-                'coordinates': [g.__geo_interface__['coordinates']
-                                for g in self]}
+        return {
+            "type": "MultiLineString",
+            "coordinates": [g.__geo_interface__["coordinates"] for g in self],
+        }
 
 
 class MultiPoint(Collection):
@@ -261,6 +282,7 @@ class MultiPoint(Collection):
     polygons : list
         list of flopy.utils.geometry.Point objects
     """
+
     def __init__(self, points=()):
         for p in points:
             if not isinstance(p, Point):
@@ -268,13 +290,14 @@ class MultiPoint(Collection):
             super(MultiPoint, self).__init__(points)
 
     def __repr__(self):
-        return 'MultiPoint: {}'.format(list(self))
+        return "MultiPoint: {}".format(list(self))
 
     @property
     def __geo_interface__(self):
-        return {'type': 'MultiPoint',
-                'coordinates': [g.__geo_interface__['coordinates']
-                                for g in self]}
+        return {
+            "type": "MultiPoint",
+            "coordinates": [g.__geo_interface__["coordinates"] for g in self],
+        }
 
 
 class Polygon(Shape):
@@ -321,8 +344,9 @@ class Polygon(Shape):
         Multi-polygons not yet supported.
         z information is only stored if it was entered.
         """
-        super(Polygon, self).__init__(self.type, coordinates=None,
-                                      exterior=exterior, interiors=interiors)
+        super(Polygon, self).__init__(
+            self.type, coordinates=None, exterior=exterior, interiors=interiors
+        )
 
     def __eq__(self, other):
         if not isinstance(other, Polygon):
@@ -689,10 +713,13 @@ def shape(pyshp_shpobj):
 
     """
     import warnings
-    warnings.warn("Method will be Deprecated, calling GeoSpatialUtil",
-                  DeprecationWarning)
+
+    warnings.warn(
+        "Method will be Deprecated, calling GeoSpatialUtil", DeprecationWarning
+    )
 
     from .geospatial_utils import GeoSpatialUtil
+
     return GeoSpatialUtil(pyshp_shpobj).flopy_geometry
 
 

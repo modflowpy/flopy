@@ -181,23 +181,30 @@ class GridIntersect:
         keepzerolengths = kwargs.pop("keepzerolengths", False)
 
         if gu.shapetype in ("Point", "MultiPoint"):
-            if self.method == "structured" and \
-                    self.mfgrid.grid_type == "structured":
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
                 rec = self._intersect_point_structured(shp)
             else:
                 rec = self._intersect_point_shapely(shp, sort_by_cellid)
         elif gu.shapetype in ("LineString", "MultiLineString"):
-            if self.method == "structured" and \
-                    self.mfgrid.grid_type == "structured":
-                rec = self._intersect_linestring_structured(shp,
-                                                            keepzerolengths)
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
+                rec = self._intersect_linestring_structured(
+                    shp, keepzerolengths
+                )
             else:
-                rec = self._intersect_linestring_shapely(shp,
-                                                         keepzerolengths,
-                                                         sort_by_cellid)
+                rec = self._intersect_linestring_shapely(
+                    shp, keepzerolengths, sort_by_cellid
+                )
         elif gu.shapetype in ("Polygon", "MultiPolygon"):
-            if self.method == "structured" and \
-                    self.mfgrid.grid_type == "structured":
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
                 rec = self._intersect_polygon_structured(shp)
             else:
                 rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
