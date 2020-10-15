@@ -9,6 +9,13 @@ from flopy.mf6.modflow.mfsimulation import MFSimulation
 from flopy.mf6.mfbase import VerbosityLevel
 
 try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
+
+try:
     import pymake
 except:
     print('could not import pymake')
@@ -179,7 +186,8 @@ def test003_gwfs_disv():
         assert array_util.array_comp(budget_fjf_valid, budget_frf)
 
     model = sim.get_model(model_name)
-    model.export('{}/{}.shp'.format(pth, test_ex_name))
+    if shapefile:
+        model.export('{}/{}.shp'.format(pth, test_ex_name))
 
     # change some settings
     chd_head_left = model.get_package('CHD_LEFT')

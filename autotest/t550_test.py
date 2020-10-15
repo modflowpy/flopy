@@ -7,6 +7,13 @@ from flopy.discretization import StructuredGrid
 from flopy.utils import SpatialReference as OGsr
 from flopy.export.shapefile_utils import shp2recarray
 
+try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
+
 tmpdir = 'temp/t550/'
 if not os.path.isdir(tmpdir):
     os.makedirs(tmpdir)
@@ -79,15 +86,19 @@ def test_mf6_grid_shp_export():
     #irch = np.zeros((nrow, ncol))
     riv6 = fp6.ModflowGwfriv(gwf, stress_period_data=spd6)
     rch6 = fp6.ModflowGwfrcha(gwf, recharge=rech)
-    #rch6.export('{}/mf6.shp'.format(tmpdir))
-    m.export('{}/mfnwt.shp'.format(tmpdir))
-    gwf.export('{}/mf6.shp'.format(tmpdir))
+    if shapefile:
+        #rch6.export('{}/mf6.shp'.format(tmpdir))
+        m.export('{}/mfnwt.shp'.format(tmpdir))
+        gwf.export('{}/mf6.shp'.format(tmpdir))
 
     riv6spdarrays = dict(riv6.stress_period_data.masked_4D_arrays_itr())
     rivspdarrays = dict(riv.stress_period_data.masked_4D_arrays_itr())
     for k, v in rivspdarrays.items():
         assert np.abs(np.nansum(v) - np.nansum(riv6spdarrays[k])) < 1e-6, "variable {} is not equal".format(k)
         pass
+
+    if shapefile is None:
+        return  # skip remainder
 
     # check that the two shapefiles are the same
     ra = shp2recarray('{}/mfnwt.shp'.format(tmpdir))
@@ -133,7 +144,8 @@ def test_huge_shapefile():
                         nper=nper, perlen=perlen, nstp=nstp,
                         tsmult=tsmult,
                         top=top, botm=botm)
-    m.export('{}/huge.shp'.format(tmpdir))
+    if shapefile:
+        m.export('{}/huge.shp'.format(tmpdir))
 
 
 if __name__ == '__main__':

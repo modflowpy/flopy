@@ -3,6 +3,7 @@ Module for exporting and importing flopy model attributes
 """
 import copy
 import shutil
+import inspect
 import json
 import numpy as np
 import os
@@ -16,16 +17,40 @@ from ..utils import Util3d, SpatialReference
 srefhttp = "https://spatialreference.org"
 
 
-def import_shapefile():
-    try:
-        import shapefile as sf
+def import_shapefile(check_version=True):
+    """Import shapefile module from pyshp.
 
-        return sf
-    except Exception as e:
-        raise Exception(
-            "io.to_shapefile(): error "
-            + "importing shapefile - try pip install pyshp"
+    Parameters
+    ----------
+    check_version : bool
+        Checks to ensure that pyshp is at least version 2. Default True,
+        which is usually required for Writer (which has a different API), but
+        can be False if only using Reader.
+
+    Returns
+    -------
+    module
+
+    Raises
+    ------
+    ImportError
+        If shapefile module is not found, or major version is less than 2.
+    """
+    try:
+        import shapefile
+    except ImportError:
+        raise ImportError(
+            inspect.getouterframes(inspect.currentframe())[1][3]
+            + ": error importing shapefile; try pip install pyshp"
         )
+    if check_version:
+        if int(shapefile.__version__.split(".")[0]) < 2:
+            raise ImportError(
+                inspect.getouterframes(inspect.currentframe())[1][3]
+                + ": shapefile version 2 or later required; try "
+                "pip install --upgrade pyshp"
+            )
+    return shapefile
 
 
 def write_gridlines_shapefile(filename, mg):
@@ -455,14 +480,9 @@ def shp2recarray(shpname):
     recarray : np.recarray
 
     """
-    try:
-        import shapefile as sf
-    except Exception:
-        raise Exception(
-            "io.to_shapefile(): error "
-            + "importing shapefile - try pip install pyshp"
-        )
     from ..utils.geometry import shape
+
+    sf = import_shapefile(check_version=False)
 
     sfobj = sf.Reader(shpname)
     dtype = [
