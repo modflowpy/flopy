@@ -33,6 +33,16 @@ if not os.path.isdir(spth):
     os.makedirs(spth)
 
 
+def import_shapefile():
+    try:
+        import shapefile
+    except ImportError:
+        return None
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        return None
+    return shapefile
+
+
 def remove_shp(shpname):
     os.remove(shpname)
     for ext in ['prj', 'shx', 'dbf']:
@@ -94,9 +104,8 @@ def export_netcdf(m):
 
 def export_shapefile(namfile):
     print('in export_shapefile: {}'.format(namfile))
-    try:
-        import shapefile as shp
-    except:
+    shp = import_shapefile()
+    if shp is None:
         return
 
     m = flopy.modflow.Modflow.load(namfile, model_ws=pth, verbose=False)
@@ -128,9 +137,8 @@ def export_shapefile(namfile):
 
 def export_shapefile_modelgrid_override(namfile):
     print('in export_modelgrid_override: {}'.format(namfile))
-    try:
-        import shapefile as shp
-    except:
+    shp = import_shapefile()
+    if shp is None:
         return
 
     from flopy.discretization import StructuredGrid
@@ -164,6 +172,8 @@ def export_shapefile_modelgrid_override(namfile):
 
 
 def test_output_helper_shapefile_export():
+    if import_shapefile() is None:
+        return
     ws = os.path.join('..', 'examples', 'data', 'freyberg_multilayer_transient')
     name = 'freyberg.nam'
 
@@ -177,6 +187,9 @@ def test_output_helper_shapefile_export():
 
 
 def test_freyberg_export():
+    if import_shapefile() is None:
+        return
+
     from flopy.discretization import StructuredGrid
     namfile = 'freyberg.nam'
 
@@ -282,6 +295,10 @@ def test_export_output():
 
 
 def test_write_shapefile():
+    sf = import_shapefile()
+    if not sf:
+        return
+
     from flopy.discretization import StructuredGrid
     from flopy.export.shapefile_utils import shp2recarray
     from flopy.export.shapefile_utils import write_grid_shapefile
@@ -298,7 +315,6 @@ def test_write_shapefile():
     # check that pyshp reads integers
     # this only check that row/column were recorded as "N"
     # not how they will be cast by python or numpy
-    import shapefile as sf
     sfobj = sf.Reader(outshp)
     for f in sfobj.fields:
         if f[0] == 'row' or f[0] == 'column':
@@ -323,11 +339,8 @@ def test_write_shapefile():
 
 
 def test_shapefile_polygon_closed():
-    import os
-    import flopy
-    try:
-        import shapefile
-    except:
+    shapefile = import_shapefile()
+    if shapefile is None:
         return
 
     xll, yll = 468970, 3478635
@@ -372,7 +385,9 @@ def test_export_array():
                        m.dis.top.array, nodata=nodata)
     arr = np.loadtxt(os.path.join(tpth, 'fb.asc'), skiprows=6)
 
-    m.modelgrid.write_shapefile(os.path.join(tpth, 'grid.shp'))
+    if import_shapefile() is not None:
+        m.modelgrid.write_shapefile(os.path.join(tpth, 'grid.shp'))
+
     # check bounds
     with open(os.path.join(tpth, 'fb.asc')) as src:
         for line in src:
@@ -1504,12 +1519,11 @@ def test_wkt_parse():
 
 
 def test_shapefile_ibound():
+    shapefile = import_shapefile()
+    if not shapefile:
+        return
     import os
     import flopy
-    try:
-        import shapefile
-    except:
-        return
 
     shape_name = os.path.join(spth, "test.shp")
     nam_file = "freyberg.nam"
@@ -1556,6 +1570,8 @@ def build_sfr_netcdf():
 
 
 def test_export_array2():
+    if import_shapefile() is None:
+        return
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array
     nrow = 7
@@ -1589,6 +1605,8 @@ def test_export_array2():
 
 
 def test_export_array_contours():
+    if import_shapefile() is None:
+        return
     from flopy.discretization import StructuredGrid
     from flopy.export.utils import export_array_contours
     nrow = 7
@@ -1625,6 +1643,8 @@ def test_export_contourf():
     try:
         import shapely
     except:
+        return
+    if import_shapefile() is None:
         return
     import matplotlib.pyplot as plt
     from flopy.export.utils import export_contourf

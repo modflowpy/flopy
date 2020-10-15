@@ -4,6 +4,13 @@ import numpy as np
 import flopy
 from flopy.utils.gridgen import Gridgen
 
+try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
+
 cpth = os.path.join('temp', 't061')
 # delete the directory if it exists
 if os.path.isdir(cpth):
@@ -56,6 +63,9 @@ def test_gridgen():
     g6 = Gridgen(dis6, model_ws=gridgen_ws, exe_name=exe_name)
     gu = Gridgen(dis_usg, model_ws=gridgen_ws, exe_name=exe_name,
                  vertical_pass_through=True)
+
+    if shapefile is None:
+        return  # skip remainder
 
     rf0shp = os.path.join(gridgen_ws, 'rf0')
     xmin = 7 * delr

@@ -7,11 +7,8 @@ import subprocess
 from ..modflow.mfdisu import ModflowDisU
 from ..mf6.modflow import ModflowGwfdis
 from .util_array import Util2d  # read1d,
-from ..export.shapefile_utils import shp2recarray
+from ..export.shapefile_utils import import_shapefile, shp2recarray
 from ..mbase import which
-from ..export.shapefile_utils import import_shapefile
-
-shapefile = import_shapefile()
 
 
 # todo
@@ -54,6 +51,7 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
+    shapefile = import_shapefile(check_version=True)
 
     if featuretype.lower() not in ["point", "line", "polygon"]:
         raise Exception("Unrecognized feature type: {}".format(featuretype))
@@ -1899,6 +1897,7 @@ class Gridgen(object):
         None
 
         """
+        shapefile = import_shapefile(check_version=False)
         # ensure there are active leaf cells from gridgen
         fname = os.path.join(self.model_ws, "qtg.nod")
         if not os.path.isfile(fname):

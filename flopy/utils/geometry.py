@@ -96,7 +96,7 @@ class Polygon:
         # exterior ring must be clockwise (negative area)
         # interiors rings must be counter-clockwise (positive area)
 
-        shapefile = import_shapefile()
+        shapefile = import_shapefile(check_version=False)
 
         exterior = list(self.exterior)
         if shapefile.signed_area(exterior) > 0:
