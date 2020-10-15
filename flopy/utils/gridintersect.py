@@ -6,6 +6,7 @@ except ImportError:
     plt = None
 
 from .geometry import transform
+from .geospatial_utils import GeoSpatialUtil
 
 try:
     from shapely.geometry import (
@@ -154,6 +155,64 @@ class GridIntersect:
                     self.method, self.mfgrid.grid_type
                 )
             )
+
+    def intersect(self, shp, **kwargs):
+        """
+        Method to intersect a shape with a model grid
+
+        Parameters
+        ----------
+        shp : shapely.geometry, geojson object, shapefile.Shape,
+              or flopy geomerty object
+        sort_by_cellid : bool
+            Sort results by cellid
+        keepzerolengths : bool
+            boolean method to keep zero length intersections for
+            linestring intersection
+
+        Returns
+        -------
+        numpy.recarray
+            a record array containing information about the intersection
+        """
+        gu = GeoSpatialUtil(shp)
+        shp = gu.shapely
+        sort_by_cellid = kwargs.pop("sort_by_cellid", True)
+        keepzerolengths = kwargs.pop("keepzerolengths", False)
+
+        if gu.shapetype in ("Point", "MultiPoint"):
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
+                rec = self._intersect_point_structured(shp)
+            else:
+                rec = self._intersect_point_shapely(shp, sort_by_cellid)
+        elif gu.shapetype in ("LineString", "MultiLineString"):
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
+                rec = self._intersect_linestring_structured(
+                    shp, keepzerolengths
+                )
+            else:
+                rec = self._intersect_linestring_shapely(
+                    shp, keepzerolengths, sort_by_cellid
+                )
+        elif gu.shapetype in ("Polygon", "MultiPolygon"):
+            if (
+                self.method == "structured"
+                and self.mfgrid.grid_type == "structured"
+            ):
+                rec = self._intersect_polygon_structured(shp)
+            else:
+                rec = self._intersect_polygon_shapely(shp, sort_by_cellid)
+        else:
+            err = "Shapetype {} is not supported".format(gu.shapetype)
+            raise TypeError(err)
+
+        return rec
 
     def _set_method_get_gridshapes(self):
         """internal method, set self._get_gridshapes to the certain method for
@@ -557,7 +616,8 @@ class GridIntersect:
 
         Parameters
         ----------
-        shp : shapely.geometry
+        shp : shapely.geometry, geojson geometry, shapefile.shape,
+              or flopy geometry object
             shape to intersect with the grid
 
         Returns
@@ -567,6 +627,8 @@ class GridIntersect:
             the shape intersects with
         """
         # query grid
+        shp = GeoSpatialUtil(shp).shapely
+
         qresult = self.query_grid(shp)
         # filter result further if possible (only strtree and filter methods)
         qfiltered = self.filter_query_result(qresult, shp)

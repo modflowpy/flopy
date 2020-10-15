@@ -4,6 +4,7 @@ import subprocess
 from ..mbase import which
 from ..utils.cvfdutil import centroid_of_polygon
 from ..plot.plotutil import plot_cvfd
+from ..utils.geospatial_utils import GeoSpatialUtil
 
 
 class Triangle(object):
@@ -59,15 +60,29 @@ class Triangle(object):
 
         Parameters
         ----------
-        polygon : list
-            polygon is a list of (x, y) points
+        polygon : list, geojson, shapely.geometry, shapefile.Shape
+            add polygon method accepts any of these geometries:
+
+            a list of (x, y) points
+            geojson Polygon object
+            shapely Polygon object
+            shapefile Polygon shape
+            flopy.utils.geometry.Polygon object
 
         Returns
         -------
         None
 
         """
-        self._polygons.append(polygon)
+        if isinstance(polygon, (list, tuple, np.ndarray)):
+            polygon = [polygon]
+
+        geom = GeoSpatialUtil(polygon, shapetype="Polygon")
+        polygon = geom.points
+        self._polygons.append(polygon[0])
+        if len(polygon) > 1:
+            for hole in polygon[1:]:
+                self.add_hole(hole)
         return
 
     def add_hole(self, hole):
