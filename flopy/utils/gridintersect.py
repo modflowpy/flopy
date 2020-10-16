@@ -710,7 +710,7 @@ class GridIntersect:
             nodelist, lengths, vertices = [], [], []
             ixshapes = []
             for ls in lineclip:
-                n, l, v, ix = self._get_nodes_intersecting_linestring(ls)
+                n, l, v, ixs = self._get_nodes_intersecting_linestring(ls)
                 nodelist += n
                 lengths += l
                 # if necessary, transform coordinates back to real
@@ -722,26 +722,32 @@ class GridIntersect:
                 ):
                     v_realworld = []
                     for pt in v:
+                        pt = np.array(pt)
                         rx, ry = transform(
-                            [pt[0]],
-                            [pt[1]],
+                            pt[:, 0],
+                            pt[:, 1],
                             self.mfgrid.xoffset,
                             self.mfgrid.yoffset,
                             self.mfgrid.angrot_radians,
                             inverse=False,
                         )
                         v_realworld.append([rx, ry])
-                    ix_realworld = rotate(
-                        ix, self.mfgrid.angrot, origin=(0.0, 0.0)
-                    )
-                    ix_realworld = translate(
-                        ix_realworld, self.mfgrid.xoffset, self.mfgrid.yoffset
-                    )
+                    ixs_realworld = []
+                    for ix in ixs:
+                        ix_realworld = rotate(
+                            ix, self.mfgrid.angrot, origin=(0.0, 0.0)
+                        )
+                        ix_realworld = translate(
+                            ix_realworld,
+                            self.mfgrid.xoffset,
+                            self.mfgrid.yoffset,
+                        )
+                        ixs_realworld.append(ix_realworld)
                 else:
                     v_realworld = v
-                    ix_realworld = ix
+                    ixs_realworld = ixs
                 vertices += v_realworld
-                ixshapes += ix_realworld
+                ixshapes += ixs_realworld
         else:  # linestring is fully within grid
             (
                 nodelist,
@@ -758,9 +764,10 @@ class GridIntersect:
             ):
                 v_realworld = []
                 for pt in vertices:
+                    pt = np.array(pt)
                     rx, ry = transform(
-                        [pt[0]],
-                        [pt[1]],
+                        pt[:, 0],
+                        pt[:, 1],
                         self.mfgrid.xoffset,
                         self.mfgrid.yoffset,
                         self.mfgrid.angrot_radians,
@@ -887,7 +894,7 @@ class GridIntersect:
         ixshapes.append(intersect)
         length = intersect.length
         lengths.append(length)
-        if intersect.geom_type == "MultiLineString":
+        if hasattr(intersect, "geoms"):
             x, y = [], []
             for igeom in intersect.geoms:
                 x.append(igeom.xy[0])
@@ -972,7 +979,7 @@ class GridIntersect:
                     intersect = linestring.intersection(pl)
                     ixshape.append(intersect)
                     length.append(intersect.length)
-                    if intersect.geom_type == "MultiLineString":
+                    if hasattr(intersect, "geoms"):
                         x, y = [], []
                         for igeom in intersect.geoms:
                             x.append(igeom.xy[0])
@@ -999,7 +1006,7 @@ class GridIntersect:
                     intersect = linestring.intersection(pl)
                     ixshape.append(intersect)
                     length.append(intersect.length)
-                    if intersect.geom_type == "MultiLineString":
+                    if hasattr(intersect, "geoms"):
                         x, y = [], []
                         for igeom in intersect.geoms:
                             x.append(igeom.xy[0])
@@ -1026,7 +1033,7 @@ class GridIntersect:
                     intersect = linestring.intersection(pl)
                     ixshape.append(intersect)
                     length.append(intersect.length)
-                    if intersect.geom_type == "MultiLineString":
+                    if hasattr(intersect, "geoms"):
                         x, y = [], []
                         for igeom in intersect.geoms:
                             x.append(igeom.xy[0])
@@ -1053,7 +1060,7 @@ class GridIntersect:
                     intersect = linestring.intersection(pl)
                     ixshape.append(intersect)
                     length.append(intersect.length)
-                    if intersect.geom_type == "MultiLineString":
+                    if hasattr(intersect, "geoms"):
                         x, y = [], []
                         for igeom in intersect.geoms:
                             x.append(igeom.xy[0])
@@ -1324,8 +1331,6 @@ class GridIntersect:
                         self.mfgrid.angrot_radians,
                         inverse=False,
                     )
-                    holes_pts.append((rx, ry))
-                geoms.append(holes_pts)
             # append (shells, holes) to transformed coordinates list
             geom_list.append(tuple(geoms))
         return geom_list

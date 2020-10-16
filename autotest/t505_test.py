@@ -35,6 +35,12 @@ from flopy.mf6.modflow.mfutlts import ModflowUtlts
 from flopy.mf6.utils import testutils
 from flopy.mf6.mfbase import MFDataException
 
+try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
 
 try:
     import pymake
@@ -2110,8 +2116,9 @@ def test006_gwf3_disv():
 
         # export to netcdf - temporarily disabled
         # model.export(os.path.join(run_folder, "test006_gwf3.nc"))
-        # export to shape file
-        model.export(os.path.join(run_folder, "test006_gwf3.shp"))
+        if shapefile:
+            # export to shape file
+            model.export(os.path.join(run_folder, "test006_gwf3.shp"))
 
         # clean up
         sim.delete_output_files()

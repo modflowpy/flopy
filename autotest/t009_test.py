@@ -10,6 +10,13 @@ import numpy as np
 from flopy.utils.recarray_utils import create_empty_recarray
 
 try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
+
+try:
     import matplotlib
     # if os.getenv('TRAVIS'):  # are we running https://travis-ci.org/ automated tests ?
     #     matplotlib.use('Agg')  # Force matplotlib  not to use any Xwindows backend
@@ -290,6 +297,8 @@ def test_export():
                                  delr=m.dis.delr.array,
                                  xoff=sr.xll, yoff=sr.yll)
     # m.sr.origin_loc = "ll"
+    if not shapefile:
+        return  # skip
     m.export(os.path.join(outpath, 'grid.shp'))
     r, d = create_sfr_data()
     sfr = flopy.modflow.ModflowSfr2(m, reach_data=r, segment_data={0: d})

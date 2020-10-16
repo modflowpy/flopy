@@ -7,7 +7,12 @@ except:
     matplotlib = None
 
 import flopy
-import shapefile
+try:
+    import shapefile
+    if int(shapefile.__version__.split('.')[0]) < 2:
+        shapefile = None
+except ImportError:
+    shapefile = None
 
 
 cpth = os.path.join('temp', 't006')
@@ -82,10 +87,11 @@ def test_mflist_reference():
     ghb = flopy.modflow.ModflowGhb(ml, stress_period_data=ghb_dict)
     assert isinstance(ghb, flopy.modflow.ModflowGhb)
 
-    test = os.path.join(cpth, 'test3.shp')
-    ml.export(test, kper=0)
-    shp = shapefile.Reader(test)
-    assert shp.numRecords == nrow * ncol
+    if shapefile:
+        test = os.path.join(cpth, 'test3.shp')
+        ml.export(test, kper=0)
+        shp = shapefile.Reader(test)
+        assert shp.numRecords == nrow * ncol
 
 def test_cbc_ts():
     fpth = os.path.join('..', 'examples', 'data', 'mf2005_test',
