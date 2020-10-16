@@ -733,6 +733,8 @@ class NetCdf(object):
         if pyproj220:
             self.grid_crs = pyproj.CRS(proj4_str)
         else:
+            if proj4_str.lower().startswith("epsg:"):
+                proj4_str = "+init=" + proj4_str
             self.grid_crs = pyproj.Proj(proj4_str, preserve_units=True)
 
         print("initialize_geometry::self.grid_crs = {}".format(self.grid_crs))
@@ -753,7 +755,10 @@ class NetCdf(object):
                 self.grid_crs, nc_crs, always_xy=True
             )
         else:
-            nc_crs = pyproj.Proj(self.nc_epsg_str)
+            nc_epsg_str = self.nc_epsg_str
+            if nc_epsg_str.lower().startswith("epsg:"):
+                nc_epsg_str = "+init=" + nc_epsg_str
+            nc_crs = pyproj.Proj(nc_epsg_str)
             self.transformer = None
 
         print("initialize_geometry::nc_crs = {}".format(nc_crs))
