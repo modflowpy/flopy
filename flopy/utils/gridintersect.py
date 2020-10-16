@@ -137,15 +137,8 @@ class GridIntersect:
             if self.rtree:
                 self.strtree = STRtree(self._get_gridshapes())
 
-            # set interesection methods
-            self.intersect_point = self._intersect_point_shapely
-            self.intersect_linestring = self._intersect_linestring_shapely
-            self.intersect_polygon = self._intersect_polygon_shapely
-
         elif self.method == "structured" and mfgrid.grid_type == "structured":
-            self.intersect_point = self._intersect_point_structured
-            self.intersect_linestring = self._intersect_linestring_structured
-            self.intersect_polygon = self._intersect_polygon_structured
+            pass
 
         else:
             raise ValueError(
@@ -943,7 +936,7 @@ class GridIntersect:
             x0 = [x[0]]
             y0 = [y[0]]
 
-        (i, j) = self.intersect_point(Point(x0[0], y0[0])).cellids[0]
+        (i, j) = self.intersect(Point(x0[0], y0[0])).cellids[0]
         Xe, Ye = self.mfgrid.xyedges
         xmin = Xe[j]
         xmax = Xe[j + 1]
