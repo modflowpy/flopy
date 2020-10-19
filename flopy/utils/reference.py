@@ -300,7 +300,7 @@ class SpatialReference(object):
             elif (
                 "units=ft" in proj_str
                 or "units=us-ft" in proj_str
-                or "to_meters:0.3048" in proj_str
+                or "to_meter=0.3048" in proj_str
             ):
                 units = "feet"
             return units

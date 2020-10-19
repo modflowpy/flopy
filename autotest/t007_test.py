@@ -605,11 +605,15 @@ def test_dis_sr():
                                    rotation=rotation, xul=xul, yul=yul,
                                    proj4_str='epsg:2243')
 
-    if abs(dis.sr.xul - xul) > 0.01:
-        raise AssertionError()
-
-    if abs(dis.sr.yul - yul) > 0.01:
-        raise AssertionError()
+    # SpatialReference has been deprecated
+    # if abs(dis.sr.xul - xul) > 0.01:
+    #     raise AssertionError()
+    # if abs(dis.sr.yul - yul) > 0.01:
+    #     raise AssertionError()
+    # Use StructuredGrid instead
+    x, y = bg.modelgrid.get_coords(0, delc * nrow)
+    np.testing.assert_almost_equal(x, xul)
+    np.testing.assert_almost_equal(y, yul)
 
 
 def test_mg():
