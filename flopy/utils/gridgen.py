@@ -40,9 +40,16 @@ def features_to_shapefile(features, featuretype, filename):
     Parameters
     ----------
     features : list
-        List of point, line, or polygon features
+        point, line, or polygon features. Method accepts
+        feature can be:
+             a list of geometries
+             flopy.utils.geometry.Collection object
+             shapely.geometry.Collection object
+             geojson.GeometryCollection object
+             list of shapefile.Shape objects
+             shapefile.Shapes object
     featuretype : str
-        Must be 'point', 'line', or 'polygon'
+        Must be 'point', 'line', 'linestring', or 'polygon'
     filename : string
         name of the shapefile to write
 
@@ -51,30 +58,42 @@ def features_to_shapefile(features, featuretype, filename):
     None
 
     """
+    from .geospatial_utils import GeoSpatialCollection
+
     shapefile = import_shapefile(check_version=True)
 
-    if featuretype.lower() not in ["point", "line", "polygon"]:
+    if featuretype.lower() == "line":
+        featuretype = "LineString"
+
+    features = GeoSpatialCollection(features, featuretype).flopy_geometry
+
+    if featuretype.lower() not in [
+        "point",
+        "line",
+        "linestring",
+        "polygon",
+    ]:
         raise Exception("Unrecognized feature type: {}".format(featuretype))
 
-    if featuretype.lower() == "line":
+    if featuretype.lower() in ("line", "linestring"):
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYLINE)
         wr.field("SHAPEID", "N", 20, 0)
         for i, line in enumerate(features):
-            wr.line(line)
+            wr.line(line.__geo_interface__["coordinates"])
             wr.record(i)
 
     elif featuretype.lower() == "point":
         wr = shapefile.Writer(filename, shapeType=shapefile.POINT)
         wr.field("SHAPEID", "N", 20, 0)
         for i, point in enumerate(features):
-            wr.point(point[0], point[1])
+            wr.point(*point.__geo_interface__["coordinates"])
             wr.record(i)
 
     elif featuretype.lower() == "polygon":
         wr = shapefile.Writer(filename, shapeType=shapefile.POLYGON)
         wr.field("SHAPEID", "N", 20, 0)
         for i, polygon in enumerate(features):
-            wr.poly(polygon)
+            wr.poly(polygon.__geo_interface__["coordinates"])
             wr.record(i)
 
     wr.close()
@@ -270,8 +289,14 @@ class Gridgen(object):
         Parameters
         ----------
         feature : str or list
-            feature can be either a string containing the name of a polygon
-            shapefile or it can be a list of polygons
+            feature can be:
+                 a string containing the name of a polygon
+                 a list of polygons
+                 flopy.utils.geometry.Collection object of Polygons
+                 shapely.geometry.Collection object of Polygons
+                 geojson.GeometryCollection object of Polygons
+                 list of shapefile.Shape objects
+                 shapefile.Shapes object
         layers : list
             A list of layers (zero based) for which this active domain
             applies.
@@ -308,9 +333,16 @@ class Gridgen(object):
         """
         Parameters
         ----------
-        features : str or list
-            features can be either a string containing the name of a shapefile
-            or it can be a list of points, lines, or polygons
+        features : str, list, or collection object
+            features can be
+                a string containing the name of a shapefile
+                a list of points, lines, or polygons
+                flopy.utils.geometry.Collection object
+                a list of flopy.utils.geometry objects
+                shapely.geometry.Collection object
+                geojson.GeometryCollection object
+                a list of shapefile.Shape objects
+                shapefile.Shapes object
         featuretype : str
             Must be either 'point', 'line', or 'polygon'
         level : int
@@ -385,7 +417,11 @@ class Gridgen(object):
         qtgfname = os.path.join(self.model_ws, "quadtreegrid.dfn")
         if os.path.isfile(qtgfname):
             os.remove(qtgfname)
-        cmds = [self.exe_name, "quadtreebuilder", "_gridgen_build.dfn"]
+        cmds = [
+            self.exe_name,
+            "quadtreebuilder",
+            "_gridgen_build.dfn",
+        ]
         buff = subprocess.check_output(cmds, cwd=self.model_ws)
         if verbose:
             print(buff)
@@ -473,7 +509,11 @@ class Gridgen(object):
         ), "Could not create export dfn file: {}".format(fname)
 
         # Export shapefiles
-        cmds = [self.exe_name, "grid_to_shapefile_poly", "_gridgen_export.dfn"]
+        cmds = [
+            self.exe_name,
+            "grid_to_shapefile_poly",
+            "_gridgen_export.dfn",
+        ]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -482,7 +522,10 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, "qtgrid.shp")
             assert os.path.isfile(fn)
         except:
-            print("Error.  Failed to export polygon shapefile of grid", buff)
+            print(
+                "Error.  Failed to export polygon shapefile of grid",
+                buff,
+            )
 
         cmds = [
             self.exe_name,
@@ -497,10 +540,17 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, "qtgrid_pt.shp")
             assert os.path.isfile(fn)
         except:
-            print("Error.  Failed to export polygon shapefile of grid", buff)
+            print(
+                "Error.  Failed to export polygon shapefile of grid",
+                buff,
+            )
 
         # Export the usg data
-        cmds = [self.exe_name, "grid_to_usgdata", "_gridgen_export.dfn"]
+        cmds = [
+            self.exe_name,
+            "grid_to_usgdata",
+            "_gridgen_export.dfn",
+        ]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -523,7 +573,11 @@ class Gridgen(object):
         except:
             print("Error.  Failed to export vtk file", buff)
 
-        cmds = [self.exe_name, "grid_to_vtk_sv", "_gridgen_export.dfn"]
+        cmds = [
+            self.exe_name,
+            "grid_to_vtk_sv",
+            "_gridgen_export.dfn",
+        ]
         buff = []
         try:
             buff = subprocess.check_output(cmds, cwd=self.model_ws)
@@ -532,7 +586,10 @@ class Gridgen(object):
             fn = os.path.join(self.model_ws, "qtg_sv.vtu")
             assert os.path.isfile(fn)
         except:
-            print("Error.  Failed to export shared vertex vtk file", buff)
+            print(
+                "Error.  Failed to export shared vertex vtk file",
+                buff,
+            )
 
         return
 
