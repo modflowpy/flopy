@@ -36,38 +36,79 @@ class ModflowGwtfmi(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    packagedata = ListTemplateGenerator(('gwt6', 'fmi', 'packagedata',
-                                         'packagedata'))
+
+    packagedata = ListTemplateGenerator(
+        ("gwt6", "fmi", "packagedata", "packagedata")
+    )
     package_abbr = "gwtfmi"
     _package_type = "fmi"
     dfn_file_name = "gwt-fmi.dfn"
 
-    dfn = [["block options", "name flow_imbalance_correction",
-            "type keyword", "reader urword", "optional true"],
-           ["block packagedata", "name packagedata",
-            "type recarray flowtype filein fname", "reader urword",
-            "optional false"],
-           ["block packagedata", "name flowtype", "in_record true",
-            "type string", "tagged false", "reader urword"],
-           ["block packagedata", "name filein", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block packagedata", "name fname", "in_record true",
-            "type string", "preserve_case true", "tagged false",
-            "reader urword"]]
+    dfn = [
+        [
+            "block options",
+            "name flow_imbalance_correction",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block packagedata",
+            "name packagedata",
+            "type recarray flowtype filein fname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name flowtype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block packagedata",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block packagedata",
+            "name fname",
+            "in_record true",
+            "type string",
+            "preserve_case true",
+            "tagged false",
+            "reader urword",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False,
-                 flow_imbalance_correction=None, packagedata=None,
-                 filename=None, pname=None, parent_file=None):
-        super(ModflowGwtfmi, self).__init__(model, "fmi", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        flow_imbalance_correction=None,
+        packagedata=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtfmi, self).__init__(
+            model, "fmi", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.flow_imbalance_correction = self.build_mfdata(
-            "flow_imbalance_correction", flow_imbalance_correction)
+            "flow_imbalance_correction", flow_imbalance_correction
+        )
         self.packagedata = self.build_mfdata("packagedata", packagedata)
         self._init_complete = True

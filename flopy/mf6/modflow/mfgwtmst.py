@@ -70,60 +70,128 @@ class ModflowGwtmst(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    porosity = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                       'porosity'))
-    decay = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata', 'decay'))
-    decay_sorbed = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                           'decay_sorbed'))
-    bulk_density = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                           'bulk_density'))
-    distcoef = ArrayTemplateGenerator(('gwt6', 'mst', 'griddata',
-                                       'distcoef'))
+
+    porosity = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "porosity"))
+    decay = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "decay"))
+    decay_sorbed = ArrayTemplateGenerator(
+        ("gwt6", "mst", "griddata", "decay_sorbed")
+    )
+    bulk_density = ArrayTemplateGenerator(
+        ("gwt6", "mst", "griddata", "bulk_density")
+    )
+    distcoef = ArrayTemplateGenerator(("gwt6", "mst", "griddata", "distcoef"))
     package_abbr = "gwtmst"
     _package_type = "mst"
     dfn_file_name = "gwt-mst.dfn"
 
-    dfn = [["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name first_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name zero_order_decay", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name sorbtion", "type keyword",
-            "reader urword", "optional true"],
-           ["block griddata", "name porosity", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true"],
-           ["block griddata", "name decay", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name decay_sorbed", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name bulk_density", "type double precision",
-            "shape (nodes)", "reader readarray", "optional true",
-            "layered true"],
-           ["block griddata", "name distcoef", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name first_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name zero_order_decay",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name sorbtion",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name porosity",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name decay",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name decay_sorbed",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name bulk_density",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "optional true",
+            "layered true",
+        ],
+        [
+            "block griddata",
+            "name distcoef",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 first_order_decay=None, zero_order_decay=None, sorbtion=None,
-                 porosity=None, decay=None, decay_sorbed=None,
-                 bulk_density=None, distcoef=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwtmst, self).__init__(model, "mst", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        first_order_decay=None,
+        zero_order_decay=None,
+        sorbtion=None,
+        porosity=None,
+        decay=None,
+        decay_sorbed=None,
+        bulk_density=None,
+        distcoef=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtmst, self).__init__(
+            model, "mst", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.first_order_decay = self.build_mfdata("first_order_decay",
-                                                   first_order_decay)
-        self.zero_order_decay = self.build_mfdata("zero_order_decay",
-                                                  zero_order_decay)
+        self.first_order_decay = self.build_mfdata(
+            "first_order_decay", first_order_decay
+        )
+        self.zero_order_decay = self.build_mfdata(
+            "zero_order_decay", zero_order_decay
+        )
         self.sorbtion = self.build_mfdata("sorbtion", sorbtion)
         self.porosity = self.build_mfdata("porosity", porosity)
         self.decay = self.build_mfdata("decay", decay)

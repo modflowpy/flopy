@@ -33,23 +33,40 @@ class ModflowGwfic(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    strt = ArrayTemplateGenerator(('gwf6', 'ic', 'griddata', 'strt'))
+
+    strt = ArrayTemplateGenerator(("gwf6", "ic", "griddata", "strt"))
     package_abbr = "gwfic"
     _package_type = "ic"
     dfn_file_name = "gwf-ic.dfn"
 
-    dfn = [["block griddata", "name strt", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "default_value 1.0"]]
+    dfn = [
+        [
+            "block griddata",
+            "name strt",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "default_value 1.0",
+        ]
+    ]
 
-    def __init__(self, model, loading_package=False, strt=1.0, filename=None,
-                 pname=None, parent_file=None):
-        super(ModflowGwfic, self).__init__(model, "ic", filename, pname,
-                                           loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        strt=1.0,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwfic, self).__init__(
+            model, "ic", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.strt = self.build_mfdata("strt", strt)

@@ -39,35 +39,80 @@ class ModflowGwtssm(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    sources = ListTemplateGenerator(('gwt6', 'ssm', 'sources',
-                                     'sources'))
+
+    sources = ListTemplateGenerator(("gwt6", "ssm", "sources", "sources"))
     package_abbr = "gwtssm"
     _package_type = "ssm"
     dfn_file_name = "gwt-ssm.dfn"
 
-    dfn = [["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block sources", "name sources",
-            "type recarray pname srctype auxname", "reader urword",
-            "optional false"],
-           ["block sources", "name pname", "in_record true", "type string",
-            "tagged false", "reader urword"],
-           ["block sources", "name srctype", "in_record true",
-            "type string", "tagged false", "optional false", "reader urword"],
-           ["block sources", "name auxname", "in_record true",
-            "type string", "tagged false", "reader urword", "optional false"]]
+    dfn = [
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block sources",
+            "name sources",
+            "type recarray pname srctype auxname",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block sources",
+            "name pname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+        ],
+        [
+            "block sources",
+            "name srctype",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "optional false",
+            "reader urword",
+        ],
+        [
+            "block sources",
+            "name auxname",
+            "in_record true",
+            "type string",
+            "tagged false",
+            "reader urword",
+            "optional false",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, print_flows=None,
-                 save_flows=None, sources=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwtssm, self).__init__(model, "ssm", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        print_flows=None,
+        save_flows=None,
+        sources=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtssm, self).__init__(
+            model, "ssm", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.print_flows = self.build_mfdata("print_flows", print_flows)

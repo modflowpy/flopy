@@ -68,18 +68,34 @@ class ModflowGwt(mfmodel.MFModel):
         model_ws : string, strict : boolean) : MFSimulation
         a class method that loads a model from files
     """
-    model_type = 'gwt'
 
-    def __init__(self, simulation, modelname='model', model_nam_file=None,
-                 version='mf6', exe_name='mf6.exe', model_rel_path='.',
-                 list=None, print_input=None, print_flows=None,
-                 save_flows=None, packages=None, **kwargs):
-        super(ModflowGwt, self).__init__(simulation, model_type='gwt6',
-                                         modelname=modelname,
-                                         model_nam_file=model_nam_file,
-                                         version=version, exe_name=exe_name,
-                                         model_rel_path=model_rel_path,
-                                         **kwargs)
+    model_type = "gwt"
+
+    def __init__(
+        self,
+        simulation,
+        modelname="model",
+        model_nam_file=None,
+        version="mf6",
+        exe_name="mf6.exe",
+        model_rel_path=".",
+        list=None,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        packages=None,
+        **kwargs
+    ):
+        super(ModflowGwt, self).__init__(
+            simulation,
+            model_type="gwt6",
+            modelname=modelname,
+            model_nam_file=model_nam_file,
+            version=version,
+            exe_name=exe_name,
+            model_rel_path=model_rel_path,
+            **kwargs
+        )
 
         self.name_file.list.set_data(list)
         self.name_file.print_input.set_data(print_input)
@@ -88,11 +104,27 @@ class ModflowGwt(mfmodel.MFModel):
         self.name_file.packages.set_data(packages)
 
     @classmethod
-    def load(cls, simulation, structure, modelname='NewModel',
-             model_nam_file='modflowtest.nam', version='mf6',
-             exe_name='mf6.exe', strict=True, model_rel_path='.',
-             load_only=None):
-        return mfmodel.MFModel.load_base(simulation, structure, modelname,
-                                         model_nam_file, 'gwt', version,
-                                         exe_name, strict, model_rel_path,
-                                         load_only)
+    def load(
+        cls,
+        simulation,
+        structure,
+        modelname="NewModel",
+        model_nam_file="modflowtest.nam",
+        version="mf6",
+        exe_name="mf6.exe",
+        strict=True,
+        model_rel_path=".",
+        load_only=None,
+    ):
+        return mfmodel.MFModel.load_base(
+            simulation,
+            structure,
+            modelname,
+            model_nam_file,
+            "gwt",
+            version,
+            exe_name,
+            strict,
+            model_rel_path,
+            load_only,
+        )

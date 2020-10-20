@@ -40,45 +40,103 @@ class ModflowGwtmvt(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    budget_filerecord = ListTemplateGenerator(('gwt6', 'mvt', 'options',
-                                               'budget_filerecord'))
+
+    budget_filerecord = ListTemplateGenerator(
+        ("gwt6", "mvt", "options", "budget_filerecord")
+    )
     package_abbr = "gwtmvt"
     _package_type = "mvt"
     dfn_file_name = "gwt-mvt.dfn"
 
-    dfn = [["block options", "name print_input", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name print_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name budget_filerecord",
-            "type record budget fileout budgetfile", "shape", "reader urword",
-            "tagged true", "optional true"],
-           ["block options", "name budget", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name fileout", "type keyword", "shape",
-            "in_record true", "reader urword", "tagged true",
-            "optional false"],
-           ["block options", "name budgetfile", "type string",
-            "preserve_case true", "shape", "in_record true", "reader urword",
-            "tagged false", "optional false"]]
+    dfn = [
+        [
+            "block options",
+            "name print_input",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name print_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget_filerecord",
+            "type record budget fileout budgetfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name budget",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name fileout",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name budgetfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, print_input=None,
-                 print_flows=None, save_flows=None, budget_filerecord=None,
-                 filename=None, pname=None, parent_file=None):
-        super(ModflowGwtmvt, self).__init__(model, "mvt", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        print_input=None,
+        print_flows=None,
+        save_flows=None,
+        budget_filerecord=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtmvt, self).__init__(
+            model, "mvt", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.budget_filerecord = self.build_mfdata("budget_filerecord",
-                                                   budget_filerecord)
+        self.budget_filerecord = self.build_mfdata(
+            "budget_filerecord", budget_filerecord
+        )
         self._init_complete = True

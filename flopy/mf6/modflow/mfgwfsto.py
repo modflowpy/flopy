@@ -55,50 +55,122 @@ class ModflowGwfsto(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    iconvert = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata',
-                                       'iconvert'))
-    ss = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'ss'))
-    sy = ArrayTemplateGenerator(('gwf6', 'sto', 'griddata', 'sy'))
+
+    iconvert = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "iconvert"))
+    ss = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "ss"))
+    sy = ArrayTemplateGenerator(("gwf6", "sto", "griddata", "sy"))
     package_abbr = "gwfsto"
     _package_type = "sto"
     dfn_file_name = "gwf-sto.dfn"
 
-    dfn = [["block options", "name save_flows", "type keyword",
-            "reader urword", "optional true"],
-           ["block options", "name storagecoefficient", "type keyword",
-            "reader urword", "optional true"],
-           ["block griddata", "name iconvert", "type integer",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "optional false", "default_value 0"],
-           ["block griddata", "name ss", "type double precision",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "optional false", "default_value 1.e-5"],
-           ["block griddata", "name sy", "type double precision",
-            "shape (nodes)", "valid", "reader readarray", "layered true",
-            "optional false", "default_value 0.15"],
-           ["block period", "name iper", "type integer",
-            "block_variable True", "in_record true", "tagged false", "shape",
-            "valid", "reader urword", "optional false"],
-           ["block period", "name steady-state", "type keyword", "shape",
-            "valid", "reader urword", "optional true"],
-           ["block period", "name transient", "type keyword", "shape",
-            "valid", "reader urword", "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name save_flows",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name storagecoefficient",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name iconvert",
+            "type integer",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "optional false",
+            "default_value 0",
+        ],
+        [
+            "block griddata",
+            "name ss",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "optional false",
+            "default_value 1.e-5",
+        ],
+        [
+            "block griddata",
+            "name sy",
+            "type double precision",
+            "shape (nodes)",
+            "valid",
+            "reader readarray",
+            "layered true",
+            "optional false",
+            "default_value 0.15",
+        ],
+        [
+            "block period",
+            "name iper",
+            "type integer",
+            "block_variable True",
+            "in_record true",
+            "tagged false",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional false",
+        ],
+        [
+            "block period",
+            "name steady-state",
+            "type keyword",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block period",
+            "name transient",
+            "type keyword",
+            "shape",
+            "valid",
+            "reader urword",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, save_flows=None,
-                 storagecoefficient=None, iconvert=0, ss=1.e-5, sy=0.15,
-                 steady_state=None, transient=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwfsto, self).__init__(model, "sto", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        save_flows=None,
+        storagecoefficient=None,
+        iconvert=0,
+        ss=1.0e-5,
+        sy=0.15,
+        steady_state=None,
+        transient=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwfsto, self).__init__(
+            model, "sto", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.storagecoefficient = self.build_mfdata("storagecoefficient",
-                                                    storagecoefficient)
+        self.storagecoefficient = self.build_mfdata(
+            "storagecoefficient", storagecoefficient
+        )
         self.iconvert = self.build_mfdata("iconvert", iconvert)
         self.ss = self.build_mfdata("ss", ss)
         self.sy = self.build_mfdata("sy", sy)

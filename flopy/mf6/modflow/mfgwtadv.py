@@ -24,7 +24,7 @@ class ModflowGwtadv(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
@@ -33,13 +33,29 @@ class ModflowGwtadv(mfpackage.MFPackage):
     _package_type = "adv"
     dfn_file_name = "gwt-adv.dfn"
 
-    dfn = [["block options", "name scheme", "type string",
-            "valid central upstream tvd", "reader urword", "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name scheme",
+            "type string",
+            "valid central upstream tvd",
+            "reader urword",
+            "optional true",
+        ]
+    ]
 
-    def __init__(self, model, loading_package=False, scheme=None, filename=None,
-                 pname=None, parent_file=None):
-        super(ModflowGwtadv, self).__init__(model, "adv", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        scheme=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtadv, self).__init__(
+            model, "adv", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.scheme = self.build_mfdata("scheme", scheme)

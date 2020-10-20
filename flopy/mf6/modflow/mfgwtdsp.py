@@ -55,49 +55,113 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
-    diffc = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'diffc'))
-    alh = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alh'))
-    alv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'alv'))
-    ath1 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath1'))
-    ath2 = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'ath2'))
-    atv = ArrayTemplateGenerator(('gwt6', 'dsp', 'griddata', 'atv'))
+
+    diffc = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "diffc"))
+    alh = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alh"))
+    alv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "alv"))
+    ath1 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath1"))
+    ath2 = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "ath2"))
+    atv = ArrayTemplateGenerator(("gwt6", "dsp", "griddata", "atv"))
     package_abbr = "gwtdsp"
     _package_type = "dsp"
     dfn_file_name = "gwt-dsp.dfn"
 
-    dfn = [["block options", "name xt3d_off", "type keyword", "shape",
-            "reader urword", "optional true"],
-           ["block options", "name xt3d_rhs", "type keyword", "shape",
-            "reader urword", "optional true"],
-           ["block griddata", "name diffc", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name alh", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name alv", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name ath1", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name ath2", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"],
-           ["block griddata", "name atv", "type double precision",
-            "shape (nodes)", "reader readarray", "layered true",
-            "optional true"]]
+    dfn = [
+        [
+            "block options",
+            "name xt3d_off",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name xt3d_rhs",
+            "type keyword",
+            "shape",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name diffc",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name alh",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name alv",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name ath1",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name ath2",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+        [
+            "block griddata",
+            "name atv",
+            "type double precision",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "optional true",
+        ],
+    ]
 
-    def __init__(self, model, loading_package=False, xt3d_off=None,
-                 xt3d_rhs=None, diffc=None, alh=None, alv=None, ath1=None,
-                 ath2=None, atv=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwtdsp, self).__init__(model, "dsp", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        model,
+        loading_package=False,
+        xt3d_off=None,
+        xt3d_rhs=None,
+        diffc=None,
+        alh=None,
+        alv=None,
+        ath1=None,
+        ath2=None,
+        atv=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwtdsp, self).__init__(
+            model, "dsp", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.xt3d_off = self.build_mfdata("xt3d_off", xt3d_off)

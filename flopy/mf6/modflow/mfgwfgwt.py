@@ -27,7 +27,7 @@ class ModflowGwfgwt(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have 
+        utility packages (mfutl*). For example, mfutllaktab package must have
         a mfgwflak package parent_file.
 
     """
@@ -38,11 +38,20 @@ class ModflowGwfgwt(mfpackage.MFPackage):
 
     dfn = []
 
-    def __init__(self, simulation, loading_package=False, exgtype=None,
-                 exgmnamea=None, exgmnameb=None, filename=None, pname=None,
-                 parent_file=None):
-        super(ModflowGwfgwt, self).__init__(simulation, "gwfgwt", filename, pname,
-                                            loading_package, parent_file)
+    def __init__(
+        self,
+        simulation,
+        loading_package=False,
+        exgtype=None,
+        exgmnamea=None,
+        exgmnameb=None,
+        filename=None,
+        pname=None,
+        parent_file=None,
+    ):
+        super(ModflowGwfgwt, self).__init__(
+            simulation, "gwfgwt", filename, pname, loading_package, parent_file
+        )
 
         # set up variables
         self.exgtype = exgtype
