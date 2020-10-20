@@ -144,303 +144,110 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    auxiliary = ListTemplateGenerator(("gwfgwf", "options", "auxiliary"))
-    gnc_filerecord = ListTemplateGenerator(
-        ("gwfgwf", "options", "gnc_filerecord")
-    )
-    mvr_filerecord = ListTemplateGenerator(
-        ("gwfgwf", "options", "mvr_filerecord")
-    )
-    obs_filerecord = ListTemplateGenerator(
-        ("gwfgwf", "options", "obs_filerecord")
-    )
-    exchangedata = ListTemplateGenerator(
-        ("gwfgwf", "exchangedata", "exchangedata")
-    )
+    auxiliary = ListTemplateGenerator(('gwfgwf', 'options', 'auxiliary'))
+    gnc_filerecord = ListTemplateGenerator(('gwfgwf', 'options',
+                                            'gnc_filerecord'))
+    mvr_filerecord = ListTemplateGenerator(('gwfgwf', 'options',
+                                            'mvr_filerecord'))
+    obs_filerecord = ListTemplateGenerator(('gwfgwf', 'options',
+                                            'obs_filerecord'))
+    exchangedata = ListTemplateGenerator(('gwfgwf', 'exchangedata',
+                                          'exchangedata'))
     package_abbr = "gwfgwf"
     _package_type = "gwfgwf"
     dfn_file_name = "exg-gwfgwf.dfn"
 
-    dfn = [
-        [
-            "block options",
-            "name auxiliary",
-            "type string",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_input",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name print_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name save_flows",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name cell_averaging",
-            "type string",
-            "valid harmonic logarithmic amt-lmk",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name cvoptions",
-            "type record variablecv dewatered",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name variablecv",
-            "in_record true",
-            "type keyword",
-            "reader urword",
-        ],
-        [
-            "block options",
-            "name dewatered",
-            "in_record true",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name newton",
-            "type keyword",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name gnc_filerecord",
-            "type record gnc6 filein gnc6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name gnc6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name gnc6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mvr_filerecord",
-            "type record mvr6 filein mvr6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name mvr6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name mvr6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs_filerecord",
-            "type record obs6 filein obs6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package obs",
-            "construct_data continuous",
-            "parameter_name observations",
-        ],
-        [
-            "block options",
-            "name obs6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name obs6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name nexg",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name exchangedata",
+    dfn = [["block options", "name auxiliary", "type string",
+            "shape (naux)", "reader urword", "optional true"],
+           ["block options", "name print_input", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name print_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name save_flows", "type keyword",
+            "reader urword", "optional true"],
+           ["block options", "name cell_averaging", "type string",
+            "valid harmonic logarithmic amt-lmk", "reader urword",
+            "optional true"],
+           ["block options", "name cvoptions",
+            "type record variablecv dewatered", "reader urword",
+            "optional true"],
+           ["block options", "name variablecv", "in_record true",
+            "type keyword", "reader urword"],
+           ["block options", "name dewatered", "in_record true",
+            "type keyword", "reader urword", "optional true"],
+           ["block options", "name newton", "type keyword", "reader urword",
+            "optional true"],
+           ["block options", "name gnc_filerecord",
+            "type record gnc6 filein gnc6_filename", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name filein", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name gnc6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name gnc6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block options", "name mvr_filerecord",
+            "type record mvr6 filein mvr6_filename", "shape", "reader urword",
+            "tagged true", "optional true"],
+           ["block options", "name mvr6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name mvr6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block options", "name obs_filerecord",
+            "type record obs6 filein obs6_filename", "shape", "reader urword",
+            "tagged true", "optional true", "construct_package obs",
+            "construct_data continuous", "parameter_name observations"],
+           ["block options", "name obs6", "type keyword", "shape",
+            "in_record true", "reader urword", "tagged true",
+            "optional false"],
+           ["block options", "name obs6_filename", "type string",
+            "preserve_case true", "in_record true", "tagged false",
+            "reader urword", "optional false"],
+           ["block dimensions", "name nexg", "type integer",
+            "reader urword", "optional false"],
+           ["block exchangedata", "name exchangedata",
             "type recarray cellidm1 cellidm2 ihc cl1 cl2 hwva aux",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cellidm1",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-            "numeric_index true",
-        ],
-        [
-            "block exchangedata",
-            "name cellidm2",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-            "numeric_index true",
-        ],
-        [
-            "block exchangedata",
-            "name ihc",
-            "type integer",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cl1",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name cl2",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name hwva",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block exchangedata",
-            "name aux",
-            "type double precision",
-            "in_record true",
-            "tagged false",
-            "shape (naux)",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+            "reader urword", "optional false"],
+           ["block exchangedata", "name cellidm1", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false", "numeric_index true"],
+           ["block exchangedata", "name cellidm2", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false", "numeric_index true"],
+           ["block exchangedata", "name ihc", "type integer",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name cl1", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name cl2", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name hwva", "type double precision",
+            "in_record true", "tagged false", "reader urword",
+            "optional false"],
+           ["block exchangedata", "name aux", "type double precision",
+            "in_record true", "tagged false", "shape (naux)", "reader urword",
+            "optional true"]]
 
-    def __init__(
-        self,
-        simulation,
-        loading_package=False,
-        exgtype=None,
-        exgmnamea=None,
-        exgmnameb=None,
-        auxiliary=None,
-        print_input=None,
-        print_flows=None,
-        save_flows=None,
-        cell_averaging=None,
-        cvoptions=None,
-        newton=None,
-        gnc_filerecord=None,
-        mvr_filerecord=None,
-        observations=None,
-        nexg=None,
-        exchangedata=None,
-        filename=None,
-        pname=None,
-        parent_file=None,
-    ):
-        super(ModflowGwfgwf, self).__init__(
-            simulation, "gwfgwf", filename, pname, loading_package, parent_file
-        )
+    def __init__(self, simulation, loading_package=False, exgtype=None,
+                 exgmnamea=None, exgmnameb=None, auxiliary=None,
+                 print_input=None, print_flows=None, save_flows=None,
+                 cell_averaging=None, cvoptions=None, newton=None,
+                 gnc_filerecord=None, mvr_filerecord=None, observations=None,
+                 nexg=None, exchangedata=None, filename=None, pname=None,
+                 parent_file=None):
+        super(ModflowGwfgwf, self).__init__(simulation, "gwfgwf", filename, pname,
+                                            loading_package, parent_file)
 
         # set up variables
         self.exgtype = exgtype
@@ -455,21 +262,19 @@ class ModflowGwfgwf(mfpackage.MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.cell_averaging = self.build_mfdata(
-            "cell_averaging", cell_averaging
-        )
+        self.cell_averaging = self.build_mfdata("cell_averaging",
+                                                cell_averaging)
         self.cvoptions = self.build_mfdata("cvoptions", cvoptions)
         self.newton = self.build_mfdata("newton", newton)
-        self.gnc_filerecord = self.build_mfdata(
-            "gnc_filerecord", gnc_filerecord
-        )
-        self.mvr_filerecord = self.build_mfdata(
-            "mvr_filerecord", mvr_filerecord
-        )
-        self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
-        self._obs_package = self.build_child_package(
-            "obs", observations, "continuous", self._obs_filerecord
-        )
+        self.gnc_filerecord = self.build_mfdata("gnc_filerecord",
+                                                gnc_filerecord)
+        self.mvr_filerecord = self.build_mfdata("mvr_filerecord",
+                                                mvr_filerecord)
+        self._obs_filerecord = self.build_mfdata("obs_filerecord",
+                                                 None)
+        self._obs_package = self.build_child_package("obs", observations,
+                                                     "continuous",
+                                                     self._obs_filerecord)
         self.nexg = self.build_mfdata("nexg", nexg)
         self.exchangedata = self.build_mfdata("exchangedata", exchangedata)
         self._init_complete = True

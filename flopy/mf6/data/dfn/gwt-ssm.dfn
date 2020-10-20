@@ -1,0 +1,58 @@
+# --------------------- gwt ssm options ---------------------
+
+block options
+name print_flows
+type keyword
+reader urword
+optional true
+longname print calculated flows to listing file
+description REPLACE print_flows {'{#1}': 'SSM'}
+
+block options
+name save_flows
+type keyword
+reader urword
+optional true
+longname save calculated flows to budget file
+description REPLACE save_flows {'{#1}': 'SSM'}
+
+
+# --------------------- gwt ssm sources ---------------------
+
+block sources
+name sources
+type recarray pname srctype auxname
+reader urword
+optional false
+longname package list
+description
+
+block sources
+name pname
+in_record true
+type string
+tagged false
+reader urword
+longname package name
+description name of the package for which an auxiliary variable contains a source concentration.
+
+block sources
+name srctype
+in_record true
+type string
+tagged false
+optional false
+reader urword
+longname source type
+description type of the source.  Must be AUX.
+
+block sources
+name auxname
+in_record true
+type string
+tagged false
+reader urword
+optional false
+longname auxiliary variable name
+description name of the auxiliary variable in the package PNAME that contains the source concentration.
+

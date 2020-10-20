@@ -51,7 +51,7 @@ longname save well flows to budget file
 description REPLACE save_flows {'{#1}': 'multi-aquifer well'}
 
 block options
-name stage_filerecord
+name head_filerecord
 type record head fileout headfile
 shape
 reader urword
@@ -68,7 +68,7 @@ in_record true
 reader urword
 tagged true
 optional false
-longname stage keyword
+longname head keyword
 description keyword to specify that record corresponds to head.
 
 block options
@@ -81,7 +81,7 @@ reader urword
 tagged false
 optional false
 longname file keyword
-description name of the binary output file to write stage information.
+description name of the binary output file to write head information.
 
 block options
 name budget_filerecord
@@ -292,7 +292,7 @@ tagged false
 in_record true
 reader urword
 longname well radius
-description radius for the multi-aquifer well.
+description radius for the multi-aquifer well. The program will terminate with an error if the radius is less than or equal to zero.
 
 block packagedata
 name bottom
@@ -302,7 +302,7 @@ tagged false
 in_record true
 reader urword
 longname well bottom
-description bottom elevation of the multi-aquifer well. The well bottom is reset to the cell bottom in the lowermost GWF cell connection in cases where the specified well bottom is above the bottom of this GWF cell.
+description bottom elevation of the multi-aquifer well. If CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, BOTTOM is set to the cell bottom in the lowermost GWF cell connection in cases where the specified well bottom is above the bottom of this GWF cell. If CONDEQN is MEAN, BOTTOM is set to the lowermost GWF cell connection screen bottom in cases where the specified well bottom is above this value. The bottom elevation defines the lowest well head that will be simulated when the NEWTON UNDER\_RELAXATION option is specified in the GWF model name file. The bottom elevation is also used to calculate volumetric storage in the well.
 
 block packagedata
 name strt
@@ -312,7 +312,7 @@ tagged false
 in_record true
 reader urword
 longname starting head
-description starting head for the multi-aquifer well.
+description starting head for the multi-aquifer well. The program will terminate with an error if the starting head is less than the specified well bottom.
 
 block packagedata
 name condeqn
@@ -407,7 +407,7 @@ tagged false
 in_record true
 reader urword
 longname screen top
-description value that defines the top elevation of the screen for the multi-aquifer well connection. If the specified SCRN\_TOP is greater than the top of the GWF cell it is set equal to the top of the cell.  SCRN\_TOP can be any value if CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE and SCRN\_TOP is set to the top of the cell.
+description value that defines the top elevation of the screen for the multi-aquifer well connection. If CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN\_TOP can be any value and is set to the top of the cell. If CONDEQN is MEAN, SCRN\_TOP is set to the multi-aquifer well connection cell top if the specified value is greater than the cell top. The program will terminate with an error if the screen top is less than the screen bottom.
 
 block connectiondata
 name scrn_bot
@@ -417,7 +417,7 @@ tagged false
 in_record true
 reader urword
 longname screen bottom
-description value that defines the bottom elevation of the screen for the multi-aquifer well connection. If the specified SCRN\_BOT is less than the bottom of the GWF cell it is set equal to the bottom of the cell.  SCRN\_BOT can be any value if CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE and SCRN\_BOT is set to the bottom of the cell.
+description value that defines the bottom elevation of the screen for the multi-aquifer well connection. If CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN\_BOT can be any value is set to the bottom of the cell. If CONDEQN is MEAN, SCRN\_BOT is set to the multi-aquifer well connection cell bottom if the specified value is less than the cell bottom. The program will terminate with an error if the screen bottom is greater than the screen top.
 
 block connectiondata
 name hk_skin
@@ -437,7 +437,7 @@ tagged false
 in_record true
 reader urword
 longname skin radius
-description real value that defines the skin radius (filter pack radius) for the multi-aquifer well. RADIUS\_SKIN can be any value if CONDEQN is SPECIFIED or THIEM. Otherwise, RADIUS\_SKIN must be greater than RADIUS for the multi-aquifer well.
+description real value that defines the skin radius (filter pack radius) for the multi-aquifer well. RADIUS\_SKIN can be any value if CONDEQN is SPECIFIED or THIEM. If CONDEQN is SKIN, CUMULATIVE, or MEAN, the program will terminate with an error if  RADIUS\_SKIN is less than or equal to the RADIUS for the multi-aquifer well.
 
 
 # --------------------- gwf maw period ---------------------
@@ -563,7 +563,7 @@ in_record true
 reader urword
 time_series true
 longname well head
-description is the head in the multi-aquifer well. WELL\_HEAD is only applied to constant head (STATUS is CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer wells. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.
+description is the head in the multi-aquifer well. WELL\_HEAD is only applied to constant head (STATUS is CONSTANT) and inactive (STATUS is INACTIVE) multi-aquifer wells. If the Options block includes a TIMESERIESFILE entry (see the ``Time-Variable Input'' section), values can be obtained from a time series by entering the time-series name in place of a numeric value. The program will terminate with an error if WELL\_HEAD is less than the bottom of the well.
 
 block period
 name head_limit

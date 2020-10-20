@@ -41,91 +41,36 @@ class ModflowUtllaktab(mfpackage.MFPackage):
         Package name for this package.
     parent_file : MFPackage
         Parent package file that references this package. Only needed for
-        utility packages (mfutl*). For example, mfutllaktab package must have
+        utility packages (mfutl*). For example, mfutllaktab package must have 
         a mfgwflak package parent_file.
 
     """
-
-    table = ListTemplateGenerator(("tab", "table", "table"))
+    table = ListTemplateGenerator(('tab', 'table', 'table'))
     package_abbr = "utltab"
     _package_type = "tab"
     dfn_file_name = "utl-lak-tab.dfn"
 
-    dfn = [
-        [
-            "block dimensions",
-            "name nrow",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block dimensions",
-            "name ncol",
-            "type integer",
-            "reader urword",
-            "optional false",
-        ],
-        [
-            "block table",
-            "name table",
-            "type recarray stage volume sarea barea",
-            "shape (nrow)",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name stage",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name volume",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name sarea",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block table",
-            "name barea",
-            "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
-        ],
-    ]
+    dfn = [["block dimensions", "name nrow", "type integer",
+            "reader urword", "optional false"],
+           ["block dimensions", "name ncol", "type integer",
+            "reader urword", "optional false"],
+           ["block table", "name table",
+            "type recarray stage volume sarea barea", "shape (nrow)",
+            "reader urword"],
+           ["block table", "name stage", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name volume", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name sarea", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword"],
+           ["block table", "name barea", "type double precision", "shape",
+            "tagged false", "in_record true", "reader urword",
+            "optional true"]]
 
-    def __init__(
-        self,
-        model,
-        loading_package=False,
-        nrow=None,
-        ncol=None,
-        table=None,
-        filename=None,
-        pname=None,
-        parent_file=None,
-    ):
-        super(ModflowUtllaktab, self).__init__(
-            model, "tab", filename, pname, loading_package, parent_file
-        )
+    def __init__(self, model, loading_package=False, nrow=None, ncol=None,
+                 table=None, filename=None, pname=None, parent_file=None):
+        super(ModflowUtllaktab, self).__init__(model, "tab", filename, pname,
+                                               loading_package, parent_file)
 
         # set up variables
         self.nrow = self.build_mfdata("nrow", nrow)
