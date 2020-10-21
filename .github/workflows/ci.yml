@@ -110,7 +110,7 @@ jobs:
         activate-environment: flopy
         use-only-tar-bz2: true
 
-    - name: Add jupyter and nbconvert to notebooks run
+    - name: Add jupyter and jupytext to notebooks run
       if: matrix.run-type == 'nb'
       shell: bash -l {0}
       run: |
