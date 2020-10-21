@@ -19,12 +19,8 @@ class ModflowGwtic(mfpackage.MFPackage):
     strt : [double]
         * strt (double) is the initial (starting) concentration---that is,
           concentration at the beginning of the GWT Model simulation. STRT must
-          be specified for all simulations, including steady-state simulations.
-          One value is read for every model cell. For simulations in which the
-          first stress period is steady state, the values used for STRT
-          generally do not affect the simulation. The execution time, however,
-          will be less if STRT includes concentrations that are close to the
-          steady-state solution.
+          be specified for all GWT Model simulations. One value is read for
+          every model cell.
     filename : String
         File name for this package.
     pname : String
