@@ -17,8 +17,8 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     xt3d_off : boolean
-        * xt3d_off (boolean) deactivate the xt3d method to and use the faster
-          and less accurate approximation. This option may provide a fast and
+        * xt3d_off (boolean) deactivate the xt3d method and use the faster and
+          less accurate approximation. This option may provide a fast and
           accurate solution under some circumstances, such as when flow aligns
           with the model grid, there is no mechanical dispersion, or when the
           longitudinal and transverse dispersivities are equal. This option may
