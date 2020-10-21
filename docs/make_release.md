@@ -46,8 +46,10 @@ Instructions for making a FloPy release
 
 ## Update the example notebooks
 
-1.  Rerun all of the notebooks in the `examples\Notebooks` directory.
-2.  Rerun all of the notebooks in the `examples\Notebooks\groundwater_paper` directory.
+Use `run_notebooks.py` in the `release` directory to rerun all of the notebooks in:
+
+1.  `examples\Notebooks` directory.
+2.  `examples\Notebooks\groundwater_paper` directory.
 
 
 ## Commit the release branch

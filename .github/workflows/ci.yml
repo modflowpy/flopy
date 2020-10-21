@@ -15,8 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-    steps:
 
+    if: github.repository_owner == 'modflowpy'
+    steps:
     # check out repo
     - name: Checkout flopy repo
       uses: actions/checkout@v2

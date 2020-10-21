@@ -43,6 +43,18 @@ Contents:
    ./source/flopy.mf6.modflow.mfgwf*
 
 
+MODFLOW 6 Groundwater Transport Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Contents:
+
+.. toctree::
+   :glob:
+   :maxdepth: 4
+
+   ./source/flopy.mf6.modflow.mfgwt*
+
+
 MODFLOW 6 Utilities
 ^^^^^^^^^^^^^^^^^^^
 
