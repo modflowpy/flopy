@@ -119,15 +119,44 @@ class ModflowIms(mfpackage.MFPackage):
           routine. For a linear problem OUTER_MAXIMUM should be 1.
     under_relaxation : string
         * under_relaxation (string) is an optional keyword that defines the
-          nonlinear under-relaxation schemes used. By default under-relaxation
-          is not used. NONE - under-relaxation is not used. SIMPLE - Simple
-          under-relaxation scheme with a fixed relaxation factor is used.
-          COOLEY - Cooley under-relaxation scheme is used. DBD - delta-bar-
-          delta under-relaxation is used. Note that the under-relaxation
-          schemes are used in conjunction with problems that use the Newton-
-          Raphson formulation, however, experience has indicated that the
-          Cooley under-relaxation and damping work well also for the Picard
-          scheme with the wet/dry options of MODFLOW 6.
+          nonlinear under-relaxation schemes used. Under-relaxation is also
+          known as dampening, and is used to reduce the size of the calculated
+          dependent variable before proceeding to the next outer iteration.
+          Under-relaxation can be an effective tool for highly nonlinear models
+          when there are large and often counteracting changes in the
+          calculated dependent variable between successive outer iterations. By
+          default under-relaxation is not used. NONE - under-relaxation is not
+          used (default). SIMPLE - Simple under-relaxation scheme with a fixed
+          relaxation factor (UNDER_RELAXATION_GAMMA) is used. COOLEY - Cooley
+          under-relaxation scheme is used. DBD - delta-bar-delta under-
+          relaxation is used. Note that the under-relaxation schemes are often
+          used in conjunction with problems that use the Newton-Raphson
+          formulation, however, experience has indicated that they also work
+          well non-Newton problems, such as those with the wet/dry options of
+          MODFLOW 6.
+    under_relaxation_gamma : double
+        * under_relaxation_gamma (double) real value defining either the
+          relaxation factor for the SIMPLE scheme or the history or memory term
+          factor of the Cooley and delta-bar-delta algorithms. For the SIMPLE
+          scheme, a value of one indicates that there is no under-relaxation
+          and the full head change is applied. This value can be gradually
+          reduced from one as a way to improve convergence; for well behaved
+          problems, using a value less than one can increase the number of
+          outer iterations required for convergence and needlessly increase run
+          times. UNDER_RELAXATION_GAMMA must be greater than zero for the
+          SIMPLE scheme or the program will terminate with an error. For the
+          Cooley and delta-bar-delta schemes, UNDER_RELAXATION_GAMMA is a
+          memory term that can range between zero and one. When
+          UNDER_RELAXATION_GAMMA is zero, only the most recent history
+          (previous iteration value) is maintained. As UNDER_RELAXATION_GAMMA
+          is increased, past history of iteration changes has greater influence
+          on the memory term. The memory term is maintained as an exponential
+          average of past changes. Retaining some past history can overcome
+          granular behavior in the calculated function surface and therefore
+          helps to overcome cyclic patterns of non-convergence. The value
+          usually ranges from 0.1 to 0.3; a value of 0.2 works well for most
+          problems. UNDER_RELAXATION_GAMMA only needs to be specified if
+          UNDER_RELAXATION is not NONE.
     under_relaxation_theta : double
         * under_relaxation_theta (double) real value defining the reduction
           factor for the learning rate (under-relaxation term) of the delta-
@@ -148,20 +177,6 @@ class ModflowIms(mfpackage.MFPackage):
           UNDER_RELAXATION_KAPPA. The value usually ranges from 0.03 to 0.3; a
           value of 0.1 works well for most problems. UNDER_RELAXATION_KAPPA
           only needs to be specified if UNDER_RELAXATION is DBD.
-    under_relaxation_gamma : double
-        * under_relaxation_gamma (double) real value defining the history or
-          memory term factor of the delta-bar-delta algorithm.
-          UNDER_RELAXATION_GAMMA is between zero and 1 but cannot be equal to
-          one. When UNDER_RELAXATION_GAMMA is zero, only the most recent
-          history (previous iteration value) is maintained. As
-          UNDER_RELAXATION_GAMMA is increased, past history of iteration
-          changes has greater influence on the memory term. The memory term is
-          maintained as an exponential average of past changes. Retaining some
-          past history can overcome granular behavior in the calculated
-          function surface and therefore helps to overcome cyclic patterns of
-          non-convergence. The value usually ranges from 0.1 to 0.3; a value of
-          0.2 works well for most problems. UNDER_RELAXATION_GAMMA only needs
-          to be specified if UNDER_RELAXATION is not NONE.
     under_relaxation_momentum : double
         * under_relaxation_momentum (double) real value defining the fraction
           of past history changes that is added as a momentum term to the step
@@ -527,6 +542,13 @@ class ModflowIms(mfpackage.MFPackage):
         ],
         [
             "block nonlinear",
+            "name under_relaxation_gamma",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block nonlinear",
             "name under_relaxation_theta",
             "type double precision",
             "reader urword",
@@ -535,13 +557,6 @@ class ModflowIms(mfpackage.MFPackage):
         [
             "block nonlinear",
             "name under_relaxation_kappa",
-            "type double precision",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block nonlinear",
-            "name under_relaxation_gamma",
             "type double precision",
             "reader urword",
             "optional true",
@@ -694,9 +709,9 @@ class ModflowIms(mfpackage.MFPackage):
         outer_rclosebnd=None,
         outer_maximum=None,
         under_relaxation=None,
+        under_relaxation_gamma=None,
         under_relaxation_theta=None,
         under_relaxation_kappa=None,
-        under_relaxation_gamma=None,
         under_relaxation_momentum=None,
         backtracking_number=None,
         backtracking_tolerance=None,
@@ -743,14 +758,14 @@ class ModflowIms(mfpackage.MFPackage):
         self.under_relaxation = self.build_mfdata(
             "under_relaxation", under_relaxation
         )
+        self.under_relaxation_gamma = self.build_mfdata(
+            "under_relaxation_gamma", under_relaxation_gamma
+        )
         self.under_relaxation_theta = self.build_mfdata(
             "under_relaxation_theta", under_relaxation_theta
         )
         self.under_relaxation_kappa = self.build_mfdata(
             "under_relaxation_kappa", under_relaxation_kappa
-        )
-        self.under_relaxation_gamma = self.build_mfdata(
-            "under_relaxation_gamma", under_relaxation_gamma
         )
         self.under_relaxation_momentum = self.build_mfdata(
             "under_relaxation_momentum", under_relaxation_momentum

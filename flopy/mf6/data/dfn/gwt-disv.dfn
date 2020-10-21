@@ -40,7 +40,7 @@ optional true
 longname rotation angle
 description counter-clockwise rotation angle (in degrees) of the model grid coordinate system relative to a real-world coordinate system.  If not specified, then a default value of 0.0 is assigned.  The value for ANGROT does not affect the model simulation, but it is written to the binary grid file so that postprocessors can locate the grid in space.
 
-# --------------------- gwf disv dimensions ---------------------
+# --------------------- gwt disv dimensions ---------------------
 
 block dimensions
 name nlay
@@ -66,7 +66,7 @@ optional false
 longname number of columns
 description is the total number of (x, y) vertex pairs used to characterize the horizontal configuration of the model grid.
 
-# --------------------- gwf disv griddata ---------------------
+# --------------------- gwt disv griddata ---------------------
 
 block griddata
 name top
@@ -93,10 +93,10 @@ reader readarray
 layered true
 optional true
 longname idomain existence array
-description is an optional array that characterizes the existence status of a cell.  If the IDOMAIN array is not specified, then all model cells exist within the solution.  If the IDOMAIN value for a cell is 0, the cell does not exist in the simulation.  Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  If the IDOMAIN value for a cell is 1 or greater, the cell exists in the simulation.  If the IDOMAIN value for a cell is -1, the cell does not exist in the simulation.  Furthermore, the first existing cell above will be connected to the first existing cell below.  This type of cell is referred to as a ``vertical pass through'' cell.
+description is an optional array that characterizes the existence status of a cell.  If the IDOMAIN array is not specified, then all model cells exist within the solution.  If the IDOMAIN value for a cell is 0, the cell does not exist in the simulation.  Input and output values will be read and written for the cell, but internal to the program, the cell is excluded from the solution.  If the IDOMAIN value for a cell is 1, the cell exists in the simulation.  If the IDOMAIN value for a cell is -1, the cell does not exist in the simulation.  Furthermore, the first existing cell above will be connected to the first existing cell below.  This type of cell is referred to as a ``vertical pass through'' cell.
 
 
-# --------------------- gwf disv vertices ---------------------
+# --------------------- gwt disv vertices ---------------------
 
 block vertices
 name vertices
@@ -138,7 +138,7 @@ longname y-coordinate for vertex
 description is the y-coordinate for the vertex.
 
 
-# --------------------- gwf disv cell2d ---------------------
+# --------------------- gwt disv cell2d ---------------------
 
 block cell2d
 name cell2d

@@ -52,8 +52,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         * save_flows (boolean) keyword to indicate that multi-aquifer well flow
           terms will be written to the file specified with "BUDGET FILEOUT" in
           Output Control.
-    stage_filerecord : [headfile]
-        * headfile (string) name of the binary output file to write stage
+    head_filerecord : [headfile]
+        * headfile (string) name of the binary output file to write head
           information.
     budget_filerecord : [budgetfile]
         * budgetfile (string) name of the binary output file to write budget
@@ -127,12 +127,21 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           which means that it should be treated as zero-based when working with
           FloPy and Python. Flopy will automatically subtract one when loading
           index variables and add one when writing index variables.
-        * radius (double) radius for the multi-aquifer well.
-        * bottom (double) bottom elevation of the multi-aquifer well. The well
-          bottom is reset to the cell bottom in the lowermost GWF cell
-          connection in cases where the specified well bottom is above the
-          bottom of this GWF cell.
-        * strt (double) starting head for the multi-aquifer well.
+        * radius (double) radius for the multi-aquifer well. The program will
+          terminate with an error if the radius is less than or equal to zero.
+        * bottom (double) bottom elevation of the multi-aquifer well. If
+          CONDEQN is SPECIFIED, THIEM, SKIN, or COMPOSITE, BOTTOM is set to the
+          cell bottom in the lowermost GWF cell connection in cases where the
+          specified well bottom is above the bottom of this GWF cell. If
+          CONDEQN is MEAN, BOTTOM is set to the lowermost GWF cell connection
+          screen bottom in cases where the specified well bottom is above this
+          value. The bottom elevation defines the lowest well head that will be
+          simulated when the NEWTON UNDER_RELAXATION option is specified in the
+          GWF model name file. The bottom elevation is also used to calculate
+          volumetric storage in the well.
+        * strt (double) starting head for the multi-aquifer well. The program
+          will terminate with an error if the starting head is less than the
+          specified well bottom.
         * condeqn (string) character string that defines the conductance
           equation that is used to calculate the saturated conductance for the
           multi-aquifer well. Possible multi-aquifer well CONDEQN strings
@@ -207,16 +216,19 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           automatically subtract one when loading index variables and add one
           when writing index variables.
         * scrn_top (double) value that defines the top elevation of the screen
-          for the multi-aquifer well connection. If the specified SCRN_TOP is
-          greater than the top of the GWF cell it is set equal to the top of
-          the cell. SCRN_TOP can be any value if CONDEQN is SPECIFIED, THIEM,
-          SKIN, or COMPOSITE and SCRN_TOP is set to the top of the cell.
+          for the multi-aquifer well connection. If CONDEQN is SPECIFIED,
+          THIEM, SKIN, or COMPOSITE, SCRN_TOP can be any value and is set to
+          the top of the cell. If CONDEQN is MEAN, SCRN_TOP is set to the
+          multi-aquifer well connection cell top if the specified value is
+          greater than the cell top. The program will terminate with an error
+          if the screen top is less than the screen bottom.
         * scrn_bot (double) value that defines the bottom elevation of the
-          screen for the multi-aquifer well connection. If the specified
-          SCRN_BOT is less than the bottom of the GWF cell it is set equal to
-          the bottom of the cell. SCRN_BOT can be any value if CONDEQN is
-          SPECIFIED, THIEM, SKIN, or COMPOSITE and SCRN_BOT is set to the
-          bottom of the cell.
+          screen for the multi-aquifer well connection. If CONDEQN is
+          SPECIFIED, THIEM, SKIN, or COMPOSITE, SCRN_BOT can be any value is
+          set to the bottom of the cell. If CONDEQN is MEAN, SCRN_BOT is set to
+          the multi-aquifer well connection cell bottom if the specified value
+          is less than the cell bottom. The program will terminate with an
+          error if the screen bottom is greater than the screen top.
         * hk_skin (double) value that defines the skin (filter pack) hydraulic
           conductivity (if CONDEQN for the multi-aquifer well is SKIN,
           CUMULATIVE, or MEAN) or conductance (if CONDEQN for the multi-aquifer
@@ -234,8 +246,9 @@ class ModflowGwfmaw(mfpackage.MFPackage):
           used for these multi-aquifer wells.
         * radius_skin (double) real value that defines the skin radius (filter
           pack radius) for the multi-aquifer well. RADIUS_SKIN can be any value
-          if CONDEQN is SPECIFIED or THIEM. Otherwise, RADIUS_SKIN must be
-          greater than RADIUS for the multi-aquifer well.
+          if CONDEQN is SPECIFIED or THIEM. If CONDEQN is SKIN, CUMULATIVE, or
+          MEAN, the program will terminate with an error if RADIUS_SKIN is less
+          than or equal to the RADIUS for the multi-aquifer well.
     perioddata : [wellno, mawsetting]
         * wellno (integer) integer value that defines the well number
           associated with the specified PERIOD data on the line. WELLNO must be
@@ -281,7 +294,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
                   wells. If the Options block includes a TIMESERIESFILE entry
                   (see the "Time-Variable Input" section), values can be
                   obtained from a time series by entering the time-series name
-                  in place of a numeric value.
+                  in place of a numeric value. The program will terminate with
+                  an error if WELL_HEAD is less than the bottom of the well.
             head_limit : [string]
                 * head_limit (string) is the limiting water level (head) in the
                   well, which is the minimum of the well RATE or the well
@@ -341,8 +355,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
     """
 
     auxiliary = ListTemplateGenerator(("gwf6", "maw", "options", "auxiliary"))
-    stage_filerecord = ListTemplateGenerator(
-        ("gwf6", "maw", "options", "stage_filerecord")
+    head_filerecord = ListTemplateGenerator(
+        ("gwf6", "maw", "options", "head_filerecord")
     )
     budget_filerecord = ListTemplateGenerator(
         ("gwf6", "maw", "options", "budget_filerecord")
@@ -411,7 +425,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         ],
         [
             "block options",
-            "name stage_filerecord",
+            "name head_filerecord",
             "type record head fileout headfile",
             "shape",
             "reader urword",
@@ -998,7 +1012,7 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         print_head=None,
         print_flows=None,
         save_flows=None,
-        stage_filerecord=None,
+        head_filerecord=None,
         budget_filerecord=None,
         no_well_storage=None,
         flow_correction=None,
@@ -1027,8 +1041,8 @@ class ModflowGwfmaw(mfpackage.MFPackage):
         self.print_head = self.build_mfdata("print_head", print_head)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self.stage_filerecord = self.build_mfdata(
-            "stage_filerecord", stage_filerecord
+        self.head_filerecord = self.build_mfdata(
+            "head_filerecord", head_filerecord
         )
         self.budget_filerecord = self.build_mfdata(
             "budget_filerecord", budget_filerecord

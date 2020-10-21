@@ -4,9 +4,9 @@ from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator
 
 
-class ModflowGwfdis(mfpackage.MFPackage):
+class ModflowGwtdis(mfpackage.MFPackage):
     """
-    ModflowGwfdis defines a dis package within a gwf6 model.
+    ModflowGwtdis defines a dis package within a gwt6 model.
 
     Parameters
     ----------
@@ -63,8 +63,8 @@ class ModflowGwfdis(mfpackage.MFPackage):
           for a cell is 0, the cell does not exist in the simulation. Input and
           output values will be read and written for the cell, but internal to
           the program, the cell is excluded from the solution. If the IDOMAIN
-          value for a cell is 1 or greater, the cell exists in the simulation.
-          If the IDOMAIN value for a cell is -1, the cell does not exist in the
+          value for a cell is 1, the cell exists in the simulation. If the
+          IDOMAIN value for a cell is -1, the cell does not exist in the
           simulation. Furthermore, the first existing cell above will be
           connected to the first existing cell below. This type of cell is
           referred to as a "vertical pass through" cell.
@@ -79,14 +79,14 @@ class ModflowGwfdis(mfpackage.MFPackage):
 
     """
 
-    delr = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "delr"))
-    delc = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "delc"))
-    top = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "top"))
-    botm = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "botm"))
-    idomain = ArrayTemplateGenerator(("gwf6", "dis", "griddata", "idomain"))
-    package_abbr = "gwfdis"
+    delr = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "delr"))
+    delc = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "delc"))
+    top = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "top"))
+    botm = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "botm"))
+    idomain = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "idomain"))
+    package_abbr = "gwtdis"
     _package_type = "dis"
-    dfn_file_name = "gwf-dis.dfn"
+    dfn_file_name = "gwt-dis.dfn"
 
     dfn = [
         [
@@ -213,7 +213,7 @@ class ModflowGwfdis(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfdis, self).__init__(
+        super(ModflowGwtdis, self).__init__(
             model, "dis", filename, pname, loading_package, parent_file
         )
 

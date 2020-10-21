@@ -4,9 +4,9 @@ from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
-class ModflowGwfdisu(mfpackage.MFPackage):
+class ModflowGwtdisu(mfpackage.MFPackage):
     """
-    ModflowGwfdisu defines a disu package within a gwf6 model.
+    ModflowGwtdisu defines a disu package within a gwt6 model.
 
     Parameters
     ----------
@@ -67,15 +67,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         * bot (double) is the bottom elevation for each cell.
     area : [double]
         * area (double) is the cell surface area (in plan view).
-    idomain : [integer]
-        * idomain (integer) is an optional array that characterizes the
-          existence status of a cell. If the IDOMAIN array is not specified,
-          then all model cells exist within the solution. If the IDOMAIN value
-          for a cell is 0, the cell does not exist in the simulation. Input and
-          output values will be read and written for the cell, but internal to
-          the program, the cell is excluded from the solution. If the IDOMAIN
-          value for a cell is 1 or greater, the cell exists in the simulation.
-          IDOMAIN values of -1 cannot be specified for the DISU Package.
     iac : [integer]
         * iac (integer) is the number of connections (plus 1) for each cell.
           The sum of all the entries in IAC must be equal to NJA.
@@ -173,23 +164,22 @@ class ModflowGwfdisu(mfpackage.MFPackage):
 
     """
 
-    top = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "top"))
-    bot = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "bot"))
-    area = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "area"))
-    idomain = ArrayTemplateGenerator(("gwf6", "disu", "griddata", "idomain"))
-    iac = ArrayTemplateGenerator(("gwf6", "disu", "connectiondata", "iac"))
-    ja = ArrayTemplateGenerator(("gwf6", "disu", "connectiondata", "ja"))
-    ihc = ArrayTemplateGenerator(("gwf6", "disu", "connectiondata", "ihc"))
-    cl12 = ArrayTemplateGenerator(("gwf6", "disu", "connectiondata", "cl12"))
-    hwva = ArrayTemplateGenerator(("gwf6", "disu", "connectiondata", "hwva"))
+    top = ArrayTemplateGenerator(("gwt6", "disu", "griddata", "top"))
+    bot = ArrayTemplateGenerator(("gwt6", "disu", "griddata", "bot"))
+    area = ArrayTemplateGenerator(("gwt6", "disu", "griddata", "area"))
+    iac = ArrayTemplateGenerator(("gwt6", "disu", "connectiondata", "iac"))
+    ja = ArrayTemplateGenerator(("gwt6", "disu", "connectiondata", "ja"))
+    ihc = ArrayTemplateGenerator(("gwt6", "disu", "connectiondata", "ihc"))
+    cl12 = ArrayTemplateGenerator(("gwt6", "disu", "connectiondata", "cl12"))
+    hwva = ArrayTemplateGenerator(("gwt6", "disu", "connectiondata", "hwva"))
     angldegx = ArrayTemplateGenerator(
-        ("gwf6", "disu", "connectiondata", "angldegx")
+        ("gwt6", "disu", "connectiondata", "angldegx")
     )
-    vertices = ListTemplateGenerator(("gwf6", "disu", "vertices", "vertices"))
-    cell2d = ListTemplateGenerator(("gwf6", "disu", "cell2d", "cell2d"))
-    package_abbr = "gwfdisu"
+    vertices = ListTemplateGenerator(("gwt6", "disu", "vertices", "vertices"))
+    cell2d = ListTemplateGenerator(("gwt6", "disu", "cell2d", "cell2d"))
+    package_abbr = "gwtdisu"
     _package_type = "disu"
-    dfn_file_name = "gwf-disu.dfn"
+    dfn_file_name = "gwt-disu.dfn"
 
     dfn = [
         [
@@ -270,15 +260,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "reader readarray",
         ],
         [
-            "block griddata",
-            "name idomain",
-            "type integer",
-            "shape (nodes)",
-            "reader readarray",
-            "layered false",
-            "optional true",
-        ],
-        [
             "block connectiondata",
             "name iac",
             "type integer",
@@ -292,7 +273,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "shape (nja)",
             "reader readarray",
             "numeric_index true",
-            "jagged_array iac",
         ],
         [
             "block connectiondata",
@@ -300,7 +280,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "type integer",
             "shape (nja)",
             "reader readarray",
-            "jagged_array iac",
         ],
         [
             "block connectiondata",
@@ -308,7 +287,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "type double precision",
             "shape (nja)",
             "reader readarray",
-            "jagged_array iac",
         ],
         [
             "block connectiondata",
@@ -316,7 +294,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "type double precision",
             "shape (nja)",
             "reader readarray",
-            "jagged_array iac",
         ],
         [
             "block connectiondata",
@@ -325,7 +302,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
             "optional true",
             "shape (nja)",
             "reader readarray",
-            "jagged_array iac",
         ],
         [
             "block vertices",
@@ -433,7 +409,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         top=None,
         bot=None,
         area=None,
-        idomain=None,
         iac=None,
         ja=None,
         ihc=None,
@@ -446,7 +421,7 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfdisu, self).__init__(
+        super(ModflowGwtdisu, self).__init__(
             model, "disu", filename, pname, loading_package, parent_file
         )
 
@@ -462,7 +437,6 @@ class ModflowGwfdisu(mfpackage.MFPackage):
         self.top = self.build_mfdata("top", top)
         self.bot = self.build_mfdata("bot", bot)
         self.area = self.build_mfdata("area", area)
-        self.idomain = self.build_mfdata("idomain", idomain)
         self.iac = self.build_mfdata("iac", iac)
         self.ja = self.build_mfdata("ja", ja)
         self.ihc = self.build_mfdata("ihc", ihc)

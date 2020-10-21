@@ -4,9 +4,9 @@ from .. import mfpackage
 from ..data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenerator
 
 
-class ModflowGwfdisv(mfpackage.MFPackage):
+class ModflowGwtdisv(mfpackage.MFPackage):
     """
-    ModflowGwfdisv defines a disv package within a gwf6 model.
+    ModflowGwtdisv defines a disv package within a gwt6 model.
 
     Parameters
     ----------
@@ -64,8 +64,8 @@ class ModflowGwfdisv(mfpackage.MFPackage):
           for a cell is 0, the cell does not exist in the simulation. Input and
           output values will be read and written for the cell, but internal to
           the program, the cell is excluded from the solution. If the IDOMAIN
-          value for a cell is 1 or greater, the cell exists in the simulation.
-          If the IDOMAIN value for a cell is -1, the cell does not exist in the
+          value for a cell is 1, the cell exists in the simulation. If the
+          IDOMAIN value for a cell is -1, the cell does not exist in the
           simulation. Furthermore, the first existing cell above will be
           connected to the first existing cell below. This type of cell is
           referred to as a "vertical pass through" cell.
@@ -107,14 +107,14 @@ class ModflowGwfdisv(mfpackage.MFPackage):
 
     """
 
-    top = ArrayTemplateGenerator(("gwf6", "disv", "griddata", "top"))
-    botm = ArrayTemplateGenerator(("gwf6", "disv", "griddata", "botm"))
-    idomain = ArrayTemplateGenerator(("gwf6", "disv", "griddata", "idomain"))
-    vertices = ListTemplateGenerator(("gwf6", "disv", "vertices", "vertices"))
-    cell2d = ListTemplateGenerator(("gwf6", "disv", "cell2d", "cell2d"))
-    package_abbr = "gwfdisv"
+    top = ArrayTemplateGenerator(("gwt6", "disv", "griddata", "top"))
+    botm = ArrayTemplateGenerator(("gwt6", "disv", "griddata", "botm"))
+    idomain = ArrayTemplateGenerator(("gwt6", "disv", "griddata", "idomain"))
+    vertices = ListTemplateGenerator(("gwt6", "disv", "vertices", "vertices"))
+    cell2d = ListTemplateGenerator(("gwt6", "disv", "cell2d", "cell2d"))
+    package_abbr = "gwtdisv"
     _package_type = "disv"
-    dfn_file_name = "gwf-disv.dfn"
+    dfn_file_name = "gwt-disv.dfn"
 
     dfn = [
         [
@@ -310,7 +310,7 @@ class ModflowGwfdisv(mfpackage.MFPackage):
         pname=None,
         parent_file=None,
     ):
-        super(ModflowGwfdisv, self).__init__(
+        super(ModflowGwtdisv, self).__init__(
             model, "disv", filename, pname, loading_package, parent_file
         )
 
