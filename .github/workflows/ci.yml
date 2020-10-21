@@ -114,7 +114,7 @@ jobs:
       if: matrix.run-type == 'nb'
       shell: bash -l {0}
       run: |
-        mamba install --name flopy jupyter nbconvert
+        mamba install --name flopy jupyter jupytext
 
     - name: Add packages to flopy environment using mamba or conda
       shell: bash -l {0}

@@ -6,6 +6,7 @@ import shutil
 src_pths = (
     os.path.join("..", "examples", "Notebooks"),
     os.path.join("..", "examples", "groundwater_paper", "Notebooks"),
+    os.path.join("..", "examples", "FAQ"),
 )
 
 # parse command line arguments for notebook to create
@@ -31,40 +32,21 @@ if nb_files is None:
             if file_name.endswith(".ipynb")
         ]
 
-# create temporary directory
-dst_pth = os.path.join("..", "examples", ".nb")
-if os.path.isdir(dst_pth):
-    shutil.rmtree(dst_pth)
-os.makedirs(dst_pth)
-
 failed_runs = []
 
 # run the notebooks
 for src in nb_files:
-    file_name = os.path.basename(src)
-    dst = os.path.join(dst_pth, file_name)
     arg = (
         "jupytext",
-        "--to ipynb",
         "--from ipynb",
         "--execute",
-        "-o",
-        dst,
         src,
     )
     print(" ".join(arg))
     return_code = os.system(" ".join(arg))
-    if return_code == 0:
-        print("copy {} -> {}". format(dst, src))
-        shutil.copyfile(dst, src)
-    else:
+    if return_code != 0:
         failed_runs.append(src)
 
 # write out failed runs
 for idx, src in enumerate(failed_runs):
     print("{:2d}...{} FAILED".format(idx + 1, src))
-
-
-# clean up temporary files
-print("cleaning up...'{}'".format(dst_pth))
-shutil.rmtree(dst_pth)
