@@ -37,7 +37,7 @@ name maxbound
 description integer value specifying the maximum number of {#1} cells that will be specified for use during any stress period.
 
 name obs6_filename
-description name of input file to define observations for the {#1} package. See the ``Observation utility'' section for instructions for preparing observation input files. Table \ref{table:obstype} lists observation type(s) supported by the {#1} package.
+description name of input file to define observations for the {#1} package. See the ``Observation utility'' section for instructions for preparing observation input files. Tables \ref{table:gwf-obstypetable} and \ref{table:gwt-obstypetable} lists observation type(s) supported by the {#1} package.
 
 name no_newton
 description keyword that deactivates the Newton-Raphson formulation for the {#1} Package.

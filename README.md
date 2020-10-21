@@ -87,7 +87,9 @@ pmv.plot_specific_discharge(spdis, color='white')
 Additional FloPy Resources
 ------------------------------------------------
 
-- [Tutorials](http://modflowpy.github.io/flopydoc/tutorials.html) demonstrating basic FloPy use.
+- [Tutorials](https://flopy.readthedocs.io/en/latest/tutorials.html) demonstrating basic FloPy use.
+
+- [MODFLOW 6 Example Problems](https://modflow6-examples.readthedocs.io/en/latest/) demonstrating FloPy use to create, run, and post-process MODFLOW 6 models.
 
 - [Jupyter notebooks](docs/notebook_examples.md) demonstrating the use of FloPy pre- and post-processing capabilities with a variety of MODFLOW-based models.
 

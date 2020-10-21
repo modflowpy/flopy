@@ -27,8 +27,8 @@ shape (nodes)
 reader readarray
 layered true
 optional true
-longname diffusion coefficient
-description molecular diffusion coefficient.
+longname effective molecular diffusion coefficient
+description effective molecular diffusion coefficient.
 
 block griddata
 name alh
@@ -38,7 +38,7 @@ reader readarray
 layered true
 optional true
 longname longitudinal dispersivity in horizontal direction
-description longitudinal dispersivity in horizontal direction.  If mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.
+description longitudinal dispersivity in horizontal direction.  If flow is strictly horizontal, then this is the longitudinal dispersivity that will be used.  If flow is not strictly horizontal or strictly vertical, then the longitudinal dispersivity is a function of both ALH and ALV.  If mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.
 
 block griddata
 name alv
@@ -48,7 +48,7 @@ reader readarray
 layered true
 optional true
 longname longitudinal dispersivity in vertical direction
-description longitudinal dispersivity in vertical direction.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ALH.
+description longitudinal dispersivity in vertical direction.  If flow is strictly vertical, then this is the longitudinal dispsersivity value that will be used.  If flow is not strictly horizontal or strictly vertical, then the longitudinal dispersivity is a function of both ALH and ALV.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ALH.
 
 block griddata
 name ath1
@@ -58,7 +58,7 @@ reader readarray
 layered true
 optional true
 longname transverse dispersivity in horizontal direction
-description transverse dispersivity in horizontal direction.  If mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.
+description transverse dispersivity in horizontal direction.  This is the transverse dispersivity value for the second ellipsoid axis.  If flow is strictly horizontal and directed in the x direction (along a row for a regular grid), then this value controls spreading in the y direction.  If mechanical dispersion is represented (by specifying any dispersivity values) then this array is required.
 
 block griddata
 name ath2
@@ -68,7 +68,7 @@ reader readarray
 layered true
 optional true
 longname transverse dispersivity in horizontal direction
-description transverse dispersivity in horizontal direction.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ATH1.
+description transverse dispersivity in horizontal direction.  This is the transverse dispersivity value for the third ellipsoid axis.  If flow is strictly horizontal and directed in the x direction (along a row for a regular grid), then this value controls spreading in the z direction.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ATH1.
 
 block griddata
 name atv
@@ -78,4 +78,4 @@ reader readarray
 layered true
 optional true
 longname transverse dispersivity when flow is in vertical direction
-description transverse dispersivity when flow is in vertical direction.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ATH2.
+description transverse dispersivity when flow is in vertical direction.  If flow is strictly vertical and directed in the z direction, then this value controls spreading in the x and y directions.  If this value is not specified and mechanical dispersion is represented, then this array is set equal to ATH2.

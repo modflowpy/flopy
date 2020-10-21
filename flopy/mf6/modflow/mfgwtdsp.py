@@ -28,26 +28,40 @@ class ModflowGwtdsp(mfpackage.MFPackage):
         * xt3d_rhs (boolean) add xt3d terms to right-hand side, when possible.
           This option uses less memory, but may require more iterations.
     diffc : [double]
-        * diffc (double) molecular diffusion coefficient.
+        * diffc (double) effective molecular diffusion coefficient.
     alh : [double]
         * alh (double) longitudinal dispersivity in horizontal direction. If
-          mechanical dispersion is represented (by specifying any dispersivity
-          values) then this array is required.
+          flow is strictly horizontal, then this is the longitudinal
+          dispersivity that will be used. If flow is not strictly horizontal or
+          strictly vertical, then the longitudinal dispersivity is a function
+          of both ALH and ALV. If mechanical dispersion is represented (by
+          specifying any dispersivity values) then this array is required.
     alv : [double]
-        * alv (double) longitudinal dispersivity in vertical direction. If this
-          value is not specified and mechanical dispersion is represented, then
-          this array is set equal to ALH.
+        * alv (double) longitudinal dispersivity in vertical direction. If flow
+          is strictly vertical, then this is the longitudinal dispsersivity
+          value that will be used. If flow is not strictly horizontal or
+          strictly vertical, then the longitudinal dispersivity is a function
+          of both ALH and ALV. If this value is not specified and mechanical
+          dispersion is represented, then this array is set equal to ALH.
     ath1 : [double]
-        * ath1 (double) transverse dispersivity in horizontal direction. If
-          mechanical dispersion is represented (by specifying any dispersivity
-          values) then this array is required.
+        * ath1 (double) transverse dispersivity in horizontal direction. This
+          is the transverse dispersivity value for the second ellipsoid axis.
+          If flow is strictly horizontal and directed in the x direction (along
+          a row for a regular grid), then this value controls spreading in the
+          y direction. If mechanical dispersion is represented (by specifying
+          any dispersivity values) then this array is required.
     ath2 : [double]
-        * ath2 (double) transverse dispersivity in horizontal direction. If
-          this value is not specified and mechanical dispersion is represented,
-          then this array is set equal to ATH1.
+        * ath2 (double) transverse dispersivity in horizontal direction. This
+          is the transverse dispersivity value for the third ellipsoid axis. If
+          flow is strictly horizontal and directed in the x direction (along a
+          row for a regular grid), then this value controls spreading in the z
+          direction. If this value is not specified and mechanical dispersion
+          is represented, then this array is set equal to ATH1.
     atv : [double]
         * atv (double) transverse dispersivity when flow is in vertical
-          direction. If this value is not specified and mechanical dispersion
+          direction. If flow is strictly vertical and directed in the z
+          direction, then this value controls spreading in the x and y
+          directions. If this value is not specified and mechanical dispersion
           is represented, then this array is set equal to ATH2.
     filename : String
         File name for this package.

@@ -17,7 +17,8 @@ class ModflowGwtadv(mfpackage.MFPackage):
         processing purposes only.
     scheme : string
         * scheme (string) scheme used to solve the advection term. Can be
-          upstream, central, or TVD.
+          upstream, central, or TVD. If not specified, upstream weighting is
+          the default weighting scheme.
     filename : String
         File name for this package.
     pname : String
