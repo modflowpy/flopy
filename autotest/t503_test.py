@@ -49,10 +49,10 @@ exclude_models = (
 exclude_examples = (
     "sagehen",
     "ex-gwt-keating",
-    "ex-gwt-moc3d-p02",
-    "ex-gwt-mt3dms-p01",
-    "ex-gwt-mt3dsupp632",
-    "ex-gwt-prudic2004t2",
+    # "ex-gwt-moc3d-p02",
+    # "ex-gwt-mt3dms-p01",
+    # "ex-gwt-mt3dsupp632",
+    # "ex-gwt-prudic2004t2",
 )
 src_folders = []
 
