@@ -1131,6 +1131,7 @@ class MFBlock(object):
             is_empty
             and self.structure.name.lower() != "exchanges"
             and self.structure.name.lower() != "options"
+            and self.structure.name.lower() != "sources"
         ):
             return
         if self.structure.repeating():

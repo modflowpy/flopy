@@ -42,23 +42,30 @@ os.mkdir(out_dir)
 
 mf6path = download_mf6_examples()
 distpth = os.path.join(mf6path)
-# folders = sorted([f for f in os.listdir(distpth)
-#                   if os.path.isdir(os.path.join(distpth, f))])
 
-exclude_models = ("gwt",)
-exclude_examples = ("sagehen", "keating",)
+exclude_models = (
+    "lnf",
+)
+exclude_examples = (
+    "sagehen",
+    "ex-gwt-keating",
+    # "ex-gwt-moc3d-p02",
+    # "ex-gwt-mt3dms-p01",
+    # "ex-gwt-mt3dsupp632",
+    # "ex-gwt-prudic2004t2",
+)
 src_folders = []
 
 for dirName, subdirList, fileList in os.walk(mf6path):
     dirBase = os.path.basename(os.path.normpath(dirName))
     useModel = True
     for exclude in exclude_models:
-        if exclude in dirBase:
+        if exclude in dirName:
             useModel = False
             break
     if useModel:
         for exclude in exclude_examples:
-            if exclude in dirBase:
+            if exclude in dirName:
                 useModel = False
                 break
     if useModel:

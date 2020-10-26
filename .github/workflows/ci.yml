@@ -140,7 +140,7 @@ jobs:
     - name: Add executables directory to path
       shell: bash
       run: |
-        echo "::add-path::$HOME/.local/bin"
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Run nosetests
       shell: bash -l {0}
